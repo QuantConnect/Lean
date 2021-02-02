@@ -20,6 +20,7 @@ using System.Web;
 using NUnit.Framework;
 using QuantConnect.Api;
 using QuantConnect.Configuration;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.API
 {
@@ -201,10 +202,8 @@ namespace QuantConnect.Tests.API
             if (File.Exists(minutePath))
                 File.Delete(minutePath);
 
-            var downloadedMinuteData = _api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                Resolution.Minute, new DateTime(2013, 10, 11));
-            var downloadedDailyData = _api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                Resolution.Daily, new DateTime(2013, 10, 07));
+            var downloadedMinuteData = _api.DownloadData(minutePath);
+            var downloadedDailyData = _api.DownloadData(dailyPath);
 
             Assert.IsTrue(downloadedMinuteData);
             Assert.IsTrue(downloadedDailyData);
@@ -219,10 +218,11 @@ namespace QuantConnect.Tests.API
         [Test]
         public void NonExistantData_WillBeDownloaded_Unsuccessfully()
         {
-            var nonExistentData = _api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-               Resolution.Minute, new DateTime(1989, 10, 11));
+            var fakeKey = Path.Combine(_dataFolder, "forex/oanda/minute/eurusd/19891011_quote.zip");
+            var nonExistentData = _api.DownloadData(fakeKey);
 
             Assert.IsFalse(nonExistentData);
+            Assert.IsFalse(Directory.Exists(fakeKey));
         }
 
         /// <summary>
@@ -260,10 +260,17 @@ namespace QuantConnect.Tests.API
         [Test, Ignore("Requires configured FXCM account")]
         public void FXCMDataLinks_CanBeRetrieved_Successfully()
         {
-            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
-                Resolution.Minute, new DateTime(2013, 10, 07));
-            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
-                Resolution.Daily, new DateTime(2013, 10, 07));
+            var minutePath = LeanData.GenerateRelativeZipFilePath(
+                new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+                new DateTime(2013, 10, 07),
+                Resolution.Minute, TickType.Quote);
+            var minuteDataLink = _api.ReadDataLink(minutePath);
+
+            var dailyPath = LeanData.GenerateRelativeZipFilePath(
+                new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+                new DateTime(2013, 10, 07),
+                Resolution.Daily, TickType.Quote);
+            var dailyDataLink = _api.ReadDataLink(dailyPath);
 
             Assert.IsTrue(minuteDataLink.Success);
             Assert.IsTrue(dailyDataLink.Success);
@@ -275,10 +282,17 @@ namespace QuantConnect.Tests.API
         [Test, Ignore("Requires configured Oanda account")]
         public void OandaDataLinks_CanBeRetrieved_Successfully()
         {
-            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                Resolution.Minute, new DateTime(2013, 10, 07));
-            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                Resolution.Daily, new DateTime(2013, 10, 07));
+            var minutePath = LeanData.GenerateRelativeZipFilePath(
+                new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                new DateTime(2013, 10, 07),
+                Resolution.Minute, TickType.Quote);
+            var minuteDataLink = _api.ReadDataLink(minutePath);
+
+            var dailyPath = LeanData.GenerateRelativeZipFilePath(
+                new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                new DateTime(2013, 10, 07),
+                Resolution.Daily, TickType.Quote);
+            var dailyDataLink = _api.ReadDataLink(dailyPath);
 
             Assert.IsTrue(minuteDataLink.Success);
             Assert.IsTrue(dailyDataLink.Success);

@@ -88,19 +88,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Attempt to download data using the Api for and return a FileStream of that data.
         /// </summary>
-        /// <param name="filepath">Filepath to save too</param>
-        /// <param name="symbol"></param>
-        /// <param name="date"></param>
-        /// <param name="resolution"></param>
+        /// <param name="key">The path to store the file</param>
+        /// <param name="symbol">The symbol we are downloading</param>
+        /// <param name="date">The date of the data</param>
+        /// <param name="resolution">The resolution of the data</param>
         /// <returns>A FileStream of the data</returns>
-        private FileStream DownloadData(string filepath, Symbol symbol, DateTime date, Resolution resolution)
+        private FileStream DownloadData(string key, Symbol symbol, DateTime date, Resolution resolution)
         {
             Log.Trace("ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
                 symbol.Value,
                 resolution,
                 date.Date.ToShortDateString());
 
-            var downloadSuccessful = _api.DownloadData(symbol, resolution, date);
+            var downloadSuccessful = _api.DownloadData(key);
 
             if (downloadSuccessful)
             {
@@ -109,13 +109,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     resolution,
                     date.Date.ToShortDateString());
 
-                return new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
 
             // Failed to download
             Log.Error("ApiDataProvider.Fetch(): Unable to remotely retrieve data for path {0}. " +
                 "Please make sure you have the necessary data in your online QuantConnect data library.",
-                filepath);
+                key);
             return null;
         }
     }

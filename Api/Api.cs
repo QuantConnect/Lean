@@ -745,12 +745,9 @@ namespace QuantConnect.Api
         /// <summary>
         /// Gets the link to the downloadable data.
         /// </summary>
-        /// <param name="symbol">Symbol of security of which data will be requested.</param>
-        /// <param name="resolution">Resolution of data requested.</param>
-        /// <param name="date">Date of the data requested.</param>
+        /// <param name="key">File path key representing the data requested</param>
         /// <returns><see cref="Link"/> to the downloadable data.</returns>
-
-        public Link ReadDataLink(Symbol symbol, Resolution resolution, DateTime date)
+        public Link ReadDataLink(string key)
         {
             var request = new RestRequest("data/read", Method.POST)
             {
@@ -760,11 +757,7 @@ namespace QuantConnect.Api
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
             {
                 format = "link",
-                ticker = symbol.Value.ToLowerInvariant(),
-                type = symbol.ID.SecurityType.ToLower(),
-                market = symbol.ID.Market,
-                resolution = resolution.ToString(),
-                date = date.ToStringInvariant("yyyyMMdd")
+                key
             }), ParameterType.RequestBody);
 
             Link result;
@@ -799,25 +792,23 @@ namespace QuantConnect.Api
         /// <summary>
         /// Method to download and save the data purchased through QuantConnect
         /// </summary>
-        /// <param name="symbol">Symbol of security of which data will be requested.</param>
-        /// <param name="resolution">Resolution of data requested.</param>
-        /// <param name="date">Date of the data requested.</param>
+        /// <param name="key">File path key representing the data requested</param>
         /// <returns>A <see cref="bool"/> indicating whether the data was successfully downloaded or not.</returns>
 
-        public bool DownloadData(Symbol symbol, Resolution resolution, DateTime date)
+        public bool DownloadData(string key)
         {
             // Get a link to the data
-            var link = ReadDataLink(symbol, resolution, date);
+            var link = ReadDataLink(key);
 
             // Make sure the link was successfully retrieved
             if (!link.Success)
                 return false;
 
-            // Save csv in same folder heirarchy as Lean
-            var path = Path.Combine(_dataFolder, LeanData.GenerateRelativeZipFilePath(symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution));
-
             // Make sure the directory exist before writing
-            (new FileInfo(path)).Directory.Create();
+            if (!Directory.Exists(key))
+            {
+                Directory.CreateDirectory(key);
+            }
 
             // Download and save the data
             var uri     = new Uri(link.DataLink);
@@ -832,20 +823,24 @@ namespace QuantConnect.Api
             {
                 try
                 {
+                    Symbol symbol;
+                    DateTime date;
+                    Resolution resolution;
+                    LeanData.TryParsePath(key, out symbol, out date, out resolution);
                     var contentObj = JObject.Parse(response.Content);
                     var message = contentObj["message"].Value<string>();
                     Log.Error($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}, Api response: {message}");
                 }
                 catch
                 {
-                    Log.Error($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}. Api response could not be parsed.");
+                    Log.Error($"Api.DownloadData(): Failed to download zip for key ({key})");
                 }
 
                 return false;
             }
             
             // Any other case save the content to given path
-            response.RawBytes.SaveAs(path);
+            response.RawBytes.SaveAs(key);
             return true;
         }
 
