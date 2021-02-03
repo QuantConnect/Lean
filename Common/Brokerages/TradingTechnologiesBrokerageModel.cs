@@ -32,7 +32,7 @@ namespace QuantConnect.Brokerages
     public class TradingTechnologiesBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// The default markets for the IB brokerage
+        /// The default markets for Trading Technologies
         /// </summary>
         public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
         {
