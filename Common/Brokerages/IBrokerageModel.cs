@@ -216,6 +216,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Atreyu:
                     return new AtreyuBrokerageModel(accountType);
 
+                case BrokerageName.TradingTechnologies:
+                    return new TradingTechnologiesBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
