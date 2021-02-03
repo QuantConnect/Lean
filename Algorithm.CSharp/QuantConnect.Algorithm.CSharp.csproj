@@ -11,7 +11,8 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>bin\Debug\</OutputPath>
