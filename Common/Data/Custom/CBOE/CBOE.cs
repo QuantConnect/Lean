@@ -30,6 +30,7 @@ namespace QuantConnect.Data.Custom.CBOE
         public CBOE()
         {
             DataType = MarketDataType.Base;
+            Period = TimeSpan.FromDays(1);
         }
 
         /// <summary>

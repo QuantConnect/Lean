@@ -88,6 +88,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (_needNewCurrent)
             {
+                if (!_universeProvider.CanPerformSelection())
+                {
+                    Current = null;
+                    return true;
+                }
+
                 var localTime = _timeProvider.GetUtcNow()
                     .RoundDown(_subscriptionRequest.Configuration.Increment)
                     .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone);

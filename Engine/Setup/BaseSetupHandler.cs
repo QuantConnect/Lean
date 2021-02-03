@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 var resolution = configs.GetHighestResolution();
                 var startTime = historyRequestFactory.GetStartTimeAlgoTz(
                     cash.ConversionRateSecurity.Symbol,
-                    1,
+                    10,
                     resolution,
                     hours,
                     configToUse.DataTimeZone);

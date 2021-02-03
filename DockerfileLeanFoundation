@@ -96,7 +96,7 @@ RUN pip install --no-cache-dir      \
     PuLP==1.6.8                     \
     pymc3==3.8                      \
     rauth==0.7.3                    \
-    scikit-learn==0.21.3            \
+    scikit-learn==0.23.2            \
     scikit-multiflow==0.4.1         \
     scikit-optimize==0.7.4          \
     Theano==1.0.4                   \
@@ -121,7 +121,6 @@ RUN pip install --no-cache-dir      \
     pyramid-arima==0.9.0            \
     pyro-ppl==1.3.1                 \
     riskparityportfolio==0.2        \
-    sklearn==0.0                    \
     sklearn-json==0.1.0             \
     stable-baselines==2.10.0        \
     statistics==1.0.3.5             \
@@ -145,7 +144,23 @@ RUN pip install --no-cache-dir      \
     fastai2==0.0.17                 \
     ppscore==0.0.2                  \
     scikit-tda==0.0.3               \
-    ta==0.5.25
+    ta==0.5.25                      \
+    seaborn==0.11.0                 \
+    pyflux==0.4.15                  \
+    optuna==2.3.0                   \
+    findiff==0.8.5                  \
+    sktime==0.3.0                   \ 
+    sktime-dl==0.1.0                \
+    hyperopt==0.2.5                 \
+    bayesian-optimization==1.2.0    \
+    rpy2==3.3.6                     \
+    pingouin==0.3.8                 \
+    quantecon==0.4.8                \
+    matplotlib==3.2.1
+
+# Notes about pip install:
+# sktime==0.3.1 is max version we can use without causing backwards incompatible changes to pandas (>= 1.0.0)
+# PyS3DE==1.0.5 not installable
 
 RUN wget -O mlfinlab.zip https://cdn.quantconnect.com/mlfinlab/mlfinlab-0.9.3.zip && \
     unzip -q mlfinlab.zip && \
@@ -169,6 +184,7 @@ RUN conda clean -y --all
 
 RUN python -m nltk.downloader -d /usr/share/nltk_data punkt
 RUN python -m nltk.downloader -d /usr/share/nltk_data vader_lexicon
+RUN python -m nltk.downloader -d /usr/share/nltk_data stopwords
 
 # Update ODO
 RUN conda remove --force-remove -y odo

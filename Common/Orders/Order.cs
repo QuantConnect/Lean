@@ -115,7 +115,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Status of the Order
         /// </summary>
-        public OrderStatus Status { get; internal set; }
+        public OrderStatus Status { get; set; }
 
         /// <summary>
         /// Order Time In Force
