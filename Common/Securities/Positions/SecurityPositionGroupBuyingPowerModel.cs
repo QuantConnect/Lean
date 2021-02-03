@@ -98,6 +98,13 @@ namespace QuantConnect.Securities.Positions
             HasSufficientPositionGroupBuyingPowerForOrderParameters parameters
             )
         {
+            if (parameters.PositionGroup.Count != 1)
+            {
+                return parameters.Error(
+                    $"{nameof(SecurityPositionGroupBuyingPowerModel)} only supports position groups containing exactly one position."
+                );
+            }
+
             var position = parameters.PositionGroup.Single();
             var security = parameters.Portfolio.Securities[position.Symbol];
             return security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(

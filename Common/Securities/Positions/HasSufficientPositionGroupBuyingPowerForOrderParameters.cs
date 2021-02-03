@@ -82,5 +82,13 @@ namespace QuantConnect.Securities.Positions
         {
             return new HasSufficientBuyingPowerForOrderResult(false, reason);
         }
+
+        /// <summary>
+        /// Creates a new result indicating that there was an error
+        /// </summary>
+        public HasSufficientBuyingPowerForOrderResult Error(string reason)
+        {
+            return new HasSufficientBuyingPowerForOrderResult(false, reason);
+        }
     }
 }
