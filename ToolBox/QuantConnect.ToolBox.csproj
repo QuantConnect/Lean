@@ -78,11 +78,11 @@
     <PackageReference Include="IKVM" Version="8.1.5717.0" />
     <PackageReference Include="IQFeed.CSharpApiClient" Version="2.5.1" />
     <PackageReference Include="LaunchDarkly.EventSource" Version="3.3.2" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.6.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
     <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
     <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
-    <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
     <PackageReference Include="Microsoft.Net.Compilers" Version="2.10.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -119,7 +119,7 @@
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.4.0" />
     <PackageReference Include="System.Threading.Timer" Version="4.3.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="Utf8Json" Version="1.3.7" />
     <PackageReference Include="WebSocket4Net" Version="0.15.2" />
     <PackageReference Include="WebSocketSharpFork" Version="1.0.4" />
