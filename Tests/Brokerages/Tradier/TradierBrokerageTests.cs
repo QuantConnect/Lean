@@ -26,7 +26,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Tradier
 {
-    [TestFixture, Ignore("This test requires a configured and active Tradier account")]
+    [TestFixture, Explicit("This test requires a configured and active Tradier account")]
     public class TradierBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -113,10 +113,11 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             Assert.IsTrue(orderFilledOrCanceled);
         }
 
-        [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Tradier.")]
-        public void ShortZnga()
+        [Test, Explicit("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Tradier.")]
+        public void ShortInvalidSymbol()
         {
-            PlaceOrderWaitForStatus(new MarketOrder(Symbols.ZNGA, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
+            var symbol = Symbol.Create("XYZ", SecurityType.Equity, Market.USA);
+            PlaceOrderWaitForStatus(new MarketOrder(symbol, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
 
             // wait for output to be generated
             Thread.Sleep(20*1000);

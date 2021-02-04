@@ -448,12 +448,12 @@ namespace QuantConnect.Tests.Brokerages
             Assert.AreEqual(GetDefaultQuantity(), afterQuantity - beforeQuantity);
         }
 
-        [Test, Ignore("This test requires reading the output and selection of a low volume security for the Brokerage")]
+        [Test, Explicit("This test requires reading the output and selection of a low volume security for the Brokerage")]
         public void PartialFills()
         {
             var manualResetEvent = new ManualResetEvent(false);
 
-            var qty = 1000000m;
+            var qty = 1000m;
             var remaining = qty;
             var sync = new object();
             Brokerage.OrderStatusChanged += (sender, orderEvent) =>
@@ -470,7 +470,7 @@ namespace QuantConnect.Tests.Brokerages
             };
 
             // pick a security with low, but some, volume
-            var symbol = Symbols.EURUSD;
+            var symbol = Symbol.Create("FB", SecurityType.Equity, Market.USA);
             var order = new MarketOrder(symbol, qty, DateTime.UtcNow) { Id = 1 };
             OrderProvider.Add(order);
             Brokerage.PlaceOrder(order);
