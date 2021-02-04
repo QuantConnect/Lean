@@ -61,16 +61,10 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
 
-        /// <summary>
-        /// Returns whether the time can be advanced or not.
-        /// </summary>
-        /// <param name="securityType">The security type</param>
-        /// <returns>true if the time can be advanced</returns>
-        public bool CanAdvanceTime(SecurityType securityType)
+        public bool CanPerformSelection()
         {
             return true;
         }
-
         #endregion
     }
 }

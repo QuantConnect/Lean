@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using CsvHelper;
+using CsvHelper.Configuration;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -517,16 +518,13 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="Exchange">Name of the exchange</param>
         /// <returns>List of instruments.</returns>
-        public List<Instrument> GetInstruments(string Exchange = null)
+        public List<CsvInstrument> GetInstruments(string Exchange = null)
         {
-            List<Instrument> instruments = new List<Instrument>();
-            List<Dictionary<string, dynamic>> instrumentsData= new List<Dictionary<string, dynamic>>();
+            List<CsvInstrument> instruments = new List<CsvInstrument>();
+            List< CsvInstrument > instrumentsData= new List<CsvInstrument>();
             var param = new Dictionary<string, dynamic>();
             try
             {
-
-                //TODO:OPtimize this later
-                var useLocalFile =false;
                 var latestFile = Globals.DataFolder+"ZerodhaInstrument-" + DateTime.Now.Date.ToString("dd/MM/yyyy",CultureInfo.InvariantCulture).Replace(" ", "-").Replace("/", "-") + ".csv";
                 if (!File.Exists(latestFile))
                 {
@@ -541,8 +539,8 @@ namespace QuantConnect.Brokerages.Zerodha
                         instrumentsData = Get("market.instruments", param);
                     }
 
-                    foreach (Dictionary<string, dynamic> item in instrumentsData)
-                        instruments.Add(new Instrument(item));
+                    foreach (var item in instrumentsData)
+                        instruments.Add(item);
 
                     using (var writer = new StreamWriter(latestFile))
                     using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -555,7 +553,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     using (var reader = new StreamReader(latestFile))
                     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                     {
-                        instruments = csv.GetRecords<Instrument>().Cast<Instrument>().ToList();
+                        instruments = csv.GetRecords<CsvInstrument>().ToList();
                     }
                 }
 
@@ -1015,7 +1013,17 @@ namespace QuantConnect.Brokerages.Zerodha
                         return responseDictionary;
                     }
                     else if (webResponse.ContentType == "text/csv")
-                        return Utils.ParseCSV(response);
+                    {
+                        //return Utils.ParseCSV(response);
+                        CsvConfiguration configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
+                        {
+                            HasHeaderRecord = true,
+                        };
+                        var reader = new StringReader(response);
+                        var csv = new CsvReader(reader, configuration);
+                        var csvRecords= csv.GetRecords<CsvInstrument>().ToList();
+                        return csvRecords;
+                    }
                     else
                         throw new DataException("Unexpected content type " + webResponse.ContentType + " " + response);
                 }

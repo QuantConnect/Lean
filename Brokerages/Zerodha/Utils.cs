@@ -115,41 +115,6 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
-        /// Parse instruments API's CSV response.
-        /// </summary>
-        /// <param name="Data">Response of instruments API.</param>
-        /// <returns>CSV data as array of nested string dictionary.</returns>
-        public static List<Dictionary<string, dynamic>> ParseCSV(string Data)
-        {
-            string[] lines = Data.Split('\n');
-
-            List<Dictionary<string, dynamic>> instruments = new List<Dictionary<string, dynamic>>();
-
-            using (var parser = new CsvTextFieldParser(StreamFromString(Data)))
-            {
-                // parser.CommentTokens = new string[] { "#" };
-                // parser.SetDelimiters(new string[] { "," });
-                parser.HasFieldsEnclosedInQuotes = true;
-
-                // Skip over header line.
-                string[] headers = parser.ReadFields();
-
-                while (!parser.EndOfData)
-                {
-                    string[] fields = parser.ReadFields();
-                    Dictionary<string, dynamic> item = new Dictionary<string, dynamic>();
-
-                    for (var i = 0; i < headers.Length; i++)
-                        item.Add(headers[i], fields[i]);
-
-                    instruments.Add(item);
-                }
-            }
-
-            return instruments;
-        }
-
-        /// <summary>
         /// Wraps a string inside a stream
         /// </summary>
         /// <param name="value">string data</param>
