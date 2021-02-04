@@ -621,8 +621,9 @@ namespace QuantConnect.Securities
         {
             var security = Securities[symbol];
 
-            var context = new BuyingPowerParameters(this, security, direction);
-            return security.BuyingPowerModel.GetBuyingPower(context).Value;
+            var positionGroup = Positions.CreateDefaultGroup(security);
+            var parameters = new PositionGroupBuyingPowerParameters(this, positionGroup, direction);
+            return positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(parameters);
         }
 
         /// <summary>
@@ -828,16 +829,17 @@ namespace QuantConnect.Securities
                 var direction = orderSubmitRequest.Quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
                 var security = Securities[orderSubmitRequest.Symbol];
 
-                var marginUsed = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(
-                    new ReservedBuyingPowerForPositionParameters(security)
+                var positionGroup = Positions.CreateDefaultGroup(security);
+                var marginUsed = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
+                    this, positionGroup
                 );
 
-                var marginRemaining = security.BuyingPowerModel.GetBuyingPower(
-                    new BuyingPowerParameters(this, security, direction)
+                var marginRemaining = positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(
+                    this, positionGroup, direction
                 );
 
                 Log.Trace("Order request margin information: " +
-                    Invariant($"MarginUsed: {marginUsed.AbsoluteUsedBuyingPower:F2}, ") +
+                    Invariant($"MarginUsed: {marginUsed:F2}, ") +
                     Invariant($"MarginRemaining: {marginRemaining.Value:F2}")
                 );
             }
