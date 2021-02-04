@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -207,7 +206,7 @@ namespace QuantConnect.Brokerages.Tradier
 
                 //Authenticate a request:
                 request.Accept = "application/json";
-                request.Headers.Add("Authorization", "Bearer " + AccessToken);
+                request.Headers.Add("Authorization", "Bearer " + _accessToken);
 
                 //Add the desired data:
                 var postData = "symbols=" + symbolJoined + "&filter=trade&sessionid=" + session.SessionId;
