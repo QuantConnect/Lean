@@ -69,6 +69,10 @@ namespace QuantConnect.Brokerages.Samco
             return true;
         }
 
+        public bool CanPerformSelection()
+        {
+            return true;
+        }
         #endregion
     }
 }
