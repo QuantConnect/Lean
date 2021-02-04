@@ -85,5 +85,15 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use Samco models
         /// </summary>
         Samco,
+        
+        /// <summary>
+        /// Transaction and submit/execution rules will use atreyu models
+        /// </summary>
+        Atreyu,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use TradingTechnologies models
+        /// </summary>
+        TradingTechnologies
     }
 }

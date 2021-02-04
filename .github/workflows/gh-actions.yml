@@ -1,0 +1,31 @@
+name: Build & Test Lean
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-16.04
+    container:
+        image: quantconnect/lean:foundation
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Restore nuget dependencies
+        run: |
+          nuget restore QuantConnect.Lean.sln -v quiet
+          nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
+
+      - name: Build
+        run: msbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+
+      - name: Run Tests
+        run: mono ./testrunner/NUnit.ConsoleRunner.3.11.1/tools/nunit3-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --where "cat != TravisExclude" --labels=Off --params:log-handler=ConsoleErrorLogHandler
+
+      - name: Generate & Publish python stubs
+        run: |
+          chmod +x ci_build_stubs.sh
+          ./ci_build_stubs.sh -d -t -g #Ignore Publish as of since credentials are missing on CI

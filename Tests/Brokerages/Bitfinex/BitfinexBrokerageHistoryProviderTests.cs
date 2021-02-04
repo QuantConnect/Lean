@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 historyProvider.SetBrokerage(brokerage);
                 historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, new DataPermissionManager()));
 
-                var now = DateTime.UtcNow.RoundDown(resolution.ToTimeSpan());
+                var now = DateTime.UtcNow;
 
                 var requests = new[]
                 {
