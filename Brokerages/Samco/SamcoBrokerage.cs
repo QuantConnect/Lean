@@ -935,7 +935,7 @@ namespace QuantConnect.Brokerages.Samco
             } while (latestTime < request.EndTimeUtc);
         }
 
-        // <summary>
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public override void Dispose()
@@ -1064,7 +1064,7 @@ namespace QuantConnect.Brokerages.Samco
             }
         }
 
-            private void EmitQuoteTick(Symbol symbol, decimal avgPrice, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        private void EmitQuoteTick(Symbol symbol,DateTime time, decimal avgPrice, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
             try
             {
@@ -1074,7 +1074,7 @@ namespace QuantConnect.Brokerages.Samco
                     BidPrice = bidPrice,
                     Value = avgPrice,
                     Symbol = symbol,
-                    Time = DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata),
+                    Time = DateTime.UtcNow,
                     Exchange = symbol.ID.Market,
                     TickType = TickType.Quote,
                     AskSize = askSize,
