@@ -15,10 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Interfaces;
@@ -51,20 +49,11 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var accountID = TradierBrokerageFactory.Configuration.AccountID;
-            var tradier = new TradierBrokerage(orderProvider, securityProvider, new AggregationManager(), accountID);
+            var useSandbox = TradierBrokerageFactory.Configuration.UseSandbox;
+            var accountId = TradierBrokerageFactory.Configuration.AccountId;
+            var accessToken = TradierBrokerageFactory.Configuration.AccessToken;
 
-            var qcUserID = TradierBrokerageFactory.Configuration.QuantConnectUserID;
-            var tokens = TradierBrokerageFactory.GetTokens();
-            tradier.SetTokens(qcUserID, tokens.AccessToken, tokens.RefreshToken, tokens.IssuedAt, TimeSpan.FromSeconds(tokens.ExpiresIn));
-
-            // keep the tokens up to date in the event of a refresh
-            tradier.SessionRefreshed += (sender, args) =>
-            {
-                File.WriteAllText(TradierBrokerageFactory.TokensFile, JsonConvert.SerializeObject(args, Formatting.Indented));
-            };
-
-            return tradier;
+            return new TradierBrokerage(orderProvider, securityProvider, new AggregationManager(), useSandbox, accountId, accessToken);
         }
 
         /// <summary>
@@ -95,7 +84,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             return quotes.Single().Ask;
         }
 
-        [Test, TestCaseSource("OrderParameters")]
+        [Test, TestCaseSource(nameof(OrderParameters))]
         public void AllowsOneActiveOrderPerSymbol(OrderTestParameters parameters)
         {
             // tradier's api gets special with zero holdings crossing in that they need to fill the order

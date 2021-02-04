@@ -54,10 +54,10 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         {
             TestDelegate test = () =>
             {
+                var useSandbox = Config.GetBool("tradier-use-sandbox");
                 var accessToken = Config.Get("tradier-access-token");
 
-                var brokerage = new TradierBrokerage(null, null, null, "");
-                brokerage.SetTokens(0, accessToken, "", DateTime.Now, Time.OneDay);
+                var brokerage = new TradierBrokerage(null, null, null, useSandbox, accessToken, "");
 
                 var now = DateTime.UtcNow;
 
