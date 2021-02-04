@@ -149,8 +149,9 @@ namespace QuantConnect.Securities
             // compute the amount of quote currency we need to liquidate in order to get within margin requirements
             var deltaAccountCurrency = totalUsedMargin - totalPortfolioValue;
 
-            var currentlyUsedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(
-                new ReservedBuyingPowerForPositionParameters(security)).AbsoluteUsedBuyingPower;
+            var positionGroup = Portfolio.Positions.CreateDefaultGroup(security);
+
+            var currentlyUsedBuyingPower = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup);
 
             // if currentlyUsedBuyingPower > deltaAccountCurrency, means we can keep using the diff in buying power
             var buyingPowerToKeep = Math.Max(0, currentlyUsedBuyingPower - deltaAccountCurrency);
@@ -158,10 +159,7 @@ namespace QuantConnect.Securities
             // we want a reduction so we send the inverse side of our position
             var deltaBuyingPower = (currentlyUsedBuyingPower - buyingPowerToKeep) * (security.Holdings.IsLong ? -1 : 1);
 
-            var positionGroup = Portfolio.Positions.CreateDefaultGroup(security);
-            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(
-                Portfolio, positionGroup, deltaBuyingPower
-            );
+            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(Portfolio, positionGroup, deltaBuyingPower);
 
             var quantity = result.NumberOfLots * security.SymbolProperties.LotSize;
 
