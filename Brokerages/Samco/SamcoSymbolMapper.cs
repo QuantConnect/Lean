@@ -17,6 +17,7 @@ namespace QuantConnect.Brokerages.Samco
     /// </summary>
     public class SamcoSymbolMapper : ISymbolMapper
     {
+        public List<ScripMaster> samcoTradableSymbolList = new List<ScripMaster>();
 
         private void SaveStreamAsFile(string filePath, Stream inputStream, string fileName)
         {
@@ -33,29 +34,13 @@ namespace QuantConnect.Brokerages.Samco
             }
         }
 
-        /// <summary>
-        /// Symbols that are Tradable
-        /// </summary>
-        public List<Symbol> KnownSymbolsList
-        {
-            get
-            {
-                return KnownSymbols;
-            }
-        }
-
-        /// <summary>
-        /// Symbols that are tradable based on daily scripMaster.csv
-        /// </summary>
-        public static List<Symbol> KnownSymbols = new List<Symbol>();
-
 
         public SamcoSymbolMapper()
         {
-            
+
             StreamReader streamReader;
             var csvFile = "SamcoInstruments-" + DateTime.Now.Date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture).Replace(" ", "-").Replace("/", "-") + ".csv";
-            var path = Path.Combine(Globals.DataFolder , csvFile);
+            var path = Path.Combine(Globals.DataFolder, csvFile);
 
             if (File.Exists(path))
             {
@@ -75,135 +60,144 @@ namespace QuantConnect.Brokerages.Samco
             };
             var csv = new CsvReader(streamReader, configuration);
             var scrips = csv.GetRecords<ScripMaster>();
+            samcoTradableSymbolList = scrips.ToList();
+
+        }
+
+        public Symbol getSymbolfromList(ScripMaster scrip)
+        {
+
             char[] sep = { '-' };
-            foreach (var tp in scrips)
+
+            var securityType = SecurityType.Equity;
+            var market = Market.NSE;
+            OptionRight optionRight = 0;
+            switch (scrip.Instrument)
             {
-                var securityType = SecurityType.Equity;
-                var market = Market.NSE;
-                OptionRight optionRight = 0;
-                switch (tp.Instrument)
-                {
-                    //Equities
-                    case "EQ":
-                        securityType = SecurityType.Equity;
-                        break;
-                    //Index Options
-                    case "OPTIDX":
-                        securityType = SecurityType.Option;
-                        break;
-                    //Stock Futures
-                    case "FUTSTK":
-                        securityType = SecurityType.Future;
-                        break;
-                    //Stock options
-                    case "OPTSTK":
-                        securityType = SecurityType.Option;
-                        break;
-                    //Commodity Futures
-                    case "FUTCOM":
-                        securityType = SecurityType.Future;
-                        break;
-                    //Commodity Options
-                    case "OPTCOM":
-                        securityType = SecurityType.Option;
-                        break;
+                //Equities
+                case "EQ":
+                    securityType = SecurityType.Equity;
+                    break;
+                //Index Options
+                case "OPTIDX":
+                    securityType = SecurityType.Option;
+                    break;
+                //Stock Futures
+                case "FUTSTK":
+                    securityType = SecurityType.Future;
+                    break;
+                //Stock options
+                case "OPTSTK":
+                    securityType = SecurityType.Option;
+                    break;
+                //Commodity Futures
+                case "FUTCOM":
+                    securityType = SecurityType.Future;
+                    break;
+                //Commodity Options
+                case "OPTCOM":
+                    securityType = SecurityType.Option;
+                    break;
 
-                    //Bullion Options
-                    case "OPTBLN":
+                //Bullion Options
+                case "OPTBLN":
 
-                        securityType = SecurityType.Option;
-                        break;
+                    securityType = SecurityType.Option;
+                    break;
 
-                    //Energy Futures
-                    case "FUTENR":
+                //Energy Futures
+                case "FUTENR":
 
-                        securityType = SecurityType.Future;
-                        break;
+                    securityType = SecurityType.Future;
+                    break;
 
-                    //Currenty Options
-                    case "OPTCUR":
+                //Currenty Options
+                case "OPTCUR":
 
-                        securityType = SecurityType.Option;
-                        break;
+                    securityType = SecurityType.Option;
+                    break;
 
-                    //Currency Futures
-                    case "FUTCUR":
+                //Currency Futures
+                case "FUTCUR":
 
-                        securityType = SecurityType.Option;
-                        break;
+                    securityType = SecurityType.Option;
+                    break;
 
-                    //Bond Futures
-                    case "FUTIRC":
+                //Bond Futures
+                case "FUTIRC":
 
-                        securityType = SecurityType.Future;
-                        break;
+                    securityType = SecurityType.Future;
+                    break;
 
-                    //Bond Futures
-                    case "FUTIRT":
+                //Bond Futures
+                case "FUTIRT":
 
-                        securityType = SecurityType.Future;
-                        break;
+                    securityType = SecurityType.Future;
+                    break;
 
-                    //Bond Option
-                    case "OPTIRC":
-                        securityType = SecurityType.Option;
-                        break;
-                    default:
-                        securityType = SecurityType.Base;
-                        break;
-                }
-
-
-                switch (tp.Exchange)
-                {
-                    case "NSE":
-                        market = Market.NSE;
-                        break;
-                    case "NFO":
-                        market = Market.NFO;
-                        break;
-                    case "CDS":
-                        market = Market.CDS;
-                        break;
-                    case "BSE":
-                        market = Market.BSE;
-                        break;
-                    case "MFO":
-                        market = Market.MCX;
-                        break;
-                    default:
-                        market = Market.NSE;
-                        break;
-                }
-
-                string[] ticker = tp.TradingSymbol.Split(sep);
-
-                if (securityType == SecurityType.Option)
-                {
-                    if (ticker[0].EndsWithInvariant("PE", true))
-                    {
-                        optionRight = OptionRight.Put;
-                    }
-                    if (ticker[0].EndsWithInvariant("CE", true))
-                    {
-                        optionRight = OptionRight.Call;
-                    }
-
-                    var strikePrice = Convert.ToDecimal(tp.StrikePrice, CultureInfo.InvariantCulture);
-                    var expiryDate = DateTime.ParseExact(tp.ExpiryDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-                    KnownSymbols.Add(Symbol.CreateOption(ConvertSamcoSymbolToLeanSymbol(tp.Name.Replace(" ", "").Trim()), market, OptionStyle.European, optionRight, strikePrice, expiryDate));
-                }
-
-                if (securityType == SecurityType.Future)
-                {
-                    var expiryDate = DateTime.ParseExact(tp.ExpiryDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-                    KnownSymbols.Add(Symbol.CreateFuture(ConvertSamcoSymbolToLeanSymbol(ticker[0].Trim().Replace(" ", "")), market, expiryDate));
-                }
-                if (securityType == SecurityType.Equity)
-                {
-                    KnownSymbols.Add(Symbol.Create(ConvertSamcoSymbolToLeanSymbol(tp.Name.Trim().Replace(" ", "")), securityType, market));
-                }
+                //Bond Option
+                case "OPTIRC":
+                    securityType = SecurityType.Option;
+                    break;
+                default:
+                    securityType = SecurityType.Base;
+                    break;
             }
+
+
+            switch (scrip.Exchange)
+            {
+                case "NSE":
+                    market = Market.NSE;
+                    break;
+                case "NFO":
+                    market = Market.NFO;
+                    break;
+                case "CDS":
+                    market = Market.CDS;
+                    break;
+                case "BSE":
+                    market = Market.BSE;
+                    break;
+                case "MFO":
+                    market = Market.MCX;
+                    break;
+                default:
+                    market = Market.NSE;
+                    break;
+            }
+
+            string[] ticker = scrip.TradingSymbol.Split(sep);
+
+            Symbol symbol = null;
+
+            if (securityType == SecurityType.Option)
+            {
+                if (ticker[0].EndsWithInvariant("PE", true))
+                {
+                    optionRight = OptionRight.Put;
+                }
+                if (ticker[0].EndsWithInvariant("CE", true))
+                {
+                    optionRight = OptionRight.Call;
+                }
+
+                var strikePrice = Convert.ToDecimal(scrip.StrikePrice, CultureInfo.InvariantCulture);
+                var expiryDate = DateTime.ParseExact(scrip.ExpiryDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                symbol = Symbol.CreateOption(ConvertSamcoSymbolToLeanSymbol(scrip.Name.Replace(" ", "").Trim()), market, OptionStyle.European, optionRight, strikePrice, expiryDate);
+            }
+
+            if (securityType == SecurityType.Future)
+            {
+                var expiryDate = DateTime.ParseExact(scrip.ExpiryDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                symbol=Symbol.CreateFuture(ConvertSamcoSymbolToLeanSymbol(ticker[0].Trim().Replace(" ", "")), market, expiryDate);
+            }
+            if (securityType == SecurityType.Equity)
+            {
+                symbol=Symbol.Create(ConvertSamcoSymbolToLeanSymbol(scrip.Name.Trim().Replace(" ", "")), securityType, market);
+            }
+
+            return symbol;
         }
         /// <summary>
         /// Converts a Lean symbol instance to an Samco symbol
@@ -214,7 +208,7 @@ namespace QuantConnect.Brokerages.Samco
         {
             if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
                 throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
-           
+
             var brokerageSymbol = ConvertLeanSymbolToSamcoSymbol(symbol.Value);
 
             return brokerageSymbol;
@@ -237,8 +231,6 @@ namespace QuantConnect.Brokerages.Samco
                 brokerageSymbol = brokerageSymbol.Split('-')[0];
             }
 
-            // return KnownSymbols.Where(s => s.ID.Symbol == brokerageSymbol && s.ID.Market == market).FirstOrDefault();
-
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
 
@@ -247,17 +239,14 @@ namespace QuantConnect.Brokerages.Samco
 
             if (!Market.Encode(market.ToLowerInvariant()).HasValue)
                 throw new ArgumentException($"Invalid market: {market}");
-           
-            switch (securityType)
+            var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol && s.Exchange == market).First();
+
+            if(scrip == null)
             {
-                case SecurityType.Option:
-                    return Symbol.CreateOption(ConvertSamcoSymbolToLeanSymbol(brokerageSymbol), market, OptionStyle.European, optionRight, strike, expirationDate);
-                case SecurityType.Future:
-                    return Symbol.CreateFuture(ConvertSamcoSymbolToLeanSymbol(brokerageSymbol), market, expirationDate);
-                default:
-                    return Symbol.Create(ConvertSamcoSymbolToLeanSymbol(brokerageSymbol), securityType, market);
+                throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
             }
 
+            return getSymbolfromList(scrip);
         }
 
         /// <summary>
@@ -265,7 +254,7 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         /// <param name="brokerageSymbol">The Samco symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetBrokerageSecurityType(string brokerageSymbol,string exchange)
+        public SecurityType GetBrokerageSecurityType(string brokerageSymbol, string exchange)
         {
             if (brokerageSymbol.Contains('-'))
             {
@@ -274,7 +263,8 @@ namespace QuantConnect.Brokerages.Samco
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
 
-            var symbol = KnownSymbols.Where(s => s.ID.Symbol == brokerageSymbol && s.ID.Market.ToUpperInvariant() == exchange.ToUpperInvariant()).FirstOrDefault();
+            var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol && s.Exchange.ToUpperInvariant() == exchange.ToUpperInvariant()).FirstOrDefault();
+            var symbol=getSymbolfromList(scrip);
             return symbol.SecurityType;
         }
 
@@ -285,7 +275,7 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>The security type</returns>
         public SecurityType GetLeanSecurityType(string leanSymbol, string exchange)
         {
-            return GetBrokerageSecurityType(ConvertLeanSymbolToSamcoSymbol(leanSymbol),exchange);
+            return GetBrokerageSecurityType(ConvertLeanSymbolToSamcoSymbol(leanSymbol), exchange);
         }
 
         /// <summary>
@@ -298,7 +288,7 @@ namespace QuantConnect.Brokerages.Samco
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 return false;
 
-            return KnownSymbols.Where(x => x.Value.Contains(brokerageSymbol) && x.ID.Market.ToUpperInvariant() == exchange.ToUpperInvariant()).IsNullOrEmpty();
+            return samcoTradableSymbolList.Where(x => x.TradingSymbol.Contains(brokerageSymbol) && x.Exchange.ToUpperInvariant() == exchange.ToUpperInvariant()).IsNullOrEmpty();
         }
 
         /// <summary>
@@ -313,7 +303,7 @@ namespace QuantConnect.Brokerages.Samco
 
             var samcoSymbol = ConvertLeanSymbolToSamcoSymbol(symbol.Value);
 
-            return IsKnownBrokerageSymbol(samcoSymbol,symbol.ID.Market) && GetBrokerageSecurityType(samcoSymbol, symbol.ID.Market) == symbol.ID.SecurityType;
+            return IsKnownBrokerageSymbol(samcoSymbol, symbol.ID.Market) && GetBrokerageSecurityType(samcoSymbol, symbol.ID.Market) == symbol.ID.SecurityType;
         }
 
         /// <summary>

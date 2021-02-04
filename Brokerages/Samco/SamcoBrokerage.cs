@@ -886,13 +886,19 @@ namespace QuantConnect.Brokerages.Samco
             string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
             var period = request.Resolution.ToTimeSpan();
             DateTime latestTime = request.StartTimeUtc;
+
             do
             {
                 latestTime = latestTime.AddDays(29);
                 var start = request.StartTimeUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                 var end = latestTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-                string endpoint = $"/intraday/candleData?symbolName={symbol}&fromDate={start}&toDate={end}";
 
+                var scrip=_symbolMapper.samcoTradableSymbolList.Where(x => x.Name.ToUpperInvariant() == symbol).First();
+                string endpoint = $"/history/candleData?symbolName={symbol}&fromDate={start}&toDate={end}";
+                if (scrip.Instrument == "INDEX")
+                {
+                    endpoint= $"/history/indexCandleData?symbolName={symbol}&fromDate={start}&toDate={end}";
+                }
                 var restRequest = new RestRequest(endpoint, Method.GET);
                 var response = _samcoAPI.ExecuteRestRequest(restRequest);
 
