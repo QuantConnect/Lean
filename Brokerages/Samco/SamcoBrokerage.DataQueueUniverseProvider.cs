@@ -50,7 +50,14 @@ namespace QuantConnect.Brokerages.Samco
                     break;
             }
 
-            var result = _symbolMapper.KnownSymbolsList.Where(x => lookupFunc(x) == lookupSymbol &&
+
+            var symbols = new List<Symbol>();
+            foreach(var scripMaster in _symbolMapper.samcoTradableSymbolList)
+            {
+                symbols.Add(_symbolMapper.getSymbolfromList(scripMaster));
+            }
+
+            var result = symbols.Where(x => lookupFunc(x) == lookupSymbol &&
                                             x.ID.SecurityType == lookupSymbol.SecurityType &&
                                             (securityExchange == null || x.ID.Market == securityExchange))
                                          .ToList();
