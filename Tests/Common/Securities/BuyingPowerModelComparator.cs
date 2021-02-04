@@ -17,6 +17,8 @@ using System;
 using System.Reflection;
 using NUnit.Framework;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Positions;
 
@@ -179,6 +181,53 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             reentry = true;
+            var security = parameters.Security;
+            var positionGroup = Portfolio.Positions[new PositionGroupKey(PositionGroupModel, security)];
+            var actual = PositionGroupModel.GetMaximumLotsForTargetBuyingPower(
+                new GetMaximumLotsForTargetBuyingPowerParameters(
+                    parameters.Portfolio,
+                    positionGroup,
+                    parameters.TargetBuyingPower,
+                    parameters.SilenceNonErrorReasons
+                )
+            );
+
+            var lotSize = security.SymbolProperties.LotSize;
+            Assert.AreEqual(expected.IsError, actual.IsError,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForTargetBuyingPower)}: " +
+                $"ExpectedQuantity: {expected.Quantity} ActualQuantity: {actual.NumberOfLots * lotSize} {Environment.NewLine}" +
+                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
+                $"ActualReason: {actual.Reason}"
+            );
+
+            // we're not comparing group quantities, which is the number of position lots, but rather the implied
+            // position quantities resulting from having that many lots.
+            var resizedPositionGroup = positionGroup.WithQuantity(actual.NumberOfLots);
+            var position = resizedPositionGroup.GetPosition(security.Symbol);
+
+            var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);
+            var pgbpmOrder = new MarketOrder(security.Symbol, position.Quantity, parameters.Portfolio.Securities.UtcTime);
+
+            var bpmOrderValue = bpmOrder.GetValue(security);
+            var pgbpmOrderValue = pgbpmOrder.GetValue(security);
+
+            var bpmOrderFees = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, bpmOrder)).Value.Amount;
+            var pgbpmOrderFees = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, pgbpmOrder)).Value.Amount;
+
+            var bpmMarginRequired = bpmOrderValue + bpmOrderFees;
+            var pgbpmMarginRequired = pgbpmOrderValue + pgbpmOrderFees;
+
+            Assert.AreEqual(expected.Quantity, position.Quantity,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForTargetBuyingPower)}: " +
+                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
+                $"ActualReason: {actual.Reason}"
+            );
+
+            Assert.AreEqual(expected.Reason, actual.Reason,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForTargetBuyingPower)}: " +
+                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
+                $"ActualReason: {actual.Reason}"
+            );
 
             reentry = false;
             return expected;
@@ -196,6 +245,47 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             reentry = true;
+            var security = parameters.Security;
+            var positionGroup = Portfolio.Positions[new PositionGroupKey(PositionGroupModel, security)];
+            var actual = PositionGroupModel.GetMaximumLotsForDeltaBuyingPower(
+                new GetMaximumLotsForDeltaBuyingPowerParameters(
+                    parameters.Portfolio,
+                    positionGroup,
+                    parameters.DeltaBuyingPower,
+                    parameters.SilenceNonErrorReasons
+                )
+            );
+
+            var lotSize = security.SymbolProperties.LotSize;
+            Assert.AreEqual(expected.IsError, actual.IsError,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForDeltaBuyingPower)}: " +
+                $"ExpectedQuantity: {expected.Quantity} ActualQuantity: {actual.NumberOfLots * lotSize} {Environment.NewLine}" +
+                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
+                $"ActualReason: {actual.Reason}"
+            );
+
+            // we're not comparing group quantities, which is the number of position lots, but rather the implied
+            // position quantities resulting from having that many lots.
+            var resizedPositionGroup = positionGroup.WithQuantity(actual.NumberOfLots);
+            var position = resizedPositionGroup.GetPosition(security.Symbol);
+
+            var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);
+            var pgbpmOrder = new MarketOrder(security.Symbol, position.Quantity, parameters.Portfolio.Securities.UtcTime);
+
+            var bpmMarginRequired = security.BuyingPowerModel.GetInitialMarginRequirement(security, bpmOrder.Quantity);
+            var pgbpmMarginRequired = PositionGroupModel.GetInitialMarginRequiredForOrder(Portfolio, resizedPositionGroup, pgbpmOrder);
+
+            var availableBuyingPower = security.BuyingPowerModel.GetBuyingPower(parameters.Portfolio, security, bpmOrder.Direction);
+
+            Assert.AreEqual(expected.Quantity, position.Quantity,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForDeltaBuyingPower)}: " +
+                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
+                $"ActualReason: {actual.Reason}"
+            );
+
+            Assert.AreEqual(expected.Reason, actual.Reason,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForDeltaBuyingPower)}"
+            );
 
             reentry = false;
             return expected;

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Securities
 {
@@ -157,10 +158,12 @@ namespace QuantConnect.Securities
             // we want a reduction so we send the inverse side of our position
             var deltaBuyingPower = (currentlyUsedBuyingPower - buyingPowerToKeep) * (security.Holdings.IsLong ? -1 : 1);
 
-            var quantity = security.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
-                new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(Portfolio,
-                    security,
-                    deltaBuyingPower)).Quantity;
+            var positionGroup = Portfolio.Positions.CreateDefaultGroup(security);
+            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(
+                Portfolio, positionGroup, deltaBuyingPower
+            );
+
+            var quantity = result.NumberOfLots * security.SymbolProperties.LotSize;
 
             return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call", DefaultOrderProperties?.Clone());
         }

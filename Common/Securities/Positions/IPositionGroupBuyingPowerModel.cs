@@ -72,6 +72,28 @@ namespace QuantConnect.Securities.Positions
             );
 
         /// <summary>
+        /// Get the maximum position group order quantity to obtain a position with a given buying power
+        /// percentage. Will not take into account free buying power.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the position group and the target
+        ///     signed buying power percentage</param>
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        GetMaximumLotsResult GetMaximumLotsForTargetBuyingPower(
+            GetMaximumLotsForTargetBuyingPowerParameters parameters
+            );
+
+        /// <summary>
+        /// Get the maximum market position group order quantity to obtain a delta in the buying power used by a position group.
+        /// The deltas sign defines the position side to apply it to, positive long, negative short.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the position group and the delta buying power</param>
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
+        GetMaximumLotsResult GetMaximumLotsForDeltaBuyingPower(
+            GetMaximumLotsForDeltaBuyingPowerParameters parameters
+            );
+
+        /// <summary>
         /// Gets the buying power available for a position group trade
         /// </summary>
         /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
