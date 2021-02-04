@@ -89,6 +89,11 @@ namespace QuantConnect.Securities.Positions
                 );
         }
 
+        /// <summary>
+        /// Creates a new <see cref="PositionGroupCollection"/> that contains all of the position groups
+        /// in this collection in addition to the specified <paramref name="group"/>. If a group with the
+        /// same key already exists then it is overwritten.
+        /// </summary>
         public PositionGroupCollection Add(IPositionGroup group)
         {
             var bySymbol = _groupsBySymbol;
@@ -114,6 +119,26 @@ namespace QuantConnect.Securities.Positions
         public bool Contains(PositionGroupKey key)
         {
             return _groups.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="IPositionGroup"/> matching the specified key. If one does not exist, then an empty
+        /// group is returned matching the unit quantities defined in the <paramref name="key"/>
+        /// </summary>
+        /// <param name="key">The position group key to search for</param>
+        /// <returns>The position group matching the specified key, or a new empty group if no matching group is found.</returns>
+        public IPositionGroup this[PositionGroupKey key]
+        {
+            get
+            {
+                IPositionGroup group;
+                if (!TryGetGroup(key, out group))
+                {
+                    return new PositionGroup(key, key.CreateEmptyPositions());
+                }
+
+                return group;
+            }
         }
 
         /// <summary>

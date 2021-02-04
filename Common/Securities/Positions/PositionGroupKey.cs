@@ -69,6 +69,45 @@ namespace QuantConnect.Securities.Positions
             IsDefaultGroup = UnitQuantities.Count == 1 && BuyingPowerModel.GetType() == typeof(SecurityPositionGroupBuyingPowerModel);
         }
 
+        /// <summary>
+        /// Creates a new array of empty positions with unit quantities according to this key
+        /// </summary>
+        public IPosition[] CreateEmptyPositions()
+        {
+            var positions = new IPosition[UnitQuantities.Count];
+            for (int i = 0; i < UnitQuantities.Count; i++)
+            {
+                var unitQuantity = UnitQuantities[i];
+                positions[i] = new Position(unitQuantity.Item1, 0m, unitQuantity.Item2);
+            }
+
+            return positions;
+        }
+
+        /// <summary>
+        /// Creates a new array of positions with each position quantity equaling its unit quantity
+        /// </summary>
+        public IPosition[] CreateUnitPositions()
+        {
+            var positions = new IPosition[UnitQuantities.Count];
+            for (int i = 0; i < UnitQuantities.Count; i++)
+            {
+                var unitQuantity = UnitQuantities[i];
+                positions[i] = new Position(unitQuantity.Item1, unitQuantity.Item2, unitQuantity.Item2);
+            }
+
+            return positions;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="IPositionGroup"/> with each position's quantity equaling it's unit quantity
+        /// </summary>
+        /// <returns>A new position group with quantity equal to 1</returns>
+        public IPositionGroup CreateUnitGroup()
+        {
+            return new PositionGroup(this, CreateUnitPositions());
+        }
+
         /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
         /// <param name="other">An object to compare with this object.</param>
         /// <returns>true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.</returns>

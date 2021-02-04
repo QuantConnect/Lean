@@ -104,6 +104,12 @@ namespace QuantConnect.Securities.Positions
         }
 
         /// <summary>
+        /// Gets the <see cref="IPositionGroup"/> matching the specified <paramref name="key"/>. If one is not found,
+        /// then a new empty position group is returned.
+        /// </summary>
+        public IPositionGroup this[PositionGroupKey key] => Groups[key];
+
+        /// <summary>
         /// Creates a position group for the specified order, pulling
         /// </summary>
         /// <param name="order">The order</param>
@@ -180,6 +186,12 @@ namespace QuantConnect.Securities.Positions
         public PositionGroupKey CreateDefaultKey(Security security)
         {
             return new PositionGroupKey(_defaultModel, security);
+        }
+
+        public IPositionGroup CreateDefaultGroup(Security security)
+        {
+            var key = CreateDefaultKey(security);
+            return Groups[key];
         }
 
         private void HoldingsOnQuantityChanged(object sender, SecurityHoldingQuantityChangedEventArgs e)

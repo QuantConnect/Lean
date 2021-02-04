@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using System;
 using System.Linq;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -87,6 +85,64 @@ namespace QuantConnect.Securities.Positions
             }
 
             return initialMarginRequirement;
+        }
+
+        /// <summary>
+        /// Get the maximum position group order quantity to obtain a position with a given buying power
+        /// percentage. Will not take into account free buying power.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the position group and the target
+        ///     signed buying power percentage</param>
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        public override GetMaximumLotsResult GetMaximumLotsForTargetBuyingPower(
+            GetMaximumLotsForTargetBuyingPowerParameters parameters
+            )
+        {
+            if (parameters.PositionGroup.Count != 1)
+            {
+                return parameters.Error(
+                    $"{nameof(SecurityPositionGroupBuyingPowerModel)} only supports position groups containing exactly one position."
+                );
+            }
+
+            var position = parameters.PositionGroup.Single();
+            var security = parameters.Portfolio.Securities[position.Symbol];
+            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
+                parameters.Portfolio, security, parameters.TargetBuyingPower
+            );
+
+            var quantity = result.Quantity / security.SymbolProperties.LotSize;
+            return new GetMaximumLotsResult(quantity, result.Reason, result.IsError);
+        }
+
+        /// <summary>
+        /// Get the maximum market position group order quantity to obtain a delta in the buying power used by a position group.
+        /// The deltas sign defines the position side to apply it to, positive long, negative short.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the position group and the delta buying power</param>
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
+        public override GetMaximumLotsResult GetMaximumLotsForDeltaBuyingPower(
+            GetMaximumLotsForDeltaBuyingPowerParameters parameters
+            )
+        {
+            if (parameters.PositionGroup.Count != 1)
+            {
+                return parameters.Error(
+                    $"{nameof(SecurityPositionGroupBuyingPowerModel)} only supports position groups containing exactly one position."
+                );
+            }
+
+            var position = parameters.PositionGroup.Single();
+            var security = parameters.Portfolio.Securities[position.Symbol];
+            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
+                new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(
+                    parameters.Portfolio, security, parameters.DeltaBuyingPower
+                )
+            );
+
+            var quantity = result.Quantity * security.SymbolProperties.LotSize;
+            return new GetMaximumLotsResult(quantity, result.Reason, result.IsError);
         }
 
         /// <summary>

@@ -78,5 +78,24 @@ namespace QuantConnect.Securities.Positions
 
             return consolidated;
         }
+
+        /// <summary>
+        /// Gets the number of lots contained within the specified <paramref name="position"/>
+        /// </summary>
+        public static decimal GetNumberOfLots(this IPosition position)
+        {
+            return position.Quantity / position.UnitQuantity;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="IPosition"/> with quantity equal to <paramref name="numberOfLots"/> times its unit quantity
+        /// </summary>
+        /// <param name="position">The position</param>
+        /// <param name="numberOfLots">The number of lots for the new position</param>
+        /// <returns>A new position with the specified number of lots</returns>
+        public static IPosition WithLots(this IPosition position, decimal numberOfLots)
+        {
+            return new Position(position.Symbol, numberOfLots * position.UnitQuantity, position.UnitQuantity);
+        }
     }
 }
