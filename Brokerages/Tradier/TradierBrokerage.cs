@@ -47,6 +47,7 @@ namespace QuantConnect.Brokerages.Tradier
     /// </summary>
     public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
     {
+        private readonly bool _useSandbox;
         private readonly string _accountId;
         private readonly string _accessToken;
 
@@ -105,6 +106,7 @@ namespace QuantConnect.Brokerages.Tradier
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
             _aggregator = aggregator;
+            _useSandbox = useSandbox;
             _accountId = accountId;
             _accessToken = accessToken;
 
