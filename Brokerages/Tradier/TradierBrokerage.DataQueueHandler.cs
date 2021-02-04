@@ -62,6 +62,13 @@ namespace QuantConnect.Brokerages.Tradier
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            // streaming is not supported by sandbox
+            if (_useSandbox)
+            {
+                throw new NotSupportedException(
+                    "TradierBrokerage.DataQueueHandler.Subscribe(): The sandbox does not support data streaming.");
+            }
+
             if (!CanSubscribe(dataConfig.Symbol))
             {
                 return Enumerable.Empty<BaseData>().GetEnumerator();
@@ -73,7 +80,7 @@ namespace QuantConnect.Brokerages.Tradier
             return enumerator;
         }
 
-        private static bool CanSubscribe(Symbol symbol)
+        private bool CanSubscribe(Symbol symbol)
         {
             return (symbol.ID.SecurityType == SecurityType.Equity || symbol.ID.SecurityType == SecurityType.Option)
                 && !symbol.Value.Contains("-UNIVERSE-");
