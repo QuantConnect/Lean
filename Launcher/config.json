@@ -77,12 +77,9 @@
   "ib-version": "974",
 
   // tradier configuration
+  "tradier-use-sandbox": true,
   "tradier-account-id": "",
   "tradier-access-token": "",
-  "tradier-refresh-token": "",
-  "tradier-issued-at": "",
-  "tradier-lifespan": "",
-  "tradier-refresh-session": true,
 
   // oanda configuration
   "oanda-environment": "Practice",
@@ -348,7 +345,7 @@
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler" 
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     }
   }
 }
