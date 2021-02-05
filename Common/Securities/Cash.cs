@@ -280,6 +280,8 @@ namespace QuantConnect.Securities
                 var newSecurity = securityService.CreateSecurity(symbol,
                     config,
                     addToSymbolCache: false);
+                    // Mark security as non tradable, because so far it's being created only for currency conversion
+                    security.IsTradable = false;
 
                 Log.Trace($"Cash.EnsureCurrencyDataFeed(): Adding {symbol.Value} for cash {Symbol} currency feed");
 
