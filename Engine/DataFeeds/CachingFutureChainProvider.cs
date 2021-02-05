@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -53,10 +54,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 symbols = _futureChainProvider.GetFutureContractList(symbol, date.Date).ToList();
                 _cache[symbol] = new FutureChainCacheEntry(date.Date, symbols);
+                Log.Trace($"GetFutureContractList(): _futureChainProvider {string.Join(",", symbols.Select(symbol1 => symbol1.ToString()))}");
             }
             else
             {
                 symbols = entry.Symbols;
+                Log.Trace($"GetFutureContractList(): from cache {string.Join(",", symbols.Select(symbol1 => symbol1.ToString()))}");
             }
 
             return symbols;

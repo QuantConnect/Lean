@@ -26,6 +26,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -149,6 +150,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var intraday = GetIntradayDataEnumerator(dataReader, request);
             if (intraday != null)
             {
+                Log.Trace("Got intraday data!");
                 // we optionally concatenate the intraday data enumerator
                 reader = new ConcatEnumerator(true, reader, intraday);
             }
@@ -165,6 +167,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
             {
+                Log.Trace($"Adding FillForwardEnumerator(): {request.FillForwardResolution}");
                 // copy forward Bid/Ask bars for QuoteBars
                 if (request.DataType == typeof(QuoteBar))
                 {
@@ -183,6 +186,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             reader = new SubscriptionFilterEnumerator(reader, security, endTimeLocal, config.ExtendedMarketHours, false);
             reader = new FilterEnumerator<BaseData>(reader, data =>
             {
+                if (data is OpenInterest)
+                {
+                    Log.Trace($"FilterEnumerator(): {data.Symbol}");
+                }
                 // allow all ticks
                 if (config.Resolution == Resolution.Tick) return true;
                 // filter out future data

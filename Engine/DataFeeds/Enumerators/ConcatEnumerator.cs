@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
@@ -90,6 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
         private IEnumerator<BaseData> GetConcatEnumerator()
         {
+            Log.Trace($"Start: enum count {_enumerators.Count}");
             foreach (var enumerator in _enumerators)
             {
                 while (enumerator.MoveNext())
@@ -99,14 +101,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         && enumerator.Current != null
                         && enumerator.Current.EndTime < _lastEnumeratorEndTime)
                     {
+                        Log.Trace($"GetConcatEnumerator: Skip data {enumerator.Current.Symbol} {enumerator.Current.EndTime}");
                         continue;
                     }
 
                     Current = enumerator.Current;
-                    yield return Current;
+                    if (enumerator.Current != null)
+                    {
+                        Log.Trace($"GetConcatEnumerator: yield {enumerator.Current.Symbol} {enumerator.Current.EndTime}");
+                    }
+                    else
+                    {
+                        Log.Trace($"Ended {_lastEnumeratorEndTime}");
+                    }
+
+                    if (Current != null)
+                    {
+                        yield return Current;
+                    }
+                    else
+                    {
+                        Log.Trace($"Current is null skip emit!");
+                    }
                 }
                 _lastEnumeratorEndTime = Current?.EndTime;
+                Log.Trace($"Ended3 {_lastEnumeratorEndTime}");
             }
+            Log.Trace($"Ended2 {_lastEnumeratorEndTime}");
         }
     }
 }

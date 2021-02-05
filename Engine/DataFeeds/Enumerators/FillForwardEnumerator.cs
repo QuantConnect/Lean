@@ -204,6 +204,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // we require fill forward data because the _enumerator.Current is too far in future
                 _isFillingForward = true;
                 Current = fillForward;
+                Log.Trace($"FillForwardEnumerator(): true: {Current.Symbol} {Current.EndTime}");
                 return true;
             }
 
