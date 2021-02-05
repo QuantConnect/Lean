@@ -31,7 +31,10 @@ namespace QuantConnect
     /// <remarks>Good design should remove the need for this function. Over time it should disappear.</remarks>
     public static class OS
     {
-        private static readonly CpuPerformance _cpuUsage = new CpuPerformance();
+        /// <summary>
+        /// CPU performance counter measures percentage of CPU used in a background thread.
+        /// </summary>
+        public static readonly CpuPerformance CpuPerformanceCounter = new CpuPerformance();
 
         /// <summary>
         /// Global Flag :: Operating System
@@ -122,7 +125,7 @@ namespace QuantConnect
         /// <summary>
         /// Total CPU usage as a percentage
         /// </summary>
-        public static decimal CpuUsage => (decimal)_cpuUsage.CpuPercentage;
+        public static decimal CpuUsage => (decimal)CpuPerformanceCounter.CpuPercentage;
 
         /// <summary>
         /// Gets the statistics of the machine, including CPU% and RAM
@@ -142,7 +145,7 @@ namespace QuantConnect
         /// <summary>
         /// Calculates the CPU usage in a background thread
         /// </summary>
-        private class CpuPerformance : IDisposable
+        public class CpuPerformance : IDisposable
         {
             private readonly CancellationTokenSource _cancellationToken;
             private readonly Task _cpuPerformanceTask;
@@ -194,6 +197,7 @@ namespace QuantConnect
             public void Dispose()
             {
                 _cancellationToken.Cancel();
+                _cpuPerformanceTask.Wait();
                 _cpuPerformanceTask.Dispose();
             }
         }
