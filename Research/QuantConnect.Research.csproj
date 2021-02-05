@@ -43,10 +43,10 @@
   <Choose>
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
+        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>$(SolutionDir)\..\pythonnet\pythonnet\netfx\amd64\Python.Runtime.dll</HintPath>
         </Reference>
-        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\clr.pyd">
+        <Content Include="$(SolutionDir)\..\pythonnet\pythonnet\netfx\amd64\clr.pyd">
           <Link>clr.pyd</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -54,7 +54,7 @@
     </When>
     <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
       <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
+        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
           <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
         </Reference>
         <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\jupyter\clr.cpython-36m-x86_64-linux-gnu.so">
@@ -69,7 +69,7 @@
     </When>
     <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
+        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
           <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
         </Reference>
         <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\jupyter\clr.cpython-36m-darwin.so">
@@ -91,11 +91,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
-    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
-    <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
