@@ -100,7 +100,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Future)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {security.Type} security type.")
+                    Invariant($"The {nameof(TradingTechnologiesBrokerageModel)} does not support {security.Type} security type.")
                 );
 
                 return false;
@@ -120,7 +120,7 @@ namespace QuantConnect.Brokerages
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
+                    Invariant($"The {nameof(TradingTechnologiesBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
                 );
 
                 return false;
@@ -190,6 +190,20 @@ namespace QuantConnect.Brokerages
             ref BrokerageMessageEvent message
             )
         {
+            // validate limit order prices
+            if (orderType == OrderType.Limit)
+            {
+                if (orderDirection == OrderDirection.Buy && limitPrice < stopPrice ||
+                    orderDirection == OrderDirection.Sell && limitPrice > stopPrice)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        "Limit Buy price must be below market, Limit Sell price must be above market."
+                    );
+
+                    return false;
+                }
+            }
+
             // validate stop market order prices
             if (orderType == OrderType.StopMarket &&
                 (orderDirection == OrderDirection.Buy && stopPrice <= security.Price ||
