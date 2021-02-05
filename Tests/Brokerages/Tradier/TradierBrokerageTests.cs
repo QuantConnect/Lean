@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         {
             var tradier = (TradierBrokerage) Brokerage;
             var quotes = tradier.GetQuotes(new List<string> {symbol.Value});
-            return quotes.Single().Ask;
+            return quotes.Single().Ask ?? 0;
         }
 
         [Test, TestCaseSource(nameof(OrderParameters))]
