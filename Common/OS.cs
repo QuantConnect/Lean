@@ -20,7 +20,6 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Log = QuantConnect.Logging.Log;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -153,6 +152,7 @@ namespace QuantConnect
             /// <summary>
             /// CPU usage as a percentage (0-100)
             /// </summary>
+            /// <remarks>Float to avoid any atomicity issues</remarks>
             public float CpuPercentage { get; private set; }
 
             /// <summary>
@@ -161,13 +161,13 @@ namespace QuantConnect
             public CpuPerformance()
             {
                 _cancellationToken = new CancellationTokenSource();
-                _cpuPerformanceTask = Task.Factory.StartNew(CalculateCpu, null, _cancellationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                _cpuPerformanceTask = Task.Factory.StartNew(CalculateCpu, _cancellationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             }
 
             /// <summary>
             /// Event loop that calculates the CPU percentage the process is using
             /// </summary>
-            private void CalculateCpu(object _)
+            private void CalculateCpu()
             {
                 var process = Process.GetCurrentProcess();
                 while (!_cancellationToken.IsCancellationRequested)
