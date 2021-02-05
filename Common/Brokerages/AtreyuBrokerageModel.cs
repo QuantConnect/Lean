@@ -147,23 +147,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            // validate limit order prices
-            if (order.Type == OrderType.Limit)
-            {
-                var orderDirection = order.Direction;
-                var market = security.Price;
-                var limitPrice = (order as LimitOrder)?.LimitPrice;
-                if (orderDirection == OrderDirection.Buy && limitPrice < market ||
-                    orderDirection == OrderDirection.Sell && limitPrice > market)
-                {
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        "Limit Buy price must be below market, Limit Sell price must be above market."
-                    );
-
-                    return false;
-                }
-            }
-
             return true;
         }
 

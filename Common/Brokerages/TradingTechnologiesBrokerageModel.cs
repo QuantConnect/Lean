@@ -126,13 +126,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            // validate stop/limit orders prices
-            var limit = order as LimitOrder;
-            if (limit != null)
-            {
-                return IsValidOrderPrices(security, OrderType.Limit, limit.Direction, security.Price, limit.LimitPrice, ref message);
-            }
-
+            // validate stop orders prices
             var stopMarket = order as StopMarketOrder;
             if (stopMarket != null)
             {
@@ -190,20 +184,6 @@ namespace QuantConnect.Brokerages
             ref BrokerageMessageEvent message
             )
         {
-            // validate limit order prices
-            if (orderType == OrderType.Limit)
-            {
-                if (orderDirection == OrderDirection.Buy && limitPrice < stopPrice ||
-                    orderDirection == OrderDirection.Sell && limitPrice > stopPrice)
-                {
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        "Limit Buy price must be below market, Limit Sell price must be above market."
-                    );
-
-                    return false;
-                }
-            }
-
             // validate stop market order prices
             if (orderType == OrderType.StopMarket &&
                 (orderDirection == OrderDirection.Buy && stopPrice <= security.Price ||
