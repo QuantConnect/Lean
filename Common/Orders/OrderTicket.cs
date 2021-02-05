@@ -241,6 +241,10 @@ namespace QuantConnect.Orders
                     {
                         return AccessOrder<StopLimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
+                    if (_submitRequest.OrderType == OrderType.LimitIfTouched)
+                    {
+                        return AccessOrder<LimitIfTouchedOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                    }
                     break;
 
                 case OrderField.StopPrice:
@@ -253,6 +257,9 @@ namespace QuantConnect.Orders
                         return AccessOrder<StopMarketOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
                     break;
+                
+                case OrderField.TriggerPrice:
+                    return AccessOrder<LimitIfTouchedOrder>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(field), field, null);

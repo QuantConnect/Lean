@@ -1,3 +1,18 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -6,15 +21,18 @@ using static QuantConnect.StringExtensions;
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// <para>
     /// In effect, a LimitIfTouchedOrder behaves opposite to the <see cref="StopLimitOrder"/>;
     /// after a trigger price is touched, a limit order is set for some user-defined value above (below)
     /// the trigger when selling (buying).
-    /// </para>
     /// https://www.interactivebrokers.ca/en/index.php?f=45318
     /// </summary>
     public class LimitIfTouchedOrder : Order
     {
+        /// <summary>
+        /// Order Type
+        /// </summary>
+        public override OrderType Type => OrderType.LimitIfTouched;
+
         /// <summary>
         /// The price which, when touched, will trigger the setting of a limit order at <see cref="LimitPrice"/>.
         /// </summary>
@@ -43,7 +61,7 @@ namespace QuantConnect.Orders
         public LimitIfTouchedOrder(
             Symbol symbol,
             decimal quantity,
-            decimal triggerPrice,
+            decimal? triggerPrice,
             decimal limitPrice,
             DateTime time,
             string tag = "",
@@ -51,11 +69,11 @@ namespace QuantConnect.Orders
             )
             : base(symbol, quantity, time, tag, properties)
         {
-            TriggerPrice = triggerPrice;
+            TriggerPrice = (decimal) triggerPrice;
             LimitPrice = limitPrice;
             if (string.IsNullOrEmpty(tag))
             {
-                //Default tag values to display stop price in GUI.
+                //Default tag values to display trigger price in GUI.
                 Tag = Invariant($"Trigger Price: {triggerPrice:C} Limit Price: {limitPrice:C}");
             }
         }
@@ -65,34 +83,6 @@ namespace QuantConnect.Orders
         /// </summary>
         public LimitIfTouchedOrder()
         {
-        }
-
-        /// <summary>
-        /// Order Type
-        /// </summary>
-        public override OrderType Type => OrderType.LimitIfTouched;
-
-        /// <summary>
-        /// Gets the order value in units of the security's quote currency for a single unit.
-        /// A single unit here is a single share of stock, or a single barrel of oil, or the
-        /// cost of a single share in an option contract.
-        /// </summary>
-        /// <param name="security">The security matching this order's symbol</param>
-        protected override decimal GetValueImpl(Security security)
-        {
-            // selling, so higher price will be used
-            if (Quantity < 0)
-            {
-                return Quantity * Math.Max(LimitPrice, security.Price);
-            }
-
-            // buying, so lower price will be used
-            if (Quantity > 0)
-            {
-                return Quantity * Math.Min(LimitPrice, security.Price);
-            }
-
-            return 0m;
         }
 
         /// <summary>
@@ -119,7 +109,8 @@ namespace QuantConnect.Orders
         /// <returns>A copy of this order</returns>
         public override Order Clone()
         {
-            var order = new LimitIfTouchedOrder {TriggerPrice = TriggerPrice, LimitPrice = LimitPrice};
+            var order = new LimitIfTouchedOrder
+                {TriggerPrice = TriggerPrice, LimitPrice = LimitPrice, TriggerTouched = TriggerTouched};
             CopyTo(order);
             return order;
         }
@@ -135,6 +126,29 @@ namespace QuantConnect.Orders
         {
             return Invariant(
                 $"{base.ToString()} at trigger {TriggerPrice.SmartRounding()} limit {LimitPrice.SmartRounding()}");
+        }
+
+        /// <summary>
+        /// Gets the order value in units of the security's quote currency for a single unit.
+        /// A single unit here is a single share of stock, or a single barrel of oil, or the
+        /// cost of a single share in an option contract.
+        /// </summary>
+        /// <param name="security">The security matching this order's symbol</param>
+        protected override decimal GetValueImpl(Security security)
+        {
+            // selling, so higher price will be used
+            if (Quantity < 0)
+            {
+                return Quantity * Math.Max(LimitPrice, security.Price);
+            }
+
+            // buying, so lower price will be used
+            if (Quantity > 0)
+            {
+                return Quantity * Math.Min(LimitPrice, security.Price);
+            }
+
+            return 0m;
         }
     }
 }

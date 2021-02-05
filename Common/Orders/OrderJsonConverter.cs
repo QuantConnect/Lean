@@ -245,6 +245,14 @@ namespace QuantConnect.Orders
                         StopPrice = jObject["StopPrice"] == null ? default(decimal) : jObject["StopPrice"].Value<decimal>()
                     };
                     break;
+                
+                case OrderType.LimitIfTouched:
+                    order = new LimitIfTouchedOrder
+                    {
+                        LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>(),
+                        TriggerPrice = jObject["TriggerPrice"] == null ? default(decimal) : jObject["TriggerPrice"].Value<decimal>()
+                    };
+                    break;
 
                 case OrderType.MarketOnOpen:
                     order = new MarketOnOpenOrder();

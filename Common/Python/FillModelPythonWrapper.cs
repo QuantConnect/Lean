@@ -74,7 +74,7 @@ namespace QuantConnect.Python
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order"><see cref="LimitIfTouchedOrder"/> Order to Check, return filled if true</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        public OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
+        public override OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
         {
             using (Py.GIL())
             {

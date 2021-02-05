@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
@@ -106,7 +107,20 @@ namespace QuantConnect.Orders.Fills
             return new Fill(orderEvent);
         }
 
-        private OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
+        /// <summary>
+        /// Default limit if touched fill model implementation in base class security.
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        ///     There is no good way to model limit orders with OHLC because we never know whether the market has
+        ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
+        ///
+        ///     With limit if touched, we can't be sure of the order of the H - L values for the limit fill. The assumption
+        ///     was made the limit fill will be done with closing price of the bar after the trigger has been reached.
+        /// </remarks>
+        public virtual OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
         {
             //Default order event to return.
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -115,9 +129,8 @@ namespace QuantConnect.Orders.Fills
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(
-                asset,
+            // Fill only if open or extended
+            if (!IsExchangeOpen(asset,
                 Parameters.ConfigProvider
                     .GetSubscriptionDataConfigs(asset.Symbol)
                     .IsExtendedMarketHours()))
@@ -125,54 +138,77 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
 
-            //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
-            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+            // Get the range of prices in the last bar:
+            var tradeHigh = 0m;
+            var tradeLow = 0m;
+            var endTimeUtc = DateTime.MinValue;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    tradeHigh = trade.Price;
+                    tradeLow = trade.Price;
+                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+
+                if (tradeBar != null)
+                {
+                    tradeHigh = tradeBar.High;
+                    tradeLow = tradeBar.Low;
+                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
 
             // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            if (endTimeUtc <= order.Time) return fill;
 
             //Check if the limit if touched order was filled:
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
-                    //-> 1.2 Buy Stop: If Price below Trigger, Buy:
-                    if (prices.High < order.TriggerPrice || order.TriggerTouched)
+                    //-> 1.2 Buy: If Price below Trigger, Buy:
+                    if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
+                        var askCurrent = GetAskPrice(asset, out endTimeUtc);
 
-                        // Fill the limit order, using closing price of bar:
-                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (prices.Current < order.LimitPrice)
+                        if (askCurrent <= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
-                            // assume the order completely filled
+                            fill.FillPrice = Math.Min(askCurrent, order.LimitPrice);
                             fill.FillQuantity = order.Quantity;
                         }
                     }
+
                     break;
 
                 case OrderDirection.Sell:
-                    //-> 1.2 Buy Stop: If Price above Trigger, Sell:
-                    if (prices.Low > order.TriggerPrice || order.TriggerTouched)
+                    //-> 1.2 Sell: If Price above Trigger, Sell:
+                    if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
+                        var bidCurrent = GetBidPrice(asset, out endTimeUtc);
 
-                        // Fill the limit order, using minimum price of the bar
-                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (prices.Current > order.LimitPrice)
+                        if (bidCurrent >= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
-                            // assume the order completely filled
+                            fill.FillPrice = Math.Max(bidCurrent, order.LimitPrice);
                             fill.FillQuantity = order.Quantity;
                         }
                     }
+
                     break;
             }
-
-            return fill;        }
+            return fill;
+        }
 
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
