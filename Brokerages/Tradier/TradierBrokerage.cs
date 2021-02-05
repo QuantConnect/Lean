@@ -261,14 +261,13 @@ namespace QuantConnect.Brokerages.Tradier
                         {
                             if (request.Method == Method.DELETE)
                             {
-                                string orderId = "[unknown]";
-                                var parameter = request.Parameters.FirstOrDefault(x => x.Name == "orderId");
-                                if (parameter != null) orderId = parameter.Value.ToString();
+                                var orderId = raw.ResponseUri.Segments.LastOrDefault() ?? "[unknown]";
+
                                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderAlreadyFilled",
                                     "Unable to cancel the order because it has already been filled. TradierOrderId: " + orderId
                                     ));
                             }
-                            return new T();
+                            return default(T);
                         }
 
                         // this happens when a request for historical data should return an empty response

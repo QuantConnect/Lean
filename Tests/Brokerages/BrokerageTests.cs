@@ -124,6 +124,7 @@ namespace QuantConnect.Tests.Brokerages
                 // these securities don't need to be real, just used for the ISecurityProvider impl, required
                 // by brokerages to track holdings
                 SecurityProvider[accountHolding.Symbol] = CreateSecurity(accountHolding.Symbol);
+                SecurityProvider[accountHolding.Symbol].Holdings.SetHoldings(accountHolding.AveragePrice, accountHolding.Quantity);
             }
             brokerage.OrderStatusChanged += (sender, args) =>
             {
@@ -453,7 +454,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             var manualResetEvent = new ManualResetEvent(false);
 
-            var qty = 1000m;
+            var qty = 1000000m;
             var remaining = qty;
             var sync = new object();
             Brokerage.OrderStatusChanged += (sender, orderEvent) =>
@@ -470,7 +471,7 @@ namespace QuantConnect.Tests.Brokerages
             };
 
             // pick a security with low, but some, volume
-            var symbol = Symbol.Create("FB", SecurityType.Equity, Market.USA);
+            var symbol = Symbols.EURUSD;
             var order = new MarketOrder(symbol, qty, DateTime.UtcNow) { Id = 1 };
             OrderProvider.Add(order);
             Brokerage.PlaceOrder(order);
