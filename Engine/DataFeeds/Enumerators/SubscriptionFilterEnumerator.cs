@@ -124,16 +124,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
+            Log.Trace($"SubscriptionFilterEnumerator(): start");
             while (_enumerator.MoveNext())
             {
                 var current = _enumerator.Current;
                 if (current != null)
                 {
+                    Log.Trace($"SubscriptionFilterEnumerator(): {current.Symbol} {current.EndTime}");
                     try
                     {
                         // execute user data filters
                         if (current.DataType != MarketDataType.Auxiliary && !_dataFilter.Filter(_security, current))
                         {
+                            Log.Trace($"SubscriptionFilterEnumerator(): filter 1");
                             continue;
                         }
                     }
@@ -151,12 +154,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                             // TODO: replace for setting security.RealTimePrice not to modify security cache data directly
                             _security.SetMarketPrice(current);
                         }
+                        Log.Trace($"SubscriptionFilterEnumerator(): filter 2");
                         continue;
                     }
 
                     // make sure we haven't passed the end
                     if (current.Time > _endTime)
                     {
+                        Log.Trace($"SubscriptionFilterEnumerator(): end 3");
                         return false;
                     }
                 }
@@ -164,6 +169,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 Current = current;
                 return true;
             }
+            Log.Trace($"SubscriptionFilterEnumerator(): end2");
 
             return false;
         }
