@@ -145,20 +145,18 @@ namespace QuantConnect
         private class CpuPerformance : IDisposable
         {
             private readonly CancellationTokenSource _cancellationToken;
-            private readonly ManualResetEventSlim _exitEvent;
             private readonly Task _cpuPerformanceTask;
 
             /// <summary>
             /// CPU usage as a percentage (0-100)
             /// </summary>
-            public double CpuPercentage { get; private set; }
+            public float CpuPercentage { get; private set; }
 
             /// <summary>
             /// Initializes an instance of the class and starts a new thread.
             /// </summary>
             public CpuPerformance()
             {
-                _exitEvent = new ManualResetEventSlim();
                 _cancellationToken = new CancellationTokenSource();
                 _cpuPerformanceTask = Task.Factory.StartNew(CalculateCpu, null, _cancellationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             }
@@ -168,26 +166,25 @@ namespace QuantConnect
             /// </summary>
             private void CalculateCpu(object _)
             {
+                var process = Process.GetCurrentProcess();
                 while (!_cancellationToken.IsCancellationRequested)
                 {
                     var startTime = DateTime.UtcNow;
-                    var startCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
-                    var stopWatch = Stopwatch.StartNew();
+                    var startCpuUsage = process.TotalProcessorTime;
 
-                    if (_exitEvent.Wait(1000))
+                    if (_cancellationToken.Token.WaitHandle.WaitOne(1000))
                     {
                         return;
                     }
 
-                    stopWatch.Stop();
                     var endTime = DateTime.UtcNow;
-                    var endCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
+                    var endCpuUsage = process.TotalProcessorTime;
 
                     var cpuUsedMs = (endCpuUsage - startCpuUsage).TotalMilliseconds;
                     var totalMsPassed = (endTime - startTime).TotalMilliseconds;
                     var cpuUsageTotal = cpuUsedMs / totalMsPassed;
 
-                    CpuPercentage = cpuUsageTotal * 100;
+                    CpuPercentage = (float)cpuUsageTotal * 100;
                 }
             }
 
@@ -197,7 +194,6 @@ namespace QuantConnect
             public void Dispose()
             {
                 _cancellationToken.Cancel();
-                _exitEvent.Set();
                 _cpuPerformanceTask.Dispose();
             }
         }
