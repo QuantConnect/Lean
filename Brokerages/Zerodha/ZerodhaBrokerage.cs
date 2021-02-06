@@ -47,52 +47,54 @@ namespace QuantConnect.Brokerages.Zerodha
     {
         #region Declarations
         private const int ConnectionTimeout = 30000;
+
         /// <summary>
         /// The websockets client instance
         /// </summary>
         protected ZerodhaWebSocketClientWrapper WebSocket;
+
         /// <summary>
         /// standard json parsing settings
         /// </summary>
         protected JsonSerializerSettings JsonSettings = new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal };
+
         /// <summary>
         /// A list of currently active orders
         /// </summary>
         public ConcurrentDictionary<int, Order> CachedOrderIDs = new ConcurrentDictionary<int, Order>();
+
         /// <summary>
         /// A list of currently subscribed channels
         /// </summary>
         protected Dictionary<string, Channel> ChannelList = new Dictionary<string, Channel>();
-        private string _market { get; set; }
+
         /// <summary>
         /// The api secret
         /// </summary>
         protected string ApiSecret;
+
         /// <summary>
         /// The api key
         /// </summary>
         protected string ApiKey;
+
         /// <summary>
         /// Timestamp of most recent heartbeat message
         /// </summary>
         protected DateTime LastHeartbeatUtcTime = DateTime.UtcNow;
-        private const int _heartbeatTimeout = 90;
-        private Thread _connectionMonitorThread;
-        private CancellationTokenSource _cancellationTokenSource;
-        private readonly object _lockerConnectionMonitor = new object();
-        private volatile bool _connectionLost;
-        private const int _connectionTimeout = 30000;
+
         private readonly IAlgorithm _algorithm;
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
-        //private ZerodhaSubscriptionManager _subscriptionManager;
+
         private readonly DataQueueHandlerSubscriptionManager SubscriptionManager;
 
         private ConcurrentDictionary<string, Symbol> _subscriptionsById = new ConcurrentDictionary<string, Symbol>();
+
         private readonly ConcurrentQueue<MessageData> _messageBuffer = new ConcurrentQueue<MessageData>();
 
         private readonly IDataAggregator _aggregator;
-        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
+
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
         /// </summary>
@@ -148,6 +150,9 @@ namespace QuantConnect.Brokerages.Zerodha
             WebSocket.Error += OnError;
             _symbolMapper = new ZerodhaSymbolMapper(_kite);
 
+            //Attach LiveOptionChainProvider
+            algorithm.SetOptionChainProvider(new ZerodhaLiveOptionChainProvider(_symbolMapper));
+
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             subscriptionManager.SubscribeImpl += (s, t) =>
             {
@@ -157,7 +162,6 @@ namespace QuantConnect.Brokerages.Zerodha
             subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
             SubscriptionManager = subscriptionManager;
 
-            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             Log.Trace("Start Zerodha Brokerage");
         }
 
