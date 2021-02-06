@@ -1464,6 +1464,30 @@ namespace QuantConnect.Algorithm
 
             return relativeVigorIndex;
         }
+        
+        /// <summary>
+        /// Creates a new Rolling Sharpe Ratio indicator
+        /// </summary>
+        /// <param name="symbol">The symbol for the indicator to track</param>
+        /// <param name="period">The period over which to calculate the Sharpe ratio.</param>
+        /// <param name="meanType">The (sample) mean method to use when estimating E(R).</param>
+        /// <param name="riskFreeRate">The user-defined risk free return rate for the period.</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The SchaffTrendCycle indicator for the requested symbol over the specified period</returns>
+        public RollingSharpeRatio RSR(Symbol symbol, int period, decimal riskFreeRate, MovingAverageType meanType=MovingAverageType.Simple,  Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"SR({period},{riskFreeRate},{meanType})", resolution);
+            var sharpeRatio = new RollingSharpeRatio(name, period, riskFreeRate, meanType);
+            RegisterIndicator(symbol, sharpeRatio, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, sharpeRatio, resolution);
+            }
+
+            return sharpeRatio;
+        }
 
         /// <summary>
         /// Creates an SimpleMovingAverage indicator for the symbol. The indicator will be automatically
