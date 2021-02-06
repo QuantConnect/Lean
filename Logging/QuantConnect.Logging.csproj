@@ -63,9 +63,9 @@
     <PackageReference Include="NLog" Version="4.4.13" />
     <PackageReference Include="NLog.Config" Version="4.4.13" />
     <PackageReference Include="NLog.Schema" Version="4.4.13" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>

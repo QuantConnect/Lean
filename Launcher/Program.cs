@@ -76,7 +76,7 @@ namespace QuantConnect.Lean.Launcher
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
 
             //Import external libraries specific to physical server location (cloud/local)
-            
+
             try
             {
                 leanEngineSystemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
@@ -166,6 +166,7 @@ namespace QuantConnect.Lean.Launcher
             leanEngineSystemHandlers.DisposeSafely();
             leanEngineAlgorithmHandlers.DisposeSafely();
             Log.LogHandler.DisposeSafely();
+            OS.CpuPerformanceCounter.DisposeSafely();
 
             Log.Trace("Program.Main(): Exiting Lean...");
             Environment.Exit(exitCode);
