@@ -401,7 +401,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
         
-                [Test]
+        [Test]
         public void PerformsLimitIfTouchedBuy()
         {
             var model = new EquityFillModel();

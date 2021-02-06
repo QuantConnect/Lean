@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -26,40 +27,73 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="trading and orders" />
     /// <meta name="tag" content="placing orders" />`
     /// <meta name="tag" content="limit if touched order"/>
-    public class LimitIfTouchedRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class LimitIfTouchedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private SubmitOrderRequest request;
+        private OrderTicket _request;
+        private int _negative;
+
+        // We assert the following occur in FIFO order in OnOrderEvent
+        readonly private Queue<string> _expectedEvents = new Queue<string>(new[]
+        {
+            "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 152.8624 USD LimitPrice: 152.519 TriggerPrice: 151.769 OrderFee: 1 USD",
+            "Time: 10/10/2013 15:47:00 OrderID: 73 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 153.8677 USD LimitPrice: 153.8898 TriggerPrice: 153.1398 OrderFee: 1 USD",
+            "Time: 10/11/2013 14:00:00 OrderID: 74 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 154.8768 USD LimitPrice: 154.8768 TriggerPrice: 154.1268 OrderFee: 1 USD",
+        });
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 15);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 15); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
         }
-        
+
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public override void OnData(Slice data)
         {
-            if (data.ContainsKey("SPY"))
+            if (!data.ContainsKey("SPY"))
             {
-                if (Time.Second == 0 && Time.Minute == 0 && Transactions.GetOpenOrders().Count < 1)
+                return;
+            }
+
+            // After an order is placed, it will decrease in quantity by one for each minute, being cancelled altogether
+            // if not filled within 10 minutes.
+            if (Transactions.GetOpenOrders().Count < 1)
+            {
+                var goLong = Time < StartDate.AddDays(2);
+                _negative = goLong ? 1 : -1;
+                var orderRequest = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "SPY",
+                    _negative * 10, 0,
+                    data["SPY"].Price - (decimal) _negative, data["SPY"].Price - (decimal) 0.25 * _negative, UtcTime,
+                    $"LIT - {UtcTime}, Quantity: {_negative * 10}");
+                _request = Transactions.AddOrder(orderRequest);
+                Debug($"Submitted: {_request.Tag}");
+                return;
+            }
+
+            // Order updating if request exists 
+            if (_request != null)
+            {
+                if (_request.Quantity == 1)
                 {
-                    var goLong = Time < StartDate.AddDays(2);
-                    var negative = goLong ? 1 : -1;
-                    request = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "SPY",
-                        negative * 10, 0, data["SPY"].Price - (decimal) 0.5 * negative,
-                        data["SPY"].Price - (decimal) negative, UtcTime, $"LIT - {UtcTime}");
-                    Transactions.AddOrder(request);
-                    Debug($"Submitted: {request.Tag}");
+                    Transactions.CancelOpenOrders();
+                    _request = null;
+                    return;
                 }
+
+                Transactions.UpdateOrder(new UpdateOrderRequest(DateTime.UtcNow, _request.OrderId,
+                    new UpdateOrderFields
+                    {
+                        Quantity = _request.Quantity - _negative,
+                        Tag = $"LIT - Time: {UtcTime}, Quantity: {_request.Quantity - _negative}"
+                    }));
             }
         }
 
@@ -69,7 +103,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="orderEvent">Order event details containing details of the events</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug($"{orderEvent}");
+            if (orderEvent.Status == OrderStatus.Filled)
+            {
+                var expected = _expectedEvents.Dequeue();
+
+                if (orderEvent.ToString() != expected)
+                {
+                    throw new Exception($"orderEvent {orderEvent.Id} differed from {expected}");
+                }
+
+                Debug($"{orderEvent}");
+            }
         }
 
         /// <summary>
@@ -87,32 +131,32 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "5"},
-            {"Average Win", "0.02%"},
+            {"Total Trades", "3"},
+            {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "1.451%"},
+            {"Compounding Annual Return", "-0.344%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.034%"},
-            {"Sharpe Ratio", "4.704"},
-            {"Probabilistic Sharpe Ratio", "77.396%"},
+            {"Net Profit", "-0.008%"},
+            {"Sharpe Ratio", "-10.164"},
+            {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.003"},
-            {"Beta", "0.015"},
-            {"Annual Standard Deviation", "0.003"},
+            {"Alpha", "-0.002"},
+            {"Beta", "-0.001"},
+            {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.187"},
-            {"Tracking Error", "0.183"},
-            {"Treynor Ratio", "0.989"},
-            {"Total Fees", "$5.00"},
-            {"Fitness Score", "0.012"},
+            {"Information Ratio", "-4.216"},
+            {"Tracking Error", "0.186"},
+            {"Treynor Ratio", "2.304"},
+            {"Total Fees", "$3.00"},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "17.591"},
-            {"Return Over Maximum Drawdown", "172.635"},
-            {"Portfolio Turnover", "0.012"},
+            {"Sortino Ratio", "-13.582"},
+            {"Return Over Maximum Drawdown", "-43.394"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -126,7 +170,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "291160226"}
+            {"OrderListHash", "-489124022"}
         };
     }
 }
