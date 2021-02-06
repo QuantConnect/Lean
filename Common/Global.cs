@@ -720,6 +720,27 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Defines the current state of algorithm warming up
+    /// </summary>
+    public enum AlgorithmWarmupState
+    {
+        /// <summary>
+        /// Not called for the warm up
+        /// </summary>
+        NotStarted,
+
+        /// <summary>
+        /// Currently processing historical data requests
+        /// </summary>
+        Running,
+
+        /// <summary>
+        /// Processed all history requested
+        /// </summary>
+        Completed
+    }
+
+    /// <summary>
     /// Specifies where a subscription's data comes from
     /// </summary>
     public enum SubscriptionTransportMedium
