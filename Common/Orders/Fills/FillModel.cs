@@ -31,16 +31,16 @@ namespace QuantConnect.Orders.Fills
     public class FillModel : IFillModel
     {
         /// <summary>
+        /// The parameters instance to be used by the different XxxxFill() implementations
+        /// </summary>
+        protected FillModelParameters Parameters { get; set; }
+        
+        /// <summary>
         /// This is required due to a limitation in PythonNet to resolved overriden methods.
         /// When Python calls a C# method that calls a method that's overriden in python it won't
         /// run the python implementation unless the call is performed through python too.
         /// </summary>
         protected FillModelPythonWrapper PythonWrapper;
-
-        /// <summary>
-        /// The parameters instance to be used by the different XxxxFill() implementations
-        /// </summary>
-        protected FillModelParameters Parameters { get; set; }
 
         /// <summary>
         /// Used to set the <see cref="FillModelPythonWrapper"/> instance if any
