@@ -364,6 +364,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             return total_tax;
         }
+
         /// <summary>
         /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
         /// </summary>
@@ -401,10 +402,10 @@ namespace QuantConnect.Brokerages.Zerodha
         /// Checks if the websocket connection is connected or in the process of connecting
         /// </summary>
         public override bool IsConnected => WebSocket.IsOpen;
+
         /// <summary>
         /// Connects to Zerodha wss
         /// </summary>
-
         public override void Connect()
         {
             if (IsConnected)
@@ -469,8 +470,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             var kiteOrderType = ConvertOrderType(order.Type);
 
-            var orderFee = new OrderFee(new CashAmount(
-                                CalculateBrokerageOrderFee(orderPrice.GetValueOrDefault() * order.AbsoluteQuantity), Currencies.INR));
+            var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(orderPrice.GetValueOrDefault() * order.AbsoluteQuantity), Currencies.INR));
 
             var orderProperties = order.Properties as ZerodhaOrderProperties;
             if (orderProperties == null)
