@@ -641,12 +641,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
             }
 
-            _cancellationTokenSource.Cancel();
-            if (_processingThread != null && !_processingThread.Join(timeout))
-            {
-                Log.Error($"BrokerageTransactionHandler.Exit(): Exceeded timeout after cancellation requested: {(int)timeout.TotalSeconds} seconds");
-            }
-
+            _processingThread?.StopSafely(timeout, _cancellationTokenSource);
             IsActive = false;
         }
 
