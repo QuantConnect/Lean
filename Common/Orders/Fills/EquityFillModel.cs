@@ -150,7 +150,7 @@ namespace QuantConnect.Orders.Fills
             {
                 var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
                 var quote = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Quote && x.Price > 0);
-                if (trade != null)
+                if (trade != null & quote != null)
                 {
                     tradeHigh = trade.Price;
                     tradeLow = trade.Price;
