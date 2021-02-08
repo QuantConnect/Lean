@@ -34,7 +34,7 @@ namespace QuantConnect.Orders.Fills
         /// The parameters instance to be used by the different XxxxFill() implementations
         /// </summary>
         protected FillModelParameters Parameters { get; set; }
-        
+
         /// <summary>
         /// This is required due to a limitation in PythonNet to resolved overriden methods.
         /// When Python calls a C# method that calls a method that's overriden in python it won't
@@ -129,8 +129,7 @@ namespace QuantConnect.Orders.Fills
             // if the order is filled on stale (fill-forward) data, set a warning message on the order event
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
-                fill.Message =
-                    $"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone})";
+                fill.Message = $"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone})";
             }
 
             //Order [fill]price for a market order model is the current security price
@@ -173,15 +172,9 @@ namespace QuantConnect.Orders.Fills
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // Fill only if open or extended
-            if (!IsExchangeOpen(asset,
-                Parameters.ConfigProvider
-                    .GetSubscriptionDataConfigs(asset.Symbol)
-                    .IsExtendedMarketHours()))
-            {
-                return fill;
-            }
-            
+            // make sure the exchange is open/normal market hours before filling
+            if (!IsExchangeOpen(asset, false)) return fill;
+
             //Get the range of prices in the last bar:
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -205,7 +198,6 @@ namespace QuantConnect.Orders.Fills
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
                     }
-
                     break;
 
                 case OrderDirection.Buy:
@@ -218,7 +210,6 @@ namespace QuantConnect.Orders.Fills
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
                     }
-
                     break;
             }
 
@@ -284,7 +275,6 @@ namespace QuantConnect.Orders.Fills
                             fill.FillQuantity = order.Quantity;
                         }
                     }
-
                     break;
 
                 case OrderDirection.Sell:
@@ -303,7 +293,6 @@ namespace QuantConnect.Orders.Fills
                             fill.FillQuantity = order.Quantity;
                         }
                     }
-
                     break;
             }
 
@@ -391,7 +380,6 @@ namespace QuantConnect.Orders.Fills
                             fill.FillQuantity = order.Quantity;
                         }
                     }
-
                     break;
 
                 case OrderDirection.Buy:
@@ -409,7 +397,6 @@ namespace QuantConnect.Orders.Fills
                             fill.FillQuantity = order.Quantity;
                         }
                     }
-
                     break;
             }
 
@@ -464,7 +451,6 @@ namespace QuantConnect.Orders.Fills
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
                     }
-
                     break;
                 case OrderDirection.Sell:
                     //Sell limit seeks highest price possible
@@ -477,7 +463,6 @@ namespace QuantConnect.Orders.Fills
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
                     }
-
                     break;
             }
 
@@ -586,39 +571,6 @@ namespace QuantConnect.Orders.Fills
             }
 
             return fill;
-        }
-
-        /// <summary>
-        /// Get data types the Security is subscribed to
-        /// </summary>
-        /// <param name="asset">Security which has subscribed data types</param>
-        private HashSet<Type> GetSubscribedTypes(Security asset)
-        {
-            var subscribedTypes = Parameters
-                .ConfigProvider
-                .GetSubscriptionDataConfigs(asset.Symbol)
-                .ToHashSet(x => x.Type);
-
-            if (subscribedTypes.Count == 0)
-            {
-                throw new InvalidOperationException($"Cannot perform fill for {asset.Symbol} because no data subscription were found.");
-            }
-
-            return subscribedTypes;
-        }
-        
-        /// <summary>
-        /// This is required due to a limitation in PythonNet to resolved
-        /// overriden methods. <see cref="GetPrices"/>
-        /// </summary>
-        private Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
-        {
-            if (PythonWrapper != null)
-            {
-                return PythonWrapper.GetPrices(asset, direction);
-            }
-
-            return GetPrices(asset, direction);
         }
 
         /// <summary>
@@ -737,6 +689,39 @@ namespace QuantConnect.Orders.Fills
             }
 
             throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data subscription were found.");
+        }
+
+        /// <summary>
+        /// Get data types the Security is subscribed to
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        private HashSet<Type> GetSubscribedTypes(Security asset)
+        {
+            var subscribedTypes = Parameters
+                .ConfigProvider
+                .GetSubscriptionDataConfigs(asset.Symbol)
+                .ToHashSet(x => x.Type);
+
+            if (subscribedTypes.Count == 0)
+            {
+                throw new InvalidOperationException($"Cannot perform fill for {asset.Symbol} because no data subscription were found.");
+            }
+
+            return subscribedTypes;
+        }
+        
+        /// <summary>
+        /// This is required due to a limitation in PythonNet to resolved
+        /// overriden methods. <see cref="GetPrices"/>
+        /// </summary>
+        private Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
+        {
+            if (PythonWrapper != null)
+            {
+                return PythonWrapper.GetPrices(asset, direction);
+            }
+
+            return GetPrices(asset, direction);
         }
 
         /// <summary>
