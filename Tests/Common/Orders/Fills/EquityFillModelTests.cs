@@ -382,19 +382,19 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            // Time jump => limit reached, holdings sold
-            // |---> First, ensure that quote data are not used to fill
-            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, 
-                    new Bar(103m, 106m, 103m, 105m), 100, // Bid bar
-                    new Bar(103m, 108m, 103m, 105m), 100) // Ask bar
-            );
+            // Time jump => limit reached, security bought
+            // |---> First, ensure that price data are not used to fill
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 100m, 100m, 99m, 99m, 100));
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
             
-            // |---> Lastly, ensure that price data used to fill
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 103m, 108m, 103m, 105m, 100));
+            // |---> Lastly, ensure that quote data used to fill
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, 
+                    new Bar(105, 105, 99m, 99m), 100, // Bid bar
+                    new Bar(100m, 100m, 99m, 99m), 100) // Ask bar
+            );
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(order.LimitPrice, fill.FillPrice);
@@ -456,18 +456,18 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
             // Time jump => limit reached, security bought
-            // |---> First, ensure that quote data are not used to fill
-            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, 
-                    new Bar(100m, 100m, 99m, 99m), 100, // Bid bar
-                    new Bar(100m, 100m, 99m, 99m), 100) // Ask bar
-            );
+            // |---> First, ensure that price data are not used to fill
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 100m, 100m, 99m, 99m, 100));
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
             
-            // |---> Lastly, ensure that price data used to fill
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 100m, 100m, 99m, 99m, 100));
+            // |---> Lastly, ensure that quote data used to fill
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, 
+                    new Bar(100m, 100m, 99m, 99m), 100, // Bid bar
+                    new Bar(100m, 100m, 99m, 99m), 100) // Ask bar
+            );
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(order.LimitPrice, fill.FillPrice);
