@@ -535,10 +535,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     ProcessAsynchronousEvents();
                 }
             }
-            catch (ThreadAbortException)
-            {
-                Log.Trace("BrokerageTransactionHandler.Run(): Thread has been aborted");
-            }
             catch (Exception err)
             {
                 // unexpected error, we need to close down shop
@@ -635,20 +631,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
+            var timeout = TimeSpan.FromSeconds(60);
             if (_processingThread != null)
             {
                 // only wait if the processing thread is running
-                var timeout = TimeSpan.FromSeconds(60);
                 if (_orderRequestQueue.IsBusy && !_orderRequestQueue.WaitHandle.WaitOne(timeout))
                 {
                     Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
                 }
             }
+
             _cancellationTokenSource.Cancel();
-            if (_processingThread != null && _processingThread.IsAlive)
+            if (_processingThread != null && !_processingThread.Join(timeout))
             {
-                _processingThread.Abort();
+                Log.Error($"BrokerageTransactionHandler.Exit(): Exceeded timeout after cancellation requested: {(int)timeout.TotalSeconds} seconds");
             }
+
             IsActive = false;
         }
 

@@ -82,11 +82,7 @@ namespace QuantConnect.Util
                 }
                 catch (Exception exception)
                 {
-                    // ThreadAbortException is triggered when we shutdown ignore the error log
-                    if (!(exception is ThreadAbortException))
-                    {
-                        Log.Error(exception);
-                    }
+                    Log.Error(exception);
                 }
                 return new List<ComposablePartDefinition>();
             });
