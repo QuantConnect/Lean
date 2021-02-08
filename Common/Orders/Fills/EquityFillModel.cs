@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
@@ -34,7 +35,7 @@ namespace QuantConnect.Orders.Fills
         /// The parameters instance to be used by the different XxxxFill() implementations
         /// </summary>
         protected FillModelParameters Parameters { get; set; }
-        
+
         /// <summary>
         /// This is required due to a limitation in PythonNet to resolved overriden methods.
         /// When Python calls a C# method that calls a method that's overriden in python it won't
@@ -140,8 +141,6 @@ namespace QuantConnect.Orders.Fills
             // Get the range of prices in the last bar:
             var tradeHigh = 0m;
             var tradeLow = 0m;
-            var bidOpen = 0m;
-            var askOpen = 0m;
             var endTimeUtc = DateTime.MinValue;
 
             var subscribedTypes = GetSubscribedTypes(asset);
@@ -149,27 +148,21 @@ namespace QuantConnect.Orders.Fills
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
-                var quote = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Quote && x.Price > 0);
-                if (trade != null & quote != null)
+                if (trade != null)
                 {
                     tradeHigh = trade.Price;
                     tradeLow = trade.Price;
-                    bidOpen = quote.BidPrice;
-                    askOpen = quote.AskPrice;
                     endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 }
             }
             else if (subscribedTypes.Contains(typeof(TradeBar)))
             {
                 var tradeBar = asset.Cache.GetData<TradeBar>();
-                var quoteBar = asset.Cache.GetData<QuoteBar>();
 
-                if (tradeBar != null && quoteBar != null)
+                if (tradeBar != null)
                 {
                     tradeHigh = tradeBar.High;
                     tradeLow = tradeBar.Low;
-                    bidOpen = quoteBar.Bid.Open;
-                    askOpen = quoteBar.Ask.Open;
                     endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 }
             }
@@ -185,14 +178,12 @@ namespace QuantConnect.Orders.Fills
                     if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
+                        var askCurrent = GetAskPrice(asset, out endTimeUtc);
 
-                        if (tradeLow <= order.LimitPrice)
+                        if (askCurrent <= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = askOpen <= order.LimitPrice
-                                ? askOpen // Fill price conditional on open
-                                : Math.Max(GetAskPrice(asset, out endTimeUtc), order.LimitPrice);
-                            // assume the order completely filled
+                            fill.FillPrice = Math.Max(askCurrent, order.LimitPrice);
                             fill.FillQuantity = order.Quantity;
                         }
                     }
@@ -204,14 +195,12 @@ namespace QuantConnect.Orders.Fills
                     if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
+                        var bidCurrent = GetBidPrice(asset, out endTimeUtc);
 
-                        if (tradeHigh >= order.LimitPrice)
+                        if (bidCurrent >= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = bidOpen >= order.LimitPrice
-                                ? bidOpen
-                                : Math.Min(GetBidPrice(asset, out endTimeUtc), order.LimitPrice);
-                            // assume the order completely filled
+                            fill.FillPrice = Math.Min(bidCurrent, order.LimitPrice);
                             fill.FillQuantity = order.Quantity;
                         }
                     }
@@ -582,7 +571,7 @@ namespace QuantConnect.Orders.Fills
 
             return fill;
         }
-        
+
         /// <summary>
         /// Get data types the Security is subscribed to
         /// </summary>

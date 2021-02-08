@@ -344,8 +344,6 @@ namespace QuantConnect.Orders.Fills
             // Get the range of prices in the last bar:
             var tradeHigh = 0m;
             var tradeLow = 0m;
-            var bidOpen = 0m;
-            var askOpen = 0m;
             var pricesEndTime = DateTime.MinValue;
             
             var subscribedTypes = GetSubscribedTypes(asset);
@@ -353,14 +351,11 @@ namespace QuantConnect.Orders.Fills
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var trade = GetPricesCheckingPythonWrapper(asset, order.Direction);
-                var quote = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Quote && x.Price > 0);
                 
                 if (trade != null)
                 {
                     tradeHigh = trade.Current;
                     tradeLow = trade.Current;
-                    bidOpen = quote.BidPrice;
-                    askOpen = quote.AskPrice;
                     pricesEndTime = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 }
             }
@@ -368,14 +363,10 @@ namespace QuantConnect.Orders.Fills
             else if (subscribedTypes.Contains(typeof(TradeBar)))
             {
                 var tradeBar = asset.Cache.GetData<TradeBar>();
-                var quoteBar = asset.Cache.GetData<QuoteBar>();
-
-                if (tradeBar != null && quoteBar != null)
+                if (tradeBar != null)
                 {
                     tradeHigh = tradeBar.High;
                     tradeLow = tradeBar.Low;
-                    bidOpen = quoteBar.Bid.Open;
-                    askOpen = quoteBar.Ask.Open;
                     pricesEndTime = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 }
             }
@@ -389,13 +380,13 @@ namespace QuantConnect.Orders.Fills
                     if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-
+                        
                         //-> 1.1 Limit surpassed: Sell.
-                        if (tradeHigh >= order.LimitPrice)
+                        if (GetAskPrice(asset, out pricesEndTime) >= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
                             // Fill price conditional on open
-                            fill.FillPrice = Math.Max(askOpen, order.LimitPrice);                            
+                            fill.FillPrice = order.LimitPrice;                            
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
@@ -407,12 +398,13 @@ namespace QuantConnect.Orders.Fills
                     if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
+
                         //-> 1.2 Limit surpassed: Buy.
-                        if (tradeLow < order.LimitPrice)
+                        if (GetBidPrice(asset, out pricesEndTime) <= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
                             // Fill price conditional on open
-                            fill.FillPrice = Math.Min(bidOpen, order.LimitPrice);                            
+                            fill.FillPrice = order.LimitPrice;                            
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
@@ -627,6 +619,124 @@ namespace QuantConnect.Orders.Fills
             }
 
             return GetPrices(asset, direction);
+        }
+
+        /// <summary>
+        /// Get current ask price for subscribed data
+        /// This method will try to get the most recent ask price data, so it will try to get tick quote first, then quote bar.
+        /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="endTime">Timestamp of the most recent data type</param>
+        private decimal GetAskPrice(Security asset, out DateTime endTime)
+        {
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            List<Tick> ticks = null;
+            var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));
+
+            if (isTickSubscribed)
+            {
+                ticks = asset.Cache.GetAll<Tick>().ToList();
+
+                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.AskPrice > 0);
+                if (quote != null)
+                {
+                    endTime = quote.EndTime;
+                    return quote.AskPrice;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(QuoteBar)))
+            {
+                var quoteBar = asset.Cache.GetData<QuoteBar>();
+                if (quoteBar != null)
+                {
+                    endTime = quoteBar.EndTime;
+                    return quoteBar.Ask?.Close ?? quoteBar.Close;
+                }
+            }
+
+            if (isTickSubscribed)
+            {
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    endTime = trade.EndTime;
+                    return trade.Price;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    endTime = tradeBar.EndTime;
+                    return tradeBar.Close;
+                }
+            }
+
+            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
+        }
+
+        /// <summary>
+        /// Get current bid price for subscribed data
+        /// This method will try to get the most recent bid price data, so it will try to get tick quote first, then quote bar.
+        /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="endTime">Timestamp of the most recent data type</param>
+        private decimal GetBidPrice(Security asset, out DateTime endTime)
+        {
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            List<Tick> ticks = null;
+            var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));
+
+            if (isTickSubscribed)
+            {
+                ticks = asset.Cache.GetAll<Tick>().ToList();
+
+                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.BidPrice > 0);
+                if (quote != null)
+                {
+                    endTime = quote.EndTime;
+                    return quote.BidPrice;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(QuoteBar)))
+            {
+                var quoteBar = asset.Cache.GetData<QuoteBar>();
+                if (quoteBar != null)
+                {
+                    endTime = quoteBar.EndTime;
+                    return quoteBar.Bid?.Close ?? quoteBar.Close;
+                }
+            }
+
+            if (isTickSubscribed)
+            {
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    endTime = trade.EndTime;
+                    return trade.Price;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    endTime = tradeBar.EndTime;
+                    return tradeBar.Close;
+                }
+            }
+
+            throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data subscription were found.");
         }
 
         /// <summary>
