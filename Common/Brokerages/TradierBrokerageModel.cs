@@ -165,7 +165,8 @@ namespace QuantConnect.Brokerages
         /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
-            return new ConstantFeeModel(1m);
+            // Trading stocks at Tradier Brokerage is free
+            return new ConstantFeeModel(0m);
         }
 
         /// <summary>
