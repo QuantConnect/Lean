@@ -350,7 +350,8 @@ namespace QuantConnect
                         }
                     )
             );
-            return joinedOrders.GetHashCode();
+
+            return int.Parse(joinedOrders.ToMD5().Substring(0, 8), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
         }
 
         /// <summary>
