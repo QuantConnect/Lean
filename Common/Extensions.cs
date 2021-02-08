@@ -303,7 +303,6 @@ namespace QuantConnect
                     if (!thread.Join(timeout))
                     {
                         Log.Error($"StopSafely(): Timeout waiting for '{thread.Name}' thread to stop");
-                        thread.Abort();
                     }
                 }
                 catch (Exception exception)
