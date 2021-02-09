@@ -308,7 +308,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
                     var orderEvent = new OrderEvent
                     (
-                        order.Id, symbol, updTime, status,
+                        order.Id, symbol, updTime.ConvertToUtc(), status,
                         direction, fillPrice, fillQuantity,
                         orderFee, $"Zerodha Order Event {direction}"
                     );
@@ -453,7 +453,7 @@ namespace QuantConnect.Brokerages.Zerodha
             if (order.Status == OrderStatus.Invalid)
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid order status {order.Status}";
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), new OrderFee(new CashAmount(0, Currencies.INR)), "Zerodha Order Event") { Status = OrderStatus.Invalid });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, new OrderFee(new CashAmount(0, Currencies.INR)), "Zerodha Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
                 UnlockStream();
@@ -476,7 +476,7 @@ namespace QuantConnect.Brokerages.Zerodha
             if (orderProperties == null)
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid product type Please set either MIS,CNC or NRML";
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
                 UnlockStream();
@@ -493,7 +493,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
 
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}";
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
                 UnlockStream();
@@ -507,7 +507,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
                 {
                     var errorMessage = $"Error parsing response from place order: {(string)orderResponse["status_message"]}";
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status_message"], errorMessage));
 
                     UnlockStream();
@@ -527,7 +527,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
 
                 // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Submitted });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Submitted });
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
                 UnlockStream();
@@ -535,7 +535,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
             var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["status_message"]}";
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
             UnlockStream();
@@ -977,18 +977,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 yield break;
             }
 
-            // if the end time cannot be rounded to resolution without a remainder
-            //TODO Fix this 
-            //if (request.EndTimeUtc.Ticks % request.Resolution.ToTimeSpan().Ticks > 0)
-            //{
-            //    // give a warning and return
-            //    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidEndTime",
-            //        "The history request's end date is not a full multiple of a resolution. " +
-            //        "Zerodha API only allows to support trade bar history requests. The start and end dates " +
-            //        "of a such request are expected to match exactly with the beginning of the first bar and ending of the last"));
-            //    yield break;
-            //}
-
+           
             DateTime latestTime = request.StartTimeUtc;
             var requests = new List<HistoryRequest>();
             requests.Add(request);

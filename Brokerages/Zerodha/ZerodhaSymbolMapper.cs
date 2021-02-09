@@ -248,6 +248,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             return KnownSymbolsList.Where(x=>x.Value.Contains(brokerageSymbol)).IsNullOrEmpty();
         }
+
         /// <param name="symbol">The Lean symbol</param>
         /// <returns>True if Zerodha supports the symbol</returns>
         public bool IsKnownLeanSymbol(Symbol symbol)
