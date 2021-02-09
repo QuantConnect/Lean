@@ -51,7 +51,7 @@ namespace QuantConnect.Report.ReportElements
                 liveOrders = new List<Order>();
             }
 
-            var orders = _backtest?.Orders?.Values.Union(liveOrders);
+            var orders = _backtest?.Orders?.Values.Concat(liveOrders).OrderBy(x => x.Time);
             if (orders == null)
             {
                 return "-";
