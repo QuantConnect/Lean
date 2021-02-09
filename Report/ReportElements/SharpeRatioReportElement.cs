@@ -47,7 +47,9 @@ namespace QuantConnect.Report.ReportElements
         {
             if (_live == null)
             {
-                return _backtest?.TotalPerformance?.PortfolioStatistics?.SharpeRatio.ToString("F1") ?? "-";
+                var backtestSharpe = _backtest?.TotalPerformance?.PortfolioStatistics?.SharpeRatio;
+                Result = backtestSharpe;
+                return backtestSharpe?.ToString("F1") ?? "-";
             }
 
             var equityPoints = ResultsUtil.EquityPoints(_live);
@@ -67,7 +69,9 @@ namespace QuantConnect.Report.ReportElements
                 return "-";
             }
 
-            return Statistics.Statistics.SharpeRatio(trailingPerformance, 0.0).ToString("F2");
+            var sharpe = Statistics.Statistics.SharpeRatio(trailingPerformance, 0.0);
+            Result = sharpe;
+            return sharpe.ToString("F2");
         }
     }
 }
