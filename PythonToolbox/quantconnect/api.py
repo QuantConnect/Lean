@@ -320,6 +320,24 @@ class Api:
             
         return json
 
+    def read_backtest_log(self, projectId, backtestId):
+        '''Read the log of a backtest in the project id specified.
+
+        Args:
+            projectId(int): Project id to read.
+            backtestId(str): Specific backtest id to read.
+        Returns:
+            Dictionary that contains the backtest log e.g. {"BacktestLogs": ["array", "of", "log", "lines"]}
+        '''
+        json = self.Execute('backtests/read/log',
+            {
+                'projectId': projectId,
+                'backtestId': backtestId,
+                'format': 'json',
+            })
+
+        return json
+
     def update_backtest(self, projectId, backtestId, backtestName = '', backtestNote = ''):
         '''Update the backtest name.
 
