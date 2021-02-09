@@ -49,12 +49,12 @@ namespace QuantConnect.Brokerages.Zerodha
         public static Dictionary<string, uint> ZerodhaInstrumentsList = new Dictionary<string, uint>();
 
 
-        public ZerodhaSymbolMapper(Kite kite, string exchange = "NSE")
+        public ZerodhaSymbolMapper(Kite kite, string exchange = "")
         {
             KnownSymbolsList = GetTradableInstrumentsList(kite, exchange);
         }
 
-        public List<Symbol> GetTradableInstrumentsList(Kite kite, string exchange = "NSE")
+        public List<Symbol> GetTradableInstrumentsList(Kite kite, string exchange = "")
         {
 
             var tradableInstruments = kite.GetInstruments(exchange);

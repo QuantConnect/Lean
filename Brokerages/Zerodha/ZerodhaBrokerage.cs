@@ -150,7 +150,7 @@ namespace QuantConnect.Brokerages.Zerodha
             _symbolMapper = new ZerodhaSymbolMapper(_kite);
 
             //Attach LiveOptionChainProvider
-            algorithm.SetOptionChainProvider(new ZerodhaLiveOptionChainProvider(_symbolMapper));
+            algorithm.SetOptionChainProvider(new ZerodhaLiveOptionChainProvider(_symbolMapper,_kite));
 
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             subscriptionManager.SubscribeImpl += (s, t) =>

@@ -26,11 +26,11 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly Kite kite;
         private readonly string exchange;
 
-        public ZerodhaLiveOptionChainProvider(ZerodhaSymbolMapper _symbolMapper,Kite kiteClient,string exchange = "NSE")
+        public ZerodhaLiveOptionChainProvider(ZerodhaSymbolMapper _symbolMapper,Kite kite,string exchange = "NSE")
         {
             symbolMapper = _symbolMapper;
-            kite = kiteClient;
-            exchange = exchange;
+            this.kite = kite;
+            this.exchange = exchange;
         }
 
         public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
