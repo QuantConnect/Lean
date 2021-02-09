@@ -42,7 +42,8 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            return _backtest?.TotalPerformance?.PortfolioStatistics?.CompoundingAnnualReturn.ToString("P1") ?? "-";
+            Result = _backtest?.TotalPerformance?.PortfolioStatistics?.CompoundingAnnualReturn;
+            return ((decimal?)Result)?.ToString("P1") ?? "-";
         }
     }
 }

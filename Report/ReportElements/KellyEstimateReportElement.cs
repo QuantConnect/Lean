@@ -43,6 +43,8 @@ namespace QuantConnect.Report.ReportElements
         public override string Render()
         {
             var kelly = _backtest?.AlphaRuntimeStatistics?.KellyCriterionEstimate;
+            Result = kelly;
+
             if (kelly == null)
             {
                 return "-";

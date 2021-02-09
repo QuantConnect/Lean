@@ -61,6 +61,7 @@ namespace QuantConnect.Report.ReportElements
             orders = orders.Union(liveOrders).ToList();
 
             var securityTypes = orders.DistinctBy(o => o.SecurityType).Select(s => s.SecurityType.ToString()).ToList();
+            Result = securityTypes;
 
             return string.Join(",", securityTypes);
         }

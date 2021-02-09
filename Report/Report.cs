@@ -30,6 +30,8 @@ namespace QuantConnect.Report
     public class Report
     {
         private const string _template = "template.html";
+        public const string StatisticsFileName = "report-statistics.json";
+
         private readonly IReadOnlyCollection<IReportElement> _elements;
 
         /// <summary>
@@ -135,12 +137,36 @@ namespace QuantConnect.Report
         public string Compile()
         {
             var html = File.ReadAllText(_template);
+            var statistics = new Dictionary<string, object>();
 
             // Render the output and replace the report section
             foreach (var element in _elements)
             {
                 Log.Trace($"QuantConnect.Report.Compile(): Rendering {element.Name}...");
                 html = html.Replace(element.Key, element.Render());
+
+                if (element is TextReportElement || element is CrisisReportElement || (element as ReportElement) == null)
+                {
+                    continue;
+                }
+
+                var reportElement = element as ReportElement;
+                statistics[reportElement.JsonKey] = reportElement.Result;
+            }
+
+            try
+            {
+                if (File.Exists(StatisticsFileName))
+                {
+                    File.Delete(StatisticsFileName);
+                }
+
+                File.WriteAllText(StatisticsFileName, JsonConvert.SerializeObject(statistics, Formatting.None));
+                Log.Trace($"Report.Compile(): Statistics have been written to disk: {StatisticsFileName}");
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, $"Writing statistics to output file {StatisticsFileName} failed.");
             }
 
             return html;
