@@ -40,6 +40,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
     <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
+    <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
     <PackageReference Include="QuantConnect.IBAutomater" Version="1.0.43" />
