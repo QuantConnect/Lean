@@ -122,7 +122,7 @@ namespace QuantConnect.Messaging
                         }
 
                         var orderHash = result.Results.Orders.GetHash();
-                        result.Results.Statistics.Add("OrderListHash", orderHash.ToString(CultureInfo.InvariantCulture));
+                        result.Results.Statistics.Add("OrderListHash", orderHash);
 
                         if (UpdateRegressionStatistics && _job.Language == Language.CSharp)
                         {
