@@ -59,7 +59,7 @@ namespace QuantConnect.Logging
 #if DEBUG
             Console.ForegroundColor = ConsoleColor.Red;
 #endif
-            _error.WriteLine(DateTime.Now.ToString(_dateFormat, CultureInfo.InvariantCulture) + " ERROR:: " + text);
+            _error.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} ERROR:: {text}");
 #if DEBUG
             Console.ResetColor();
 #endif
@@ -71,7 +71,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The debug text to log</param>
         public virtual void Debug(string text)
         {
-            _trace.WriteLine(DateTime.Now.ToString(_dateFormat, CultureInfo.InvariantCulture) + " DEBUG:: " + text);
+            _trace.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} DEBUG:: {text}");
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The trace text to log</param>
         public virtual void Trace(string text)
         {
-            _trace.WriteLine(DateTime.Now.ToString(_dateFormat, CultureInfo.InvariantCulture) + " Trace:: " + text);
+            _trace.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} TRACE:: {text}");
         }
 
         /// <summary>
