@@ -47,7 +47,9 @@ namespace QuantConnect.Report.ReportElements
         {
             if (_live == null)
             {
-                return _backtest?.TotalPerformance?.PortfolioStatistics?.Drawdown.ToString("P1") ?? "-";
+                var backtestDrawdown = _backtest?.TotalPerformance?.PortfolioStatistics?.Drawdown;
+                Result = backtestDrawdown;
+                return backtestDrawdown?.ToString("P1") ?? "-";
             }
 
             var backtestEquityPoints = new Series<DateTime, double>(ResultsUtil.EquityPoints(_backtest));
@@ -62,6 +64,7 @@ namespace QuantConnect.Report.ReportElements
                 .OrderByDescending(x => x)
                 .FirstOrDefault();
 
+            Result = separateResultsMaxDrawdown;
             return $"{separateResultsMaxDrawdown:P1}";
         }
     }

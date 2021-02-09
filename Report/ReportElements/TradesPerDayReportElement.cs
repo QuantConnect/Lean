@@ -72,6 +72,7 @@ namespace QuantConnect.Report.ReportElements
             }
 
             var tradesPerDay = orders.Count() / days;
+            Result = tradesPerDay;
 
             if (tradesPerDay > 9)
             {
