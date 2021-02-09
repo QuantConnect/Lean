@@ -35,9 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
         // We assert the following occur in FIFO order in OnOrderEvent
         readonly private Queue<string> _expectedEvents = new Queue<string>(new[]
         {
-            "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 152.8624 USD LimitPrice: 152.519 TriggerPrice: 151.769 OrderFee: 1 USD",
-            "Time: 10/10/2013 15:47:00 OrderID: 73 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 153.8677 USD LimitPrice: 153.8898 TriggerPrice: 153.1398 OrderFee: 1 USD",
-            "Time: 10/11/2013 14:00:00 OrderID: 74 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 154.8768 USD LimitPrice: 154.8768 TriggerPrice: 154.1268 OrderFee: 1 USD",
+            "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 152.519 USD LimitPrice: 152.519 TriggerPrice: 151.769 OrderFee: 1 USD",
+            "Time: 10/10/2013 15:55:00 OrderID: 73 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 153.8898 USD LimitPrice: 153.8898 TriggerPrice: 153.1398 OrderFee: 1 USD",
+            "Time: 10/11/2013 14:02:00 OrderID: 74 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 154.9317 USD LimitPrice: 154.9317 TriggerPrice: 154.1817 OrderFee: 1 USD",
         });
 
         /// <summary>
@@ -134,28 +134,28 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.344%"},
+            {"Compounding Annual Return", "-0.355%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Net Profit", "-0.008%"},
-            {"Sharpe Ratio", "-10.164"},
+            {"Sharpe Ratio", "-10.093"},
             {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "-0.002"},
-            {"Beta", "-0.001"},
+            {"Beta", "-0.002"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
             {"Information Ratio", "-4.216"},
             {"Tracking Error", "0.186"},
-            {"Treynor Ratio", "2.304"},
+            {"Treynor Ratio", "2.247"},
             {"Total Fees", "$3.00"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-13.582"},
-            {"Return Over Maximum Drawdown", "-43.394"},
+            {"Sortino Ratio", "-15.984"},
+            {"Return Over Maximum Drawdown", "-43.392"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -170,7 +170,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-489124022"}
+            {"OrderListHash", "943725620"}
         };
     }
 }
