@@ -145,7 +145,7 @@ namespace QuantConnect.Logging
         /// <summary>
         /// Output to the console
         /// </summary>
-        /// <param name="text">The messaage to show</param>
+        /// <param name="text">The message to show</param>
         /// <param name="level">debug level</param>
         public static void Debug(string text, int level = 1)
         {
