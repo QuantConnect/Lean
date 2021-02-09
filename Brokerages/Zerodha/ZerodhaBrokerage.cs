@@ -903,9 +903,9 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     return holdingsList;
                 }
+                
                 foreach (var item in HoldingResponse)
                 {
-
                     Holding holding = new Holding
                     {
                         AveragePrice = item.AveragePrice,
@@ -916,12 +916,10 @@ namespace QuantConnect.Brokerages.Zerodha
                         UnrealizedPnL = item.PNL,
                         CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
                         MarketValue = item.ClosePrice * item.Quantity
-
                     };
                     holdingsList.Add(holding);
                 }
             }
-            
 
             return holdingsList;
         }
