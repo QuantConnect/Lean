@@ -34,7 +34,12 @@ namespace QuantConnect.Orders
         /// Specify to update the stop price of the order
         /// </summary>
         public decimal? StopPrice { get; set; }
-
+        
+        /// <summary>
+        /// Specify to update the trigger price of the order
+        /// </summary>
+        public decimal? TriggerPrice { get; set; }
+        
         /// <summary>
         /// Specify to update the order's tag
         /// </summary>

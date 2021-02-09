@@ -465,8 +465,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             
             // |---> Lastly, ensure that quote data used to fill
             security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, 
-                    new Bar(100m, 100m, 99m, 99m), 100, // Bid bar
-                    new Bar(100m, 100m, 99m, 99m), 100) // Ask bar
+                    new Bar(100m, 100m, 100m, 100m), 100, // Bid bar
+                    new Bar(100m, 100m, 100m, 100m), 100) // Ask bar
             );
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
