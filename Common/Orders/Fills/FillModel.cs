@@ -374,7 +374,6 @@ namespace QuantConnect.Orders.Fills
                         if (GetAskPrice(asset, out pricesEndTime) >= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            // Fill price conditional on open
                             fill.FillPrice = order.LimitPrice;                            
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
@@ -391,7 +390,6 @@ namespace QuantConnect.Orders.Fills
                         if (GetBidPrice(asset, out pricesEndTime) <= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            // Fill price conditional on open
                             fill.FillPrice = order.LimitPrice;                            
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
@@ -428,7 +426,6 @@ namespace QuantConnect.Orders.Fills
             {
                 return fill;
             }
-
             //Get the range of prices in the last bar:
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -546,7 +543,6 @@ namespace QuantConnect.Orders.Fills
             {
                 return fill;
             }
-
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
@@ -720,7 +716,6 @@ namespace QuantConnect.Orders.Fills
             {
                 return PythonWrapper.GetPrices(asset, direction);
             }
-
             return GetPrices(asset, direction);
         }
 
@@ -801,7 +796,6 @@ namespace QuantConnect.Orders.Fills
                     return false;
                 }
             }
-
             return true;
         }
 

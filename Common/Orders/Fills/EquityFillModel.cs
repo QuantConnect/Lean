@@ -183,7 +183,7 @@ namespace QuantConnect.Orders.Fills
                         if (askCurrent <= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = Math.Max(askCurrent, order.LimitPrice);
+                            fill.FillPrice = Math.Min(askCurrent, order.LimitPrice);
                             fill.FillQuantity = order.Quantity;
                         }
                     }
@@ -200,7 +200,7 @@ namespace QuantConnect.Orders.Fills
                         if (bidCurrent >= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = Math.Min(bidCurrent, order.LimitPrice);
+                            fill.FillPrice = Math.Max(bidCurrent, order.LimitPrice);
                             fill.FillQuantity = order.Quantity;
                         }
                     }
@@ -708,6 +708,7 @@ namespace QuantConnect.Orders.Fills
 
             throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data subscription were found.");
         }
+
 
         /// <summary>
         /// This is required due to a limitation in PythonNet to resolved
