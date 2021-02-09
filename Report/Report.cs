@@ -134,9 +134,9 @@ namespace QuantConnect.Report
         /// Compile the backtest data into a report
         /// </summary>
         /// <returns></returns>
-        public string Compile()
+        public void Compile(out string html, out string reportStatistics)
         {
-            var html = File.ReadAllText(_template);
+            html = File.ReadAllText(_template);
             var statistics = new Dictionary<string, object>();
 
             // Render the output and replace the report section
@@ -154,22 +154,7 @@ namespace QuantConnect.Report
                 statistics[reportElement.JsonKey] = reportElement.Result;
             }
 
-            try
-            {
-                if (File.Exists(StatisticsFileName))
-                {
-                    File.Delete(StatisticsFileName);
-                }
-
-                File.WriteAllText(StatisticsFileName, JsonConvert.SerializeObject(statistics, Formatting.None));
-                Log.Trace($"Report.Compile(): Statistics have been written to disk: {StatisticsFileName}");
-            }
-            catch (Exception err)
-            {
-                Log.Error(err, $"Writing statistics to output file {StatisticsFileName} failed.");
-            }
-
-            return html;
+            reportStatistics = JsonConvert.SerializeObject(statistics, Formatting.None);
         }
     }
 }
