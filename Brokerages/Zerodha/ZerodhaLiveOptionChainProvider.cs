@@ -20,6 +20,10 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
+    /// <summary>
+    /// An implementation of <see cref="IOptionChainProvider"/> that fetches the list of contracts
+    /// from the Zerodha daily tradable CSV instruments list.
+    /// </summary>
     public class ZerodhaLiveOptionChainProvider : IOptionChainProvider
     {
         private readonly ZerodhaSymbolMapper symbolMapper;

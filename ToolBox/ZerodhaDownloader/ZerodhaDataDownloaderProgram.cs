@@ -123,7 +123,6 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
                     }
                 }
             }
-            //TODO:Throw exception
             catch (Exception err)
             {
                 Log.Error($"ZerodhaDataDownloadManager.OnError(): Message: {err.Message} Exception: {err.InnerException}");

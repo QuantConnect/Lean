@@ -870,7 +870,7 @@ namespace QuantConnect.Brokerages.Zerodha
         public override List<Holding> GetAccountHoldings()
         {
             var holdingsList = new List<Holding>();
-            if (_zerodhaProductType.ToUpperInvariant() == KiteProductType.MIS.ToString().ToUpperInvariant())
+            if (_zerodhaProductType.ToUpperInvariant() == KiteProductType.MIS.ToString().ToUpperInvariant() || _zerodhaProductType.ToUpperInvariant() == KiteProductType.NRML.ToString().ToUpperInvariant())
             {
                 var HoldingResponse = _kite.GetPositions();
                 if (HoldingResponse.Day.Count == 0)
@@ -921,10 +921,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     holdingsList.Add(holding);
                 }
             }
-            else
-            {
-                //TODO: Pending for the NRML product type
-            }
+            
 
             return holdingsList;
         }
