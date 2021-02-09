@@ -319,7 +319,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="orders">The order collection</param>
         /// <returns>The hash value</returns>
-        public static int GetHash(this IDictionary<int, Order> orders)
+        public static string GetHash(this IDictionary<int, Order> orders)
         {
             var joinedOrders = string.Join(
                 ",",
@@ -351,7 +351,7 @@ namespace QuantConnect
                     )
             );
 
-            return int.Parse(joinedOrders.ToMD5().Substring(0, 8), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            return joinedOrders.ToMD5();
         }
 
         /// <summary>

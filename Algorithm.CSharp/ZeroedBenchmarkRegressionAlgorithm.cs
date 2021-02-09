@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "909457271"}
+            {"OrderListHash", "363537773ab1fd28273b257f3ee0594a"}
         };
 
         internal class TestBrokerageModel : DefaultBrokerageModel
