@@ -23,15 +23,19 @@ namespace QuantConnect.Brokerages.Zerodha
     public class ZerodhaLiveOptionChainProvider : IOptionChainProvider
     {
         private readonly ZerodhaSymbolMapper symbolMapper;
+        private readonly Kite kite;
+        private readonly string exchange;
 
-        public ZerodhaLiveOptionChainProvider(ZerodhaSymbolMapper _symbolMapper)
+        public ZerodhaLiveOptionChainProvider(ZerodhaSymbolMapper _symbolMapper,Kite kiteClient,string exchange = "NSE")
         {
             symbolMapper = _symbolMapper;
+            kite = kiteClient;
+            exchange = exchange;
         }
 
         public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
         {
-            return symbolMapper.KnownSymbols.Where(s => s.SecurityType == SecurityType.Option && s.ID.Symbol == symbol.Underlying.Value);
+            return symbolMapper.GetTradableInstrumentsList(kite,exchange).Where(s => s.SecurityType == SecurityType.Option && s.ID.Symbol == symbol.Underlying.Value);
         }
     }
 }

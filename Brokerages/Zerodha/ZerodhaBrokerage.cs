@@ -1041,7 +1041,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 yield return new TradeBar()
                 {
-                    Time = candle.TimeStamp,
+                    Time = candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),
                     Symbol = symbol,
                     Low = candle.Low,
                     High = candle.High,
@@ -1051,7 +1051,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     Value = candle.Close,
                     DataType = MarketDataType.TradeBar,
                     Period = period,
-                    EndTime = candle.TimeStamp.Add(period)
+                    EndTime = candle.TimeStamp.Add(period).ConvertFromUtc(TimeZones.Kolkata)
                 };
             }
         }
@@ -1125,10 +1125,10 @@ namespace QuantConnect.Brokerages.Zerodha
                             {
                                 var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(tick.InstrumentToken);
 
-                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity, tick.Timestamp.GetValueOrDefault());
+                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity, tick.Timestamp.GetValueOrDefault().ConvertFromUtc(TimeZones.Kolkata));
                                 if (_lastTradeTickTime != tick.LastTradeTime.GetValueOrDefault())
                                 {
-                                    EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault(), tick.LastPrice, tick.LastQuantity);
+                                    EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault().ConvertFromUtc(TimeZones.Kolkata), tick.LastPrice, tick.LastQuantity);
                                     _lastTradeTickTime = tick.LastTradeTime.GetValueOrDefault();
                                 }
                             }
