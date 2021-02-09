@@ -308,7 +308,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
                     var orderEvent = new OrderEvent
                     (
-                        order.Id, symbol, updTime.ConvertToUtc(), status,
+                        order.Id, symbol, updTime, status,
                         direction, fillPrice, fillQuantity,
                         orderFee, $"Zerodha Order Event {direction}"
                     );
@@ -887,7 +887,7 @@ namespace QuantConnect.Brokerages.Zerodha
                         MarketPrice = item.LastPrice,
                         Quantity = item.Quantity,
                         Type = SecurityType.Equity,
-                        UnrealizedPnL = item.PNL, //(item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
+                        UnrealizedPnL = item.Unrealised,
                         CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
                         MarketValue = item.ClosePrice * item.Quantity
 
@@ -913,7 +913,7 @@ namespace QuantConnect.Brokerages.Zerodha
                         MarketPrice = item.LastPrice,
                         Quantity = item.Quantity,
                         Type = SecurityType.Equity,
-                        UnrealizedPnL = item.PNL, //(item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
+                        UnrealizedPnL = item.PNL,
                         CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
                         MarketValue = item.ClosePrice * item.Quantity
 
