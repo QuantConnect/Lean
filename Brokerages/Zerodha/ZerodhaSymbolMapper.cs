@@ -15,7 +15,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using QuantConnect.Brokerages.Zerodha.Messages;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Zerodha
@@ -124,26 +126,39 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     var strikePrice = tp.Strike;
                     var expiryDate = tp.Expiry;
-                    var symbol = GetLeanSymbol(tp.TradingSymbol.Trim().Replace(" ", ""), securityType, market, (DateTime)expiryDate, strikePrice, optionRight);
-                    symbols.Add(symbol);
-                    zerodhaInstrumentsMapping.Add(tp.TradingSymbol.Trim().Replace(" ", "") + "-" + market, tp.InstrumentToken);
+                    //TODO: Handle parsing of BCDOPT strike price
+                    if(tp.Segment!= "BCD-OPT")
+                    {
+                        var symbol = GetLeanSymbol(tp.TradingSymbol.Trim().Replace(" ", ""), securityType, market, (DateTime)expiryDate, GetStrikePrice(tp), optionRight);
+                        symbols.Add(symbol);
+                        zerodhaInstrumentsMapping.Add(tp.TradingSymbol.Trim().Replace(" ", "") + "^" + market, tp.InstrumentToken);
+                    }                    
                 }
                 if (securityType == SecurityType.Future)
                 {
                     var expiryDate = tp.Expiry;
                     var symbol = GetLeanSymbol(tp.TradingSymbol.Trim().Replace(" ", ""), securityType, market, (DateTime)expiryDate);
                     symbols.Add(symbol);
-                    zerodhaInstrumentsMapping.Add(tp.TradingSymbol.Trim().Replace(" ", "") + "-" + market, tp.InstrumentToken);
+                    zerodhaInstrumentsMapping.Add(tp.TradingSymbol.Trim().Replace(" ", "") + "^" + market, tp.InstrumentToken);
                 }
                 if (securityType == SecurityType.Equity)
                 {
                     var symbol = GetLeanSymbol(tp.TradingSymbol.Trim().Replace(" ", ""), securityType, market);
                     symbols.Add(symbol);
-                    zerodhaInstrumentsMapping.Add(tp.TradingSymbol.Trim().Replace(" ", "") + "-" + market, tp.InstrumentToken);
+                    zerodhaInstrumentsMapping.Add(tp.TradingSymbol.Trim().Replace(" ", "") + "^" + market, tp.InstrumentToken);
                 }
             }
             ZerodhaInstrumentsList = zerodhaInstrumentsMapping;
             return symbols;
+        }
+
+        private decimal GetStrikePrice(CsvInstrument scrip)
+        {
+            var strikePrice = scrip.TradingSymbol.Trim().Replace(" ", "").Replace(scrip.Name, "");
+            var strikePriceTemp = strikePrice.Substring(5, strikePrice.Length - 5);
+            var strikePriceResult = strikePriceTemp.Substring(0, strikePriceTemp.Length - 2);
+
+            return Convert.ToDecimal(strikePriceResult, CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -231,9 +246,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>A new Lean Symbol instance</returns>
         public uint GetZerodhaInstrumentToken(string brokerageSymbol, string market)
         {
-            var symbol = KnownSymbols.Where(s => s.Value == brokerageSymbol.Replace(" ", "").Trim()).FirstOrDefault();
+            var symbol = KnownSymbols.Where(s => s.Value == brokerageSymbol.Replace(" ", "").Trim() && s.ID.Market.ToUpperInvariant()==market.ToUpperInvariant()).FirstOrDefault();
             uint token = 0;
-            if (symbol != null && ZerodhaInstrumentsList.TryGetValue(symbol.ID.Symbol + "-" + symbol.ID.Market, out token))
+            if (symbol != null && ZerodhaInstrumentsList.TryGetValue(symbol.ID.Symbol + "^" + symbol.ID.Market, out token))
             {
                 return token;
             }
@@ -271,7 +286,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         public Symbol ConvertZerodhaSymbolToLeanSymbol(uint ZerodhaSymbol)
         {
-            var _symbol = ZerodhaInstrumentsList.FirstOrDefault(x => x.Value == ZerodhaSymbol).Key.Split("-".ToCharArray());
+            var _symbol = ZerodhaInstrumentsList.FirstOrDefault(x => x.Value == ZerodhaSymbol).Key.Replace(" ","").Split("^".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
             // return as it is due to Zerodha has similar Symbol format
             return KnownSymbolsList.Where(s => s.Value == _symbol[0] && s.ID.Market == _symbol[1]).FirstOrDefault();

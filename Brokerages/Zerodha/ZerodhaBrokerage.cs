@@ -972,7 +972,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 yield break;
             }
 
-           
+
             DateTime latestTime = request.StartTimeUtc;
             var requests = new List<HistoryRequest>();
             requests.Add(request);
