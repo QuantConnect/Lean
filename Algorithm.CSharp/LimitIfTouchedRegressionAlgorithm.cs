@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -72,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var orderRequest = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "SPY",
                     _negative * 10, 0,
                     data["SPY"].Price - (decimal) _negative, data["SPY"].Price - (decimal) 0.25 * _negative, UtcTime,
-                    $"LIT - {UtcTime}, Quantity: {_negative * 10}");
+                    $"LIT - {UtcTime.ToString(CultureInfo.InvariantCulture)}, Quantity: {_negative * 10}");
                 _request = Transactions.AddOrder(orderRequest);
                 Debug($"Submitted: {_request.Tag}");
                 return;
