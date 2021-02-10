@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
                     new UpdateOrderFields
                     {
                         Quantity = _request.Quantity - _negative,
-                        Tag = $"LIT - Time: {UtcTime}, Quantity: {_request.Quantity - _negative}"
+                        Tag = $"LIT - Time: {UtcTime.ToString(CultureInfo.InvariantCulture)}, Quantity: {_request.Quantity - _negative}"
                     }));
             }
         }
@@ -171,7 +171,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "475ce10474bd16b15e79c751f4e6b79a"}
+            {"OrderListHash", "013f0be632044268fcb72f087872bb94"}
         };
     }
 }
