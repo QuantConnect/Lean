@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var orderRequest = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "SPY",
                     _negative * 10, 0,
                     data["SPY"].Price - (decimal) _negative, data["SPY"].Price - (decimal) 0.25 * _negative, UtcTime,
-                    $"LIT - {UtcTime.ToString(CultureInfo.InvariantCulture)}, Quantity: {_negative * 10}");
+                    $"LIT - {UtcTime.ToString(DateFormat.US, CultureInfo.InvariantCulture)}, Quantity: {_negative * 10}");
                 _request = Transactions.AddOrder(orderRequest);
                 Debug($"Submitted: {_request.Tag}");
                 return;
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
                     new UpdateOrderFields
                     {
                         Quantity = _request.Quantity - _negative,
-                        Tag = $"LIT - Time: {UtcTime.ToString(CultureInfo.InvariantCulture)}, Quantity: {_request.Quantity - _negative}"
+                        Tag = $"LIT - Time: {UtcTime.ToString(DateFormat.US, CultureInfo.InvariantCulture)}, Quantity: {_request.Quantity - _negative}"
                     }));
             }
         }
@@ -112,8 +112,6 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"orderEvent {orderEvent.Id} differed from {expected}");
                 }
-
-                Debug($"{orderEvent}");
             }
         }
 
@@ -171,7 +169,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "013f0be632044268fcb72f087872bb94"}
+            {"OrderListHash", "21eabcf9fd410ea14403b44213ebfdec"}
         };
     }
 }
