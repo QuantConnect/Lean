@@ -18,7 +18,7 @@ namespace QuantConnect.Report.ReportElements
     /// <summary>
     /// Common interface for template elements of the report
     /// </summary>
-    internal abstract class ReportElement : IReportElement
+    public abstract class ReportElement : IReportElement
     {
         /// <summary>
         /// Name of this report element
