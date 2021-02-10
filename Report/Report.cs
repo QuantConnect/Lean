@@ -30,6 +30,8 @@ namespace QuantConnect.Report
     public class Report
     {
         private const string _template = "template.html";
+        public const string StatisticsFileName = "report-statistics.json";
+
         private readonly IReadOnlyCollection<IReportElement> _elements;
 
         /// <summary>
@@ -132,18 +134,27 @@ namespace QuantConnect.Report
         /// Compile the backtest data into a report
         /// </summary>
         /// <returns></returns>
-        public string Compile()
+        public void Compile(out string html, out string reportStatistics)
         {
-            var html = File.ReadAllText(_template);
+            html = File.ReadAllText(_template);
+            var statistics = new Dictionary<string, object>();
 
             // Render the output and replace the report section
             foreach (var element in _elements)
             {
                 Log.Trace($"QuantConnect.Report.Compile(): Rendering {element.Name}...");
                 html = html.Replace(element.Key, element.Render());
+
+                if (element is TextReportElement || element is CrisisReportElement || (element as ReportElement) == null)
+                {
+                    continue;
+                }
+
+                var reportElement = element as ReportElement;
+                statistics[reportElement.JsonKey] = reportElement.Result;
             }
 
-            return html;
+            reportStatistics = JsonConvert.SerializeObject(statistics, Formatting.None);
         }
     }
 }
