@@ -309,8 +309,12 @@ namespace QuantConnect.Orders.Fills
         ///     There is no good way to model limit orders with OHLC because we never know whether the market has
         ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
         ///
-        ///     With limit if touched, we can't be sure of the order of the H - L values for the limit fill. The assumption
-        ///     was made the limit fill will be done with closing price of the bar after the trigger has been reached.
+        ///     With Limit if Touched orders, whether or not a trigger is surpassed is determined by the high (low)
+        ///     of the previous tradebar when making a sell (buy) request. Following the behaviour of
+        ///     <see cref="StopLimitFill"/>, current quote information is used when determining fill parameters
+        ///     (e.g., price, quantity) as the tradebar containing the incoming data is not yet consolidated.
+        ///     This conservative approach, however, can lead to trades not occuring as would be expected when
+        ///     compared to future consolidated data.
         /// </remarks>
         public virtual OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
         {
