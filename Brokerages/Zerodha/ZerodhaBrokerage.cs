@@ -1120,10 +1120,10 @@ namespace QuantConnect.Brokerages.Zerodha
                             {
                                 var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(tick.InstrumentToken);
 
-                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity, tick.Timestamp.GetValueOrDefault().ConvertFromUtc(TimeZones.Kolkata));
+                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity, tick.Timestamp.GetValueOrDefault());
                                 if (_lastTradeTickTime != tick.LastTradeTime.GetValueOrDefault())
                                 {
-                                    EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault().ConvertFromUtc(TimeZones.Kolkata), tick.LastPrice, tick.LastQuantity);
+                                    EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault(), tick.LastPrice, tick.LastQuantity);
                                     _lastTradeTickTime = tick.LastTradeTime.GetValueOrDefault();
                                 }
                             }
