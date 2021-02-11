@@ -6,12 +6,11 @@
     <AssemblyName>QuantConnect.Brokerages</AssemblyName>
     <TargetFramework>net462</TargetFramework>
     <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <DefineConstants>NET45</DefineConstants>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Brokerages.xml</DocumentationFile>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
   </PropertyGroup>
@@ -31,15 +30,10 @@
   </Target>
   <ItemGroup>
     <PackageReference Include="IKVM" Version="8.1.5717.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
-    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
-    <PackageReference Include="Microsoft.Net.Compilers" Version="2.10.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
-    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />

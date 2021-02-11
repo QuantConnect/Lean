@@ -7,10 +7,9 @@
     <TargetFramework>net462</TargetFramework>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
@@ -55,16 +54,11 @@
     <PackageReference Include="IKVM" Version="8.1.5717.0" />
     <PackageReference Include="LaunchDarkly.EventSource" Version="3.3.2" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.6.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
-    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
-    <PackageReference Include="Microsoft.Net.Compilers" Version="2.10.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
-    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
-    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.8.3" />
     <PackageReference Include="Mono.Cecil" Version="0.11.3" />
     <PackageReference Include="Moq" Version="4.7.63" />
