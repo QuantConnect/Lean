@@ -7,10 +7,9 @@
     <AssemblyName>QuantConnect.Lean.Launcher</AssemblyName>
     <TargetFramework>net462</TargetFramework>
     <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
@@ -36,15 +35,10 @@
   <ItemGroup>
     <PackageReference Include="DynamicInterop" Version="0.7.4" />
     <PackageReference Include="IKVM" Version="8.1.5717.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
-    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
-    <PackageReference Include="Microsoft.Net.Compilers" Version="2.10.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
-    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
     <PackageReference Include="R.NET.Community" Version="1.6.5" />
     <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
   </ItemGroup>
