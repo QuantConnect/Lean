@@ -33,6 +33,7 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 using NodaTime;
 using QuantConnect.Data.Market;
+using QuantConnect.Configuration;
 
 using Order = QuantConnect.Orders.Order;
 using OrderType = QuantConnect.Orders.OrderType;
@@ -150,7 +151,7 @@ namespace QuantConnect.Brokerages.Zerodha
             _symbolMapper = new ZerodhaSymbolMapper(_kite);
 
             //Attach LiveOptionChainProvider
-            algorithm.SetOptionChainProvider(new ZerodhaLiveOptionChainProvider(_symbolMapper,_kite));
+            algorithm.SetOptionChainProvider(new ZerodhaLiveOptionChainProvider(_symbolMapper, _kite));
 
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             subscriptionManager.SubscribeImpl += (s, t) =>
@@ -903,7 +904,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     return holdingsList;
                 }
-                
+
                 foreach (var item in HoldingResponse)
                 {
                     Holding holding = new Holding
@@ -994,20 +995,22 @@ namespace QuantConnect.Brokerages.Zerodha
 
                 var history = Enumerable.Empty<BaseData>();
 
-
-                switch (historyRequest.Resolution)
+                if (Config.GetBool("zerodha-history-subscription"))
                 {
-                    case Resolution.Minute:
-                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "minute");
-                        break;
+                    switch (historyRequest.Resolution)
+                    {
+                        case Resolution.Minute:
+                            history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "minute");
+                            break;
 
-                    case Resolution.Hour:
-                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "60minute");
-                        break;
+                        case Resolution.Hour:
+                            history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "60minute");
+                            break;
 
-                    case Resolution.Daily:
-                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "day");
-                        break;
+                        case Resolution.Daily:
+                            history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "day");
+                            break;
+                    }
                 }
 
                 foreach (var baseData in history)
