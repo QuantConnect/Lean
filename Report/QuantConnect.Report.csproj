@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>QuantConnect.Report</RootNamespace>
     <AssemblyName>QuantConnect.Report</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
