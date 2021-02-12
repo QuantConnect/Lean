@@ -55,10 +55,6 @@ namespace QuantConnect.Lean.Engine
         private readonly bool _liveMode;
 
         private DateTime? _lastHistoryTimeUtc;
-        private bool _setStartTime;
-        private TimeSpan _minimumIncrement;
-        private DateTime _nextStatusTime;
-        private long _warmUpStartTicks;
         private AlgorithmWarmupState _warmupState;
         private readonly ConcurrentQueue<TimeSlice> _historicalTimeSlicesQueue = new ConcurrentQueue<TimeSlice>();
         private readonly ConcurrentQueue<TimeSlice> _tempSynchronizerTimeSlicesQueue = new ConcurrentQueue<TimeSlice>();
@@ -179,7 +175,7 @@ namespace QuantConnect.Lean.Engine
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
-            foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
+            foreach (var timeSlice in Stream(algorithm, synchronizer, token))
             {
                 // reset our timer on each loop
                 TimeLimit.StartNewTimeStep();
@@ -703,7 +699,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, ISynchronizer synchronizer, IResultHandler results, CancellationToken cancellationToken)
+        private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, ISynchronizer synchronizer, CancellationToken cancellationToken)
         {
             // fulfilling history requirements of volatility models in live mode
             if (algorithm.LiveMode)
@@ -715,10 +711,10 @@ namespace QuantConnect.Lean.Engine
                 _algorithm.SetFinishedWarmingUp();
             }
 
-            return ProcessSynchronizerTimeSlices(algorithm, synchronizer, results, cancellationToken);
+            return ProcessSynchronizerTimeSlices(algorithm, synchronizer, cancellationToken);
         }
 
-        private IEnumerable<TimeSlice> ProcessSynchronizerTimeSlices(IAlgorithm algorithm, ISynchronizer synchronizer, IResultHandler results, CancellationToken cancellationToken)
+        private IEnumerable<TimeSlice> ProcessSynchronizerTimeSlices(IAlgorithm algorithm, ISynchronizer synchronizer, CancellationToken cancellationToken)
         {
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
@@ -738,14 +734,15 @@ namespace QuantConnect.Lean.Engine
                         }
                         else
                         {
+                            _warmupState = AlgorithmWarmupState.Running;
+
                             // We don't want to miss ticks from synchronizer
                             // So we will retrieve history in another thread
                             Task.Run(() =>
                             {
-                                ProcessHistoryTimeSlices(historyRequests, results);
+                                ProcessHistoryTimeSlices(historyRequests);
                             }, cancellationToken);
 
-                            _warmupState = AlgorithmWarmupState.Running;
                             // Continue no yield
                             continue;
                         }
@@ -758,7 +755,9 @@ namespace QuantConnect.Lean.Engine
                             case AlgorithmWarmupState.Running:
                             {
                                 // Place timeslice to the temporary queue
+                                // while algorithm is warming up, i.e retrieving historical data in another thread
                                 _tempSynchronizerTimeSlicesQueue.Enqueue(timeSlice);
+
                                 // No yield just continue
                                 continue;
                             }
@@ -778,13 +777,17 @@ namespace QuantConnect.Lean.Engine
                                     // the history for warmup, so there will be some overlap between the data
                                     if (_lastHistoryTimeUtc.HasValue)
                                     {
-                                        if (ts.Time.RoundDown(TimeSpan.FromSeconds(1)) <= _lastHistoryTimeUtc.Value)
+                                        if (ts.Time <= _lastHistoryTimeUtc.Value)
                                         {
                                             continue;
                                         }
                                     }
                                     yield return ts;
                                 }
+
+                                algorithm.SetFinishedWarmingUp();
+                                Log.Trace("Algorithm finished warming up.");
+
                                 break;
                             }
                         }
@@ -794,45 +797,24 @@ namespace QuantConnect.Lean.Engine
                     {
                         continue;
                     }
-
-                    // in live mode wait to mark us as finished warming up when
-                    // the data feed has caught up to now within the min increment
-                    if (timeSlice.Time > DateTime.UtcNow.Subtract(_minimumIncrement))
-                    {
-                        algorithm.SetFinishedWarmingUp();
-                        algorithm.Debug("Algorithm finished warming up.");
-                        Log.Trace("AlgorithmManager.Stream(): Finished warmup");
-                    }
-                    else if (DateTime.UtcNow > _nextStatusTime)
-                    {
-                        // send some status to the user letting them know we're done history, but still warming up,
-                        // catching up to real time data
-                        _nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-                        var percent = (int)(100 * (timeSlice.Time.Ticks - _warmUpStartTicks) / (double)(DateTime.UtcNow.Ticks - _warmUpStartTicks));
-                        results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
-                    }
                 }
+
                 yield return timeSlice;
             }
         }
 
-        private void ProcessHistoryTimeSlices(ICollection<HistoryRequest> historyRequests, IResultHandler results)
+        private void ProcessHistoryTimeSlices(ICollection<HistoryRequest> historyRequests)
         {
             var timeZone = _algorithm.TimeZone;
             var history = _algorithm.HistoryProvider;
 
             // initialize variables for progress computation
-            _warmUpStartTicks = DateTime.UtcNow.Ticks;
-            _nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-            _minimumIncrement = _algorithm.UniverseManager
-                .Select(x => x.Value.UniverseSettings?.Resolution.ToTimeSpan() ?? _algorithm.UniverseSettings.Resolution.ToTimeSpan())
-                .DefaultIfEmpty(Time.OneSecond)
-                .Min();
-
-            _minimumIncrement = _minimumIncrement == TimeSpan.Zero ? Time.OneSecond : _minimumIncrement;
+            var warmUpStartTicks = DateTime.UtcNow.Ticks;
 
             if (historyRequests.Count != 0)
             {
+                Log.Trace("Algorithm warming up...");
+
                 // rewrite internal feed requests
                 var subscriptions = _algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).ToList();
                 var minResolution = subscriptions.Count > 0 ? subscriptions.Min(x => x.Resolution) : Resolution.Second;
@@ -861,7 +843,7 @@ namespace QuantConnect.Lean.Engine
 
                 foreach (var request in historyRequests)
                 {
-                    _warmUpStartTicks = Math.Min(request.StartTimeUtc.Ticks, _warmUpStartTicks);
+                    warmUpStartTicks = Math.Min(request.StartTimeUtc.Ticks, warmUpStartTicks);
                     Log.Trace($"AlgorithmManager.Stream(): WarmupHistoryRequest: {request.Symbol}: Start: {request.StartTimeUtc} End: {request.EndTimeUtc} Resolution: {request.Resolution}");
                 }
 
@@ -915,20 +897,6 @@ namespace QuantConnect.Lean.Engine
 
                     if (timeSlice != null)
                     {
-                        if (!_setStartTime)
-                        {
-                            _setStartTime = true;
-                            _algorithm.Debug("Algorithm warming up...");
-                        }
-                        if (DateTime.UtcNow > _nextStatusTime)
-                        {
-                            // send some status to the user letting them know we're done history, but still warming up,
-                            // catching up to real time data
-                            _nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-                            var percent = (int)(100 * (timeSlice.Time.Ticks - _warmUpStartTicks) / (double)(DateTime.UtcNow.Ticks - _warmUpStartTicks));
-                            results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
-                        }
-
                         _historicalTimeSlicesQueue.Enqueue(timeSlice);
                         _lastHistoryTimeUtc = timeSlice.Time;
                     }
