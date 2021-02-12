@@ -255,7 +255,7 @@ namespace QuantConnect.Configuration
 
             if (type.IsEnum)
             {
-                return (T) Enum.Parse(type, value);
+                return (T) Enum.Parse(type, value, true);
             }
 
             if (typeof(IConvertible).IsAssignableFrom(type))
