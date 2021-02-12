@@ -59,12 +59,6 @@
     <PackageReference Include="SharpZipLib" Version="1.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

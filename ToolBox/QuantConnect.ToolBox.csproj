@@ -103,11 +103,6 @@
     <Reference Include="QuantConnect.Fxcm">
       <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
     </Reference>
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE">
