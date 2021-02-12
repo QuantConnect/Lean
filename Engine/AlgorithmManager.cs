@@ -876,7 +876,7 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             var config = _algorithm.SubscriptionManager.SubscriptionDataConfigService
-                                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
+                                .GetSubscriptionDataConfigs(symbol)
                                 .FirstOrDefault(subscription => dataType.IsAssignableFrom(subscription.Type));
 
                             if (config == null)

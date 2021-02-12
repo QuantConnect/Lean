@@ -167,14 +167,17 @@ namespace QuantConnect.Algorithm
         /// <returns></returns>
         public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
         {
+            var symbolsToWarmup = Securities.Values
+                .Where(s => s.IsTradable).Select(s => s.Symbol);
+
             if (_warmupBarCount.HasValue)
             {
-                return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value, _warmupResolution);
+                return CreateBarCountHistoryRequests(symbolsToWarmup, _warmupBarCount.Value, _warmupResolution);
             }
             if (_warmupTimeSpan.HasValue)
             {
                 var end = UtcTime.ConvertFromUtc(TimeZone);
-                return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end, _warmupResolution);
+                return CreateDateRangeHistoryRequests(symbolsToWarmup, end - _warmupTimeSpan.Value, end, _warmupResolution);
             }
 
             // if not warmup requested return nothing
