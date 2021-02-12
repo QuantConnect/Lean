@@ -15,7 +15,6 @@
 */
 
 using System.Diagnostics;
-using Microsoft.Win32;
 using System.Threading;
 using QuantConnect.Configuration;
 
@@ -41,29 +40,6 @@ namespace QuantConnect.ToolBox.IQFeed
                 );
         }
 
-        public string getPath()
-        {
-            var key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\DTN\\IQFeed");
-            if (key == null)
-            {
-                // if it isn't in that location, it is possible the user is running and x64 OS.  Check the windows virtualized registry location
-                key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Wow6432Node\\DTN\\IQFeed");
-            }
-            string sLocation = null;
-            if (key != null)
-            {
-                sLocation = key.GetValue("EXEDIR", "").ToString();
-                // close the key since we don't need it anymore
-                key.Close();
-                // verify there is a \ on the end before we append the exe name
-                if (!(sLocation.EndsWith("\\") || sLocation.EndsWith("/")))
-                {
-                    sLocation += "\\";
-                }
-                sLocation += "IQConnect.exe";
-            }
-            return sLocation;
-        }
         public string getArguments(IQCredentials iqc)
         {
             var arguments = "";

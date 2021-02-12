@@ -18,7 +18,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities.Future;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {

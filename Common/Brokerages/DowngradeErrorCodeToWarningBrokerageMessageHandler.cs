@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
+using System.Linq;
 using System.Collections.Generic;
-using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
