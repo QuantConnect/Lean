@@ -203,7 +203,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         /// <returns></returns>
         public OptionPosition GetUnderlyingPosition()
-            => LinqExtensions.GetValueOrDefault(_positions, Underlying, new OptionPosition(Underlying, 0));
+            => _positions.GetValueOrDefault(Underlying, new OptionPosition(Underlying, 0));
 
         /// <summary>
         /// Creates a new <see cref="OptionPositionCollection"/> from the specified enumerable of <paramref name="positions"/>
