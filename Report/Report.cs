@@ -117,11 +117,11 @@ namespace QuantConnect.Report
                 new ReturnsPerTradeReportElement("returns per trade", ReportKey.ReturnsPerTrade, backtest, live),
                 new AssetAllocationReportElement("asset allocation over time pie chart", ReportKey.AssetAllocation, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
                 new DrawdownReportElement("drawdown plot", ReportKey.Drawdown, backtest, live),
-                //new DailyReturnsReportElement("daily returns plot", ReportKey.DailyReturns, backtest, live),
-                //new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live),
-                //new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live),
-                //new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
-                //new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
+                new DailyReturnsReportElement("daily returns plot", ReportKey.DailyReturns, backtest, live),
+                new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live),
+                new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live),
+                new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
+                new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
 
                 // Array of Crisis Plots:
                 new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),
