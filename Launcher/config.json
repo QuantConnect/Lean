@@ -5,8 +5,8 @@
   // anything, and just require definition in this file. There's
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
-
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+    
+  "environment": "live-alpaca", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
   "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
@@ -112,7 +112,7 @@
   "bitfinex-api-secret": "",
   "bitfinex-api-key": "",
 
-    // binance configuration
+  // binance configuration
   "binance-api-secret": "",
   "binance-api-key": "",
 
@@ -143,7 +143,7 @@
 
   // Required for streaming Polygon.io data
   // To get your access token go to https://polygon.io
-  "polygon-api-key": "",
+  "polygon-api-key": "Fz9zXdEtzjmQ4lfj7Jt82X5AsfJ8uEyR",
 
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
@@ -310,7 +310,7 @@
       "live-mode": true,
 
       // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "AlpacaBrokerage",
+      "live-mode-brokerage": "PaperBrokerage", //"AlpacaBrokerage",
       "data-queue-handler": "PolygonDataQueueHandler",
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
