@@ -143,7 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-254.23"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

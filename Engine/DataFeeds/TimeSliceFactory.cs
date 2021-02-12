@@ -174,7 +174,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 for (var i = 0; i < list.Count; i++)
                 {
                     var baseData = list[i];
-                    if (!packet.Configuration.IsInternalFeed)
+                    if (!packet.Configuration.IsInternalFeed && !(baseData is OpenInterest))
                     {
                         // this is all the data that goes into the algorithm
                         allDataForAlgorithm.Add(baseData);

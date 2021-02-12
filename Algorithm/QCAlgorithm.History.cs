@@ -579,17 +579,25 @@ namespace QuantConnect.Algorithm
         {
             var sentMessage = false;
             // filter out any universe securities that may have made it this far
-            var reqs = requests.Where(hr => !UniverseManager.ContainsKey(hr.Symbol)).ToList();
-            foreach (var request in reqs)
+            var filteredRequests = requests.Where(hr => !UniverseManager.ContainsKey(hr.Symbol)).ToList();
+            for (var i = 0; i < filteredRequests.Count; i++)
             {
+                var request  = filteredRequests[i];
                 // prevent future requests
                 if (request.EndTimeUtc > UtcTime)
                 {
-                    request.EndTimeUtc = UtcTime;
+                    var endTimeUtc = UtcTime;
+                    var startTimeUtc = request.StartTimeUtc;
                     if (request.StartTimeUtc > request.EndTimeUtc)
                     {
-                        request.StartTimeUtc = request.EndTimeUtc;
+                        startTimeUtc = request.EndTimeUtc;
                     }
+
+                    filteredRequests[i] = new HistoryRequest(startTimeUtc, endTimeUtc,
+                        request.DataType, request.Symbol, request.Resolution, request.ExchangeHours,
+                        request.DataTimeZone, request.FillForwardResolution, request.IncludeExtendedMarketHours,
+                        request.IsCustomData, request.DataNormalizationMode, request.TickType);
+
                     if (!sentMessage)
                     {
                         sentMessage = true;
@@ -599,7 +607,7 @@ namespace QuantConnect.Algorithm
             }
 
             // filter out future data to prevent look ahead bias
-            return ((IAlgorithm)this).HistoryProvider.GetHistory(reqs, timeZone);
+            return ((IAlgorithm)this).HistoryProvider.GetHistory(filteredRequests, timeZone);
         }
 
         /// <summary>
