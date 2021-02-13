@@ -75,7 +75,6 @@ namespace QuantConnect.Algorithm.CSharp
                     data["SPY"].Price - (decimal) _negative, data["SPY"].Price - (decimal) 0.25 * _negative, UtcTime,
                     $"LIT - {UtcTime.ToString(DateFormat.US, CultureInfo.InvariantCulture)}, Quantity: {_negative * 10}");
                 _request = Transactions.AddOrder(orderRequest);
-                Debug($"Submitted: {_request.Tag}");
                 return;
             }
 
@@ -123,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages => new[] { Language.CSharp };
+        public Language[] Languages => new[] { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
