@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -66,16 +65,17 @@ namespace QuantConnect.Algorithm.CSharp
 
             // After an order is placed, it will decrease in quantity by one for each minute, being cancelled altogether
             // if not filled within 10 minutes.
-            if (Transactions.GetOpenOrders().Count < 1)
+            if (Transactions.GetOpenOrders().Count == 0)
             {
-                var goLong = Time < StartDate.AddDays(2);
+                var goLong = Time.Day < 9;
                 _negative = goLong ? 1 : -1;
                 var orderRequest = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "SPY",
                     _negative * 10, 0,
                     data["SPY"].Price - (decimal) _negative, data["SPY"].Price - (decimal) 0.25 * _negative, UtcTime,
-                    $"LIT - {UtcTime.ToString(DateFormat.US, CultureInfo.InvariantCulture)}, Quantity: {_negative * 10}");
+                    $"LIT - Quantity: {_negative * 10}");
                 _request = Transactions.AddOrder(orderRequest);
                 return;
+                
             }
 
             // Order updating if request exists 
@@ -84,16 +84,14 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_request.Quantity == 1)
                 {
                     Transactions.CancelOpenOrders();
+                    _request.Cancel();
                     _request = null;
                     return;
                 }
 
-                Transactions.UpdateOrder(new UpdateOrderRequest(DateTime.UtcNow, _request.OrderId,
-                    new UpdateOrderFields
-                    {
-                        Quantity = _request.Quantity - _negative,
-                        Tag = $"LIT - Time: {UtcTime.ToString(DateFormat.US, CultureInfo.InvariantCulture)}, Quantity: {_request.Quantity - _negative}"
-                    }));
+                var newQuantity = _request.Quantity - _negative;
+                _request.UpdateQuantity(newQuantity,
+                    $"LIT - Quantity: {newQuantity}");
             }
         }
 
@@ -168,7 +166,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "21eabcf9fd410ea14403b44213ebfdec"}
+            {"OrderListHash", "05ae058d8e98b92dcb6fa0612f9a598e"}
         };
     }
 }
