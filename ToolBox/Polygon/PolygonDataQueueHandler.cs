@@ -525,26 +525,20 @@ namespace QuantConnect.ToolBox.Polygon
                 // Skips Saturday and Sunday
                 if (!start.IsCommonBusinessDay())
                 {
-#if DEBUG
-                    Log.Trace("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
-#endif
+                    Log.Debug("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
                     start = start.Date.AddDays(1);
                     break;
                 }
                 else
                 {
-#if DEBUG
-                    Log.Trace("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
-#endif
+                    Log.Debug("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
                 }
 
                 using (var client = new WebClient())
                 {
                     var url = $"{HistoryBaseUrl}/v2/ticks/stocks/nbbo/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offsetStart}&limit={_apiResultsLimit}";
 
-#if DEBUG
-                    Log.Trace(url);
-#endif
+                    Log.Debug(url);
 
                     string response = "";
                     try
@@ -554,16 +548,14 @@ namespace QuantConnect.ToolBox.Polygon
                     catch (WebException e)
                     {
                         isException = true;
-                        offsetStart = offsetEnd;
                     }
 
-                    if ((response != "") && (isException == false) && (response != null))
+                    if ((!response.IsNullOrEmpty()) && (isException == false))
                     {
                         var obj = JObject.Parse(response);
                         var objTicks = obj["results"];
                         if ((objTicks.Type == JTokenType.Null) || (!objTicks.Any()))
                         {
-
                             offsetStart = offsetEnd;   // Set offsetStart end of the time to Finish the while loop
                         }
                         else
@@ -603,7 +595,7 @@ namespace QuantConnect.ToolBox.Polygon
                                 {
                                     quoteConditions = string.Join("", row.Conditions.Select(p => String.Format(System.Globalization.CultureInfo.GetCultureInfo("en-US"), "{0:X2}", p)));
                                 }
-                                // Adds the exchange the Tick.   Prefers the bid exchange and assumes mutually exclusive bid/ask exchange IDs on quote
+                                // Adds the exchange to the Tick.   Prefers the bid exchange and assumes mutually exclusive bid/ask exchange IDs on quote
                                 string exchange = "";
                                 if (row.BidExchange != null)
                                 {
@@ -648,27 +640,21 @@ namespace QuantConnect.ToolBox.Polygon
                 // Skips Saturday and Sunday
                 if (!start.IsCommonBusinessDay())
                 {
-#if DEBUG
-                    Log.Trace("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
-#endif
+                    Log.Debug("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
                     start = start.Date.AddDays(1);
                     break;
                 }
                 else
                 {
-#if DEBUG
-                    Log.Trace("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
-#endif
+                    Log.Debug("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
                 }
 
                 using (var client = new WebClient())
                 {
                     var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offsetStart}&limit={_apiResultsLimit}";
 
-#if DEBUG
-                    Log.Trace(url);
-#endif
-                    
+                    Log.Debug(url);
+
                     string response = "";
                     try
                     {
@@ -720,7 +706,7 @@ namespace QuantConnect.ToolBox.Polygon
                                 }
 
                                 // Convert Sale Conditions to Hex and concatenate
-                                string saleConditions = "";
+                                var saleConditions = "";
                                 if (row.Conditions != null)
                                 {
                                     saleConditions = string.Join("", row.Conditions.Select(p => String.Format(System.Globalization.CultureInfo.GetCultureInfo("en-US"), "{0:X2}", p)));

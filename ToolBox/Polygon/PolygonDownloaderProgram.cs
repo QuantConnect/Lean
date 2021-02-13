@@ -77,8 +77,8 @@ namespace QuantConnect.ToolBox.Polygon
                         var dataTimeZone = marketHoursDatabase.GetDataTimeZone(market, symbol, securityType);
 
                         // Set the UTC times for correctness of the architecture
-                        var utcStartDate = fromDate.ConvertToUtc(dataTimeZone);  // TimeZones.NewYork);
-                        var utcEndDate = toDate.ConvertToUtc(dataTimeZone);  // TimeZones.NewYork);
+                        var utcStartDate = fromDate.ConvertToUtc(dataTimeZone);
+                        var utcEndDate = toDate.ConvertToUtc(dataTimeZone);
                         var numberOfDays = (utcEndDate - utcStartDate).TotalDays;
 
                         // Iterate through each day, which is the Polygon.IO api architecture
@@ -95,7 +95,7 @@ namespace QuantConnect.ToolBox.Polygon
                                         }
                                     );
 
-                                if ((data != null))
+                                if (data.ToList().Count > 0)
                                 {
                                     // Save the data
                                     var writer = new LeanDataWriter(resolution, symbol, dataDirectory, tickType);
