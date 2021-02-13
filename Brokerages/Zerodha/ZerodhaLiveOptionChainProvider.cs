@@ -24,22 +24,17 @@ namespace QuantConnect.Brokerages.Zerodha
     /// An implementation of <see cref="IOptionChainProvider"/> that fetches the list of contracts
     /// from the Zerodha daily tradable CSV instruments list.
     /// </summary>
-    public class ZerodhaLiveOptionChainProvider : IOptionChainProvider
+    public partial class ZerodhaBrokerage
     {
-        private readonly ZerodhaSymbolMapper symbolMapper;
-        private readonly Kite kite;
-        private readonly string exchange;
-
-        public ZerodhaLiveOptionChainProvider(ZerodhaSymbolMapper _symbolMapper,Kite kite,string exchange = "NSE")
-        {
-            symbolMapper = _symbolMapper;
-            this.kite = kite;
-            this.exchange = exchange;
-        }
-
+        /// <summary>
+        /// Get list of Option Contracts
+        /// </summary>
+        /// <param name="symbol">Symbol</param>
+        /// <param name="date">Date</param>
+        /// <returns></returns>
         public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
         {
-            return symbolMapper.GetTradableInstrumentsList(kite,exchange).Where(s => s.SecurityType == SecurityType.Option && s.ID.Symbol == symbol.Underlying.Value);
+            return _symbolMapper.GetTradableInstrumentsList(_kite).Where(s => s.SecurityType == SecurityType.Option && s.ID.Symbol == symbol.Underlying.Value);
         }
     }
 }

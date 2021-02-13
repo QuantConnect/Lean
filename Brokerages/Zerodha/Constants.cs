@@ -16,7 +16,9 @@
 
 namespace QuantConnect.Brokerages.Zerodha
 {
-
+    /// <summary>
+    /// Types of product supported by Kite
+    /// </summary>
     public enum KiteProductType
     {
         MIS,
@@ -24,6 +26,9 @@ namespace QuantConnect.Brokerages.Zerodha
         NRML
     }
 
+    /// <summary>
+    /// Types of order supported by Kite
+    /// </summary>
     public enum KiteOrderType
     {
         MARKET,

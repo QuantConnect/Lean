@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.Zerodha
     /// Zerodha Brokerage implementation
     /// </summary>
     [BrokerageFactory(typeof(ZerodhaBrokerageFactory))]
-    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
+    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IOptionChainProvider
     {
         #region Declarations
         private const int ConnectionTimeout = 30000;
@@ -108,8 +108,6 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly List<string> unSubscribeInstrumentTokens = new List<string>();
 
         private Kite _kite;
-        private readonly IOrderProvider _orderProvider;
-        private readonly ISecurityProvider _securityProvider;
         private readonly string _apiKey;
         private readonly string _accessToken;
         private readonly string _wssUrl = "wss://ws.kite.trade/";
@@ -125,19 +123,22 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
+        /// <param name="aggregator">data aggregator </param>
+        /// <param name="tradingSegment">trading segment</param>
+        /// <param name="zerodhaProductType">zerodha product type - MIS, CNC or NRML </param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        public ZerodhaBrokerage(string tradingSegment, string zerodhaProductType, string apiKey, string accessToken, IAlgorithm algorithm, IDataAggregator aggregator)
+        public ZerodhaBrokerage(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator)
             : base("Zerodha")
         {
             _tradingSegment = tradingSegment;
             _zerodhaProductType = zerodhaProductType;
             _algorithm = algorithm;
             _aggregator = aggregator;
-            _kite = new Kite(apiKey, accessToken);
+            _kite = new Kite(apiKey, apiSecret);
             _apiKey = apiKey;
-            _accessToken = accessToken;
+            _accessToken = apiSecret;
             WebSocket = new ZerodhaWebSocketClientWrapper();
             _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
             WebSocket.Initialize(_wssUrl);
@@ -171,8 +172,10 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="symbols">The list of symbols to subscribe</param>
         public void Subscribe(IEnumerable<Symbol> symbols)
         {
-            if (symbols.Count() <= 0)
+            if (symbols.Count() <= 0) 
+            { 
                 return;
+            }
             foreach (var symbol in symbols)
             {
                 var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
@@ -193,6 +196,10 @@ namespace QuantConnect.Brokerages.Zerodha
             WebSocket.Send(requestFullMode);
         }
 
+        /// <summary>
+        /// Get list of subscribed symbol
+        /// </summary>
+        /// <returns></returns>
         private IEnumerable<Symbol> GetSubscribed()
         {
             return SubscriptionManager.GetSubscribedSymbols() ?? Enumerable.Empty<Symbol>();
@@ -243,7 +250,10 @@ namespace QuantConnect.Brokerages.Zerodha
 
 
 
-
+        /// <summary>
+        /// Fill order events
+        /// </summary>
+        /// <param name="orderUpdate"></param>
         private void EmitFillOrder(Messages.Order orderUpdate)
         {
             try
@@ -332,7 +342,11 @@ namespace QuantConnect.Brokerages.Zerodha
                 throw;
             }
         }
-
+        /// <summary>
+        /// Zerodha brokerage fees calculation 
+        /// </summary>
+        /// <param name="orderValue"></param>
+        /// <returns></returns>
         private decimal CalculateBrokerageOrderFee(decimal orderValue)
         {
             bool isSell = orderValue < 0;
@@ -342,28 +356,28 @@ namespace QuantConnect.Brokerages.Zerodha
 
             var turnover = Math.Round(orderValue, 2);
 
-            decimal stt_total = 0;
+            decimal sttTotal = 0;
             if (isSell)
             {
-                stt_total = Math.Round(orderValue * 0.00025M, 2);
+                sttTotal = Math.Round(orderValue * 0.00025M, 2);
             }
 
-            var exc_trans_charge = Math.Round(turnover * 0.0000325M, 2);
+            var excTransCharge = Math.Round(turnover * 0.0000325M, 2);
             var cc = 0;
 
 
-            var stax = Math.Round(0.18M * (brokerage + exc_trans_charge), 2);
+            var stax = Math.Round(0.18M * (brokerage + excTransCharge), 2);
 
-            var sebi_charges = Math.Round((turnover * 0.000001M), 2);
-            decimal stamp_charges = 0;
+            var sebiCharges = Math.Round((turnover * 0.000001M), 2);
+            decimal stampCharges = 0;
             if (!isSell)
             {
-                stamp_charges = Math.Round(orderValue * 0.00003M, 2);
+                stampCharges = Math.Round(orderValue * 0.00003M, 2);
             }
 
-            var total_tax = Math.Round(brokerage + stt_total + exc_trans_charge + stamp_charges + cc + stax + sebi_charges, 2);
+            var totalTax = Math.Round(brokerage + sttTotal + excTransCharge + stampCharges + cc + stax + sebiCharges, 2);
 
-            return total_tax;
+            return totalTax;
         }
 
         /// <summary>
@@ -410,7 +424,9 @@ namespace QuantConnect.Brokerages.Zerodha
         public override void Connect()
         {
             if (IsConnected)
+            {
                 return;
+            }
 
             Log.Trace("ZerodhaBrokerage.Connect(): Connecting...");
 
@@ -1284,7 +1300,7 @@ namespace QuantConnect.Brokerages.Zerodha
             tick.Close = ReadInt(b, ref offset) / divisor;
             tick.Change = ReadInt(b, ref offset) / divisor;
             uint time = ReadInt(b, ref offset);
-            tick.Timestamp = Utils.UnixToDateTime(time);
+            tick.Timestamp = Time.UnixTimeStampToDateTime(time);
             return tick;
         }
 
@@ -1340,11 +1356,11 @@ namespace QuantConnect.Brokerages.Zerodha
             tick.Close = ReadInt(b, ref offset) / divisor;
 
             // KiteConnect 3 fields
-            tick.LastTradeTime = Utils.UnixToDateTime(ReadInt(b, ref offset));
+            tick.LastTradeTime = Time.UnixTimeStampToDateTime(ReadInt(b, ref offset));
             tick.OI = ReadInt(b, ref offset);
             tick.OIDayHigh = ReadInt(b, ref offset);
             tick.OIDayLow = ReadInt(b, ref offset);
-            tick.Timestamp = Utils.UnixToDateTime(ReadInt(b, ref offset));
+            tick.Timestamp = Time.UnixTimeStampToDateTime(ReadInt(b, ref offset));
 
 
             tick.Bids = new DepthItem[5];

@@ -190,6 +190,9 @@ namespace QuantConnect.Brokerages.Zerodha
             Closed?.Invoke(this, e);
         }
 
+        /// <summary>
+        /// Connection Handler 
+        /// </summary>
         private async Task HandleConnection(CancellationTokenSource connectionCts)
         {
             using (_client = new ClientWebSocket())
@@ -262,6 +265,9 @@ namespace QuantConnect.Brokerages.Zerodha
         
     }
 
+    /// <summary>
+    /// Message Data 
+    /// </summary>
     public class MessageData
     {
         public byte[] Data { get; set; }

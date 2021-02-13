@@ -86,6 +86,7 @@ namespace QuantConnect.Brokerages.Zerodha
             //Add the brokerage to the composer to ensure its accessible to the live data feed.
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
             Composer.Instance.AddPart<IDataQueueUniverseProvider>(brokerage);
+            Comparer.Instance.AddPart<IOptionChainProvider>(brokerage);
             return brokerage;
         }
     }

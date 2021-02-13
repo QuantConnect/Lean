@@ -28,11 +28,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Method returns a collection of Symbols that are available at the broker.
         /// </summary>
-        /// <param name="lookupName">String representing the name to lookup</param>
-        /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
+        /// <param name="lookupSymbol">Representation of the Symbol</param>
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
-        /// <param name="securityExchange">Expected security exchange name(if any)</param>
         /// <returns></returns>
         public IEnumerable<Symbol> LookupSymbols(Symbol lookupSymbol, bool includeExpired, string securityCurrency = null)
         {
@@ -60,7 +58,10 @@ namespace QuantConnect.Brokerages.Zerodha
             return result.Select(x => x);
         }
 
-
+        // <summary>
+        /// Returns whether selection can take place or not.
+        /// </summary>
+        /// <returns>True if selection can take place</returns>
         public bool CanPerformSelection()
         {
             return true;

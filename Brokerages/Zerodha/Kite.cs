@@ -145,7 +145,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>User structure with tokens and profile data</returns>
         public User GenerateSession(string RequestToken, string AppSecret)
         {
-            string checksum = Utils.SHA256(_apiKey + RequestToken + AppSecret);
+            string checksum = Extensions.ToSHA256(_apiKey + RequestToken + AppSecret);
 
             var param = new Dictionary<string, dynamic>
             {
@@ -199,7 +199,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             var param = new Dictionary<string, dynamic>();
 
-            string checksum = Utils.SHA256(_apiKey + RefreshToken + AppSecret);
+            string checksum = Extensions.ToSHA256(_apiKey + RefreshToken + AppSecret);
 
             Utils.AddIfNotNull(param, "api_key", _apiKey);
             Utils.AddIfNotNull(param, "refresh_token", RefreshToken);
@@ -335,7 +335,9 @@ namespace QuantConnect.Brokerages.Zerodha
             string ProductString = Product;
 
             if ((ProductString == "bo" || ProductString == "co") && VarietyString != ProductString)
+            {
                 throw new Exception(String.Format(CultureInfo.InvariantCulture, "Invalid variety. It should be: {0}", ProductString));
+            }
 
             Utils.AddIfNotNull(param, "order_id", OrderId);
             Utils.AddIfNotNull(param, "parent_order_id", ParentOrderId);
@@ -393,7 +395,9 @@ namespace QuantConnect.Brokerages.Zerodha
             List<Order> orders = new List<Order>();
 
             foreach (JObject item in ordersData["data"])
+            {
                 orders.Add(new Order(item));
+            }
 
             return orders;
         }
@@ -412,12 +416,14 @@ namespace QuantConnect.Brokerages.Zerodha
 
             var orderData = Get("orders.history", param);
 
-            List<Order> orderhistory = new List<Order>();
+            List<Order> orderHistory = new List<Order>();
 
             foreach (JObject item in orderData["data"])
-                orderhistory.Add(new Order(item));
+            {
+                orderHistory.Add(new Order(item));
+            }
 
-            return orderhistory;
+            return orderHistory;
         }
 
         /// <summary>
@@ -444,7 +450,9 @@ namespace QuantConnect.Brokerages.Zerodha
             List<Trade> trades = new List<Trade>();
 
             foreach (Dictionary<string, dynamic> item in tradesdata["data"])
+            {
                 trades.Add(new Trade(item));
+            }
 
             return trades;
         }
@@ -471,7 +479,9 @@ namespace QuantConnect.Brokerages.Zerodha
             List<Messages.Holding> holdings = new List<Messages.Holding>();
 
             foreach (JObject item in holdingsData)
+            {
                 holdings.Add(new Messages.Holding(item));
+            }
             return holdings;
         }
 
@@ -518,7 +528,6 @@ namespace QuantConnect.Brokerages.Zerodha
         public List<CsvInstrument> GetInstruments(string Exchange = null)
         {
             List<CsvInstrument> instruments = new List<CsvInstrument>();
-            List< CsvInstrument > instrumentsData= new List<CsvInstrument>();
             var param = new Dictionary<string, dynamic>();
             try
             {
@@ -537,7 +546,9 @@ namespace QuantConnect.Brokerages.Zerodha
                     }
 
                     foreach (var item in instrumentsData)
+                    {
                         instruments.Add(item);
+                    }
 
                     using (var writer = new StreamWriter(latestFile))
                     using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -580,7 +591,9 @@ namespace QuantConnect.Brokerages.Zerodha
 
             Dictionary<string, Quote> quotes = new Dictionary<string, Quote>();
             foreach (string item in InstrumentIds)
+            {
                 quotes.Add(item, new Quote(quoteData[item]));
+            }
 
             return quotes;
         }
@@ -600,7 +613,9 @@ namespace QuantConnect.Brokerages.Zerodha
 
             Dictionary<string, OHLC> ohlcs = new Dictionary<string, OHLC>();
             foreach (string item in ohlcData.Keys)
+            {
                 ohlcs.Add(item, new OHLC(ohlcData[item]));
+            }
 
             return ohlcs;
         }
@@ -620,7 +635,9 @@ namespace QuantConnect.Brokerages.Zerodha
 
             Dictionary<string, LTP> ltps = new Dictionary<string, LTP>();
             foreach (string item in ltpData.Keys)
+            {
                 ltps.Add(item, new LTP(ltpData[item]));
+            }
 
             return ltps;
         }
@@ -658,7 +675,9 @@ namespace QuantConnect.Brokerages.Zerodha
             List<Historical> historicals = new List<Historical>();
 
             foreach (var item in historicalData["data"]["candles"])
+            {
                 historicals.Add(new Historical(item));
+            }
 
             return historicals;
         }
@@ -681,7 +700,9 @@ namespace QuantConnect.Brokerages.Zerodha
 
             Dictionary<string, TrigerRange> triggerRanges = new Dictionary<string, TrigerRange>();
             foreach (string item in triggerdata.Keys)
+            {
                 triggerRanges.Add(item, new TrigerRange(triggerdata[item]));
+            }
 
             return triggerRanges;
         }
@@ -699,7 +720,9 @@ namespace QuantConnect.Brokerages.Zerodha
             List<GTT> gtts = new List<GTT>();
 
             foreach (Dictionary<string, dynamic> item in gttsdata["data"])
+            {
                 gtts.Add(new GTT(item));
+            }
 
             return gtts;
         }
@@ -879,7 +902,9 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             var KiteAssembly = System.Reflection.Assembly.GetAssembly(typeof(Kite));
             if (KiteAssembly != null)
+            {
                 Req.UserAgent = "KiteConnect.Net/" + KiteAssembly.GetName().Version;
+            }
 
             Req.Headers.Add("X-Kite-Version", "3");
             Req.Headers.Add("Authorization", "token " + _apiKey + ":" + _accessToken);
@@ -890,7 +915,10 @@ namespace QuantConnect.Brokerages.Zerodha
             //}
 
             Req.Timeout = _timeout;
-            if (_proxy != null) Req.Proxy = _proxy;
+            if (_proxy != null)
+            {
+                Req.Proxy = _proxy;
+            }
 
 
         }
@@ -916,11 +944,13 @@ namespace QuantConnect.Brokerages.Zerodha
                 var urlparams = Params.ToDictionary(entry => entry.Key, entry => entry.Value);
 
                 foreach (KeyValuePair<string, dynamic> item in urlparams)
+                {
                     if (url.Contains("{" + item.Key + "}"))
                     {
                         url = url.Replace("{" + item.Key + "}", (string)item.Value);
                         Params.Remove(item.Key);
                     }
+                }
             }
 
             //if (!Params.ContainsKey("api_key"))
@@ -961,7 +991,9 @@ namespace QuantConnect.Brokerages.Zerodha
             catch (WebException e)
             {
                 if (e.Response.Equals(null))
+                {
                     throw e;
+                }
 
                 webResponse = e.Response;
             }
@@ -984,10 +1016,14 @@ namespace QuantConnect.Brokerages.Zerodha
                             string message = "";
 
                             if (responseDictionary["error_type"] != null)
+                            {
                                 errorType = (string)responseDictionary["error_type"];
+                            }
 
                             if (responseDictionary["message"] != null)
+                            {
                                 message = (string)responseDictionary["message"];
+                            }
 
                             
                             switch (errorType)

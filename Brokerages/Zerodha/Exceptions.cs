@@ -18,43 +18,66 @@ using System.Net;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
+    /// <summary>
+    /// KiteAPI Exceptions
+    /// </summary>
     public class KiteException : Exception
     {
         HttpStatusCode status;
         public KiteException(string message, HttpStatusCode httpStatus, Exception innerException = null) : base(message, innerException) { status = httpStatus; }
     }
 
+    /// <summary>
+    /// General Exceptions
+    /// </summary>
     public class GeneralException : KiteException
     {
         public GeneralException(string message, HttpStatusCode httpStatus = HttpStatusCode.InternalServerError, Exception innerException = null) : base(message, httpStatus, innerException) { }
     }
 
+    /// <summary>
+    /// Token Exceptions
+    /// </summary>
     public class TokenException : KiteException
     {
         public TokenException(string message, HttpStatusCode httpStatus = HttpStatusCode.Forbidden, Exception innerException = null) : base(message, httpStatus, innerException) { }
     }
 
-
+    /// <summary>
+    /// Permission Exceptions
+    /// </summary>
     public class PermissionException : KiteException
     {
         public PermissionException(string message, HttpStatusCode httpStatus = HttpStatusCode.Forbidden, Exception innerException = null) : base(message, httpStatus, innerException) { }
     }
 
+    /// <summary>
+    /// Order Exceptions
+    /// </summary>
     public class OrderException : KiteException
     {
         public OrderException(string message, HttpStatusCode httpStatus = HttpStatusCode.BadRequest, Exception innerException = null) : base(message, httpStatus, innerException) { }
     }
 
+    /// <summary>
+    /// InputExceptions
+    /// </summary>
     public class InputException : KiteException
     {
         public InputException(string message, HttpStatusCode httpStatus = HttpStatusCode.BadRequest, Exception innerException = null) : base(message, httpStatus, innerException) { }
     }
 
+    /// <summary>
+    /// DataExceptions 
+    /// </summary>
     public class DataException : KiteException
     {
         public DataException(string message, HttpStatusCode httpStatus = HttpStatusCode.BadGateway, Exception innerException = null) : base(message, httpStatus, innerException) { }
     }
 
+    /// <summary>
+    /// Network Exceptions
+    /// </summary>
     public class NetworkException : KiteException
     {
         public NetworkException(string message, HttpStatusCode httpStatus = HttpStatusCode.ServiceUnavailable, Exception innerException = null) : base(message, httpStatus, innerException) { }
