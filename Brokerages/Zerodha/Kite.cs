@@ -537,15 +537,15 @@ namespace QuantConnect.Brokerages.Zerodha
 
                     if (String.IsNullOrEmpty(Exchange))
                     {
-                        instrumentsData = Get("market.instruments.all", param);
+                        instruments = Get("market.instruments.all", param);
                     }
                     else
                     {
                         param.Add("exchange", Exchange);
-                        instrumentsData = Get("market.instruments", param);
+                        instruments = Get("market.instruments", param);
                     }
 
-                    foreach (var item in instrumentsData)
+                    foreach (var item in instruments)
                     {
                         instruments.Add(item);
                     }
