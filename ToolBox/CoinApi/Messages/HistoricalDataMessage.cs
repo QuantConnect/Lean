@@ -48,19 +48,18 @@ namespace QuantConnect.ToolBox.CoinApi.Messages
         /// <summary>
         /// Converts CoinApi OHLCV to QuantConnect TradeBar 
         /// </summary>
-        /// <param name="ohlcv"></param>
         /// <returns></returns>
-        public static TradeBar ToTradeBar(HistoricalDataMessage ohlcv)
+        public TradeBar ToTradeBar()
         {
             return new TradeBar()
             {
-                Time = ohlcv.TimePeriodStart,
-                EndTime = ohlcv.TimePeriodEnd,
-                Open = ohlcv.PriceOpen,
-                High = ohlcv.PriceHigh,
-                Low = ohlcv.PriceLow,
-                Close = ohlcv.PriceClose,
-                Volume = ohlcv.VolumeTraded
+                Time = TimePeriodStart,
+                EndTime = TimePeriodEnd,
+                Open = PriceOpen,
+                High = PriceHigh,
+                Low = PriceLow,
+                Close = PriceClose,
+                Volume = VolumeTraded
             };
         }
     }

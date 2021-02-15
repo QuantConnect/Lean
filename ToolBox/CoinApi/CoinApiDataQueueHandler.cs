@@ -409,7 +409,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
             foreach (var ohlcv in coinApiHistoryBars)
             {
-                yield return HistoricalDataMessage.ToTradeBar(ohlcv);
+                yield return ohlcv.ToTradeBar();
             }
         }
 
