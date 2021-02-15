@@ -19,21 +19,36 @@ using System.Linq;
 using System.Threading.Tasks;
 using CoinAPI.WebSocket.V1;
 using CoinAPI.WebSocket.V1.DataModels;
+using Newtonsoft.Json;
+using NodaTime;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.ToolBox.CoinApi.Messages;
 using QuantConnect.Util;
+using RestSharp;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.ToolBox.CoinApi
 {
     /// <summary>
     /// An implementation of <see cref="IDataQueueHandler"/> for CoinAPI
     /// </summary>
-    public class CoinApiDataQueueHandler : IDataQueueHandler
+    public class CoinApiDataQueueHandler : SynchronizingHistoryProvider, IDataQueueHandler
     {
+        private static readonly Dictionary<Resolution, string> _ResolutionToCoinApiPeriodMappings = new Dictionary<Resolution, string>
+        {
+            { Resolution.Second, "1SEC"},
+            { Resolution.Minute, "1MIN" },
+            { Resolution.Hour, "1HRS" },
+            { Resolution.Daily, "1DAY" },
+        };
+
         private readonly string _apiKey = Config.Get("coinapi-api-key");
         private readonly string[] _streamingDataType;
         private readonly CoinApiWsClient _client;
@@ -325,6 +340,95 @@ namespace QuantConnect.ToolBox.CoinApi
         private void OnError(object sender, Exception e)
         {
             Log.Error(e);
+        }
+
+        #region SynchronizingHistoryProvider
+
+        public override void Initialize(HistoryProviderInitializeParameters parameters)
+        {
+            // NOP
+        }
+
+        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        {
+            var subscriptions = new List<Subscription>();
+            foreach (var request in requests)
+            {
+                var history = GetHistory(request);
+                var subscription = CreateSubscription(request, history);
+                subscriptions.Add(subscription);
+            }
+            return CreateSliceEnumerableFromSubscriptions(subscriptions, sliceTimeZone);
+        }
+
+        public IEnumerable<BaseData> GetHistory(HistoryRequest historyRequest)
+        {
+            if (historyRequest.Symbol.SecurityType != SecurityType.Crypto)
+            {
+                Log.Error($"CoinApiDataQueueHandler.GetHistory(): Invalid security type {historyRequest.Symbol.SecurityType}");
+                yield break;
+            }
+
+            if (historyRequest.Resolution == Resolution.Tick)
+            {
+                Log.Error("CoinApiDataQueueHandler.GetHistory(): Historical ticks can not be provided, only OHLCV timeseries");
+                yield break;
+            }
+
+            var coinApiSymbol = _symbolMapper.GetBrokerageSymbol(historyRequest.Symbol);
+            var coinApiPeriod = _ResolutionToCoinApiPeriodMappings[historyRequest.Resolution];
+
+            // Time must be in ISO 8601 format
+            var coinApiStartTime = historyRequest.StartTimeUtc.ToStringInvariant("s");
+            var coinApiEndTime = historyRequest.EndTimeUtc.ToStringInvariant("s");
+
+            // Construct URL for rest request
+            var baseUrl =
+                "https://rest.coinapi.io/v1/ohlcv/" +
+                $"{coinApiSymbol}/history?period_id={coinApiPeriod}" +
+                $"&time_start={coinApiStartTime}&time_end={coinApiEndTime}";
+
+            // Execute
+            var client = new RestClient(baseUrl);
+            var restRequest = new RestRequest(Method.GET);
+            restRequest.AddHeader("X-CoinAPI-Key", _apiKey);
+            var response = client.Execute(restRequest);
+
+            // Log the information associated with the API Key's rest call limits.
+            TraceRestUsage(response);
+
+            // Deserialize to array
+            var coinApiHistoryBars = JsonConvert.DeserializeObject<HistoricalDataMessage[]>(response.Content);
+
+            // Can be no historical data for a short period interval
+            if (!coinApiHistoryBars.Any())
+            {
+                Log.Error("CoinApiDataQueueHandler.GetHistory(): API returned no data for the requested period");
+                yield break;
+            }
+
+            foreach (var ohlcv in coinApiHistoryBars)
+            {
+                yield return HistoricalDataMessage.ToTradeBar(ohlcv);
+            }
+        }
+
+        #endregion
+
+        private void TraceRestUsage(IRestResponse response)
+        {
+            var total = GetHttpHeaderValue(response, "x-ratelimit-limit");
+            var used = GetHttpHeaderValue(response, "x-ratelimit-used");
+            var remaining = GetHttpHeaderValue(response, "x-ratelimit-remaining");
+
+            Log.Trace($"CoinApiDataQueueHandler.TraceRestUsage(): Used {used}, Remaining {remaining}, Total {total}");
+        }
+
+        private string GetHttpHeaderValue(IRestResponse response, string propertyName)
+        {
+            return response.Headers.ToList()
+                .Find(x => x.Name == propertyName)
+                .Value.ToString();
         }
     }
 }
