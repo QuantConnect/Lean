@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         private int _negative;
 
         // We assert the following occur in FIFO order in OnOrderEvent
-        readonly private Queue<string> _expectedEvents = new Queue<string>(new[]
+        private readonly Queue<string> _expectedEvents = new Queue<string>(new[]
         {
             "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 152.8807 USD LimitPrice: 152.519 TriggerPrice: 151.769 OrderFee: 1 USD",
             "Time: 10/10/2013 15:55:00 OrderID: 73 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 153.9225 USD LimitPrice: 153.8898 TriggerPrice: 153.1398 OrderFee: 1 USD",
@@ -46,16 +46,16 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2013, 10, 07); //Set Start Date
-            SetEndDate(2013, 10, 15); //Set End Date
+            SetEndDate(2013, 10, 11); //Set End Date
             SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
+            AddEquity("SPY");
         }
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">TradeBars IDictionary object with your stock data</param>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
             if (!data.ContainsKey("SPY"))
@@ -84,14 +84,12 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_request.Quantity == 1)
                 {
                     Transactions.CancelOpenOrders();
-                    _request.Cancel();
                     _request = null;
                     return;
                 }
 
                 var newQuantity = _request.Quantity - _negative;
-                _request.UpdateQuantity(newQuantity,
-                    $"LIT - Quantity: {newQuantity}");
+                _request.UpdateQuantity(newQuantity, $"LIT - Quantity: {newQuantity}");
             }
         }
 
@@ -130,12 +128,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.337%"},
+            {"Compounding Annual Return", "-0.625%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Net Profit", "-0.008%"},
-            {"Sharpe Ratio", "-10.159"},
-            {"Probabilistic Sharpe Ratio", "0.000%"},
+            {"Sharpe Ratio", "-13.588"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
@@ -143,15 +141,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "-0.001"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.216"},
-            {"Tracking Error", "0.186"},
-            {"Treynor Ratio", "2.299"},
+            {"Information Ratio", "-8.779"},
+            {"Tracking Error", "0.22"},
+            {"Treynor Ratio", "3.431"},
             {"Total Fees", "$3.00"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-13.601"},
-            {"Return Over Maximum Drawdown", "-43.396"},
+            {"Sortino Ratio", "-15.79"},
+            {"Return Over Maximum Drawdown", "-82.891"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

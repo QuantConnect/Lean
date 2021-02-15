@@ -34,9 +34,9 @@ class LimitIfTouchedRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 15)
+        self.SetEndDate(2013, 10, 11)
         self.SetCash(100000)
-        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute)
+        self.AddEquity("SPY")
 
     def OnData(self, data):
         if data.ContainsKey("SPY"):
@@ -53,16 +53,14 @@ class LimitIfTouchedRegressionAlgorithm(QCAlgorithm):
             if self._request is not None:
                 if self._request.Quantity == 1:
                     self.Transactions.CancelOpenOrders()
-                    self._request.Cancel()
                     self._request = None
                     return
 
                 new_quantity = int(self._request.Quantity - self._negative)
-                self._request.UpdateQuantity(new_quantity,
-                                             f"LIT - Quantity: {new_quantity}")
+                self._request.UpdateQuantity(new_quantity, f"LIT - Quantity: {new_quantity}")
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
             expected = self._expectedEvents.popleft()
-            # if orderEvent.ToString() != expected:
-            #     raise Exception(f"orderEvent {orderEvent.Id} differed from {expected}")
+            if orderEvent.ToString() != expected:
+                raise Exception(f"orderEvent {orderEvent.Id} differed from {expected}")
