@@ -303,7 +303,6 @@ namespace QuantConnect
                     if (!thread.Join(timeout))
                     {
                         Log.Error($"StopSafely(): Timeout waiting for '{thread.Name}' thread to stop");
-                        thread.Abort();
                     }
                 }
                 catch (Exception exception)
@@ -319,7 +318,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="orders">The order collection</param>
         /// <returns>The hash value</returns>
-        public static int GetHash(this IDictionary<int, Order> orders)
+        public static string GetHash(this IDictionary<int, Order> orders)
         {
             var joinedOrders = string.Join(
                 ",",
@@ -350,7 +349,8 @@ namespace QuantConnect
                         }
                     )
             );
-            return joinedOrders.GetHashCode();
+
+            return joinedOrders.ToMD5();
         }
 
         /// <summary>
@@ -1545,7 +1545,7 @@ namespace QuantConnect
         {
             if (type.IsEnum)
             {
-                return Enum.Parse(type, value);
+                return Enum.Parse(type, value, true);
             }
 
             if (typeof (IConvertible).IsAssignableFrom(type))
@@ -2247,7 +2247,7 @@ namespace QuantConnect
                 {
                     an = new AssemblyName(pyObject.Repr().Split('\'')[1]);
                 }
-                var typeBuilder = AppDomain.CurrentDomain
+                var typeBuilder = AssemblyBuilder
                     .DefineDynamicAssembly(an, AssemblyBuilderAccess.Run)
                     .DefineDynamicModule("MainModule")
                     .DefineType(an.Name, TypeAttributes.Class, type);

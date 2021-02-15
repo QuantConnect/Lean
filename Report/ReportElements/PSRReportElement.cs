@@ -43,6 +43,7 @@ namespace QuantConnect.Report.ReportElements
         public override string Render()
         {
             var psr = _backtest?.TotalPerformance?.PortfolioStatistics?.ProbabilisticSharpeRatio;
+            Result = psr;
             if (psr == null)
             {
                 return "-";
@@ -53,6 +54,7 @@ namespace QuantConnect.Report.ReportElements
                 return $"{psr:P0}";
             }
 
+            Result = null;
             return "-";
         }
     }

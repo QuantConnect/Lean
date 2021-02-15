@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using System;
@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Configuration
         {
             var args = $"--force-exchange-always-open false";
 
-            Assert.Throws<CommandParsingException>(
+            Assert.Throws<UnrecognizedCommandParsingException>(
                 () =>
                 {
                     var options = ApplicationParser.Parse(

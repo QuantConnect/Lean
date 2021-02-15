@@ -100,7 +100,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Future)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {security.Type} security type.")
+                    Invariant($"The {nameof(TradingTechnologiesBrokerageModel)} does not support {security.Type} security type.")
                 );
 
                 return false;
@@ -120,19 +120,13 @@ namespace QuantConnect.Brokerages
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
+                    Invariant($"The {nameof(TradingTechnologiesBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
                 );
 
                 return false;
             }
 
-            // validate stop/limit orders prices
-            var limit = order as LimitOrder;
-            if (limit != null)
-            {
-                return IsValidOrderPrices(security, OrderType.Limit, limit.Direction, security.Price, limit.LimitPrice, ref message);
-            }
-
+            // validate stop orders prices
             var stopMarket = order as StopMarketOrder;
             if (stopMarket != null)
             {

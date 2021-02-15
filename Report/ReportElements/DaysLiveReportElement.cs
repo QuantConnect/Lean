@@ -48,7 +48,10 @@ namespace QuantConnect.Report.ReportElements
             }
 
             var equityPoints = ResultsUtil.EquityPoints(_live);
-            return (DateTime.UtcNow - equityPoints.First().Key).Days.ToStringInvariant();
+            var daysLive = (DateTime.UtcNow - equityPoints.First().Key).Days;
+            Result = daysLive;
+
+            return daysLive.ToStringInvariant();
         }
     }
 }
