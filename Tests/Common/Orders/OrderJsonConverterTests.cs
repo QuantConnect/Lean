@@ -129,6 +129,25 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expected.StopPrice, actual.StopPrice);
             Assert.AreEqual(expected.LimitPrice, actual.LimitPrice);
         }
+        
+        [TestCase(Symbols.SymbolsKey.SPY)]
+        [TestCase(Symbols.SymbolsKey.EURUSD)]
+        [TestCase(Symbols.SymbolsKey.BTCUSD)]
+        public void DeserializesLimitIfTouchedOrder(Symbols.SymbolsKey key)
+        {
+            var expected = new LimitIfTouchedOrder(Symbols.Lookup(key), 100, 210.10m, 200.23m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            {
+                Id = 12345,
+                Price = 209.03m,
+                ContingentId = 123456,
+                BrokerId = new List<string> {"727", "54970"}
+            };
+
+            var actual = TestOrderType(expected);
+
+            Assert.AreEqual(expected.TriggerPrice, actual.TriggerPrice);
+            Assert.AreEqual(expected.LimitPrice, actual.LimitPrice);
+        }
 
         [Test]
         public void DeserializesOptionExpireOrder()

@@ -345,6 +345,12 @@ namespace QuantConnect
                             {
                                 stopMarket.StopPrice = stopMarket.StopPrice.SmartRounding();
                             }
+                            var limitIfTouched = order as LimitIfTouchedOrder;
+                            if (limitIfTouched != null)
+                            {
+                                limitIfTouched.LimitPrice = limitIfTouched.LimitPrice.SmartRounding();
+                                limitIfTouched.TriggerPrice = limitIfTouched.TriggerPrice.SmartRounding();
+                            }
                             return JsonConvert.SerializeObject(pair.Value, Formatting.None);
                         }
                     )
@@ -1823,6 +1829,7 @@ namespace QuantConnect
         {
             var limitPrice = 0m;
             var stopPrice = 0m;
+            var triggerPrice = 0m;
 
             switch (order.Type)
             {
@@ -1838,6 +1845,11 @@ namespace QuantConnect
                     var stopLimitOrder = order as StopLimitOrder;
                     stopPrice = stopLimitOrder.StopPrice;
                     limitPrice = stopLimitOrder.LimitPrice;
+                    break;
+                case OrderType.LimitIfTouched:
+                    var limitIfTouched = order as LimitIfTouchedOrder;
+                    triggerPrice = limitIfTouched.TriggerPrice;
+                    limitPrice = limitIfTouched.LimitPrice;
                     break;
                 case OrderType.OptionExercise:
                 case OrderType.Market:
@@ -1856,6 +1868,7 @@ namespace QuantConnect
                 order.Quantity,
                 stopPrice,
                 limitPrice,
+                triggerPrice,
                 order.Time,
                 order.Tag,
                 order.Properties);

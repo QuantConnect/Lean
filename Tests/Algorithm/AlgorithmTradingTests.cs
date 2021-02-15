@@ -1288,7 +1288,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(150000);
 
             var mock = new Mock<ITransactionHandler>();
-            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null);
+            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
             mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(new OrderTicket(null, request.Object));
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algo.Transactions.SetOrderProcessor(mock.Object);
@@ -1332,13 +1332,17 @@ namespace QuantConnect.Tests.Algorithm
             algo.StopLimitOrder(Symbols.MSFT, 1, 1, 2);
             algo.StopLimitOrder(Symbols.MSFT, 1.0, 1, 2);
             algo.StopLimitOrder(Symbols.MSFT, 1.0m, 1, 2);
+            
+            algo.LimitIfTouchedOrder(Symbols.MSFT, 1, 1, 2);
+            algo.LimitIfTouchedOrder(Symbols.MSFT, 1.0, 1, 2);
+            algo.LimitIfTouchedOrder(Symbols.MSFT, 1.0m, 1, 2);
 
             algo.SetHoldings(Symbols.MSFT, 1);
             algo.SetHoldings(Symbols.MSFT, 1.0);
             algo.SetHoldings(Symbols.MSFT, 1.0m);
             algo.SetHoldings(Symbols.MSFT, 1.0f);
 
-            int expected = 32;
+            int expected = 35;
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 

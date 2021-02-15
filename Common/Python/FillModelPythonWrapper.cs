@@ -69,6 +69,20 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Limit if Touched Fill Model. Return an order event with the fill details.
+        /// </summary>
+        /// <param name="asset">Asset we're trading this order</param>
+        /// <param name="order"><see cref="LimitIfTouchedOrder"/> Order to Check, return filled if true</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public override OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
+        {
+            using (Py.GIL())
+            {
+                return (_model.LimitIfTouchedFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
+            }
+        }
+
+        /// <summary>
         /// Model the slippage on a market order: fixed percentage of order price
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>

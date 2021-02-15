@@ -1013,6 +1013,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         orderEvent.LimitPrice = stopLimitOrder.LimitPrice;
                         orderEvent.StopPrice = stopLimitOrder.StopPrice;
                         break;
+                    case OrderType.LimitIfTouched:
+                        var limitIfTouchedOrder = order as LimitIfTouchedOrder;
+                        orderEvent.LimitPrice = limitIfTouchedOrder.LimitPrice;
+                        orderEvent.TriggerPrice = limitIfTouchedOrder.TriggerPrice;
+                        break;
                 }
 
                 //Apply the filled order to our portfolio:
@@ -1217,6 +1222,30 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             SendWarningOnPriceChange("Stop", stopRound, stopPrice);
                         }
                     }
+                    break;
+                
+                case OrderType.LimitIfTouched:
+                {
+                    var limitPrice = ((LimitIfTouchedOrder) order).LimitPrice;
+                    var increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                        new GetMinimumPriceVariationParameters(security, limitPrice));
+                    if (increment > 0)
+                    {
+                        var limitRound = Math.Round(limitPrice / increment) * increment;
+                        ((LimitIfTouchedOrder) order).LimitPrice = limitRound;
+                        SendWarningOnPriceChange("Limit", limitRound, limitPrice);
+                    }
+
+                    var triggerPrice = ((LimitIfTouchedOrder) order).TriggerPrice;
+                    increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                        new GetMinimumPriceVariationParameters(security, triggerPrice));
+                    if (increment > 0)
+                    {
+                        var triggerRound = Math.Round(triggerPrice / increment) * increment;
+                        ((LimitIfTouchedOrder) order).TriggerPrice = triggerRound;
+                        SendWarningOnPriceChange("Trigger", triggerRound, triggerPrice);
+                    }
+                }
                     break;
             }
         }
