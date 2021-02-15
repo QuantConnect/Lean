@@ -67,15 +67,19 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
                             throw new ArgumentException("Samco Doesn't support tick resolution");
 
                         case Resolution.Minute:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end).ToList();
+                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end,"1").ToList();
                             timeSpan = Time.OneMinute;
                             break;
 
                         case Resolution.Hour:
-                            throw new ArgumentException("Samco Doesn't support second resolution");
+                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end,"60").ToList();
+                            timeSpan = Time.OneHour;
+                            break;
 
                         case Resolution.Daily:
-                            throw new ArgumentException("Samco Doesn't support second resolution");
+                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end,"3600").ToList();
+                            timeSpan = Time.OneDay;
+                            break;
                     }
 
                     foreach (var bar in history)
