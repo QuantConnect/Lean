@@ -63,6 +63,8 @@ namespace QuantConnect.ToolBox.CoinApi
                 ? new[] { "trade" }
                 : new[] { "trade", "quote" };
 
+            Log.Trace($"CoinApiDataQueueHandler(): using plan '{product}'. Available data types: '{string.Join(",", _streamingDataType)}'");
+
             _client = new CoinApiWsClient();
             _client.TradeEvent += OnTrade;
             _client.QuoteEvent += OnQuote;
