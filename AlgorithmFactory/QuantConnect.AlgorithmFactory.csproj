@@ -4,11 +4,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <RootNamespace>QuantConnect.AlgorithmFactory</RootNamespace>
     <AssemblyName>QuantConnect.AlgorithmFactory</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFrameworks>net50;net462</TargetFrameworks>
     <LangVersion>6</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <!--<AnalysisMode>AllEnabledByDefault</AnalysisMode> -->
     <DocumentationFile>bin\$(Configuration)\QuantConnect.AlgorithmFactory.xml</DocumentationFile>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
@@ -69,7 +69,7 @@
       </ItemGroup>
     </When>
   </Choose>
-  <ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>

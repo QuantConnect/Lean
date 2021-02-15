@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
@@ -57,8 +58,8 @@ namespace QuantConnect.ToolBox
             var root = new PipeDataProcessor();
 
             // only filter tick sources
-            var stack = !sourceIsTick ? root 
-                : (IDataProcessor) new FilteredDataProcessor(root, x => ((Tick) x).TickType == tickType);
+            var stack = !sourceIsTick ? root
+                : (IDataProcessor)new FilteredDataProcessor(root, x => ((Tick)x).TickType == tickType);
 
             if (set.Contains(Resolution.Tick))
             {
@@ -113,13 +114,13 @@ namespace QuantConnect.ToolBox
                     {
                         return sourceIsTick
                             ? new TickConsolidator(resolution.ToTimeSpan())
-                            : (IDataConsolidator) new TradeBarConsolidator(resolution.ToTimeSpan());
+                            : (IDataConsolidator)new TradeBarConsolidator(resolution.ToTimeSpan());
                     }
                     if (tickType == TickType.Quote)
                     {
                         return sourceIsTick
                             ? new TickQuoteBarConsolidator(resolution.ToTimeSpan())
-                            : (IDataConsolidator) new QuoteBarConsolidator(resolution.ToTimeSpan());
+                            : (IDataConsolidator)new QuoteBarConsolidator(resolution.ToTimeSpan());
                     }
                     break;
             }

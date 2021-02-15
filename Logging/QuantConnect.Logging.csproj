@@ -5,11 +5,11 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <RootNamespace>QuantConnect.Logging</RootNamespace>
     <AssemblyName>QuantConnect.Logging</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFrameworks>net50;net462</TargetFrameworks>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <LangVersion>6</LangVersion>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <!--<AnalysisMode>AllEnabledByDefault</AnalysisMode> -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Logging.xml</DocumentationFile>
@@ -49,18 +49,16 @@
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="MathNet.Filtering" Version="0.4.0" />
-    <PackageReference Include="MathNet.Numerics" Version="3.19.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NLog" Version="4.4.13" />
+    <PackageReference Include="NLog" Version="4.7.7" />
     <PackageReference Include="NLog.Config" Version="4.4.13" />
     <PackageReference Include="NLog.Schema" Version="4.4.13" />
     <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>

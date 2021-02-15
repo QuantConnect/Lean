@@ -4,9 +4,9 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <RootNamespace>QuantConnect.Algorithm.Python</RootNamespace>
     <AssemblyName>QuantConnect.Algorithm.Python</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFrameworks>net50;net462</TargetFrameworks>
     <LangVersion>6</LangVersion>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <!--<AnalysisMode>AllEnabledByDefault</AnalysisMode> -->
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

@@ -41,7 +41,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         private readonly ImmutableDictionary<Symbol, OptionPosition> _positions;
         private readonly ImmutableDictionary<OptionRight, ImmutableHashSet<Symbol>> _rights;
         private readonly ImmutableDictionary<PositionSide, ImmutableHashSet<Symbol>> _sides;
-        private readonly ImmutableSortedDictionary<decimal,  ImmutableHashSet<Symbol>> _strikes;
+        private readonly ImmutableSortedDictionary<decimal, ImmutableHashSet<Symbol>> _strikes;
         private readonly ImmutableSortedDictionary<DateTime, ImmutableHashSet<Symbol>> _expirations;
 
         /// <summary>
@@ -203,7 +203,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         /// <returns></returns>
         public OptionPosition GetUnderlyingPosition()
+#if NET462
             => LinqExtensions.GetValueOrDefault(_positions, Underlying, new OptionPosition(Underlying, 0));
+#else
+            => _positions.GetValueOrDefault(Underlying, new OptionPosition(Underlying, 0));
+#endif
 
         /// <summary>
         /// Creates a new <see cref="OptionPositionCollection"/> from the specified enumerable of <paramref name="positions"/>
@@ -227,7 +231,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 {
                     if (symbol == underlying)
                     {
-                        var underlyingLots = (int) (holding.Quantity / contractMultiplier);
+                        var underlyingLots = (int)(holding.Quantity / contractMultiplier);
                         positions = positions.Add(new OptionPosition(symbol, underlyingLots));
                     }
 
@@ -239,7 +243,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     continue;
                 }
 
-                var position = new OptionPosition(symbol, (int) holding.Quantity);
+                var position = new OptionPosition(symbol, (int)holding.Quantity);
                 positions = positions.Add(position);
             }
 
@@ -330,7 +334,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         public OptionPositionCollection AddRange(params OptionPosition[] positions)
         {
-            return AddRange((IEnumerable<OptionPosition>) positions);
+            return AddRange((IEnumerable<OptionPosition>)positions);
         }
 
         /// <summary>
@@ -382,7 +386,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Slices this collection, returning a new collection containing only
         /// positions with the specified <paramref name="side"/>
         /// </summary>
-        public OptionPositionCollection  Slice(PositionSide side, bool includeUnderlying = true)
+        public OptionPositionCollection Slice(PositionSide side, bool includeUnderlying = true)
         {
             var otherSides = GetOtherSides(side);
             var sides = _sides.Remove(otherSides[0]).Remove(otherSides[1]);
@@ -597,16 +601,16 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             }
         }
 
-        private static readonly PositionSide[] OtherSidesForNone = {PositionSide.Short, PositionSide.Long};
-        private static readonly PositionSide[] OtherSidesForShort = {PositionSide.None, PositionSide.Long};
-        private static readonly PositionSide[] OtherSidesForLong = {PositionSide.Short, PositionSide.None};
+        private static readonly PositionSide[] OtherSidesForNone = { PositionSide.Short, PositionSide.Long };
+        private static readonly PositionSide[] OtherSidesForShort = { PositionSide.None, PositionSide.Long };
+        private static readonly PositionSide[] OtherSidesForLong = { PositionSide.Short, PositionSide.None };
         private static PositionSide[] GetOtherSides(PositionSide side)
         {
             switch (side)
             {
                 case PositionSide.Short: return OtherSidesForShort;
-                case PositionSide.None:  return OtherSidesForNone;
-                case PositionSide.Long:  return OtherSidesForLong;
+                case PositionSide.None: return OtherSidesForNone;
+                case PositionSide.Long: return OtherSidesForLong;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(side), side, null);
             }
@@ -617,12 +621,12 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             return GetEnumerator();
         }
 
-        public static OptionPositionCollection operator+(OptionPositionCollection positions, OptionPosition position)
+        public static OptionPositionCollection operator +(OptionPositionCollection positions, OptionPosition position)
         {
             return positions.Add(position);
         }
 
-        public static OptionPositionCollection operator-(OptionPositionCollection positions, OptionPosition position)
+        public static OptionPositionCollection operator -(OptionPositionCollection positions, OptionPosition position)
         {
             return positions.Remove(position);
         }

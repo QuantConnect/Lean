@@ -52,7 +52,7 @@ namespace QuantConnect.Configuration
             {
                 foreach (var commandOption in listOfOptions.Where(option => option.HasValue()))
                 {
-                    var optionKey = commandOption.Template.Replace("--", "");
+                    var optionKey = commandOption.LongName.Replace("--", "");
                     var matchingOption = options.Find(o => o.Name == optionKey);
                     switch (matchingOption.Type)
                     {

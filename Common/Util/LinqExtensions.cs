@@ -61,6 +61,7 @@ namespace QuantConnect.Util
             return new ReadOnlyDictionary<K, V>(enumerable.ToDictionary());
         }
 
+#if NET462
         /// <summary>
         /// Creates a new <see cref="HashSet{T}"/> from the elements in the specified enumerable
         /// </summary>
@@ -71,7 +72,7 @@ namespace QuantConnect.Util
         {
             return new HashSet<T>(enumerable);
         }
-
+#endif
         /// <summary>
         /// Creates a new <see cref="HashSet{T}"/> from the elements in the specified enumerable
         /// </summary>
@@ -138,7 +139,7 @@ namespace QuantConnect.Util
         public static T Median<T>(this IEnumerable<T> enumerable)
         {
             var collection = enumerable.ToList();
-            return collection.OrderBy(x => x).Skip(collection.Count/2).First();
+            return collection.OrderBy(x => x).Skip(collection.Count / 2).First();
         }
 
         /// <summary>
@@ -296,7 +297,7 @@ namespace QuantConnect.Util
             {
                 if (e.MoveNext())
                 {
-                    var list = new List<T> {e.Current};
+                    var list = new List<T> { e.Current };
                     var pred = e.Current;
                     while (e.MoveNext())
                     {
@@ -307,7 +308,7 @@ namespace QuantConnect.Util
                         else
                         {
                             yield return list;
-                            list = new List<T> {e.Current};
+                            list = new List<T> { e.Current };
                         }
                         pred = e.Current;
                     }
@@ -347,6 +348,7 @@ namespace QuantConnect.Util
             }
         }
 
+#if NET462
         /// <summary>
         /// Gets the value associated with the specified key or provided default value if key is not found.
         /// </summary>
@@ -361,6 +363,7 @@ namespace QuantConnect.Util
             V obj;
             return dictionary.TryGetValue(key, out obj) ? obj : defaultValue;
         }
+#endif
 
         /// <summary>
         /// Performs an action for each element in collection source

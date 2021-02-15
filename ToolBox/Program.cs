@@ -26,15 +26,19 @@ using QuantConnect.ToolBox.BitfinexDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
-using QuantConnect.ToolBox.DukascopyDownloader;
 using QuantConnect.ToolBox.EstimizeDataDownloader;
+
+#if NET462
+using QuantConnect.ToolBox.DukascopyDownloader;
 using QuantConnect.ToolBox.FxcmDownloader;
 using QuantConnect.ToolBox.FxcmVolumeDownload;
-using QuantConnect.ToolBox.GDAXDownloader;
 using QuantConnect.ToolBox.IBDownloader;
+using QuantConnect.ToolBox.IVolatilityEquityConverter;
+#endif
+
+using QuantConnect.ToolBox.GDAXDownloader;
 using QuantConnect.ToolBox.IEX;
 using QuantConnect.ToolBox.IQFeedDownloader;
-using QuantConnect.ToolBox.IVolatilityEquityConverter;
 using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
@@ -86,6 +90,7 @@ namespace QuantConnect.ToolBox
                         CryptoiqDownloaderProgram.CryptoiqDownloader(tickers, GetParameterOrExit(optionsObject, "exchange"), fromDate, toDate);
                         break;
                     case "ddl":
+#if NET462
                     case "dukascopydownloader":
                         DukascopyDownloaderProgram.DukascopyDownloader(tickers, resolution, fromDate, toDate);
                         break;
@@ -101,6 +106,7 @@ namespace QuantConnect.ToolBox
                     case "ibdownloader":
                         IBDownloaderProgram.IBDownloader(tickers, resolution, fromDate, toDate);
                         break;
+#endif
                     case "iexdl":
                     case "iexdownloader":
                         IEXDownloaderProgram.IEXDownloader(tickers, resolution, fromDate, toDate);
@@ -184,8 +190,8 @@ namespace QuantConnect.ToolBox
                             tickers,
                             GetParameterOrExit(optionsObject, "security-type"),
                             GetParameterOrExit(optionsObject, "market"),
-                            resolution, 
-                            fromDate, 
+                            resolution,
+                            fromDate,
                             toDate);
                         break;
 
@@ -219,6 +225,7 @@ namespace QuantConnect.ToolBox
                     case "algoseekoptionsconverter":
                         AlgoSeekOptionsConverterProgram.AlgoSeekOptionsConverter(GetParameterOrExit(optionsObject, "date"));
                         break;
+#if NET462
                     case "ivec":
                     case "ivolatilityequityconverter":
                         IVolatilityEquityConverterProgram.IVolatilityEquityConverter(GetParameterOrExit(optionsObject, "source-dir"),
@@ -226,6 +233,7 @@ namespace QuantConnect.ToolBox
                                                                                      GetParameterOrExit(optionsObject, "destination-dir"),
                                                                                      GetParameterOrExit(optionsObject, "resolution"));
                         break;
+#endif
                     case "kdc":
                     case "kaikodataconverter":
                         KaikoDataConverterProgram.KaikoDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
@@ -300,7 +308,7 @@ namespace QuantConnect.ToolBox
                         TiingoNewsConverterProgram.TiingoNewsConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrExit(optionsObject, "destination-dir"),
-                            date != null ? DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture) : (DateTime?) null);
+                            date != null ? DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture) : (DateTime?)null);
                         break;
                     case "bzncv":
                     case "benzinganewsconverter":

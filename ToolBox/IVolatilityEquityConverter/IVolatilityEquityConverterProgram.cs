@@ -1,4 +1,5 @@
-﻿/*
+﻿#if NET462
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -36,14 +37,14 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
 
         private const int PriceLastField = 7;
 
-//        private const int SizeLastField = 13;
+        //        private const int SizeLastField = 13;
         private const int VolumeField = 17;
 
         static string _destinationDirectory = "";
         static string _sourceDirectory = "";
         static string _sourceMetaDirectory = "";
         static Resolution _resolution = Resolution.Minute;
-        static readonly string[] Separators = {","};
+        static readonly string[] Separators = { "," };
 
         public static void IVolatilityEquityConverter(string sourceDirectory, string sourceMetaDirectory, string destinationDirectory, string resolution)
         {
@@ -93,9 +94,9 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
                 var inputStream = streamProvider.Open(file).First();
                 var streamReader = new StreamReader(inputStream);
                 IList<TradeBar> fileTradeBars = new List<TradeBar>();
-//                IList<QuoteBar> fileQuoteBars = new List<QuoteBar>();
+                //                IList<QuoteBar> fileQuoteBars = new List<QuoteBar>();
                 var tradeDataWriter = new LeanDataWriter(_resolution, symbol, _destinationDirectory);
-//                var quoteDataWriter = new LeanDataWriter(_resolution, symbol, _destinationDirectory, TickType.Quote);
+                //                var quoteDataWriter = new LeanDataWriter(_resolution, symbol, _destinationDirectory, TickType.Quote);
                 string line;
                 while ((line = streamReader.ReadLine()) != null)
                 {
@@ -117,11 +118,11 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
                     var quoteBar = new QuoteBar(time, symbol, bidBar, sizeBid, askBar, sizeAsk,
                         TimeSpan.FromSeconds(60));
                     fileTradeBars.Add(tradeBar);
-//                    fileQuoteBars.Add(quoteBar);
+                    //                    fileQuoteBars.Add(quoteBar);
                 }
                 tradeDataWriter.Write(fileTradeBars);
                 //TODO: implement quote bars in LeanDataWriter for minute equity resolution
-//                quoteDataWriter.Write(fileQuoteBars);
+                //                quoteDataWriter.Write(fileQuoteBars);
                 count++;
             }
         }
@@ -276,3 +277,4 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
         }
     }
 }
+#endif

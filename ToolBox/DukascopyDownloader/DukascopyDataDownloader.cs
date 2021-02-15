@@ -21,8 +21,9 @@ using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+#if NET462
 using SevenZip;
-
+#endif
 namespace QuantConnect.ToolBox.DukascopyDownloader
 {
     /// <summary>

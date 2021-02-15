@@ -4,10 +4,10 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <RootNamespace>QuantConnect.Algorithm.Framework</RootNamespace>
     <AssemblyName>QuantConnect.Algorithm.Framework</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFrameworks>net50;net462</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <!--<AnalysisMode>AllEnabledByDefault</AnalysisMode> -->
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Algorithm.Framework.xml</DocumentationFile>
     <PackageTags>Library</PackageTags>
     <LangVersion>6</LangVersion>
@@ -41,10 +41,10 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="Accord" Version="3.6.0" />
-    <PackageReference Include="Accord.Math" Version="3.6.0" />
-    <PackageReference Include="Accord.Statistics" Version="3.6.0" />
-    <PackageReference Include="MathNet.Numerics" Version="3.19.0" />
+    <PackageReference Include="Accord" Version="3.8.0" />
+    <PackageReference Include="Accord.Math" Version="3.8.0" />
+    <PackageReference Include="Accord.Statistics" Version="3.8.0" />
+    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -75,7 +75,7 @@
       </ItemGroup>
     </When>
   </Choose>
-  <ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>

@@ -1,0 +1,6 @@
+[submodule "submodules/rdotnet"]
+	path = submodules/rdotnet
+	url = git@github.com:xposure/rdotnet.git
+[submodule "submodules/websocket-sharp"]
+	path = submodules/websocket-sharp
+	url = git@github.com:xposure/websocket-sharp.git
