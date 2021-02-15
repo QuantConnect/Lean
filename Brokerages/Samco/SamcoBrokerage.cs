@@ -1070,7 +1070,7 @@ namespace QuantConnect.Brokerages.Samco
             }
         }
 
-        private void EmitQuoteTick(Symbol symbol,DateTime time, decimal avgPrice, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        private void EmitQuoteTick(Symbol symbol, decimal avgPrice, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
             try
             {
