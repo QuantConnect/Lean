@@ -159,6 +159,10 @@
   // Required for IEX history requests
   "iex-cloud-api-key": "",
 
+  // Required for market data from Coin API 
+  "coinapi-api-key": "",
+  "coinapi-product": "free", // free, startup, streamer, professional, enterprise 
+
   // Required for streaming Polygon.io data
   // To get your access token go to https://polygon.io
   "polygon-api-key": "",
@@ -348,7 +352,7 @@
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler" 
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     }
   }
 }
