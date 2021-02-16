@@ -362,7 +362,7 @@ namespace QuantConnect.Algorithm
             if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
             // verify the types match
             var requestedType = typeof(T);
-            var config = GetMatchingSubscription(symbol, requestedType);
+            var config = GetMatchingSubscription(symbol, requestedType, resolution);
             if (config == null)
             {
                 var actualType = Securities[symbol].Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
@@ -657,10 +657,10 @@ namespace QuantConnect.Algorithm
             });
         }
 
-        private SubscriptionDataConfig GetMatchingSubscription(Symbol symbol, Type type)
+        private SubscriptionDataConfig GetMatchingSubscription(Symbol symbol, Type type, Resolution? resolution = null)
         {
             // find the first subscription matching the requested type with a higher resolution than requested
-            return GetMatchingSubscriptions(symbol, type).FirstOrDefault();
+            return GetMatchingSubscriptions(symbol, type, resolution).FirstOrDefault();
         }
 
         private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
@@ -670,7 +670,7 @@ namespace QuantConnect.Algorithm
             {
                 // find all subscriptions matching the requested type with a higher resolution than requested
                 var matchingSubscriptions = from sub in security.Subscriptions.OrderByDescending(s => s.Resolution)
-                    where type.IsAssignableFrom(sub.Type)
+                    where SubscriptionDataConfigTypeFilter(type, sub.Type)
                     select sub;
 
                 if (resolution.HasValue
@@ -692,6 +692,7 @@ namespace QuantConnect.Algorithm
 
                 return SubscriptionManager
                     .LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution.Value, symbol.IsCanonical())
+                    .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1))
                     .Select(x => new SubscriptionDataConfig(
                         x.Item1,
                         symbol,
@@ -706,6 +707,18 @@ namespace QuantConnect.Algorithm
                         true,
                         UniverseSettings.DataNormalizationMode));
             }
+        }
+
+        /// <summary>
+        /// Helper method to determine if the provided config type passes the filter of the target type
+        /// </summary>
+        /// <remarks>If the target type is <see cref="BaseData"/>, <see cref="OpenInterest"/> config types will return false.
+        /// This is useful to filter OpenInterest by default from history requests unless it's explicitly requested</remarks>
+        private bool SubscriptionDataConfigTypeFilter(Type targetType, Type configType)
+        {
+            var targetIsGenericType = targetType == typeof(BaseData);
+
+            return targetType.IsAssignableFrom(configType) && (!targetIsGenericType || configType != typeof(OpenInterest));
         }
 
         private SecurityExchangeHours GetExchangeHours(Symbol symbol)
