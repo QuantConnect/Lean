@@ -258,7 +258,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // define market hours and user filters to incoming data
                 if (request.Configuration.IsFilteredSubscription)
                 {
-                    enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, request.StartTimeLocal, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
+                    enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
                 }
 
                 // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
