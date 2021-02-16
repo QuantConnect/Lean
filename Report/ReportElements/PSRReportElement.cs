@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
+using Deedle;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -42,20 +45,33 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var psr = _backtest?.TotalPerformance?.PortfolioStatistics?.ProbabilisticSharpeRatio;
-            Result = psr;
-            if (psr == null)
+            decimal? psr;
+            if (_live == null)
+            {
+                psr = _backtest?.TotalPerformance?.PortfolioStatistics?.ProbabilisticSharpeRatio;
+                Result = psr;
+                if (psr == null)
+                {
+                    return "-";
+                }
+                
+                return $"{psr:P0}";
+            }
+
+            var liveEquity = new Series<DateTime, double>(ResultsUtil.EquityPoints(_live));
+            if (liveEquity.IsEmpty)
             {
                 return "-";
             }
 
-            if (psr > 0)
-            {
-                return $"{psr:P0}";
-            }
+            var liveEquityPerformance = liveEquity.ResampleEquivalence(date => date.Date, s => s.LastValue())
+                .PercentChange();
+            
+            var benchmarkSharpeRatio = 1.0d / Math.Sqrt(252);
+            psr = (decimal)Statistics.Statistics.ProbabilisticSharpeRatio(liveEquityPerformance.Values.ToList(), benchmarkSharpeRatio);
+            Result = psr;
 
-            Result = null;
-            return "-";
+            return $"{psr:P0}";
         }
     }
 }
