@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         #region IDataQueueHandler implementation
 
-        private bool _disconnect;
+        private volatile bool _disconnect;
         private volatile bool _refresh = true;
         private Timer _refreshDelay = new Timer();
         private Stream _tradierStream;
@@ -186,7 +186,7 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
-        /// Connect to tradier API strea:
+        /// Connect to tradier API stream
         /// </summary>
         /// <param name="symbols">symbol list</param>
         /// <returns></returns>

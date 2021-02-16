@@ -23,7 +23,6 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -143,8 +142,7 @@ namespace QuantConnect.Brokerages.Tradier
             _rateLimitPeriod[TradierApiRequestType.Data] = TimeSpan.FromMilliseconds(500);
 
             // we can poll orders once a second in sandbox and twice a second in production
-            var orderPollingIntervalInSeconds = Config.GetDouble("tradier-order-poll-interval", 1.0);
-            var interval = (int)(1000 * orderPollingIntervalInSeconds);
+            var interval = _useSandbox ? 1000 : 500;
             _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
 
             Task.Factory.StartNew(() =>
