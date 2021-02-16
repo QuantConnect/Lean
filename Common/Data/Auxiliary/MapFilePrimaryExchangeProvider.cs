@@ -15,7 +15,6 @@
 */
 
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 
@@ -40,7 +39,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="securityIdentifier">The security identifier to get the primary exchange for</param>
         /// <returns>Returns the primary exchange or null if not found</returns>
-        public string GetPrimaryExchange(SecurityIdentifier securityIdentifier)
+        public PrimaryExchange GetPrimaryExchange(SecurityIdentifier securityIdentifier)
         {
             PrimaryExchange primaryExchange;
             if (!_primaryExchangeBySid.TryGetValue(securityIdentifier, out primaryExchange))
@@ -52,7 +51,8 @@ namespace QuantConnect.Data.Auxiliary
                 }
                 _primaryExchangeBySid[securityIdentifier] = primaryExchange;
             }
-            return primaryExchange.ToString();
+
+            return primaryExchange;
         }
     }
 }

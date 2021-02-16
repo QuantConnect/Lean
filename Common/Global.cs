@@ -751,8 +751,8 @@ namespace QuantConnect
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PrimaryExchange GetPrimaryExchange(this string exchange)
         {
-            PrimaryExchange primaryExchange;
-            if (Enum.TryParse(exchange, true, out primaryExchange))
+            var primaryExchange = PrimaryExchange.UNKNOWN;
+            if (string.IsNullOrEmpty(exchange) || Enum.TryParse(exchange, true, out primaryExchange))
             {
                 return primaryExchange;
             }

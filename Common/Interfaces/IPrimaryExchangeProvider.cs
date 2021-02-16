@@ -22,6 +22,6 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="securityIdentifier">The security identifier to get the primary exchange for</param>
         /// <returns>Returns the primary exchange or null if not found</returns>
-        string GetPrimaryExchange(SecurityIdentifier securityIdentifier);
+        PrimaryExchange GetPrimaryExchange(SecurityIdentifier securityIdentifier);
     }
 }
