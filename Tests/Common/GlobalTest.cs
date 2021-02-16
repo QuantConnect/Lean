@@ -18,9 +18,8 @@ using NUnit.Framework;
 namespace QuantConnect.Tests.Common
 {
     [TestFixture]
-    class GlobalTest
+    public class GlobalTest
     {
-
         [TestCase("NASDAQ", "Q")]
         [TestCase("NASDAQ BX", "B")]
         [TestCase("NASDAQ PSX", "X")]
