@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using Deedle;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -42,7 +44,22 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            Result = _backtest?.TotalPerformance?.PortfolioStatistics?.CompoundingAnnualReturn;
+            var equityCurve = _live == null
+                ? new Series<DateTime, double>(ResultsUtil.EquityPoints(_backtest))
+                : DrawdownCollection.NormalizeResults(_backtest, _live);
+
+            if (equityCurve.IsEmpty)
+            {
+                return "-";
+            }
+            
+            var years = (decimal)(equityCurve.LastKey() - equityCurve.FirstKey()).TotalDays / 365m;
+            
+            Result = Statistics.Statistics.CompoundingAnnualPerformance(
+                equityCurve.FirstValue().SafeDecimalCast(),
+                equityCurve.LastValue().SafeDecimalCast(),
+                years);
+            
             return ((decimal?)Result)?.ToString("P1") ?? "-";
         }
     }

@@ -58,19 +58,27 @@ namespace QuantConnect.Report.ReportElements
                 return $"{psr:P0}";
             }
 
-            var liveEquity = new Series<DateTime, double>(ResultsUtil.EquityPoints(_live));
-            if (liveEquity.IsEmpty)
+            var equityCurvePerformance = DrawdownCollection.NormalizeResults(_backtest, _live)
+                .ResampleEquivalence(date => date.Date, s => s.LastValue())
+                .PercentChange();
+
+            if (equityCurvePerformance.IsEmpty || equityCurvePerformance.KeyCount < 180)
             {
                 return "-";
             }
 
-            var liveEquityPerformance = liveEquity.ResampleEquivalence(date => date.Date, s => s.LastValue())
-                .PercentChange();
-            
-            var benchmarkSharpeRatio = 1.0d / Math.Sqrt(252);
-            psr = (decimal)Statistics.Statistics.ProbabilisticSharpeRatio(liveEquityPerformance.Values.ToList(), benchmarkSharpeRatio);
-            Result = psr;
+            var sixMonthsBefore = equityCurvePerformance.LastKey() - TimeSpan.FromDays(180);
 
+            var benchmarkSharpeRatio = 1.0d / Math.Sqrt(252);
+            psr = Statistics.Statistics.ProbabilisticSharpeRatio(
+                equityCurvePerformance
+                    .Where(kvp => kvp.Key >= sixMonthsBefore)
+                    .Values
+                    .ToList(), 
+                benchmarkSharpeRatio)
+                .SafeDecimalCast();
+            
+            Result = psr;
             return $"{psr:P0}";
         }
     }
