@@ -36,7 +36,8 @@ namespace QuantConnect.Report
         public static Series<DateTime, double> Beta(Series<DateTime, double> equityCurve, Series<DateTime, double> benchmarkSeries, int windowSize = 132)
         {
             var dailyReturnsSeries = equityCurve.ResampleEquivalence(date => date.Date, s => s.TotalReturns());
-            var benchmarkReturns = benchmarkSeries.ResampleEquivalence(date => date.Date, s => s.TotalReturns());
+            var benchmarkReturns = benchmarkSeries.ResampleEquivalence(date => date.Date, s => s.LastValue())
+                .CumulativeReturns();
 
             var returns = Frame.CreateEmpty<DateTime, string>();
             returns["strategy"] = dailyReturnsSeries;
