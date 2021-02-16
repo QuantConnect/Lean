@@ -42,16 +42,16 @@
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
+    <Reference Include="Python.Runtime, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="3.19.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
-        </Reference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Data.DataSetExtensions" />

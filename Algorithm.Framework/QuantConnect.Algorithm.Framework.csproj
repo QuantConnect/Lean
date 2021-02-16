@@ -43,6 +43,11 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
   <ItemGroup>
+    <Reference Include="Python.Runtime, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="Accord.Math" Version="3.6.0" />
     <PackageReference Include="Accord.Statistics" Version="3.6.0" />
@@ -52,12 +57,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NodaTime" Version="3.0.5" />
-
-  </ItemGroup>
-  <ItemGroup>
-        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
-        </Reference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Data.DataSetExtensions" />

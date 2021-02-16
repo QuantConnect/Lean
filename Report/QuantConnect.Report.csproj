@@ -53,9 +53,9 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup>
-        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
-        </Reference>
+    <Reference Include="Python.Runtime, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Deedle" Version="2.1.0" />

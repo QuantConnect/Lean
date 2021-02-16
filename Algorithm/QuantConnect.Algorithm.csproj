@@ -56,9 +56,9 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
   <ItemGroup>
-        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
-        </Reference>
+    <Reference Include="Python.Runtime, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
