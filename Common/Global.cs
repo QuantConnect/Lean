@@ -731,7 +731,7 @@ namespace QuantConnect
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetPrimaryExchangeAsSingleCharacter(this string exchange)
         {
-            return ((char)exchange.GetPrimaryExchange()).ToString();
+            return string.IsNullOrEmpty(exchange) ? null : ((char)exchange.GetPrimaryExchange()).ToString();
         }
         
         /// <summary>
