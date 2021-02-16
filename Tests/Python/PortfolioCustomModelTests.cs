@@ -137,7 +137,6 @@ class CustomMarginCallModel(DefaultMarginCallModel):
     def __init__(self, portfolio, defaultOrderProperties):
         self.porfolio = portfolio
         self.defaultOrderProperties = defaultOrderProperties
-        super().__init__(portfolio, defaultOrderProperties)
 
     def GenerateMarginCallOrder(self, security, netLiquidationValue, totalMargin, maintenanceMarginRequirement):
         time = Extensions.ConvertToUtc(security.LocalTime, security.Exchange.TimeZone)

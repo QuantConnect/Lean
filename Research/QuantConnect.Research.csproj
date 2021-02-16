@@ -40,49 +40,15 @@
     <Message Text="IsLinux $(IsLinux)" Importance="high" />
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
-  <Choose>
-    <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(SolutionDir)\..\pythonnet\pythonnet\netfx\amd64\Python.Runtime.dll</HintPath>
-        </Reference>
-        <Content Include="$(SolutionDir)\..\pythonnet\pythonnet\netfx\amd64\clr.pyd">
-          <Link>clr.pyd</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-      </ItemGroup>
-    </When>
-    <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
-        </Reference>
-        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\jupyter\clr.cpython-36m-x86_64-linux-gnu.so">
-          <Link>jupyter\clr.cpython-36m-x86_64-linux-gnu.so</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\jupyter\Python.Runtime.dll">
-          <Link>jupyter\Python.Runtime.dll</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-      </ItemGroup>
-    </When>
-    <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
-        </Reference>
-        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\jupyter\clr.cpython-36m-darwin.so">
-          <Link>jupyter\clr.cpython-36m-darwin.so</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\jupyter\Python.Runtime.dll">
-          <Link>jupyter\Python.Runtime.dll</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-      </ItemGroup>
-    </When>
-  </Choose>
+  <ItemGroup>
+    <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
+    </Reference>
+    <Content Include="$(SolutionDir)\PythonNet\clr.py">
+      <Link>clr.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
