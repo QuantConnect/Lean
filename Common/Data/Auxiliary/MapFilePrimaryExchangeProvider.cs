@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Auxiliary
     /// <summary>
     /// Implementation of IPrimaryExchangeProvider from map files. 
     /// </summary>
-    class MapFilePrimaryExchangeProvider : IPrimaryExchangeProvider
+    public class MapFilePrimaryExchangeProvider : IPrimaryExchangeProvider
     {
         private readonly IMapFileProvider _mapFileProvider;
         private readonly ConcurrentDictionary<SecurityIdentifier, PrimaryExchange> _primaryExchangeBySid;
