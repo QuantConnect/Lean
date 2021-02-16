@@ -60,7 +60,7 @@ namespace QuantConnect.Report.ReportElements
             var maxDrawdown = Statistics.Statistics.DrawdownPercent(equityCurve);
             Result = maxDrawdown;
 
-            return $"{maxDrawdown}";
+            return $"{maxDrawdown:P1}";
         }
     }
 }
