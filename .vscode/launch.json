@@ -28,36 +28,35 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch w/ Mono (Local)",
-            "type": "mono",
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Launcher/bin/Debug/QuantConnect.Lean.Launcher.dll",
+            "args": [],
             "cwd": "${workspaceFolder}/Launcher/bin/Debug/",
-            "program": "${workspaceFolder}/Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe",
+            "stopAtEntry": false,
+            "console": "externalTerminal",
             "args": [
                 "--data-folder",
                 "${workspaceFolder}/Data",
                 "--config",
-                "${workspaceFolder}/Launcher/config.json"],
-            "console": "externalTerminal"
+                "${workspaceFolder}/Launcher/config.json"]
         },
-        {
-            "name": "Debug in Container",
-            "type": "mono",
-            "preLaunchTask": "run-docker",
-            "postDebugTask": "close-docker",
-            "request": "attach",
-            "address": "localhost",
-            "port": 55555
-        },
-        {
-            "name": "Attach to Mono",
-            "type": "mono",
-            "request": "attach",
-            "address": "localhost",
-            "postDebugTask": "close-docker",
-            "port": 55555
-        },
+        // {
+        //     "name": "Launch (Local)",
+        //     "type": "mono",
+        //     "request": "launch",
+        //     "preLaunchTask": "build",
+        //     "cwd": "${workspaceFolder}/Launcher/bin/Debug/",
+        //     "program": "${workspaceFolder}/Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe",
+        //     "args": [
+        //         "--data-folder",
+        //         "${workspaceFolder}/Data",
+        //         "--config",
+        //         "${workspaceFolder}/Launcher/config.json"],
+        //     "console": "externalTerminal"
+        // },
         {
             "name": "Attach to Python (Container)",
             "type": "python",

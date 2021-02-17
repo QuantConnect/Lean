@@ -16,7 +16,7 @@
 
   //Physical DLL location
   "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
-  //"algorithm-location": "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
+  //"algorithm-location": "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.cc",
 
   //Research notebook
   //"composer-dll-directory": ".",
@@ -26,7 +26,7 @@
 
   // debugging configuration - options for debugging-method LocalCmdLine, VisualStudio, PTVSD, PyCharm
   "debugging": false,
-  "debugging-method": "LocalCmdline",
+  "debugging-method": "LocalCmdLine",
 
   // handlers
   "log-handler": "QuantConnect.Logging.CompositeLogHandler",

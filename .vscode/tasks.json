@@ -7,17 +7,15 @@
     "tasks": [
         {
             "label": "build",
-            "type": "shell",
-            "command": "msbuild",
+            "command": "dotnet",
+            "type": "process",
             "args": [
-                "/p:Configuration=Debug",
-                "/p:DebugType=portable",
-                "/t:build",
+                "build",
+                "-f", "net50",
+                "${workspaceFolder}/launcher/QuantConnect.Lean.Launcher.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
             ],
-            "group": "build",
-            "presentation": {
-                "reveal": "silent"
-            },
             "problemMatcher": "$msCompile"
         },
         {
