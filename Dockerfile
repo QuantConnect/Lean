@@ -1,22 +1,19 @@
-#
-#   LEAN Docker Container 20200522
-#   Cross platform deployment for multiple brokerages
-#
+# https://hub.docker.com/_/microsoft-dotnet
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+WORKDIR /source
 
-# Use base system
-FROM quantconnect/lean:foundation
+COPY */*.csproj ./
+RUN find . -depth -name "*.csproj" -exec sh -c 'f="{}"; echo -- "$f" "${QuantConnect.f%}"' \;
+RUN for file in $(ls *.csproj); do mkdir -p ${file%.*}/ && mv $file ${file%.*}/; done
+COPY *.sln .
+RUN dotnet restore
 
-MAINTAINER QuantConnect <contact@quantconnect.com>
+# copy everything else and build app
+COPY . .
+RUN dotnet publish -c release -o /app --no-restore
 
-#Install Python Tool for Visual Studio Debugger for remote python debugging
-RUN pip install ptvsd
-
-#Install PyDev Debugger for Pycharm for remote python debugging
-RUN pip install pydevd-pycharm~=201.8538.36
-
-COPY ./Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
-
-# Can override with '-w'
-WORKDIR /Lean/Launcher/bin/Debug
-
-ENTRYPOINT [ "mono", "QuantConnect.Lean.Launcher.exe" ]
+# final stage/image
+FROM mcr.microsoft.com/dotnet/runtime:5.0
+WORKDIR /app
+COPY --from=build /app ./
+ENTRYPOINT ["dotnet", "QuantConnect.Lean.Launcher.dll"]
