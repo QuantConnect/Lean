@@ -9,9 +9,8 @@ COPY *.sln ./
 COPY Directory.Build.props .
 ADD projectfiles.tar.gz ./
 RUN dotnet restore
-# RUN for file in $(ls *.csproj); do dotnet restore ${file}; done
 
-# # copy everything else and build app
+# copy everything else and build app
 COPY . .
 RUN dotnet publish Launcher/QuantConnect.Lean.Launcher.csproj -c release -o /app 
 
