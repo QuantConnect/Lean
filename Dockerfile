@@ -1,4 +1,5 @@
 # Script for building the project file tar
+#find . -name "*.sln" | tar -cf slnfiles.tar.gz -T -
 #find . -name "*.csproj" | tar -cf projectfiles.tar.gz -T -
 
 # https://hub.docker.com/_/microsoft-dotnet
@@ -8,7 +9,8 @@ WORKDIR /source
 COPY *.sln ./
 COPY Directory.Build.props .
 ADD projectfiles.tar.gz ./
-RUN find . -type f -name '*.csproj' -exec dotnet restore "{}" \;
+ADD slnfiles.tar.gz ./
+RUN find . -type f -name '*.sln' -exec dotnet restore "{}" \;
 #RUN dotnet restore
 
 # copy everything else and build app
