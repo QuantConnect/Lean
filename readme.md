@@ -32,6 +32,8 @@
 - quantconnect/pythonnet needs updated to .net5
 - Consider removing linux/windows/osx and just move to docker for a unified platform
 
+You can install the .NET template by downloading the file from `DotnetTemplate\Lean-NET5.1.0.0.nupkg` and then installing the template with `dotnet new -i Lean-NET5.1.0.0.nupkg` and you can uninstall it with `dotnet new -u Lean-NET5`.
+
 ## Introduction
 
 Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
