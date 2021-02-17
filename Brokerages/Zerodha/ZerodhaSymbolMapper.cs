@@ -136,7 +136,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     //TODO: Handle parsing of BCDOPT strike price
                     if(tp.Segment!= "BCD-OPT")
                     {
-                        var symbol = GetLeanSymbol(tp.TradingSymbol.Trim().Replace(" ", ""), securityType, market, (DateTime)expiryDate, GetStrikePrice(tp), optionRight);
+                        var symbol = GetLeanSymbol(tp.Name.Trim().Replace(" ", ""), securityType, market, (DateTime)expiryDate, GetStrikePrice(tp), optionRight);
                         symbols.Add(symbol);
                         zerodhaInstrumentsMapping.Add(tp.TradingSymbol.Trim().Replace(" ", "") + "^" + market, tp.InstrumentToken);
                     }                    

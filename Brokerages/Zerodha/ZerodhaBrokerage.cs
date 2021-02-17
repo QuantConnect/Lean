@@ -175,7 +175,8 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             foreach (var symbol in symbols)
             {
-                var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
+                var market = getSymbolMarket(symbol);
+                var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, market);
                 if (instrumentToken == 0)
                 {
                     Log.Error("Invalid Zerodha Instrument token");
@@ -191,6 +192,27 @@ namespace QuantConnect.Brokerages.Zerodha
             string requestFullMode = "{\"a\":\"mode\",\"v\":[\"full\",[" + String.Join(",", subscribeInstrumentTokens.ToArray()) + "]]}";
             WebSocket.Send(request);
             WebSocket.Send(requestFullMode);
+        }
+
+        /// <summary>
+        /// Get symbol exchange
+        /// </summary>
+        /// <param name="symbol">symbols to get market</param>
+        /// <returns>string</returns>
+        private string getSymbolMarket(Symbol symbol)
+        {
+            if(symbol.SecurityType == SecurityType.Equity && symbol.ID.Market.ToLowerInvariant() == "nfo")
+            {
+                return "nse";
+            }
+            else if (symbol.SecurityType == SecurityType.Option && symbol.ID.Market.ToLowerInvariant() == "nfo" && symbol.HasUnderlying)
+            {
+                if(symbol.Underlying.SecurityType == SecurityType.Equity && symbol.Underlying.ID.Market == "nfo")
+                {
+                    return "nse";
+                }
+            }
+            return symbol.ID.Market;
         }
 
         /// <summary>
