@@ -1,17 +1,17 @@
 # Script for building the project file tar
-#find . -name "*.sln" | tar -cf slnfiles.tar.gz -T -
-#find . -name "*.csproj" | tar -cf projectfiles.tar.gz -T -
+#find . -name "*.sln" | tar -cf Dockerfiles/sln.tar.gz -T -
+#find . -name "*.fsproj" | tar -cf Dockerfiles/fsproj.tar.gz -T -
+#find . -name "*.csproj" | tar -cf Dockerfiles/csproj.tar.gz -T -
 
 # https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /source
 
-COPY *.sln ./
 COPY Directory.Build.props .
-ADD projectfiles.tar.gz ./
-ADD slnfiles.tar.gz ./
+ADD Dockerfiles/sln.tar.gz ./
+ADD Dockerfiles/fsproj.tar.gz ./
+ADD Dockerfiles/csproj.tar.gz ./
 RUN find . -type f -name '*.sln' -exec dotnet restore "{}" \;
-#RUN dotnet restore
 
 # copy everything else and build app
 COPY . .
