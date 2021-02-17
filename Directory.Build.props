@@ -24,4 +24,16 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target> -->
 
+  <PropertyGroup>
+    <Authors>QuantConnect Team and Community Contributors</Authors>
+    <LicenseUrl>https://github.com/QuantConnect/Lean/blob/master/LICENSE</LicenseUrl>
+    <ProjectUrl>https://github.com/QuantConnect/Lean</ProjectUrl>
+    <IconUrl>https://github.com/QuantConnect/Lean/blob/master/lean.ico</IconUrl>
+    <RepositoryUrl>https://github.com/xposure/Lean</RepositoryUrl>
+    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    <Description>QuantConnect LEAN Engine: Algorithm Project - Core QCAlgorithm implementation</Description>
+    <Copyright>QuantConnect™ 2018. All Rights Reserved</Copyright>
+    <Tags>algorithm algorithmic-trading-engine bitcoins broker c-sharp cfd crypto finance future forex fxcm gdax hft hft-trading interactive-brokers lean-engine markets nasdaq oanda options python quant quantconnect quantitative-finance stock-indicators trading trading-algorithms trading-bot trading-platform trading-robots trading-strategies</Tags>
+  </PropertyGroup>
+
 </Project>

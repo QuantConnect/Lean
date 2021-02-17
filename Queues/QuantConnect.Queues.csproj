@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Id>QuantConnect.Queues</Id>
+  </PropertyGroup>
+  <PropertyGroup>
     <RootNamespace>QuantConnect.Queues</RootNamespace>
     <AssemblyName>QuantConnect.Queues</AssemblyName>
     <TargetFramework>net50</TargetFramework>

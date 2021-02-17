@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Id>QuantConnect.Logging</Id>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <RootNamespace>QuantConnect.Logging</RootNamespace>
     <AssemblyName>QuantConnect.Logging</AssemblyName>
     <TargetFramework>net50</TargetFramework>

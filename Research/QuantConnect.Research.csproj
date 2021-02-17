@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Id>QuantConnect.Research</Id>
+  </PropertyGroup>
+  <PropertyGroup>
     <RootNamespace>QuantConnect.Research</RootNamespace>
     <AssemblyName>QuantConnect.Research</AssemblyName>
     <TargetFramework>net50</TargetFramework>

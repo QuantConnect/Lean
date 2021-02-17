@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Id>QuantConnect.Brokerages</Id>
+  </PropertyGroup>
+  <PropertyGroup>
     <RootNamespace>QuantConnect.Brokerages</RootNamespace>
     <AssemblyName>QuantConnect.Brokerages</AssemblyName>
     <TargetFramework>net50</TargetFramework>

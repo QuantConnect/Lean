@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Id>QuantConnect.Indicators</Id>
+  </PropertyGroup>
+  <PropertyGroup>
     <RootNamespace>QuantConnect.Indicators</RootNamespace>
     <AssemblyName>QuantConnect.Indicators</AssemblyName>
     <TargetFramework>net50</TargetFramework>

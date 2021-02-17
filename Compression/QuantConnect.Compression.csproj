@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Id>QuantConnect.Compression</Id>
+  </PropertyGroup>
+  <PropertyGroup>
     <RootNamespace>QuantConnect.Compression</RootNamespace>
     <AssemblyName>QuantConnect.Compression</AssemblyName>
     <TargetFramework>net50</TargetFramework>
