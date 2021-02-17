@@ -50,7 +50,7 @@
   </Target>
   <ItemGroup>
     <Reference Include="Python.Runtime,  Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\PythonNet\runtime\Python.Runtime.dll</HintPath>
+      <HintPath>$(ProjectDir)..\PythonNet\Python.Runtime.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
