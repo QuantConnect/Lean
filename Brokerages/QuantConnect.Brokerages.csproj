@@ -1,33 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <RootNamespace>QuantConnect.Brokerages</RootNamespace>
     <AssemblyName>QuantConnect.Brokerages</AssemblyName>
-    <TargetFrameworks>net50;net462</TargetFrameworks>
-    <LangVersion>6</LangVersion>
-    <!--<AnalysisMode>AllEnabledByDefault</AnalysisMode> -->
-    <DefineConstants>NET45</DefineConstants>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <TargetFramework>net50</TargetFramework>
+    <!-- <DefineConstants>NET45</DefineConstants> -->
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Brokerages.xml</DocumentationFile>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugType>full</DebugType>
-    <Optimize>$(SelectedOptimization)</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NET45</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>TRACE;NET45</DefineConstants>
-  </PropertyGroup>
-  <Target Name="Print" BeforeTargets="Build">
-    <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
-  </Target>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
@@ -47,7 +26,7 @@
     <Compile Remove="Fxcm/**"/>
     <Compile Remove="InteractiveBrokers/**" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+  <!-- <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <PackageReference Include="IKVM" Version="8.1.5717" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -68,7 +47,7 @@
       <HintPath>Fxcm\QuantConnect.Fxcm.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-  </ItemGroup>
+  </ItemGroup> -->
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
