@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Arrange
             var equitySymbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var mockedPrimaryExchangeProvider = new Mock<IPrimaryExchangeProvider>();
-            mockedPrimaryExchangeProvider.Setup(pep => pep.GetPrimaryExchange(equitySymbol.ID)).Returns("NASDAQ");
+            mockedPrimaryExchangeProvider.Setup(pep => pep.GetPrimaryExchange(equitySymbol.ID)).Returns(PrimaryExchange.NASDAQ);
 
             var algorithm = new AlgorithmStub();
             var securityService = new SecurityService(algorithm.Portfolio.CashBook,
