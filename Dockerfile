@@ -18,4 +18,5 @@ RUN dotnet publish Launcher/QuantConnect.Lean.Launcher.csproj -c release -o /app
 FROM mcr.microsoft.com/dotnet/runtime:5.0
 WORKDIR /app
 COPY --from=build /app ./
-#ENTRYPOINT ["dotnet", "QuantConnect.Lean.Launcher.dll"]
+COPY --from=build /source/Data /Data
+ENTRYPOINT ["dotnet", "QuantConnect.Lean.Launcher.dll"]
