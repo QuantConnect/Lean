@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.Brokerages</RootNamespace>
-    <AssemblyName>Xposure.Brokerages</AssemblyName>
+    <AssemblyName>QuantConnect.Brokerages</AssemblyName>
+    <PackageId>Xposure.Brokerages</PackageId>
     <TargetFramework>net50</TargetFramework>
     <!-- <DefineConstants>NET45</DefineConstants> -->
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Brokerages.xml</DocumentationFile>

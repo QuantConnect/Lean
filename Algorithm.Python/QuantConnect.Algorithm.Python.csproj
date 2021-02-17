@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>QuantConnect.Algorithm.Python</RootNamespace>
-    <AssemblyName>Xposure.Algorithm.Python</AssemblyName>
+    <AssemblyName>QuantConnect.Algorithm.Python</AssemblyName>
+    <PackageId>Xposure.Algorithm.Python</PackageId>
     <TargetFramework>net50</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>

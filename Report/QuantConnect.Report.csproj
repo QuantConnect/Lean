@@ -2,7 +2,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>QuantConnect.Report</RootNamespace>
-    <AssemblyName>Xposure.Report</AssemblyName>
+    <AssemblyName>QuantConnect.Report</AssemblyName>
+    <PackageId>Xposure.Report</PackageId>
     <TargetFramework>net50</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Report.xml</DocumentationFile>

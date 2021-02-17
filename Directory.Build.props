@@ -26,7 +26,7 @@
 
   <PropertyGroup>
     <IsPackable>False</IsPackable>
-    <Version>8.1.4</Version>
+    <Version>8.1.5</Version>
     <Authors>QuantConnect Team and Community Contributors</Authors>
     <LicenseUrl>https://github.com/QuantConnect/Lean/blob/master/LICENSE</LicenseUrl>
     <ProjectUrl>https://github.com/QuantConnect/Lean</ProjectUrl>

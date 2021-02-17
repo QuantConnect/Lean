@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>QuantConnect.Tests</RootNamespace>
-    <AssemblyName>Xposure.Tests</AssemblyName>
+    <AssemblyName>QuantConnect.Tests</AssemblyName>
+    <PackageId>Xposure.Tests</PackageId>
     <TargetFramework>net50</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>

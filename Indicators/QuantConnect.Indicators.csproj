@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.Indicators</RootNamespace>
-    <AssemblyName>Xposure.Indicators</AssemblyName>
+    <AssemblyName>QuantConnect.Indicators</AssemblyName>
+    <PackageId>Xposure.Indicators</PackageId>
     <TargetFramework>net50</TargetFramework>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Indicators.xml</DocumentationFile>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>

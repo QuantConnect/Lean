@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.Api</RootNamespace>
-    <AssemblyName>Xposure.Api</AssemblyName>
+    <AssemblyName>QuantConnect.Api</AssemblyName>
+    <PackageId>Xposure.Api</PackageId>
     <TargetFramework>net50</TargetFramework>
     <RestorePackages>true</RestorePackages>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Api.xml</DocumentationFile>

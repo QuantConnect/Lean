@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.Queues</RootNamespace>
-    <AssemblyName>Xposure.Queues</AssemblyName>
+    <AssemblyName>QuantConnect.Queues</AssemblyName>
+    <PackageId>Xposure.Queues</PackageId>
     <TargetFramework>net50</TargetFramework>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Queues.xml</DocumentationFile>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>

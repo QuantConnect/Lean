@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <TargetFramework>net50</TargetFramework>
-    <AssemblyName>Xposure.Common</AssemblyName>
+    <AssemblyName>QuantConnect.Common</AssemblyName>
+    <PackageId>Xposure.Common</PackageId>
     <RestorePackages>true</RestorePackages>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Common.xml</DocumentationFile>
   </PropertyGroup>

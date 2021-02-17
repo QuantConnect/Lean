@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.Algorithm.CSharp</RootNamespace>
-    <AssemblyName>Xposure.Algorithm.CSharp</AssemblyName>
+    <AssemblyName>QuantConnect.Algorithm.CSharp</AssemblyName>
+    <PackageId>Xposure.Algorithm.CSharp</PackageId>
     <TargetFramework>net50</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>

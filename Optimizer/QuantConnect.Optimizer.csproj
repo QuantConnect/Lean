@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>QuantConnect.Optimizer</RootNamespace>
-    <AssemblyName>Xposure.Optimizer</AssemblyName>
+    <AssemblyName>QuantConnect.Optimizer</AssemblyName>
+    <PackageId>Xposure.Optimizer</PackageId>
     <TargetFramework>net50</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.Research</RootNamespace>
-    <AssemblyName>Xposure.Research</AssemblyName>
+    <AssemblyName>QuantConnect.Research</AssemblyName>
+    <PackageId>Xposure.Research</PackageId>
     <TargetFramework>net50</TargetFramework>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
   </PropertyGroup>

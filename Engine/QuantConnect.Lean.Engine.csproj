@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.Lean.Engine</RootNamespace>
-    <AssemblyName>Xposure.Lean.Engine</AssemblyName>
+    <AssemblyName>QuantConnect.Lean.Engine</AssemblyName>
+    <PackageId>Xposure.Lean.Engine</PackageId>
     <TargetFramework>net50</TargetFramework>
     <RestorePackages>true</RestorePackages>
     <PublishUrl>publish\</PublishUrl>

@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.AlgorithmFactory</RootNamespace>
-    <AssemblyName>Xposure.AlgorithmFactory</AssemblyName>
+    <AssemblyName>QuantConnect.AlgorithmFactory</AssemblyName>
+    <PackageId>Xposure.AlgorithmFactory</PackageId>
     <TargetFramework>net50</TargetFramework>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.AlgorithmFactory.xml</DocumentationFile>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>

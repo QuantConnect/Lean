@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.Messaging</RootNamespace>
-    <AssemblyName>Xposure.Messaging</AssemblyName>
+    <AssemblyName>QuantConnect.Messaging</AssemblyName>
+    <PackageId>Xposure.Messaging</PackageId>
     <TargetFramework>net50</TargetFramework>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Messaging.xml</DocumentationFile>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

@@ -30,6 +30,7 @@
 - Added some InvisibleTo attributes to support internal on projects without a package
   If you would like to help complete this fork by running the tests and provide proper python support, please reach me on discord xposure#8248
 - quantconnect/pythonnet needs updated to .net5
+- Consider removing linux/windows/osx and just move to docker for a unified platform
 
 ## Introduction
 

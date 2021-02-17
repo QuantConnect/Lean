@@ -2,7 +2,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>QuantConnect.Optimizer.Launcher</RootNamespace>
-    <AssemblyName>Xposure.Optimizer.Launcher</AssemblyName>
+    <AssemblyName>QuantConnect.Optimizer.Launcher</AssemblyName>
+    <PackageId>Xposure.Optimizer.Launcher</PackageId>
     <TargetFramework>net50</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

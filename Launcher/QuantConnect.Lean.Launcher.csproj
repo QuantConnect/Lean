@@ -3,7 +3,8 @@
     <IsPackable>true</IsPackable>
     <OutputType>Exe</OutputType>
     <RootNamespace>QuantConnect.Lean.Launcher</RootNamespace>
-    <AssemblyName>Xposure.Lean.Launcher</AssemblyName>
+    <AssemblyName>QuantConnect.Lean.Launcher</AssemblyName>
+    <PackageId>Xposure.Lean.Launcher</PackageId>
     <TargetFramework>net50</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>

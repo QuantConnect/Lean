@@ -2,7 +2,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <RootNamespace>QuantConnect.Algorithm.Framework</RootNamespace>
-    <AssemblyName>Xposure.Algorithm.Framework</AssemblyName>
+    <AssemblyName>QuantConnect.Algorithm.Framework</AssemblyName>
+    <PackageId>Xposure.Algorithm.Framework</PackageId>
     <TargetFramework>net50</TargetFramework>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Algorithm.Framework.xml</DocumentationFile>
     <PackageTags>Library</PackageTags>
