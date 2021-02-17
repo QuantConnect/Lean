@@ -16,8 +16,10 @@
 using System;
 using QuantConnect.Data;
 using System.Collections;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -50,14 +52,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public LiveDelistingEventProviderEnumerator(ITimeProvider timeProvider, SubscriptionDataConfig dataConfig, SecurityCache securityCache)
+        private LiveDelistingEventProviderEnumerator(ITimeProvider timeProvider, SubscriptionDataConfig dataConfig,
+            SecurityCache securityCache, DelistingEventProvider delistingEventProvider, MapFile mapFile)
         {
             _dataConfig = dataConfig;
             _timeProvider = timeProvider;
             _securityCache = securityCache;
             _dataToEmit = new Queue<BaseData>();
-            _delistingEventProvider = new DelistingEventProvider();
-            _delistingEventProvider.Initialize(dataConfig, null, null, DateTime.UtcNow);
+            _delistingEventProvider = delistingEventProvider;
+            _delistingEventProvider.Initialize(dataConfig, null, mapFile, DateTime.UtcNow);
         }
 
         /// <summary>
@@ -106,6 +109,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Dispose()
         {
+        }
+
+        /// <summary>
+        /// Helper method to create a new instance.
+        /// Knows which security types should create one and determines the appropriate delisting event provider to use
+        /// </summary>
+        public static bool TryCreate(SubscriptionDataConfig dataConfig, ITimeProvider timeProvider, IDataQueueHandler dataQueueHandler,
+            SecurityCache securityCache, IMapFileProvider mapFileProvider, out IEnumerator<BaseData> enumerator)
+        {
+            enumerator = null;
+            var securityType = dataConfig.SecurityType;
+            if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future
+                || securityType == SecurityType.Option || securityType == SecurityType.Equity)
+            {
+                var mapfile = mapFileProvider.Get(dataConfig.Symbol.ID.Market).ResolveMapFile(dataConfig.Symbol, dataConfig.Type);
+                var delistingEventProvider = new DelistingEventProvider();
+                if (securityType == SecurityType.Equity)
+                {
+                    delistingEventProvider = new LiveDataBasedDelistingEventProvider(dataConfig, dataQueueHandler);
+                }
+                enumerator = new LiveDelistingEventProviderEnumerator(timeProvider, dataConfig, securityCache, delistingEventProvider, mapfile);
+                return true;
+            }
+            return false;
         }
     }
 }

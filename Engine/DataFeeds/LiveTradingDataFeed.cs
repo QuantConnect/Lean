@@ -48,6 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ITimeProvider _timeProvider;
         private ITimeProvider _frontierTimeProvider;
         private IDataProvider _dataProvider;
+        private IMapFileProvider _mapFileProvider;
         private IDataQueueHandler _dataQueueHandler;
         private BaseDataExchange _customExchange;
         private SubscriptionCollection _subscriptions;
@@ -85,8 +86,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _job = (LiveNodePacket) job;
             _timeProvider = dataFeedTimeProvider.TimeProvider;
             _dataProvider = dataProvider;
+            _mapFileProvider = mapFileProvider;
             _channelProvider = dataChannelProvider;
-
             _frontierTimeProvider = dataFeedTimeProvider.FrontierTimeProvider;
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
@@ -249,12 +250,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler));
                             auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler));
                         }
-                        else if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future || securityType == SecurityType.Option)
+
+                        IEnumerator<BaseData> delistingEnumerator;
+                        if (LiveDelistingEventProviderEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler, request.Security.Cache, _mapFileProvider, out delistingEnumerator))
                         {
-                            auxEnumerators.Add(new LiveDelistingEventProviderEnumerator(_timeProvider, request.Configuration, request.Security.Cache));
+                            auxEnumerators.Add(delistingEnumerator);
                         }
 
-                        enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators.ToArray());
+                        if (auxEnumerators.Count > 0)
+                        {
+                            enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators.ToArray());
+                        }
                     }
                 }
 

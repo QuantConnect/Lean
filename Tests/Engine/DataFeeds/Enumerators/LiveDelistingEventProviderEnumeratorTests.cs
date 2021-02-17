@@ -18,6 +18,8 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
@@ -43,7 +45,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             cache.AddData(new Tick(DateTime.UtcNow, config.Symbol, 20, 10));
             var timeProvider = new ManualTimeProvider(time);
 
-            var enumerator = new LiveDelistingEventProviderEnumerator(timeProvider, config, cache);
+            IEnumerator<BaseData> enumerator;
+            Assert.IsTrue(LiveDelistingEventProviderEnumerator.TryCreate(config, timeProvider, null, cache, new LocalDiskMapFileProvider(), out enumerator));
 
             Assert.IsFalse(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
