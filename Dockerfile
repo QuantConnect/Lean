@@ -8,11 +8,12 @@ WORKDIR /source
 COPY *.sln ./
 COPY Directory.Build.props .
 ADD projectfiles.tar.gz ./
-RUN dotnet restore
+RUN find . -type f -name '*.csproj' -exec dotnet restore "{}" \;
+#RUN dotnet restore
 
 # copy everything else and build app
 COPY . .
-RUN dotnet publish Launcher/QuantConnect.Lean.Launcher.csproj -c release -o /app 
+RUN dotnet publish Launcher/QuantConnect.Lean.Launcher.csproj -c release -o /app --no-restore
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/runtime:5.0
