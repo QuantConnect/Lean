@@ -56,6 +56,7 @@ namespace QuantConnect.Lean.Engine
 
         private DateTime? _lastHistoryTimeUtc;
         private AlgorithmWarmupState _warmupState;
+        private bool _appliedSecurityChanges;
         private readonly ConcurrentQueue<TimeSlice> _historicalTimeSlicesQueue = new ConcurrentQueue<TimeSlice>();
         private readonly ConcurrentQueue<TimeSlice> _tempSynchronizerTimeSlicesQueue = new ConcurrentQueue<TimeSlice>();
 
@@ -405,6 +406,8 @@ namespace QuantConnect.Lean.Engine
 
                         algorithm.OnSecuritiesChanged(algorithmSecurityChanges);
                         algorithm.OnFrameworkSecuritiesChanged(algorithmSecurityChanges);
+
+                        _appliedSecurityChanges = true;
                     }
                     catch (Exception err)
                     {
@@ -720,8 +723,12 @@ namespace QuantConnect.Lean.Engine
             {
                 if (algorithm.LiveMode && algorithm.IsWarmingUp)
                 {
-                    var hasTradableSecurities = algorithm.Securities.Values.Any(s => s.IsTradable);
-                    if (hasTradableSecurities && _warmupState == AlgorithmWarmupState.NotStarted)
+                    if (timeSlice.IsTimePulse)
+                    {
+                        continue;
+                    }
+
+                    if (_appliedSecurityChanges && _warmupState == AlgorithmWarmupState.NotStarted)
                     {
                         // Get the required history job from the algorithm
                         var historyRequests = _algorithm.GetWarmupHistoryRequests().ToList();
@@ -791,11 +798,6 @@ namespace QuantConnect.Lean.Engine
                                 break;
                             }
                         }
-                    }
-
-                    if (timeSlice.IsTimePulse)
-                    {
-                        continue;
                     }
                 }
 
@@ -895,11 +897,8 @@ namespace QuantConnect.Lean.Engine
                         return;
                     }
 
-                    if (timeSlice != null)
-                    {
-                        _historicalTimeSlicesQueue.Enqueue(timeSlice);
-                        _lastHistoryTimeUtc = timeSlice.Time;
-                    }
+                    _historicalTimeSlicesQueue.Enqueue(timeSlice);
+                    _lastHistoryTimeUtc = timeSlice.Time;
                 }
             }
 
