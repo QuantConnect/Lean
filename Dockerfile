@@ -11,13 +11,13 @@ COPY Directory.Build.props .
 ADD Dockerfiles/*.tar.gz ./
 RUN find . -type f -name '*.sln' -exec dotnet restore "{}" \;
 
-# copy everything else and build app
+# copy everything else and build lean
 COPY . .
-RUN dotnet publish Launcher/QuantConnect.Lean.Launcher.csproj -c release -o /app --no-restore
+RUN dotnet publish Launcher/QuantConnect.Lean.Launcher.csproj -c release -o /lean --no-restore
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/runtime:5.0
-WORKDIR /app
-COPY --from=build /app ./
+WORKDIR /lean
+COPY --from=build /lean ./
 COPY --from=build /source/Data /Data
 ENTRYPOINT ["dotnet", "QuantConnect.Lean.Launcher.dll"]

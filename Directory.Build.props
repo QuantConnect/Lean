@@ -25,8 +25,7 @@
   </Target> -->
 
   <PropertyGroup>
-    <Version>8.1.0</Version>
-    <VersionSuffix>alpha</VersionSuffix>
+    <Version>8.1.2</Version>
     <Authors>QuantConnect Team and Community Contributors</Authors>
     <LicenseUrl>https://github.com/QuantConnect/Lean/blob/master/LICENSE</LicenseUrl>
     <ProjectUrl>https://github.com/QuantConnect/Lean</ProjectUrl>
