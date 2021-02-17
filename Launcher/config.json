@@ -77,12 +77,9 @@
   "ib-version": "974",
 
   // tradier configuration
+  "tradier-use-sandbox": true,
   "tradier-account-id": "",
   "tradier-access-token": "",
-  "tradier-refresh-token": "",
-  "tradier-issued-at": "",
-  "tradier-lifespan": "",
-  "tradier-refresh-session": true,
 
   // oanda configuration
   "oanda-environment": "Practice",
