@@ -98,6 +98,7 @@ namespace QuantConnect.Brokerages.Tradier
             var accessToken = Read<string>(job.BrokerageData, "tradier-access-token", errors);
 
             var brokerage = new TradierBrokerage(
+                algorithm,
                 algorithm.Transactions,
                 algorithm.Portfolio,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),

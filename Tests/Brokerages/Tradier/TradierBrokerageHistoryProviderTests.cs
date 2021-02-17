@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
                 var accountId = Config.Get("tradier-account-id");
                 var accessToken = Config.Get("tradier-access-token");
 
-                var brokerage = new TradierBrokerage(null, null, null, useSandbox, accountId, accessToken);
+                var brokerage = new TradierBrokerage(null, null, null, null, useSandbox, accountId, accessToken);
 
                 var now = DateTime.UtcNow;
 

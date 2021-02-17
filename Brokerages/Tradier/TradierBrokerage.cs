@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.Tradier
     ///  - Placing orders.
     ///  - Getting user data.
     /// </summary>
-    public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
+    public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
     {
         private readonly bool _useSandbox;
         private readonly string _accountId;
@@ -66,6 +66,8 @@ namespace QuantConnect.Brokerages.Tradier
 
         //Endpoints:
         private readonly string _requestEndpoint;
+
+        private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
         private readonly IDataAggregator _aggregator;
@@ -94,6 +96,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Create a new Tradier Object:
         /// </summary>
         public TradierBrokerage(
+            IAlgorithm algorithm,
             IOrderProvider orderProvider,
             ISecurityProvider securityProvider,
             IDataAggregator aggregator,
@@ -102,6 +105,7 @@ namespace QuantConnect.Brokerages.Tradier
             string accessToken)
             : base("Tradier Brokerage")
         {
+            _algorithm = algorithm;
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
             _aggregator = aggregator;
@@ -150,35 +154,44 @@ namespace QuantConnect.Brokerages.Tradier
                 IEnumerator<TradierStreamData> pipe = null;
                 do
                 {
-                    if (!Subscriptions.Any())
+                    try
                     {
-                        Thread.Sleep(10);
-                        continue;
-                    }
-
-                    //If there's been an update to the subscriptions list; recreate the stream.
-                    if (_refresh)
-                    {
-                        var stream = Stream(GetTickers());
-                        pipe = stream.GetEnumerator();
-                        pipe.MoveNext();
-                        _refresh = false;
-                    }
-
-                    if (pipe != null && pipe.Current != null)
-                    {
-                        var tsd = pipe.Current;
-                        if (tsd.Type == "trade")
+                        if (!Subscriptions.Any())
                         {
-                            var tick = CreateTick(tsd);
-                            if (tick != null)
-                            {
-                                _aggregator.Update(tick);
-                            }
+                            Thread.Sleep(10);
+                            continue;
                         }
-                        pipe.MoveNext();
+
+                        //If there's been an update to the subscriptions list; recreate the stream.
+                        if (_refresh)
+                        {
+                            var stream = Stream(GetTickers());
+                            pipe = stream.GetEnumerator();
+                            pipe.MoveNext();
+                            _refresh = false;
+                        }
+
+                        if (pipe?.Current != null)
+                        {
+                            var tsd = pipe.Current;
+                            if (tsd.Type == "trade" || tsd.Type == "quote")
+                            {
+                                var tick = CreateTick(tsd);
+                                if (tick != null)
+                                {
+                                    _aggregator.Update(tick);
+                                }
+                            }
+                            pipe.MoveNext();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e);
                     }
                 } while (!_disconnect);
+
+                pipe.DisposeSafely();
             }, TaskCreationOptions.LongRunning);
         }
 

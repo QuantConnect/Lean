@@ -107,7 +107,10 @@ namespace QuantConnect.Brokerages.Tradier
             _refreshDelay.Elapsed += (sender, args) =>
             {
                 _refresh = true;
-                Log.Trace("TradierBrokerage.DataQueueHandler.Refresh(): Updating tickers..." + string.Join(",", Subscriptions.Select(x => x.Value)));
+
+                var tickerList = string.Join(",", Subscriptions.Where(x => !x.IsCanonical()).Select(x => x.Value));
+                Log.Trace($"TradierBrokerage.DataQueueHandler.Refresh(): Updating tickers: {tickerList}");
+
                 CloseStream();
                 _refreshDelay.Stop();
             };
@@ -120,48 +123,82 @@ namespace QuantConnect.Brokerages.Tradier
         /// <returns>List of string tickers</returns>
         private List<string> GetTickers()
         {
-            var values = Subscriptions.Select(x => x.Value).ToList();
+            var values = Subscriptions
+                .Where(x => !x.IsCanonical())
+                .Select(x => x.SecurityType == SecurityType.Option
+                    ? x.Value.Replace(" ", "")
+                    : x.Value).ToList();
             Log.Trace("TradierBrokerage.DataQueueHandler.GetTickers(): " + string.Join(",", values));
             return values;
         }
 
         /// <summary>
-        /// Create a tick from the tradier stream data:
+        /// Create a tick from the tradier stream data
         /// </summary>
-        /// <param name="tsd">Tradier stream data obejct</param>
+        /// <param name="tsd">Tradier stream data object</param>
         /// <returns>LEAN Tick object</returns>
         private Tick CreateTick(TradierStreamData tsd)
         {
-            var symbol = Subscriptions.FirstOrDefault(x => x.Value == tsd.Symbol);
+            var symbol = Subscriptions.FirstOrDefault(x =>
+            {
+                var ticker = x.SecurityType == SecurityType.Option
+                    ? x.Value.Replace(" ", "")
+                    : x.Value;
+
+                return ticker == tsd.Symbol;
+            });
 
             // Not subscribed to this symbol.
             if (symbol == null) return null;
 
-            // Occassionally Tradier sends trades with 0 volume?
-            if (tsd.TradeSize == 0) return null;
+            if (tsd.Type == "trade")
+            {
+                // Occassionally Tradier sends trades with 0 volume?
+                if (tsd.TradeSize == 0) return null;
+            }
 
             // Tradier trades are US NY time only. Convert local server time to NY Time:
             var unix = tsd.UnixDate.ConvertInvariant<long>() / 1000;
             var utc = Time.UnixTimeStampToDateTime(unix);
 
-            // Occassionally Tradier sends old ticks every 20sec-ish if no trading?
+            // Occasionally Tradier sends old ticks every 20sec-ish if no trading?
             if (DateTime.UtcNow - utc > TimeSpan.FromSeconds(10)) return null;
 
             //Convert the to security timezone and pass into algorithm
             var time = utc.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
 
-            return new Tick
+            switch (tsd.Type)
             {
-                Exchange = tsd.TradeExchange,
-                TickType = TickType.Trade,
-                Quantity = (int)tsd.TradeSize,
-                Time = time,
-                EndTime = time,
-                Symbol = symbol,
-                DataType = MarketDataType.Tick,
-                Suspicious = false,
-                Value = tsd.TradePrice
-            };
+                case "trade":
+                    return new Tick
+                    {
+                        Exchange = tsd.TradeExchange,
+                        TickType = TickType.Trade,
+                        Quantity = (int)tsd.TradeSize,
+                        Time = time,
+                        EndTime = time,
+                        Symbol = symbol,
+                        DataType = MarketDataType.Tick,
+                        Suspicious = false,
+                        Value = tsd.TradePrice
+                    };
+
+                case "quote":
+                    return new Tick
+                    {
+                        TickType = TickType.Quote,
+                        BidPrice = tsd.BidPrice,
+                        BidSize = tsd.BidSize,
+                        AskPrice = tsd.AskPrice,
+                        AskSize = tsd.AskSize,
+                        Time = time,
+                        EndTime = time,
+                        Symbol = symbol,
+                        DataType = MarketDataType.Tick
+                    };
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -196,7 +233,7 @@ namespace QuantConnect.Brokerages.Tradier
             var symbolJoined = String.Join(",", symbols);
             var session = CreateStreamSession();
 
-            if (session == null || session.SessionId == null || session.Url == null)
+            if (session?.SessionId == null || session.Url == null)
             {
                 Log.Error("Tradier.Stream(): Failed to Created Stream Session", true);
                 yield break;
@@ -267,7 +304,7 @@ namespace QuantConnect.Brokerages.Tradier
                     }
                     catch (Exception err)
                     {
-                        Log.Trace("TradierBrokerage.DataQueueHandler.Stream(): Handled breakout / socket close from jsonRead operation: " + err.Message);
+                        Log.Trace("TradierBrokerage.DataQueueHandler.Stream(): Handled breakout / socket close from json Read operation: " + err.Message);
                         break;
                     }
 
@@ -286,7 +323,7 @@ namespace QuantConnect.Brokerages.Tradier
                     catch (Exception err)
                     {
                         // Do nothing for now. Can come back later to fix. Errors are from Tradier not properly json encoding values E.g. "NaN" string.
-                        Log.Trace("TradierBrokerage.DataQueueHandler.Stream(): Handled breakout / socket close from jsonRead operation: " + err.Message);
+                        Log.Trace("TradierBrokerage.DataQueueHandler.Stream(): Handled breakout / socket close from json Deserialize operation: " + err.Message);
                     }
 
                     // don't yield garbage, just wait for the next one
