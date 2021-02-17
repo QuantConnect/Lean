@@ -29,6 +29,7 @@
 - Current InteractiveBroker and FXCM are not including in the .NET5.0 builds until their are updated
 - Added some InvisibleTo attributes to support internal on projects without a package
   If you would like to help complete this fork by running the tests and provide proper python support, please reach me on discord xposure#8248
+- quantconnect/pythonnet needs updated to .net5
 
 ## Introduction
 
