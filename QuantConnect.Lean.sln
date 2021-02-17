@@ -58,6 +58,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Optimizer", "O
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Optimizer.Launcher", "Optimizer.Launcher\QuantConnect.Optimizer.Launcher.csproj", "{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "submodules", "submodules", "{7E473D16-DF69-4F54-B945-36B5BE29A8E4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rdotnet", "rdotnet", "{17268FA1-18C7-4F75-AD16-F8D17684BDC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RDotNet", "submodules\rdotnet\R.NET\RDotNet.csproj", "{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "websocket-sharp", "websocket-sharp", "{3E3F2A32-128D-44B8-A39F-373EFB175ED7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "websocket-sharp", "submodules\websocket-sharp\websocket-sharp\websocket-sharp.csproj", "{72D7A27E-6C07-4F1B-AF05-FC5B32092B65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -224,11 +234,33 @@ Global
 		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|x64.ActiveCfg = Release|Any CPU
 		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|x64.Build.0 = Release|Any CPU
+		{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5}.Debug|x64.Build.0 = Debug|Any CPU
+		{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5}.Release|x64.ActiveCfg = Release|Any CPU
+		{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5}.Release|x64.Build.0 = Release|Any CPU
+		{72D7A27E-6C07-4F1B-AF05-FC5B32092B65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72D7A27E-6C07-4F1B-AF05-FC5B32092B65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72D7A27E-6C07-4F1B-AF05-FC5B32092B65}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{72D7A27E-6C07-4F1B-AF05-FC5B32092B65}.Debug|x64.Build.0 = Debug|Any CPU
+		{72D7A27E-6C07-4F1B-AF05-FC5B32092B65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72D7A27E-6C07-4F1B-AF05-FC5B32092B65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72D7A27E-6C07-4F1B-AF05-FC5B32092B65}.Release|x64.ActiveCfg = Release|Any CPU
+		{72D7A27E-6C07-4F1B-AF05-FC5B32092B65}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {67BACDB0-1FDB-4AF0-A199-88CF436FB470}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{17268FA1-18C7-4F75-AD16-F8D17684BDC2} = {7E473D16-DF69-4F54-B945-36B5BE29A8E4}
+		{CB9B5B87-1D05-44D7-B0D3-5C2AC0446AE5} = {17268FA1-18C7-4F75-AD16-F8D17684BDC2}
+		{3E3F2A32-128D-44B8-A39F-373EFB175ED7} = {7E473D16-DF69-4F54-B945-36B5BE29A8E4}
+		{72D7A27E-6C07-4F1B-AF05-FC5B32092B65} = {3E3F2A32-128D-44B8-A39F-373EFB175ED7}
 	EndGlobalSection
 EndGlobal

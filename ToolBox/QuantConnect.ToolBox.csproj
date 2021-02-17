@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>QuantConnect.ToolBox</RootNamespace>
-    <AssemblyName>QuantConnect.ToolBox</AssemblyName>
+    <AssemblyName>Xposure.ToolBox</AssemblyName>
     <TargetFramework>net50</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

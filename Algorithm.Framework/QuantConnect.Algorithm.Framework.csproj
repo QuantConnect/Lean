@@ -1,11 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <Id>QuantConnect.Algorithm.Framework</Id>
-  </PropertyGroup>
-  <PropertyGroup>
     <RootNamespace>QuantConnect.Algorithm.Framework</RootNamespace>
-    <AssemblyName>QuantConnect.Algorithm.Framework</AssemblyName>
+    <AssemblyName>Xposure.Algorithm.Framework</AssemblyName>
     <TargetFramework>net50</TargetFramework>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Algorithm.Framework.xml</DocumentationFile>
     <PackageTags>Library</PackageTags>

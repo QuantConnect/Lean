@@ -1,11 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <Id>QuantConnect.Queues</Id>
-  </PropertyGroup>
-  <PropertyGroup>
     <RootNamespace>QuantConnect.Queues</RootNamespace>
-    <AssemblyName>QuantConnect.Queues</AssemblyName>
+    <AssemblyName>Xposure.Queues</AssemblyName>
     <TargetFramework>net50</TargetFramework>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Queues.xml</DocumentationFile>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>

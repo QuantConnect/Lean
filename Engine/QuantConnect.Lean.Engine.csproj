@@ -1,11 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <Id>QuantConnect.Lean.Engine</Id>
-  </PropertyGroup>
-  <PropertyGroup>
     <RootNamespace>QuantConnect.Lean.Engine</RootNamespace>
-    <AssemblyName>QuantConnect.Lean.Engine</AssemblyName>
+    <AssemblyName>Xposure.Lean.Engine</AssemblyName>
     <TargetFramework>net50</TargetFramework>
     <RestorePackages>true</RestorePackages>
     <PublishUrl>publish\</PublishUrl>

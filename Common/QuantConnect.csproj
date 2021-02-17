@@ -1,11 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <Id>QuantConnect.Common</Id>
-  </PropertyGroup>
-  <PropertyGroup>
     <TargetFramework>net50</TargetFramework>
-    <AssemblyName>QuantConnect.Common</AssemblyName>
+    <AssemblyName>Xposure.Common</AssemblyName>
     <RestorePackages>true</RestorePackages>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Common.xml</DocumentationFile>
   </PropertyGroup>

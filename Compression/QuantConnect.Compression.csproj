@@ -5,7 +5,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <RootNamespace>QuantConnect.Compression</RootNamespace>
-    <AssemblyName>QuantConnect.Compression</AssemblyName>
+    <AssemblyName>Xposure.Compression</AssemblyName>
     <TargetFramework>net50</TargetFramework>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Compression.xml</DocumentationFile>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>

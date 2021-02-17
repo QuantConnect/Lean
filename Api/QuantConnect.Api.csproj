@@ -1,11 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <Id>QuantConnect.Api</Id>
-  </PropertyGroup>
-  <PropertyGroup>
     <RootNamespace>QuantConnect.Api</RootNamespace>
-    <AssemblyName>QuantConnect.Api</AssemblyName>
+    <AssemblyName>Xposure.Api</AssemblyName>
     <TargetFramework>net50</TargetFramework>
     <RestorePackages>true</RestorePackages>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Api.xml</DocumentationFile>

@@ -27,8 +27,8 @@
   - `dotnet pack -c Release -o packages` once this is pushed to nuget, look at adding ` --include-symbols --include-source` for better debugging support
   - `dotnet nuget push packages\ --source <SOURCE> --api-key <API-KEY>` you can add `--skip-duplicate` if something fails along the way
 - Current InteractiveBroker and FXCM are not including in the .NET5.0 builds until their are updated
-
-If you would like to help complete this fork by running the tests and provide proper python support, please reach me on discord xposure#8248
+- Added some InvisibleTo attributes to support internal on projects without a package
+  If you would like to help complete this fork by running the tests and provide proper python support, please reach me on discord xposure#8248
 
 ## Introduction
 

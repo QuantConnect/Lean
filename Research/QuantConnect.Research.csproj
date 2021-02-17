@@ -1,11 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <Id>QuantConnect.Research</Id>
-  </PropertyGroup>
-  <PropertyGroup>
     <RootNamespace>QuantConnect.Research</RootNamespace>
-    <AssemblyName>QuantConnect.Research</AssemblyName>
+    <AssemblyName>Xposure.Research</AssemblyName>
     <TargetFramework>net50</TargetFramework>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
   </PropertyGroup>
