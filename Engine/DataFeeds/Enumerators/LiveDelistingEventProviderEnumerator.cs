@@ -20,6 +20,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -109,6 +110,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Dispose()
         {
+            var liveProvider = _delistingEventProvider as LiveDataBasedDelistingEventProvider;
+            liveProvider.DisposeSafely();
         }
 
         /// <summary>

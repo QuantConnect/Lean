@@ -28,8 +28,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// Delisting event provider implementation which will source the delisting date based on the incoming data point
     /// </summary>
     /// <remarks>This is useful for equities for which we don't know the delisting date upfront</remarks>
-    public class LiveDataBasedDelistingEventProvider : DelistingEventProvider
+    public class LiveDataBasedDelistingEventProvider : DelistingEventProvider, IDisposable
     {
+        private readonly SubscriptionDataConfig _dataConfig;
+        private readonly IDataQueueHandler _dataQueueHandler;
         private readonly IEnumerator<BaseData> _delistingEnumerator;
         
         /// <summary>
@@ -37,9 +39,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public LiveDataBasedDelistingEventProvider(SubscriptionDataConfig dataConfig, IDataQueueHandler dataQueueHandler)
         {
-            var delistingConfig = new SubscriptionDataConfig(dataConfig, typeof(Delisting));
+            _dataConfig = new SubscriptionDataConfig(dataConfig, typeof(Delisting));
 
-            _delistingEnumerator = dataQueueHandler.Subscribe(delistingConfig, (sender, args) =>
+            _dataQueueHandler = dataQueueHandler;
+            _delistingEnumerator = dataQueueHandler.Subscribe(_dataConfig, (sender, args) =>
             {
                 if (_delistingEnumerator != null && _delistingEnumerator.MoveNext())
                 {
@@ -59,6 +62,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     Log.Error("LiveDataBasedDelistingEventProvider(): new data available triggered with no data");
                 }
             });
+        }
+
+        /// <summary>
+        /// Clean up
+        /// </summary>
+        public void Dispose()
+        {
+            _dataQueueHandler.Unsubscribe(_dataConfig);
+            _delistingEnumerator.DisposeSafely();
         }
     }
 }
