@@ -32,7 +32,15 @@
 - quantconnect/pythonnet needs updated to .net5
 - Consider removing linux/windows/osx and just move to docker for a unified platform
 
-You can install the .NET template by downloading the file from `DotnetTemplate\Lean-NET5.1.0.0.nupkg` and then installing the template with `dotnet new -i Lean-NET5.1.0.0.nupkg` and you can uninstall it with `dotnet new -u Lean-NET5`.
+You can install the .NET template by downloading the file from `DotnetTemplate\Lean-NET5.1.0.0.nupkg` and then installing the template with `dotnet new -i Lean-NET5.1.0.0.nupkg` and you can uninstall it with `dotnet new -u Lean-NET5`. Once installed you can then run the following commands (skaffold support soon to come).
+
+```
+mkdir test
+cd test
+dotnet new lean
+docker build -t test-algo .
+docker run -it --rm test-algo
+```
 
 ## Introduction
 
