@@ -35,6 +35,7 @@ namespace QuantConnect.ToolBox.CoinApi
     public class CoinApiDataQueueHandler : IDataQueueHandler
     {
         private readonly string _apiKey = Config.Get("coinapi-api-key");
+        private readonly string[] _streamingDataType;
         private readonly CoinApiWsClient _client;
         private readonly object _locker = new object();
         private readonly CoinApiSymbolMapper _symbolMapper = new CoinApiSymbolMapper();
@@ -57,6 +58,13 @@ namespace QuantConnect.ToolBox.CoinApi
         /// </summary>
         public CoinApiDataQueueHandler()
         {
+            var product = Config.GetValue<CoinApiProduct>("coinapi-product");
+            _streamingDataType = product < CoinApiProduct.Streamer
+                ? new[] { "trade" }
+                : new[] { "trade", "quote" };
+
+            Log.Trace($"CoinApiDataQueueHandler(): using plan '{product}'. Available data types: '{string.Join(",", _streamingDataType)}'");
+
             _client = new CoinApiWsClient();
             _client.TradeEvent += OnTrade;
             _client.QuoteEvent += OnQuote;
@@ -249,7 +257,7 @@ namespace QuantConnect.ToolBox.CoinApi
             {
                 apikey = Guid.Parse(_apiKey),
                 heartbeat = true,
-                subscribe_data_type = new[] { "trade", "quote" },
+                subscribe_data_type = _streamingDataType,
                 subscribe_filter_symbol_id = list.ToArray()
             });
 

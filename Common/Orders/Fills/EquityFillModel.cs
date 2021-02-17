@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
@@ -75,6 +76,11 @@ namespace QuantConnect.Orders.Fills
                         ? PythonWrapper.LimitFill(parameters.Security, parameters.Order as LimitOrder)
                         : LimitFill(parameters.Security, parameters.Order as LimitOrder);
                     break;
+                case OrderType.LimitIfTouched:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.LimitIfTouchedFill(parameters.Security, parameters.Order as LimitIfTouchedOrder)
+                        : LimitIfTouchedFill(parameters.Security, parameters.Order as LimitIfTouchedOrder);
+                    break;
                 case OrderType.StopMarket:
                     orderEvent = PythonWrapper != null
                         ? PythonWrapper.StopMarketFill(parameters.Security, parameters.Order as StopMarketOrder)
@@ -99,6 +105,114 @@ namespace QuantConnect.Orders.Fills
                     throw new ArgumentOutOfRangeException();
             }
             return new Fill(orderEvent);
+        }
+
+        /// <summary>
+        /// Default limit if touched fill model implementation in base class security.
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        ///     There is no good way to model limit orders with OHLC because we never know whether the market has
+        ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
+        ///
+        ///     With Limit if Touched orders, whether or not a trigger is surpassed is determined by the high (low)
+        ///     of the previous tradebar when making a sell (buy) request. Following the behaviour of
+        ///     <see cref="StopLimitFill"/>, current quote information is used when determining fill parameters
+        ///     (e.g., price, quantity) as the tradebar containing the incoming data is not yet consolidated.
+        ///     This conservative approach, however, can lead to trades not occuring as would be expected when
+        ///     compared to future consolidated data.
+        /// </remarks>
+        public virtual OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
+        {
+            //Default order event to return.
+            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
+
+            //If its cancelled don't need anymore checks:
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            // Fill only if open or extended
+            if (!IsExchangeOpen(asset,
+                Parameters.ConfigProvider
+                    .GetSubscriptionDataConfigs(asset.Symbol)
+                    .IsExtendedMarketHours()))
+            {
+                return fill;
+            }
+
+            // Get the range of prices in the last bar:
+            var tradeHigh = 0m;
+            var tradeLow = 0m;
+            var endTimeUtc = DateTime.MinValue;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                
+                if (trade != null)
+                {
+                    tradeHigh = trade.Price;
+                    tradeLow = trade.Price;
+                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+
+                if (tradeBar != null)
+                {
+                    tradeHigh = tradeBar.High;
+                    tradeLow = tradeBar.Low;
+                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+
+            // do not fill on stale data
+            if (endTimeUtc <= order.Time) return fill;
+
+            //Check if the limit if touched order was filled:
+            switch (order.Direction)
+            {
+                case OrderDirection.Buy:
+                    //-> 1.2 Buy: If Price below Trigger, Buy:
+                    if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
+                    {
+                        order.TriggerTouched = true;
+                        var askCurrent = GetAskPrice(asset, out endTimeUtc);
+
+                        if (askCurrent <= order.LimitPrice)
+                        {
+                            fill.Status = OrderStatus.Filled;
+                            fill.FillPrice = Math.Min(askCurrent, order.LimitPrice);
+                            fill.FillQuantity = order.Quantity;
+                        }
+                    }
+
+                    break;
+
+                case OrderDirection.Sell:
+                    //-> 1.2 Sell: If Price above Trigger, Sell:
+                    if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
+                    {
+                        order.TriggerTouched = true;
+                        var bidCurrent = GetBidPrice(asset, out endTimeUtc);
+
+                        if (bidCurrent >= order.LimitPrice)
+                        {
+                            fill.Status = OrderStatus.Filled;
+                            fill.FillPrice = Math.Max(bidCurrent, order.LimitPrice);
+                            fill.FillQuantity = order.Quantity;
+                        }
+                    }
+
+                    break;
+            }
+            return fill;
         }
 
         /// <summary>

@@ -103,7 +103,6 @@ namespace QuantConnect.Report
                 new CAGRReportElement("cagr kpi", ReportKey.CAGR, backtest, live),
                 new TurnoverReportElement("turnover kpi", ReportKey.Turnover, backtest, live),
                 new MaxDrawdownReportElement("max drawdown kpi", ReportKey.MaxDrawdown, backtest, live),
-                new KellyEstimateReportElement("kelly estimate kpi", ReportKey.KellyEstimate, backtest, live),
                 new SharpeRatioReportElement("sharpe kpi", ReportKey.SharpeRatio, backtest, live),
                 new PSRReportElement("psr kpi", ReportKey.PSR, backtest, live),
                 new InformationRatioReportElement("ir kpi", ReportKey.InformationRatio, backtest, live),

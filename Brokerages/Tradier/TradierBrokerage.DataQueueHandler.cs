@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -40,7 +39,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         #region IDataQueueHandler implementation
 
-        private bool _disconnect;
+        private volatile bool _disconnect;
         private volatile bool _refresh = true;
         private Timer _refreshDelay = new Timer();
         private Stream _tradierStream;
@@ -63,6 +62,13 @@ namespace QuantConnect.Brokerages.Tradier
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            // streaming is not supported by sandbox
+            if (_useSandbox)
+            {
+                throw new NotSupportedException(
+                    "TradierBrokerage.DataQueueHandler.Subscribe(): The sandbox does not support data streaming.");
+            }
+
             if (!CanSubscribe(dataConfig.Symbol))
             {
                 return Enumerable.Empty<BaseData>().GetEnumerator();
@@ -74,7 +80,7 @@ namespace QuantConnect.Brokerages.Tradier
             return enumerator;
         }
 
-        private static bool CanSubscribe(Symbol symbol)
+        private bool CanSubscribe(Symbol symbol)
         {
             return (symbol.ID.SecurityType == SecurityType.Equity || symbol.ID.SecurityType == SecurityType.Option)
                 && !symbol.Value.Contains("-UNIVERSE-");
@@ -180,7 +186,7 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
-        /// Connect to tradier API strea:
+        /// Connect to tradier API stream
         /// </summary>
         /// <param name="symbols">symbol list</param>
         /// <returns></returns>
@@ -207,7 +213,7 @@ namespace QuantConnect.Brokerages.Tradier
 
                 //Authenticate a request:
                 request.Accept = "application/json";
-                request.Headers.Add("Authorization", "Bearer " + AccessToken);
+                request.Headers.Add("Authorization", "Bearer " + _accessToken);
 
                 //Add the desired data:
                 var postData = "symbols=" + symbolJoined + "&filter=trade&sessionid=" + session.SessionId;

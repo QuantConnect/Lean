@@ -475,7 +475,7 @@ namespace QuantConnect.Brokerages.Backtesting
             _pendingOptionAssignments.Add(option.Symbol);
 
             // assignments always cause a positive change to option contract holdings
-            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, Math.Abs(quantity), 0m, 0m, Algorithm.UtcTime, "Simulated option assignment before expiration");
+            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, Math.Abs(quantity), 0m, 0m, 0m, Algorithm.UtcTime, "Simulated option assignment before expiration");
 
             var ticket = Algorithm.Transactions.ProcessRequest(request);
             Log.Trace($"BacktestingBrokerage.ActivateOptionAssignment(): OrderId: {ticket.OrderId}");

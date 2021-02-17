@@ -77,12 +77,9 @@
   "ib-version": "974",
 
   // tradier configuration
+  "tradier-use-sandbox": true,
   "tradier-account-id": "",
   "tradier-access-token": "",
-  "tradier-refresh-token": "",
-  "tradier-issued-at": "",
-  "tradier-lifespan": "",
-  "tradier-refresh-session": true,
 
   // oanda configuration
   "oanda-environment": "Practice",
@@ -158,6 +155,10 @@
 
   // Required for IEX history requests
   "iex-cloud-api-key": "",
+
+  // Required for market data from Coin API 
+  "coinapi-api-key": "",
+  "coinapi-product": "free", // free, startup, streamer, professional, enterprise 
 
   // Required for streaming Polygon.io data
   // To get your access token go to https://polygon.io

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Deedle;
 using QuantConnect.Packets;
@@ -52,20 +53,14 @@ namespace QuantConnect.Report.ReportElements
                 return backtestDrawdown?.ToString("P1") ?? "-";
             }
 
-            var backtestEquityPoints = new Series<DateTime, double>(ResultsUtil.EquityPoints(_backtest));
-            var liveEquityPoints = new Series<DateTime, double>(ResultsUtil.EquityPoints(_live));
+            var equityCurve = new SortedDictionary<DateTime, decimal>(DrawdownCollection.NormalizeResults(_backtest, _live)
+                .Observations
+                .ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value));
 
-            var backtestDrawdownGroups = new DrawdownCollection(backtestEquityPoints, 1);
-            var liveDrawdownGroups = new DrawdownCollection(liveEquityPoints, 1);
+            var maxDrawdown = Statistics.Statistics.DrawdownPercent(equityCurve);
+            Result = maxDrawdown;
 
-            var separateResultsMaxDrawdown = backtestDrawdownGroups.Drawdowns
-                .Concat(liveDrawdownGroups.Drawdowns)
-                .Select(x => x.PeakToTrough)
-                .OrderByDescending(x => x)
-                .FirstOrDefault();
-
-            Result = separateResultsMaxDrawdown;
-            return $"{separateResultsMaxDrawdown:P1}";
+            return $"{maxDrawdown:P1}";
         }
     }
 }

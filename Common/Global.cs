@@ -726,6 +726,15 @@ namespace QuantConnect
     public static class Exchanges
     {
         /// <summary>
+        /// Gets the exchange as single character representation.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetPrimaryExchangeAsSingleCharacter(this string exchange)
+        {
+            return string.IsNullOrEmpty(exchange) ? null : ((char)exchange.GetPrimaryExchange()).ToString();
+        }
+        
+        /// <summary>
         /// Returns the main Exchange from the single character encoding.
         /// </summary>
         /// <param name="exchange"></param>

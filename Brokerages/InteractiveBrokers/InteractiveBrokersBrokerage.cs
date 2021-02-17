@@ -1731,6 +1731,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var limitOrder = order as LimitOrder;
             var stopMarketOrder = order as StopMarketOrder;
             var stopLimitOrder = order as StopLimitOrder;
+            var limitIfTouchedOrder = order as LimitIfTouchedOrder;
             if (limitOrder != null)
             {
                 ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(limitOrder.LimitPrice, GetMinTick(contract, order.Symbol)));
@@ -1744,6 +1745,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var minTick = GetMinTick(contract, order.Symbol);
                 ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.LimitPrice, minTick));
                 ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.StopPrice, minTick));
+            }
+            else if (limitIfTouchedOrder != null)
+            {
+                var minTick = GetMinTick(contract, order.Symbol);
+                ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(limitIfTouchedOrder.LimitPrice, minTick));
+                ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(limitIfTouchedOrder.TriggerPrice, minTick));
             }
 
             // add financial advisor properties
@@ -1844,6 +1851,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         Convert.ToDecimal(ibOrder.LmtPrice),
                         new DateTime()
                         );
+                    break;
+                
+                case OrderType.LimitIfTouched:
+                    order = new LimitIfTouchedOrder(mappedSymbol,
+                        Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
+                        Convert.ToDecimal(ibOrder.AuxPrice),
+                        Convert.ToDecimal(ibOrder.LmtPrice),
+                        new DateTime()
+                    );
                     break;
 
                 default:
@@ -1972,6 +1988,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.Limit:           return IB.OrderType.Limit;
                 case OrderType.StopMarket:      return IB.OrderType.Stop;
                 case OrderType.StopLimit:       return IB.OrderType.StopLimit;
+                case OrderType.LimitIfTouched:  return IB.OrderType.LimitIfTouched;
                 case OrderType.MarketOnOpen:    return IB.OrderType.Market;
                 case OrderType.MarketOnClose:   return IB.OrderType.MarketOnClose;
                 default:
@@ -1989,6 +2006,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case IB.OrderType.Limit:            return OrderType.Limit;
                 case IB.OrderType.Stop:             return OrderType.StopMarket;
                 case IB.OrderType.StopLimit:        return OrderType.StopLimit;
+                case IB.OrderType.LimitIfTouched:   return OrderType.LimitIfTouched;
                 case IB.OrderType.MarketOnClose:    return OrderType.MarketOnClose;
 
                 case IB.OrderType.Market:

@@ -124,6 +124,7 @@ namespace QuantConnect.Tests.Brokerages
                 // these securities don't need to be real, just used for the ISecurityProvider impl, required
                 // by brokerages to track holdings
                 SecurityProvider[accountHolding.Symbol] = CreateSecurity(accountHolding.Symbol);
+                SecurityProvider[accountHolding.Symbol].Holdings.SetHoldings(accountHolding.AveragePrice, accountHolding.Quantity);
             }
             brokerage.OrderStatusChanged += (sender, args) =>
             {
@@ -448,7 +449,7 @@ namespace QuantConnect.Tests.Brokerages
             Assert.AreEqual(GetDefaultQuantity(), afterQuantity - beforeQuantity);
         }
 
-        [Test, Ignore("This test requires reading the output and selection of a low volume security for the Brokerage")]
+        [Test, Explicit("This test requires reading the output and selection of a low volume security for the Brokerage")]
         public void PartialFills()
         {
             var manualResetEvent = new ManualResetEvent(false);

@@ -14,12 +14,14 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fills
 {
@@ -72,6 +74,11 @@ namespace QuantConnect.Orders.Fills
                     orderEvent = PythonWrapper != null
                         ? PythonWrapper.LimitFill(parameters.Security, parameters.Order as LimitOrder)
                         : LimitFill(parameters.Security, parameters.Order as LimitOrder);
+                    break;
+                case OrderType.LimitIfTouched:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.LimitIfTouchedFill(parameters.Security, parameters.Order as LimitIfTouchedOrder)
+                        : LimitIfTouchedFill(parameters.Security, parameters.Order as LimitIfTouchedOrder);
                     break;
                 case OrderType.StopMarket:
                     orderEvent = PythonWrapper != null
@@ -293,6 +300,112 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
+        /// Default limit if touched fill model implementation in base class security. (Limit If Touched Order Type)
+        /// </summary>
+        /// <param name="asset"></param>
+        /// <param name="order"></param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        ///     There is no good way to model limit orders with OHLC because we never know whether the market has
+        ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
+        ///
+        ///     With Limit if Touched orders, whether or not a trigger is surpassed is determined by the high (low)
+        ///     of the previous tradebar when making a sell (buy) request. Following the behaviour of
+        ///     <see cref="StopLimitFill"/>, current quote information is used when determining fill parameters
+        ///     (e.g., price, quantity) as the tradebar containing the incoming data is not yet consolidated.
+        ///     This conservative approach, however, can lead to trades not occuring as would be expected when
+        ///     compared to future consolidated data.
+        /// </remarks>
+        public virtual OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
+        {
+            //Default order event to return.
+            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
+
+            //If its cancelled don't need anymore checks:
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            // Fill only if open or extended
+            if (!IsExchangeOpen(asset,
+                Parameters.ConfigProvider
+                    .GetSubscriptionDataConfigs(asset.Symbol)
+                    .IsExtendedMarketHours()))
+            {
+                return fill;
+            }
+            
+            // Get the range of prices in the last bar:
+            var tradeHigh = 0m;
+            var tradeLow = 0m;
+            var pricesEndTime = DateTime.MinValue;
+            
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trade = GetPricesCheckingPythonWrapper(asset, order.Direction);
+                
+                if (trade != null)
+                {
+                    tradeHigh = trade.Current;
+                    tradeLow = trade.Current;
+                    pricesEndTime = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+            
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    tradeHigh = tradeBar.High;
+                    tradeLow = tradeBar.Low;
+                    pricesEndTime = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+
+            // do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
+
+            switch (order.Direction)
+            {
+                case OrderDirection.Sell:
+                    if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
+                    {
+                        order.TriggerTouched = true;
+                        
+                        //-> 1.1 Limit surpassed: Sell.
+                        if (GetAskPrice(asset, out pricesEndTime) >= order.LimitPrice)
+                        {
+                            fill.Status = OrderStatus.Filled;
+                            fill.FillPrice = order.LimitPrice;                            
+                            // assume the order completely filled
+                            fill.FillQuantity = order.Quantity;
+                        }
+                    }
+                    break;
+
+                case OrderDirection.Buy:
+                    if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
+                    {
+                        order.TriggerTouched = true;
+
+                        //-> 1.2 Limit surpassed: Buy.
+                        if (GetBidPrice(asset, out pricesEndTime) <= order.LimitPrice)
+                        {
+                            fill.Status = OrderStatus.Filled;
+                            fill.FillPrice = order.LimitPrice;                            
+                            // assume the order completely filled
+                            fill.FillQuantity = order.Quantity;
+                        }
+                    }
+                    break;
+            }
+
+            return fill;
+        }
+
+        /// <summary>
         /// Default limit order fill model in the base security class.
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
@@ -460,6 +573,143 @@ namespace QuantConnect.Orders.Fills
             return fill;
         }
 
+        /// <summary>
+        /// Get current ask price for subscribed data
+        /// This method will try to get the most recent ask price data, so it will try to get tick quote first, then quote bar.
+        /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="endTime">Timestamp of the most recent data type</param>
+        private decimal GetAskPrice(Security asset, out DateTime endTime)
+        {
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            List<Tick> ticks = null;
+            var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));
+
+            if (isTickSubscribed)
+            {
+                ticks = asset.Cache.GetAll<Tick>().ToList();
+
+                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.AskPrice > 0);
+                if (quote != null)
+                {
+                    endTime = quote.EndTime;
+                    return quote.AskPrice;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(QuoteBar)))
+            {
+                var quoteBar = asset.Cache.GetData<QuoteBar>();
+                if (quoteBar != null)
+                {
+                    endTime = quoteBar.EndTime;
+                    return quoteBar.Ask?.Close ?? quoteBar.Close;
+                }
+            }
+
+            if (isTickSubscribed)
+            {
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    endTime = trade.EndTime;
+                    return trade.Price;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    endTime = tradeBar.EndTime;
+                    return tradeBar.Close;
+                }
+            }
+
+            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
+        }
+
+        /// <summary>
+        /// Get current bid price for subscribed data
+        /// This method will try to get the most recent bid price data, so it will try to get tick quote first, then quote bar.
+        /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="endTime">Timestamp of the most recent data type</param>
+        private decimal GetBidPrice(Security asset, out DateTime endTime)
+        {
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            List<Tick> ticks = null;
+            var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));
+
+            if (isTickSubscribed)
+            {
+                ticks = asset.Cache.GetAll<Tick>().ToList();
+
+                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.BidPrice > 0);
+                if (quote != null)
+                {
+                    endTime = quote.EndTime;
+                    return quote.BidPrice;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(QuoteBar)))
+            {
+                var quoteBar = asset.Cache.GetData<QuoteBar>();
+                if (quoteBar != null)
+                {
+                    endTime = quoteBar.EndTime;
+                    return quoteBar.Bid?.Close ?? quoteBar.Close;
+                }
+            }
+
+            if (isTickSubscribed)
+            {
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    endTime = trade.EndTime;
+                    return trade.Price;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    endTime = tradeBar.EndTime;
+                    return tradeBar.Close;
+                }
+            }
+
+            throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data subscription were found.");
+        }
+
+        /// <summary>
+        /// Get data types the Security is subscribed to
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        private HashSet<Type> GetSubscribedTypes(Security asset)
+        {
+            var subscribedTypes = Parameters
+                .ConfigProvider
+                .GetSubscriptionDataConfigs(asset.Symbol)
+                .ToHashSet(x => x.Type);
+
+            if (subscribedTypes.Count == 0)
+            {
+                throw new InvalidOperationException($"Cannot perform fill for {asset.Symbol} because no data subscription were found.");
+            }
+
+            return subscribedTypes;
+        }
+        
         /// <summary>
         /// This is required due to a limitation in PythonNet to resolved
         /// overriden methods. <see cref="GetPrices"/>

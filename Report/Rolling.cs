@@ -35,8 +35,11 @@ namespace QuantConnect.Report
         /// <returns>Rolling beta</returns>
         public static Series<DateTime, double> Beta(Series<DateTime, double> equityCurve, Series<DateTime, double> benchmarkSeries, int windowSize = 132)
         {
-            var dailyReturnsSeries = equityCurve.ResampleEquivalence(date => date.Date, s => s.TotalReturns());
-            var benchmarkReturns = benchmarkSeries.ResampleEquivalence(date => date.Date, s => s.TotalReturns());
+            var dailyReturnsSeries = equityCurve.ResampleEquivalence(date => date.Date, s => s.LastValue())
+                .PercentChange();
+
+            var benchmarkReturns = benchmarkSeries.ResampleEquivalence(date => date.Date, s => s.LastValue())
+                .CumulativeReturns();
 
             var returns = Frame.CreateEmpty<DateTime, string>();
             returns["strategy"] = dailyReturnsSeries;
@@ -70,7 +73,9 @@ namespace QuantConnect.Report
                 return equityCurve;
             }
 
-            var dailyReturns = equityCurve.ResampleEquivalence(date => date.Date, s => s.TotalReturns());
+            var dailyReturns = equityCurve.ResampleEquivalence(date => date.Date, s => s.LastValue())
+                .PercentChange();
+
             var rollingSharpeData = new List<KeyValuePair<DateTime, double>>();
             var firstDate = equityCurve.FirstKey();
 
