@@ -66,6 +66,11 @@
     <PackageReference Include="WebSocket4Net" Version="0.15.2" />
   </ItemGroup>
   
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net50' ">
+    <Compile Remove="**/Fxcm/**" />
+    <Compile Remove="**/InteractiveBrokers/**" />
+  </ItemGroup>
+
   <!-- <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <PackageReference Include="IKVM" Version="8.1.5717.0" />
   </ItemGroup> -->
@@ -110,6 +115,9 @@
       </ItemGroup>
     </When>
   </Choose>
+  <ItemGroup>
+  
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Content Include="Research\RegressionScripts\Test_QuantBookIndicator.py">

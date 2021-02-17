@@ -43,20 +43,6 @@
                 "--config",
                 "${workspaceFolder}/Launcher/config.json"]
         },
-        // {
-        //     "name": "Launch (Local)",
-        //     "type": "mono",
-        //     "request": "launch",
-        //     "preLaunchTask": "build",
-        //     "cwd": "${workspaceFolder}/Launcher/bin/Debug/",
-        //     "program": "${workspaceFolder}/Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe",
-        //     "args": [
-        //         "--data-folder",
-        //         "${workspaceFolder}/Data",
-        //         "--config",
-        //         "${workspaceFolder}/Launcher/config.json"],
-        //     "console": "externalTerminal"
-        // },
         {
             "name": "Attach to Python (Container)",
             "type": "python",

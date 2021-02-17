@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
