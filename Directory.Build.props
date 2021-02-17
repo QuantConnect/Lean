@@ -6,6 +6,7 @@
     <LangVersion>8</LangVersion>
     <!--<AnalysisMode>AllEnabledByDefault</AnalysisMode> -->    
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
 
   <PropertyGroup>
