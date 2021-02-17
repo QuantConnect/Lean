@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json.schemastore.org/template",
+    "author": "cphillips83",
+    "classifications": [ "Lean", "Console", "C#9" ],
+    "identity": "Lean.Algorithm.CSharp",
+    "name": "Lean.Algorithm.CSharp",
+    "shortName": "lean",
+    "tags": {
+      "language": "C#",
+      "type": "project"
+    },
+    "sourceName": "Algorithm_CSharp",
+    "preferNameDirectory": true
+  }

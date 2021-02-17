@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>   
+    <PackageReference Include="Xposure.Algorithm" Version="8.1.5" />
+    <PackageReference Include="Xposure.Algorithm.CSharp" Version="8.1.5" />
+    <PackageReference Include="Xposure.Algorithm.Framework" Version="8.1.5" />
+    <PackageReference Include="Xposure.AlgorithmFactory" Version="8.1.5" />
+    <PackageReference Include="Xposure.Brokerages" Version="8.1.5" />
+    <PackageReference Include="Xposure.Common" Version="8.1.5" />
+    <PackageReference Include="Xposure.Compression" Version="8.1.5" />
+    <PackageReference Include="Xposure.Configuration" Version="8.1.5" />
+    <PackageReference Include="Xposure.Indicators" Version="8.1.5" />
+    <PackageReference Include="Xposure.Logging" Version="8.1.5" />
+    <PackageReference Include="Xposure.Messaging" Version="8.1.5" />
+    <PackageReference Include="Xposure.Queues" Version="8.1.5" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
