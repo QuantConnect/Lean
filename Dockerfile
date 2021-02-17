@@ -8,9 +8,7 @@ FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /source
 
 COPY Directory.Build.props .
-ADD Dockerfiles/sln.tar.gz ./
-ADD Dockerfiles/fsproj.tar.gz ./
-ADD Dockerfiles/csproj.tar.gz ./
+ADD Dockerfiles/*.tar.gz ./
 RUN find . -type f -name '*.sln' -exec dotnet restore "{}" \;
 
 # copy everything else and build app
