@@ -424,8 +424,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend for trade bar
-                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription and split/dividend/delisting for trade bar
+                    Assert.AreEqual(currentSubscriptionCount - 5, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
@@ -471,8 +471,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend for trade bar
-                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription and split/dividend/delisting for trade bar
+                    Assert.AreEqual(currentSubscriptionCount - 5, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
@@ -642,6 +642,102 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.That(RestApiBaseData.ReaderCount, Is.LessThanOrEqualTo(30)); // we poll at 10x frequency
 
             Log.Trace("Count: " + count + " ReaderCount: " + RestApiBaseData.ReaderCount);
+        }
+
+        [Test]
+        public void DelistedEventEmitted_Equity()
+        {
+            _startDate = new DateTime(2016, 2, 18);
+            CustomMockedFileBaseData.StartDate = _startDate;
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            var delistingDate = _startDate.AddDays(1);
+
+            var autoResetEvent = new AutoResetEvent(false);
+            var feed = RunDataFeed(getNextTicksFunction: handler =>
+            {
+                autoResetEvent.Set();
+                return new[] { new Delisting(Symbols.AAPL, delistingDate, 1, DelistingType.Warning) };
+            });
+
+            _algorithm.AddEquity(Symbols.AAPL);
+            _algorithm.OnEndOfTimeStep();
+            _algorithm.SetFinishedWarmingUp();
+
+            Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
+
+            var receivedDelistedWarning = 0;
+            var receivedDelisted = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+            {
+                foreach (var delistingEvent in ts.Slice.Delistings)
+                {
+                    if (delistingEvent.Key != Symbols.AAPL)
+                    {
+                        throw new Exception($"Unexpected delisting for symbol {delistingEvent.Key}");
+                    }
+
+                    if (delistingEvent.Value.Type == DelistingType.Warning)
+                    {
+                        Interlocked.Increment(ref receivedDelistedWarning);
+                    }
+                    if (delistingEvent.Value.Type == DelistingType.Delisted)
+                    {
+                        Interlocked.Increment(ref receivedDelisted);
+                        // we got what we wanted, end unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    }
+                }
+            },
+            alwaysInvoke: false,
+            secondsTimeStep: 3600 * 8,
+            endDate: delistingDate.AddDays(2));
+
+            Assert.AreEqual(1, receivedDelistedWarning, $"Did not receive {DelistingType.Warning}");
+            Assert.AreEqual(1, receivedDelisted, $"Did not receive {DelistingType.Delisted}");
+        }
+
+        [Test]
+        public void DelistedEventEmitted()
+        {
+            _startDate = new DateTime(2016, 2, 18);
+            var delistingDate = Symbols.SPY_C_192_Feb19_2016.GetDelistingDate();
+            CustomMockedFileBaseData.StartDate = _startDate;
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            var feed = RunDataFeed();
+
+            _algorithm.AddOptionContract(Symbols.SPY_C_192_Feb19_2016);
+            _algorithm.OnEndOfTimeStep();
+            _algorithm.SetFinishedWarmingUp();
+
+            var receivedDelistedWarning = 0;
+            var receivedDelisted = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+                {
+                    foreach (var delisting in ts.Slice.Delistings)
+                    {
+                        if(delisting.Key != Symbols.SPY_C_192_Feb19_2016)
+                        {
+                            throw new Exception($"Unexpected delisting for symbol {delisting.Key}");
+                        }
+
+                        if (delisting.Value.Type == DelistingType.Warning)
+                        {
+                            Interlocked.Increment(ref receivedDelistedWarning);
+                        }
+                        if (delisting.Value.Type == DelistingType.Delisted)
+                        {
+                            Interlocked.Increment(ref receivedDelisted);
+                            // we got what we wanted, end unit test
+                            _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                        }
+                    }
+                },
+                alwaysInvoke: false,
+                secondsTimeStep: 3600 * 8,
+                endDate: delistingDate.AddDays(2));
+
+            Assert.AreEqual(1, receivedDelistedWarning, $"Did not receive {DelistingType.Warning}");
+            Assert.AreEqual(1, receivedDelisted, $"Did not receive {DelistingType.Delisted}");
         }
 
         [Test]
