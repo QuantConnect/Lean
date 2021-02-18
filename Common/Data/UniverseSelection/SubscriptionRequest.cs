@@ -22,56 +22,27 @@ namespace QuantConnect.Data.UniverseSelection
     /// <summary>
     /// Defines the parameters required to add a subscription to a data feed.
     /// </summary>
-    public class SubscriptionRequest
+    public class SubscriptionRequest : BaseDataRequest
     {
-        private readonly Lazy<DateTime> _localStartTime;
-        private readonly Lazy<DateTime> _localEndTime;
-
         /// <summary>
         /// Gets true if the subscription is a universe
         /// </summary>
-        public bool IsUniverseSubscription { get; private set; }
+        public bool IsUniverseSubscription { get; }
 
         /// <summary>
         /// Gets the universe this subscription resides in
         /// </summary>
-        public Universe Universe { get; private set; }
+        public Universe Universe { get; }
 
         /// <summary>
         /// Gets the security. This is the destination of data for non-internal subscriptions.
         /// </summary>
-        public Security Security { get; private set; }
+        public Security Security { get; }
 
         /// <summary>
         /// Gets the subscription configuration. This defines how/where to read the data.
         /// </summary>
-        public SubscriptionDataConfig Configuration { get; private set; }
-
-        /// <summary>
-        /// Gets the beginning of the requested time interval in UTC
-        /// </summary>
-        public DateTime StartTimeUtc { get; private set; }
-
-        /// <summary>
-        /// Gets the end of the requested time interval in UTC
-        /// </summary>
-        public DateTime EndTimeUtc { get; private set; }
-
-        /// <summary>
-        /// Gets the <see cref="StartTimeUtc"/> in the security's exchange time zone
-        /// </summary>
-        public DateTime StartTimeLocal
-        {
-            get { return _localStartTime.Value; }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="EndTimeUtc"/> in the security's exchange time zone
-        /// </summary>
-        public DateTime EndTimeLocal
-        {
-            get { return _localEndTime.Value; }
-        }
+        public SubscriptionDataConfig Configuration { get; }
 
         /// <summary>
         /// Gets the tradable days specified by this request, in the security's data time zone
@@ -98,6 +69,7 @@ namespace QuantConnect.Data.UniverseSelection
             SubscriptionDataConfig configuration,
             DateTime startTimeUtc,
             DateTime endTimeUtc)
+            : base(startTimeUtc, endTimeUtc, security.Exchange.Hours, configuration.TickType)
         {
             IsUniverseSubscription = isUniverseSubscription;
             Universe = universe;
@@ -105,15 +77,11 @@ namespace QuantConnect.Data.UniverseSelection
             Configuration = configuration;
 
             // open interest data comes in once a day before market open,
-            // make the subscription start from midnight
-            StartTimeUtc = configuration.TickType == TickType.OpenInterest ?
-                startTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone).Date.ConvertToUtc(Configuration.ExchangeTimeZone) :
-                startTimeUtc;
-
-            EndTimeUtc = endTimeUtc;
-
-            _localStartTime = new Lazy<DateTime>(() => StartTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone));
-            _localEndTime = new Lazy<DateTime>(() => EndTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone));
+            // make the subscription start from midnight and use always open exchange
+            if (Configuration.TickType == TickType.OpenInterest)
+            {
+                StartTimeUtc = StartTimeUtc.ConvertFromUtc(ExchangeHours.TimeZone).Date.ConvertToUtc(ExchangeHours.TimeZone);
+            }
         }
 
         /// <summary>
