@@ -67,6 +67,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     Logging.Log.Trace($"AlgorithmPythonWrapper(): Python version {PythonEngine.Version}: Importing python module {moduleName}");
 
                     var module = Py.Import(moduleName);
+
+                    Logging.Log.Trace($"AlgorithmPythonWrapper(): {moduleName} successfully imported.");
+
                     var pyList = module.Dir();
                     foreach (var name in pyList)
                     {
