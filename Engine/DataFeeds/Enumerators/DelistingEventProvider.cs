@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -32,9 +33,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         // since we need to wait for the next trading day before emitting
         private bool _delisted;
         private bool _delistedWarning;
-        private DateTime _delistingDate;
 
         private SubscriptionDataConfig _config;
+
+        /// <summary>
+        /// The delisting date
+        /// </summary>
+        protected ReferenceWrapper<DateTime> DelistingDate { get; set; }
 
         /// <summary>
         /// Initializes this instance
@@ -50,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             DateTime startTime)
         {
             _config = config;
-            _delistingDate = config.Symbol.GetDelistingDate(mapFile);
+            DelistingDate = new ReferenceWrapper<DateTime>(config.Symbol.GetDelistingDate(mapFile));
         }
 
         /// <summary>
@@ -65,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // we send the delisting warning when we reach the delisting date, here we make sure we compare using the date component
                 // of the delisting date since for example some futures can trade a few hours in their delisting date, else we would skip on
                 // emitting the delisting warning, which triggers us to handle liquidation once delisted
-                if (!_delistedWarning && eventArgs.Date >= _delistingDate.Date)
+                if (!_delistedWarning && eventArgs.Date >= DelistingDate.Value.Date)
                 {
                     _delistedWarning = true;
                     var price = eventArgs.LastBaseData?.Price ?? 0;
@@ -75,14 +80,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         price,
                         DelistingType.Warning);
                 }
-                if (!_delisted && eventArgs.Date > _delistingDate)
+                if (!_delisted && eventArgs.Date > DelistingDate.Value)
                 {
                     _delisted = true;
                     var price = eventArgs.LastBaseData?.Price ?? 0;
                     // delisted at EOD
                     yield return new Delisting(
                         eventArgs.Symbol,
-                        _delistingDate.AddDays(1),
+                        DelistingDate.Value.AddDays(1),
                         price,
                         DelistingType.Delisted);
                 }

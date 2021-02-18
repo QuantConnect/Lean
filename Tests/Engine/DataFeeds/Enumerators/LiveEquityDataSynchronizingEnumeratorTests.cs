@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var count1 = 0;
             var count2 = 0;
             var previous = DateTime.MinValue;
-            var synchronizer = new LiveEquityDataSynchronizingEnumerator(new RealTimeProvider(), DateTimeZone.Utc, stream1, stream2);
+            var synchronizer = new LiveAuxiliaryDataSynchronizingEnumerator(new RealTimeProvider(), DateTimeZone.Utc, stream1, stream2);
             while (synchronizer.MoveNext() && DateTime.UtcNow < end)
             {
                 if (synchronizer.Current != null)
