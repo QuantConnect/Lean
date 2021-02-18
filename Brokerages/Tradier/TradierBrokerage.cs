@@ -116,16 +116,8 @@ namespace QuantConnect.Brokerages.Tradier
             _requestEndpoint = useSandbox ? "https://sandbox.tradier.com/v1/" : "https://api.tradier.com/v1/";
 
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += (s, t) =>
-            {
-                Refresh();
-                return true;
-            };
-            _subscriptionManager.UnsubscribeImpl += (s, t) =>
-            {
-                Refresh();
-                return true;
-            };
+            _subscriptionManager.SubscribeImpl += Subscribe;
+            _subscriptionManager.UnsubscribeImpl += Unsubscribe;
 
             _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
 
@@ -149,50 +141,8 @@ namespace QuantConnect.Brokerages.Tradier
             var interval = _useSandbox ? 1000 : 500;
             _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
 
-            Task.Factory.StartNew(() =>
-            {
-                IEnumerator<TradierStreamData> pipe = null;
-                do
-                {
-                    try
-                    {
-                        if (!Subscriptions.Any())
-                        {
-                            Thread.Sleep(10);
-                            continue;
-                        }
-
-                        //If there's been an update to the subscriptions list; recreate the stream.
-                        if (_refresh)
-                        {
-                            var stream = Stream(GetTickers());
-                            pipe = stream.GetEnumerator();
-                            pipe.MoveNext();
-                            _refresh = false;
-                        }
-
-                        if (pipe?.Current != null)
-                        {
-                            var tsd = pipe.Current;
-                            if (tsd.Type == "trade" || tsd.Type == "quote")
-                            {
-                                var tick = CreateTick(tsd);
-                                if (tick != null)
-                                {
-                                    _aggregator.Update(tick);
-                                }
-                            }
-                            pipe.MoveNext();
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
-                    }
-                } while (!_disconnect);
-
-                pipe.DisposeSafely();
-            }, TaskCreationOptions.LongRunning);
+            _webSocketClient.Initialize(WebSocketUrl);
+            _webSocketClient.Message += OnMessage;
         }
 
         #region Tradier client implementation
@@ -677,7 +627,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected => !_disconnect;
+        public override bool IsConnected => _webSocketClient.IsOpen;
 
         /// <summary>
         /// Gets all open orders on the account.
@@ -960,7 +910,19 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public override void Connect()
         {
-            _disconnect = false;
+            _streamSession = CreateStreamSession();
+
+            var resetEvent = new ManualResetEvent(false);
+            EventHandler triggerEvent = (o, args) => resetEvent.Set();
+            _webSocketClient.Open += triggerEvent;
+
+            _webSocketClient.Connect();
+
+            if (!resetEvent.WaitOne(ConnectionTimeout))
+            {
+                throw new TimeoutException("Websockets connection timeout.");
+            }
+            _webSocketClient.Open -= triggerEvent;
         }
 
         /// <summary>
@@ -968,7 +930,10 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public override void Disconnect()
         {
-            _disconnect = true;
+            if (_webSocketClient.IsOpen)
+            {
+                _webSocketClient.Close();
+            }
         }
 
         /// <summary>

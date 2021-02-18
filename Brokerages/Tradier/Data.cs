@@ -483,5 +483,15 @@ namespace QuantConnect.Brokerages.Tradier
         /// Trading Stream: Ask Date
         [JsonProperty(PropertyName = "askdate")]
         public long AskDateUnix;
+
+        /// <summary>
+        /// Gets the tick timestamp (UTC)
+        /// </summary>
+        public DateTime GetTickTimestamp()
+        {
+            var unix = Type == "trade" ? UnixDate.ConvertInvariant<long>() : Type == "quote" ? BidDateUnix : 0;
+
+            return Time.UnixMillisecondTimeStampToDateTime(unix);
+        }
     }
 }
