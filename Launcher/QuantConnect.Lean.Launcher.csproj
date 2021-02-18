@@ -30,6 +30,7 @@
   <PropertyGroup>
     <StartupObject>QuantConnect.Lean.Launcher.Program</StartupObject>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageId>QuantConnect.Lean</PackageId>
   </PropertyGroup>
   <Target Name="Print" BeforeTargets="Build">
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
