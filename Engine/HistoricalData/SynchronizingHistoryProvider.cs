@@ -45,7 +45,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Enumerates the subscriptions into slices
         /// </summary>
-        protected IEnumerable<Slice> CreateSliceEnumerableFromSubscriptions(IEnumerable<Subscription> subscriptions, DateTimeZone sliceTimeZone)
+        protected IEnumerable<Slice> CreateSliceEnumerableFromSubscriptions(List<Subscription> subscriptions, DateTimeZone sliceTimeZone)
         {
             // required by TimeSlice.Create, but we don't need it's behavior
             var frontier = DateTime.MinValue;
