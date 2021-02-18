@@ -447,7 +447,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
         private string GetHttpHeaderValue(IRestResponse response, string propertyName)
         {
-            return response.Headers.ToList()
+            return response.Headers
                 .FirstOrDefault(x => x.Name == propertyName)?
                 .Value.ToString();
         }
