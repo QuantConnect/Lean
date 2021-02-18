@@ -15,5 +15,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("5c3d0688-07ac-4cd4-8f2e-e74ebcf32a88")]
-[assembly: AssemblyDescription("QuantConnect LEAN Engine: ToolBox Project - A collection of data downloaders and converters")]
 [assembly: InternalsVisibleTo("QuantConnect.Tests")]
