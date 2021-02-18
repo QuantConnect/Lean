@@ -381,7 +381,6 @@ namespace QuantConnect.ToolBox.CoinApi
                 yield break;
             }
 
-
             // Perform a check the number of bars requested, this must not exceed the limit of 100k
             var dataRequestedCount = (historyRequest.EndTimeUtc - historyRequest.StartTimeUtc).Ticks 
                                      / historyRequest.Resolution.ToTimeSpan().Ticks;
@@ -399,7 +398,6 @@ namespace QuantConnect.ToolBox.CoinApi
             // Time must be in ISO 8601 format
             var coinApiStartTime = historyRequest.StartTimeUtc.ToStringInvariant("s");
             var coinApiEndTime = historyRequest.EndTimeUtc.ToStringInvariant("s");
-
 
             // Construct URL for rest request
             var baseUrl =
