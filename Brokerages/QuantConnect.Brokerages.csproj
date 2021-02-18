@@ -14,6 +14,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Description>QuantConnect LEAN Engine: Brokerages Project - A collection of brokerages for live trading and backtesting</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -64,6 +65,10 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="InteractiveBrokers\IB-symbol-map.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

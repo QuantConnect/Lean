@@ -89,6 +89,10 @@
     <Content Include="AltData\TiingoNewsAlgorithm.py" />
     <Content Include="BasicCSharpIntegrationTemplateAlgorithm.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="InceptionDateSelectionRegressionAlgorithm.py" />
     <None Include="USTreasuryYieldCurveDataAlgorithm.py" />
     <None Include="SmartInsiderDataAlgorithm.py" />
@@ -320,5 +324,6 @@
     <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
       ./build.sh
     </PostBuildEvent>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 </Project>
