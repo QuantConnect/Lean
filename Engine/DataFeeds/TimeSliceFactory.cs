@@ -499,6 +499,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             FuturesChain chain;
             var canonical = Symbol.Create(symbol.ID.Symbol, SecurityType.Future, symbol.ID.Market);
+
             if (!futuresChains.TryGetValue(canonical, out chain))
             {
                 chain = new FuturesChain(canonical, algorithmTime);
