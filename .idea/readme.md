@@ -30,6 +30,17 @@ _**PyCharm’s remote debugger requires PyCharm Professional._
 
 <br />
 
+<h1>Setting up Python Code Completion</h1>
+
+In Pycharm or Rider, after installing [`lean-cli`](https://github.com/QuantConnect/lean-cli) or [`quantconnect-stubs`](https://github.com/QuantConnect/quantconnect-stubs-generator),
+
+1. Open settings
+2. Click on "Python Console" under the "Console" subsection
+3. For the interpreter of your choice, add `import quantconnect-stubs` under "Starting script".
+
+After clicking "Apply" or "Ok", all .py files opened using these project settings will implicitly import the stubs module. 
+It is recommended that a virtual environment is used for your Lean project so that these stubs will only ever load when developing in Lean.
+
 <h1>Develop Algorithms Locally, Run in Container</h1>
 
 
