@@ -371,7 +371,25 @@ namespace QuantConnect.ToolBox.CoinApi
 
             if (historyRequest.Resolution == Resolution.Tick)
             {
-                Log.Error("CoinApiDataQueueHandler.GetHistory(): Historical ticks can not be provided, only OHLCV timeseries");
+                Log.Error("CoinApiDataQueueHandler.GetHistory(): No historical ticks, only OHLCV timeseries");
+                yield break;
+            }
+
+            if (historyRequest.DataType == typeof(QuoteBar))
+            {
+                Log.Error("CoinApiDataQueueHandler.GetHistory(): No historical QuoteBars , only TradeBars");
+                yield break;
+            }
+
+
+            // Perform a check the number of bars requested, this must not exceed the limit of 100k
+            var dataRequestedCount = (historyRequest.EndTimeUtc - historyRequest.StartTimeUtc).Ticks 
+                                     / historyRequest.Resolution.ToTimeSpan().Ticks;
+
+            if (dataRequestedCount > 100000)
+            {
+                Log.Error("CoinApiDataQueueHandler.GetHistory(): The requested data range is too large, " +
+                          "the amount of data returned will exceed the limit of 100.000");
                 yield break;
             }
 
@@ -382,10 +400,11 @@ namespace QuantConnect.ToolBox.CoinApi
             var coinApiStartTime = historyRequest.StartTimeUtc.ToStringInvariant("s");
             var coinApiEndTime = historyRequest.EndTimeUtc.ToStringInvariant("s");
 
+
             // Construct URL for rest request
             var baseUrl =
                 "https://rest.coinapi.io/v1/ohlcv/" +
-                $"{coinApiSymbol}/history?period_id={coinApiPeriod}" +
+                $"{coinApiSymbol}/history?period_id={coinApiPeriod}&limit={100000}" +
                 $"&time_start={coinApiStartTime}&time_end={coinApiEndTime}";
 
             // Execute
@@ -409,7 +428,9 @@ namespace QuantConnect.ToolBox.CoinApi
 
             foreach (var ohlcv in coinApiHistoryBars)
             {
-                yield return ohlcv.ToTradeBar();
+                yield return
+                    new TradeBar(ohlcv.TimePeriodStart, historyRequest.Symbol, ohlcv.PriceOpen, ohlcv.PriceHigh,
+                        ohlcv.PriceLow, ohlcv.PriceClose, ohlcv.VolumeTraded, historyRequest.Resolution.ToTimeSpan());
             }
         }
 
@@ -427,7 +448,7 @@ namespace QuantConnect.ToolBox.CoinApi
         private string GetHttpHeaderValue(IRestResponse response, string propertyName)
         {
             return response.Headers.ToList()
-                .Find(x => x.Name == propertyName)
+                .FirstOrDefault(x => x.Name == propertyName)?
                 .Value.ToString();
         }
     }

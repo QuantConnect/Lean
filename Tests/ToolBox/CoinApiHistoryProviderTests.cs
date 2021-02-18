@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.CoinApi;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.ToolBox
 {
@@ -34,24 +35,30 @@ namespace QuantConnect.Tests.ToolBox
         // -- DATA TO TEST --
         private static TestCaseData[] TestData => new[]
         {
-            // No data - period is too short
-            new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Minute, TimeSpan.FromMinutes(1), false),
-            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Minute, TimeSpan.FromMinutes(1), false),
+            // No data - invalid resolution or data type, or period is more than limit
+            new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Tick, typeof(TradeBar), 100, false),
+            new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Daily, typeof(QuoteBar), 100, false),
+            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Minute, typeof(TradeBar), 100001, false),
             // Has data
-            new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Minute, TimeSpan.FromMinutes(10), true),
-            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Minute, TimeSpan.FromMinutes(10), true),
-            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Hour, TimeSpan.FromHours(99), true),
-            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Daily, TimeSpan.FromDays(99), true)
+            new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Minute, typeof(TradeBar), 10, true),
+            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Minute, typeof(TradeBar), 10, true),
+            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Hour, typeof(TradeBar), 100, true),
+            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Daily, typeof(TradeBar), 1000, true),
+            // Can get data for resolution second
+            new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Second, typeof(TradeBar), 300, true)
         };
-
+        
         [Test]
         [TestCaseSource(nameof(TestData))]
-        public void CanGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool isNonEmptyResult)
+        public void CanGetHistory(Symbol symbol, Resolution resolution, Type dataType, int period, bool isNonEmptyResult)
         {
-            var now = DateTime.UtcNow;
+            var nowUtc = DateTime.UtcNow;
+            var periodTimeSpan = TimeSpan.FromTicks(resolution.ToTimeSpan().Ticks * period);
+            var startTimeUtc = nowUtc.Add(-periodTimeSpan);
+
             var historyRequests = new[]
             {
-                new HistoryRequest(now.Add(-period), now, typeof(TradeBar), symbol, resolution,
+                new HistoryRequest(startTimeUtc, nowUtc, dataType, symbol, resolution,
                     SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), TimeZones.Utc,
                     resolution, true, false, DataNormalizationMode.Raw, TickType.Trade)
             };
@@ -60,9 +67,40 @@ namespace QuantConnect.Tests.ToolBox
             
             if (isNonEmptyResult)
             {
-                // Slices are not empty
-                Assert.IsNotEmpty(slices);
-                // And are ordered by time
+                // For resolution larger than second do more tests
+                if (resolution > Resolution.Second)
+                {
+                    Assert.AreEqual(period, slices.Length);
+
+                    var firstSliceTradeBars = slices.First().Bars.Values;
+                    
+                    Assert.True(firstSliceTradeBars.Select(x => x.Symbol).Contains(symbol));
+
+                    firstSliceTradeBars.DoForEach(tb =>
+                    {
+                        var resTimeSpan = resolution.ToTimeSpan();
+                        Assert.AreEqual(resTimeSpan, tb.Period);
+                        Assert.AreEqual(startTimeUtc.RoundUp(resTimeSpan), tb.Time);
+                    });
+
+                    var lastSliceTradeBars = slices.Last().Bars.Values;
+
+                    lastSliceTradeBars.DoForEach(tb =>
+                    {
+                        var resTimeSpan = resolution.ToTimeSpan();
+                        Assert.AreEqual(resTimeSpan, tb.Period);
+                        Assert.AreEqual(nowUtc.RoundDown(resTimeSpan), tb.Time);
+                    });
+                }
+                // For res. second data counts, start/end dates may slightly vary from historical request's 
+                // Make sure just that resolution is correct and amount is positive numb.
+                else
+                {
+                    Assert.IsTrue(slices.Length > 0);
+                    Assert.AreEqual(resolution.ToTimeSpan(), slices.First().Bars.Values.FirstOrDefault()?.Period);
+                }
+
+                // Slices are ordered by time
                 Assert.That(slices, Is.Ordered.By("Time"));
             }
             else

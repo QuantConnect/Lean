@@ -15,7 +15,6 @@
 
 using System;
 using Newtonsoft.Json;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.ToolBox.CoinApi.Messages
 {
@@ -44,23 +43,5 @@ namespace QuantConnect.ToolBox.CoinApi.Messages
 
         [JsonProperty("trades_count")]
         public int TradesCount { get; set; }
-
-        /// <summary>
-        /// Converts CoinApi OHLCV to QuantConnect TradeBar 
-        /// </summary>
-        /// <returns></returns>
-        public TradeBar ToTradeBar()
-        {
-            return new TradeBar()
-            {
-                Time = TimePeriodStart,
-                EndTime = TimePeriodEnd,
-                Open = PriceOpen,
-                High = PriceHigh,
-                Low = PriceLow,
-                Close = PriceClose,
-                Volume = VolumeTraded
-            };
-        }
     }
 }
