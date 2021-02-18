@@ -13,4 +13,3 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("7007a02a-8d01-4a85-84e4-fcd58dc943e2")]
-[assembly: AssemblyDescription("QuantConnect LEAN Engine: Algorithm.Python Project - A collection of Py algorithm demonstrations for how to use the API")]

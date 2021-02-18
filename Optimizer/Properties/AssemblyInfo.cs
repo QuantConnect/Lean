@@ -15,4 +15,3 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("4ecd7df3-a675-4e9e-aca3-2b51c88736ce")]
-[assembly: AssemblyDescription("QuantConnect LEAN Engine: Optimizer Project - The Lean optimization engine")]
