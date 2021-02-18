@@ -15,4 +15,3 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("7b9bd814-ef00-4c83-9843-81ca75db53d1")]
-[assembly: AssemblyDescription("QuantConnect LEAN Engine: Tests Project - The test collection")]

@@ -21,4 +21,3 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("QuantConnect.Brokerages")]
 [assembly: InternalsVisibleTo("QuantConnect.Lean.Engine")]
 [assembly: InternalsVisibleTo("QuantConnect.Tests")]
-[assembly: AssemblyDescription("QuantConnect LEAN Engine: Common Project - A collection of common definitions and utils")]
