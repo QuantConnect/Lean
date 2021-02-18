@@ -77,7 +77,7 @@
   </Choose>
   <ItemGroup>
     <PackageReference Include="Deedle" Version="2.1.0" />
-    <PackageReference Include="MathNet.Numerics" Version="4.9.0" />
+    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
