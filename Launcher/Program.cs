@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Launcher
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
-            if (VersionHelper.IsNotEqualVersion(job.Version) || job.Redelivered)
+            if (job.Redelivered)
             {
                 Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Globals.Version + " Redelivered: " + job.Redelivered);
                 //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.

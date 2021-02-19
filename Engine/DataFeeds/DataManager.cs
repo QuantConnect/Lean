@@ -503,7 +503,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     exchangeHours.TimeZone,
                     fillForward,
                     extendedMarketHours,
-                    isInternalFeed,
+                    // if the subscription data types were not provided and the tick type is OpenInterest we make it internal
+                    subscriptionDataTypes == null && tickType == TickType.OpenInterest || isInternalFeed,
                     isCustomData,
                     isFilteredSubscription: isFilteredSubscription,
                     tickType: tickType,

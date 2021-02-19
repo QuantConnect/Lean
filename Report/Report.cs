@@ -108,6 +108,7 @@ namespace QuantConnect.Report
                 new InformationRatioReportElement("ir kpi", ReportKey.InformationRatio, backtest, live),
                 new MarketsReportElement("markets kpi", ReportKey.Markets, backtest, live),
                 new TradesPerDayReportElement("trades per day kpi", ReportKey.TradesPerDay, backtest, live),
+                new EstimatedCapacityReportElement("estimated algorithm capacity", ReportKey.StrategyCapacity, backtest, live),
 
                 // Generate and insert plots MonthlyReturnsReportElement
                 new MonthlyReturnsReportElement("monthly return plot", ReportKey.MonthlyReturns, backtest, live),

@@ -36,6 +36,7 @@ namespace QuantConnect.Report
         public const string TradesPerDay = @"{{$KPI-TRADES-PER-DAY}}";
         public const string Markets = @"{{$KPI-MARKETS}}";
         public const string PSR = @"{{$KPI-PSR}}";
+        public const string StrategyCapacity = @"{{$KPI-STRATEGY-CAPACITY}}";
 
         public const string MonthlyReturns = @"{{$PLOT-MONTHLY-RETURNS}}";
         public const string CumulativeReturns = @"{{$PLOT-CUMULATIVE-RETURNS}}";
