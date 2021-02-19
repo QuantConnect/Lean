@@ -41,19 +41,8 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
   <ItemGroup>
-    <Reference Include="Python.Runtime, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>$(ProjectDir)..\PythonNet\Python.Runtime.dll</HintPath>
-    </Reference>
-    <Content Include="$(SolutionDir)\PythonNet\clr.py">
-      <Link>clr.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.0" />
+      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
