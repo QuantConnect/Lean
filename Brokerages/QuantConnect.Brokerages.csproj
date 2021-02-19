@@ -32,7 +32,6 @@
   </Target>
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="19.0.0" />
-    <PackageReference Include="IKVM" Version="8.1.5717.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -78,10 +77,5 @@
     <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj" />
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj" />
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Fxcm\QuantConnect.Fxcm.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>

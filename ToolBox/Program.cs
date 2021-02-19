@@ -28,8 +28,6 @@ using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
 using QuantConnect.ToolBox.EstimizeDataDownloader;
-using QuantConnect.ToolBox.FxcmDownloader;
-using QuantConnect.ToolBox.FxcmVolumeDownload;
 using QuantConnect.ToolBox.GDAXDownloader;
 using QuantConnect.ToolBox.IBDownloader;
 using QuantConnect.ToolBox.IEX;
@@ -95,14 +93,6 @@ namespace QuantConnect.ToolBox
                     case "ddl":
                     case "dukascopydownloader":
                         DukascopyDownloaderProgram.DukascopyDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-                    case "fdl":
-                    case "fxcmdownloader":
-                        FxcmDownloaderProgram.FxcmDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-                    case "fvdl":
-                    case "fxcmvolumedownload":
-                        FxcmVolumeDownloadProgram.FxcmVolumeDownload(tickers, resolution, fromDate, toDate);
                         break;
                     case "ibdl":
                     case "ibdownloader":
