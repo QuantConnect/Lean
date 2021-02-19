@@ -283,7 +283,7 @@ namespace QuantConnect.Report
             IEnumerable<SubscriptionDataConfig> configs,
             IEnumerable<BaseData> dataBin)
         {
-            foreach (var config in configs)//conversionConfigs.Concat(_subscriptionManager.Subscriptions))
+            foreach (var config in configs)
             {
                 var symbol = config.Symbol;
                 var cashMoney = _cashBook.Values.FirstOrDefault(x => x.ConversionRateSecurity?.Symbol == symbol);
