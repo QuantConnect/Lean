@@ -35,6 +35,11 @@ namespace QuantConnect.Interfaces
         bool ShouldPerformCashSync(DateTime currentTimeUtc);
 
         /// <summary>
+        /// Disable cash sync entirely
+        /// </summary>
+        void DisableCashSync();
+
+        /// <summary>
         /// Synchronizes the cashbook with the brokerage account
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>

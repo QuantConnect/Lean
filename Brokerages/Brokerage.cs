@@ -39,6 +39,11 @@ namespace QuantConnect.Brokerages
         private long _lastSyncTimeTicks = DateTime.UtcNow.Ticks;
 
         /// <summary>
+        /// True if cash sync should be performed
+        /// </summary>
+        protected bool CashSyncEnabled { get; set; } = true;
+
+        /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
         public event EventHandler<OrderEvent> OrderStatusChanged;
@@ -257,6 +262,11 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the cash sync should be performed</returns>
         public virtual bool ShouldPerformCashSync(DateTime currentTimeUtc)
         {
+            if (!CashSyncEnabled)
+            {
+                return false;
+            }
+
             // every morning flip this switch back
             var currentTimeNewYork = currentTimeUtc.ConvertFromUtc(TimeZones.NewYork);
             if (_syncedLiveBrokerageCashToday && currentTimeNewYork.Date != LastSyncDate)
@@ -265,6 +275,14 @@ namespace QuantConnect.Brokerages
             }
 
             return !_syncedLiveBrokerageCashToday && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime;
+        }
+
+        /// <summary>
+        /// Disable cash sync entirely
+        /// </summary>
+        public void DisableCashSync()
+        {
+            CashSyncEnabled = false;
         }
 
         /// <summary>
