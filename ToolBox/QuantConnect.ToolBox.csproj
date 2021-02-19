@@ -79,7 +79,6 @@
     <PackageReference Include="Common.Logging" Version="3.4.1" />
     <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
     <PackageReference Include="DotNetZip" Version="1.13.3" />
-    <PackageReference Include="IKVM" Version="8.1.5717.0" />
     <PackageReference Include="IQFeed.CSharpApiClient" Version="2.5.1" />
     <PackageReference Include="LaunchDarkly.EventSource" Version="3.3.2" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.6.0" />

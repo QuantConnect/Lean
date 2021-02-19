@@ -208,7 +208,7 @@ namespace QuantConnect.Report
         /// <remarks>We use L1 crypto data because there is much greater depth of crypto books vs. the trading volumes</remarks>
         private void SetupDataSubscriptions(List<Order> orders)
         {
-            var symbols = LinqExtensions.ToHashSet(orders.Select(x => x.Symbol));
+            var symbols = orders.ToHashSet(x => x.Symbol);
 
             foreach (var symbol in symbols)
             {

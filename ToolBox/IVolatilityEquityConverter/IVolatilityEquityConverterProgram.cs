@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using ikvm.extensions;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
@@ -133,7 +132,7 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
         private static Symbol GetSymbol(string fileName)
         {
             var splits = fileName.Split('_');
-            var ticker = splits[1].toLowerCase();
+            var ticker = splits[1].ToLowerInvariant();
             return Symbol.Create(ticker, SecurityType.Equity, Market.USA);
         }
 
@@ -144,7 +143,7 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
         /// <returns></returns>
         private static Resolution ParseResolution(string entry)
         {
-            switch (entry.Trim().toLowerCase())
+            switch (entry.Trim().ToLowerInvariant())
             {
                 case "minute":
                     return Resolution.Minute;
