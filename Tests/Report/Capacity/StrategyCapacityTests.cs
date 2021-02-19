@@ -23,21 +23,24 @@ using QuantConnect.Tests.Report.Capacity.Strategies;
 
 namespace QuantConnect.Tests.Report.Capacity
 {
-    [TestFixture]
+    /// <summary>
+    /// </summary>
+    [TestFixture, Category("TravisExclude"), Ignore("Requires a ton of data to run these tests that doesn't exist in the repo")]
+
     public class StrategyCapacityTests
     {
-        [TestCase(nameof(SpyBondPortfolioRebalance), 2940000)]
-        [TestCase(nameof(BeastVsPenny), 177000)]
-        [TestCase(nameof(MonthlyRebalanceHourly), 10900000)]
-        [TestCase(nameof(MonthlyRebalanceDaily), 10900000)]
-        [TestCase(nameof(IntradayMinuteScalping), 26300000)]
-        [TestCase("IntradayMinuteScalpingBTCETH", 132000)]
-        [TestCase("IntradayMinuteScalpingEURUSD", 2380000)]
-        [TestCase("IntradayMinuteScalpingGBPJPY", 2240000)]
-        [TestCase("IntradayMinuteScalpingTRYJPY", 2270000)]
-        [TestCase("CheeseMilkHourlyRebalance", 51900)]
-        [TestCase(nameof(IntradayMinuteScalpingFuturesES), 20200000)]
-        [TestCase(nameof(EmaPortfolioRebalance100), 203)]
+        [TestCase(nameof(SpyBondPortfolioRebalance), 2900000)]
+        [TestCase(nameof(BeastVsPenny), 180000)]
+        [TestCase(nameof(MonthlyRebalanceHourly), 11000000)]
+        [TestCase(nameof(MonthlyRebalanceDaily), 11000000)]
+        [TestCase(nameof(IntradayMinuteScalping), 26000000)]
+        [TestCase("IntradayMinuteScalpingBTCETH", 130000)]
+        [TestCase("IntradayMinuteScalpingEURUSD", 2400000)]
+        [TestCase("IntradayMinuteScalpingGBPJPY", 2200000)]
+        [TestCase("IntradayMinuteScalpingTRYJPY", 2300000)]
+        [TestCase(nameof(CheeseMilkHourlyRebalance), 52000)]
+        [TestCase(nameof(IntradayMinuteScalpingFuturesES), 20000000)]
+        [TestCase(nameof(EmaPortfolioRebalance100), 200)]
         public void TestCapacity(string strategy, int expectedCapacity)
         {
             var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(Path.Combine("Report", "Capacity", "Strategies", $"{strategy}.json")), new OrderJsonConverter());

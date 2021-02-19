@@ -39,19 +39,25 @@ namespace QuantConnect.Report
     public class StrategyCapacity
     {
         private const Resolution _resolution = Resolution.Minute;
-
-        private int _previousMonth;
-        private Dictionary<Symbol, SymbolData> _symbolData;
+        private const decimal _forexMinuteVolume = 25000000m;
+        private const decimal _percentageOfMinuteDollarVolume = 0.20m;
+        /// <summary>
+        /// If trades were more than 180 minutes apart, there was no impact.
+        /// (390 / 2) roughly equals 180 minutes
+        /// </summary>
+        private const decimal _fastTradingDiscountFactor = 2m;
 
         private LiveResult _live;
         private BacktestResult _backtest;
+        private int _previousMonth;
         private Dictionary<Symbol, DateTimeZone> _timeZones;
-        private SecurityManager _securityManager;
-        private CashBook _cashBook;
+        private Dictionary<Symbol, SymbolData> _symbolData;
         private SubscriptionManager _subscriptionManager;
-        private MarketHoursDatabase _mhdb;
-        private SymbolPropertiesDatabase _spdb;
+        private SecurityManager _securityManager;
         private SecurityService _securityService;
+        private SymbolPropertiesDatabase _spdb;
+        private MarketHoursDatabase _mhdb;
+        private CashBook _cashBook;
 
         /// <summary>
         /// Capacity of the strategy at different points in time
@@ -79,6 +85,11 @@ namespace QuantConnect.Report
                 new SecurityCacheProvider(new ReportSecurityProvider()));
         }
 
+        /// <summary>
+        /// Estimates the strategy's capacity. Can be a live or backtest result.
+        /// </summary>
+        /// <param name="result">Backtest or live result</param>
+        /// <returns>Estimated capacity in USD</returns>
         public decimal? Estimate(Result result)
         {
             Initialize();
@@ -106,7 +117,7 @@ namespace QuantConnect.Report
                     _securityService)
                 .Concat(_subscriptionManager.Subscriptions);
 
-            var capacity = AlgorithmCapacity(configs, orders, start, end).RoundToSignificantDigits(3);
+            var capacity = AlgorithmCapacity(configs, orders, start, end).RoundToSignificantDigits(2);
 
             return capacity;
         }
@@ -127,7 +138,7 @@ namespace QuantConnect.Report
                 SymbolData symbolData;
                 if (!_symbolData.TryGetValue(symbol, out symbolData))
                 {
-                    symbolData = new SymbolData(symbol, _timeZones[symbol]);
+                    symbolData = new SymbolData(symbol, _timeZones[symbol], _fastTradingDiscountFactor, _percentageOfMinuteDollarVolume);
                     _symbolData[symbol] = symbolData;
                 }
 
@@ -148,7 +159,7 @@ namespace QuantConnect.Report
             SymbolData symbolData;
             if (!_symbolData.TryGetValue(symbol, out symbolData))
             {
-                symbolData = new SymbolData(symbol, _timeZones[symbol]);
+                symbolData = new SymbolData(symbol, _timeZones[symbol], _fastTradingDiscountFactor, _percentageOfMinuteDollarVolume);
                 _symbolData[symbol] = symbolData;
             }
 
@@ -187,6 +198,11 @@ namespace QuantConnect.Report
             }
         }
 
+        /// <summary>
+        /// Creates the data subscriptions required for loading data
+        /// </summary>
+        /// <param name="orders">Orders to load data for</param>
+        /// <remarks>We use L1 crypto data because there is much greater depth of crypto books vs. the trading volumes</remarks>
         private void SetupDataSubscriptions(IEnumerable<Order> orders)
         {
             var symbols = LinqExtensions.ToHashSet(orders.Select(x => x.Symbol));
@@ -210,6 +226,13 @@ namespace QuantConnect.Report
             }
         }
 
+        /// <summary>
+        /// Uses the orders to load data
+        /// </summary>
+        /// <param name="configs">Configurations to use for reading data</param>
+        /// <param name="start">Starting date to read data for</param>
+        /// <param name="end">Ending date to read data for</param>
+        /// <returns>List of enumerators of data</returns>
         private List<IEnumerator<BaseData>> ReadData(
             IEnumerable<SubscriptionDataConfig> configs,
             DateTime start,
@@ -231,6 +254,12 @@ namespace QuantConnect.Report
             return readers;
         }
 
+        /// <summary>
+        /// Synchronizes the data in time, binning it by the data's time.
+        /// This ensures that data is separated into discrete time steps so that
+        /// we can create slices from all data at a given point in time.
+        /// </summary>
+        /// <returns>Data binned by time</returns>
         private List<List<BaseData>> SynchronizeData(IEnumerable<SubscriptionDataConfig> configs, DateTime start, DateTime end)
         {
             var readers = ReadData(configs, start, end);
@@ -279,6 +308,10 @@ namespace QuantConnect.Report
             return dataBinnedByTime;
         }
 
+        /// <summary>
+        /// Updates the currency converter with the price data required for it to convert to the account currency (USD)
+        /// </summary>
+        /// <remarks>Used primarily for crypto and FX</remarks>
         private void UpdateCurrencyConversionData(
             IEnumerable<SubscriptionDataConfig> configs,
             IEnumerable<BaseData> dataBin)
@@ -296,6 +329,13 @@ namespace QuantConnect.Report
             }
         }
 
+        /// <summary>
+        /// Converts any crypto/FX data to USD so that we can calculate the USD capacity
+        /// </summary>
+        /// <remarks>
+        /// Futures uses the notional value to approximate trading volume for the day.
+        /// FX estimates the capacity at 25MM USD per minute.
+        /// <param name="dataBin"></param>
         private void DataToAccountCurrency(List<BaseData> dataBin)
         {
             var forexTrades = new List<BaseData>();
@@ -339,7 +379,7 @@ namespace QuantConnect.Report
                             _cashBook.ConvertToAccountCurrency(quoteBar.High, symbolProperties.QuoteCurrency),
                             _cashBook.ConvertToAccountCurrency(quoteBar.Low, symbolProperties.QuoteCurrency),
                             _cashBook.ConvertToAccountCurrency(quoteBar.Close, symbolProperties.QuoteCurrency),
-                            25000000m / _cashBook.ConvertToAccountCurrency(quoteBar.Close, symbolProperties.QuoteCurrency),
+                            _forexMinuteVolume / _cashBook.ConvertToAccountCurrency(quoteBar.Close, symbolProperties.QuoteCurrency),
                             TimeSpan.FromMinutes(1)
                         ));
                     }
@@ -364,6 +404,12 @@ namespace QuantConnect.Report
             dataBin.AddRange(forexTrades);
         }
 
+        /// <summary>
+        /// Takes orders and converts them to OrderEvents. Orders will have their fill price converted to
+        /// the account currency (USD) and have their fill time set to UTC. MOO orders are shifted until market open.
+        /// </summary>
+        /// <param name="cursor">Cursor is used to keep track of what order we're on</param>
+        /// <returns>OrderEvents</returns>
         private List<OrderEvent> ToOrderEvents(List<Order> orders, DateTime dataTime, ref int cursor)
         {
             var orderEvents = new List<OrderEvent>();
@@ -399,6 +445,10 @@ namespace QuantConnect.Report
             return orderEvents;
         }
 
+        /// <summary>
+        /// Step through time and order events and calculate capacity based on the volumes in the minutes surrounding the order.
+        /// </summary>
+        /// <returns>Capacity in USD</returns>
         private decimal AlgorithmCapacity(
             IEnumerable<SubscriptionDataConfig> configs,
             List<Order> orders,
@@ -429,16 +479,26 @@ namespace QuantConnect.Report
             return Capacity.LastOrDefault()?.y ?? 0;
         }
 
+        /// <summary>
+        /// Class for calculating the capacity and volume of individual assets
+        /// </summary>
         private class SymbolData
         {
+            private decimal _percentageOfMinuteDollarVolume = 0.20m;
             private Symbol _symbol;
             private TradeBar _previousBar;
             private QuoteBar _previousQuoteBar;
             private OrderEvent _previousTrade;
-            public decimal AverageCapacity => (_marketCapacityDollarVolume / TradeCount) * 0.20m;
+
+
+            /// <summary>
+            /// 20% of Total market capacity dollar volume of minutes surrounding after an order. It is penalized by frequency of trading.
+            /// </summary>
+            public decimal AverageCapacity => (_marketCapacityDollarVolume / TradeCount) * _percentageOfMinuteDollarVolume;
 
             private DateTime _timeout;
             private double _fastTradingVolumeDiscountFactor;
+            private double _fastTradingVolumeScalingFactor;
             private decimal _averageVolume;
             private readonly DateTimeZone _timeZone;
 
@@ -448,13 +508,24 @@ namespace QuantConnect.Report
             public decimal AbsoluteTradingDollarVolume { get; private set; }
             private decimal _marketCapacityDollarVolume;
 
-            public SymbolData(Symbol symbol, DateTimeZone timeZone)
+            /// <summary>
+            /// Creates an instance of SymbolData, used internally to calculate capacity
+            /// </summary>
+            /// <param name="symbol">Symbol to calculate capacity for</param>
+            /// <param name="timeZone">Time zone of the data</param>
+            /// <param name="fastTradingVolumeScalingFactor">Penalty for fast trading</param>
+            /// <param name="percentageOfMinuteDollarVolume">Percentage of minute dollar volume to assume as take-able without moving the market</param>
+            public SymbolData(Symbol symbol, DateTimeZone timeZone, decimal fastTradingVolumeScalingFactor, decimal percentageOfMinuteDollarVolume)
             {
                 _symbol = symbol;
                 _timeZone = timeZone;
-                _fastTradingVolumeDiscountFactor = 1;
+                _fastTradingVolumeScalingFactor = (double)fastTradingVolumeScalingFactor;
+                _percentageOfMinuteDollarVolume = percentageOfMinuteDollarVolume;
             }
 
+            /// <summary>
+            /// Processes an order event, calculating the dollar volume and setting the order timeout
+            /// </summary>
             public void OnOrderEvent(OrderEvent orderEvent)
             {
                 TradedBetweenSnapshots = true;
@@ -462,7 +533,7 @@ namespace QuantConnect.Report
                 TradeCount++;
 
                 // Use 6000000 as the maximum bound for trading volume in a single minute.
-                // Any bars that exceed 6 million total volume will be capped to a timeout of one minute.
+                // Any bars that exceed 6 million total volume will be capped to a timeout of five minutes.
                 var k = _averageVolume != 0
                     ? 6000000 / _averageVolume
                     : 10;
@@ -471,7 +542,7 @@ namespace QuantConnect.Report
 
                 // To reduce the capacity of high frequency strategies, we scale down the
                 // volume captured on each bar proportional to the trades per day.
-                _fastTradingVolumeDiscountFactor = 2 * (((orderEvent.UtcTime - (_previousTrade?.UtcTime ?? orderEvent.UtcTime.AddDays(-1))).TotalMinutes) / 390);
+                _fastTradingVolumeDiscountFactor = _fastTradingVolumeScalingFactor * (((orderEvent.UtcTime - (_previousTrade?.UtcTime ?? orderEvent.UtcTime.AddDays(-1))).TotalMinutes) / 390);
                 _fastTradingVolumeDiscountFactor = _fastTradingVolumeDiscountFactor > 1 ? 1 : Math.Max(0.01, _fastTradingVolumeDiscountFactor);
 
                 // When trades occur within 10 minutes the total volume we will capture is implicitly limited
@@ -480,6 +551,9 @@ namespace QuantConnect.Report
                 _previousTrade = orderEvent;
             }
 
+            /// <summary>
+            /// Process data and calculate volume at this time step, as well as the dollar volume of the market.
+            /// </summary>
             public void OnData(Slice data)
             {
                 var bar = data.Bars.FirstOrDefault(x => x.Key == _symbol).Value;
