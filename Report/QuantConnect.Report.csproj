@@ -117,6 +117,7 @@
     <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj" />
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
     <ProjectReference Include="..\Messaging\QuantConnect.Messaging.csproj" />
+    <ProjectReference Include="..\ToolBox\QuantConnect.ToolBox.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ReportChartTests.py" />
