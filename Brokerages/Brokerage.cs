@@ -169,7 +169,12 @@ namespace QuantConnect.Brokerages
         {
             try
             {
-                Log.Trace("Brokerage.OnAccountChanged(): " + e);
+                if (!CashSyncEnabled)
+                {
+                    Log.Trace($"Brokerage.OnAccountChanged(): {e}. Skipping cash sync disabled");
+                    return;
+                }
+                Log.Trace($"Brokerage.OnAccountChanged(): {e}");
 
                 AccountChanged?.Invoke(this, e);
             }
