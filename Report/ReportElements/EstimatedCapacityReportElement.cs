@@ -13,23 +13,7 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using NodaTime;
-using QuantConnect.Algorithm;
-using QuantConnect.Brokerages;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
-using QuantConnect.ToolBox;
-using QuantConnect.Util;
 
 namespace QuantConnect.Report.ReportElements
 {
