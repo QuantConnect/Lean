@@ -348,7 +348,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     brokerage.DisableCashSync();
 
-                    Log.Trace("BrokerageSetupHandler.Setup(): will use job packet max cash limit. Disabled cash sync");
+                    Log.Trace("BrokerageSetupHandler.Setup(): will use job packet max cash limit. Disabled cash sync.");
                     foreach (var cash in maxCashLimit)
                     {
                         var brokerageCash = cashBalance.FirstOrDefault(
@@ -358,6 +358,8 @@ namespace QuantConnect.Lean.Engine.Setup
                         {
                             Log.Trace($"BrokerageSetupHandler.Setup(): Job packet amount {cash.Currency} {cash.Amount}. Brokerage amount {brokerageCash.Amount}.");
                             var cashToUse = new CashAmount(Math.Min(cash.Amount, brokerageCash.Amount), cash.Currency);
+
+                            algorithm.Debug($"Live deployment has been allocation limited to {cashToUse.Amount:C} {cashToUse.Currency}");
 
                             algorithm.Portfolio.SetCash(cashToUse.Currency, cashToUse.Amount, 0);
                         }
@@ -393,6 +395,7 @@ namespace QuantConnect.Lean.Engine.Setup
             if (liveJob.BrokerageData.TryGetValue("load-existing-holdings", out loadExistingHoldings) && !bool.Parse(loadExistingHoldings))
             {
                 Log.Trace("BrokerageSetupHandler.Setup(): Ignoring brokerage holdings and orders");
+                algorithm.Debug("Live deployment skipping loading of existing assets from the brokerage per deployment settings.");
                 return true;
             }
 
