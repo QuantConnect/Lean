@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -140,7 +141,13 @@ namespace QuantConnect.Brokerages.Tradier
 
             if (symbolsRemoved)
             {
-                SendSubscribeMessage(_subscribedTickers.Keys.ToList());
+                var tickers = _subscribedTickers.Keys.ToList();
+
+                // Tradier expects at least one symbol
+                if (tickers.Count > 0)
+                {
+                    SendSubscribeMessage(tickers);
+                }
             }
 
             return true;
@@ -163,9 +170,17 @@ namespace QuantConnect.Brokerages.Tradier
 
         private void OnMessage(object sender, WebSocketMessage e)
         {
-            var tsd = JsonConvert.DeserializeObject<TradierStreamData>(e.Message);
+            var obj = JObject.Parse(e.Message);
+            JToken error;
+            if (obj.TryGetValue("error", out error))
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, error.Value<string>()));
+                return;
+            }
 
-            if (tsd.Type == "trade" || tsd.Type == "quote")
+            var tsd = obj.ToObject<TradierStreamData>();
+
+            if (tsd?.Type == "trade" || tsd?.Type == "quote")
             {
                 var tick = CreateTick(tsd);
                 if (tick != null)
