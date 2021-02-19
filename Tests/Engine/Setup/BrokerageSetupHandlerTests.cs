@@ -234,7 +234,7 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [Test]
-        public void SkipsLoadingHoldings()
+        public void SkipsLoadingHoldingsAndOrders()
         {
             var symbol = Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda);
 
@@ -258,7 +258,10 @@ namespace QuantConnect.Tests.Engine.Setup
             {
                 new Holding { Symbol = symbol, Type = symbol.SecurityType, Quantity = 100 }
             });
-            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>
+            {
+                new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow)
+            });
 
             var setupHandler = new BrokerageSetupHandler();
 
@@ -270,6 +273,7 @@ namespace QuantConnect.Tests.Engine.Setup
 
             Security security;
             Assert.IsFalse(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
+            Assert.IsFalse(algorithm.Portfolio.Securities.TryGetValue(Symbols.SPY, out security));
         }
 
         [Test]
