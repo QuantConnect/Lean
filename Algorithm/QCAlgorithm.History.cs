@@ -332,17 +332,8 @@ namespace QuantConnect.Algorithm
             where T : IBaseData
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-            if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
 
-            // verify the types match
-            var requestedType = typeof(T);
-            var config = GetMatchingSubscription(symbol, requestedType);
-            if (config == null)
-            {
-                var actualType = Securities[symbol].Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
-                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
-            }
-
+            var config = GetHistoryRequestConfig(symbol, typeof(T), resolution);
             resolution = GetResolution(symbol, resolution);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), config.DataTimeZone);
             return History<T>(symbol, start, Time, resolution).Memoize();
@@ -359,15 +350,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
             where T : IBaseData
         {
-            if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
-            // verify the types match
-            var requestedType = typeof(T);
-            var config = GetMatchingSubscription(symbol, requestedType, resolution);
-            if (config == null)
-            {
-                var actualType = Securities[symbol].Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
-                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
-            }
+            var config = GetHistoryRequestConfig(symbol, typeof(T), resolution);
 
             var request = _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(symbol), resolution);
             return History(request).Get<T>(symbol).Memoize();
@@ -573,6 +556,28 @@ namespace QuantConnect.Algorithm
                 resolution == Resolution.Hour ? 24 : 1440;
 
             return getLastKnownPriceForPeriods(periods);
+        }
+
+        /// <summary>
+        /// Centralized logic to get a configuration for a symbol, a data type and a resolution
+        /// </summary>
+        private SubscriptionDataConfig GetHistoryRequestConfig(Symbol symbol, Type requestedType, Resolution? resolution = null)
+        {
+            if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
+
+            // verify the types match
+            var config = GetMatchingSubscription(symbol, requestedType, resolution);
+            if (config == null)
+            {
+                var actualType = GetMatchingSubscription(symbol, typeof(BaseData)).Type;
+                var message = $"The specified security is not of the requested type. Symbol: {symbol} Requested Type: {requestedType.Name} Actual Type: {actualType}";
+                if (resolution.HasValue)
+                {
+                    message += $" Requested Resolution.{resolution.Value}";
+                }
+                throw new ArgumentException(message);
+            }
+            return config;
         }
 
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
