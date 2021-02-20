@@ -30,17 +30,17 @@ namespace QuantConnect.Tests.Report.Capacity
     public class StrategyCapacityTests
     {
         [TestCase(nameof(SpyBondPortfolioRebalance), 2900000)]
-        [TestCase(nameof(BeastVsPenny), 180000)]
+        [TestCase(nameof(BeastVsPenny), 370000)]
         [TestCase(nameof(MonthlyRebalanceHourly), 11000000)]
         [TestCase(nameof(MonthlyRebalanceDaily), 11000000)]
-        [TestCase(nameof(IntradayMinuteScalping), 26000000)]
-        [TestCase("IntradayMinuteScalpingBTCETH", 130000)]
-        [TestCase("IntradayMinuteScalpingEURUSD", 2400000)]
-        [TestCase("IntradayMinuteScalpingGBPJPY", 2200000)]
-        [TestCase("IntradayMinuteScalpingTRYJPY", 2300000)]
-        [TestCase(nameof(CheeseMilkHourlyRebalance), 52000)]
-        [TestCase(nameof(IntradayMinuteScalpingFuturesES), 20000000)]
-        [TestCase(nameof(EmaPortfolioRebalance100), 200)]
+        [TestCase(nameof(IntradayMinuteScalping), 31000000)]
+        [TestCase("IntradayMinuteScalpingBTCETH", 13000)]
+        [TestCase("IntradayMinuteScalpingEURUSD", 4800000)]
+        [TestCase("IntradayMinuteScalpingGBPJPY", 4700000)]
+        [TestCase("IntradayMinuteScalpingTRYJPY", 4300000)]
+        [TestCase(nameof(CheeseMilkHourlyRebalance), 57000)]
+        [TestCase(nameof(IntradayMinuteScalpingFuturesES), 36000000)]
+        [TestCase(nameof(EmaPortfolioRebalance100), 2600)]
         public void TestCapacity(string strategy, int expectedCapacity)
         {
             var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(Path.Combine("Report", "Capacity", "Strategies", $"{strategy}.json")), new OrderJsonConverter());

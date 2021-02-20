@@ -20,10 +20,14 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
@@ -45,16 +49,17 @@ namespace QuantConnect.Report
         /// If trades were more than 180 minutes apart, there was no impact.
         /// (390 / 2) roughly equals 180 minutes
         /// </summary>
-        private const decimal _fastTradingDiscountFactor = 2m;
+        private const decimal _fastTradingVolumeScalingFactor = 2m;
 
         private LiveResult _live;
         private BacktestResult _backtest;
         private int _previousMonth;
-        private Dictionary<Symbol, DateTimeZone> _timeZones;
         private Dictionary<Symbol, SymbolData> _symbolData;
+        private Dictionary<Symbol, MapFile> _mapFileCache;
         private SubscriptionManager _subscriptionManager;
         private SecurityManager _securityManager;
         private SecurityService _securityService;
+        private MapFileResolver _mapFileResolver;
         private SymbolPropertiesDatabase _spdb;
         private MarketHoursDatabase _mhdb;
         private CashBook _cashBook;
@@ -69,13 +74,17 @@ namespace QuantConnect.Report
             Capacity = new List<ChartPoint>();
 
             _symbolData = new Dictionary<Symbol, SymbolData>();
-            _timeZones = new Dictionary<Symbol, DateTimeZone>();
             _securityManager = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork, TimeZones.Utc));
             _cashBook = new CashBook();
             _subscriptionManager = new SubscriptionManager();
             _subscriptionManager.SetDataManager(new StubDataManager());
             _mhdb = MarketHoursDatabase.FromDataFolder();
             _spdb = SymbolPropertiesDatabase.FromDataFolder();
+
+            _mapFileCache = new Dictionary<Symbol, MapFile>();
+            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
+                .Get("usa");
+
             _securityService = new SecurityService(
                 _cashBook,
                 _mhdb,
@@ -94,7 +103,9 @@ namespace QuantConnect.Report
         {
             Initialize();
 
+            //var asdf = new DateTime(2019, 10, 31);
             var orders = result?.Orders?.Values
+                .Where(o => (o.Status == OrderStatus.Filled || o.Status == OrderStatus.PartiallyFilled))
                 .OrderBy(o => o.LastFillTime ?? o.Time)
                 .ToList();
 
@@ -117,7 +128,7 @@ namespace QuantConnect.Report
                     _securityService)
                 .Concat(_subscriptionManager.Subscriptions);
 
-            var capacity = AlgorithmCapacity(configs, orders, start, end).RoundToSignificantDigits(2);
+            var capacity = AlgorithmCapacity(configs, start, end).RoundToSignificantDigits(2);
 
             return capacity;
         }
@@ -126,44 +137,21 @@ namespace QuantConnect.Report
         /// Triggered on a new slice update
         /// </summary>
         /// <param name="data"></param>
-        public void OnData(Slice data)
+        public void OnData(BaseData data)
         {
             if (data.Time.Month != _previousMonth && _previousMonth != 0)
             {
                 TakeCapacitySnapshot(data.Time);
             }
 
-            foreach (var symbol in data.Keys)
-            {
-                SymbolData symbolData;
-                if (!_symbolData.TryGetValue(symbol, out symbolData))
-                {
-                    symbolData = new SymbolData(symbol, _timeZones[symbol], _fastTradingDiscountFactor, _percentageOfMinuteDollarVolume);
-                    _symbolData[symbol] = symbolData;
-                }
-
-                symbolData.OnData(data);
-            }
-
-            _previousMonth = data.Time.Month;
-        }
-
-        /// <summary>
-        /// Triggered on a new order event
-        /// </summary>
-        /// <param name="orderEvent">Order event</param>
-        public void OnOrderEvent(OrderEvent orderEvent)
-        {
-            var symbol = orderEvent.Symbol;
-
             SymbolData symbolData;
-            if (!_symbolData.TryGetValue(symbol, out symbolData))
+            if (!_symbolData.TryGetValue(data.Symbol, out symbolData))
             {
-                symbolData = new SymbolData(symbol, _timeZones[symbol], _fastTradingDiscountFactor, _percentageOfMinuteDollarVolume);
-                _symbolData[symbol] = symbolData;
+                return;
             }
 
-            symbolData.OnOrderEvent(orderEvent);
+            symbolData.OnData(data);
+            _previousMonth = data.Time.Month;
         }
 
         public void TakeCapacitySnapshot(DateTime time)
@@ -203,7 +191,7 @@ namespace QuantConnect.Report
         /// </summary>
         /// <param name="orders">Orders to load data for</param>
         /// <remarks>We use L1 crypto data because there is much greater depth of crypto books vs. the trading volumes</remarks>
-        private void SetupDataSubscriptions(IEnumerable<Order> orders)
+        private void SetupDataSubscriptions(List<Order> orders)
         {
             var symbols = LinqExtensions.ToHashSet(orders.Select(x => x.Symbol));
 
@@ -212,17 +200,24 @@ namespace QuantConnect.Report
                 var dataTimeZone = _mhdb.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
                 var exchangeTimeZone = _mhdb.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
 
-                _timeZones[symbol] = exchangeTimeZone;
+                var usesQuotes = symbol.SecurityType == SecurityType.Crypto || symbol.SecurityType == SecurityType.Forex;
+                var type = usesQuotes ? typeof(QuoteBar) : typeof(TradeBar);
+                var tickType = usesQuotes ? TickType.Quote : TickType.Trade;
+                var config = _subscriptionManager.Add(type, tickType, symbol, _resolution, dataTimeZone, exchangeTimeZone, false);
 
-                var config = _subscriptionManager.Add(symbol, _resolution, dataTimeZone, exchangeTimeZone);
                 _securityManager.Add(_securityService.CreateSecurity(config.Symbol, config));
 
-                if (config.Symbol.SecurityType == SecurityType.Crypto || config.Symbol.SecurityType == SecurityType.Forex)
-                {
-                    var quoteConfig = new SubscriptionDataConfig(config, tickType: TickType.Quote);
-                    _subscriptionManager.Add(typeof(QuoteBar), TickType.Quote, symbol, _resolution, dataTimeZone, exchangeTimeZone, false);
-                    _securityManager.Add(_securityService.CreateSecurity(quoteConfig.Symbol, quoteConfig));
-                }
+                var orderEvents = ToOrderEvents(orders.Where(o => o.Symbol == symbol), exchangeTimeZone)
+                    .OrderBy(o => o.UtcTime);
+
+                _symbolData[symbol] = new SymbolData(
+                    symbol,
+                    exchangeTimeZone,
+                    orderEvents,
+                    _cashBook,
+                    _spdb,
+                    _fastTradingVolumeScalingFactor,
+                    _percentageOfMinuteDollarVolume);
             }
         }
 
@@ -244,9 +239,22 @@ namespace QuantConnect.Report
             {
                 foreach (var date in Time.EachDay(start, end))
                 {
-                    if (File.Exists(LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, _resolution, config.TickType)))
+                    var mappedSymbol = config.Symbol;
+                    if (config.Symbol.SecurityType == SecurityType.Equity || config.Symbol.SecurityType == SecurityType.Option)
                     {
-                        readers.Add(new LeanDataReader(config, config.Symbol, _resolution, date, Globals.DataFolder).Parse().GetEnumerator());
+                        MapFile mapFile;
+                        if (!_mapFileCache.TryGetValue(config.Symbol, out mapFile))
+                        {
+                            mapFile = _mapFileResolver.ResolveMapFile(config.Symbol, null);
+                            _mapFileCache[config.Symbol] = mapFile;
+                        }
+
+                        mappedSymbol = config.Symbol.UpdateMappedSymbol(mapFile.GetMappedSymbol(date, config.Symbol.Value));
+                    }
+
+                    if (File.Exists(LeanData.GenerateZipFilePath(Globals.DataFolder, mappedSymbol, date, _resolution, config.TickType)))
+                    {
+                        readers.Add(new LeanDataReader(config, mappedSymbol, _resolution, date, Globals.DataFolder).Parse().GetEnumerator());
                     }
                 }
             }
@@ -255,78 +263,15 @@ namespace QuantConnect.Report
         }
 
         /// <summary>
-        /// Synchronizes the data in time, binning it by the data's time.
-        /// This ensures that data is separated into discrete time steps so that
-        /// we can create slices from all data at a given point in time.
-        /// </summary>
-        /// <returns>Data binned by time</returns>
-        private List<List<BaseData>> SynchronizeData(IEnumerable<SubscriptionDataConfig> configs, DateTime start, DateTime end)
-        {
-            var readers = ReadData(configs, start, end);
-            var dataEnumerators = readers.ToArray();
-            var synchronizer = new SynchronizingEnumerator(dataEnumerators);
-
-            var dataBinnedByTime = new List<List<BaseData>>();
-            var currentData = new List<BaseData>();
-            var currentTime = DateTime.MinValue;
-
-            while (synchronizer.MoveNext())
-            {
-                if (synchronizer.Current == null || synchronizer.Current.EndTime > end)
-                {
-                    break;
-                }
-
-                if (synchronizer.Current.EndTime < start)
-                {
-                    continue;
-                }
-
-                if (currentTime == DateTime.MinValue)
-                {
-                    currentTime = synchronizer.Current.EndTime;
-                }
-
-                if (currentTime != synchronizer.Current.EndTime)
-                {
-                    dataBinnedByTime.Add(currentData);
-                    currentData = new List<BaseData>();
-                    currentData.Add(synchronizer.Current);
-                    currentTime = synchronizer.Current.EndTime;
-
-                    continue;
-                }
-
-                currentData.Add(synchronizer.Current);
-            }
-
-            if (currentData.Count != 0)
-            {
-                dataBinnedByTime.Add(currentData);
-            }
-
-            return dataBinnedByTime;
-        }
-
-        /// <summary>
         /// Updates the currency converter with the price data required for it to convert to the account currency (USD)
         /// </summary>
         /// <remarks>Used primarily for crypto and FX</remarks>
-        private void UpdateCurrencyConversionData(
-            IEnumerable<SubscriptionDataConfig> configs,
-            IEnumerable<BaseData> dataBin)
+        private void UpdateCurrencyConversionData(BaseData data)
         {
-            foreach (var config in configs)
-            {
-                var symbol = config.Symbol;
-                var cashMoney = _cashBook.Values.FirstOrDefault(x => x.ConversionRateSecurity?.Symbol == symbol);
-                var currencyUpdateData = dataBin.FirstOrDefault(x => x.Symbol == symbol);
+            var symbol = data.Symbol;
+            var cashMoney = _cashBook.Values.FirstOrDefault(x => x.ConversionRateSecurity?.Symbol == symbol);
 
-                if (cashMoney != null && currencyUpdateData != null)
-                {
-                    cashMoney.Update(currencyUpdateData);
-                }
-            }
+            cashMoney?.Update(data);
         }
 
         /// <summary>
@@ -336,72 +281,58 @@ namespace QuantConnect.Report
         /// Futures uses the notional value to approximate trading volume for the day.
         /// FX estimates the capacity at 25MM USD per minute.
         /// <param name="dataBin"></param>
-        private void DataToAccountCurrency(List<BaseData> dataBin)
+        private void DataToAccountCurrency(BaseData data)
         {
-            var forexTrades = new List<BaseData>();
+            var symbolProperties = _spdb.GetSymbolProperties(data.Symbol.ID.Market, data.Symbol, data.Symbol.SecurityType, "USD");
+            var bar = data as TradeBar;
 
-            foreach (var dataPoint in dataBin)
+            if (bar != null)
             {
-                var symbolProperties = _spdb.GetSymbolProperties(dataPoint.Symbol.ID.Market, dataPoint.Symbol, dataPoint.Symbol.SecurityType, "USD");
-                var bar = dataPoint as TradeBar;
+                // Actual units are:
+                // USD/BTC
+                // BTC/ETH
+                //
+                // 0.02541 BTC == 1 ETH
+                // 0.02541 BTC == 744 USD
+                // 0.02541 BTC/ETH * 29280 USD/BTC = 744 USD/ETH
+                // So converting from BTC to USD should be sufficient.
+                bar.Open = _cashBook.ConvertToAccountCurrency(bar.Open, symbolProperties.QuoteCurrency);
+                bar.High = _cashBook.ConvertToAccountCurrency(bar.High, symbolProperties.QuoteCurrency);
+                bar.Low = _cashBook.ConvertToAccountCurrency(bar.Low, symbolProperties.QuoteCurrency);
+                bar.Close = _cashBook.ConvertToAccountCurrency(bar.Close, symbolProperties.QuoteCurrency);
+                // We don't convert bar volume here, since it will be converted for us as dollar volume
+                // in the SymbolData class inside the StrategyCapacity class.
+                bar.Volume *= symbolProperties.ContractMultiplier;
 
-                if (bar != null)
+                return;
+            }
+            var quoteBar = data as QuoteBar;
+            if (quoteBar != null)
+            {
+                if (quoteBar.LastBidSize == 0)
                 {
-                    // Actual units are:
-                    // USD/BTC
-                    // BTC/ETH
-                    //
-                    // 0.02541 BTC == 1 ETH
-                    // 0.02541 BTC == 744 USD
-                    // 0.02541 BTC/ETH * 29280 USD/BTC = 744 USD/ETH
-                    // So converting from BTC to USD should be sufficient.
-                    bar.Open = _cashBook.ConvertToAccountCurrency(bar.Open, symbolProperties.QuoteCurrency);
-                    bar.High = _cashBook.ConvertToAccountCurrency(bar.High, symbolProperties.QuoteCurrency);
-                    bar.Low = _cashBook.ConvertToAccountCurrency(bar.Low, symbolProperties.QuoteCurrency);
-                    bar.Close = _cashBook.ConvertToAccountCurrency(bar.Close, symbolProperties.QuoteCurrency);
-                    // We don't convert bar volume here, since it will be converted for us as dollar volume
-                    // in the SymbolData class inside the StrategyCapacity class.
-                    bar.Volume *= symbolProperties.ContractMultiplier;
-
-                    continue;
+                    quoteBar.LastBidSize = _forexMinuteVolume / _cashBook.ConvertToAccountCurrency(quoteBar.Close, symbolProperties.QuoteCurrency);
                 }
-                var quoteBar = dataPoint as QuoteBar;
-                if (quoteBar != null)
+                if (quoteBar.LastAskSize == 0)
                 {
-                    // Order matters here, since we need to have the raw quote values to convert them into
-                    // the account currency.
-                    if (quoteBar.Symbol.SecurityType == SecurityType.Forex)
-                    {
-                        forexTrades.Add(new TradeBar(
-                            quoteBar.Time,
-                            quoteBar.Symbol,
-                            _cashBook.ConvertToAccountCurrency(quoteBar.Open, symbolProperties.QuoteCurrency),
-                            _cashBook.ConvertToAccountCurrency(quoteBar.High, symbolProperties.QuoteCurrency),
-                            _cashBook.ConvertToAccountCurrency(quoteBar.Low, symbolProperties.QuoteCurrency),
-                            _cashBook.ConvertToAccountCurrency(quoteBar.Close, symbolProperties.QuoteCurrency),
-                            _forexMinuteVolume / _cashBook.ConvertToAccountCurrency(quoteBar.Close, symbolProperties.QuoteCurrency),
-                            TimeSpan.FromMinutes(1)
-                        ));
-                    }
+                    quoteBar.LastAskSize = _forexMinuteVolume / _cashBook.ConvertToAccountCurrency(quoteBar.Close, symbolProperties.QuoteCurrency);
+                }
 
-                    if (quoteBar.Bid != null)
-                    {
-                        quoteBar.Bid.Open = _cashBook.ConvertToAccountCurrency(quoteBar.Bid.Open, symbolProperties.QuoteCurrency);
-                        quoteBar.Bid.High = _cashBook.ConvertToAccountCurrency(quoteBar.Bid.High, symbolProperties.QuoteCurrency);
-                        quoteBar.Bid.Low = _cashBook.ConvertToAccountCurrency(quoteBar.Bid.Low, symbolProperties.QuoteCurrency);
-                        quoteBar.Bid.Close = _cashBook.ConvertToAccountCurrency(quoteBar.Bid.Close, symbolProperties.QuoteCurrency);
-                    }
-                    if (quoteBar.Ask != null)
-                    {
-                        quoteBar.Ask.Open = _cashBook.ConvertToAccountCurrency(quoteBar.Ask.Open, symbolProperties.QuoteCurrency);
-                        quoteBar.Ask.High = _cashBook.ConvertToAccountCurrency(quoteBar.Ask.High, symbolProperties.QuoteCurrency);
-                        quoteBar.Ask.Low = _cashBook.ConvertToAccountCurrency(quoteBar.Ask.Low, symbolProperties.QuoteCurrency);
-                        quoteBar.Ask.Close = _cashBook.ConvertToAccountCurrency(quoteBar.Ask.Close, symbolProperties.QuoteCurrency);
-                    }
+                if (quoteBar.Bid != null)
+                {
+                    quoteBar.Bid.Open = _cashBook.ConvertToAccountCurrency(quoteBar.Bid.Open, symbolProperties.QuoteCurrency);
+                    quoteBar.Bid.High = _cashBook.ConvertToAccountCurrency(quoteBar.Bid.High, symbolProperties.QuoteCurrency);
+                    quoteBar.Bid.Low = _cashBook.ConvertToAccountCurrency(quoteBar.Bid.Low, symbolProperties.QuoteCurrency);
+                    quoteBar.Bid.Close = _cashBook.ConvertToAccountCurrency(quoteBar.Bid.Close, symbolProperties.QuoteCurrency);
+                }
+                if (quoteBar.Ask != null)
+                {
+                    quoteBar.Ask.Open = _cashBook.ConvertToAccountCurrency(quoteBar.Ask.Open, symbolProperties.QuoteCurrency);
+                    quoteBar.Ask.High = _cashBook.ConvertToAccountCurrency(quoteBar.Ask.High, symbolProperties.QuoteCurrency);
+                    quoteBar.Ask.Low = _cashBook.ConvertToAccountCurrency(quoteBar.Ask.Low, symbolProperties.QuoteCurrency);
+                    quoteBar.Ask.Close = _cashBook.ConvertToAccountCurrency(quoteBar.Ask.Close, symbolProperties.QuoteCurrency);
                 }
             }
-
-            dataBin.AddRange(forexTrades);
         }
 
         /// <summary>
@@ -410,36 +341,28 @@ namespace QuantConnect.Report
         /// </summary>
         /// <param name="cursor">Cursor is used to keep track of what order we're on</param>
         /// <returns>OrderEvents</returns>
-        private List<OrderEvent> ToOrderEvents(List<Order> orders, DateTime dataTime, ref int cursor)
+        private List<OrderEvent> ToOrderEvents(IEnumerable<Order> orders, DateTimeZone timeZone)
         {
             var orderEvents = new List<OrderEvent>();
 
-            while (cursor < orders.Count)
+            foreach (var order in orders)
             {
-                var order = orders[cursor];
                 var exchangeHours = _mhdb.GetEntry(order.Symbol.ID.Market, order.Symbol, order.Symbol.SecurityType)
                     .ExchangeHours;
 
                 var orderEvent = new OrderEvent(order, order.LastFillTime ?? order.Time, OrderFee.Zero);
-                var symbolProperties = _spdb.GetSymbolProperties(order.Symbol.ID.Market, order.Symbol, order.Symbol.SecurityType, "USD");
 
                 // Price is in USD/ETH
-                orderEvent.FillPrice = _cashBook.ConvertToAccountCurrency(order.Price, symbolProperties.QuoteCurrency);
+                orderEvent.FillPrice = order.Price;
                 // Qty is in ETH, (ETH/1) * (USD/ETH) == USD
                 // However, the OnData handler inside SymbolData in the StrategyCapacity
                 // class will multiply this for us, so let's keep this in the asset quantity for now.
                 orderEvent.FillQuantity = order.Quantity;
                 orderEvent.UtcTime = order.Type == OrderType.MarketOnOpen
-                    ? exchangeHours.GetNextMarketOpen(orderEvent.UtcTime.ConvertFromUtc(_timeZones[order.Symbol]), false).AddMinutes(1).ConvertToUtc(_timeZones[order.Symbol])
+                    ? exchangeHours.GetNextMarketOpen(orderEvent.UtcTime.ConvertFromUtc(timeZone), false).AddMinutes(1).ConvertToUtc(timeZone)
                     : orderEvent.UtcTime;
 
-                if (orderEvent.UtcTime.ConvertFromUtc(_timeZones[order.Symbol]) > dataTime)
-                {
-                    break;
-                }
-
                 orderEvents.Add(orderEvent);
-                cursor++;
             }
 
             return orderEvents;
@@ -451,32 +374,23 @@ namespace QuantConnect.Report
         /// <returns>Capacity in USD</returns>
         private decimal AlgorithmCapacity(
             IEnumerable<SubscriptionDataConfig> configs,
-            List<Order> orders,
             DateTime start,
             DateTime end)
         {
-            var dataBinnedByTime = SynchronizeData(configs, start, end);
-            var symbols = LinqExtensions.ToHashSet(orders.Select(x => x.Symbol));
-            var cursor = 0;
+            var readers = ReadData(configs, start, end);
+            var dataEnumerators = readers.ToArray();
+            var feed = new SynchronizingEnumerator(dataEnumerators);
 
-            foreach (var dataBin in dataBinnedByTime)
+            while (feed.MoveNext() && feed.Current != null)
             {
-                UpdateCurrencyConversionData(configs, dataBin);
-                DataToAccountCurrency(dataBin);
+                var data = feed.Current;
 
-                var dataTime = dataBin[0].EndTime;
-                var orderEvents = ToOrderEvents(orders, dataTime, ref cursor);
-
-                var slice = new Slice(dataTime, dataBin.Where(x => symbols.Contains(x.Symbol)));
-                OnData(slice);
-
-                foreach (var orderEvent in orderEvents)
-                {
-                    OnOrderEvent(orderEvent);
-                }
+                UpdateCurrencyConversionData(data);
+                DataToAccountCurrency(data);
+                OnData(data);
             }
 
-            return Capacity.LastOrDefault()?.y ?? 0;
+            return Capacity.LastOrDefault()?.y ?? -1;
         }
 
         /// <summary>
@@ -484,12 +398,15 @@ namespace QuantConnect.Report
         /// </summary>
         private class SymbolData
         {
+            private readonly IEnumerator<OrderEvent> _orderEvents;
+            private bool _orderEventsFinished;
+            private string _quoteCurrency;
             private decimal _percentageOfMinuteDollarVolume = 0.20m;
             private Symbol _symbol;
             private TradeBar _previousBar;
             private QuoteBar _previousQuoteBar;
             private OrderEvent _previousTrade;
-
+            private CashBook _cashBook;
 
             /// <summary>
             /// 20% of Total market capacity dollar volume of minutes surrounding after an order. It is penalized by frequency of trading.
@@ -500,10 +417,10 @@ namespace QuantConnect.Report
             private double _fastTradingVolumeDiscountFactor;
             private double _fastTradingVolumeScalingFactor;
             private decimal _averageVolume;
-            private readonly DateTimeZone _timeZone;
 
             public bool TradedBetweenSnapshots { get; private set; }
 
+            public DateTimeZone TimeZone { get; }
             public int TradeCount { get; private set; }
             public decimal AbsoluteTradingDollarVolume { get; private set; }
             private decimal _marketCapacityDollarVolume;
@@ -515,12 +432,23 @@ namespace QuantConnect.Report
             /// <param name="timeZone">Time zone of the data</param>
             /// <param name="fastTradingVolumeScalingFactor">Penalty for fast trading</param>
             /// <param name="percentageOfMinuteDollarVolume">Percentage of minute dollar volume to assume as take-able without moving the market</param>
-            public SymbolData(Symbol symbol, DateTimeZone timeZone, decimal fastTradingVolumeScalingFactor, decimal percentageOfMinuteDollarVolume)
+            public SymbolData(
+                Symbol symbol,
+                DateTimeZone timeZone,
+                IEnumerable<OrderEvent> orderEvents,
+                CashBook cashBook,
+                SymbolPropertiesDatabase spdb,
+                decimal fastTradingVolumeScalingFactor,
+                decimal percentageOfMinuteDollarVolume)
             {
+                TimeZone = timeZone;
+
                 _symbol = symbol;
-                _timeZone = timeZone;
+                _orderEvents = orderEvents.GetEnumerator();
                 _fastTradingVolumeScalingFactor = (double)fastTradingVolumeScalingFactor;
                 _percentageOfMinuteDollarVolume = percentageOfMinuteDollarVolume;
+                _quoteCurrency = spdb.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD").QuoteCurrency;
+                _cashBook = cashBook;
             }
 
             /// <summary>
@@ -528,6 +456,8 @@ namespace QuantConnect.Report
             /// </summary>
             public void OnOrderEvent(OrderEvent orderEvent)
             {
+                orderEvent.FillPrice = _cashBook.ConvertToAccountCurrency(orderEvent.FillPrice, _quoteCurrency);
+
                 TradedBetweenSnapshots = true;
                 AbsoluteTradingDollarVolume += orderEvent.FillPrice * orderEvent.AbsoluteFillQuantity;
                 TradeCount++;
@@ -538,68 +468,71 @@ namespace QuantConnect.Report
                     ? 6000000 / _averageVolume
                     : 10;
 
-                var timeoutMinutes = k > 60 ? 60 : (int)Math.Max(5, (double)k);
+                var timeoutMinutes = k > 120 ? 120 : (int)Math.Max(5, (double)k);
 
                 // To reduce the capacity of high frequency strategies, we scale down the
                 // volume captured on each bar proportional to the trades per day.
                 _fastTradingVolumeDiscountFactor = _fastTradingVolumeScalingFactor * (((orderEvent.UtcTime - (_previousTrade?.UtcTime ?? orderEvent.UtcTime.AddDays(-1))).TotalMinutes) / 390);
-                _fastTradingVolumeDiscountFactor = _fastTradingVolumeDiscountFactor > 1 ? 1 : Math.Max(0.01, _fastTradingVolumeDiscountFactor);
+                _fastTradingVolumeDiscountFactor = _fastTradingVolumeDiscountFactor > 1 ? 1 : Math.Max(0.20, _fastTradingVolumeDiscountFactor);
 
                 // When trades occur within 10 minutes the total volume we will capture is implicitly limited
                 // because of the reduced time that we're capturing the volume
-                _timeout = orderEvent.UtcTime.ConvertFromUtc(_timeZone).AddMinutes(timeoutMinutes);
+                _timeout = orderEvent.UtcTime.ConvertFromUtc(TimeZone).AddMinutes(timeoutMinutes);
                 _previousTrade = orderEvent;
             }
 
             /// <summary>
             /// Process data and calculate volume at this time step, as well as the dollar volume of the market.
             /// </summary>
-            public void OnData(Slice data)
+            public void OnData(BaseData data)
             {
-                var bar = data.Bars.FirstOrDefault(x => x.Key == _symbol).Value;
-                var quote = data.QuoteBars.FirstOrDefault(x => x.Key == _symbol).Value;
-
-                if (bar != null)
-                {
-                    var absoluteMarketDollarVolume = bar.Close * bar.Volume;
-                    if (_previousBar == null)
-                    {
-                        _previousBar = bar;
-                        _averageVolume = absoluteMarketDollarVolume;
-
-                        return;
-                    }
-
-                    // If we have an illiquid stock, we will get bars that might not be continuous
-                    _averageVolume = (bar.Close * (bar.Volume + _previousBar.Volume)) / (decimal)(bar.EndTime - _previousBar.Time).TotalMinutes;
-
-                    if (bar.EndTime <= _timeout)
-                    {
-                        _marketCapacityDollarVolume += absoluteMarketDollarVolume * (decimal)_fastTradingVolumeDiscountFactor;
-                    }
-
-                    _previousBar = bar;
-                }
+                var bar = data as TradeBar;
+                var quote = data as QuoteBar;
 
                 if (quote != null)
                 {
-                    var bidDepth = quote.LastBidSize;
-                    var askDepth = quote.LastAskSize;
-
-                    var bidSideMarketCapacity = bidDepth * quote.Bid?.Close ?? _previousQuoteBar?.Bid?.Close ?? _previousBar?.Close;
-                    var askSideMarketCapacity = askDepth * quote.Ask?.Close ?? _previousQuoteBar?.Ask?.Close ?? _previousBar?.Close;
-
-                    if (bidSideMarketCapacity != null && quote.EndTime <= _timeout)
-                    {
-                        _marketCapacityDollarVolume += bidSideMarketCapacity.Value;
-                    }
-                    if (askSideMarketCapacity != null && quote.EndTime <= _timeout)
-                    {
-                        _marketCapacityDollarVolume += askSideMarketCapacity.Value;
-                    }
-
-                    _previousQuoteBar = quote;
+                    // Fake a tradebar for quote data using market depth as a proxy for volume
+                    bar = new TradeBar(
+                        quote.Time,
+                        quote.Symbol,
+                        quote.Open,
+                        quote.High,
+                        quote.Low,
+                        quote.Close,
+                        (quote.LastBidSize + quote.LastAskSize) / 2);
                 }
+
+                var absoluteMarketDollarVolume = bar.Close * bar.Volume;
+                if (_previousBar == null)
+                {
+                    _previousBar = bar;
+                    _averageVolume = absoluteMarketDollarVolume;
+
+                    return;
+                }
+
+                // If we have an illiquid stock, we will get bars that might not be continuous
+                _averageVolume = (bar.Close * (bar.Volume + _previousBar.Volume)) / (decimal)(bar.EndTime - _previousBar.Time).TotalMinutes;
+
+                if (bar.EndTime <= _timeout)
+                {
+                    _marketCapacityDollarVolume += absoluteMarketDollarVolume * (decimal)_fastTradingVolumeDiscountFactor;
+                }
+
+                var endTimeUtc = bar.EndTime.ConvertToUtc(TimeZone);
+
+                if (_orderEvents.Current == null)
+                {
+                    _orderEvents.MoveNext();
+                }
+
+                while (!_orderEventsFinished && _orderEvents.Current != null && _orderEvents.Current.UtcTime <= endTimeUtc)
+                {
+                    OnOrderEvent(_orderEvents.Current);
+                    _orderEventsFinished = !_orderEvents.MoveNext();
+                }
+
+                _previousBar = bar;
             }
 
             public void Reset()
