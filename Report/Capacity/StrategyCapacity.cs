@@ -71,6 +71,8 @@ namespace QuantConnect.Report
 
         private void Initialize()
         {
+            Log.Trace("StrategyCapacity.Initialize(): Initializing...");
+
             Capacity = new List<ChartPoint>();
 
             _symbolData = new Dictionary<Symbol, SymbolData>();
@@ -103,7 +105,6 @@ namespace QuantConnect.Report
         {
             Initialize();
 
-            //var asdf = new DateTime(2019, 10, 31);
             var orders = result?.Orders?.Values
                 .Where(o => (o.Status == OrderStatus.Filled || o.Status == OrderStatus.PartiallyFilled))
                 .OrderBy(o => o.LastFillTime ?? o.Time)
@@ -111,12 +112,15 @@ namespace QuantConnect.Report
 
             if (orders == null || orders.Count == 0)
             {
+                Log.Trace("StrategyCapacity.Estimate(): No orders found. Skipping capacity estimation.");
                 return null;
             }
 
             var start = orders[0].LastFillTime ?? orders[0].Time;
             // Add a buffer of 1 day so that orders placed in the last trading day are snapshotted if the month changes.
             var end = (orders[orders.Count - 1].LastFillTime ?? orders[orders.Count - 1].Time).AddDays(1);
+
+            Log.Trace($"StrategyCapacity.Estimate(): Creating estimate for date range: {start:yyyy-MM-dd} until: {end:yyyy-MM-dd}");
 
             SetupDataSubscriptions(orders);
 
@@ -126,9 +130,12 @@ namespace QuantConnect.Report
                     new DefaultBrokerageModel().DefaultMarkets,
                     new SecurityChanges(_securityManager.Values, Array.Empty<Security>()),
                     _securityService)
-                .Concat(_subscriptionManager.Subscriptions);
+                .Concat(_subscriptionManager.Subscriptions)
+                .ToList();
 
-            var capacity = AlgorithmCapacity(configs, start, end).RoundToSignificantDigits(2);
+            Log.Trace($"StrategyCapacity.Estimate(): Created {_subscriptionManager.Count} order data configs, and created {configs.Count - _subscriptionManager.Count} currency conversion configs");
+
+            var capacity = AlgorithmCapacity(orders, configs, start, end).RoundToSignificantDigits(2);
 
             return capacity;
         }
@@ -156,6 +163,8 @@ namespace QuantConnect.Report
 
         public void TakeCapacitySnapshot(DateTime time)
         {
+            Log.Trace($"StrategyCapacity.TakeCapacitySnapshot(): Taking capacity snapshot for date: {time:yyyy-MM-dd}");
+
             if (_symbolData.Values.All(x => !x.TradedBetweenSnapshots))
             {
                 ResetData();
@@ -174,12 +183,18 @@ namespace QuantConnect.Report
                 .OrderBy(kvp => kvp.Value.AverageCapacity)
                 .FirstOrDefault();
 
-            Capacity.Add(new ChartPoint(time, (minimumMarketVolume.Value.AverageCapacity) / symbolByPercentageOfAbsoluteDollarVolume[minimumMarketVolume.Key]));
+            var capacity = minimumMarketVolume.Value.AverageCapacity / symbolByPercentageOfAbsoluteDollarVolume[minimumMarketVolume.Key];
+
+            Log.Trace($"StrategyCapacity.TakeCapacitySnapshot(): Capacity for date {time:yyyy-MM-dd} is {capacity}");
+
+            Capacity.Add(new ChartPoint(time, capacity));
             ResetData();
         }
 
         protected void ResetData()
         {
+            Log.Trace("StrategyCapacity.ResetData(): Resetting SymbolData");
+
             foreach (var symbolData in _symbolData.Values)
             {
                 symbolData.Reset();
@@ -229,33 +244,42 @@ namespace QuantConnect.Report
         /// <param name="end">Ending date to read data for</param>
         /// <returns>List of enumerators of data</returns>
         private List<IEnumerator<BaseData>> ReadData(
+            IEnumerable<Order> orders,
+            HashSet<Symbol> orderSymbols,
             IEnumerable<SubscriptionDataConfig> configs,
-            DateTime start,
-            DateTime end)
+            DateTime date)
         {
             var readers = new List<IEnumerator<BaseData>>();
+            Log.Trace($"StrategyCapacity.ReadData(): Creating data reader for date: {date:yyyy-MM-dd}");
 
-            foreach (var config in configs)
+            var symbolsOnDate = new HashSet<Symbol>(orders
+                .Where(o => (o.LastFillTime ?? o.Time).Date == date)
+                .Select(o => o.Symbol));
+
+            // If the config is not in the order Symbols at all, then it's a currency conversion
+            // feed, and should be loaded on every day.
+            var configsOnDate = configs
+                .Where(c => symbolsOnDate.Contains(c.Symbol) || !orderSymbols.Contains(c.Symbol))
+                .ToList();
+
+            foreach (var config in configsOnDate)
             {
-                foreach (var date in Time.EachDay(start, end))
+                var mappedSymbol = config.Symbol;
+                if (config.Symbol.SecurityType == SecurityType.Equity || config.Symbol.SecurityType == SecurityType.Option)
                 {
-                    var mappedSymbol = config.Symbol;
-                    if (config.Symbol.SecurityType == SecurityType.Equity || config.Symbol.SecurityType == SecurityType.Option)
+                    MapFile mapFile;
+                    if (!_mapFileCache.TryGetValue(config.Symbol, out mapFile))
                     {
-                        MapFile mapFile;
-                        if (!_mapFileCache.TryGetValue(config.Symbol, out mapFile))
-                        {
-                            mapFile = _mapFileResolver.ResolveMapFile(config.Symbol, null);
-                            _mapFileCache[config.Symbol] = mapFile;
-                        }
-
-                        mappedSymbol = config.Symbol.UpdateMappedSymbol(mapFile.GetMappedSymbol(date, config.Symbol.Value));
+                        mapFile = _mapFileResolver.ResolveMapFile(config.Symbol, null);
+                        _mapFileCache[config.Symbol] = mapFile;
                     }
 
-                    if (File.Exists(LeanData.GenerateZipFilePath(Globals.DataFolder, mappedSymbol, date, _resolution, config.TickType)))
-                    {
-                        readers.Add(new LeanDataReader(config, mappedSymbol, _resolution, date, Globals.DataFolder).Parse().GetEnumerator());
-                    }
+                    mappedSymbol = config.Symbol.UpdateMappedSymbol(mapFile.GetMappedSymbol(date, config.Symbol.Value));
+                }
+
+                if (File.Exists(LeanData.GenerateZipFilePath(Globals.DataFolder, mappedSymbol, date, _resolution, config.TickType)))
+                {
+                    readers.Add(new LeanDataReader(config, mappedSymbol, _resolution, date, Globals.DataFolder).Parse().GetEnumerator());
                 }
             }
 
@@ -373,21 +397,28 @@ namespace QuantConnect.Report
         /// </summary>
         /// <returns>Capacity in USD</returns>
         private decimal AlgorithmCapacity(
+            IEnumerable<Order> orders,
             IEnumerable<SubscriptionDataConfig> configs,
             DateTime start,
             DateTime end)
         {
-            var readers = ReadData(configs, start, end);
-            var dataEnumerators = readers.ToArray();
-            var feed = new SynchronizingEnumerator(dataEnumerators);
-
-            while (feed.MoveNext() && feed.Current != null)
+            var orderSymbols = new HashSet<Symbol>(orders.Select(x => x.Symbol));
+            foreach (var date in Time.EachDay(start, end))
             {
-                var data = feed.Current;
+                var readers = ReadData(orders, orderSymbols, configs, date);
+                var dataEnumerators = readers.ToArray();
+                var feed = new SynchronizingEnumerator(dataEnumerators);
 
-                UpdateCurrencyConversionData(data);
-                DataToAccountCurrency(data);
-                OnData(data);
+                Log.Trace($"StrategyCapacity.AlgorithmCapacity(): Begin enumerating data for {dataEnumerators.Length} on date: {date:yyyy-MM-dd}");
+
+                while (feed.MoveNext() && feed.Current != null)
+                {
+                    var data = feed.Current;
+
+                    UpdateCurrencyConversionData(data);
+                    DataToAccountCurrency(data);
+                    OnData(data);
+                }
             }
 
             return Capacity.LastOrDefault()?.y ?? -1;
@@ -408,22 +439,37 @@ namespace QuantConnect.Report
             private OrderEvent _previousTrade;
             private CashBook _cashBook;
 
+            private DateTime _timeout;
+            private double _fastTradingVolumeDiscountFactor;
+            private double _fastTradingVolumeScalingFactor;
+            private decimal _marketCapacityDollarVolume;
+            private decimal _averageVolume;
+
             /// <summary>
             /// 20% of Total market capacity dollar volume of minutes surrounding after an order. It is penalized by frequency of trading.
             /// </summary>
             public decimal AverageCapacity => (_marketCapacityDollarVolume / TradeCount) * _percentageOfMinuteDollarVolume;
 
-            private DateTime _timeout;
-            private double _fastTradingVolumeDiscountFactor;
-            private double _fastTradingVolumeScalingFactor;
-            private decimal _averageVolume;
-
+            /// <summary>
+            /// If an order event is encountered between the previous snapshot
+            /// and the current snapshot, this will be set to true.
+            /// </summary>
             public bool TradedBetweenSnapshots { get; private set; }
 
+            /// <summary>
+            /// Time zone of the Symbol
+            /// </summary>
             public DateTimeZone TimeZone { get; }
+
+            /// <summary>
+            /// Number of trades placed by the algorithm between snapshots
+            /// </summary>
             public int TradeCount { get; private set; }
+
+            /// <summary>
+            /// Dollar volume traded by the user between snapshots
+            /// </summary>
             public decimal AbsoluteTradingDollarVolume { get; private set; }
-            private decimal _marketCapacityDollarVolume;
 
             /// <summary>
             /// Creates an instance of SymbolData, used internally to calculate capacity
