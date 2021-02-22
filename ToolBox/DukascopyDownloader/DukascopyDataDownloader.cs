@@ -21,7 +21,6 @@ using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using SevenZip;
 
 namespace QuantConnect.ToolBox.DukascopyDownloader
 {
@@ -196,39 +195,63 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
 
             using (var inStream = new MemoryStream(bytesBi5))
             {
-                using (var outStream = new MemoryStream())
+                byte[] bytes;
+
+                var inputFile = $"{Guid.NewGuid()}.7z";
+                var outputDirectory = $"{Guid.NewGuid()}";
+
+                try
                 {
-                    SevenZipExtractor.DecompressStream(inStream, outStream, (int)inStream.Length, null);
+                    File.WriteAllBytes(inputFile, bytesBi5);
+                    Compression.Extract7ZipArchive(inputFile, outputDirectory);
 
-                    byte[] bytes = outStream.ToArray();
-                    int count = bytes.Length / DukascopyTickLength;
-
-                    // Numbers are big-endian
-                    // ii1 = milliseconds within the hour
-                    // ii2 = AskPrice * point value
-                    // ii3 = BidPrice * point value
-                    // ff1 = AskVolume (not used)
-                    // ff2 = BidVolume (not used)
-
-                    fixed (byte* pBuffer = &bytes[0])
+                    var outputFileInfo = Directory.CreateDirectory(outputDirectory).GetFiles("*").First();
+                    bytes = File.ReadAllBytes(outputFileInfo.FullName);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "Failed to read raw data into stream");
+                    return new List<Tick>();
+                }
+                finally
+                {
+                    if (File.Exists(inputFile))
                     {
-                        uint* p = (uint*)pBuffer;
+                        File.Delete(inputFile);
+                    }
+                    if (Directory.Exists(outputDirectory))
+                    {
+                        Directory.Delete(outputDirectory, true);
+                    }
+                }
 
-                        for (int i = 0; i < count; i++)
+                int count = bytes.Length / DukascopyTickLength;
+
+                // Numbers are big-endian
+                // ii1 = milliseconds within the hour
+                // ii2 = AskPrice * point value
+                // ii3 = BidPrice * point value
+                // ff1 = AskVolume (not used)
+                // ff2 = BidVolume (not used)
+
+                fixed (byte* pBuffer = &bytes[0])
+                {
+                    uint* p = (uint*)pBuffer;
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        ReverseBytes(p); uint time = *p++;
+                        ReverseBytes(p); uint ask = *p++;
+                        ReverseBytes(p); uint bid = *p++;
+                        p++; p++;
+
+                        if (bid > 0 && ask > 0)
                         {
-                            ReverseBytes(p); uint time = *p++;
-                            ReverseBytes(p); uint ask = *p++;
-                            ReverseBytes(p); uint bid = *p++;
-                            p++; p++;
-
-                            if (bid > 0 && ask > 0)
-                            {
-                                ticks.Add(new Tick(
-                                    date.AddMilliseconds(timeOffset + time),
-                                    symbol,
-                                    Convert.ToDecimal(bid / pointValue),
-                                    Convert.ToDecimal(ask / pointValue)));
-                            }
+                            ticks.Add(new Tick(
+                                date.AddMilliseconds(timeOffset + time),
+                                symbol,
+                                Convert.ToDecimal(bid / pointValue),
+                                Convert.ToDecimal(ask / pointValue)));
                         }
                     }
                 }

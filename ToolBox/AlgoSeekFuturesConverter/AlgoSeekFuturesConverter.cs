@@ -81,8 +81,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             var totalFilesProcessed = 0;
             var start = DateTime.MinValue;
 
-            var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
-
             var symbolMultipliers = LoadSymbolMultipliers();
 
             //Extract each file massively in parallel.
@@ -103,34 +101,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                         Directory.CreateDirectory(csvFileInfo.DirectoryName);
 
                         Log.Trace("AlgoSeekFuturesConverter.Convert(): Extracting " + file);
-                        var psi = new ProcessStartInfo(zipper, " e " + file.FullName + " -o" + _source.FullName)
-                        {
-                            CreateNoWindow = true,
-                            WindowStyle = ProcessWindowStyle.Hidden,
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true
-                        };
 
-                        var process = new Process();
-                        process.StartInfo = psi;
-                        process.Start();
-
-                        while (!process.StandardOutput.EndOfStream)
-                        {
-                            process.StandardOutput.ReadLine();
-                        }
-
-                        if (!process.WaitForExit(ExecTimeout * 1000))
-                        {
-                            Log.Error("7Zip timed out: " + file);
-                        }
-                        else
-                        {
-                            if (process.ExitCode > 0)
-                            {
-                                Log.Error("7Zip Exited Unsuccessfully: " + file);
-                            }
-                        }
+                        Compression.Extract7ZipArchive(file.FullName, _source.FullName);
                     }
 
                     // setting up local processors
