@@ -205,7 +205,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         ///Option Exp Date
         [JsonProperty(PropertyName = "expiration_date")]
-        private long Options_ExpirationDate = 0;
+        private string Options_ExpirationDate;
 
         ///Option Exp Type
         [JsonProperty(PropertyName = "expiration_type")]

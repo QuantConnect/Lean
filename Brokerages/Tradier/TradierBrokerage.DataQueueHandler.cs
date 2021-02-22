@@ -100,9 +100,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 if (!symbol.IsCanonical())
                 {
-                    var ticker = symbol.SecurityType == SecurityType.Option
-                        ? symbol.Value.Replace(" ", "")
-                        : symbol.Value;
+                    var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
                     if (!_subscribedTickers.ContainsKey(ticker))
                     {
                         _subscribedTickers.TryAdd(ticker, symbol);
@@ -127,9 +125,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 if (!symbol.IsCanonical())
                 {
-                    var ticker = symbol.SecurityType == SecurityType.Option
-                        ? symbol.Value.Replace(" ", "")
-                        : symbol.Value;
+                    var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
                     if (_subscribedTickers.ContainsKey(ticker))
                     {
                         Symbol removedSymbol;

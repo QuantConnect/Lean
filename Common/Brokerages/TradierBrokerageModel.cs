@@ -57,10 +57,10 @@ namespace QuantConnect.Brokerages
             message = null;
 
             var securityType = order.SecurityType;
-            if (securityType != SecurityType.Equity)
+            if (securityType != SecurityType.Equity && securityType != SecurityType.Option)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model only supports equities."
+                    "This model only supports equities and options."
                 );
 
                 return false;
