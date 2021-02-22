@@ -74,7 +74,7 @@
     <PackageReference Include="Accord.MachineLearning" Version="3.6.0" />
     <PackageReference Include="Accord.Math" Version="3.6.0" />
     <PackageReference Include="Accord.Statistics" Version="3.6.0" />
-    <PackageReference Include="DynamicInterop" Version="0.7.4" />
+    <PackageReference Include="DynamicInterop" Version="0.9.1" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
@@ -83,7 +83,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
     <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
-    <PackageReference Include="R.NET.Community" Version="1.6.5" />
+    <PackageReference Include="R.NET" Version="1.9.0" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Data.DataSetExtensions" />
