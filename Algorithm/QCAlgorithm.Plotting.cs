@@ -183,9 +183,9 @@ namespace QuantConnect.Algorithm
                     ? i + c.Series.Values.Count(s => reservedSeriesNames.Count > 0 && !reservedSeriesNames.Contains(s.Name))
                     : i + c.Series.Count);
 
-                if (seriesCount > 10)
+                if (seriesCount > 60)
                 {
-                    Error("Exceeded maximum series count: Each backtest can have up to 10 series in total.");
+                    Error("Exceeded maximum series count: Each backtest can have up to 60 series in total.");
                     return;
                 }
 
