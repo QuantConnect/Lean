@@ -241,6 +241,11 @@ RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
     pip install h2o-3.30.0.3/python/h2o-3.30.0.3-py2.py3-none-any.whl && \
     rm -rf h2o-3.30.0.3
 
+# Install R 3.6
+RUN echo deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/ >> /etc/apt/sources.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && apt-get update && apt-fast -y install r-base
+
 # Delete temporary zip files
 RUN rm -rf *.zip *.gz
 

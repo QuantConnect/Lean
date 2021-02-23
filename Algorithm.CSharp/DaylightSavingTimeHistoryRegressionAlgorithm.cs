@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -45,7 +44,26 @@ namespace QuantConnect.Algorithm.CSharp
             for (int i = 0; i < _symbols.Length; i++)
             {
                 var symbol = _symbols[i];
-                var history = History<QuoteBar>(symbol, 10, Resolution.Daily);
+                IEnumerable<BaseData> history;
+                if (symbol.SecurityType == SecurityType.Equity)
+                {
+                    try
+                    {
+
+                        history = History<QuoteBar>(symbol, 10, Resolution.Daily).Select(bar => bar as BaseData);
+                        throw new Exception("We were expecting an argument exception to be thrown. Equity does not have daily QuoteBars!");
+                    }
+                    catch (ArgumentException)
+                    {
+                        // expected
+                    }
+                    history = History<TradeBar>(symbol, 10, Resolution.Daily).Select(bar => bar as BaseData);
+                }
+                else
+                {
+                    history = History<QuoteBar>(symbol, 10, Resolution.Daily)
+                        .Select(bar => bar as BaseData);
+                }
 
                 var duplications = history
                     .GroupBy(k => k.Time)

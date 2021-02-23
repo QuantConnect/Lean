@@ -199,6 +199,84 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [Test]
+        public void EnforcesCashAmounts()
+        {
+            var algorithm = new TestAlgorithm();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+            job.BrokerageData["max-cash-limit"] = "[{\"amount\":20, \"currency\": \"USD\"}, {\"Amount\":1, \"Currency\": \"EUR\"}]";
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(10000, Currencies.USD), new CashAmount(11, Currencies.GBP)});
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+
+            Assert.AreEqual(20, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
+            Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey(Currencies.GBP));
+            Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey(Currencies.EUR));
+        }
+
+        [Test]
+        public void SkipsLoadingHoldingsAndOrders()
+        {
+            var symbol = Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda);
+
+            var algorithm = new TestAlgorithm();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+            job.BrokerageData["load-existing-holdings"] = "false";
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
+            {
+                new Holding { Symbol = symbol, Type = symbol.SecurityType, Quantity = 100 }
+            });
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>
+            {
+                new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow)
+            });
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+
+            Security security;
+            Assert.IsFalse(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
+            Assert.IsFalse(algorithm.Portfolio.Securities.TryGetValue(Symbols.SPY, out security));
+        }
+
+        [Test]
         public void LoadsHoldingsForExpectedMarket()
         {
             var symbol = Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda);
