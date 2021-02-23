@@ -331,11 +331,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // since the ticker plant will send the coarse data using this symbol
                 var normalizedSymbol = CoarseFundamental.CreateUniverseSymbol(config.Symbol.ID.Market, false);
 
-                // Will try to pull coarse data from the data folder every 30min, file with today's date.
+                // Will try to pull coarse data from the data folder every 10min, file with today's date.
                 // If lean is started today it will trigger initial coarse universe selection
                 var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider,
                     // we adjust time to the previous tradable date
-                    time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false, config.DataTimeZone)
+                    time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false, config.DataTimeZone),
+                    TimeSpan.FromMinutes(10)
                 );
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 

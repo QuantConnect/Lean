@@ -30,6 +30,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 {
+    [TestFixture]
     public class LiveCustomDataSubscriptionEnumeratorFactoryTests
     {
         [TestFixture]
@@ -60,19 +61,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         }))
                         .Verifiable();
 
-                var quoteCurrency = new Cash(Currencies.USD, 0, 1);
-                var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RestData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-                var security = new Equity(
-                    Symbols.SPY,
-                    exchangeHours,
-                    quoteCurrency,
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                );
-                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-1), _referenceUtc.AddDays(1));
+                var request = GetSubscriptionRequest(config, _referenceUtc.AddSeconds(-1), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
@@ -106,11 +96,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNull(_enumerator.Current);
 
-                _dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
-                        sds.Source == "rest.source" &&
-                        sds.TransportMedium == SubscriptionTransportMedium.Rest &&
-                        sds.Format == FileFormat.Csv))
-                    , Times.Once);
+                VerifyGetSourceInvocationCount(_dataSourceReader, 1, "rest.source", SubscriptionTransportMedium.Rest, FileFormat.Csv);
             }
         }
 
@@ -142,19 +128,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     )
                     .Verifiable();
 
-                var quoteCurrency = new Cash(Currencies.USD, 0, 1);
-                var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RestCollectionData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-                var security = new Equity(
-                    Symbols.SPY,
-                    exchangeHours,
-                    quoteCurrency,
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                );
-                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-4), _referenceUtc.AddDays(1));
+                var request = GetSubscriptionRequest(config, _referenceUtc.AddSeconds(-4), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
@@ -194,11 +169,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNull(_enumerator.Current);
 
-                _dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
-                        sds.Source == "rest.collection.source" &&
-                        sds.TransportMedium == SubscriptionTransportMedium.Rest &&
-                        sds.Format == FileFormat.Collection))
-                    , Times.Once);
+                VerifyGetSourceInvocationCount(_dataSourceReader, 1, "rest.collection.source", SubscriptionTransportMedium.Rest, FileFormat.Collection);
             }
         }
 
@@ -231,19 +202,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         }))
                     .Verifiable();
 
-                var quoteCurrency = new Cash(Currencies.USD, 0, 1);
-                var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RemoteFileData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-                var security = new Equity(
-                    Symbols.SPY,
-                    exchangeHours,
-                    quoteCurrency,
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                );
-                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-6), _referenceUtc.AddDays(1));
+                var request = GetSubscriptionRequest(config, _referenceUtc.AddSeconds(-6), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
@@ -277,11 +237,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.IsNotNull(_enumerator.Current);
                 Assert.AreEqual(_referenceLocal.AddSeconds(1), _enumerator.Current.EndTime);
 
-                _dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
-                        sds.Source == "remote.file.source" &&
-                        sds.TransportMedium == SubscriptionTransportMedium.RemoteFile &&
-                        sds.Format == FileFormat.Csv))
-                    , Times.Once);
+                VerifyGetSourceInvocationCount(_dataSourceReader, 1, "remote.file.source", SubscriptionTransportMedium.RemoteFile, FileFormat.Csv);
             }
         }
 
@@ -315,19 +271,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         }))
                     .Verifiable();
 
-                var quoteCurrency = new Cash(Currencies.USD, 0, 1);
-                var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RemoteFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-                var security = new Equity(
-                    Symbols.SPY,
-                    exchangeHours,
-                    quoteCurrency,
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                );
-                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddDays(-2), _referenceUtc.AddDays(1));
+                var request = GetSubscriptionRequest(config, _referenceUtc.AddDays(-2), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
@@ -440,13 +385,85 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             private void VerifyGetSourceInvocation(int count)
             {
                 _runningCount += count;
-                _dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
-                        sds.Source == "remote.file.source" &&
-                        sds.TransportMedium == SubscriptionTransportMedium.RemoteFile &&
-                        sds.Format == FileFormat.Csv))
-                    , Times.Exactly(_runningCount));
+                VerifyGetSourceInvocationCount(_dataSourceReader, _runningCount, "remote.file.source", SubscriptionTransportMedium.RemoteFile, FileFormat.Csv);
             }
         }
+
+        [TestCase(10)]
+        [TestCase(60)]
+        [TestCase(0)]
+        public void AllowsSpecifyingIntervalCheck(int intervalCheck)
+        {
+            var referenceLocal = new DateTime(2017, 10, 12);
+            var referenceUtc = new DateTime(2017, 10, 12).ConvertToUtc(TimeZones.NewYork);
+
+            var timeProvider = new ManualTimeProvider(referenceUtc);
+
+            var callCount = 0;
+            var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
+            dataSourceReader.Setup(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
+                    sds.Source == "local.file.source" &&
+                    sds.TransportMedium == SubscriptionTransportMedium.LocalFile &&
+                    sds.Format == FileFormat.Csv))
+                )
+                .Returns(() => new []{ new LocalFileData { EndTime = referenceLocal.AddSeconds(++callCount) } })
+                .Verifiable();
+
+            var config = new SubscriptionDataConfig(typeof(LocalFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var request = GetSubscriptionRequest(config, referenceUtc.AddSeconds(-1), referenceUtc.AddDays(1));
+
+            var intervalCalls = intervalCheck == 0 ? (TimeSpan?) null : TimeSpan.FromMinutes(intervalCheck);
+
+            var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(timeProvider, dataSourceReader.Object, intervalCalls);
+            var enumerator = factory.CreateEnumerator(request, null);
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+            Assert.AreEqual(referenceLocal.AddSeconds(callCount), enumerator.Current.EndTime);
+
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+
+            // time didn't pass so should refresh
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+
+            var expectedInterval = intervalCalls ?? TimeSpan.FromMinutes(30);
+
+            timeProvider.Advance(expectedInterval.Add(-TimeSpan.FromSeconds(2)));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+
+            timeProvider.Advance(TimeSpan.FromSeconds(2));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+            Assert.AreEqual(referenceLocal.AddSeconds(callCount), enumerator.Current.EndTime);
+            VerifyGetSourceInvocationCount(dataSourceReader, 2, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+        }
+
+        private static void VerifyGetSourceInvocationCount(Mock<ISubscriptionDataSourceReader> dataSourceReader, int count, string source, SubscriptionTransportMedium medium, FileFormat fileFormat)
+        {
+            dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
+                sds.Source == source && sds.TransportMedium == medium && sds.Format == fileFormat)), Times.Exactly(count));
+        }
+
+        private static SubscriptionRequest GetSubscriptionRequest(SubscriptionDataConfig config, DateTime startTime, DateTime endTime)
+        {
+            var quoteCurrency = new Cash(Currencies.USD, 0, 1);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
+            var security = new Equity(
+                Symbols.SPY,
+                exchangeHours,
+                quoteCurrency,
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            return new SubscriptionRequest(false, null, security, config, startTime, endTime);
+        }
+
 
         class RestData : BaseData
         {
@@ -478,12 +495,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             }
         }
 
+        class LocalFileData : BaseData
+        {
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return new SubscriptionDataSource("local.file.source", SubscriptionTransportMedium.LocalFile);
+            }
+        }
+
         class TestableLiveCustomDataSubscriptionEnumeratorFactory : LiveCustomDataSubscriptionEnumeratorFactory
         {
             private readonly ISubscriptionDataSourceReader _dataSourceReader;
 
-            public TestableLiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, ISubscriptionDataSourceReader dataSourceReader)
-                : base(timeProvider)
+            public TestableLiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, ISubscriptionDataSourceReader dataSourceReader, TimeSpan? minimumIntervalCheck = null)
+                : base(timeProvider, minimumIntervalCheck: minimumIntervalCheck)
             {
                 _dataSourceReader = dataSourceReader;
             }
