@@ -402,14 +402,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var callCount = 0;
             var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
             dataSourceReader.Setup(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
-                    sds.Source == "rest.source" &&
-                    sds.TransportMedium == SubscriptionTransportMedium.Rest &&
+                    sds.Source == "local.file.source" &&
+                    sds.TransportMedium == SubscriptionTransportMedium.LocalFile &&
                     sds.Format == FileFormat.Csv))
                 )
-                .Returns(() => new []{ new RestData { EndTime = referenceLocal.AddSeconds(++callCount) } })
+                .Returns(() => new []{ new LocalFileData { EndTime = referenceLocal.AddSeconds(++callCount) } })
                 .Verifiable();
 
-            var config = new SubscriptionDataConfig(typeof(RestData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(typeof(LocalFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
             var request = GetSubscriptionRequest(config, referenceUtc.AddSeconds(-1), referenceUtc.AddDays(1));
 
             var intervalCalls = intervalCheck == 0 ? (TimeSpan?) null : TimeSpan.FromMinutes(intervalCheck);
@@ -421,25 +421,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.IsNotNull(enumerator.Current);
             Assert.AreEqual(referenceLocal.AddSeconds(callCount), enumerator.Current.EndTime);
 
-            VerifyGetSourceInvocationCount(dataSourceReader, 1, "rest.source", SubscriptionTransportMedium.Rest, FileFormat.Csv);
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
 
             // time didn't pass so should refresh
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
-            VerifyGetSourceInvocationCount(dataSourceReader, 1, "rest.source", SubscriptionTransportMedium.Rest, FileFormat.Csv);
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
 
             var expectedInterval = intervalCalls ?? TimeSpan.FromMinutes(30);
 
             timeProvider.Advance(expectedInterval.Add(-TimeSpan.FromSeconds(2)));
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
-            VerifyGetSourceInvocationCount(dataSourceReader, 1, "rest.source", SubscriptionTransportMedium.Rest, FileFormat.Csv);
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
 
-            timeProvider.Advance(TimeSpan.FromSeconds(1));
+            timeProvider.Advance(TimeSpan.FromSeconds(2));
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
             Assert.AreEqual(referenceLocal.AddSeconds(callCount), enumerator.Current.EndTime);
-            VerifyGetSourceInvocationCount(dataSourceReader, 2, "rest.source", SubscriptionTransportMedium.Rest, FileFormat.Csv);
+            VerifyGetSourceInvocationCount(dataSourceReader, 2, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         private static void VerifyGetSourceInvocationCount(Mock<ISubscriptionDataSourceReader> dataSourceReader, int count, string source, SubscriptionTransportMedium medium, FileFormat fileFormat)
@@ -492,6 +492,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 return new SubscriptionDataSource("remote.file.source", SubscriptionTransportMedium.RemoteFile);
+            }
+        }
+
+        class LocalFileData : BaseData
+        {
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return new SubscriptionDataSource("local.file.source", SubscriptionTransportMedium.LocalFile);
             }
         }
 
