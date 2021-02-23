@@ -122,7 +122,6 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="Utf8Json" Version="1.3.7" />
     <PackageReference Include="WebSocket4Net" Version="0.15.2" />
-    <PackageReference Include="WebSocketSharpFork" Version="1.0.4" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="QuantConnect.Fxcm">
