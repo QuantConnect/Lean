@@ -199,15 +199,17 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 var message = $"{brokerage.Name} account base currency: {brokerage.AccountBaseCurrency ?? algorithm.AccountCurrency}";
 
-                Log.Trace($"BrokerageSetupHandler.Setup(): {message}");
-
-                algorithm.Debug(message);
 
                 var accountCurrency = brokerage.AccountBaseCurrency;
                 if (liveJob.BrokerageData.ContainsKey("max-cash-limit"))
                 {
                     accountCurrency = Currencies.USD;
+                    message += ". Allocation limited, will use 'USD' account currency";
                 }
+
+                Log.Trace($"BrokerageSetupHandler.Setup(): {message}");
+
+                algorithm.Debug(message);
                 if (accountCurrency != null && accountCurrency != algorithm.AccountCurrency)
                 {
                     algorithm.SetAccountCurrency(accountCurrency);
