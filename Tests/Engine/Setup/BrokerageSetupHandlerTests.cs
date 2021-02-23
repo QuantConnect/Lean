@@ -233,6 +233,40 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey(Currencies.EUR));
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void EnforcesAccountCurrency(bool enforceAccountCurrency)
+        {
+            var algorithm = new TestAlgorithm();
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+            if (enforceAccountCurrency)
+            {
+                job.BrokerageData["max-cash-limit"] = "[{\"amount\":20, \"currency\": \"USD\"}, {\"Amount\":1, \"Currency\": \"EUR\"}]";
+            }
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.EUR);
+
+            var setupHandler = new BrokerageSetupHandler();
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+
+            Assert.AreEqual(enforceAccountCurrency ? Currencies.USD : Currencies.EUR, algorithm.AccountCurrency);
+        }
+
         [Test]
         public void SkipsLoadingHoldingsAndOrders()
         {

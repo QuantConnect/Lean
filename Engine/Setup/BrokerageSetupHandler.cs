@@ -203,9 +203,14 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 algorithm.Debug(message);
 
-                if (brokerage.AccountBaseCurrency != null && brokerage.AccountBaseCurrency != algorithm.AccountCurrency)
+                var accountCurrency = brokerage.AccountBaseCurrency;
+                if (liveJob.BrokerageData.ContainsKey("max-cash-limit"))
                 {
-                    algorithm.SetAccountCurrency(brokerage.AccountBaseCurrency);
+                    accountCurrency = Currencies.USD;
+                }
+                if (accountCurrency != null && accountCurrency != algorithm.AccountCurrency)
+                {
+                    algorithm.SetAccountCurrency(accountCurrency);
                 }
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Initializing algorithm...");
