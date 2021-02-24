@@ -140,10 +140,9 @@ namespace QuantConnect.Brokerages.Tradier
                 var tickers = _subscribedTickers.Keys.ToList();
 
                 // Tradier expects at least one symbol
-                if (tickers.Count > 0)
-                {
-                    SendSubscribeMessage(tickers);
-                }
+                SendSubscribeMessage(tickers.Count > 0
+                    ? tickers
+                    : new List<string> { "$empty$" });
             }
 
             return true;
@@ -218,32 +217,10 @@ namespace QuantConnect.Brokerages.Tradier
             switch (tsd.Type)
             {
                 case "trade":
-                    return new Tick
-                    {
-                        Exchange = tsd.TradeExchange,
-                        TickType = TickType.Trade,
-                        Quantity = (int)tsd.TradeSize,
-                        Time = time,
-                        EndTime = time,
-                        Symbol = symbol,
-                        DataType = MarketDataType.Tick,
-                        Suspicious = false,
-                        Value = tsd.TradePrice
-                    };
+                    return new Tick(time, symbol, "", tsd.TradeExchange, (int) tsd.TradeSize, tsd.TradePrice);
 
                 case "quote":
-                    return new Tick
-                    {
-                        TickType = TickType.Quote,
-                        BidPrice = tsd.BidPrice,
-                        BidSize = tsd.BidSize,
-                        AskPrice = tsd.AskPrice,
-                        AskSize = tsd.AskSize,
-                        Time = time,
-                        EndTime = time,
-                        Symbol = symbol,
-                        DataType = MarketDataType.Tick
-                    };
+                    return new Tick(time, symbol, "", "", tsd.BidSize, tsd.BidPrice, tsd.AskSize, tsd.AskPrice);
             }
 
             return null;
