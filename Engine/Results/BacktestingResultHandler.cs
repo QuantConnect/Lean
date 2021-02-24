@@ -48,6 +48,11 @@ namespace QuantConnect.Lean.Engine.Results
         private int _daysProcessedFrontier;
         private readonly HashSet<string> _chartSeriesExceededDataPoints;
 
+        /// <summary>
+        /// Calculates the capacity of a strategy per Symbol in real-time
+        /// </summary>
+        private CapacityEstimate _capacityEstimate;
+
         //Processing Time:
         private DateTime _nextSample;
         private string _algorithmId;
@@ -191,12 +196,13 @@ namespace QuantConnect.Lean.Engine.Results
                 var runtimeStatistics = new Dictionary<string, string>();
                 lock (RuntimeStatistics)
                 {
+
                     foreach (var pair in RuntimeStatistics)
                     {
                         runtimeStatistics.Add(pair.Key, pair.Value);
                     }
                 }
-                var summary = GenerateStatisticsResults(performanceCharts).Summary;
+                var summary = GenerateStatisticsResults(performanceCharts, estimatedStrategyCapacity: _capacityEstimate.Capacity).Summary;
                 GetAlgorithmRuntimeStatistics(summary, runtimeStatistics);
 
                 var progress = (decimal)_daysProcessed / _jobDays;
@@ -341,7 +347,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var charts = new Dictionary<string, Chart>(Charts);
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
+                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate.Capacity);
                     var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
 
                     FinalStatistics = statisticsResults.Summary;
@@ -394,6 +400,7 @@ namespace QuantConnect.Lean.Engine.Results
             StartingPortfolioValue = startingPortfolioValue;
             PreviousUtcSampleTime = Algorithm.UtcTime;
             DailyPortfolioValue = StartingPortfolioValue;
+            _capacityEstimate = new CapacityEstimate(Algorithm);
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;
@@ -675,6 +682,16 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
+        public override void OrderEvent(OrderEvent newEvent)
+        {
+            if (newEvent.Status != OrderStatus.Filled && newEvent.Status != OrderStatus.PartiallyFilled)
+            {
+                return;
+            }
+
+            _capacityEstimate.OnOrderEvent(newEvent);
+        }
+
         /// <summary>
         /// Process the synchronous result events, sampling and message reading.
         /// This method is triggered from the algorithm manager thread.
@@ -683,6 +700,8 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void ProcessSynchronousEvents(bool forceProcess = false)
         {
             if (Algorithm == null) return;
+
+            _capacityEstimate.UpdateMarketCapacity();
 
             var time = Algorithm.UtcTime;
 
