@@ -621,7 +621,7 @@ namespace QuantConnect.Securities
         {
             var security = Securities[symbol];
 
-            var positionGroup = Positions.CreateDefaultGroup(security);
+            var positionGroup = Positions.GetOrCreateDefaultGroup(security);
             var parameters = new PositionGroupBuyingPowerParameters(this, positionGroup, direction);
             return positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(parameters);
         }
@@ -829,7 +829,7 @@ namespace QuantConnect.Securities
                 var direction = orderSubmitRequest.Quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
                 var security = Securities[orderSubmitRequest.Symbol];
 
-                var positionGroup = Positions.CreateDefaultGroup(security);
+                var positionGroup = Positions.GetOrCreateDefaultGroup(security);
                 var marginUsed = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
                     this, positionGroup
                 );
