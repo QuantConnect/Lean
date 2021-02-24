@@ -188,7 +188,10 @@ namespace QuantConnect.Securities.Positions
             return new PositionGroupKey(_defaultModel, security);
         }
 
-        public IPositionGroup CreateDefaultGroup(Security security)
+        /// <summary>
+        /// Gets or creates the default position group for the specified <paramref name="security"/>
+        /// </summary>
+        public IPositionGroup GetOrCreateDefaultGroup(Security security)
         {
             var key = CreateDefaultKey(security);
             return Groups[key];
