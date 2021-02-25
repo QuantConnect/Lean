@@ -170,7 +170,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             foreach (var symbol in symbols)
             {
-                var market = getSymbolMarket(symbol);
+                var market = GetSymbolMarket(symbol);
                 var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, market);
                 if (instrumentToken == 0)
                 {
@@ -194,7 +194,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="symbol">symbols to get market</param>
         /// <returns>string</returns>
-        private string getSymbolMarket(Symbol symbol)
+        private string GetSymbolMarket(Symbol symbol)
         {
             if(symbol.SecurityType == SecurityType.Equity && symbol.ID.Market.ToLowerInvariant() == "nfo")
             {
@@ -262,18 +262,16 @@ namespace QuantConnect.Brokerages.Zerodha
             return quotes[instrument.ToStringInvariant()];
         }
 
-
-
         /// <summary>
-        /// Fill order events
+        /// Zerodha brokerage order events
         /// </summary>
         /// <param name="orderUpdate"></param>
-        private void EmitFillOrder(Messages.Order orderUpdate)
+        private void OnOrderUpdate(Messages.Order orderUpdate)
         {
             try
             {
                 var brokerId = orderUpdate.OrderId;
-                Log.Trace("EmitFillOrder Broker ID:" + brokerId);
+                Log.Trace("OnZerodhaOrderEvent(): Broker ID:" + brokerId);
                 var order = CachedOrderIDs
                     .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
                     .Value;
@@ -479,24 +477,8 @@ namespace QuantConnect.Brokerages.Zerodha
 
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
             JObject orderResponse;
-            decimal? triggerPrice = null;
 
-            if (order.Status == OrderStatus.Invalid)
-            {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid order status {order.Status}";
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, new OrderFee(new CashAmount(0, Currencies.INR)), "Zerodha Order Event") { Status = OrderStatus.Invalid });
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-
-                UnlockStream();
-                return false;
-            }
-
-
-
-            if (order.Type == OrderType.StopLimit || order.Type == OrderType.StopMarket || order.Type == OrderType.Limit)
-            {
-                triggerPrice = GetOrderTriggerPrice(order);
-            }
+            decimal? triggerPrice = GetOrderTriggerPrice(order);
             decimal? orderPrice = GetOrderPrice(order);
 
             var kiteOrderType = ConvertOrderType(order.Type);
@@ -534,7 +516,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
             if ((string)orderResponse["status"] == "success")
             {
-
                 if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
                 {
                     var errorMessage = $"Error parsing response from place order: {(string)orderResponse["status_message"]}";
@@ -586,14 +567,13 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 case OrderType.Limit:
                     return ((LimitOrder)order).LimitPrice;
-                case OrderType.Market:
-                    // Order price must be positive for market order too;
-                    // refuses for price = 0
-                    return null;
+
                 case OrderType.StopLimit:
                     return ((StopLimitOrder)order).LimitPrice;
+
+                case OrderType.Market:
                 case OrderType.StopMarket:
-                    return ((StopMarketOrder)order).StopPrice;
+                    return null;
             }
 
             throw new NotSupportedException($"ZerodhaBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
@@ -609,16 +589,15 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             switch (order.Type)
             {
-                case OrderType.Limit:
-                    return ((LimitOrder)order).LimitPrice;
-                case OrderType.Market:
-                    // Order price must be positive for market order too;
-                    // refuses for price = 0
-                    return null;
                 case OrderType.StopLimit:
                     return ((StopLimitOrder)order).StopPrice;
+
                 case OrderType.StopMarket:
                     return ((StopMarketOrder)order).StopPrice;
+
+                case OrderType.Limit:
+                case OrderType.Market:
+                    return null;
             }
 
             throw new NotSupportedException($"ZerodhaBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
@@ -678,12 +657,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
             JObject orderResponse;
-            decimal? triggerPrice = null;
-
-            if (order.Type == OrderType.StopLimit || order.Type == OrderType.StopMarket || order.Type == OrderType.Limit)
-            {
-                triggerPrice = GetOrderTriggerPrice(order);
-            }
+            decimal? triggerPrice = GetOrderTriggerPrice(order);
             decimal? orderPrice = GetOrderPrice(order);
             var kiteOrderType = ConvertOrderType(order.Type);
 
@@ -809,13 +783,12 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             var allOrders = _kite.GetOrders();
             List<Order> list = new List<Order>();
+
             //Only loop if there are any actual orders inside response
             if (allOrders.Count > 0)
             {
-
-                foreach (var item in allOrders.Where(z => z.Status == "OPEN"))
+                foreach (var item in allOrders.Where(z => z.Status == "OPEN" || z.Status == "TRIGGER PENDING"))
                 {
-
                     Order order;
                     if (item.OrderType.ToUpperInvariant() == "MARKET")
                     {
@@ -1176,8 +1149,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     JObject messageDict = Utils.JsonDeserialize(message);
                     if ((string)messageDict["type"] == "order")
                     {
-
-                        EmitFillOrder(new Messages.Order(messageDict["data"]));
+                        OnOrderUpdate(new Messages.Order(messageDict["data"]));
                     }
                     else if ((string)messageDict["type"] == "error")
                     {
