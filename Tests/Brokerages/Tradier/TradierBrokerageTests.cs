@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             var accountId = TradierBrokerageFactory.Configuration.AccountId;
             var accessToken = TradierBrokerageFactory.Configuration.AccessToken;
 
-            return new TradierBrokerage(orderProvider, securityProvider, new AggregationManager(), useSandbox, accountId, accessToken);
+            return new TradierBrokerage(null, orderProvider, securityProvider, new AggregationManager(), useSandbox, accountId, accessToken);
         }
 
         /// <summary>
