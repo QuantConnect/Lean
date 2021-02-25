@@ -63,6 +63,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly string _account;
         private readonly string _host;
         private readonly IAlgorithm _algorithm;
+        private readonly bool _loadExistingHoldings;
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
         private readonly IDataAggregator _aggregator;
@@ -228,6 +229,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="password">The login password</param>
         /// <param name="tradingMode">The trading mode: 'live' or 'paper'</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
+        /// <param name="loadExistingHoldings">False will ignore existing security holdings from being loaded.</param>
         public InteractiveBrokersBrokerage(
             IAlgorithm algorithm,
             IOrderProvider orderProvider,
@@ -242,9 +244,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             string userName,
             string password,
             string tradingMode,
-            string agentDescription = IB.AgentDescription.Individual)
+            string agentDescription = IB.AgentDescription.Individual,
+            bool loadExistingHoldings = true)
             : base("Interactive Brokers Brokerage")
         {
+            _loadExistingHoldings = loadExistingHoldings;
             _algorithm = algorithm;
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
@@ -1666,8 +1670,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             try
             {
                 _accountHoldingsResetEvent.Reset();
-                var holding = CreateHolding(e);
-                _accountData.AccountHoldings[holding.Symbol.Value] = holding;
+                if (_loadExistingHoldings)
+                {
+                    var holding = CreateHolding(e);
+                    _accountData.AccountHoldings[holding.Symbol.Value] = holding;
+                }
             }
             catch (Exception exception)
             {
