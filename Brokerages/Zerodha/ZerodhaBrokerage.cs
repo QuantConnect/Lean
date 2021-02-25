@@ -96,11 +96,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private readonly IDataAggregator _aggregator;
 
-        /// <summary>
-        /// Locking object for the Ticks list in the data queue handler
-        /// </summary>
-        public readonly object TickLocker = new object();
-
         private readonly ZerodhaSymbolMapper _symbolMapper;
 
 
@@ -169,13 +164,13 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="symbols">The list of symbols to subscribe</param>
         public void Subscribe(IEnumerable<Symbol> symbols)
         {
-            if (symbols.Count() <= 0) 
-            { 
+            if (symbols.Count() <= 0)
+            {
                 return;
             }
             foreach (var symbol in symbols)
             {
-                var market = getSymbolMarket(symbol);
+                var market = GetSymbolMarket(symbol);
                 var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, market);
                 if (instrumentToken == 0)
                 {
@@ -199,7 +194,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="symbol">symbols to get market</param>
         /// <returns>string</returns>
-        private string getSymbolMarket(Symbol symbol)
+        private string GetSymbolMarket(Symbol symbol)
         {
             if(symbol.SecurityType == SecurityType.Equity && symbol.ID.Market.ToLowerInvariant() == "nfo")
             {
@@ -267,18 +262,16 @@ namespace QuantConnect.Brokerages.Zerodha
             return quotes[instrument.ToStringInvariant()];
         }
 
-
-
         /// <summary>
-        /// Fill order events
+        /// Zerodha brokerage order events
         /// </summary>
         /// <param name="orderUpdate"></param>
-        private void EmitFillOrder(Messages.Order orderUpdate)
+        private void OnOrderUpdate(Messages.Order orderUpdate)
         {
             try
             {
                 var brokerId = orderUpdate.OrderId;
-                Log.Trace("EmitFillOrder Broker ID:" + brokerId);
+                Log.Trace("OnZerodhaOrderEvent(): Broker ID:" + brokerId);
                 var order = CachedOrderIDs
                     .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
                     .Value;
@@ -362,7 +355,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
         /// <summary>
-        /// Zerodha brokerage fees calculation 
+        /// Zerodha brokerage fees calculation
         /// </summary>
         /// <param name="orderValue"></param>
         /// <returns></returns>
@@ -484,24 +477,8 @@ namespace QuantConnect.Brokerages.Zerodha
 
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
             JObject orderResponse;
-            decimal? triggerPrice = null;
 
-            if (order.Status == OrderStatus.Invalid)
-            {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid order status {order.Status}";
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, new OrderFee(new CashAmount(0, Currencies.INR)), "Zerodha Order Event") { Status = OrderStatus.Invalid });
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-
-                UnlockStream();
-                return false;
-            }
-
-
-
-            if (order.Type == OrderType.StopLimit || order.Type == OrderType.StopMarket || order.Type == OrderType.Limit)
-            {
-                triggerPrice = GetOrderTriggerPrice(order);
-            }
+            decimal? triggerPrice = GetOrderTriggerPrice(order);
             decimal? orderPrice = GetOrderPrice(order);
 
             var kiteOrderType = ConvertOrderType(order.Type);
@@ -539,7 +516,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
             if ((string)orderResponse["status"] == "success")
             {
-
                 if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
                 {
                     var errorMessage = $"Error parsing response from place order: {(string)orderResponse["status_message"]}";
@@ -591,14 +567,13 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 case OrderType.Limit:
                     return ((LimitOrder)order).LimitPrice;
-                case OrderType.Market:
-                    // Order price must be positive for market order too;
-                    // refuses for price = 0
-                    return null;
+
                 case OrderType.StopLimit:
                     return ((StopLimitOrder)order).LimitPrice;
+
+                case OrderType.Market:
                 case OrderType.StopMarket:
-                    return ((StopMarketOrder)order).StopPrice;
+                    return null;
             }
 
             throw new NotSupportedException($"ZerodhaBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
@@ -614,16 +589,15 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             switch (order.Type)
             {
-                case OrderType.Limit:
-                    return ((LimitOrder)order).LimitPrice;
-                case OrderType.Market:
-                    // Order price must be positive for market order too;
-                    // refuses for price = 0
-                    return null;
                 case OrderType.StopLimit:
                     return ((StopLimitOrder)order).StopPrice;
+
                 case OrderType.StopMarket:
                     return ((StopMarketOrder)order).StopPrice;
+
+                case OrderType.Limit:
+                case OrderType.Market:
+                    return null;
             }
 
             throw new NotSupportedException($"ZerodhaBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
@@ -683,12 +657,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
             JObject orderResponse;
-            decimal? triggerPrice = null;
-
-            if (order.Type == OrderType.StopLimit || order.Type == OrderType.StopMarket || order.Type == OrderType.Limit)
-            {
-                triggerPrice = GetOrderTriggerPrice(order);
-            }
+            decimal? triggerPrice = GetOrderTriggerPrice(order);
             decimal? orderPrice = GetOrderPrice(order);
             var kiteOrderType = ConvertOrderType(order.Type);
 
@@ -814,13 +783,12 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             var allOrders = _kite.GetOrders();
             List<Order> list = new List<Order>();
+
             //Only loop if there are any actual orders inside response
             if (allOrders.Count > 0)
             {
-
-                foreach (var item in allOrders.Where(z => z.Status == "OPEN"))
+                foreach (var item in allOrders.Where(z => z.Status == "OPEN" || z.Status == "TRIGGER PENDING"))
                 {
-
                     Order order;
                     if (item.OrderType.ToUpperInvariant() == "MARKET")
                     {
@@ -1158,11 +1126,17 @@ namespace QuantConnect.Brokerages.Zerodha
                             {
                                 var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(tick.InstrumentToken);
 
-                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity, tick.Timestamp.GetValueOrDefault());
-                                if (_lastTradeTickTime != tick.LastTradeTime.GetValueOrDefault())
+                                var bestBidQuote = tick.Bids[0];
+                                var bestAskQuote = tick.Offers[0];
+
+                                var time = tick.Timestamp ?? DateTime.UtcNow;
+
+                                EmitQuoteTick(symbol, time, bestBidQuote.Price, bestBidQuote.Quantity, bestAskQuote.Price, bestAskQuote.Quantity);
+
+                                if (_lastTradeTickTime != time)
                                 {
-                                    EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault(), tick.LastPrice, tick.LastQuantity);
-                                    _lastTradeTickTime = tick.LastTradeTime.GetValueOrDefault();
+                                    EmitTradeTick(symbol, time, tick.LastPrice, tick.LastQuantity);
+                                    _lastTradeTickTime = time;
                                 }
                             }
                         }
@@ -1175,8 +1149,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     JObject messageDict = Utils.JsonDeserialize(message);
                     if ((string)messageDict["type"] == "order")
                     {
-
-                        EmitFillOrder(new Messages.Order(messageDict["data"]));
+                        OnOrderUpdate(new Messages.Order(messageDict["data"]));
                     }
                     else if ((string)messageDict["type"] == "error")
                     {
@@ -1198,51 +1171,22 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal amount)
         {
-            try
-            {
-                lock (TickLocker)
-                {
-                    _aggregator.Update(new Tick
-                    {
-                        Value = price,
-                        Time = time,
-                        Symbol = symbol,
-                        TickType = TickType.Trade,
-                        Quantity = Math.Abs(amount),
-                        Exchange = symbol.ID.Market
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
+            //Log.Trace($"Trade: {time:O} {symbol} - Price:{price}, Quantity:{amount}");
+
+            var tick = new Tick(time, symbol, string.Empty, symbol.ID.Market, Math.Abs(amount), price);
+
+            _aggregator.Update(tick);
         }
 
-
-
-        private void EmitQuoteTick(Symbol symbol, DepthItem[] bids, decimal bidSize, DepthItem[] asks, decimal askSize, DateTime time)
+        private void EmitQuoteTick(Symbol symbol, DateTime time, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
-            if (bids != null && bids.Max(x => x.Price) > 0 && asks != null && asks.Max(x => x.Price) > 0)
+            if (bidPrice > 0 && askPrice > 0)
             {
-                var tick = new Tick
-                {
-                    AskPrice = asks.Max(x => x.Price),
-                    BidPrice = bids.Max(x => x.Price),
-                    Time = time,
-                    Symbol = symbol,
-                    TickType = TickType.Quote,
-                    AskSize = askSize,
-                    BidSize = bidSize,
+                //Log.Trace($"Quote: {time:O} {symbol} - BidPrice:{bidPrice}, BidSize:{bidSize}, AskPrice:{askPrice}, AskSize:{askSize}");
 
+                var tick = new Tick(time, symbol, string.Empty, string.Empty, bidSize, bidPrice, askSize, askPrice);
 
-                };
-
-                lock (TickLocker)
-                {
-                    _aggregator.Update(tick);
-                }
+                _aggregator.Update(tick);
             }
         }
 
