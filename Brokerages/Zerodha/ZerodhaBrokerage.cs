@@ -96,11 +96,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private readonly IDataAggregator _aggregator;
 
-        /// <summary>
-        /// Locking object for the Ticks list in the data queue handler
-        /// </summary>
-        public readonly object TickLocker = new object();
-
         private readonly ZerodhaSymbolMapper _symbolMapper;
 
 
@@ -169,8 +164,8 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="symbols">The list of symbols to subscribe</param>
         public void Subscribe(IEnumerable<Symbol> symbols)
         {
-            if (symbols.Count() <= 0) 
-            { 
+            if (symbols.Count() <= 0)
+            {
                 return;
             }
             foreach (var symbol in symbols)
@@ -362,7 +357,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
         /// <summary>
-        /// Zerodha brokerage fees calculation 
+        /// Zerodha brokerage fees calculation
         /// </summary>
         /// <param name="orderValue"></param>
         /// <returns></returns>
@@ -1158,11 +1153,17 @@ namespace QuantConnect.Brokerages.Zerodha
                             {
                                 var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(tick.InstrumentToken);
 
-                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity, tick.Timestamp.GetValueOrDefault());
-                                if (_lastTradeTickTime != tick.LastTradeTime.GetValueOrDefault())
+                                var bestBidQuote = tick.Bids[0];
+                                var bestAskQuote = tick.Offers[0];
+
+                                var time = tick.Timestamp ?? DateTime.UtcNow;
+
+                                EmitQuoteTick(symbol, time, bestBidQuote.Price, bestBidQuote.Quantity, bestAskQuote.Price, bestAskQuote.Quantity);
+
+                                if (_lastTradeTickTime != time)
                                 {
-                                    EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault(), tick.LastPrice, tick.LastQuantity);
-                                    _lastTradeTickTime = tick.LastTradeTime.GetValueOrDefault();
+                                    EmitTradeTick(symbol, time, tick.LastPrice, tick.LastQuantity);
+                                    _lastTradeTickTime = time;
                                 }
                             }
                         }
@@ -1198,51 +1199,22 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal amount)
         {
-            try
-            {
-                lock (TickLocker)
-                {
-                    _aggregator.Update(new Tick
-                    {
-                        Value = price,
-                        Time = time,
-                        Symbol = symbol,
-                        TickType = TickType.Trade,
-                        Quantity = Math.Abs(amount),
-                        Exchange = symbol.ID.Market
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
+            //Log.Trace($"Trade: {time:O} {symbol} - Price:{price}, Quantity:{amount}");
+
+            var tick = new Tick(time, symbol, string.Empty, symbol.ID.Market, Math.Abs(amount), price);
+
+            _aggregator.Update(tick);
         }
 
-
-
-        private void EmitQuoteTick(Symbol symbol, DepthItem[] bids, decimal bidSize, DepthItem[] asks, decimal askSize, DateTime time)
+        private void EmitQuoteTick(Symbol symbol, DateTime time, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
-            if (bids != null && bids.Max(x => x.Price) > 0 && asks != null && asks.Max(x => x.Price) > 0)
+            if (bidPrice > 0 && askPrice > 0)
             {
-                var tick = new Tick
-                {
-                    AskPrice = asks.Max(x => x.Price),
-                    BidPrice = bids.Max(x => x.Price),
-                    Time = time,
-                    Symbol = symbol,
-                    TickType = TickType.Quote,
-                    AskSize = askSize,
-                    BidSize = bidSize,
+                //Log.Trace($"Quote: {time:O} {symbol} - BidPrice:{bidPrice}, BidSize:{bidSize}, AskPrice:{askPrice}, AskSize:{askSize}");
 
+                var tick = new Tick(time, symbol, string.Empty, string.Empty, bidSize, bidPrice, askSize, askPrice);
 
-                };
-
-                lock (TickLocker)
-                {
-                    _aggregator.Update(tick);
-                }
+                _aggregator.Update(tick);
             }
         }
 
