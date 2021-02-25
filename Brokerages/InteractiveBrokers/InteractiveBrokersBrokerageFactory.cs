@@ -81,6 +81,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var tradingMode = Read<string>(job.BrokerageData, "ib-trading-mode", errors);
             var agentDescription = Read<string>(job.BrokerageData, "ib-agent-description", errors);
 
+            var loadExistingHoldings = true;
+            if (job.BrokerageData.ContainsKey("load-existing-holdings"))
+            {
+                loadExistingHoldings = Convert.ToBoolean(job.BrokerageData["load-existing-holdings"]);
+            }
+
             if (errors.Count != 0)
             {
                 // if we had errors then we can't create the instance
@@ -106,7 +112,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 userId,
                 password,
                 tradingMode,
-                agentDescription);
+                agentDescription,
+                loadExistingHoldings);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
 
             return ib;
