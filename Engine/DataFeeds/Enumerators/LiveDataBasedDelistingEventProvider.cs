@@ -46,15 +46,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 if (_delistingEnumerator != null && _delistingEnumerator.MoveNext())
                 {
-                    var delisting = _delistingEnumerator.Current as Delisting;
-                    if (delisting != null)
+                    // live trading always returns true but could be null
+                    if (_delistingEnumerator.Current != null)
                     {
-                        // we set the delisting date!
-                        DelistingDate = new ReferenceWrapper<DateTime>(delisting.Time);
-                    }
-                    else
-                    {
-                        Log.Error($"LiveDataBasedDelistingEventProvider(): Current is null or not a {nameof(Delisting)} event: {_delistingEnumerator.Current?.GetType()}");
+                        var delisting = _delistingEnumerator.Current as Delisting;
+                        if (delisting != null)
+                        {
+                            // we set the delisting date!
+                            DelistingDate = new ReferenceWrapper<DateTime>(delisting.Time);
+                        }
+                        else
+                        {
+                            Log.Error($"LiveDataBasedDelistingEventProvider(): Current is not a {nameof(Delisting)} event: {_delistingEnumerator.Current?.GetType()}");
+                        }
                     }
                 }
                 else

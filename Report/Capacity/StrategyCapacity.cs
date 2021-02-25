@@ -250,7 +250,6 @@ namespace QuantConnect.Report
             DateTime date)
         {
             var readers = new List<IEnumerator<BaseData>>();
-            Log.Trace($"StrategyCapacity.ReadData(): Creating data reader for date: {date:yyyy-MM-dd}");
 
             var symbolsOnDate = new HashSet<Symbol>(orders
                 .Where(o => (o.LastFillTime ?? o.Time).Date == date)
@@ -408,8 +407,6 @@ namespace QuantConnect.Report
                 var readers = ReadData(orders, orderSymbols, configs, date);
                 var dataEnumerators = readers.ToArray();
                 var feed = new SynchronizingEnumerator(dataEnumerators);
-
-                Log.Trace($"StrategyCapacity.AlgorithmCapacity(): Begin enumerating data for {dataEnumerators.Length} on date: {date:yyyy-MM-dd}");
 
                 while (feed.MoveNext() && feed.Current != null)
                 {

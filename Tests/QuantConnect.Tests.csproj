@@ -97,7 +97,6 @@
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.Threading.Timer" Version="4.3.0" />
     <PackageReference Include="WebSocket4Net" Version="0.15.2" />
-    <PackageReference Include="WebSocketSharpFork" Version="1.0.4" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CSharpAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">

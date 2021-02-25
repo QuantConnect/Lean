@@ -205,7 +205,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         ///Option Exp Date
         [JsonProperty(PropertyName = "expiration_date")]
-        private long Options_ExpirationDate = 0;
+        private string Options_ExpirationDate;
 
         ///Option Exp Type
         [JsonProperty(PropertyName = "expiration_type")]
@@ -483,5 +483,15 @@ namespace QuantConnect.Brokerages.Tradier
         /// Trading Stream: Ask Date
         [JsonProperty(PropertyName = "askdate")]
         public long AskDateUnix;
+
+        /// <summary>
+        /// Gets the tick timestamp (UTC)
+        /// </summary>
+        public DateTime GetTickTimestamp()
+        {
+            var unix = Type == "trade" ? UnixDate.ConvertInvariant<long>() : Type == "quote" ? BidDateUnix : 0;
+
+            return Time.UnixMillisecondTimeStampToDateTime(unix);
+        }
     }
 }

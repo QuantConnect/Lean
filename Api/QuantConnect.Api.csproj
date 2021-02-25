@@ -57,7 +57,6 @@
     <PackageReference Include="NodaTime" Version="3.0.5" />
     <PackageReference Include="RestSharp" Version="106.6.10" />
     <PackageReference Include="SharpZipLib" Version="1.2.0" />
-    <PackageReference Include="WebSocketSharpFork" Version="1.0.4" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Configuration" />

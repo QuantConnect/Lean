@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.Tradier
     ///  - Placing orders.
     ///  - Getting user data.
     /// </summary>
-    public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
+    public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
     {
         private readonly bool _useSandbox;
         private readonly string _accountId;
@@ -53,6 +53,9 @@ namespace QuantConnect.Brokerages.Tradier
         // we're reusing the equity exchange here to grab typical exchange hours
         private static readonly EquityExchange Exchange =
             new EquityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity));
+
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+        private readonly TradierSymbolMapper _symbolMapper = new TradierSymbolMapper();
 
         private string _previousResponseRaw = "";
         private readonly object _lockAccessCredentials = new object();
@@ -66,6 +69,8 @@ namespace QuantConnect.Brokerages.Tradier
 
         //Endpoints:
         private readonly string _requestEndpoint;
+
+        private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
         private readonly IDataAggregator _aggregator;
@@ -94,6 +99,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Create a new Tradier Object:
         /// </summary>
         public TradierBrokerage(
+            IAlgorithm algorithm,
             IOrderProvider orderProvider,
             ISecurityProvider securityProvider,
             IDataAggregator aggregator,
@@ -102,6 +108,7 @@ namespace QuantConnect.Brokerages.Tradier
             string accessToken)
             : base("Tradier Brokerage")
         {
+            _algorithm = algorithm;
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
             _aggregator = aggregator;
@@ -112,16 +119,8 @@ namespace QuantConnect.Brokerages.Tradier
             _requestEndpoint = useSandbox ? "https://sandbox.tradier.com/v1/" : "https://api.tradier.com/v1/";
 
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += (s, t) =>
-            {
-                Refresh();
-                return true;
-            };
-            _subscriptionManager.UnsubscribeImpl += (s, t) =>
-            {
-                Refresh();
-                return true;
-            };
+            _subscriptionManager.SubscribeImpl += Subscribe;
+            _subscriptionManager.UnsubscribeImpl += Unsubscribe;
 
             _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
 
@@ -145,41 +144,8 @@ namespace QuantConnect.Brokerages.Tradier
             var interval = _useSandbox ? 1000 : 500;
             _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
 
-            Task.Factory.StartNew(() =>
-            {
-                IEnumerator<TradierStreamData> pipe = null;
-                do
-                {
-                    if (!Subscriptions.Any())
-                    {
-                        Thread.Sleep(10);
-                        continue;
-                    }
-
-                    //If there's been an update to the subscriptions list; recreate the stream.
-                    if (_refresh)
-                    {
-                        var stream = Stream(GetTickers());
-                        pipe = stream.GetEnumerator();
-                        pipe.MoveNext();
-                        _refresh = false;
-                    }
-
-                    if (pipe != null && pipe.Current != null)
-                    {
-                        var tsd = pipe.Current;
-                        if (tsd.Type == "trade")
-                        {
-                            var tick = CreateTick(tsd);
-                            if (tick != null)
-                            {
-                                _aggregator.Update(tick);
-                            }
-                        }
-                        pipe.MoveNext();
-                    }
-                } while (!_disconnect);
-            }, TaskCreationOptions.LongRunning);
+            _webSocketClient.Initialize(WebSocketUrl);
+            _webSocketClient.Message += OnMessage;
         }
 
         #region Tradier client implementation
@@ -664,7 +630,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected => !_disconnect;
+        public override bool IsConnected => _webSocketClient.IsOpen;
 
         /// <summary>
         /// Gets all open orders on the account.
@@ -693,12 +659,15 @@ namespace QuantConnect.Brokerages.Tradier
         public override List<Holding> GetAccountHoldings()
         {
             var holdings = GetPositions().Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
-            var symbols = holdings.Select(x => x.Symbol.Value).ToList();
-            var quotes = GetQuotes(symbols).ToDictionary(x => x.Symbol);
+            var tickers = holdings.Select(x => _symbolMapper.GetBrokerageSymbol(x.Symbol)).ToList();
+
+            var quotes = GetQuotes(tickers).ToDictionary(x => x.Symbol);
             foreach (var holding in holdings)
             {
+                var ticker = _symbolMapper.GetBrokerageSymbol(holding.Symbol);
+
                 TradierQuote quote;
-                if (quotes.TryGetValue(holding.Symbol.Value, out quote))
+                if (quotes.TryGetValue(ticker, out quote))
                 {
                     holding.MarketPrice = quote.Last;
                 }
@@ -765,7 +734,9 @@ namespace QuantConnect.Brokerages.Tradier
 
             var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
 
-            var orderRequest = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity, holdingQuantity);
+            var classification = ConvertSecurityType(order.SecurityType);
+
+            var orderRequest = new TradierPlaceOrderRequest(order, classification, holdingQuantity, _symbolMapper);
 
             // do we need to split the order into two pieces?
             bool crossesZero = OrderCrossesZero(order);
@@ -780,7 +751,10 @@ namespace QuantConnect.Brokerages.Tradier
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
                 // but a market or a limit order
-                var restOfOrder = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity, 0) { Quantity = Math.Abs(secondOrderQuantity) };
+                var restOfOrder = new TradierPlaceOrderRequest(order, classification, 0, _symbolMapper)
+                {
+                    Quantity = Math.Abs(secondOrderQuantity)
+                };
                 restOfOrder.ConvertStopOrderTypes();
 
                 _contingentOrdersByQCOrderID.AddOrUpdate(order.Id, new ContingentOrderQueue(order, restOfOrder));
@@ -934,7 +908,7 @@ namespace QuantConnect.Brokerages.Tradier
                 {
                     TradierCachedOpenOrder tradierOrder;
                     _cachedOpenOrdersByTradierOrderID.TryRemove(id, out tradierOrder);
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Tradier Fill Event")
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Tradier Order Event")
                         { Status = OrderStatus.Canceled });
                 }
             }
@@ -947,7 +921,19 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public override void Connect()
         {
-            _disconnect = false;
+            _streamSession = CreateStreamSession();
+
+            var resetEvent = new ManualResetEvent(false);
+            EventHandler triggerEvent = (o, args) => resetEvent.Set();
+            _webSocketClient.Open += triggerEvent;
+
+            _webSocketClient.Connect();
+
+            if (!resetEvent.WaitOne(ConnectionTimeout))
+            {
+                throw new TimeoutException("Websockets connection timeout.");
+            }
+            _webSocketClient.Open -= triggerEvent;
         }
 
         /// <summary>
@@ -955,7 +941,10 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public override void Disconnect()
         {
-            _disconnect = true;
+            if (_webSocketClient.IsOpen)
+            {
+                _webSocketClient.Close();
+            }
         }
 
         /// <summary>
@@ -983,8 +972,6 @@ namespace QuantConnect.Brokerages.Tradier
 
         private TradierOrderResponse TradierPlaceOrder(TradierPlaceOrderRequest order)
         {
-            const TradierOrderClass classification = TradierOrderClass.Equity;
-
             string stopLimit = string.Empty;
             if (order.Price != 0 || order.Stop != 0)
             {
@@ -1026,7 +1013,7 @@ namespace QuantConnect.Brokerages.Tradier
                     Type = order.Type,
                     TransactionDate = DateTime.Now,
                     AverageFillPrice = 0m,
-                    Class = classification,
+                    Class = order.Classification,
                     CreatedDate = DateTime.Now,
                     Direction = order.Direction,
                     Duration = order.Duration,
@@ -1149,7 +1136,7 @@ namespace QuantConnect.Brokerages.Tradier
                         {
                             Log.Error(err);
                             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "PendingOrderNotReturned",
-                                "An error ocurred while trying to resolve fill events from Tradier orders: " + err));
+                                "An error occurred while trying to resolve fill events from Tradier orders: " + err));
                         }
                         finally
                         {
@@ -1319,7 +1306,7 @@ namespace QuantConnect.Brokerages.Tradier
                                 catch (Exception err)
                                 {
                                     Log.Error(err);
-                                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "ContingentOrderError", "An error ocurred while trying to submit an Tradier contingent order: " + err));
+                                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "ContingentOrderError", "An error occurred while trying to submit an Tradier contingent order: " + err));
                                     OnOrderEvent(new OrderEvent(qcOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Canceled });
                                 }
                                 finally
@@ -1429,7 +1416,9 @@ namespace QuantConnect.Brokerages.Tradier
                 default:
                     throw new NotImplementedException("The Tradier order type " + order.Type + " is not implemented.");
             }
-            qcOrder.Symbol = Symbol.Create(order.Symbol, SecurityType.Equity, Market.USA);
+
+            qcOrder.Symbol = _symbolMapper.GetLeanSymbol(order.Class == TradierOrderClass.Option ? order.OptionSymbol : order.Symbol);
+
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.Status = ConvertStatus(order.Status);
             qcOrder.BrokerId.Add(order.Id.ToStringInvariant());
@@ -1587,11 +1576,26 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         protected Holding ConvertHolding(TradierPosition position)
         {
+            var symbol = _symbolMapper.GetLeanSymbol(position.Symbol);
+
+            var averagePrice = position.CostBasis / position.Quantity;
+            if (symbol.SecurityType == SecurityType.Option)
+            {
+                var multiplier = _symbolPropertiesDatabase.GetSymbolProperties(
+                        symbol.ID.Market,
+                        symbol,
+                        symbol.SecurityType,
+                        _algorithm.Portfolio.CashBook.AccountCurrency)
+                    .ContractMultiplier;
+
+                averagePrice /= multiplier;
+            }
+
             return new Holding
             {
-                Symbol = Symbol.Create(position.Symbol, SecurityType.Equity, Market.USA),
-                Type = SecurityType.Equity,
-                AveragePrice = position.CostBasis / position.Quantity,
+                Symbol = symbol,
+                Type = symbol.SecurityType,
+                AveragePrice = averagePrice,
                 CurrencySymbol = "$",
                 MarketPrice = 0m, //--> GetAccountHoldings does a call to GetQuotes to fill this data in
                 Quantity = position.Quantity
@@ -1601,20 +1605,22 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Converts the QC order direction to a tradier order direction
         /// </summary>
-        protected static TradierOrderDirection ConvertDirection(OrderDirection direction, decimal holdingQuantity)
+        protected static TradierOrderDirection ConvertDirection(OrderDirection direction, SecurityType securityType, decimal holdingQuantity)
         {
-            // this mapping assumes we're dealing with equity types, options have different codes, buy_to_open and sell_to_close
+            // Equity codes: buy, buy_to_cover, sell, sell_short
+            // Option codes: buy_to_open, buy_to_close, sell_to_open, sell_to_close
             // Tradier has 4 types of orders for this: buy/sell/buy to cover and sell short.
-            // 2 of the types are specifically for opening, lets handle those first:
+            // 2 of the types are specifically for opening, lets handle those first
             if (holdingQuantity == 0)
             {
-                //Open a position: Both open long and open short:
+                // Open a position: Both open long and open short
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return TradierOrderDirection.Buy;
+                        return securityType == SecurityType.Option ? TradierOrderDirection.BuyToOpen : TradierOrderDirection.Buy;
+
                     case OrderDirection.Sell:
-                        return TradierOrderDirection.SellShort;
+                        return securityType == SecurityType.Option ? TradierOrderDirection.SellToOpen : TradierOrderDirection.SellShort;
                 }
             }
             else if (holdingQuantity > 0)
@@ -1622,11 +1628,12 @@ namespace QuantConnect.Brokerages.Tradier
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        //Increasing existing position:
-                        return TradierOrderDirection.Buy;
+                        // Increasing existing long position
+                        return securityType == SecurityType.Option ? TradierOrderDirection.BuyToOpen : TradierOrderDirection.Buy;
+
                     case OrderDirection.Sell:
-                        //Reducing existing position:
-                        return TradierOrderDirection.Sell;
+                        // Reducing existing long position
+                        return securityType == SecurityType.Option ? TradierOrderDirection.SellToClose : TradierOrderDirection.Sell;
                 }
             }
             else if (holdingQuantity < 0)
@@ -1634,13 +1641,15 @@ namespace QuantConnect.Brokerages.Tradier
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        //Reducing existing short position:
-                        return TradierOrderDirection.BuyToCover;
+                        // Reducing existing short position
+                        return securityType == SecurityType.Option ? TradierOrderDirection.BuyToClose : TradierOrderDirection.BuyToCover;
+
                     case OrderDirection.Sell:
-                        //Increasing existing short position:
-                        return TradierOrderDirection.SellShort;
+                        // Increasing existing short position
+                        return securityType == SecurityType.Option ? TradierOrderDirection.SellToOpen : TradierOrderDirection.SellShort;
                 }
             }
+
             return TradierOrderDirection.None;
         }
 
@@ -1698,14 +1707,36 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 case OrderType.Market:
                     return TradierOrderType.Market;
+
                 case OrderType.Limit:
                     return TradierOrderType.Limit;
+
                 case OrderType.StopMarket:
                     return TradierOrderType.StopMarket;
+
                 case OrderType.StopLimit:
                     return TradierOrderType.StopLimit;
+
                 default:
                     throw new ArgumentOutOfRangeException("type", order.Type, order.Type + " not supported");
+            }
+        }
+
+        /// <summary>
+        /// Converts a LEAN security type to a Tradier order class
+        /// </summary>
+        private static TradierOrderClass ConvertSecurityType(SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    return TradierOrderClass.Equity;
+
+                case SecurityType.Option:
+                    return TradierOrderClass.Option;
+
+                default:
+                    throw new NotSupportedException($"Unsupported security type: {securityType}");
             }
         }
 
@@ -1795,25 +1826,35 @@ namespace QuantConnect.Brokerages.Tradier
             }
         }
 
-        class TradierPlaceOrderRequest
+        private class TradierPlaceOrderRequest
         {
-            public Order QCOrder;
-            public TradierOrderClass Classification;
-            public TradierOrderDirection Direction;
-            public string Symbol;
+            public readonly Order QCOrder;
+            public readonly TradierOrderClass Classification;
+            public readonly TradierOrderDirection Direction;
+            public readonly string Symbol;
             public decimal Quantity;
             public decimal Price;
             public decimal Stop;
-            public string OptionSymbol;
+            public readonly string OptionSymbol;
             public TradierOrderType Type;
             public TradierOrderDuration Duration;
 
-            public TradierPlaceOrderRequest(Order order, TradierOrderClass classification, decimal holdingQuantity)
+            public TradierPlaceOrderRequest(Order order, TradierOrderClass classification, decimal holdingQuantity, ISymbolMapper symbolMapper)
             {
                 QCOrder = order;
                 Classification = classification;
-                Symbol = order.Symbol.Value;
-                Direction = ConvertDirection(order.Direction, holdingQuantity);
+
+                if (order.SecurityType == SecurityType.Option)
+                {
+                    OptionSymbol = symbolMapper.GetBrokerageSymbol(order.Symbol);
+                    Symbol = order.Symbol.Underlying.Value;
+                }
+                else
+                {
+                    Symbol = order.Symbol.Value;
+                }
+
+                Direction = ConvertDirection(order.Direction, order.SecurityType, holdingQuantity);
                 Quantity = Math.Abs(order.Quantity);
                 Price = GetLimitPrice(order);
                 Stop = GetStopPrice(order);

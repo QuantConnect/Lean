@@ -39,6 +39,15 @@ RUN echo "deb http://download.mono-project.com/repo/ubuntu stable-xenial/snapsho
     apt-get update && apt-fast install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl && \
     apt-fast install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
+# Install dotnet 5 sdk & runtime
+RUN wget https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    apt-get update; \
+    apt-get install -y apt-transport-https && \
+    apt-get update && \
+    apt-get install -y dotnet-sdk-5.0 && \
+    rm packages-microsoft-prod.deb
+
 # Install miniconda
 ENV CONDA="Miniconda3-4.5.12-Linux-x86_64.sh"
 ENV PATH="/opt/miniconda3/bin:${PATH}"
