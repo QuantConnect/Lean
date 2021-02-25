@@ -21,7 +21,6 @@ using System.Text;
 
 using System.IO;
 using System.Web;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Globalization;
@@ -34,20 +33,20 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Convert string to Date object
         /// </summary>
-        /// <param name="obj">Date string.</param>
+        /// <param name="dateString">Date string.</param>
         /// <returns>Date object/</returns>
-        public static DateTime? StringToDate(string DateString)
+        public static DateTime? StringToDate(string dateString)
         {
+            if (dateString == null)
+            {
+                return null;
+            }
+
             try
             {
-                if(DateString.Length == 10)
-                {
-                    return DateTime.ParseExact(DateString, "yyyy-MM-dd", null);
-                }else
-                {
-                    return DateTime.ParseExact(DateString, "yyyy-MM-dd HH:mm:ss", null);
-                }
-            }catch (Exception)
+                return DateTime.ParseExact(dateString, dateString.Length == 10 ? "yyyy-MM-dd" : "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            }
+            catch (Exception)
             {
                 return null;
             }
