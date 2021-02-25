@@ -76,5 +76,41 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.Data, result.Data);
             Assert.AreEqual(expected.Headers, result.Headers);
         }
+
+        [Test]
+        public void CaseInsensitive()
+        {
+            var serialized = @"[{
+			""address"": ""p@p.com"",
+			""subject"": ""sdads""
+		}, {
+			""phoneNumber"": ""11111111111""
+		}, {
+			""headers"": {
+				""1"": ""2""
+			},
+			""address"": ""qc.com""
+		}, {
+			""address"": ""qc.com/1234""
+		}]";
+            var result = JsonConvert.DeserializeObject<List<Notification>>(serialized);
+
+            Assert.AreEqual(4, result.Count);
+
+            var email = result[0] as NotificationEmail;
+            Assert.AreEqual("sdads", email.Subject);
+            Assert.AreEqual("p@p.com", email.Address);
+
+            var sms = result[1] as NotificationSms;
+            Assert.AreEqual("11111111111", sms.PhoneNumber);
+
+            var web = result[2] as NotificationWeb;
+            Assert.AreEqual(1, web.Headers.Count);
+            Assert.AreEqual("2", web.Headers["1"]);
+            Assert.AreEqual("qc.com", web.Address);
+
+            var web2 = result[3] as NotificationWeb;
+            Assert.AreEqual("qc.com/1234", web2.Address);
+        }
     }
 }

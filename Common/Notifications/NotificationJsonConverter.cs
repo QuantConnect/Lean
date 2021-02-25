@@ -52,25 +52,25 @@ namespace QuantConnect.Notifications
             var jObject = JObject.Load(reader);
 
             JToken token;
-            if (jObject.TryGetValue("PhoneNumber", out token))
+            if (jObject.TryGetValue("PhoneNumber", StringComparison.InvariantCultureIgnoreCase, out token))
             {
-                var message = jObject.GetValue("Message");
+                var message = jObject.GetValue("Message", StringComparison.InvariantCultureIgnoreCase);
 
                 return new NotificationSms(token.ToString(), message?.ToString());
             }
-            else if (jObject.TryGetValue("Subject", out token))
+            else if (jObject.TryGetValue("Subject", StringComparison.InvariantCultureIgnoreCase, out token))
             {
-                var data = jObject.GetValue("Data");
-                var message = jObject.GetValue("Message");
-                var address = jObject.GetValue("Address");
-                var headers= jObject.GetValue("Headers");
+                var data = jObject.GetValue("Data", StringComparison.InvariantCultureIgnoreCase);
+                var message = jObject.GetValue("Message", StringComparison.InvariantCultureIgnoreCase);
+                var address = jObject.GetValue("Address", StringComparison.InvariantCultureIgnoreCase);
+                var headers= jObject.GetValue("Headers", StringComparison.InvariantCultureIgnoreCase);
 
                 return new NotificationEmail(address?.ToString(), token.ToString(), message?.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
             }
-            else if (jObject.TryGetValue("Address", out token))
+            else if (jObject.TryGetValue("Address", StringComparison.InvariantCultureIgnoreCase, out token))
             {
-                var headers = jObject.GetValue("Headers");
-                var data = jObject.GetValue("Data");
+                var headers = jObject.GetValue("Headers", StringComparison.InvariantCultureIgnoreCase);
+                var data = jObject.GetValue("Data", StringComparison.InvariantCultureIgnoreCase);
 
                 return new NotificationWeb(token.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
             }
