@@ -938,11 +938,11 @@ namespace QuantConnect.Brokerages.Zerodha
             var response = _kite.GetMargins();
             if (_tradingSegment == "EQUITY")
             {
-                amt = Convert.ToDecimal(response.Equity.Net, CultureInfo.InvariantCulture);
+                amt = Convert.ToDecimal(response.Equity.Available.Cash, CultureInfo.InvariantCulture);
             }
             else
             {
-                amt = Convert.ToDecimal(response.Commodity.Net, CultureInfo.InvariantCulture);
+                amt = Convert.ToDecimal(response.Commodity.Available.Cash, CultureInfo.InvariantCulture);
             }
             list.Add(new CashAmount(amt, AccountBaseCurrency));
             return list;
