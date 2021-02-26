@@ -31,7 +31,7 @@ namespace QuantConnect.Optimizer.Launcher
     {
         public static void Main()
         {
-            LeanOptimizer optimizer = null;
+            var endedEvent = new ManualResetEvent(false);
             
             try
             {
@@ -54,13 +54,14 @@ namespace QuantConnect.Optimizer.Launcher
                     MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Environment.ProcessorCount / 2)
                 };
 
-                optimizer = new ConsoleLeanOptimizer(packet);
+                var optimizer = new ConsoleLeanOptimizer(packet);
 
                 optimizer.Start();
 
                 optimizer.Ended += (s, e) =>
                 {
                     optimizer.DisposeSafely();
+                    endedEvent.Set();
                 };
             }
             catch (Exception e)
@@ -69,10 +70,7 @@ namespace QuantConnect.Optimizer.Launcher
             }
 
             // Wait until the optimizer has stopped running before exiting
-            while (optimizer != null && (optimizer.Status == OptimizationStatus.New || optimizer.Status == OptimizationStatus.Running))
-            {
-                Thread.Sleep(100);
-            }
+            endedEvent.WaitOne();
         }
     }
 }
