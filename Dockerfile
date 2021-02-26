@@ -15,6 +15,7 @@ RUN pip install ptvsd
 RUN pip install pydevd-pycharm~=201.8538.36
 
 COPY ./Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
+COPY ./Optimizer.Launcher/bin/Debug/ /Lean/Optimizer.Launcher/bin/Debug/
 
 # Can override with '-w'
 WORKDIR /Lean/Launcher/bin/Debug

@@ -415,7 +415,7 @@ namespace QuantConnect.Optimizer
 
                     if (!string.IsNullOrEmpty(backtestId))
                     {
-                        Log.Trace($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): launched backtest '{backtestId}'");
+                        Log.Trace($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): launched backtest '{backtestId}' with parameters '{parameterSet}'");
                         RunningParameterSetForBacktest.TryAdd(backtestId, parameterSet);
                     }
                     else

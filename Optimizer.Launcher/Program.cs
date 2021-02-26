@@ -22,6 +22,8 @@ using QuantConnect.Optimizer.Strategies;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 
 namespace QuantConnect.Optimizer.Launcher
 {
@@ -29,9 +31,12 @@ namespace QuantConnect.Optimizer.Launcher
     {
         public static void Main()
         {
+            var endedEvent = new ManualResetEvent(false);
+            
             try
             {
                 Log.DebuggingEnabled = Config.GetBool("debug-mode");
+                Log.FilePath = Path.Combine(Config.Get("results-destination-folder"), "log.txt");
                 Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
                 var optimizationStrategyName = Config.Get("optimization-strategy",
@@ -56,6 +61,7 @@ namespace QuantConnect.Optimizer.Launcher
                 optimizer.Ended += (s, e) =>
                 {
                     optimizer.DisposeSafely();
+                    endedEvent.Set();
                 };
             }
             catch (Exception e)
@@ -63,7 +69,8 @@ namespace QuantConnect.Optimizer.Launcher
                 Log.Error(e);
             }
 
-            Console.ReadKey();
+            // Wait until the optimizer has stopped running before exiting
+            endedEvent.WaitOne();
         }
     }
 }
