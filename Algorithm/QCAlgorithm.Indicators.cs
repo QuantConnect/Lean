@@ -1466,6 +1466,31 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new RollingSharpeRatio indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose RSR we want</param>
+        /// <param name="sharpePeriod">The period over which to compute the RSR</param>
+        /// <param name="movingAveragePeriod">The period which we want to compute the Sharpe Ratio over</param>
+        /// <param name="movingAverageType">The type of moving average to use</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The RollingSharpeRatio indicator for the requested symbol over the specified period</returns>
+        public RollingSharpeRatio RSR(Symbol symbol, int sharpePeriod, int movingAveragePeriod, MovingAverageType movingAverageType, Resolution ? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RSR({sharpePeriod},{movingAveragePeriod},{movingAverageType})", resolution);
+            var rollingSharpeRatio = new RollingSharpeRatio(name, sharpePeriod, movingAveragePeriod, movingAverageType);
+            RegisterIndicator(symbol, rollingSharpeRatio, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, rollingSharpeRatio, resolution);
+            }
+
+            return rollingSharpeRatio;
+        }
+
+
+        /// <summary>
         /// Creates an SimpleMovingAverage indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
