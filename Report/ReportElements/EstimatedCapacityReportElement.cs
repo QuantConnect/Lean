@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Globalization;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -22,7 +23,6 @@ namespace QuantConnect.Report.ReportElements
         private readonly BacktestResult _backtest;
         private readonly LiveResult _live;
 
-        private readonly StrategyCapacity _capacityEstimator;
         /// <summary>
         /// Create a new capacity estimate
         /// </summary>
@@ -36,15 +36,21 @@ namespace QuantConnect.Report.ReportElements
             _backtest = backtest;
             Name = name;
             Key = key;
-
-            _capacityEstimator = new StrategyCapacity();
         }
 
         public override string Render()
         {
-            var capacity = _capacityEstimator.Estimate(_backtest);
+            var statistics = _backtest?.Statistics;
+            string capacityUsd;
+            if (statistics == null || !statistics.TryGetValue("Estimated Strategy Capacity", out capacityUsd))
+            {
+                return "-";
+            }
+
+            var capacity = decimal.Parse(capacityUsd.Replace("$", ""), NumberStyles.Any, CultureInfo.InvariantCulture);
             Result = capacity;
-            return capacity == null ? "-" : FormatNumber(capacity.Value);
+
+            return FormatNumber(capacity);
         }
 
         private static string FormatNumber(decimal number)

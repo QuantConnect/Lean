@@ -689,7 +689,7 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
-            _capacityEstimate.OnOrderEvent(newEvent);
+            _capacityEstimate?.OnOrderEvent(newEvent);
         }
 
         /// <summary>
