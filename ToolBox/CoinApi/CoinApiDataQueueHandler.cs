@@ -41,6 +41,7 @@ namespace QuantConnect.ToolBox.CoinApi
     /// </summary>
     public class CoinApiDataQueueHandler : SynchronizingHistoryProvider, IDataQueueHandler
     {
+        protected int HistoricalDataPerRequestLimit = 10000;
         private static readonly Dictionary<Resolution, string> _ResolutionToCoinApiPeriodMappings = new Dictionary<Resolution, string>
         {
             { Resolution.Second, "1SEC"},
@@ -381,55 +382,65 @@ namespace QuantConnect.ToolBox.CoinApi
                 yield break;
             }
 
-            // Perform a check the number of bars requested, this must not exceed the limit of 100k
-            var dataRequestedCount = (historyRequest.EndTimeUtc - historyRequest.StartTimeUtc).Ticks 
-                                     / historyRequest.Resolution.ToTimeSpan().Ticks;
+            var resolutionTimeSpan = historyRequest.Resolution.ToTimeSpan();
+            var lastRequestedBarStartTime = historyRequest.EndTimeUtc.RoundDown(resolutionTimeSpan);
+            var currentStartTime = historyRequest.StartTimeUtc.RoundUp(resolutionTimeSpan);
+            var currentEndTime = lastRequestedBarStartTime;
 
-            if (dataRequestedCount > 100000)
+            // Perform a check of the number of bars requested, this must not exceed a static limit
+            var dataRequestedCount = (currentEndTime - currentStartTime).Ticks 
+                                     / resolutionTimeSpan.Ticks;
+
+            if (dataRequestedCount > HistoricalDataPerRequestLimit)
             {
-                Log.Error("CoinApiDataQueueHandler.GetHistory(): The requested data range is too large, " +
-                          "the amount of data returned will exceed the limit of 100.000");
-                yield break;
+                currentEndTime = currentStartTime 
+                                 + TimeSpan.FromTicks(resolutionTimeSpan.Ticks * HistoricalDataPerRequestLimit);
             }
 
-            var coinApiSymbol = _symbolMapper.GetBrokerageSymbol(historyRequest.Symbol);
-            var coinApiPeriod = _ResolutionToCoinApiPeriodMappings[historyRequest.Resolution];
-
-            // Time must be in ISO 8601 format
-            var coinApiStartTime = historyRequest.StartTimeUtc.ToStringInvariant("s");
-            var coinApiEndTime = historyRequest.EndTimeUtc.ToStringInvariant("s");
-
-            // Construct URL for rest request
-            var baseUrl =
-                "https://rest.coinapi.io/v1/ohlcv/" +
-                $"{coinApiSymbol}/history?period_id={coinApiPeriod}&limit={100000}" +
-                $"&time_start={coinApiStartTime}&time_end={coinApiEndTime}";
-
-            // Execute
-            var client = new RestClient(baseUrl);
-            var restRequest = new RestRequest(Method.GET);
-            restRequest.AddHeader("X-CoinAPI-Key", _apiKey);
-            var response = client.Execute(restRequest);
-
-            // Log the information associated with the API Key's rest call limits.
-            TraceRestUsage(response);
-
-            // Deserialize to array
-            var coinApiHistoryBars = JsonConvert.DeserializeObject<HistoricalDataMessage[]>(response.Content);
-
-            // Can be no historical data for a short period interval
-            if (!coinApiHistoryBars.Any())
+            while (currentStartTime < lastRequestedBarStartTime)
             {
-                Log.Error("CoinApiDataQueueHandler.GetHistory(): API returned no data for the requested period");
-                yield break;
-            }
+                var coinApiSymbol = _symbolMapper.GetBrokerageSymbol(historyRequest.Symbol);
+                var coinApiPeriod = _ResolutionToCoinApiPeriodMappings[historyRequest.Resolution];
 
-            foreach (var ohlcv in coinApiHistoryBars)
-            {
-                yield return
-                    new TradeBar(ohlcv.TimePeriodStart, historyRequest.Symbol, ohlcv.PriceOpen, ohlcv.PriceHigh,
-                        ohlcv.PriceLow, ohlcv.PriceClose, ohlcv.VolumeTraded, historyRequest.Resolution.ToTimeSpan());
-            }
+                // Time must be in ISO 8601 format
+                var coinApiStartTime = currentStartTime.ToStringInvariant("s");
+                var coinApiEndTime = currentEndTime.ToStringInvariant("s");
+
+                // Construct URL for rest request
+                var baseUrl =
+                    "https://rest.coinapi.io/v1/ohlcv/" +
+                    $"{coinApiSymbol}/history?period_id={coinApiPeriod}&limit={HistoricalDataPerRequestLimit}" +
+                    $"&time_start={coinApiStartTime}&time_end={coinApiEndTime}";
+
+                // Execute
+                var client = new RestClient(baseUrl);
+                var restRequest = new RestRequest(Method.GET);
+                restRequest.AddHeader("X-CoinAPI-Key", _apiKey);
+                var response = client.Execute(restRequest);
+
+                // Log the information associated with the API Key's rest call limits.
+                TraceRestUsage(response);
+
+                // Deserialize to array
+                var coinApiHistoryBars = JsonConvert.DeserializeObject<HistoricalDataMessage[]>(response.Content);
+
+                // Can be no historical data for a short period interval
+                if (!coinApiHistoryBars.Any())
+                {
+                    Log.Error($"CoinApiDataQueueHandler.GetHistory(): API returned no data for the requested period [{coinApiStartTime} - {coinApiEndTime}] for symbol [{historyRequest.Symbol}]");
+                    continue;
+                }
+
+                foreach (var ohlcv in coinApiHistoryBars)
+                {
+                    yield return
+                        new TradeBar(ohlcv.TimePeriodStart, historyRequest.Symbol, ohlcv.PriceOpen, ohlcv.PriceHigh,
+                            ohlcv.PriceLow, ohlcv.PriceClose, ohlcv.VolumeTraded, historyRequest.Resolution.ToTimeSpan());
+                }
+
+                currentStartTime = currentEndTime;
+                currentEndTime += TimeSpan.FromTicks(resolutionTimeSpan.Ticks * HistoricalDataPerRequestLimit);
+            } 
         }
 
         #endregion
@@ -448,6 +459,12 @@ namespace QuantConnect.ToolBox.CoinApi
             return response.Headers
                 .FirstOrDefault(x => x.Name == propertyName)?
                 .Value.ToString();
+        }
+
+        // WARNING: here to be called from tests to reduce explicitly the amount of request's output 
+        protected void SetUpHistDataLimit(int limit)
+        {
+            HistoricalDataPerRequestLimit = limit;
         }
     }
 }

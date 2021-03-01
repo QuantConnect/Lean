@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.ToolBox
     {
         private static readonly Symbol _CoinbaseBtcUsdSymbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
         private static readonly Symbol _BitfinexBtcUsdSymbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
-        private readonly CoinApiDataQueueHandler _coinApiDataQueueHandler = new CoinApiDataQueueHandler(); 
+        private readonly CoinApiDataQueueHandlerMock _coinApiDataQueueHandler = new CoinApiDataQueueHandlerMock(); 
 
         // -- DATA TO TEST --
         private static TestCaseData[] TestData => new[]
@@ -38,12 +38,11 @@ namespace QuantConnect.Tests.ToolBox
             // No data - invalid resolution or data type, or period is more than limit
             new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Tick, typeof(TradeBar), 100, false),
             new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Daily, typeof(QuoteBar), 100, false),
-            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Minute, typeof(TradeBar), 100001, false),
             // Has data
-            new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Minute, typeof(TradeBar), 10, true),
-            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Minute, typeof(TradeBar), 10, true),
-            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Hour, typeof(TradeBar), 100, true),
-            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Daily, typeof(TradeBar), 1000, true),
+            new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Minute, typeof(TradeBar), 216, true),
+            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Minute, typeof(TradeBar), 342, true),
+            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Hour, typeof(TradeBar), 107, true),
+            new TestCaseData(_CoinbaseBtcUsdSymbol, Resolution.Daily, typeof(TradeBar), 489, true),
             // Can get data for resolution second
             new TestCaseData(_BitfinexBtcUsdSymbol, Resolution.Second, typeof(TradeBar), 300, true)
         };
@@ -52,6 +51,8 @@ namespace QuantConnect.Tests.ToolBox
         [TestCaseSource(nameof(TestData))]
         public void CanGetHistory(Symbol symbol, Resolution resolution, Type dataType, int period, bool isNonEmptyResult)
         {
+            _coinApiDataQueueHandler.SetUpHistDataLimit(100);
+
             var nowUtc = DateTime.UtcNow;
             var periodTimeSpan = TimeSpan.FromTicks(resolution.ToTimeSpan().Ticks * period);
             var startTimeUtc = nowUtc.Add(-periodTimeSpan);
@@ -109,5 +110,14 @@ namespace QuantConnect.Tests.ToolBox
                 Assert.IsEmpty(slices);
             }
         }
+
+        public class CoinApiDataQueueHandlerMock : CoinApiDataQueueHandler
+        {
+            public new void SetUpHistDataLimit(int limit)
+            {
+                base.SetUpHistDataLimit(limit);
+            }
+        }
+        
     }
 }
