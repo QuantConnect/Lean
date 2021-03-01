@@ -23,6 +23,9 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
 {
+    /// <summary>
+    /// Per-symbol capacity estimations, tightly coupled with the <see cref="CapacityEstimate"/> class.
+    /// </summary>
     internal class SymbolCapacity
     {
         /// <summary>
@@ -46,6 +49,9 @@ namespace QuantConnect.Lean.Engine.Results
         private TradeBar _previousBar;
         private Resolution _resolution;
 
+        /// <summary>
+        /// The Symbol's Security
+        /// </summary>
         public Security Security { get; }
 
         private decimal _resolutionScaleFactor
@@ -72,12 +78,22 @@ namespace QuantConnect.Lean.Engine.Results
                 }
             }
         }
+
+        /// <summary>
+        /// The absolute dollar volume we've traded
+        /// </summary>
         public decimal SaleVolume { get; private set; }
 
+        /// <summary>
+        /// Market capacity dollar volume, i.e. the capacity the market is able to provide for this Symbol
+        /// </summary>
         public decimal MarketCapacityDollarVolume => _marketCapacityDollarVolume * _resolutionScaleFactor;
 
-        public decimal TotalHoldingsInDollars => _holding.HoldingsValue;
-
+        /// <summary>
+        /// Creates a new SymbolCapacity object, capable of determining market capacity for a Symbol
+        /// </summary>
+        /// <param name="algorithm"></param>
+        /// <param name="symbol"></param>
         public SymbolCapacity(IAlgorithm algorithm, Symbol symbol)
         {
             _algorithm = algorithm;
@@ -96,6 +112,11 @@ namespace QuantConnect.Lean.Engine.Results
                 : resolution.Value;
         }
 
+        /// <summary>
+        /// New order event handler. Handles the aggregation of SaleVolume and
+        /// sometimes resetting the <seealso cref="MarketCapacityDollarVolume"/>
+        /// </summary>
+        /// <param name="orderEvent"></param>
         public void OnOrderEvent(OrderEvent orderEvent)
         {
             SaleVolume += Security.QuoteCurrency.ConversionRate * orderEvent.FillPrice * orderEvent.AbsoluteFillQuantity * Security.SymbolProperties.ContractMultiplier;
@@ -115,6 +136,10 @@ namespace QuantConnect.Lean.Engine.Results
             _previousOrderEvent = orderEvent;
         }
 
+        /// <summary>
+        /// Determines whether we should add the Market Volume to the <see cref="MarketCapacityDollarVolume"/>
+        /// </summary>
+        /// <returns></returns>
         private bool IncludeMarketVolume()
         {
             if (_previousOrderEvent == null)
@@ -154,7 +179,8 @@ namespace QuantConnect.Lean.Engine.Results
                 case Resolution.Daily:
                     // At the end of a daily bar, the EndTime is the next day.
                     // Increment the order by one day to match it
-                    return _algorithm.UtcTime.Date == _previousOrderEvent.UtcTime.RoundUp(_resolution.ToTimeSpan());
+                    return _algorithm.UtcTime == _previousOrderEvent.UtcTime ||
+                        _algorithm.UtcTime.Date == _previousOrderEvent.UtcTime.RoundUp(_resolution.ToTimeSpan());
 
                 default:
                     timeout = _previousOrderEvent.UtcTime.AddHours(1);
@@ -164,6 +190,10 @@ namespace QuantConnect.Lean.Engine.Results
             return _algorithm.UtcTime <= timeout;
         }
 
+        /// <summary>
+        /// Updates the market capacity of the Symbol. Called on each time step of the algorithm
+        /// </summary>
+        /// <returns>False if we're currently within the timeout period, True if the Symbol has went past the timeout</returns>
         public bool UpdateMarketCapacity()
         {
             var bar = GetBar();
@@ -202,6 +232,11 @@ namespace QuantConnect.Lean.Engine.Results
             return !includeMarketVolume;
         }
 
+        /// <summary>
+        /// Gets the TradeBar for the given time step. For Quotes, we convert
+        /// it into a TradeBar using market depth as a proxy for volume.
+        /// </summary>
+        /// <returns>TradeBar</returns>
         private TradeBar GetBar()
         {
             TradeBar bar;
@@ -232,6 +267,9 @@ namespace QuantConnect.Lean.Engine.Results
             return null;
         }
 
+        /// <summary>
+        /// Signals a reset for the <see cref="MarketCapacityDollarVolume"/> and <see cref="SaleVolume"/>
+        /// </summary>
         public void Reset()
         {
             _resetMarketCapacityDollarVolume = true;

@@ -701,7 +701,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (Algorithm == null) return;
 
-            _capacityEstimate.UpdateMarketCapacity();
+            _capacityEstimate.UpdateMarketCapacity(forceProcess);
 
             var time = Algorithm.UtcTime;
 
