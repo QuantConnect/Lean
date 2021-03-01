@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public bool CanRunLocally { get; } = false;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.138"},
             {"Treynor Ratio", "-0.772"},
             {"Total Fees", "$38.83"},
-            {"Estimated Strategy Capacity", "$7600000.00"},
+            {"Estimated Strategy Capacity", "$6000000.00"},
             {"Fitness Score", "0.004"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
