@@ -323,42 +323,6 @@
     <None Update="TestData\spy_arima.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Report\Capacity\Strategies\BeastVsPenny.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\EmaPortfolioRebalance100.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\IntradayMinuteScalping.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\IntradayMinuteScalpingBTCETH.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\MonthlyRebalanceDaily.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\MonthlyRebalanceHourly.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\SpyBondPortfolioRebalance.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\IntradayMinuteScalpingEURUSD.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\IntradayMinuteScalpingGBPJPY.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\IntradayMinuteScalpingTRYJPY.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\IntradayMinuteScalpingFuturesES.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Report\Capacity\Strategies\CheeseMilkHourlyRebalance.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj" />

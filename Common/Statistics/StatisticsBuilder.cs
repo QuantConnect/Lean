@@ -46,7 +46,8 @@ namespace QuantConnect.Statistics
             List<ChartPoint> pointsBenchmark,
             decimal startingCapital,
             decimal totalFees,
-            int totalTransactions)
+            int totalTransactions,
+            decimal estimatedStrategyCapacity)
         {
             var equity = ChartPointToDictionary(pointsEquity);
 
@@ -55,7 +56,7 @@ namespace QuantConnect.Statistics
 
             var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
             var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
-            var summary = GetSummary(totalPerformance, totalFees, totalTransactions);
+            var summary = GetSummary(totalPerformance, totalFees, totalTransactions, estimatedStrategyCapacity);
 
             return new StatisticsResults(totalPerformance, rollingPerformances, summary);
         }
@@ -164,7 +165,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Returns a summary of the algorithm performance as a dictionary
         /// </summary>
-        private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, decimal totalFees, int totalTransactions)
+        private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, decimal totalFees, int totalTransactions, decimal estimatedStrategyCapacity)
         {
             return new Dictionary<string, string>
             {
@@ -187,7 +188,8 @@ namespace QuantConnect.Statistics
                 { "Information Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3).ToStringInvariant() },
                 { "Tracking Error", Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToStringInvariant() },
                 { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToStringInvariant() },
-                { "Total Fees", "$" + totalFees.ToStringInvariant("0.00") }
+                { "Total Fees", "$" + totalFees.ToStringInvariant("0.00") },
+                { "Estimated Strategy Capacity", "$" + estimatedStrategyCapacity.RoundToSignificantDigits(2).ToStringInvariant() }
             };
         }
 
