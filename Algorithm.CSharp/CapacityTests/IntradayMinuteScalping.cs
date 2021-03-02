@@ -20,6 +20,11 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Scalps SPY using an EMA cross strategy at minute resolution.
+    /// This tests equity strategies that trade at a higher frequency, which
+    /// should have a reduced capacity estimate as a result.
+    /// </summary>
     public class IntradayMinuteScalping : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;

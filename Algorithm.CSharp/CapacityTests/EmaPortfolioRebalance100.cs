@@ -20,6 +20,10 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Tests a wide variety of liquid and illiquid stocks together, with bins
+    /// of 20 ranging from micro-cap to mega-cap stocks.
+    /// </summary>
     public class EmaPortfolioRebalance100 : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public List<SymbolData> Data;

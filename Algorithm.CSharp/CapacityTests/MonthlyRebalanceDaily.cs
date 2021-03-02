@@ -18,6 +18,10 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Rebalances ultra-liquid stocks monthly, testing
+    /// bursts of orders centered around the start of the month at Daily resolution
+    /// </summary>
     public class MonthlyRebalanceDaily : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()

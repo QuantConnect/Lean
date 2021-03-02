@@ -31,12 +31,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// An estimate of how much volume the FX market trades per minute
         /// </summary>
+        /// <remarks>
+        /// Any mentions of "dollar volume" are in account currency. They are not always in dollars.
+        /// </remarks>
         private const decimal _forexMinuteVolume = 25000000m;
         private const decimal _fastTradingVolumeScalingFactor = 2m;
 
         private readonly IAlgorithm _algorithm;
         private readonly Symbol _symbol;
-        private readonly SecurityHolding _holding;
 
         private decimal _previousVolume;
         private DateTime? _previousTime;
@@ -46,8 +48,7 @@ namespace QuantConnect.Lean.Engine.Results
         private bool _resetMarketCapacityDollarVolume;
         private decimal _fastTradingVolumeDiscountFactor;
         private OrderEvent _previousOrderEvent;
-        private TradeBar _previousBar;
-        private Resolution _resolution;
+        private readonly Resolution _resolution;
 
         /// <summary>
         /// The Symbol's Security
@@ -80,13 +81,16 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// The absolute dollar volume we've traded
+        /// The absolute dollar volume (in account currency) we've traded
         /// </summary>
         public decimal SaleVolume { get; private set; }
 
         /// <summary>
         /// Market capacity dollar volume, i.e. the capacity the market is able to provide for this Symbol
         /// </summary>
+        /// <remarks>
+        /// Dollar volume is in account currency, but name is used for consistency with financial literature.
+        /// </remarks>
         public decimal MarketCapacityDollarVolume => _marketCapacityDollarVolume * _resolutionScaleFactor;
 
         /// <summary>
@@ -99,9 +103,11 @@ namespace QuantConnect.Lean.Engine.Results
             _algorithm = algorithm;
             Security = _algorithm.Securities[symbol];
             _symbol = symbol;
-            _holding = _algorithm.Portfolio[_symbol];
 
-            var resolution = Security.Subscriptions
+            var resolution = _algorithm
+                .SubscriptionManager
+                .SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(symbol)
                 .Where(s => !s.IsInternalFeed)
                 .OrderBy(s => s.Resolution)
                 .FirstOrDefault()?
@@ -202,16 +208,12 @@ namespace QuantConnect.Lean.Engine.Results
                 return false;
             }
 
-            _previousBar = bar;
-
             var utcTime = _algorithm.UtcTime;
             var conversionRate = Security.QuoteCurrency.ConversionRate;
             var timeBetweenBars = (decimal)(utcTime - (_previousTime ?? utcTime)).TotalMinutes;
 
             if (_previousTime == null || timeBetweenBars == 0)
             {
-                _previousTime = utcTime;
-                _previousVolume = bar.Volume;
                 _averageDollarVolume = conversionRate * bar.Close * bar.Volume;
             }
             else

@@ -22,64 +22,68 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Tests an illiquid asset that has bursts of liquidity around 11:00 A.M. Central Time
+    /// with an hourly in and out strategy.
+    /// </summary>
     public class CheeseMilkHourlyRebalance : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-    	private ExponentialMovingAverage _fast;
-    	private ExponentialMovingAverage _slow;
-		private Symbol _contract;
-		private DateTime _lastTrade;
+        private ExponentialMovingAverage _fast;
+        private ExponentialMovingAverage _slow;
+        private Symbol _contract;
+        private DateTime _lastTrade;
 
         public override void Initialize()
         {
             SetStartDate(2021, 1, 1);
-			SetEndDate(2021, 2, 17);
-			SetTimeZone(TimeZones.Chicago);
+            SetEndDate(2021, 2, 17);
+            SetTimeZone(TimeZones.Chicago);
             SetCash(100000);
             SetWarmup(1000);
 
-			var dc = AddFuture("DC", Resolution.Minute, Market.CME);
-			dc.SetFilter(0, 10000);
+            var dc = AddFuture("DC", Resolution.Minute, Market.CME);
+            dc.SetFilter(0, 10000);
         }
 
         public override void OnData(Slice data)
         {
-        	var contract = data.FutureChains.Values.SelectMany(c => c.Contracts.Values)
-        		.OrderBy(c => c.Symbol.ID.Date)
-        		.FirstOrDefault()?
-        		.Symbol;
+            var contract = data.FutureChains.Values.SelectMany(c => c.Contracts.Values)
+                .OrderBy(c => c.Symbol.ID.Date)
+                .FirstOrDefault()?
+                .Symbol;
 
-        	if (contract == null)
-        	{
-        		return;
-        	}
+            if (contract == null)
+            {
+                return;
+            }
 
-        	if (_contract != contract || (_fast == null && _slow == null))
-        	{
-	            _fast = EMA(contract, 600);
-            	_slow = EMA(contract, 1200);
-            	_contract = contract;
-        	}
+            if (_contract != contract || (_fast == null && _slow == null))
+            {
+                _fast = EMA(contract, 600);
+                _slow = EMA(contract, 1200);
+                _contract = contract;
+            }
 
-        	if (!_fast.IsReady || !_slow.IsReady)
-        	{
-        		return;
-        	}
+            if (!_fast.IsReady || !_slow.IsReady)
+            {
+                return;
+            }
 
-        	if (Time - _lastTrade <= TimeSpan.FromHours(1) || Time.TimeOfDay <= new TimeSpan(10, 50, 0) || Time.TimeOfDay >= new TimeSpan(12, 30, 0))
-        	{
-        		return;
-        	}
+            if (Time - _lastTrade <= TimeSpan.FromHours(1) || Time.TimeOfDay <= new TimeSpan(10, 50, 0) || Time.TimeOfDay >= new TimeSpan(12, 30, 0))
+            {
+                return;
+            }
 
-			if (!Portfolio.ContainsKey(contract) || (Portfolio[contract].Quantity <= 0 && _fast > _slow))
-			{
-				SetHoldings(contract, 0.5);
-				_lastTrade = Time;
-			}
-			else if (Portfolio.ContainsKey(contract) && Portfolio[contract].Quantity >= 0 && _fast < _slow)
-			{
-				SetHoldings(contract, -0.5);
-				_lastTrade = Time;
-			}
+            if (!Portfolio.ContainsKey(contract) || (Portfolio[contract].Quantity <= 0 && _fast > _slow))
+            {
+                SetHoldings(contract, 0.5);
+                _lastTrade = Time;
+            }
+            else if (Portfolio.ContainsKey(contract) && Portfolio[contract].Quantity >= 0 && _fast < _slow)
+            {
+                SetHoldings(contract, -0.5);
+                _lastTrade = Time;
+            }
         }
 
         /// <summary>

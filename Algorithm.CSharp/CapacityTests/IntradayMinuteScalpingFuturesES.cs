@@ -21,6 +21,16 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Scalps ES futures contracts (E-mini SP500) using an EMA cross strategy at minute resolution.
+    /// This tests futures strategies that trade at a higher frequency, which
+    /// should have a reduced capacity estimate as a result.
+    /// </summary>
+    /// <remarks>
+    /// The insanely high capacity estimate of this strategy is realistic.
+    /// ES notional contract value traded is around $600 Billion USD per day (!!!), which
+    /// is what the capacity is set to.
+    /// </remarks>
     public class IntradayMinuteScalpingFuturesES : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private ExponentialMovingAverage _fast;

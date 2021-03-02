@@ -21,6 +21,13 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Scalps BTCETH using an EMA cross strategy at minute resolution.
+    /// This tests crypto strategies that trade at a higher frequency, which
+    /// should have a reduced capacity estimate as a result. This also tests
+    /// that currency conversions are handled properly in the strategy capacity
+    /// calculation class.
+    /// </summary>
     public class IntradayMinuteScalpingBTCETH : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _ethbtc;

@@ -24,13 +24,23 @@ using QuantConnect.Securities;
 namespace QuantConnect.Lean.Engine.Results
 {
     /// <summary>
-    /// Estimates dollar volume capacity of algorithm using all Symbols in the portfolio.
+    /// Estimates dollar volume capacity of algorithm (in account currency) using all Symbols in the portfolio.
     /// </summary>
+    /// <remarks>
+    /// Any mention of dollar volume is volume in account currency, but "dollar volume" is used
+    /// to maintain consistency with financial terminology and our use
+    /// case of having alphas measured capacity be in USD.
+    /// </remarks>
     public class CapacityEstimate
     {
         private readonly IAlgorithm _algorithm;
         private readonly Dictionary<Symbol, SymbolCapacity> _capacityBySymbol;
         private List<SymbolCapacity> _monitoredSymbolCapacity;
+        // We use multiple collections to avoid having to perform an O(n) lookup whenever
+        // we're wanting to check whether a particular SymbolData instance is being "monitored",
+        // but still want to preserve indexing via an integer index
+        // (monitored meaning it is currently aggregating market dollar volume for its capacity calculation).
+        // For integer indexing, we use the List above, v.s. for lookup we use this HashSet.
         private HashSet<SymbolCapacity> _monitoredSymbolCapacitySet;
         private DateTime _previousSnapshotDate;
         private DateTime _nextSnapshotDate;
@@ -63,6 +73,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="order">Order to use to calculate capacity</param>
         public void OnOrderEvent(OrderEvent orderEvent)
         {
+            if (orderEvent.Status != OrderStatus.Filled && orderEvent.Status != OrderStatus.PartiallyFilled)
+            {
+                return;
+            }
+
             SymbolCapacity symbolCapacity;
             if (!_capacityBySymbol.TryGetValue(orderEvent.Symbol, out symbolCapacity))
             {

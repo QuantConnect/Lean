@@ -19,6 +19,11 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Tests that splits do not cause the algorithm to report capacity estimates
+    /// above or below the actual capacity due to splits. The stock HTGM is illiquid,
+    /// trading only $1.2 Million per day on average with sparse trade frequencies.
+    /// </summary>
     public class SplitTestingStrategy : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _htgm;

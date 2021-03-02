@@ -20,6 +20,12 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Scalps TRYJPY using an EMA cross strategy at minute resolution.
+    /// This tests FOREX strategies that trade at a higher frequency, which
+    /// should have a reduced capacity estimate as a result. This tests that
+    /// currency conversions are applied properly to the capacity estimate calculation.
+    /// </summary>
     public class IntradayMinuteScalpingTRYJPY : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _tryjpy;

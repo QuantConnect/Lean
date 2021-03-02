@@ -18,6 +18,9 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Tests capacity by trading SPY (beast) alongside a small cap stock ABUS (penny)
+    /// </summary>
     public class BeastVsPenny : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;

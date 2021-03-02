@@ -684,11 +684,6 @@ namespace QuantConnect.Lean.Engine.Results
 
         public override void OrderEvent(OrderEvent newEvent)
         {
-            if (newEvent.Status != OrderStatus.Filled && newEvent.Status != OrderStatus.PartiallyFilled)
-            {
-                return;
-            }
-
             _capacityEstimate?.OnOrderEvent(newEvent);
         }
 

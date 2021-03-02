@@ -18,6 +18,10 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Rebalances between SPY and BND. Tests capacity of the weakest link, which in this
+    /// case is BND, dragging down the capacity estimate.
+    /// </summary>
     public class SpyBondPortfolioRebalance : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;

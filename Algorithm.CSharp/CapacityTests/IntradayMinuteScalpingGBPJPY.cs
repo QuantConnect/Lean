@@ -20,6 +20,12 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Scalps GBPJPY using an EMA cross strategy at minute resolution.
+    /// This tests FOREX strategies that trade at a higher frequency, which
+    /// should have a reduced capacity estimate as a result. This test also
+    /// tests that currency conversion rates are applied and calculated correctly.
+    /// </summary>
     public class IntradayMinuteScalpingGBPJPY : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _gbpjpy;
