@@ -32,16 +32,6 @@ namespace QuantConnect.Brokerages
         {
         }
 
-      
-        public override AccountType AccountType => base.AccountType;
-
-        public override decimal RequiredFreeBuyingPowerPercent => base.RequiredFreeBuyingPowerPercent;
-
-        public override void ApplySplit(List<OrderTicket> tickets, Split split)
-        {
-            base.ApplySplit(tickets, split);
-        }
-
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
         /// market prices are sufficient for the fill to take place. This is used to emulate the
@@ -56,9 +46,7 @@ namespace QuantConnect.Brokerages
         {
 
             // validate security type
-            if (security.Type != SecurityType.Equity &&
-                security.Type != SecurityType.Option &&
-                security.Type != SecurityType.Future)
+            if (security.Type != SecurityType.Equity)
             {
                 return false;
             }
@@ -89,9 +77,7 @@ namespace QuantConnect.Brokerages
             message = null;
 
             // validate security type
-            if (security.Type != SecurityType.Equity &&
-                security.Type != SecurityType.Option &&
-                security.Type != SecurityType.Future)
+            if (security.Type != SecurityType.Equity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Invariant($"The {nameof(ZerodhaBrokerageModel)} does not support {security.Type} security type.")
@@ -183,8 +169,7 @@ namespace QuantConnect.Brokerages
         {
             var map = DefaultMarketMap.ToDictionary();
             map[SecurityType.Equity] = Market.NSE;
-            map[SecurityType.Future] = Market.NFO;
-            map[SecurityType.Option] = Market.NFO;
+
             return map.ToReadOnlyDictionary();
         }
     }
