@@ -50,6 +50,11 @@ namespace QuantConnect.Report.ReportElements
             var capacity = decimal.Parse(capacityUsd.Replace("$", ""), NumberStyles.Any, CultureInfo.InvariantCulture);
             Result = capacity;
 
+            if (capacity == 0m)
+            {
+                return "-";
+            }
+
             return FormatNumber(capacity);
         }
 
