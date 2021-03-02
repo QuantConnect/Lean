@@ -39,11 +39,10 @@ namespace QuantConnect.Brokerages.Zerodha
             switch (lookupSymbol.SecurityType)
             {
                 case SecurityType.Option:
-                    // for option, futures contract we search the underlying
-                    lookupFunc = symbol => symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
+                    throw new ArgumentException("Lean does not currently support Option for Zerodha");
                     break;
                 case SecurityType.Future:
-                    lookupFunc = symbol => symbol.ID.Symbol;
+                    throw new ArgumentException("Lean does not currently support Future for Zerodha");
                     break;
                 default:
                     lookupFunc = symbol => symbol.Value;

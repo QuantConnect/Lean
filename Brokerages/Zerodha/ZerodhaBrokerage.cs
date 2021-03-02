@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.Zerodha
     /// Zerodha Brokerage implementation
     /// </summary>
     [BrokerageFactory(typeof(ZerodhaBrokerageFactory))]
-    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IOptionChainProvider
+    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         #region Declarations
         private const int ConnectionTimeout = 30000;
