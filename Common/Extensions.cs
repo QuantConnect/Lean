@@ -835,6 +835,52 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts a decimal into a rounded number ending with K (thousands), M (millions), B (billions), etc.
+        /// </summary>
+        /// <param name="number">Number to convert</param>
+        /// <returns>Formatted number with figures written in shorthand form</returns>
+        public static string ToFinancialFigures(this decimal number)
+        {
+            if (number < 1000)
+            {
+                return number.ToStringInvariant();
+            }
+
+            // Subtract by multiples of 5 to round down to nearest round number
+            if (number < 10000)
+            {
+                return $"{number - 5m:#,.##}K";
+            }
+
+            if (number < 100000)
+            {
+                return $"{number - 50m:#,.#}K";
+            }
+
+            if (number < 1000000)
+            {
+                return $"{number - 500m:#,.}K";
+            }
+
+            if (number < 10000000)
+            {
+                return $"{number - 5000m:#,,.##}M";
+            }
+
+            if (number < 100000000)
+            {
+                return $"{number - 50000m:#,,.#}M";
+            }
+
+            if (number < 1000000000)
+            {
+                return $"{number - 500000m:#,,.}M";
+            }
+
+            return $"{number - 5000000m:#,,,.##}B";
+        }
+
+        /// <summary>
         /// Will truncate the provided decimal, without rounding, to 3 decimal places
         /// </summary>
         /// <param name="value">The value to truncate</param>

@@ -47,7 +47,9 @@ namespace QuantConnect.Report.ReportElements
                 return "-";
             }
 
-            var capacity = decimal.Parse(capacityUsd.Replace("$", ""), NumberStyles.Any, CultureInfo.InvariantCulture);
+            var capacity = decimal.Parse(capacityUsd.Replace("$", ""), NumberStyles.Any, CultureInfo.InvariantCulture)
+                .RoundToSignificantDigits(2);
+
             Result = capacity;
 
             if (capacity == 0m)
@@ -55,48 +57,7 @@ namespace QuantConnect.Report.ReportElements
                 return "-";
             }
 
-            return FormatNumber(capacity);
-        }
-
-        private static string FormatNumber(decimal number)
-        {
-            if (number < 1000)
-            {
-                return number.ToStringInvariant();
-            }
-
-            // Subtract by multiples of 5 to round down to nearest round number
-            if (number < 10000)
-            {
-                return $"{number - 5m:#,.##}K";
-            }
-
-            if (number < 100000)
-            {
-                return $"{number - 50m:#,.#}K";
-            }
-
-            if (number < 1000000)
-            {
-                return $"{number - 500m:#,.}K";
-            }
-
-            if (number < 10000000)
-            {
-                return $"{number - 5000m:#,,.##}M";
-            }
-
-            if (number < 100000000)
-            {
-                return $"{number - 50000m:#,,.#}M";
-            }
-
-            if (number < 1000000000)
-            {
-                return $"{number - 500000m:#,,.}M";
-            }
-
-            return $"{number - 5000000m:#,,,.##}B";
+            return capacity.ToFinancialFigures();
         }
     }
 }

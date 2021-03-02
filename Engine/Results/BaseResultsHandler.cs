@@ -560,7 +560,7 @@ namespace QuantConnect.Lean.Engine.Results
             runtimeStatistics["Volume"] = accountCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
             if (capacityEstimate != null)
             {
-                runtimeStatistics["Capacity"] = accountCurrencySymbol + capacityEstimate.Value.ToStringInvariant("N2");
+                runtimeStatistics["Capacity"] = accountCurrencySymbol + capacityEstimate.Value.RoundToSignificantDigits(2).ToFinancialFigures();
             }
 
             return runtimeStatistics;
