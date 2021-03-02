@@ -532,7 +532,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// Gets the algorithm runtime statistics
         /// </summary>
         protected Dictionary<string, string> GetAlgorithmRuntimeStatistics(Dictionary<string, string> summary,
-            Dictionary<string, string> runtimeStatistics = null)
+            Dictionary<string, string> runtimeStatistics = null,
+            decimal? capacityEstimate = null)
         {
             if (runtimeStatistics == null)
             {
@@ -557,6 +558,10 @@ namespace QuantConnect.Lean.Engine.Results
             runtimeStatistics["Equity"] = accountCurrencySymbol + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
             runtimeStatistics["Holdings"] = accountCurrencySymbol + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
             runtimeStatistics["Volume"] = accountCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
+            if (capacityEstimate != null)
+            {
+                runtimeStatistics["Capacity"] = accountCurrencySymbol + capacityEstimate.Value.ToStringInvariant("N2");
+            }
 
             return runtimeStatistics;
         }

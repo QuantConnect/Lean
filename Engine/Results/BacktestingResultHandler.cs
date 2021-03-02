@@ -203,7 +203,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                 }
                 var summary = GenerateStatisticsResults(performanceCharts, estimatedStrategyCapacity: _capacityEstimate.Capacity).Summary;
-                GetAlgorithmRuntimeStatistics(summary, runtimeStatistics);
+                GetAlgorithmRuntimeStatistics(summary, runtimeStatistics, _capacityEstimate.Capacity);
 
                 var progress = (decimal)_daysProcessed / _jobDays;
                 if (progress > 0.999m) progress = 0.999m;
@@ -348,7 +348,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
                     var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate.Capacity);
-                    var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
+                    var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary, capacityEstimate: _capacityEstimate.Capacity);
 
                     FinalStatistics = statisticsResults.Summary;
 
