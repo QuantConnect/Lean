@@ -41,6 +41,8 @@ namespace QuantConnect.Tests.Indicators
             Assert.True(indicator.LowPivotPoints.Length > 0);
             Assert.True(indicator.PivotPoints.Length > 0);
             Assert.AreEqual(indicator.PivotPoints.Length, indicator.HighPivotPoints.Length + indicator.LowPivotPoints.Length);
+
+            Assert.That(indicator.PivotPoints, Is.Ordered.Descending.By("Time"));
         }
     }
 }

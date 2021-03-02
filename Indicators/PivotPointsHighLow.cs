@@ -43,7 +43,7 @@ namespace QuantConnect.Indicators
         public PivotPoint[] PivotPoints;
 
         /// <summary>
-        /// 
+        /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
         /// </summary>
         /// <param name="length"></param>
         public PivotPointsHighLow(int length)
@@ -51,7 +51,7 @@ namespace QuantConnect.Indicators
         { }
 
         /// <summary>
-        /// 
+        /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
         /// </summary>
         /// <param name="name"></param>
         /// <param name="period"></param>
@@ -140,11 +140,11 @@ namespace QuantConnect.Indicators
                 tempArray = new PivotPoint[size];
                 for (var n = 0; n < array.Length; n++)
                 {
-                    tempArray[n] = array[n];
+                    tempArray[n + 1] = array[n];
                 }
             }
 
-            tempArray[size - 1] = point;
+            tempArray[0] = point;
             array = tempArray;
         }
     }
