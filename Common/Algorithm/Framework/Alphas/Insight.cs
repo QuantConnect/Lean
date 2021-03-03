@@ -38,12 +38,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the unique identifier for this insight
         /// </summary>
-        public Guid Id { get; private set; }
+        public Guid Id { get; protected set; }
 
         /// <summary>
         /// Gets the group id this insight belongs to, null if not in a group
         /// </summary>
-        public Guid? GroupId { get; private set; }
+        public Guid? GroupId { get; protected set; }
 
         /// <summary>
         /// Gets an identifier for the source model that generated this insight.
@@ -115,12 +115,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the most recent scores for this insight
         /// </summary>
-        public InsightScore Score { get; private set; }
+        public InsightScore Score { get; protected set; }
 
         /// <summary>
         /// Gets the estimated value of this insight in the account currency
         /// </summary>
-        public decimal EstimatedValue { get; internal set; }
+        public decimal EstimatedValue { get; protected set; }
 
         /// <summary>
         /// Determines whether or not this insight is considered expired at the specified <paramref name="utcTime"/>
