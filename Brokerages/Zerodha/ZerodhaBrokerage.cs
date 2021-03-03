@@ -174,7 +174,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, market);
                 if (instrumentToken == 0)
                 {
-                    Log.Error("Invalid Zerodha Instrument token");
+                    Log.Error("ZerodhaBrokerage.Subscribe(): Invalid Zerodha Instrument token");
                     continue;
                 }
                 if (!subscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
@@ -233,7 +233,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
                     if (instrumentToken == 0)
                     {
-                        Log.Error("Invalid Zerodha Instrument token");
+                        Log.Error("ZerodhaBrokerage.Unsubscribe(): Invalid Zerodha Instrument token");
                         continue;
                     }
                     if (!unSubscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
