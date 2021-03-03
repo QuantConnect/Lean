@@ -257,7 +257,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// Gets Quote using Zerodha API
         /// </summary>
         /// <returns> Quote</returns>
-        private Quote GetQuote(Symbol symbol)
+        public Quote GetQuote(Symbol symbol)
         {
             var instrument = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
             var instrumentIds = new string[] { instrument.ToStringInvariant() };
