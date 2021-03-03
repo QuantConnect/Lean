@@ -34,7 +34,7 @@ using Newtonsoft.Json.Linq;
 using NodaTime;
 using QuantConnect.Data.Market;
 using QuantConnect.Configuration;
-
+using QuantConnect.Util;
 using Order = QuantConnect.Orders.Order;
 using OrderType = QuantConnect.Orders.OrderType;
 
@@ -175,6 +175,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 if (instrumentToken == 0)
                 {
                     Log.Error("Invalid Zerodha Instrument token");
+                    continue;
                 }
                 if (!subscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
                 {
@@ -183,8 +184,9 @@ namespace QuantConnect.Brokerages.Zerodha
                     _subscriptionsById[instrumentToken.ToStringInvariant()] = symbol;
                 }
             }
-            string request = "{\"a\":\"subscribe\",\"v\":[" + String.Join(",", subscribeInstrumentTokens.ToArray()) + "]}";
-            string requestFullMode = "{\"a\":\"mode\",\"v\":[\"full\",[" + String.Join(",", subscribeInstrumentTokens.ToArray()) + "]]}";
+            //Websocket Data subscription modes. Full mode gives depth of asks and bids along with basic data.
+            var request = "{\"a\":\"subscribe\",\"v\":[" + String.Join(",", subscribeInstrumentTokens.ToArray()) + "]}";
+            var requestFullMode = "{\"a\":\"mode\",\"v\":[\"full\",[" + String.Join(",", subscribeInstrumentTokens.ToArray()) + "]]}";
             WebSocket.Send(request);
             WebSocket.Send(requestFullMode);
         }
@@ -232,6 +234,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     if (instrumentToken == 0)
                     {
                         Log.Error("Invalid Zerodha Instrument token");
+                        continue;
                     }
                     if (!unSubscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
                     {
@@ -241,7 +244,7 @@ namespace QuantConnect.Brokerages.Zerodha
                         _subscriptionsById.TryRemove(instrumentToken.ToStringInvariant(), out unSubscribeSymbol);
                     }
                 }
-                string request = "{\"a\":\"unsubscribe\",\"v\":[" + String.Join(",", unSubscribeInstrumentTokens.ToArray()) + "]}";
+                var request = "{\"a\":\"unsubscribe\",\"v\":[" + String.Join(",", unSubscribeInstrumentTokens.ToArray()) + "]}";
                 WebSocket.Send(request);
                 return true;
             }
@@ -254,7 +257,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// Gets Quote using Zerodha API
         /// </summary>
         /// <returns> Quote</returns>
-        public Quote GetQuote(Symbol symbol)
+        private Quote GetQuote(Symbol symbol)
         {
             var instrument = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
             var instrumentIds = new string[] { instrument.ToStringInvariant() };
@@ -1062,6 +1065,11 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         public override void Dispose()
         {
+            _aggregator.DisposeSafely();
+            if (WebSocket.IsOpen)
+            {
+                WebSocket.Close();
+            }
         }
 
         private void OnError(object sender, WebSocketError e)
@@ -1171,10 +1179,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal amount)
         {
-            //Log.Trace($"Trade: {time:O} {symbol} - Price:{price}, Quantity:{amount}");
-
             var tick = new Tick(time, symbol, string.Empty, symbol.ID.Market, Math.Abs(amount), price);
-
             _aggregator.Update(tick);
         }
 
@@ -1182,10 +1187,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             if (bidPrice > 0 && askPrice > 0)
             {
-                //Log.Trace($"Quote: {time:O} {symbol} - BidPrice:{bidPrice}, BidSize:{bidSize}, AskPrice:{askPrice}, AskSize:{askSize}");
-
                 var tick = new Tick(time, symbol, string.Empty, string.Empty, bidSize, bidPrice, askSize, askPrice);
-
                 _aggregator.Update(tick);
             }
         }
