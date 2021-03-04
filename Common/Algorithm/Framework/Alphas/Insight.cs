@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the estimated value of this insight in the account currency
         /// </summary>
-        public decimal EstimatedValue { get; internal set; }
+        public decimal EstimatedValue { get; protected internal set; }
 
         /// <summary>
         /// Determines whether or not this insight is considered expired at the specified <paramref name="utcTime"/>
