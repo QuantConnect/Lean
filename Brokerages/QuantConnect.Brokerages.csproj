@@ -51,9 +51,6 @@
     <Reference Include="CSharpAPI">
       <HintPath>InteractiveBrokers\CSharpAPI.dll</HintPath>
     </Reference>
-    <Reference Include="QuantConnect.IBAutomater">
-      <HintPath>InteractiveBrokers\QuantConnect.IBAutomater.dll</HintPath>
-    </Reference>
     <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>Fxcm\QuantConnect.Fxcm.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
