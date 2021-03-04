@@ -49,6 +49,11 @@ namespace QuantConnect.Orders
         public string FaProfile { get; set; }
 
         /// <summary>
+        /// If set to true, allows orders to also trigger or fill outside of regular trading hours.
+        /// </summary>
+        public bool OutsideRth { get; set; }
+
+        /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
         public override IOrderProperties Clone()
