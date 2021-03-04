@@ -44,6 +44,7 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
   <ItemGroup>
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.0" />
     <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="Accord.Math" Version="3.6.0" />
     <PackageReference Include="AsyncIO" Version="0.1.26.0" />
@@ -71,7 +72,6 @@
     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
     <PackageReference Include="protobuf-net" Version="3.0.29" />
     <PackageReference Include="protobuf-net.Core" Version="3.0.29" />
-    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
     <PackageReference Include="RestSharp" Version="106.6.10" />
     <PackageReference Include="SuperSocket.ClientEngine.Core" Version="0.10.0" />
     <PackageReference Include="System.Buffers" Version="4.5.1" />
@@ -115,29 +115,6 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-  <Choose>
-    <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Content Include="Research\RegressionScripts\Test_QuantBookIndicator.py">

@@ -265,5 +265,8 @@ RUN conda clean -y --all
 # Clean up any unused packages installed by apt-get
 RUN apt-get autoremove --purge -y
 
+# Set PythonDLL variable for PythonNet
+ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.6m.so"
+
 # List all packages
 RUN conda list

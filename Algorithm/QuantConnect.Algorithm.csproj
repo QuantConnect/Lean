@@ -55,30 +55,8 @@
     <Message Text="IsLinux $(IsLinux)" Importance="high" />
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
-  <Choose>
-    <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
   <ItemGroup>
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.0" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
@@ -86,7 +64,7 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
-    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
+
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

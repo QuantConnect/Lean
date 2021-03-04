@@ -41,36 +41,13 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
   <ItemGroup>
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NodaTime" Version="3.0.5" />
-    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
   </ItemGroup>
-  <Choose>
-    <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
-      <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
   <ItemGroup>
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
