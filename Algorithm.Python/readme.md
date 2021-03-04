@@ -33,7 +33,7 @@ Before we enable python support, follow the [installation instructions](https://
         - Value of the variable: python installation path.
 4. Install [pandas=0.25.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 5. Install [wrapt=1.11.2](https://pypi.org/project/wrapt/) module.
-6. Reboot computer to ensure changes are propogated.
+6. Reboot computer to ensure changes are propagated.
 
 #### [macOS](https://github.com/QuantConnect/Lean#macos)
 
