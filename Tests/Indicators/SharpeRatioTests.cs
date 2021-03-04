@@ -21,60 +21,60 @@ using System;
 namespace QuantConnect.Tests.Indicators 
 {
 	[TestFixture]
-	public class RollingSharpeRatioTests : CommonIndicatorTests<IndicatorDataPoint>
+	public class SharpeRatioTests : CommonIndicatorTests<IndicatorDataPoint>
     {   
     	protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
     	{
-            return new RollingSharpeRatio("RSR", 5, 5);
+            return new SharpeRatio("SR", 10);
     	}
 
-        protected override string TestFileName => "spy_rsr.txt";
+        protected override string TestFileName => "spy_sr.txt";
 
-        protected override string TestColumnName => "RSR_10_10";
+        protected override string TestColumnName => "SR_10";
 
         [Test]
         public void TestTradeBarsWithSameValue() 
         {
     		// With the value not changing, the indicator should return default value 0m.
-    		var rsr = new RollingSharpeRatio("RSR", 10, 10);
+    		var sr = new SharpeRatio("SR", 10);
     		
     		// push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
     		for(int i = 0; i < 20; i++) {
     			IndicatorDataPoint point = new IndicatorDataPoint(new DateTime(), 100000m);
-    			rsr.Update(point);
+    			sr.Update(point);
     		}
     		
-    		Assert.AreEqual(rsr.Current.Value, 0m);
+    		Assert.AreEqual(sr.Current.Value, 0m);
         }
         
         [Test]
         public void TestTradeBarsWithDifferingValue() 
         {
         	// With the value changing, the indicator should return a value that is not the default 0m.
-        	var rsr = new RollingSharpeRatio("RSR", 10, 10);
+        	var sr = new SharpeRatio("SR", 10);
     		
     		// push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
     		for(int i = 0; i < 20; i++) {
     			IndicatorDataPoint point = new IndicatorDataPoint(new DateTime(), 100000m + i);
-    			rsr.Update(point);
+    			sr.Update(point);
     		}
     		
-    		Assert.AreNotEqual(rsr.Current.Value, 0m);
+    		Assert.AreNotEqual(sr.Current.Value, 0m);
         }
         
         [Test]
         public void TestDivByZero()
         {
         	// With the value changing, the indicator should return a value that is not the default 0m.
-        	var rsr = new RollingSharpeRatio("RSR", 10, 10);
+        	var sr = new SharpeRatio("SR", 10);
     		
     		// push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
     		for(int i = 0; i < 20; i++) {
     			IndicatorDataPoint point = new IndicatorDataPoint(new DateTime(), 0);
-    			rsr.Update(point);
+    			sr.Update(point);
     		}
     		
-    		Assert.AreEqual(rsr.Current.Value, 0m);
+    		Assert.AreEqual(sr.Current.Value, 0m);
         }
     }
 }
