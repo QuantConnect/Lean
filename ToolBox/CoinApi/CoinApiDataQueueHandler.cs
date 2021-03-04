@@ -260,7 +260,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
         private void SendHelloMessage(IEnumerable<string> subscribeFilter)
         {
-            var list = subscribeFilter.ToList();
+            var list = subscribeFilter.Select(x => string.Concat(x, "$")).ToList();
             if (list.Count == 0)
             {
                 // If we use a null or empty filter in the CoinAPI hello message
