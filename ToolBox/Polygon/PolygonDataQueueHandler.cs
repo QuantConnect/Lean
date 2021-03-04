@@ -46,7 +46,7 @@ namespace QuantConnect.ToolBox.Polygon
     public class PolygonDataQueueHandler : SynchronizingHistoryProvider, IDataQueueHandler
     {
         private const string HistoryBaseUrl = "https://api.polygon.io";
-
+        private const int BaseAggregateBarsLimit = 50000;
         private readonly string _apiKey = Config.Get("polygon-api-key");
 
         private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
@@ -190,6 +190,7 @@ namespace QuantConnect.ToolBox.Polygon
         /// </summary>
         public void Dispose()
         {
+            _dataAggregator.Dispose();
         }
 
         #endregion
@@ -629,40 +630,61 @@ namespace QuantConnect.ToolBox.Polygon
                     tickerPrefix = string.Empty;
                     break;
             }
+            
+            var resolutionTimeSpan = request.Resolution.ToTimeSpan();
+            var lastRequestedBarStartTime = request.EndTimeUtc.RoundDown(resolutionTimeSpan);
+            var start = request.StartTimeUtc.RoundDown(TimeSpan.FromDays(1));
+            var end = lastRequestedBarStartTime;
 
-            var start = request.StartTimeUtc;
-            var end = request.EndTimeUtc;
+            // Perform a check of the number of bars requested, this must not exceed a static limit
+            var aggregatesCountPerResolution = GetArrgegatesCountPerResoltion(request.Resolution);
+            var dataRequestedCount = (end - start).Ticks
+                                     / resolutionTimeSpan.Ticks / aggregatesCountPerResolution;
 
-            using (var client = new WebClient())
+            if (dataRequestedCount > BaseAggregateBarsLimit)
             {
-                var url = $"{HistoryBaseUrl}/v2/aggs/ticker/{tickerPrefix}{request.Symbol.Value}/range/1/{historyTimespan}/{start.Date:yyyy-MM-dd}/{end.Date:yyyy-MM-dd}?apiKey={_apiKey}";
+                end = start + TimeSpan.FromTicks(resolutionTimeSpan.Ticks * BaseAggregateBarsLimit / aggregatesCountPerResolution);
+                end = end.RoundDown(TimeSpan.FromDays(1));
+            }
 
-                var response = client.DownloadString(url);
-
-                var result = JsonConvert.DeserializeObject<AggregatesResponse>(response);
-                if (result.Results == null)
+            while (start < lastRequestedBarStartTime)
+            {
+                using (var client = new WebClient())
                 {
-                    yield break;
-                }
+                    var url = $"{HistoryBaseUrl}/v2/aggs/ticker/{tickerPrefix}{request.Symbol.Value}/range/1/{historyTimespan}/{start.Date:yyyy-MM-dd}/{end.Date:yyyy-MM-dd}" +
+                              $"?apiKey={_apiKey}&limit={BaseAggregateBarsLimit}";
 
-                foreach (var row in result.Results)
-                {
-                    var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
+                    var response = client.DownloadString(url);
 
-                    if (utcTime < request.StartTimeUtc)
-                    {
-                        continue;
-                    }
-
-                    if (utcTime > request.EndTimeUtc.Add(request.Resolution.ToTimeSpan()))
+                    var result = JsonConvert.DeserializeObject<AggregatesResponse>(response);
+                    if (result.Results == null)
                     {
                         yield break;
                     }
 
-                    var time = GetTickTime(request.Symbol, utcTime);
+                    foreach (var row in result.Results)
+                    {
+                        var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
 
-                    yield return new TradeBar(time, request.Symbol, row.Open, row.High, row.Low, row.Close, row.Volume);
+                        if (utcTime < request.StartTimeUtc)
+                        {
+                            continue;
+                        }
+
+                        if (utcTime > request.EndTimeUtc.Add(request.Resolution.ToTimeSpan()))
+                        {
+                            yield break;
+                        }
+
+                        var time = GetTickTime(request.Symbol, utcTime);
+
+                        yield return new TradeBar(time, request.Symbol, row.Open, row.High, row.Low, row.Close, row.Volume);
+                    }
                 }
+
+                start = end;
+                end += TimeSpan.FromTicks(resolutionTimeSpan.Ticks * BaseAggregateBarsLimit / aggregatesCountPerResolution);
+                end = end.RoundDown(TimeSpan.FromDays(1));
             }
         }
 
@@ -913,6 +935,21 @@ namespace QuantConnect.ToolBox.Polygon
         {
             string market;
             return _cryptoExchangeMap.TryGetValue(exchangeId, out market) ? market : string.Empty;
+        }
+
+        private static int GetArrgegatesCountPerResoltion(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Minute:
+                    return 1;
+                case Resolution.Hour:
+                    return 60;
+                case Resolution.Daily:
+                    return 1;
+                default:
+                    throw new NotSupportedException($"No data aggregation for {resolution} resolution");
+            }
         }
     }
 }

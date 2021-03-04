@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -30,6 +31,12 @@ namespace QuantConnect.Tests.ToolBox
     [Explicit("Tests require a Polygon.io api key.")]
     public class PolygonHistoryTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            Config.Set("polygon-api-key", "");
+        }
+
         [TestCaseSource(nameof(HistoryTestCases))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool shouldBeEmpty)
         {
@@ -60,10 +67,11 @@ namespace QuantConnect.Tests.ToolBox
 
             if (dataType == typeof(TradeBar))
             {
+                var i = -1;
                 foreach (var slice in history)
                 {
                     var bar = slice.Bars[symbol];
-                    Log.Trace($"{bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}");
+                    Log.Trace($"{++i} {bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}");
                 }
             }
             else if (dataType == typeof(QuoteBar))
@@ -95,6 +103,10 @@ namespace QuantConnect.Tests.ToolBox
             else
             {
                 Assert.IsTrue(history.Count > 0);
+
+                // No repeating bars
+                var timesArray = history.Select(x => x.Time).ToArray();
+                Assert.AreEqual(timesArray.Length, timesArray.Distinct().Count());
             }
         }
 
@@ -106,6 +118,8 @@ namespace QuantConnect.Tests.ToolBox
             new TestCaseData(Symbols.SPY, Resolution.Minute, TickType.Trade, Time.OneHour, false),
             new TestCaseData(Symbols.SPY, Resolution.Hour, TickType.Trade, TimeSpan.FromHours(6), false),
             new TestCaseData(Symbols.SPY, Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
+            // long request
+            new TestCaseData(Symbols.SPY, Resolution.Minute, TickType.Trade, TimeSpan.FromDays(100), false),
 
             // equity (quotes)
             new TestCaseData(Symbols.SPY, Resolution.Tick, TickType.Quote, TimeSpan.FromSeconds(15), false),
