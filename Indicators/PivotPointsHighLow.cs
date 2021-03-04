@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -26,21 +27,12 @@ namespace QuantConnect.Indicators
     public class PivotPointsHighLow : WindowIndicator<IBaseDataBar>
     {
         private readonly int _length;
+        private PivotPoint[] _pivotPoints;
 
         /// <summary>
-        /// Array of high pivot points, such that first element is nearest to the present date
+        /// Event informs of new pivot point formed with new data update
         /// </summary>
-        public PivotPoint[] HighPivotPoints;
-
-        /// <summary>
-        /// Array of low pivot points, such that first element is nearest to the present date
-        /// </summary>
-        public PivotPoint[] LowPivotPoints;
-
-        /// <summary>
-        /// Array of both high and low pivot points, such that first element is nearest to the present date
-        /// </summary>
-        public PivotPoint[] PivotPoints;
+        public event EventHandler<PivotPointsEventArgs> NewPivotPointFormed;
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
@@ -95,37 +87,77 @@ namespace QuantConnect.Indicators
             if (isHigh && isLow)
             {
                 var pointHigh = new PivotPoint(PivotPointType.High, middlePoint.High, middlePoint.EndTime);
-                Push(pointHigh, ref HighPivotPoints);
-                Push(pointHigh, ref PivotPoints);
+                Push(pointHigh, ref _pivotPoints);
+                OnNewPivotPointFormed(new PivotPointsEventArgs(pointHigh));
 
                 var pointLow = new PivotPoint(PivotPointType.Low, middlePoint.Low, middlePoint.EndTime);
-                Push(pointLow, ref LowPivotPoints);
-                Push(pointLow, ref PivotPoints);
+                Push(pointLow, ref _pivotPoints);
+                OnNewPivotPointFormed(new PivotPointsEventArgs(pointLow));
+
                 return 2m;
             }
 
             if (isHigh)
             {
                 var point = new PivotPoint(PivotPointType.High, middlePoint.High, middlePoint.EndTime);
-                Push(point, ref HighPivotPoints);
-                Push(point, ref PivotPoints);
+                Push(point, ref _pivotPoints);
+                OnNewPivotPointFormed(new PivotPointsEventArgs(point));
+
                 return 1m;
             }
 
             if (isLow)
             {
                 var point = new PivotPoint(PivotPointType.Low, middlePoint.Low, middlePoint.EndTime);
-                Push(point, ref LowPivotPoints);
-                Push(point, ref PivotPoints);
+                Push(point, ref _pivotPoints);
+                OnNewPivotPointFormed(new PivotPointsEventArgs(point));
+
                 return -1m;
             }
 
             return 0m;
         }
 
+        /// <summary>
+        /// Get current high pivot points, in the order such that first element in collection is the nearest to the present date
+        /// </summary>
+        /// <returns></returns>
+        public PivotPoint[] GetHighPivotPointsArray()
+        {
+            return _pivotPoints.Where(p => p.PivotPointType == PivotPointType.High).ToArray();
+        }
+
+        /// <summary>
+        /// Get current low pivot points, in the order such that first element in collection is the nearest to the present date
+        /// </summary>
+        /// <returns></returns>
+        public PivotPoint[] GetLowPivotPointsArray()
+        {
+            return _pivotPoints.Where(p => p.PivotPointType == PivotPointType.Low).ToArray();
+        }
+
+        /// <summary>
+        /// Get all pivot points, in the order such that first element in collection is the nearest to the present date
+        /// </summary>
+        /// <returns></returns>
+        public PivotPoint[] GetAllPivotPointsArray()
+        {
+            // Get the copy of array
+            return _pivotPoints.ToArray();
+        }
+
+        /// <summary>
+        /// Invokes NewPivotPointFormed event
+        /// </summary>
+        /// <param name="pivotPointsEventArgs"></param>
+        protected virtual void OnNewPivotPointFormed(PivotPointsEventArgs pivotPointsEventArgs)
+        {
+            NewPivotPointFormed?.Invoke(this, pivotPointsEventArgs);
+        }
+
         // Will replace an array passed by reference with a new one, containing new pivot point,
         // where the the order of the elements will be from nearest to farthest in time
-        private void Push(PivotPoint point, ref PivotPoint[] array)
+        private static void Push(PivotPoint point, ref PivotPoint[] array)
         {
             PivotPoint[] tempArray;
             int size;
@@ -189,5 +221,25 @@ namespace QuantConnect.Indicators
         /// Low pivot point
         /// </summary>
         Low = -1
+    }
+
+    /// <summary>
+    /// Event arguments class for the <see cref="PivotPointsHighLow.NewPivotPointFormed"/> event
+    /// </summary>
+    public class PivotPointsEventArgs : EventArgs
+    {
+        /// <summary>
+        /// New pivot point
+        /// </summary>
+        public PivotPoint PivotPoint { get; }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="PivotPointsEventArgs"/>
+        /// </summary>
+        /// <param name="pivotPoint"></param>
+        public PivotPointsEventArgs(PivotPoint pivotPoint)
+        {
+            PivotPoint = pivotPoint;
+        }
     }
 }
