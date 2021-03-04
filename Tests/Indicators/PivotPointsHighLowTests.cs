@@ -37,12 +37,16 @@ namespace QuantConnect.Tests.Indicators
             var indicator = (PivotPointsHighLow)CreateIndicator();
             RunTestIndicator(indicator);
 
-            Assert.True(indicator.HighPivotPoints.Length > 0);
-            Assert.True(indicator.LowPivotPoints.Length > 0);
-            Assert.True(indicator.PivotPoints.Length > 0);
-            Assert.AreEqual(indicator.PivotPoints.Length, indicator.HighPivotPoints.Length + indicator.LowPivotPoints.Length);
+            var highPivotPoints = indicator.GetHighPivotPointsArray();
+            var lowPivotPoints = indicator.GetLowPivotPointsArray();
+            var pivotPoints = indicator.GetAllPivotPointsArray();
 
-            Assert.That(indicator.PivotPoints, Is.Ordered.Descending.By("Time"));
+            Assert.True(highPivotPoints.Length > 0);
+            Assert.True(lowPivotPoints.Length > 0);
+            Assert.True(pivotPoints.Length > 0);
+            Assert.AreEqual(pivotPoints.Length, highPivotPoints.Length + lowPivotPoints.Length);
+
+            Assert.That(pivotPoints, Is.Ordered.Descending.By("Time"));
         }
     }
 }
