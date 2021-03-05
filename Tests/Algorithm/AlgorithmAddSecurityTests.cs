@@ -24,6 +24,7 @@ using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System;
+using QuantConnect.Securities.Index;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -68,6 +69,9 @@ namespace QuantConnect.Tests.Algorithm
                         break;
                     case SecurityType.Cfd:
                         var cfd = (Cfd)security;
+                        break;
+                    case SecurityType.Index:
+                        var index = (Index)security;
                         break;
                     case SecurityType.Crypto:
                         var crypto = (Crypto)security;

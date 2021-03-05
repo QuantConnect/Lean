@@ -351,6 +351,11 @@ namespace QuantConnect
         /// Contract For a Difference Security Type.
         /// </summary>
         Cfd,
+        
+        /// <summary>
+        /// Index Security Type.
+        /// </summary>
+        Index,
 
         /// <summary>
         /// Cryptocurrency Security Type.
