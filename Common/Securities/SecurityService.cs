@@ -166,6 +166,10 @@ namespace QuantConnect.Securities
                 case SecurityType.Cfd:
                     security = new Cfd.Cfd(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
+                
+                case SecurityType.Index:
+                    security = new Index.Index(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
+                    break;
 
                 case SecurityType.Crypto:
                     security = new Crypto.Crypto(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
