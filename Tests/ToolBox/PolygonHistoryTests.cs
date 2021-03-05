@@ -116,8 +116,6 @@ namespace QuantConnect.Tests.ToolBox
             new TestCaseData(Symbols.SPY, Resolution.Minute, TickType.Trade, Time.OneHour, false),
             new TestCaseData(Symbols.SPY, Resolution.Hour, TickType.Trade, TimeSpan.FromHours(6), false),
             new TestCaseData(Symbols.SPY, Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
-            // long request
-            new TestCaseData(Symbols.SPY, Resolution.Minute, TickType.Trade, TimeSpan.FromDays(1), false),
 
             // equity (quotes)
             new TestCaseData(Symbols.SPY, Resolution.Tick, TickType.Quote, TimeSpan.FromSeconds(15), false),
