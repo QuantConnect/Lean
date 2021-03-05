@@ -633,7 +633,7 @@ namespace QuantConnect.ToolBox.Polygon
             
             var resolutionTimeSpan = request.Resolution.ToTimeSpan();
             var lastRequestedBarStartTime = request.EndTimeUtc.RoundDown(resolutionTimeSpan);
-            var start = request.StartTimeUtc.RoundDown(TimeSpan.FromDays(1));
+            var start = request.StartTimeUtc.Date;
             var end = lastRequestedBarStartTime;
 
             // Perform a check of the number of bars requested, this must not exceed a static limit
@@ -644,10 +644,10 @@ namespace QuantConnect.ToolBox.Polygon
             if (dataRequestedCount > BaseAggregateBarsLimit)
             {
                 end = start + TimeSpan.FromTicks(resolutionTimeSpan.Ticks * BaseAggregateBarsLimit / aggregatesCountPerResolution);
-                end = end.RoundDown(TimeSpan.FromDays(1));
+                end = end.Date;
             }
 
-            while (start < lastRequestedBarStartTime)
+            while (start < lastRequestedBarStartTime.Date)
             {
                 using (var client = new WebClient())
                 {
@@ -682,9 +682,15 @@ namespace QuantConnect.ToolBox.Polygon
                     }
                 }
 
-                start = end;
+                start = end.AddDays(1);
                 end += TimeSpan.FromTicks(resolutionTimeSpan.Ticks * BaseAggregateBarsLimit / aggregatesCountPerResolution);
-                end = end.RoundDown(TimeSpan.FromDays(1));
+
+                if (end > lastRequestedBarStartTime)
+                {
+                    end = lastRequestedBarStartTime;
+                }
+
+                end = end.Date;
             }
         }
 

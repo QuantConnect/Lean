@@ -31,18 +31,21 @@ namespace QuantConnect.Tests.ToolBox
     [Explicit("Tests require a Polygon.io api key.")]
     public class PolygonHistoryTests
     {
+        private PolygonDataQueueHandler _historyProvider;
+
         [SetUp]
         public void SetUp()
         {
             Config.Set("polygon-api-key", "");
+
+            _historyProvider = new PolygonDataQueueHandler(false);
+            _historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
+
         }
 
         [TestCaseSource(nameof(HistoryTestCases))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool shouldBeEmpty)
         {
-            var historyProvider = new PolygonDataQueueHandler(false);
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
-
             var now = new DateTime(2020, 5, 20, 15, 0, 0).RoundDown(resolution.ToTimeSpan());
 
             var dataType = LeanData.GetDataType(resolution, tickType);
@@ -63,15 +66,14 @@ namespace QuantConnect.Tests.ToolBox
                     tickType)
             };
 
-            var history = historyProvider.GetHistory(requests, TimeZones.NewYork).ToList();
+            var history = _historyProvider.GetHistory(requests, TimeZones.NewYork).ToList();
 
             if (dataType == typeof(TradeBar))
             {
-                var i = -1;
                 foreach (var slice in history)
                 {
                     var bar = slice.Bars[symbol];
-                    Log.Trace($"{++i} {bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}");
+                    Log.Trace($"{bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}");
                 }
             }
             else if (dataType == typeof(QuoteBar))
@@ -94,7 +96,7 @@ namespace QuantConnect.Tests.ToolBox
                 }
             }
 
-            Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
+            Log.Trace("Data points retrieved: " + _historyProvider.DataPointCount);
 
             if (shouldBeEmpty)
             {
@@ -103,10 +105,6 @@ namespace QuantConnect.Tests.ToolBox
             else
             {
                 Assert.IsTrue(history.Count > 0);
-
-                // No repeating bars
-                var timesArray = history.Select(x => x.Time).ToArray();
-                Assert.AreEqual(timesArray.Length, timesArray.Distinct().Count());
             }
         }
 
@@ -119,7 +117,7 @@ namespace QuantConnect.Tests.ToolBox
             new TestCaseData(Symbols.SPY, Resolution.Hour, TickType.Trade, TimeSpan.FromHours(6), false),
             new TestCaseData(Symbols.SPY, Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
             // long request
-            new TestCaseData(Symbols.SPY, Resolution.Minute, TickType.Trade, TimeSpan.FromDays(100), false),
+            new TestCaseData(Symbols.SPY, Resolution.Minute, TickType.Trade, TimeSpan.FromDays(1), false),
 
             // equity (quotes)
             new TestCaseData(Symbols.SPY, Resolution.Tick, TickType.Quote, TimeSpan.FromSeconds(15), false),
@@ -152,5 +150,54 @@ namespace QuantConnect.Tests.ToolBox
             // invalid security type, no error, empty result
             new TestCaseData(Symbols.DE30EUR, Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), true)
         };
+
+        private static TestCaseData[] HistoricalTradeBarsTestCaseDatas => new[]
+        {
+            // long requests
+            new TestCaseData(Symbols.SPY, Resolution.Minute, TickType.Trade, TimeSpan.FromDays(100), true),
+            new TestCaseData(Symbols.SPY, Resolution.Minute, TickType.Trade, TimeSpan.FromDays(200), true),
+        };
+
+        [TestCaseSource(nameof(HistoricalTradeBarsTestCaseDatas))]
+        public void GetHistoricalTradeBarsTest(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool isNonEmptyResult)
+        {
+            var now = new DateTime(2020, 5, 20, 15, 0, 0).RoundDown(resolution.ToTimeSpan());
+            var dataType = LeanData.GetDataType(resolution, tickType);
+
+            var request = new HistoryRequest(now.Add(-period),
+                now,
+                dataType,
+                symbol,
+                resolution,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                TimeZones.NewYork,
+                null,
+                true,
+                false,
+                DataNormalizationMode.Adjusted,
+                tickType);
+
+            var historyArray = _historyProvider.GetHistory(request).ToArray();
+
+            Log.Trace("Data points retrieved: " + _historyProvider.DataPointCount);
+
+            if (isNonEmptyResult)
+            {
+                var i = -1;
+                foreach (var baseData in historyArray)
+                {
+                    var bar = (TradeBar) baseData;
+                    Log.Trace($"{++i} {bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}");
+                }
+
+                // Ordered by time
+                Assert.That(historyArray, Is.Ordered.By("Time"));
+
+                // No repeating bars
+                var timesArray = historyArray.Select(x => x.Time).ToArray();
+                Assert.AreEqual(timesArray.Length, timesArray.Distinct().Count());
+            }
+        }
+
     }
 }
