@@ -256,8 +256,8 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
 
-            var symbol = KnownSymbols.Where(s => s.Value == brokerageSymbol).FirstOrDefault();
-            return GetLeanSymbol(brokerageSymbol.Replace(" ", "").Trim(), symbol.SecurityType, symbol.ID.Market);
+            var symbol = KnownSymbols.FirstOrDefault(s => s.Value == brokerageSymbol);
+            return GetLeanSymbol(brokerageSymbol, symbol.SecurityType, symbol.ID.Market);
         }
 
         /// <summary>

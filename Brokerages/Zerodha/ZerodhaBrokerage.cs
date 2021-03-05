@@ -313,6 +313,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     var direction = orderUpdate.TransactionType == "SELL" ? OrderDirection.Sell : OrderDirection.Buy;
                     var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
                     var orderFee = new OrderFee(new CashAmount(
+                                
                                 CalculateBrokerageOrderFee(orderUpdate.AveragePrice * orderUpdate.FilledQuantity),
                             Currencies.INR
                         ));
@@ -958,6 +959,14 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
+            
+            if (request.DataType != typeof(TradeBar))
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidBarType",
+                    $"{request.DataType} type not supported, no history returned"));
+                yield break;
+            }
+            
             if (request.Symbol.SecurityType != SecurityType.Equity && request.Symbol.SecurityType != SecurityType.Future && request.Symbol.SecurityType != SecurityType.Option)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidSecurityType",
@@ -1054,7 +1063,6 @@ namespace QuantConnect.Brokerages.Zerodha
                     Volume = candle.Volume,
                     Value = candle.Close,
                     DataType = MarketDataType.TradeBar,
-                    Period = period,
                     EndTime = candle.TimeStamp.Add(period).ConvertFromUtc(TimeZones.Kolkata)
                 };
             }
