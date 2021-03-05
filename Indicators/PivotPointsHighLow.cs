@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators
     public class PivotPointsHighLow : WindowIndicator<IBaseDataBar>
     {
         private readonly int _length;
-        private PivotPoint[] _pivotPoints;
+        private PivotPoint[] _pivotPoints = Array.Empty<PivotPoint>();
 
         /// <summary>
         /// Event informs of new pivot point formed with new data update
@@ -121,29 +121,32 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Get current high pivot points, in the order such that first element in collection is the nearest to the present date
         /// </summary>
-        /// <returns></returns>
+        /// <returns>An array of high pivot points.</returns>
+        /// <remarks>Returned array can be empty if no points have been registered yet/</remarks>
         public PivotPoint[] GetHighPivotPointsArray()
         {
-            return _pivotPoints.Where(p => p.PivotPointType == PivotPointType.High).ToArray();
+            return _pivotPoints?.Where(p => p.PivotPointType == PivotPointType.High).ToArray();
         }
 
         /// <summary>
         /// Get current low pivot points, in the order such that first element in collection is the nearest to the present date
         /// </summary>
-        /// <returns></returns>
+        /// <returns>An array of low pivot points.</returns>
+        /// <remarks>Returned array can be empty if no points have been registered yet/</remarks>
         public PivotPoint[] GetLowPivotPointsArray()
         {
-            return _pivotPoints.Where(p => p.PivotPointType == PivotPointType.Low).ToArray();
+            return _pivotPoints?.Where(p => p.PivotPointType == PivotPointType.Low).ToArray();
         }
 
         /// <summary>
         /// Get all pivot points, in the order such that first element in collection is the nearest to the present date
         /// </summary>
-        /// <returns></returns>
+        /// <returns>An array of low and high pivot points. Ordered by time in descending order.</returns>
+        /// <remarks>Returned array can be empty if no points have been registered yet/</remarks>
         public PivotPoint[] GetAllPivotPointsArray()
         {
             // Get the copy of array
-            return _pivotPoints.ToArray();
+            return _pivotPoints?.ToArray();
         }
 
         /// <summary>
