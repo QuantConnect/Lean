@@ -179,6 +179,10 @@ namespace QuantConnect.Data.UniverseSelection
                 case SecurityType.Cfd:
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
                     break;
+                
+                case SecurityType.Index:
+                    sid = SecurityIdentifier.GenerateIndex(ticker, market);
+                    break;
 
                 case SecurityType.Future:
                     sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
