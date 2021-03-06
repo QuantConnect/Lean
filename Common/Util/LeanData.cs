@@ -217,10 +217,10 @@ namespace QuantConnect.Util
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var bar = data as QuoteBar;
+                            var bar = data as TradeBar;
                             if (bar == null)
                             {
-                                throw new ArgumentException("Expected data of type 'QuoteBar'", nameof(data));
+                                throw new ArgumentException("Expected data of type 'TradeBar'", nameof(data));
                             }
                             return ToCsv(milliseconds,
                                 ToNonScaledCsv(bar.Bid), bar.LastBidSize,
@@ -228,10 +228,10 @@ namespace QuantConnect.Util
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = data as QuoteBar;
+                            var bigBar = data as TradeBar;
                             if (bigBar == null)
                             {
-                                throw new ArgumentException("Expected data of type 'QuoteBar'", nameof(data));
+                                throw new ArgumentException("Expected data of type 'TradeBar'", nameof(data));
                             }
                             return ToCsv(longTime,
                                 ToNonScaledCsv(bigBar.Bid), bigBar.LastBidSize,
