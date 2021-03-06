@@ -79,6 +79,8 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         protected string ApiKey;
 
+        private readonly ISecurityProvider _securityProvider;
+
         /// <summary>
         /// Timestamp of most recent heartbeat message
         /// </summary>
@@ -124,7 +126,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        public ZerodhaBrokerage(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator)
+        public ZerodhaBrokerage(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, IAlgorithm algorithm, ISecurityProvider securityProvider, IDataAggregator aggregator)
             : base("Zerodha")
         {
             _tradingSegment = tradingSegment;
@@ -134,6 +136,7 @@ namespace QuantConnect.Brokerages.Zerodha
             _kite = new Kite(apiKey, apiSecret);
             _apiKey = apiKey;
             _accessToken = apiSecret;
+            _securityProvider = securityProvider;
             WebSocket = new ZerodhaWebSocketClientWrapper();
             _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
             WebSocket.Initialize(_wssUrl);
@@ -312,11 +315,12 @@ namespace QuantConnect.Brokerages.Zerodha
                     var fillQuantity = orderUpdate.FilledQuantity;
                     var direction = orderUpdate.TransactionType == "SELL" ? OrderDirection.Sell : OrderDirection.Buy;
                     var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
-                    var orderFee = new OrderFee(new CashAmount(
-                                
-                                CalculateBrokerageOrderFee(orderUpdate.AveragePrice * orderUpdate.FilledQuantity),
-                            Currencies.INR
-                        ));
+
+                    var security = _securityProvider.GetSecurity(order.Symbol);
+                    var orderFee = security.FeeModel.GetOrderFee(
+                        new OrderFeeParameters(security, order));
+
+                    
                     if (direction == OrderDirection.Sell)
                     {
                         fillQuantity = -1 * fillQuantity;
@@ -358,43 +362,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 throw;
             }
         }
-        /// <summary>
-        /// Zerodha brokerage fees calculation
-        /// </summary>
-        /// <param name="orderValue"></param>
-        /// <returns></returns>
-        private decimal CalculateBrokerageOrderFee(decimal orderValue)
-        {
-            bool isSell = orderValue < 0;
-            orderValue = Math.Abs(orderValue);
-            var multiplied = orderValue * 0.0003M;
-            var brokerage = (multiplied > 20) ? 20 : Math.Round(multiplied, 2);
-
-            var turnover = Math.Round(orderValue, 2);
-
-            decimal sttTotal = 0;
-            if (isSell)
-            {
-                sttTotal = Math.Round(orderValue * 0.00025M, 2);
-            }
-
-            var excTransCharge = Math.Round(turnover * 0.0000325M, 2);
-            var cc = 0;
-
-
-            var stax = Math.Round(0.18M * (brokerage + excTransCharge), 2);
-
-            var sebiCharges = Math.Round((turnover * 0.000001M), 2);
-            decimal stampCharges = 0;
-            if (!isSell)
-            {
-                stampCharges = Math.Round(orderValue * 0.00003M, 2);
-            }
-
-            var totalTax = Math.Round(brokerage + sttTotal + excTransCharge + stampCharges + cc + stax + sebiCharges, 2);
-
-            return totalTax;
-        }
+        
 
         /// <summary>
         /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
@@ -486,9 +454,9 @@ namespace QuantConnect.Brokerages.Zerodha
             decimal? orderPrice = GetOrderPrice(order);
 
             var kiteOrderType = ConvertOrderType(order.Type);
-
-            var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(orderPrice.GetValueOrDefault() * order.AbsoluteQuantity), Currencies.INR));
-
+            var security = _securityProvider.GetSecurity(order.Symbol);
+            var orderFee = security.FeeModel.GetOrderFee(
+                        new OrderFeeParameters(security, order));
             var orderProperties = order.Properties as ZerodhaOrderProperties;
             if (orderProperties == null)
             {
@@ -1052,19 +1020,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             foreach (var candle in candles)
             {
-                yield return new TradeBar()
-                {
-                    Time = candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),
-                    Symbol = symbol,
-                    Low = candle.Low,
-                    High = candle.High,
-                    Open = candle.Open,
-                    Close = candle.Close,
-                    Volume = candle.Volume,
-                    Value = candle.Close,
-                    DataType = MarketDataType.TradeBar,
-                    EndTime = candle.TimeStamp.Add(period).ConvertFromUtc(TimeZones.Kolkata)
-                };
+                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
             }
         }
 

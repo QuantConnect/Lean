@@ -81,6 +81,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 job.BrokerageData["zerodha-api-key"],
                 job.BrokerageData["zerodha-access-token"],
                 algorithm,
+                algorithm.Portfolio,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"))
                );
             //Add the brokerage to the composer to ensure its accessible to the live data feed.
