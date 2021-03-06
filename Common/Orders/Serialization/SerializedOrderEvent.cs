@@ -28,7 +28,7 @@ namespace QuantConnect.Orders.Serialization
         /// The unique order event id
         /// </summary>
         [JsonProperty("id")]
-        public string Id => $"{AlgorithmId}-{OrderId}-{OrderEventId}";
+        public virtual string Id => $"{AlgorithmId}-{OrderId}-{OrderEventId}";
 
         /// <summary>
         /// Algorithm Id, BacktestId or DeployId
@@ -135,9 +135,8 @@ namespace QuantConnect.Orders.Serialization
         /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>
-        private SerializedOrderEvent()
+        protected SerializedOrderEvent()
         {
-
         }
 
         /// <summary>

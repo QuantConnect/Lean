@@ -191,7 +191,7 @@ namespace QuantConnect.Orders.Serialization
         /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>
-        private SerializedOrder()
+        protected SerializedOrder()
         {
         }
 
