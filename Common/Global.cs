@@ -351,7 +351,7 @@ namespace QuantConnect
         /// Contract For a Difference Security Type.
         /// </summary>
         Cfd,
-
+        
         /// <summary>
         /// Cryptocurrency Security Type.
         /// </summary>
@@ -367,7 +367,12 @@ namespace QuantConnect
         /// The contract multiplier for Futures Options plays a big part in determining the premium
         /// of the option, which can also differ from the underlying future's multiplier.
         /// </remarks>
-        FutureOption
+        FutureOption,
+
+        /// <summary>
+        /// Index Security Type.
+        /// </summary>
+        Index
     }
 
     /// <summary>

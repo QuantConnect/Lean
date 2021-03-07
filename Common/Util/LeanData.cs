@@ -204,6 +204,41 @@ namespace QuantConnect.Util
                     }
                     break;
 
+                case SecurityType.Index:
+                    switch (resolution)
+                    {
+                        case Resolution.Tick:
+                            var tick = data as Tick;
+                            if (tick == null)
+                            {
+                                throw new ArgumentException("Expected data of type 'Tick'", nameof(data));
+                            }
+                            return ToCsv(milliseconds, tick.BidPrice, tick.AskPrice);
+
+                        case Resolution.Second:
+                        case Resolution.Minute:
+                            var bar = data as TradeBar;
+                            if (bar == null)
+                            {
+                                throw new ArgumentException("Expected data of type 'TradeBar'", nameof(data));
+                            }
+                            return ToCsv(milliseconds,
+                                ToNonScaledCsv(bar.Bid), bar.LastBidSize,
+                                ToNonScaledCsv(bar.Ask), bar.LastAskSize);
+
+                        case Resolution.Hour:
+                        case Resolution.Daily:
+                            var bigBar = data as TradeBar;
+                            if (bigBar == null)
+                            {
+                                throw new ArgumentException("Expected data of type 'TradeBar'", nameof(data));
+                            }
+                            return ToCsv(longTime,
+                                ToNonScaledCsv(bigBar.Bid), bigBar.LastBidSize,
+                                ToNonScaledCsv(bigBar.Ask), bigBar.LastAskSize);
+                    }
+                    break;
+
                 case SecurityType.Option:
                     switch (resolution)
                     {

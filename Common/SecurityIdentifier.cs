@@ -176,6 +176,7 @@ namespace QuantConnect
                         case SecurityType.Equity:
                         case SecurityType.Option:
                         case SecurityType.Future:
+                        case SecurityType.Index:
                         case SecurityType.FutureOption:
                             var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
                             _date = DateTime.FromOADate(oadate);
@@ -540,6 +541,17 @@ namespace QuantConnect
         public static SecurityIdentifier GenerateCfd(string symbol, string market)
         {
             return Generate(DefaultDate, symbol, SecurityType.Cfd, market);
+        }
+        
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a INDEX security
+        /// </summary>
+        /// <param name="symbol">The Index contract symbol</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified INDEX security</returns>
+        public static SecurityIdentifier GenerateIndex(string symbol, string market)
+        {
+            return Generate(DefaultDate, symbol, SecurityType.Index, market);
         }
 
         /// <summary>
