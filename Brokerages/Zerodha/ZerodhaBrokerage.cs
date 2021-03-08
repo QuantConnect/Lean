@@ -1101,7 +1101,7 @@ namespace QuantConnect.Brokerages.Zerodha
                                 var bestBidQuote = tick.Bids[0];
                                 var bestAskQuote = tick.Offers[0];
 
-                                var time = tick.Timestamp ?? DateTime.UtcNow;
+                                var time = tick.Timestamp ?? DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata);
 
                                 EmitQuoteTick(symbol, time, bestBidQuote.Price, bestBidQuote.Quantity, bestAskQuote.Price, bestAskQuote.Quantity);
 
