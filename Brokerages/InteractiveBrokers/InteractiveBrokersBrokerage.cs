@@ -1013,10 +1013,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     var orderProperties = order.Properties as InteractiveBrokersOrderProperties;
                     if (orderProperties != null)
                     {
-                        if (orderProperties.OutsideRth)
-                        {
-                            outsideRth = true;
-                        }
+                        outsideRth = orderProperties.OutsideRegularTradingHours;
                     }
                 }
 
