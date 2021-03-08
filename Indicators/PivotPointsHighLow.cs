@@ -26,8 +26,11 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class PivotPointsHighLow : WindowIndicator<IBaseDataBar>
     {
-        private readonly int _length;
-        private PivotPoint[] _pivotPoints = Array.Empty<PivotPoint>();
+        private readonly int _lengthHigh;
+        private readonly int _lengthLow;
+
+        // Indicator will keep information of the last 100 pivot points
+        private readonly RollingWindow<PivotPoint> _pivotPoints = new RollingWindow<PivotPoint>(100);
 
         /// <summary>
         /// Event informs of new pivot point formed with new data update
@@ -35,22 +38,33 @@ namespace QuantConnect.Indicators
         public event EventHandler<PivotPointsEventArgs> NewPivotPointFormed;
 
         /// <summary>
-        /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
+        /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator with an equal high and low length
         /// </summary>
-        /// <param name="length"></param>
+        /// <param name="length">The length parameter here defines the number of surround bars that we compare against the current bar high and lows for the max/min </param>
         public PivotPointsHighLow(int length)
-            : this ($"PivotPointsHighLow({length})", length)
+            : this($"PivotPointsHighLow({length})", length, length)
         { }
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="period"></param>
-        public PivotPointsHighLow(string name, int period) : 
-            base(name, 2 * period + 1)
+        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current one's for the high pivot point be assigned</param>
+        /// <param name="lengthLow">The number of surrounding bars whose lows values should be less than the current one's for the low pivot point be assigned</param>
+        public PivotPointsHighLow(int lengthHigh, int lengthLow)
+            : this($"PivotPointsHighLow({lengthHigh},{lengthLow})", lengthHigh, lengthLow)
+        { }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
+        /// </summary>
+        /// <param name="name">The name of an indicator</param>
+        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current one's for the high pivot point be assigned</param>
+        /// <param name="lengthLow">The number of surrounding bars whose lows values should be less than the current one's for the low pivot point be assigned</param>
+        public PivotPointsHighLow(string name, int lengthHigh, int lengthLow) :
+            base(name, 2 * Math.Max(lengthLow, lengthHigh) + 1)
         {
-            _length = period;
+            _lengthHigh = lengthHigh;
+            _lengthLow = lengthLow;
         }
 
         /// <inheritdoc />
@@ -58,27 +72,27 @@ namespace QuantConnect.Indicators
         {
             if (!IsReady) return 0m;
 
-            var middlePoint = window[_length];
-
+            var middlePoint1 = window[_lengthHigh];
             var isHigh = false;
-            for (var k = 0; k < window.Count; k++)
+            for (var k = 0; k < (2 * _lengthHigh + 1); k++)
             {
                 // Skip the middle point
-                if (k == _length) continue;
+                if (k == _lengthHigh) continue;
 
                 // Check if current high is below middle point high
-                isHigh = window[k].High < middlePoint.High;
+                isHigh = window[k].High < middlePoint1.High;
 
                 // If any high is not below middle point high -> this is not a pivot point
                 if (!isHigh) break;
             }
 
+            var middlePoint2 = window[_lengthLow];
             var isLow = false;
-            for (var k = 0; k < window.Count; k++)
+            for (var k = 0; k < (2 * _lengthLow + 1); k++)
             {
-                if (k == _length) continue;
+                if (k == _lengthLow) continue;
 
-                isLow = window[k].Low > middlePoint.Low;
+                isLow = window[k].Low > middlePoint2.Low;
 
                 if (!isLow) break;
             }
@@ -86,12 +100,12 @@ namespace QuantConnect.Indicators
             // It's possible case when the bar forms both low and high points at the same time
             if (isHigh && isLow)
             {
-                var pointHigh = new PivotPoint(PivotPointType.High, middlePoint.High, middlePoint.EndTime);
-                Push(pointHigh, ref _pivotPoints);
+                var pointHigh = new PivotPoint(PivotPointType.High, middlePoint1.High, middlePoint1.EndTime);
+                _pivotPoints.Add(pointHigh);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(pointHigh));
 
-                var pointLow = new PivotPoint(PivotPointType.Low, middlePoint.Low, middlePoint.EndTime);
-                Push(pointLow, ref _pivotPoints);
+                var pointLow = new PivotPoint(PivotPointType.Low, middlePoint2.Low, middlePoint2.EndTime);
+                _pivotPoints.Add(pointLow);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(pointLow));
 
                 return 2m;
@@ -99,8 +113,8 @@ namespace QuantConnect.Indicators
 
             if (isHigh)
             {
-                var point = new PivotPoint(PivotPointType.High, middlePoint.High, middlePoint.EndTime);
-                Push(point, ref _pivotPoints);
+                var point = new PivotPoint(PivotPointType.High, middlePoint1.High, middlePoint1.EndTime);
+                _pivotPoints.Add(point);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(point));
 
                 return 1m;
@@ -108,8 +122,8 @@ namespace QuantConnect.Indicators
 
             if (isLow)
             {
-                var point = new PivotPoint(PivotPointType.Low, middlePoint.Low, middlePoint.EndTime);
-                Push(point, ref _pivotPoints);
+                var point = new PivotPoint(PivotPointType.Low, middlePoint2.Low, middlePoint2.EndTime);
+                _pivotPoints.Add(point);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(point));
 
                 return -1m;
@@ -145,8 +159,8 @@ namespace QuantConnect.Indicators
         /// <remarks>Returned array can be empty if no points have been registered yet/</remarks>
         public PivotPoint[] GetAllPivotPointsArray()
         {
-            // Get the copy of array
-            return _pivotPoints?.ToArray();
+            // Get all pivot points within rolling wind. collection as an array
+            return _pivotPoints?.Take(_pivotPoints.Count).ToArray();
         }
 
         /// <summary>
@@ -156,31 +170,6 @@ namespace QuantConnect.Indicators
         protected virtual void OnNewPivotPointFormed(PivotPointsEventArgs pivotPointsEventArgs)
         {
             NewPivotPointFormed?.Invoke(this, pivotPointsEventArgs);
-        }
-
-        // Will replace an array passed by reference with a new one, containing new pivot point,
-        // where the the order of the elements will be from nearest to farthest in time
-        private static void Push(PivotPoint point, ref PivotPoint[] array)
-        {
-            PivotPoint[] tempArray;
-            int size;
-            if (array == null)
-            {
-                size = 1;
-                tempArray = new PivotPoint[size];
-            }
-            else
-            {
-                size = array.Length + 1;
-                tempArray = new PivotPoint[size];
-                for (var n = 0; n < array.Length; n++)
-                {
-                    tempArray[n + 1] = array[n];
-                }
-            }
-
-            tempArray[0] = point;
-            array = tempArray;
         }
     }
 
@@ -216,14 +205,24 @@ namespace QuantConnect.Indicators
     public enum PivotPointType
     {
         /// <summary>
+        /// Low pivot point
+        /// </summary>
+        Low = -1,
+
+        /// <summary>
+        /// No pivot point
+        /// </summary>
+        None = 0,
+
+        /// <summary>
         /// High pivot point
         /// </summary>
         High = 1,
 
         /// <summary>
-        /// Low pivot point
+        /// Both high and low pivot point
         /// </summary>
-        Low = -1
+        Both = 2
     }
 
     /// <summary>
