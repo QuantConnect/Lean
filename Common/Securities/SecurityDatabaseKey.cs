@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Logging;
 using static QuantConnect.StringExtensions;
 
@@ -28,6 +29,11 @@ namespace QuantConnect.Securities
         /// Represents that the specified symbol or market field will match all
         /// </summary>
         public const string Wildcard = "[*]";
+
+        /// <summary>
+        /// Invalid SecurityTypes we've already logged, in order to avoid spamming the console
+        /// </summary>
+        private static readonly HashSet<string> _invalidSecurityTypes = new HashSet<string>();
 
         /// <summary>
         /// The market. If null, ignore market filtering
@@ -72,7 +78,12 @@ namespace QuantConnect.Securities
             SecurityType type;
             if (!Enum.TryParse(parts[0], out type))
             {
-                Log.Error($"SecurityDatabaseKey.Parse(): Encountered unknown SecurityType in MarketHoursDatabase: {parts[0]}");
+                if (!_invalidSecurityTypes.Contains(parts[0]))
+                {
+                    Log.Error($"SecurityDatabaseKey.Parse(): Encountered unknown SecurityType in MarketHoursDatabase: {parts[0]}");
+                    _invalidSecurityTypes.Add(parts[0]);
+                }
+
                 return null;
             }
 
