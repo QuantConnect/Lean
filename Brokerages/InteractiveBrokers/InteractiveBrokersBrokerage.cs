@@ -1003,7 +1003,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             else
             {
-                var ibOrder = ConvertOrder(order, contract, ibOrderId);
+                var outsideRth = false;
+
+                if (order.Type == OrderType.Limit ||
+                    order.Type == OrderType.LimitIfTouched ||
+                    order.Type == OrderType.StopMarket ||
+                    order.Type == OrderType.StopLimit)
+                {
+                    var orderProperties = order.Properties as InteractiveBrokersOrderProperties;
+                    if (orderProperties != null)
+                    {
+                        outsideRth = orderProperties.OutsideRegularTradingHours;
+                    }
+                }
+
+                var ibOrder = ConvertOrder(order, contract, ibOrderId, outsideRth);
                 _client.ClientSocket.placeOrder(ibOrder.OrderId, contract, ibOrder);
             }
         }
@@ -1695,7 +1709,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Converts a QC order to an IB order
         /// </summary>
-        private IBApi.Order ConvertOrder(Order order, Contract contract, int ibOrderId)
+        private IBApi.Order ConvertOrder(Order order, Contract contract, int ibOrderId, bool outsideRth)
         {
             var ibOrder = new IBApi.Order
             {
@@ -1708,7 +1722,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 AllOrNone = false,
                 Tif = ConvertTimeInForce(order),
                 Transmit = true,
-                Rule80A = _agentDescription
+                Rule80A = _agentDescription,
+                OutsideRth = outsideRth
             };
 
             var gtdTimeInForce = order.TimeInForce as GoodTilDateTimeInForce;
