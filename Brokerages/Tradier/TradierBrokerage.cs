@@ -1147,7 +1147,7 @@ namespace QuantConnect.Brokerages.Tradier
                 }
 
                 // if we get order updates for orders we're unaware of we need to bail, this can corrupt the algorithm state
-                var unknownOrderIDs = updatedOrders.Where(IsUnknownOrderID).ToHashSet(x => x.Key);
+                var unknownOrderIDs = updatedOrders.Where(IsUnknownOrderID).Select(x => x.Key).ToHashSet();
                 unknownOrderIDs.ExceptWith(_verifiedUnknownTradierOrderIDs);
                 var fireTask = unknownOrderIDs.Count != 0 && _unknownTradierOrderIDs.Count == 0;
                 foreach (var unknownOrderID in unknownOrderIDs)
@@ -1172,7 +1172,7 @@ namespace QuantConnect.Brokerages.Tradier
                             {
                                 // fetch all rejected intraday orders within the last minute, we're going to exclude rejected orders from the error condition
                                 var recentOrders = GetIntradayAndPendingOrders().Where(x => x.Status == TradierOrderStatus.Rejected)
-                                    .Where(x => DateTime.UtcNow - x.TransactionDate < TimeSpan.FromMinutes(1)).ToHashSet(x => x.Id);
+                                    .Where(x => DateTime.UtcNow - x.TransactionDate < TimeSpan.FromMinutes(1)).Select(x => x.Id).ToHashSet();
 
                                 // remove recently rejected orders, sometimes we'll get updates for these but we've already marked them as rejected
                                 stillUnknownOrderIDs.RemoveAll(x => recentOrders.Contains(x));

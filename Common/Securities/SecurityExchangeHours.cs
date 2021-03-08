@@ -56,7 +56,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public HashSet<DateTime> Holidays
         {
-            get { return _holidays.ToHashSet(x => new DateTime(x)); }
+            get { return _holidays.Select(x => new DateTime(x)).ToHashSet(); }
         }
 
         /// <summary>

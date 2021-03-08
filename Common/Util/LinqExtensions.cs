@@ -60,31 +60,7 @@ namespace QuantConnect.Util
         {
             return new ReadOnlyDictionary<K, V>(enumerable.ToDictionary());
         }
-
-        /// <summary>
-        /// Creates a new <see cref="HashSet{T}"/> from the elements in the specified enumerable
-        /// </summary>
-        /// <typeparam name="T">The item type in the hash set</typeparam>
-        /// <param name="enumerable">The items to be placed into the enumerable</param>
-        /// <returns>A new <see cref="HashSet{T}"/> containing the items in the enumerable</returns>
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> enumerable)
-        {
-            return new HashSet<T>(enumerable);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="HashSet{T}"/> from the elements in the specified enumerable
-        /// </summary>
-        /// <typeparam name="T">The item type of the source enumerable</typeparam>
-        /// <typeparam name="TResult">The type of the items in the output <see cref="HashSet{T}"/></typeparam>
-        /// <param name="enumerable">The items to be placed into the enumerable</param>
-        /// <param name="selector">Selects items from the enumerable to be placed into the <see cref="HashSet{T}"/></param>
-        /// <returns>A new <see cref="HashSet{T}"/> containing the items in the enumerable</returns>
-        public static HashSet<TResult> ToHashSet<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
-        {
-            return new HashSet<TResult>(enumerable.Select(selector));
-        }
-
+   
         /// <summary>
         /// Creates a new <see cref="IList{T}"/> from the projected elements in the specified enumerable
         /// </summary>
@@ -345,21 +321,6 @@ namespace QuantConnect.Util
                     yield return enumerator.Current;
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets the value associated with the specified key or provided default value if key is not found.
-        /// </summary>
-        /// <typeparam name="K">The key type</typeparam>
-        /// <typeparam name="V">The value type</typeparam>
-        /// <param name="dictionary">The dictionary instance</param>
-        /// <param name="key">Lookup key</param>
-        /// <param name="defaultValue">Default value</param>
-        /// <returns>Value associated with the specified key or  default value</returns>
-        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dictionary, K key, V defaultValue = default(V))
-        {
-            V obj;
-            return dictionary.TryGetValue(key, out obj) ? obj : defaultValue;
         }
 
         /// <summary>

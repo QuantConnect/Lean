@@ -32,7 +32,7 @@ namespace QuantConnect.Python
     public class PandasData
     {
         private static dynamic _pandas;
-        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
+        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().Select(x => x.Name.ToLowerInvariant()).ToHashSet();
         private readonly static ConcurrentDictionary<Type, List<MemberInfo>> _membersByType = new ConcurrentDictionary<Type, List<MemberInfo>>();
 
         private readonly Symbol _symbol;
@@ -338,14 +338,14 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
             if (IsCustomData)
             {
-                var keys = (data as DynamicData)?.GetStorageDictionary().ToHashSet(x => x.Key);
+                var keys = (data as DynamicData)?.GetStorageDictionary().Select(x => x.Key).ToHashSet();
 
                 // C# types that are not DynamicData type
                 if (keys == null)
                 {
                     if (_membersByType.TryGetValue(type, out _members))
                     {
-                        keys = _members.ToHashSet(x => x.Name.ToLowerInvariant());
+                        keys = _members.Select(x => x.Name.ToLowerInvariant()).ToHashSet();
                     }
                     else
                     {
@@ -358,7 +358,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         }
 
                         // If the custom data derives from a Market Data (e.g. Tick, TradeBar, QuoteBar), exclude its keys
-                        keys = members.ToHashSet(x => x.Name.ToLowerInvariant());
+                        keys = members.Select(x => x.Name.ToLowerInvariant()).ToHashSet();
                         keys.ExceptWith(_baseDataProperties);
                         keys.ExceptWith(GetPropertiesNames(typeof(QuoteBar), type));
                         keys.ExceptWith(GetPropertiesNames(typeof(TradeBar), type));

@@ -14,7 +14,7 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Util;
+using System.Linq;
 
 namespace QuantConnect.Brokerages
 {

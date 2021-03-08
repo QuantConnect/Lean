@@ -586,7 +586,8 @@ namespace QuantConnect.Orders.Fills
             var subscribedTypes = Parameters
                 .ConfigProvider
                 .GetSubscriptionDataConfigs(asset.Symbol)
-                .ToHashSet(x => x.Type);
+                .Select(x => x.Type)
+                .ToHashSet();
 
             if (subscribedTypes.Count == 0)
             {

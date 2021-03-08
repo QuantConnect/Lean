@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -97,7 +98,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             // clean up data for removed securities
             if (changes.RemovedSecurities.Count > 0)
             {
-                var removed = changes.RemovedSecurities.ToHashSet(x => x.Symbol);
+                var removed = changes.RemovedSecurities.Select(x => x.Symbol).ToHashSet();
                 foreach (var subscription in algorithm.SubscriptionManager.Subscriptions)
                 {
                     if (removed.Contains(subscription.Symbol))
