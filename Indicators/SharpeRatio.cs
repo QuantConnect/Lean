@@ -107,9 +107,12 @@ namespace QuantConnect.Indicators
 
             // calculates SharpeRatio
             // makes sure no divisibilty errors occur
-            decimal pc = input.Value != 0.0m ? ((input.Value - _values[SharpePeriod].Value) / input.Value) : 0.0m;
+            // define percent change from prior value SharpePeriod values away
+            decimal percentChange = input.Value != 0.0m ? ((input.Value - _values[SharpePeriod].Value) / input.Value) : 0.0m;
+            // define std as a percent value over input
             decimal stdAsPercentage = input.Value != 0.0m ? _std / input.Value : 0.0m;
-            var sharpe = stdAsPercentage != 0.0m ? (pc - RiskFreeRate) / stdAsPercentage : 0.0m;
+            // calculate the sharpe ratio
+            var sharpe = stdAsPercentage != 0.0m ? (percentChange - RiskFreeRate) / stdAsPercentage : 0.0m;
             return sharpe;
         }
 
