@@ -351,28 +351,35 @@ namespace QuantConnect.Lean.Engine.Setup
                 string maxCashLimitStr;
                 if (liveJob.BrokerageData.TryGetValue("max-cash-limit", out maxCashLimitStr))
                 {
-                    var maxCashLimit = JsonConvert.DeserializeObject<HashSet<CashAmount>>(maxCashLimitStr);
+                    var maxCashLimit = JsonConvert.DeserializeObject<HashSet<CashAmountLimit>>(maxCashLimitStr);
 
                     brokerage.DisableCashSync();
 
                     Log.Trace("BrokerageSetupHandler.Setup(): will use job packet max cash limit. Disabled cash sync.");
-                    foreach (var cash in maxCashLimit)
+                    foreach (var amountLimit in maxCashLimit)
                     {
+                        var cash = amountLimit.Cash;
+
                         var brokerageCash = cashBalance.FirstOrDefault(
                             brokerageCashAmount => string.Equals(brokerageCashAmount.Currency, cash.Currency, StringComparison.InvariantCultureIgnoreCase));
                         // we use the min amount between the brokerage and the job packet, if any
-                        if (brokerageCash != default(CashAmount))
+                        if (brokerageCash != default(CashAmount) || amountLimit.Force)
                         {
-                            Log.Trace($"BrokerageSetupHandler.Setup(): Job packet amount {cash.Currency} {cash.Amount}. Brokerage amount {brokerageCash.Amount}.");
-                            var cashToUse = new CashAmount(Math.Min(cash.Amount, brokerageCash.Amount), cash.Currency);
+                            Log.Trace($"BrokerageSetupHandler.Setup(): Job packet amount {cash.Currency} {cash.Amount}. Brokerage amount {brokerageCash.Amount}. Force {amountLimit.Force}");
 
+                            var cashToUse = cash;
+                            if (!amountLimit.Force)
+                            {
+                                // if we are not forcing we use the min between brokerage and limit
+                                cashToUse = new CashAmount(Math.Min(cash.Amount, brokerageCash.Amount), cash.Currency);
+                            }
                             algorithm.Debug($"Live deployment has been allocation limited to {cashToUse.Amount:C} {cashToUse.Currency}");
 
                             algorithm.Portfolio.SetCash(cashToUse.Currency, cashToUse.Amount, 0);
                         }
                         else
                         {
-                            Log.Trace($"BrokerageSetupHandler.Setup(): Skip setting {cash.Currency} brokerage does not have it.");
+                            Log.Trace($"BrokerageSetupHandler.Setup(): Skip setting {cash.Currency} brokerage does not have it. Force: {amountLimit.Force}");
                         }
                     }
                 }
