@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -32,7 +33,7 @@ namespace QuantConnect.Securities
         private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
         private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
 
-        private SymbolPropertiesDatabase(string file)
+        protected SymbolPropertiesDatabase(string file)
         {
             var allEntries = new Dictionary<SecurityDatabaseKey, SymbolProperties>();
             var entriesBySecurityType = new Dictionary<SecurityDatabaseKey, SecurityDatabaseKey>();
@@ -245,14 +246,21 @@ namespace QuantConnect.Securities
         /// <param name="line">The csv line to be parsed</param>
         /// <param name="key">The key used to uniquely identify this security</param>
         /// <returns>A new <see cref="SymbolProperties"/> for the specified csv line</returns>
-        private static SymbolProperties FromCsvLine(string line, out SecurityDatabaseKey key)
+        protected static SymbolProperties FromCsvLine(string line, out SecurityDatabaseKey key)
         {
             var csv = line.Split(',');
+
+            SecurityType securityType;
+            if (!Enum.TryParse(csv[2], true, out securityType))
+            {
+                Log.Error($"SymbolPropertiesDatabase.FromCsvLine(): Encountered unknown SecurityType in SymbolPropertiesDatabase: {csv[2]} - Defaulting to SecurityType.Base");
+                securityType = SecurityType.Base;
+            }
 
             key = new SecurityDatabaseKey(
                 market: csv[0],
                 symbol: csv[1],
-                securityType: (SecurityType)Enum.Parse(typeof(SecurityType), csv[2], true));
+                securityType: securityType);
 
             return new SymbolProperties(
                 description: csv[3],

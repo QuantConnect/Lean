@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Logging;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
@@ -64,14 +65,15 @@ namespace QuantConnect.Securities
         public static SecurityDatabaseKey Parse(string key)
         {
             var parts = key.Split('-');
-            if (parts.Length != 3)
+            if (parts.Length != 3 || parts[0] == Wildcard)
             {
                 throw new FormatException($"The specified key was not in the expected format: {key}");
             }
             SecurityType type;
             if (!Enum.TryParse(parts[0], out type))
             {
-                throw new ArgumentException($"Unable to parse \'{parts[2]}\' as a SecurityType.");
+                Log.Error($"SecurityDatabaseKey.Parse(): Encountered unknown SecurityType in MarketHoursDatabase: {parts[0]} - Defaulting to SecurityType.Base");
+                type = SecurityType.Base;
             }
 
             return new SecurityDatabaseKey(parts[1], parts[2], type);
