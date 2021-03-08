@@ -31,11 +31,6 @@ namespace QuantConnect.Securities
         public const string Wildcard = "[*]";
 
         /// <summary>
-        /// Invalid SecurityTypes we've already logged, in order to avoid spamming the console
-        /// </summary>
-        private static readonly HashSet<string> _invalidSecurityTypes = new HashSet<string>();
-
-        /// <summary>
         /// The market. If null, ignore market filtering
         /// </summary>
         public readonly string Market;
@@ -76,14 +71,8 @@ namespace QuantConnect.Securities
                 throw new FormatException($"The specified key was not in the expected format: {key}");
             }
             SecurityType type;
-            if (!Enum.TryParse(parts[0], out type))
+            if (!parts[0].TryParseSecurityType(out type))
             {
-                if (!_invalidSecurityTypes.Contains(parts[0]))
-                {
-                    Log.Error($"SecurityDatabaseKey.Parse(): Encountered unknown SecurityType in MarketHoursDatabase: {parts[0]}");
-                    _invalidSecurityTypes.Add(parts[0]);
-                }
-
                 return null;
             }
 

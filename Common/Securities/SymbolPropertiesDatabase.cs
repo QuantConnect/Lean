@@ -29,7 +29,6 @@ namespace QuantConnect.Securities
     {
         private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase;
         private static readonly object DataFolderSymbolPropertiesDatabaseLock = new object();
-        private static readonly HashSet<string> _invalidSecurityTypes = new HashSet<string>();
 
         private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
         private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
@@ -256,14 +255,8 @@ namespace QuantConnect.Securities
             var csv = line.Split(',');
 
             SecurityType securityType;
-            if (!Enum.TryParse(csv[2], true, out securityType))
+            if (!csv[2].TryParseSecurityType(out securityType))
             {
-                if (!_invalidSecurityTypes.Contains(csv[2]))
-                {
-                    Log.Error($"SymbolPropertiesDatabase.FromCsvLine(): Encountered unknown SecurityType in SymbolPropertiesDatabase: {csv[2]}");
-                    _invalidSecurityTypes.Add(csv[2]);
-                }
-
                 key = null;
                 return null;
             }
