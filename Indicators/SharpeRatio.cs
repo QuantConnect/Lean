@@ -52,11 +52,6 @@ namespace QuantConnect.Indicators
         public decimal RiskFreeRate { get; }
 
         /// <summary>
-        /// Stores the value of the dividend-yield for calculation
-        /// </summary>
-        public decimal DividendYield { get; }
-
-        /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; }
@@ -67,13 +62,12 @@ namespace QuantConnect.Indicators
         public override bool IsReady => _values.IsReady && _std.IsReady;
 
         /// <summary>
-        /// Creates a new SharpeRatio inidcator using the specified periods
+        /// Creates a new SharpeRatio indicator using the specified periods
         /// </summary>
 		/// <param name="name">The name of this indicator</param>
 		/// <param name="sharpePeriod">Period of historical observation for sharpe ratio calculation</param>
-		/// <param name="dividendYield">Dividend-yield for sharpe ratio calculation</param>
 		/// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
-        public SharpeRatio(string name, int sharpePeriod, decimal dividendYield = 0.0m, decimal riskFreeRate = 0.0m)
+        public SharpeRatio(string name, int sharpePeriod, decimal riskFreeRate = 0.0m)
             : base(name)
         {
             // init private variables
@@ -82,19 +76,17 @@ namespace QuantConnect.Indicators
 
             // init public variables
             SharpePeriod = sharpePeriod;
-            DividendYield = dividendYield;
             RiskFreeRate = riskFreeRate;
             WarmUpPeriod = sharpePeriod + 1;
         }
 
         /// <summary>
-        /// Creates a new SharpeRatio inidcator using the specified periods
+        /// Creates a new SharpeRatio indicator using the specified periods
         /// </summary>
         /// <param name="sharpePeriod">Period of historical observation for sharpe ratio calculation</param>
-		/// <param name="dividendYield">Dividend-yield for sharpe ratio calculation</param>
 		/// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
-        public SharpeRatio(int sharpePeriod, decimal dividendYield = 0.0m, decimal riskFreeRate = 0.0m)
-            : this($"SR({sharpePeriod})", sharpePeriod, dividendYield, riskFreeRate)
+        public SharpeRatio(int sharpePeriod, decimal riskFreeRate = 0.0m)
+            : this($"SR({sharpePeriod})", sharpePeriod, riskFreeRate)
         {
         }
 
@@ -115,9 +107,9 @@ namespace QuantConnect.Indicators
 
             // calculates SharpeRatio
             // makes sure no divisibilty errors occur
-            decimal pc = input.Value != 0.0m ? ((input.Value - _values[SharpePeriod].Value) / input.Value) + (DividendYield * (SharpePeriod / 252)) : 0.0m;
-            decimal stdPercent = input.Value != 0.0m ? _std / input.Value : 0.0m;
-            decimal sharpe = stdPercent != 0.0m ? (pc - RiskFreeRate) / stdPercent : 0.0m;
+            decimal pc = input.Value != 0.0m ? ((input.Value - _values[SharpePeriod].Value) / input.Value) : 0.0m;
+            decimal stdAsPercentage = input.Value != 0.0m ? _std / input.Value : 0.0m;
+            var sharpe = stdAsPercentage != 0.0m ? (pc - RiskFreeRate) / stdAsPercentage : 0.0m;
             return sharpe;
         }
 

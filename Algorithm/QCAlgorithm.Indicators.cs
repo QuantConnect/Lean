@@ -1470,15 +1470,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose RSR we want</param>
         /// <param name="sharpePeriod">Period of historical observation for sharpe ratio calculation</param>
-		/// <param name="dividendYield">Dividend-yield for sharpe ratio calculation</param>
 		/// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The RollingSharpeRatio indicator for the requested symbol over the specified period</returns>
-        public SharpeRatio SR(Symbol symbol, int sharpePeriod, decimal dividendYield = 0.0m, decimal riskFreeRate = 0.0m, Resolution ? resolution = null, Func<IBaseData, decimal> selector = null)
+        public SharpeRatio SR(Symbol symbol, int sharpePeriod, decimal riskFreeRate = 0.0m, Resolution ? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"RSR({sharpePeriod},{dividendYield},{riskFreeRate})", resolution);
-            var sharpeRatio = new SharpeRatio(name, sharpePeriod, dividendYield, riskFreeRate);
+            var name = CreateIndicatorName(symbol, $"SR({sharpePeriod},{riskFreeRate})", resolution);
+            var sharpeRatio = new SharpeRatio(name, sharpePeriod, riskFreeRate);
             RegisterIndicator(symbol, sharpeRatio, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)
