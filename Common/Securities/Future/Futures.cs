@@ -804,10 +804,22 @@ namespace QuantConnect.Securities
             public const string Nikkei225Yen = "NK";
 
             /// <summary>
-            /// Nifty 50  Index Futures
+            /// NSE Nifty50 Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string Nifty50 = "IN";
+            public const string Nifty50 = "NIFTY";
+
+            /// <summary>
+            /// NSE BankNifty Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string BankNifty = "BANKNIFTY";
+
+            /// <summary>
+            /// S&amp;P BSE Sensex Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string BseSensex = "SENSEX";
 
             /// <summary>
             /// Hang Seng Index

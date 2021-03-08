@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string FourPMLondonTime = "15:00:00";
         private const string TwoThirtyPM = "14:30:00";
         private const string OneFortyFivePM = "13:45:00";
-        private const string SixFifteenPM = "18:15:00";
+        private const string ThreeThirtyPM = "15:30:00";
         private const string FourPM = "16:00:00";
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
@@ -299,7 +299,9 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Indices.VIX, EightOClockChicagoTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.Nikkei225Yen, TwoThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.MSCITaiwanIndex, OneFortyFivePM)]
-        [TestCase(QuantConnect.Securities.Futures.Indices.Nifty50, SixFifteenPM)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.Nifty50, ThreeThirtyPM)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.BankNifty, ThreeThirtyPM)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.BseSensex, ThreeThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.HangSeng, FourPM)]
         public void IndicesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {

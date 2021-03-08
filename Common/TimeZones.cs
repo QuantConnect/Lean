@@ -216,5 +216,10 @@ namespace QuantConnect
         /// Gets the time zone for Honolulu, USA. This is a daylight savings time zone.
         /// </summary>
         public static readonly DateTimeZone Honolulu = DateTimeZoneProviders.Tzdb["Pacific/Honolulu"];
+
+        /// <summary>
+        /// Gets the time zone for Kolkata, India.
+        /// </summary>
+        public static readonly DateTimeZone Kolkata = DateTimeZoneProviders.Tzdb["Asia/Kolkata"];
     }
 }

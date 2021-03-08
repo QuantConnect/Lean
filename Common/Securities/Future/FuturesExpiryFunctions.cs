@@ -519,14 +519,14 @@ namespace QuantConnect.Securities.Future
                 })
             },
 
-            // Nifty 50 Index Futures: https://www.sgx.com/derivatives/products/nifty#Contract%20Specifications
-            {Symbol.Create(Futures.Indices.Nifty50, SecurityType.Future, Market.SGX), (time =>
+            // Nifty 50 Index Futures: https://www1.nseindia.com/products/content/derivatives/equities/contract_specifitns.htm
+            {Symbol.Create(Futures.Indices.Nifty50, SecurityType.Future, Market.NFO), (time =>
                 {
                     // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
-                    // The expiring contract shall close on its last trading day at 6.15 pm.
+                    // The expiring contract shall close on its last trading day at 3.30 pm.
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.NSE, Futures.Indices.Nifty50, SecurityType.Future)
+                        .GetEntry(Market.NFO, Futures.Indices.Nifty50, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -536,7 +536,49 @@ namespace QuantConnect.Securities.Future
                     {
                         expiryday = expiryday.AddDays(-1);
                     }
-                    return expiryday.Add(new TimeSpan(18, 15, 0));
+                    return expiryday.Add(new TimeSpan(15, 30, 0));
+                })
+            },
+
+            // BankNifty Index Futures: https://www1.nseindia.com/products/content/derivatives/equities/bank_nifty_new.htm
+            {Symbol.Create(Futures.Indices.BankNifty, SecurityType.Future, Market.NFO), (time =>
+                {
+                    // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
+                    // The expiring contract shall close on its last trading day at 3.30 pm.
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NFO, Futures.Indices.BankNifty, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    var expiryday = FuturesExpiryUtilityFunctions.LastThursday(time);
+
+                    while (holidays.Contains(expiryday) || !expiryday.IsCommonBusinessDay())
+                    {
+                        expiryday = expiryday.AddDays(-1);
+                    }
+                    return expiryday.Add(new TimeSpan(15, 30, 0));
+                })
+            },
+
+
+            // BSE S&P Sensex Index Futures: https://www.bseindia.com/static/markets/Derivatives/DeriReports/market_information.html#!#ach6
+            {Symbol.Create(Futures.Indices.BseSensex, SecurityType.Future, Market.BSE), (time =>
+                {
+                    // Last Thursday of the expiring contract month. If this falls on an BSE non-business day, the last trading day shall be the preceding business day.
+                    // The expiring contract shall close on its last trading day at 3.30 pm.
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.BSE, Futures.Indices.BseSensex, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    var expiryday = FuturesExpiryUtilityFunctions.LastThursday(time);
+
+                    while (holidays.Contains(expiryday) || !expiryday.IsCommonBusinessDay())
+                    {
+                        expiryday = expiryday.AddDays(-1);
+                    }
+                    return expiryday.Add(new TimeSpan(15, 30, 0));
                 })
             },
 
