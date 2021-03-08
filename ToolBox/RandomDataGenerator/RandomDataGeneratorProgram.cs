@@ -179,6 +179,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                     output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");
                 }
+                else
+                {
+                    // This ensures that ticks will be written for the current symbol up until 9999-12-31
+                    renamedSymbols.Add(symbol, new DateTime(9999, 12, 31));
+                }
 
                 Symbol previousSymbol = null;
                 var currentCount = 0;
