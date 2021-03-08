@@ -38,6 +38,11 @@ namespace QuantConnect
         public static string GBP = "GBP";
 
         /// <summary>
+        /// INR currency string
+        /// </summary>
+        public static string INR = "INR";
+
+        /// <summary>
         /// Null currency used when a real one is not required
         /// </summary>
         public const string NullCurrency = "QCC";

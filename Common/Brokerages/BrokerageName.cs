@@ -77,6 +77,10 @@ namespace QuantConnect.Brokerages
         AlphaStreams,
 
         /// <summary>
+        /// Transaction and submit/execution rules will use Zerodha models
+        /// </summary>
+        Zerodha,
+
         /// Transaction and submit/execution rules will use atreyu models
         /// </summary>
         Atreyu,
