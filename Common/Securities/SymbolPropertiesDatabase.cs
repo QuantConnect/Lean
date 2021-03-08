@@ -235,6 +235,10 @@ namespace QuantConnect.Securities
             {
                 SecurityDatabaseKey key;
                 var entry = FromCsvLine(line, out key);
+                if (key == null || entry == null)
+                {
+                    continue;
+                }
 
                 yield return new KeyValuePair<SecurityDatabaseKey, SymbolProperties>(key, entry);
             }
@@ -253,8 +257,10 @@ namespace QuantConnect.Securities
             SecurityType securityType;
             if (!Enum.TryParse(csv[2], true, out securityType))
             {
-                Log.Error($"SymbolPropertiesDatabase.FromCsvLine(): Encountered unknown SecurityType in SymbolPropertiesDatabase: {csv[2]} - Defaulting to SecurityType.Base");
-                securityType = SecurityType.Base;
+                Log.Error($"SymbolPropertiesDatabase.FromCsvLine(): Encountered unknown SecurityType in SymbolPropertiesDatabase: {csv[2]}");
+
+                key = null;
+                return null;
             }
 
             key = new SecurityDatabaseKey(

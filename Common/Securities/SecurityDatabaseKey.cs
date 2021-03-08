@@ -72,8 +72,8 @@ namespace QuantConnect.Securities
             SecurityType type;
             if (!Enum.TryParse(parts[0], out type))
             {
-                Log.Error($"SecurityDatabaseKey.Parse(): Encountered unknown SecurityType in MarketHoursDatabase: {parts[0]} - Defaulting to SecurityType.Base");
-                type = SecurityType.Base;
+                Log.Error($"SecurityDatabaseKey.Parse(): Encountered unknown SecurityType in MarketHoursDatabase: {parts[0]}");
+                return null;
             }
 
             return new SecurityDatabaseKey(parts[1], parts[2], type);
