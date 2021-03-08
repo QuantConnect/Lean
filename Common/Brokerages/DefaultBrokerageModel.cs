@@ -51,7 +51,8 @@ namespace QuantConnect.Brokerages
             {SecurityType.FutureOption, Market.CME},
             {SecurityType.Forex, Market.Oanda},
             {SecurityType.Cfd, Market.FXCM},
-            {SecurityType.Crypto, Market.GDAX}
+            {SecurityType.Crypto, Market.GDAX},
+            {SecurityType.Index, Market.USA},
         }.ToReadOnlyDictionary();
 
         /// <summary>
@@ -196,6 +197,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Option:
                 case SecurityType.FutureOption:
                 case SecurityType.Future:
+                case SecurityType.Index:
                 default:
                     return 1m;
             }
@@ -239,6 +241,8 @@ namespace QuantConnect.Brokerages
                     break;
                 case SecurityType.Crypto:
                     break;
+                case SecurityType.Index:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException($"{GetType().Name}.GetFillModel: Invalid security type {security.Type}");
             }
@@ -259,6 +263,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                 case SecurityType.Crypto:
+                case SecurityType.Index:
                     return new ConstantFeeModel(0m);
 
                 case SecurityType.Equity:
@@ -284,6 +289,7 @@ namespace QuantConnect.Brokerages
             {
                 case SecurityType.Base:
                 case SecurityType.Equity:
+                case SecurityType.Index:
                     return new ConstantSlippageModel(0);
 
                 case SecurityType.Forex:
@@ -363,6 +369,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Future:
                     model = new FutureMarginModel(RequiredFreeBuyingPowerPercent, security);
                     break;
+                case SecurityType.Index:
                 default:
                     model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
                     break;

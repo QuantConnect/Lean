@@ -1779,9 +1779,14 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Index"/> security</returns>
-        public Index AddIndex(string ticker, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
-        {
-            return AddSecurity<Index>(SecurityType.Cfd, ticker, resolution, market, fillDataForward, leverage, false);
+        public Index AddIndex(string ticker, Resolution? resolution = null, string market = null, bool fillDataForward = true)
+        { 
+            var index = AddSecurity<Index>(SecurityType.Index, ticker, resolution, market, fillDataForward, 1, false);
+
+            // Index assets are used for indicators only and cannot be traded directly. 
+            index.IsTradable = false;
+
+            return index;
         }
         
         /// <summary>

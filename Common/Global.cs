@@ -158,7 +158,7 @@ namespace QuantConnect
             ConversionRate = security.QuoteCurrency.ConversionRate;
 
             var rounding = 2;
-            if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd)
+            if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd || holding.Type == SecurityType.Index)
             {
                 rounding = 5;
             }

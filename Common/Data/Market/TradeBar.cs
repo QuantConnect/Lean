@@ -278,6 +278,9 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Crypto:
                         return ParseCrypto(config, stream, date);
 
+                    case SecurityType.Index:
+                        return ParseIndex(config, stream, date);
+
                     case SecurityType.Cfd:
                         return ParseCfd(config, stream, date);
 
@@ -616,47 +619,6 @@ namespace QuantConnect.Data.Market
             ParseForex(tradeBar, config, streamReader, date);
             return tradeBar;
         }
-        
-        /// <summary>
-        /// Parses Index trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
-        /// </summary>
-        /// <typeparam name="T">The requested output type, must derive from TradeBar</typeparam>
-        /// <param name="config">Symbols, Resolution, DataType, </param>
-        /// <param name="line">Line from the data file requested</param>
-        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
-        /// <returns></returns>
-        public static T ParseIndex<T>(SubscriptionDataConfig config, string line, DateTime date)
-            where T : TradeBar, new()
-        {
-            // CFD has the same data format as Forex
-            return ParseForex<T>(config, line, date);
-        }
-
-        /// <summary>
-        /// Parses Index trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
-        /// </summary>
-        /// <param name="config">Symbols, Resolution, DataType, </param>
-        /// <param name="line">Line from the data file requested</param>
-        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
-        /// <returns></returns>
-        public static TradeBar ParseIndex(SubscriptionDataConfig config, string line, DateTime date)
-        {
-            // CFD has the same data format as Forex
-            return ParseForex(config, line, date);
-        }
-
-        /// <summary>
-        /// Parses Index trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
-        /// </summary>
-        /// <param name="config">Symbols, Resolution, DataType, </param>
-        /// <param name="streamReader">The data stream of the requested file</param>
-        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
-        /// <returns></returns>
-        public static TradeBar ParseIndex(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
-        {
-            // Index has the same data format as Forex
-            return ParseForex(config, streamReader, date);
-        }
 
         /// <summary>
         /// Parses CFD trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
@@ -847,6 +809,49 @@ namespace QuantConnect.Data.Market
             tradeBar.Low = csv[3].ToDecimal();
             tradeBar.Close = csv[4].ToDecimal();
             tradeBar.Volume = csv[5].ToDecimal();
+
+            return tradeBar;
+        }
+
+        /// <summary>
+        /// Parse an index bar from the LEAN disk format
+        /// </summary>
+        public static TradeBar ParseIndex(SubscriptionDataConfig config, string line, DateTime date)
+        {
+            var tradeBar = new TradeBar
+            {
+                Period = config.Increment,
+                Symbol = config.Symbol
+            };
+
+            var csv = line.ToCsv(6);
+            tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            tradeBar.Open = csv[1].ToDecimal();
+            tradeBar.High = csv[2].ToDecimal();
+            tradeBar.Low = csv[3].ToDecimal();
+            tradeBar.Close = csv[4].ToDecimal();
+            tradeBar.Volume = csv[5].ToDecimal();
+
+            return tradeBar;
+        }
+
+        /// <summary>
+        /// Parse an index bar from the LEAN disk format
+        /// </summary>
+        public static TradeBar ParseIndex(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        {
+            var tradeBar = new TradeBar
+            {
+                Period = config.Increment,
+                Symbol = config.Symbol
+            }; 
+
+            tradeBar.Time = date.Date.AddMilliseconds(streamReader.GetInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            tradeBar.Open = streamReader.GetDecimal();
+            tradeBar.High = streamReader.GetDecimal();
+            tradeBar.Low = streamReader.GetDecimal();
+            tradeBar.Close = streamReader.GetDecimal();
+            tradeBar.Volume = streamReader.GetDecimal();
 
             return tradeBar;
         }

@@ -209,6 +209,7 @@ namespace QuantConnect.Data
             return new Dictionary<SecurityType, List<TickType>>
             {
                 {SecurityType.Base, new List<TickType> {TickType.Trade}},
+                {SecurityType.Index, new List<TickType> {TickType.Trade}},
                 {SecurityType.Forex, new List<TickType> {TickType.Quote}},
                 {SecurityType.Equity, new List<TickType> {TickType.Trade, TickType.Quote}},
                 {SecurityType.Option, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},

@@ -1835,6 +1835,8 @@ namespace QuantConnect
                     return "forex";
                 case SecurityType.Future:
                     return "future";
+                case SecurityType.Index:
+                    return "index";
                 case SecurityType.Cfd:
                     return "cfd";
                 case SecurityType.Crypto:

@@ -15,9 +15,8 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
+using System.Collections.Generic;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 
@@ -45,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 3, 3);
             SetCash(1000000);
 
-            // Use indicator for signal
+            // Use indicator for signal; but it cannot be traded
             _spx = AddIndex("SPX", Resolution.Minute).Symbol;
             _emaSlow = EMA(_spx, 80);
             _emaFast = EMA(_spx, 200);
@@ -59,7 +58,6 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnData(Slice slice)
         {
-            
             if (!slice.Bars.ContainsKey(_spx) || !slice.Bars.ContainsKey(_spy))
             {
                 return;
