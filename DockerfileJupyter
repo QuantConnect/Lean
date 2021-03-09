@@ -43,12 +43,9 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=\"Notebooks\" --LabApp.token='' " \
     > start.sh
 
-# We keep this pythonnet used for C# -> Py (C# kernels)
-# We copy the pythonnet used for the Py kernels
-RUN mkdir ${WORK}pythonnet && \
-    mv -f ${WORK}Python.Runtime.dll ${WORK}pythonnet/Python.Runtime.dll && \
-    mv -f ${WORK}jupyter/* ${WORK} && \
-    chmod -R 777 ${WORK}
+RUN chmod -R 777 ${WORK}
+
+RUN pip install clr-loader
 
 EXPOSE 8888
 WORKDIR $WORK
