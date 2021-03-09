@@ -6,6 +6,7 @@ mono:
 solution: QuantConnect.Lean.sln
 before_install:
   - export PATH="$HOME/miniconda3/bin:$PATH"
+  - export PYTHONNET_PYDLL="$HOME/miniconda3/lib/libpython3.6m.so"
   - wget -q https://cdn.quantconnect.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
   - bash Miniconda3-4.5.12-Linux-x86_64.sh -b
   - rm -rf Miniconda3-4.5.12-Linux-x86_64.sh
@@ -20,6 +21,7 @@ before_install:
 install:
   - nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
 script:
+  - dotnet nuget add source $TRAVIS_BUILD_DIR/LocalPackages
   - dotnet build /p:Configuration=Release /p:VbcToolExe=vbnc.exe /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
   - mono ./testrunner/NUnit.ConsoleRunner.3.11.1/tools/nunit3-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --where "cat != TravisExclude" --labels=Off --params:log-handler=ConsoleErrorLogHandler
   - chmod +x ci_build_stubs.sh
