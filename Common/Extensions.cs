@@ -63,6 +63,7 @@ namespace QuantConnect
     {
         private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
         private static ConcurrentBag<Guid> Guids = new ConcurrentBag<Guid>();
+        private static readonly HashSet<string> _invalidSecurityTypes = new HashSet<string>();
 
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
@@ -1574,6 +1575,32 @@ namespace QuantConnect
             if (Time.OneDay    > timeSpan) return Resolution.Hour;
 
             return Resolution.Daily;
+        }
+
+        /// <summary>
+        /// Attempts to convert the string into a <see cref="SecurityType"/> enum value
+        /// </summary>
+        /// <param name="value">string value to convert to SecurityType</param>
+        /// <param name="securityType">SecurityType output</param>
+        /// <param name="ignoreCase">Ignore casing</param>
+        /// <returns>true if parsed into a SecurityType successfully, false otherwise</returns>
+        /// <remarks>
+        /// Logs once if we've encountered an invalid SecurityType
+        /// </remarks>
+        public static bool TryParseSecurityType(this string value, out SecurityType securityType, bool ignoreCase = true)
+        {
+            if (Enum.TryParse(value, ignoreCase, out securityType))
+            {
+                return true;
+            }
+
+            if (_invalidSecurityTypes.Add(value))
+            {
+                Log.Error($"Extensions.TryParseSecurityType(): Attempted to parse unknown SecurityType: {value}");
+            }
+
+            return false;
+
         }
 
         /// <summary>
