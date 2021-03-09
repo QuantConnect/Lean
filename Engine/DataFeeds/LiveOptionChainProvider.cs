@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var canonicalOption = Symbol.CreateOption(
                         futureContractSymbol,
                         futureContractSymbol.ID.Market,
-                        default(OptionStyle),
+                        futureContractSymbol.SecurityType.DefaultOptionStyle(),
                         default(OptionRight),
                         default(decimal),
                         SecurityIdentifier.DefaultDate);

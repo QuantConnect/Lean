@@ -58,7 +58,7 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
 
         uniqueUnderlyingSymbols = set()
         for optionSymbol in self.optionChainSymbolSelector(algorithm.UtcTime):
-            if optionSymbol.SecurityType != SecurityType.Option and optionSymbol.SecurityType != SecurityType.FutureOption:
+            if Extensions.IsOption(optionSymbol.SecurityType):
                 raise ValueError("optionChainSymbolSelector must return option or futures options symbols.")
 
             # prevent creating duplicate option chains -- one per underlying

@@ -56,7 +56,7 @@ namespace QuantConnect.Data
         /// <param name="normalizationMode"></param>
         public void SetDataNormalizationMode(DataNormalizationMode normalizationMode)
         {
-            if ((Symbol.SecurityType == SecurityType.Option || Symbol.SecurityType == SecurityType.FutureOption) && normalizationMode != DataNormalizationMode.Raw)
+            if (Symbol.SecurityType.IsOption() && normalizationMode != DataNormalizationMode.Raw)
             {
                 throw new ArgumentException($"DataNormalizationMode.Raw must be used with SecurityType {Symbol.SecurityType}");
             }

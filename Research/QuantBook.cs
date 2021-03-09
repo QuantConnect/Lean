@@ -322,7 +322,7 @@ namespace QuantConnect.Research
             }
 
             // Load a canonical option Symbol if the user provides us with an underlying Symbol
-            if (symbol.SecurityType != SecurityType.Option && symbol.SecurityType != SecurityType.FutureOption)
+            if (!symbol.SecurityType.IsOption())
             {
                 var option = AddOption(symbol, resolution, symbol.ID.Market);
 

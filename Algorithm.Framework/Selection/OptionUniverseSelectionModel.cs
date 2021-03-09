@@ -96,9 +96,9 @@ namespace QuantConnect.Algorithm.Framework.Selection
             var uniqueUnderlyingSymbols = new HashSet<Symbol>();
             foreach (var optionSymbol in _optionChainSymbolSelector(algorithm.UtcTime))
             {
-                if (optionSymbol.SecurityType != SecurityType.Option && optionSymbol.SecurityType != SecurityType.FutureOption)
+                if (!optionSymbol.SecurityType.IsOption())
                 {
-                    throw new ArgumentException("optionChainSymbolSelector must return option or futures options symbols.");
+                    throw new ArgumentException("optionChainSymbolSelector must return option, index options, or futures options symbols.");
                 }
 
                 // prevent creating duplicate option chains -- one per underlying

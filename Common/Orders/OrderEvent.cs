@@ -125,7 +125,7 @@ namespace QuantConnect.Orders
                 }
             }
         }
-        
+
         /// <summary>
         /// The current trigger price
         /// </summary>
@@ -272,7 +272,7 @@ namespace QuantConnect.Orders
                 message += Invariant($" Message: {Message}");
             }
 
-            if (Symbol.SecurityType == SecurityType.Option || Symbol.SecurityType == SecurityType.FutureOption)
+            if (Symbol.SecurityType.IsOption())
             {
                 message += Invariant($" IsAssignment: {IsAssignment}");
             }
@@ -313,7 +313,7 @@ namespace QuantConnect.Orders
                 message += Invariant($" M:{Message}");
             }
 
-            if (Symbol.SecurityType == SecurityType.Option || Symbol.SecurityType == SecurityType.FutureOption)
+            if (Symbol.SecurityType.IsOption())
             {
                 message += Invariant($" IA:{IsAssignment}");
             }

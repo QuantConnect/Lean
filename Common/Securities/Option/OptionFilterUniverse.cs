@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using System.Linq;
 using QuantConnect.Securities.FutureOption;
+using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities
@@ -66,9 +67,15 @@ namespace QuantConnect.Securities
         /// <returns>True if standard</returns>
         protected override bool IsStandard(Symbol symbol)
         {
-            return symbol.SecurityType == SecurityType.FutureOption
-                ? FutureOptionSymbol.IsStandard(symbol)
-                : OptionSymbol.IsStandard(symbol);
+            switch (symbol.SecurityType)
+            {
+                case SecurityType.FutureOption:
+                    return FutureOptionSymbol.IsStandard(symbol);
+                case SecurityType.IndexOption:
+                    return IndexOptionSymbol.IsStandard(symbol);
+                default:
+                    return OptionSymbol.IsStandard(symbol);
+            }
         }
 
         /// <summary>

@@ -314,7 +314,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         universe.UniverseSettings.ExtendedMarketHours,
                         dataNormalizationMode: universe.UniverseSettings.DataNormalizationMode);
 
-                    security = _securityService.CreateSecurity(symbol, configs, universe.UniverseSettings.Leverage, (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.FutureOption));
+                    security = _securityService.CreateSecurity(symbol, configs, universe.UniverseSettings.Leverage, symbol.ID.SecurityType.IsOption());
 
                     pendingAdditions.Add(symbol, security);
                 }

@@ -1465,7 +1465,7 @@ namespace QuantConnect.Algorithm
             var isCanonical = symbol.IsCanonical();
 
             // Short-circuit to AddOptionContract because it will add the underlying if required
-            if (!isCanonical && (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption))
+            if (!isCanonical && symbol.SecurityType.IsOption())
             {
                 return AddOptionContract(symbol, resolution, fillDataForward, leverage);
             }
@@ -1488,7 +1488,7 @@ namespace QuantConnect.Algorithm
                 if (!UniverseManager.TryGetValue(symbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != symbol))
                 {
                     var settings = new UniverseSettings(configs.First().Resolution, leverage, true, false, TimeSpan.Zero);
-                    if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
+                    if (symbol.SecurityType.IsOption())
                     {
                         universe = new OptionChainUniverse((Option)security, settings, LiveMode);
                     }
@@ -1558,11 +1558,7 @@ namespace QuantConnect.Algorithm
         /// <exception cref="KeyNotFoundException"></exception>
         public Option AddOption(Symbol underlying, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
         {
-            var optionType = SecurityType.Option;
-            if (underlying.SecurityType == SecurityType.Future)
-            {
-                optionType = SecurityType.FutureOption;
-            }
+            var optionType = QuantConnect.Symbol.GetOptionTypeFromUnderlying(underlying);
 
             if (market == null)
             {
@@ -1576,13 +1572,12 @@ namespace QuantConnect.Algorithm
             var alias = "?" + underlying.Value;
             if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) ||
                 canonicalSymbol.ID.Market != market ||
-                (canonicalSymbol.SecurityType != SecurityType.Option &&
-                canonicalSymbol.SecurityType != SecurityType.FutureOption))
+                !canonicalSymbol.SecurityType.IsOption())
             {
                 canonicalSymbol = QuantConnect.Symbol.CreateOption(
                     underlying,
                     underlying.ID.Market,
-                    default(OptionStyle),
+                    optionType.DefaultOptionStyle(),
                     default(OptionRight),
                     0,
                     SecurityIdentifier.DefaultDate,
@@ -1668,6 +1663,60 @@ namespace QuantConnect.Algorithm
             if (symbol.IsCanonical())
             {
                 throw new ArgumentException("Expected non-canonical Symbol (i.e. a Symbol representing a specific Future contract");
+            }
+
+            return AddOptionContract(symbol, resolution, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// Creates and adds index options to the algorithm.
+        /// </summary>
+        /// <param name="ticker">The ticker of the Index Option</param>
+        /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
+        /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
+        /// <param name="leverage">The leverage to apply to the index option contracts</param>
+        /// <returns>Canonical Option security</returns>
+        public Option AddIndexOption(string ticker, Resolution? resolution = null, string market = Market.USA, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        {
+            return AddIndexOption(
+                QuantConnect.Symbol.Create(ticker, SecurityType.Index, market),
+                resolution,
+                fillDataForward,
+                leverage);
+        }
+
+        /// <summary>
+        /// Creates and adds index options to the algorithm.
+        /// </summary>
+        /// <param name="symbol">The Symbol of the <see cref="Security"/> returned from <see cref="AddIndex"/></param>
+        /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
+        /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
+        /// <param name="leverage">The leverage to apply to the index option contracts</param>
+        /// <returns>Canonical Option security</returns>
+        public Option AddIndexOption(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        {
+            if (symbol.SecurityType != SecurityType.Index)
+            {
+                throw new ArgumentException("Symbol provided must be of type SecurityType.Index");
+            }
+
+            return AddOption(symbol, resolution, symbol.ID.Market, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// Adds an index option contract to the algorithm.
+        /// </summary>
+        /// <param name="symbol">Symbol of the index option contract</param>
+        /// <param name="resolution">Resolution of the index option contract, i.e. the granularity of the data</param>
+        /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
+        /// <param name="leverage">The leverage to apply to the index option contract</param>
+        /// <returns>Index Option Contract</returns>
+        /// <exception cref="ArgumentException">The provided Symbol is not an Index Option</exception>
+        public Option AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        {
+            if (symbol.SecurityType != SecurityType.IndexOption)
+            {
+                throw new ArgumentException("Symbol provided must be of type SecurityType.IndexOption");
             }
 
             return AddOptionContract(symbol, resolution, fillDataForward, leverage);
@@ -1769,7 +1818,7 @@ namespace QuantConnect.Algorithm
             return AddSecurity<Cfd>(SecurityType.Cfd, ticker, resolution, market, fillDataForward, leverage, false);
         }
 
-        
+
         /// <summary>
         /// Creates and adds a new <see cref="Index"/> security to the algorithm
         /// </summary>
@@ -1780,15 +1829,15 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Index"/> security</returns>
         public Index AddIndex(string ticker, Resolution? resolution = null, string market = null, bool fillDataForward = true)
-        { 
+        {
             var index = AddSecurity<Index>(SecurityType.Index, ticker, resolution, market, fillDataForward, 1, false);
 
-            // Index assets are used for indicators only and cannot be traded directly. 
+            // Index assets are used for indicators only and cannot be traded directly.
             index.IsTradable = false;
 
             return index;
         }
-        
+
         /// <summary>
         /// Creates and adds a new <see cref="Crypto"/> security to the algorithm
         /// </summary>
@@ -2411,7 +2460,7 @@ namespace QuantConnect.Algorithm
         {
             return BrokerageModel.GetShortableProvider().AllShortableSymbols(Time);
         }
-        
+
         /// Set the properties and exchange hours for a given key into our databases
         /// </summary>
         /// <param name="key">Key for database storage</param>

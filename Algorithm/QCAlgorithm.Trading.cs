@@ -478,7 +478,7 @@ namespace QuantConnect.Algorithm
             //Add the order and create a new order Id.
             return Transactions.AddOrder(request);
         }
-        
+
         /// <summary>
         /// Send a limit if touched order to the transaction handler:
         /// </summary>
@@ -492,7 +492,7 @@ namespace QuantConnect.Algorithm
         {
             return LimitIfTouchedOrder(symbol, (decimal)quantity, triggerPrice, limitPrice, tag);
         }
-        
+
         /// <summary>
         /// Send a limit if touched order to the transaction handler:
         /// </summary>
@@ -506,7 +506,7 @@ namespace QuantConnect.Algorithm
         {
             return LimitIfTouchedOrder(symbol, quantity.SafeDecimalCast(), triggerPrice, limitPrice, tag);
         }
-        
+
         /// <summary>
         /// Send a limit if touched order to the transaction handler:
         /// </summary>
@@ -821,7 +821,7 @@ namespace QuantConnect.Algorithm
 
             if (request.OrderType == OrderType.OptionExercise)
             {
-                if (security.Type != SecurityType.Option && security.Type != SecurityType.FutureOption)
+                if (!security.Type.IsOption())
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.NonExercisableSecurity,
                         $"The security with symbol '{request.Symbol}' is not exercisable."

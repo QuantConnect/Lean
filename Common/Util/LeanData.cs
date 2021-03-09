@@ -221,6 +221,7 @@ namespace QuantConnect.Util
                     break;
 
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                     switch (resolution)
                     {
                         case Resolution.Tick:
@@ -515,6 +516,7 @@ namespace QuantConnect.Util
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLowerInvariant()) : directory;
 
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                     // options uses the underlying symbol for pathing.
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLowerInvariant()) : directory;
 
@@ -599,7 +601,7 @@ namespace QuantConnect.Util
                     return Invariant($"{formattedDate}_{symbol.Value.ToLowerInvariant()}_{resolution.ResolutionToLower()}_{tickType.TickTypeToLower()}.csv");
 
                 case SecurityType.Option:
-                    // We want the future option ticker as the lookup name inside the ZIP file
+                case SecurityType.IndexOption:
                     var optionPath = symbol.Underlying.Value.ToLowerInvariant();
 
                     if (isHourOrDaily)
@@ -712,6 +714,7 @@ namespace QuantConnect.Util
 
                     return $"{formattedDate}_{tickTypeString}.zip";
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                     if (isHourOrDaily)
                     {
                         var optionPath = symbol.Underlying.Value.ToLowerInvariant();
@@ -759,7 +762,7 @@ namespace QuantConnect.Util
             {
                 if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd) {
                     tickType = TickType.Quote;
-                } 
+                }
                 else
                 {
                     tickType = TickType.Trade;
@@ -799,6 +802,7 @@ namespace QuantConnect.Util
             {
                 case SecurityType.Option:
                 case SecurityType.FutureOption:
+                case SecurityType.IndexOption:
                     if (isHourlyOrDaily)
                     {
                         var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), parts[2], true);

@@ -219,12 +219,13 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Cfd:
                         return ParseCfd(config, line, date);
-                    
+
                     case SecurityType.Index:
                         return ParseIndex(config, line, date);
 
                     case SecurityType.Option:
                     case SecurityType.FutureOption:
+                    case SecurityType.IndexOption:
                         return ParseOption(config, line, date);
 
                     case SecurityType.Future:
@@ -286,6 +287,7 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Option:
                     case SecurityType.FutureOption:
+                    case SecurityType.IndexOption:
                         return ParseOption(config, stream, date);
 
                     case SecurityType.Future:
@@ -844,7 +846,7 @@ namespace QuantConnect.Data.Market
             {
                 Period = config.Increment,
                 Symbol = config.Symbol
-            }; 
+            };
 
             tradeBar.Time = date.Date.AddMilliseconds(streamReader.GetInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             tradeBar.Open = streamReader.GetDecimal();
@@ -941,9 +943,7 @@ namespace QuantConnect.Data.Market
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
-            if (config.SecurityType == SecurityType.Option ||
-                config.SecurityType == SecurityType.Future ||
-                config.SecurityType == SecurityType.FutureOption)
+            if (config.SecurityType == SecurityType.Future || config.SecurityType.IsOption())
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }
@@ -998,7 +998,16 @@ namespace QuantConnect.Data.Market
         /// <returns>Scaling factor</returns>
         private static decimal GetScaleFactor(Symbol symbol)
         {
-            return symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Option ? _scaleFactor : 1;
+            return UseScaleFactor(symbol)
+                ? _scaleFactor
+                : 1;
+        }
+
+        private static bool UseScaleFactor(Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Equity ||
+                symbol.SecurityType == SecurityType.Option ||
+                symbol.SecurityType == SecurityType.IndexOption;
         }
 
         /// <summary>

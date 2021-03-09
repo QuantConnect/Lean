@@ -262,7 +262,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         // special handling of options data to build the option chain
-                        if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
+                        if (symbol.SecurityType.IsOption())
                         {
                             // internal feeds, like open interest, will not create the chain but will update it if it exists
                             // this is because the open interest could arrive at some closed market hours in which there is no other data and we don't

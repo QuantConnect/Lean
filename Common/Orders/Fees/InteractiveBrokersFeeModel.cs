@@ -91,6 +91,7 @@ namespace QuantConnect.Orders.Fees
                     break;
 
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                     Func<decimal, decimal, CashAmount> optionsCommissionFunc;
                     if (!_optionFee.TryGetValue(market, out optionsCommissionFunc))
                     {

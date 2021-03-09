@@ -83,6 +83,7 @@ namespace QuantConnect.ToolBox
 
                 case SecurityType.Option:
                 case SecurityType.FutureOption:
+                case SecurityType.IndexOption:
                     if (tickType == TickType.Trade) return typeof (TradeBar);
                     if (tickType == TickType.Quote) return typeof (QuoteBar);
                     break;

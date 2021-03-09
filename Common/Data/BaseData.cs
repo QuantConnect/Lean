@@ -238,7 +238,7 @@ namespace QuantConnect.Data
         /// custom data types can override it</remarks>
         public virtual List<Resolution> SupportedResolutions()
         {
-            if (Symbol.SecurityType == SecurityType.Option || Symbol.SecurityType == SecurityType.FutureOption || Symbol.SecurityType == SecurityType.Index)
+            if (Symbol.SecurityType.IsOption() || Symbol.SecurityType == SecurityType.Index)
             {
                 return MinuteResolution;
             }

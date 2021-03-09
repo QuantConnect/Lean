@@ -630,10 +630,10 @@ namespace QuantConnect.Securities
         /// <param name="leverage">Leverage for this asset</param>
         public void SetLeverage(decimal leverage)
         {
-            if (Symbol.ID.SecurityType == SecurityType.Future ||
-                Symbol.ID.SecurityType == SecurityType.Option ||
-                Symbol.ID.SecurityType == SecurityType.FutureOption)
+            if (Symbol.ID.SecurityType == SecurityType.Future || Symbol.ID.SecurityType.IsOption())
+            {
                 return;
+            }
 
             BuyingPowerModel.SetLeverage(this, leverage);
         }

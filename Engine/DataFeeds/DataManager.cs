@@ -473,8 +473,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
-            if (symbol.ID.SecurityType == SecurityType.Option ||
-                symbol.ID.SecurityType == SecurityType.FutureOption ||
+            if (symbol.ID.SecurityType.IsOption() ||
                 symbol.ID.SecurityType == SecurityType.Future ||
                 symbol.ID.SecurityType == SecurityType.Index)
             {

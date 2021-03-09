@@ -1060,7 +1060,7 @@ namespace QuantConnect.Lean.Engine
 
                 var orderType = OrderType.Market;
                 var tag = "Liquidate from delisting";
-                if (security.Type == SecurityType.Option || security.Type == SecurityType.FutureOption)
+                if (security.Type.IsOption())
                 {
                     // tx handler will determine auto exercise/assignment
                     tag = "Option Expired";
@@ -1152,7 +1152,7 @@ namespace QuantConnect.Lean.Engine
 
                 // fetch all option derivatives of the underlying with holdings (excluding the canonical security)
                 var derivatives = algorithm.Securities.Where(kvp => kvp.Key.HasUnderlying &&
-                    (kvp.Key.SecurityType == SecurityType.Option || kvp.Key.SecurityType == SecurityType.FutureOption) &&
+                    kvp.Key.SecurityType.IsOption() &&
                     kvp.Key.Underlying == security.Symbol &&
                     !kvp.Key.Underlying.IsCanonical() &&
                     kvp.Value.HoldStock

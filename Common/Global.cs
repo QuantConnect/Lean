@@ -90,7 +90,7 @@ namespace QuantConnect
         public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
         /// Date format of FIX Protocol UTC Timestamp without milliseconds
         public const string FIX = "yyyyMMdd-HH:mm:ss";
-        /// Date format of FIX Protocol UTC Timestamp with milliseconds 
+        /// Date format of FIX Protocol UTC Timestamp with milliseconds
         public const string FIXWithMillisecond = "yyyyMMdd-HH:mm:ss.fff";
         /// YYYYMM Year and Month Character Date Representation (used for futures)
         public const string YearMonth = "yyyyMM";
@@ -351,7 +351,7 @@ namespace QuantConnect
         /// Contract For a Difference Security Type.
         /// </summary>
         Cfd,
-        
+
         /// <summary>
         /// Cryptocurrency Security Type.
         /// </summary>
@@ -372,7 +372,15 @@ namespace QuantConnect
         /// <summary>
         /// Index Security Type.
         /// </summary>
-        Index
+        Index,
+
+        /// <summary>
+        /// Index Option Security Type.
+        /// </summary>
+        /// <remarks>
+        /// For index options traded on American markets, they tend to be European-style options and are Cash-settled.
+        /// </remarks>
+        IndexOption,
     }
 
     /// <summary>
@@ -738,7 +746,7 @@ namespace QuantConnect
         {
             return string.IsNullOrEmpty(exchange) ? null : ((char)exchange.GetPrimaryExchange()).ToString();
         }
-        
+
         /// <summary>
         /// Returns the main Exchange from the single character encoding.
         /// </summary>
@@ -761,7 +769,7 @@ namespace QuantConnect
             {
                 return primaryExchange;
             }
-            
+
             switch (exchange.LazyToUpper())
             {
                 case "T":
