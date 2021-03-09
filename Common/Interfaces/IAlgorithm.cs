@@ -560,7 +560,7 @@ namespace QuantConnect.Interfaces
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
+        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
