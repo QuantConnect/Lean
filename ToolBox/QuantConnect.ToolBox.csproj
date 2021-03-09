@@ -49,6 +49,9 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
   <ItemGroup>
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.0" />
     <PackageReference Include="CoinAPI.WebSocket.V1" Version="1.6.0" />
     <PackageReference Include="Common.Logging" Version="3.4.1" />
