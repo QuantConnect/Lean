@@ -73,7 +73,7 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
             symbol: Symbol of the option
         Returns:
             OptionChainUniverse for the given symbol'''
-        if symbol.SecurityType != SecurityType.Option and symbol.SecurityType != SecurityType.FutureOption:
+        if not Extensions.IsOption(symbol.SecurityType):
             raise ValueError("CreateOptionChain requires an option symbol.")
 
         # rewrite non-canonical symbols to be canonical

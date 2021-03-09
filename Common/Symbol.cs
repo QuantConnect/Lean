@@ -205,7 +205,7 @@ namespace QuantConnect
         {
             return
                 (ID.SecurityType == SecurityType.Future ||
-                ID.SecurityType.IsOption() && HasUnderlying) &&
+                (ID.SecurityType.IsOption() && HasUnderlying)) &&
                 ID.Date == SecurityIdentifier.DefaultDate;
         }
 

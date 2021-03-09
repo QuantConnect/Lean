@@ -28,7 +28,6 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateIndexOptionsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spx;
-        private Symbol _spy;
         private ExponentialMovingAverage _emaSlow;
         private ExponentialMovingAverage _emaFast;
 
@@ -37,15 +36,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2021, 2, 25);
-            SetEndDate(2021, 3, 3);
+            SetStartDate(2021, 1, 1);
+            SetEndDate(2021, 2, 1);
             SetCash(1000000);
 
             // Use indicator for signal; but it cannot be traded.
             // We will instead trade on SPX options
             _spx = AddIndex("SPX", Resolution.Minute).Symbol;
             var spxOptions = AddIndexOption(_spx, Resolution.Minute);
-            spxOptions.SetFilter(filterFunc => filterFunc.Strikes(-2, 2).Expiration(30, 90));
+            spxOptions.SetFilter(filterFunc => filterFunc.CallsOnly().Strikes(-30, 30).Expiration(30, 90));
 
             _emaSlow = EMA(_spx, 80);
             _emaFast = EMA(_spx, 200);
@@ -56,14 +55,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnData(Slice slice)
         {
-            if (!slice.Bars.ContainsKey(_spx) || !slice.Bars.ContainsKey(_spy))
+            if (!slice.Bars.ContainsKey(_spx))
             {
+                Debug($"No SPX on {Time}");
                 return;
             }
 
             // Warm up indicators
             if (!_emaSlow.IsReady)
             {
+                Debug($"EMA slow not ready on {Time}");
                 return;
             }
 
@@ -71,6 +72,16 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var contract in chain.Contracts.Values)
                 {
+                    if (contract.Expiry.Month == 3 && contract.Symbol.ID.StrikePrice == 3700m && contract.Right == OptionRight.Call && slice.QuoteBars.ContainsKey(contract.Symbol))
+                    {
+                        Log($"{Time} {contract.Strike}{(contract.Right == OptionRight.Call ? 'C' : 'P')} -- {slice.QuoteBars[contract.Symbol]}");
+                    }
+
+                    if (Portfolio.Invested)
+                    {
+                        continue;
+                    }
+
                     if (_emaFast > _emaSlow && contract.Right == OptionRight.Call)
                     {
                         Liquidate(InvertOption(contract.Symbol));

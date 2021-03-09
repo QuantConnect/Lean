@@ -21,7 +21,7 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Securities.IndexOption
 {
     /// <summary>
-    /// Futures Options security
+    /// Index Options security
     /// </summary>
     public class IndexOption : Option.Option
     {
@@ -47,7 +47,7 @@ namespace QuantConnect.Securities.IndexOption
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
-                new OptionExchange(exchangeHours),
+                new IndexOptionExchange(exchangeHours),
                 securityCache,
                 new OptionPortfolioModel(),
                 new ImmediateFillModel(),
@@ -55,7 +55,7 @@ namespace QuantConnect.Securities.IndexOption
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new IndexOptionsMarginModel(),
+                new OptionMarginModel(),
                 new OptionDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,

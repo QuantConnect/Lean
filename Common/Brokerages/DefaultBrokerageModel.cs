@@ -244,6 +244,8 @@ namespace QuantConnect.Brokerages
                     break;
                 case SecurityType.Index:
                     break;
+                case SecurityType.IndexOption:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException($"{GetType().Name}.GetFillModel: Invalid security type {security.Type}");
             }

@@ -1783,8 +1783,9 @@ namespace QuantConnect
                 case SecurityType.Forex:
                 case SecurityType.Future:
                 case SecurityType.Cfd:
-                case SecurityType.Index:
                 case SecurityType.Crypto:
+                case SecurityType.Index:
+                case SecurityType.IndexOption:
                     return true;
                 default:
                     return false;

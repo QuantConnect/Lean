@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     Log.Trace($"LiveOptionChainProvider.GetOptionContractList(): Fetching option chain for {symbol.Value} [Attempt {attempt}]");
 
-                    contracts = FindEquityOptionContracts(symbol.Value);
+                    contracts = FindOptionContracts(symbol.Value);
                     break;
                 }
                 catch (WebException exception)
@@ -267,14 +267,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Retrieve the list of option contracts for an underlying symbol from the OCC website
         /// </summary>
-        private static IEnumerable<Symbol> FindEquityOptionContracts(string underlyingSymbol)
+        private static IEnumerable<Symbol> FindOptionContracts(Symbol underlyingSymbol)
         {
             var symbols = new List<Symbol>();
 
             using (var client = new WebClient())
             {
                 // use QC url to bypass TLS issues with Mono pre-4.8 version
-                var url = "https://www.quantconnect.com/api/v2/theocc/series-search?symbolType=U&symbol=" + underlyingSymbol;
+                var url = "https://www.quantconnect.com/api/v2/theocc/series-search?symbolType=U&symbol=" + underlyingSymbol.Value;
 
                 // download the text file
                 var fileContent = client.DownloadString(url);
@@ -288,20 +288,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var fields = line.Split('\t');
 
                     var ticker = fields[0].Trim();
-                    if (ticker != underlyingSymbol)
+                    if (ticker != underlyingSymbol.Value)
                         continue;
 
                     var expiryDate = new DateTime(fields[2].ToInt32(), fields[3].ToInt32(), fields[4].ToInt32());
                     var strike = (fields[5] + "." + fields[6]).ToDecimal();
 
-                    if (fields[7].Contains("C"))
-                    {
-                        symbols.Add(Symbol.CreateOption(underlyingSymbol, Market.USA, OptionStyle.American, OptionRight.Call, strike, expiryDate));
-                    }
+                    OptionRight? right = fields[7].Contains("C")
+                        ? OptionRight.Call
+                        : fields[7].Contains("P")
+                            ? (OptionRight?)OptionRight.Put
+                            : null;
 
-                    if (fields[7].Contains("P"))
+                    if (right.HasValue)
                     {
-                        symbols.Add(Symbol.CreateOption(underlyingSymbol, Market.USA, OptionStyle.American, OptionRight.Put, strike, expiryDate));
+                        symbols.Add(Symbol.CreateOption(
+                            underlyingSymbol,
+                            underlyingSymbol.ID.Market,
+                            underlyingSymbol.SecurityType.DefaultOptionStyle(),
+                            right.Value,
+                            strike,
+                            expiryDate));
                     }
                 }
             }
