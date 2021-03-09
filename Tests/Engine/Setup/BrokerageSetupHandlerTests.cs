@@ -198,15 +198,20 @@ namespace QuantConnect.Tests.Engine.Setup
             }
         }
 
-        [Test]
-        public void EnforcesCashAmounts()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void EnforcesCashAmounts(bool force)
         {
             var algorithm = new TestAlgorithm();
             algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
 
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
             var job = GetJob();
-            job.BrokerageData["max-cash-limit"] = "[{\"amount\":20, \"currency\": \"USD\"}, {\"Amount\":1, \"Currency\": \"EUR\"}]";
+            job.BrokerageData["max-cash-limit"] = "[{\"cash\":{\"amount\":20, \"currency\": \"USD\"}, \"force\": " +
+                $"\"{force}\"" +
+                "},{\"cash\":{\"Amount\":1, \"Currency\": \"EUR\"}, \"force\":" +
+                $"\"{force}\"" +
+                "}]";
 
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
@@ -230,7 +235,16 @@ namespace QuantConnect.Tests.Engine.Setup
 
             Assert.AreEqual(20, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
             Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey(Currencies.GBP));
-            Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey(Currencies.EUR));
+            if (force)
+            {
+                // even if the brokerage did not have USD we force it
+                Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey(Currencies.EUR));
+                Assert.AreEqual(1, algorithm.Portfolio.CashBook[Currencies.EUR].Amount);
+            }
+            else
+            {
+                Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey(Currencies.EUR));
+            }
         }
 
         [TestCase(true)]
