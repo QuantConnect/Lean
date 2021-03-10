@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
@@ -63,6 +64,21 @@ namespace QuantConnect.Securities.IndexOption
             )
         {
             ExerciseSettlement = settlementType;
+        }
+
+        /// <summary>
+        /// Consumes market price data and updates the minimum price variation
+        /// </summary>
+        /// <param name="data">Market price data</param>
+        /// <remarks>
+        /// Index options have variable sized minimum price variations.
+        /// For prices greater than or equal to $3.00 USD, the minimum price variation is $0.10 USD.
+        /// For prices less than $3.00 USD, the minimum price variation is $0.05 USD.
+        /// </remarks>
+        protected override void UpdateConsumersMarketPrice(BaseData data)
+        {
+            base.UpdateConsumersMarketPrice(data);
+            ((OptionSymbolProperties)SymbolProperties).UpdateMinimumPriceVariation(data.Price >= 3 ? 0.10m : 0.05m);
         }
     }
 }

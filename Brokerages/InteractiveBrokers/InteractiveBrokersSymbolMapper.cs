@@ -159,13 +159,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         return Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American, optionRight, strike, expirationDate);
 
                     case SecurityType.IndexOption:
+                        // Index Options have their expiry offset from their last trading date by one day. We add one day
+                        // to get the expected expiration date.
                         return Symbol.CreateOption(
                             Symbol.Create(brokerageSymbol, SecurityType.Index, market),
                             market,
                             securityType.DefaultOptionStyle(),
                             optionRight,
                             strike,
-                            expirationDate);
+                            expirationDate.AddDays(1));
 
                     case SecurityType.FutureOption:
                         var future = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(

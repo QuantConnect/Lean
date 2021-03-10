@@ -699,7 +699,8 @@ namespace QuantConnect.Data.Market
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsValid()
         {
-            return (TickType == TickType.Trade && LastPrice > 0.0m && Quantity > 0) ||
+            // Indexes have zero volume in live trading, but is still a valid tick.
+            return (TickType == TickType.Trade && (LastPrice > 0.0m && (Quantity > 0 || Symbol.SecurityType == SecurityType.Index))) ||
                    (TickType == TickType.Quote && AskPrice > 0.0m && AskSize > 0) ||
                    (TickType == TickType.Quote && BidPrice > 0.0m && BidSize > 0) ||
                    (TickType == TickType.OpenInterest && Value > 0);

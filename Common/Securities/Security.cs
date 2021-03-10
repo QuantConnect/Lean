@@ -817,7 +817,7 @@ namespace QuantConnect.Securities
             UpdateSubscriptionProperties();
         }
 
-        private void UpdateConsumersMarketPrice(BaseData data)
+        protected virtual void UpdateConsumersMarketPrice(BaseData data)
         {
             if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);

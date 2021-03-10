@@ -72,9 +72,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <exception cref="ArgumentException">Option underlying Symbol is not Future or Equity</exception>
         public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
         {
-            if (underlyingSymbol.SecurityType == SecurityType.Equity)
+            if (underlyingSymbol.SecurityType == SecurityType.Equity || underlyingSymbol.SecurityType == SecurityType.Index)
             {
-                // Source data from TheOCC if we're trading equity options
+                // Source data from TheOCC if we're trading equity or index options
                 return GetEquityOptionContractList(underlyingSymbol, date);
             }
             if (underlyingSymbol.SecurityType == SecurityType.Future)
@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return GetFutureOptionContractList(underlyingSymbol, date);
             }
 
-            throw new ArgumentException("Option Underlying SecurityType is not supported. Supported types are: Equity, Future");
+            throw new ArgumentException("Option Underlying SecurityType is not supported. Supported types are: Equity, Index, Future");
         }
 
         private IEnumerable<Symbol> GetFutureOptionContractList(Symbol futureContractSymbol, DateTime date)
