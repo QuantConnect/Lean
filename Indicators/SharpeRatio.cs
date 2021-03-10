@@ -19,7 +19,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Calculation of the rolling moving average for the Sharpe Ratio (sr) developed by William F. Sharpe
+    /// Calculation of the Sharpe Ratio (SR) developed by William F. Sharpe
     /// You can optionally specify a different moving average type to be used in the computation.
     ///
     /// Reference: https://www.investopedia.com/articles/07/sharpe_ratio.asp
@@ -45,17 +45,7 @@ namespace QuantConnect.Indicators
         /// Indicator to store the calculation of the sharpe ratio
         /// </summary>
         private CompositeIndicator<IndicatorDataPoint> _sharpeRatio;
-
-        /// <summary>
-        /// Stores the period of the historical percent changes used for calculating sharpe ratio
-        /// </summary>
-        public int SharpePeriod { get; }
-
-        /// <summary>
-        /// Stores the value of the risk-free rate of return for calculation
-        /// </summary>
-        public decimal RiskFreeRate { get; }
-
+        
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
@@ -64,7 +54,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Returns whether the indicator is properly initalized with data
         /// </summary>
-        public override bool IsReady => _counter == SharpePeriod + 1 && _sharpeRatio.IsReady && _roc.IsReady;
+        public override bool IsReady => _counter == WarmUpPeriod && _sharpeRatio.IsReady && _roc.IsReady;
 
         /// <summary>
         /// Creates a new SharpeRatio indicator using the specified periods
@@ -84,9 +74,7 @@ namespace QuantConnect.Indicators
             var sma = _roc.SMA(sharpePeriod);
             _sharpeRatio = sma.Minus(riskFreeRate).Over(std);
 
-            // init public variables
-            SharpePeriod = sharpePeriod;
-            RiskFreeRate = riskFreeRate;
+            // define warmup value
             WarmUpPeriod = sharpePeriod + 1;
         }
 
@@ -108,7 +96,7 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             // increments counter until warmup period has been successfully reached
-            if (_counter < SharpePeriod + 1)
+            if (_counter < WarmUpPeriod)
                 _counter++;
 
             // update indicators
