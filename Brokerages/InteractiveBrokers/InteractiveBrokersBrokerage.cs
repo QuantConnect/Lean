@@ -38,6 +38,7 @@ using QuantConnect.IBAutomater;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities.FutureOption;
+using QuantConnect.Securities.Index;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
@@ -1928,9 +1929,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.PrimaryExch = GetPrimaryExchange(contract, symbol);
             }
 
+            // Indexes requires that the exchange be specified exactly
+            if (symbol.ID.SecurityType == SecurityType.Index)
+            {
+                contract.Exchange = IndexSymbol.GetIndexExchange(symbol);
+            }
+
             if (symbol.ID.SecurityType.IsOption())
             {
-                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter);
+                // Subtract a day from Index Options, since their last trading date
+                // is on the day before the expiry.
+                contract.LastTradeDateOrContractMonth = symbol.ID.Date
+                    .AddDays(symbol.SecurityType == SecurityType.IndexOption ? -1 : 0)
+                    .ToStringInvariant(DateFormat.EightCharacter);
+
                 contract.Right = symbol.ID.OptionRight == OptionRight.Call ? IB.RightType.Call : IB.RightType.Put;
                 contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
                 contract.Symbol = ibSymbol;
