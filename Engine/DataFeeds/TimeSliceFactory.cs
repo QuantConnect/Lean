@@ -397,7 +397,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = baseData.Symbol;
 
             OptionChain chain;
-            var canonical = Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
+            var canonical = symbol.Canonical;
             if (!optionChains.TryGetValue(canonical, out chain))
             {
                 chain = new OptionChain(canonical, algorithmTime);
@@ -504,7 +504,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = baseData.Symbol;
 
             FuturesChain chain;
-            var canonical = Symbol.Create(symbol.ID.Symbol, SecurityType.Future, symbol.ID.Market);
+            var canonical = symbol.Canonical;
             if (!futuresChains.TryGetValue(canonical, out chain))
             {
                 chain = new FuturesChain(canonical, algorithmTime);

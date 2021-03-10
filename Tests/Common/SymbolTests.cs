@@ -619,6 +619,38 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expectedValue, symbol.Value);
         }
 
+        [TestCase("CL XKJAZ588SI4H", "CL", "CL21F21")] // Future
+        [TestCase("CL JL", "CL", "/CL")] // Canonical Future
+        [TestCase("ES 1S4 | ES XLDTU1KH5XC1", "ES", "?ES21F21")] // Future Option Canonical
+        [TestCase("ES XKGCMV4QK9VO | ES XLDTU1KH5XC1", "ES", "ES21F21  201218C00000000")] // Future Option
+        [TestCase("SPY 2U | SPY R735QTJ8XC9X", "SPY", "?SPY")] // Option Canonical
+        [TestCase("GOOCV 305RBQ2BZBZT2 | GOOCV VP83T1ZUHROL", "GOOCV", "GOOCV 151224P00750000")] // Option
+        [TestCase("SPY R735QTJ8XC9X", "SPY", null)] // Equity
+        [TestCase("EURGBP 8G", "EURGBP", null)] // Forex
+        [TestCase("BTCUSD XJ", "BTCUSD", null)] // Crypto
+        public void SymbolCanonical(string identifier, string ticker, string expectedValue)
+        {
+            var symbol = new Symbol(SecurityIdentifier.Parse(identifier), ticker);
+            if (expectedValue != null)
+            {
+                var result = symbol.Canonical;
+
+                Assert.IsNotNull(result);
+                Assert.AreSame(result, symbol.Canonical);
+                Assert.IsTrue(result.IsCanonical());
+                Assert.IsTrue(result.Value.Contains(ticker));
+                Assert.AreEqual(symbol.SecurityType, result.SecurityType);
+                Assert.AreEqual(symbol.ID.Market, result.ID.Market);
+            }
+            else
+            {
+                Assert.Throws<InvalidOperationException>(() =>
+                {
+                    var canonical = symbol.Canonical;
+                });
+            }
+        }
+
         class OldSymbol
         {
             public string Value { get; set; }
