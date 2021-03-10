@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Fasterflect;
@@ -41,6 +42,8 @@ namespace QuantConnect.Lean.Engine.Setup
     public class BrokerageSetupHandler : ISetupHandler
     {
         private bool _notifiedDefaultResolutionUsed;
+
+        public static string MaxAllocationLimitConfig = "max-allocation-limit";
 
         /// <summary>
         /// The worker thread instance the setup handler should use
@@ -201,7 +204,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
 
                 var accountCurrency = brokerage.AccountBaseCurrency;
-                if (liveJob.BrokerageData.ContainsKey("max-cash-limit"))
+                if (liveJob.BrokerageData.ContainsKey(MaxAllocationLimitConfig))
                 {
                     accountCurrency = Currencies.USD;
                     message += ". Allocation limited, will use 'USD' account currency";
@@ -298,12 +301,12 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
-                if (!LoadCashBalance(liveJob, brokerage, algorithm))
+                if (!LoadCashBalance(brokerage, algorithm))
                 {
                     return false;
                 }
 
-                if (!LoadExistingHoldingsAndOrders(liveJob, brokerage, algorithm, parameters))
+                if (!LoadExistingHoldingsAndOrders(brokerage, algorithm, parameters))
                 {
                     return false;
                 }
@@ -316,6 +319,19 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (algorithm.Portfolio.TotalPortfolioValue == 0)
                 {
                     algorithm.Debug("Warning: No cash balances or holdings were found in the brokerage account.");
+                }
+
+                string maxCashLimitStr;
+                if (liveJob.BrokerageData.TryGetValue(MaxAllocationLimitConfig, out maxCashLimitStr))
+                {
+                    var maxCashLimit = decimal.Parse(maxCashLimitStr, NumberStyles.Any, CultureInfo.InvariantCulture);
+
+                    if (algorithm.Portfolio.TotalPortfolioValue > maxCashLimit)
+                    {
+                        var exceptionMessage = $"TotalPortfolioValue '{algorithm.Portfolio.TotalPortfolioValue}' exceeds allocation limit '{maxCashLimit}'";
+                        algorithm.Debug(exceptionMessage);
+                        throw new ArgumentException(exceptionMessage);
+                    }
                 }
 
                 //Set the starting portfolio value for the strategy to calculate performance:
@@ -341,56 +357,18 @@ namespace QuantConnect.Lean.Engine.Setup
             return Errors.Count == 0;
         }
 
-        private bool LoadCashBalance(LiveNodePacket liveJob, IBrokerage brokerage, IAlgorithm algorithm)
+        private bool LoadCashBalance(IBrokerage brokerage, IAlgorithm algorithm)
         {
             Log.Trace("BrokerageSetupHandler.Setup(): Fetching cash balance from brokerage...");
             try
             {
                 // set the algorithm's cash balance for each currency
                 var cashBalance = brokerage.GetCashBalance();
-                string maxCashLimitStr;
-                if (liveJob.BrokerageData.TryGetValue("max-cash-limit", out maxCashLimitStr))
+                foreach (var cash in cashBalance)
                 {
-                    var maxCashLimit = JsonConvert.DeserializeObject<HashSet<CashAmountLimit>>(maxCashLimitStr);
+                    Log.Trace($"BrokerageSetupHandler.Setup(): Setting {cash.Currency} cash to {cash.Amount}");
 
-                    brokerage.DisableCashSync();
-
-                    Log.Trace("BrokerageSetupHandler.Setup(): will use job packet max cash limit. Disabled cash sync.");
-                    foreach (var amountLimit in maxCashLimit)
-                    {
-                        var cash = amountLimit.Cash;
-
-                        var brokerageCash = cashBalance.FirstOrDefault(
-                            brokerageCashAmount => string.Equals(brokerageCashAmount.Currency, cash.Currency, StringComparison.InvariantCultureIgnoreCase));
-                        // we use the min amount between the brokerage and the job packet, if any
-                        if (brokerageCash != default(CashAmount) || amountLimit.Force)
-                        {
-                            Log.Trace($"BrokerageSetupHandler.Setup(): Job packet amount {cash.Currency} {cash.Amount}. Brokerage amount {brokerageCash.Amount}. Force {amountLimit.Force}");
-
-                            var cashToUse = cash;
-                            if (!amountLimit.Force)
-                            {
-                                // if we are not forcing we use the min between brokerage and limit
-                                cashToUse = new CashAmount(Math.Min(cash.Amount, brokerageCash.Amount), cash.Currency);
-                            }
-                            algorithm.Debug($"Live deployment has been allocation limited to {cashToUse.Amount:C} {cashToUse.Currency}");
-
-                            algorithm.Portfolio.SetCash(cashToUse.Currency, cashToUse.Amount, 0);
-                        }
-                        else
-                        {
-                            Log.Trace($"BrokerageSetupHandler.Setup(): Skip setting {cash.Currency} brokerage does not have it. Force: {amountLimit.Force}");
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var cash in cashBalance)
-                    {
-                        Log.Trace($"BrokerageSetupHandler.Setup(): Setting {cash.Currency} cash to {cash.Amount}");
-
-                        algorithm.Portfolio.SetCash(cash.Currency, cash.Amount, 0);
-                    }
+                    algorithm.Portfolio.SetCash(cash.Currency, cash.Amount, 0);
                 }
             }
             catch (Exception err)
@@ -399,20 +377,11 @@ namespace QuantConnect.Lean.Engine.Setup
                 AddInitializationError("Error getting cash balance from brokerage: " + err.Message, err);
                 return false;
             }
-
             return true;
         }
 
-        private bool LoadExistingHoldingsAndOrders(LiveNodePacket liveJob, IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
+        private bool LoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
         {
-            string loadExistingHoldings;
-            if (liveJob.BrokerageData.TryGetValue("load-existing-holdings", out loadExistingHoldings) && !bool.Parse(loadExistingHoldings))
-            {
-                Log.Trace("BrokerageSetupHandler.Setup(): Ignoring brokerage holdings and orders");
-                algorithm.Debug("Live deployment skipping loading of existing assets from the brokerage per deployment settings.");
-                return true;
-            }
-
             var supportedSecurityTypes = new HashSet<SecurityType>
             {
                 SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.Crypto
