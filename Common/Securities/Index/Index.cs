@@ -61,6 +61,7 @@ namespace QuantConnect.Securities.Index
                 )
         {
             Holdings = new IndexHolding(this, currencyConverter);
+            IsTradable = false;
         }
 
         /// <summary>
@@ -99,6 +100,7 @@ namespace QuantConnect.Securities.Index
                 )
         {
             Holdings = new IndexHolding(this, currencyConverter);
+            IsTradable = false;
         }
 
         /// <summary>
