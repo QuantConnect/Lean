@@ -24,14 +24,13 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests In The Money (ITM) future option expiry for calls.
-    /// We expect 3 orders from the algorithm, which are:
+    /// This regression algorithm tests In The Money (ITM) index option expiry for calls.
+    /// We expect 2 orders from the algorithm, which are:
     ///
-    ///   * Initial entry, buy ES Call Option (expiring ITM)
-    ///   * Option exercise, receiving ES future contracts
-    ///   * Future contract liquidation, due to impending expiry
+    ///   * Initial entry, buy SPX Call Option (expiring ITM)
+    ///   * Option exercise, settles into cash
     ///
-    /// Additionally, we test delistings for future options and assert that our
+    /// Additionally, we test delistings for index options and assert that our
     /// portfolio holdings reflect the orders the algorithm has submitted.
     /// </summary>
     public class IndexOptionCallITMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition

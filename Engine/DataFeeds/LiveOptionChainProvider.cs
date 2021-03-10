@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     Log.Trace($"LiveOptionChainProvider.GetOptionContractList(): Fetching option chain for {symbol.Value} [Attempt {attempt}]");
 
-                    contracts = FindOptionContracts(symbol.Value);
+                    contracts = FindOptionContracts(symbol);
                     break;
                 }
                 catch (WebException exception)

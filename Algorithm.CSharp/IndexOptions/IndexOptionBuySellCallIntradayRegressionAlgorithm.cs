@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var expectedContract3700 = QuantConnect.Symbol.CreateOption(
                 spx,
-                Market.CME,
+                Market.USA,
                 OptionStyle.European,
                 OptionRight.Call,
                 3700m,
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var expectedContract3800 = QuantConnect.Symbol.CreateOption(
                 spx,
-                Market.CME,
+                Market.USA,
                 OptionStyle.European,
                 OptionRight.Call,
                 3800m,
@@ -75,12 +75,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (spxOptions[0] != expectedContract3700)
             {
-                Log($"{spxOptions[0].ID.Market}\n{spxOptions[0].ID.OptionStyle}\n{spxOptions[0].ID.OptionRight}\n{spxOptions[0].ID.StrikePrice}\n{spxOptions[0].ID.Date}");
                 throw new Exception($"Contract {expectedContract3700} was not found in the chain, found instead: {spxOptions[0]}");
             }
             if (spxOptions[1] != expectedContract3800)
             {
-                Log($"{spxOptions[1].ID.Market}\n{spxOptions[1].ID.OptionStyle}\n{spxOptions[1].ID.OptionRight}\n{spxOptions[1].ID.StrikePrice}\n{spxOptions[1].ID.Date}");
                 throw new Exception($"Contract {expectedContract3800} was not found in the chain, found instead: {spxOptions[1]}");
             }
 

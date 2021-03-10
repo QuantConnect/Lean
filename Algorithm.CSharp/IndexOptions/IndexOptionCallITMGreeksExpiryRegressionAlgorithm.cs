@@ -26,8 +26,8 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests In The Money (ITM) future option expiry for calls.
-    /// We test to make sure that FOPs have greeks enabled, same as equity options.
+    /// This regression algorithm tests In The Money (ITM) index option expiry for calls.
+    /// We test to make sure that index options have greeks enabled, same as equity options.
     /// </summary>
     public class IndexOptionCallITMGreeksExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
