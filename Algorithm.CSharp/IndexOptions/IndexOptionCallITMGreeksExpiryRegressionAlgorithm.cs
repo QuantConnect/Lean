@@ -33,33 +33,28 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private bool _invested;
         private int _onDataCalls;
-        private Symbol _es19m20;
-        private Option _esOption;
+        private Symbol _spx;
+        private Option _spxOption;
         private Symbol _expectedOptionContract;
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 5);
-            SetEndDate(2020, 6, 30);
+            SetStartDate(2021, 1, 4);
+            SetEndDate(2021, 1, 31);
 
-            _es19m20 = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(
-                    Futures.Indices.SP500EMini,
-                    Market.CME,
-                    new DateTime(2020, 6, 19)),
-                Resolution.Minute).Symbol;
+            _spx = AddIndex("SPX", Resolution.Minute).Symbol;
 
-            // Select a future option expiring ITM, and adds it to the algorithm.
-            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, new DateTime(2020, 1, 5))
-                .Where(x => x.ID.StrikePrice <= 3200m && x.ID.OptionRight == OptionRight.Call)
+            // Select an index option expiring ITM, and adds it to the algorithm.
+            _spxOption = AddIndexOptionContract(OptionChainProvider.GetOptionContractList(_spx, Time)
+                .Where(x => x.ID.StrikePrice <= 3200m && x.ID.OptionRight == OptionRight.Call && x.ID.Date.Year == 2021 && x.ID.Date.Month == 1)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
                 .Single(), Resolution.Minute);
 
-            _esOption.PriceModel = OptionPriceModels.BjerksundStensland();
+            _spxOption.PriceModel = OptionPriceModels.BjerksundStensland();
 
-            _expectedOptionContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3200m, new DateTime(2020, 6, 19));
-            if (_esOption.Symbol != _expectedOptionContract)
+            _expectedOptionContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 3200m, new DateTime(2021, 1, 15));
+            if (_spxOption.Symbol != _expectedOptionContract)
             {
                 throw new Exception($"Contract {_expectedOptionContract} was not found in the chain");
             }

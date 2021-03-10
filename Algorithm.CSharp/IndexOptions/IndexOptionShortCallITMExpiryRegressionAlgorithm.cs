@@ -25,48 +25,42 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests In The Money (ITM) future option expiry for short calls.
-    /// We expect 3 orders from the algorithm, which are:
+    /// This regression algorithm tests In The Money (ITM) index option expiry for short calls.
+    /// We expect 2 orders from the algorithm, which are:
     ///
-    ///   * Initial entry, sell ES Call Option (expiring ITM)
-    ///   * Option assignment, sell 1 contract of the underlying (ES)
-    ///   * Future contract expiry, liquidation (buy 1 ES future)
+    ///   * Initial entry, sell SPX Call Option (expiring ITM)
+    ///   * Option assignment
     ///
-    /// Additionally, we test delistings for future options and assert that our
+    /// Additionally, we test delistings for index options and assert that our
     /// portfolio holdings reflect the orders the algorithm has submitted.
     /// </summary>
     public class IndexOptionShortCallITMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _es19m20;
+        private Symbol _spx;
         private Symbol _esOption;
         private Symbol _expectedContract;
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 5);
-            SetEndDate(2020, 6, 30);
+            SetStartDate(2021, 1, 4);
+            SetEndDate(2021, 1, 31);
 
-            _es19m20 = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(
-                    Futures.Indices.SP500EMini,
-                    Market.CME,
-                    new DateTime(2020, 6, 19)),
-                Resolution.Minute).Symbol;
+            _spx = AddIndex("SPX", Resolution.Minute).Symbol;
 
-            // Select a future option expiring ITM, and adds it to the algorithm.
-            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
-                .Where(x => x.ID.StrikePrice <= 3100m && x.ID.OptionRight == OptionRight.Call)
+            // Select a index option expiring ITM, and adds it to the algorithm.
+            _esOption = AddIndexOptionContract(OptionChainProvider.GetOptionContractList(_spx, Time)
+                .Where(x => x.ID.StrikePrice <= 3100m && x.ID.OptionRight == OptionRight.Call && x.ID.Date.Year == 2021 && x.ID.Date.Month == 1)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 
-            _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3100m, new DateTime(2020, 6, 19));
+            _expectedContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 3100m, new DateTime(2021, 1, 15));
             if (_esOption != _expectedContract)
             {
                 throw new Exception($"Contract {_expectedContract} was not found in the chain");
             }
 
-            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1), () =>
+            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_spx, 1), () =>
             {
                 MarketOrder(_esOption, -1);
             });
@@ -80,14 +74,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    if (delisting.Time != new DateTime(2020, 6, 19))
+                    if (delisting.Time != new DateTime(2021, 1, 15))
                     {
                         throw new Exception($"Delisting warning issued at unexpected date: {delisting.Time}");
                     }
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
-                    if (delisting.Time != new DateTime(2020, 6, 20))
+                    if (delisting.Time != new DateTime(2021, 1, 16))
                     {
                         throw new Exception($"Delisting happened at unexpected date: {delisting.Time}");
                     }
@@ -109,13 +103,13 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var security = Securities[orderEvent.Symbol];
-            if (security.Symbol == _es19m20)
+            if (security.Symbol == _spx)
             {
-                AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedContract]);
+                AssertIndexOptionOrderExercise(orderEvent, security, Securities[_expectedContract]);
             }
             else if (security.Symbol == _expectedContract)
             {
-                AssertFutureOptionContractOrder(orderEvent, security);
+                AssertIndexOptionContractOrder(orderEvent, security);
             }
             else
             {
@@ -125,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{orderEvent}");
         }
 
-        private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
+        private void AssertIndexOptionOrderExercise(OrderEvent orderEvent, Security index, Security optionContract)
         {
             if (orderEvent.Message.Contains("Assignment"))
             {
@@ -133,22 +127,14 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception("Option was not assigned at expected strike price (3100)");
                 }
-                if (orderEvent.Direction != OrderDirection.Sell || future.Holdings.Quantity != -1)
+                if (orderEvent.Direction != OrderDirection.Sell || index.Holdings.Quantity != 0)
                 {
-                    throw new Exception($"Expected Qty: -1 futures holdings for assigned future {future.Symbol}, found {future.Holdings.Quantity}");
+                    throw new Exception($"Expected Qty: 0 index holdings for assigned index option {index.Symbol}, found {index.Holdings.Quantity}");
                 }
-
-                return;
-            }
-
-            if (orderEvent.Direction == OrderDirection.Buy && future.Holdings.Quantity != 0)
-            {
-                // We buy back the underlying at expiration, so we expect a neutral position then
-                throw new Exception($"Expected no holdings when liquidating future contract {future.Symbol}");
             }
         }
 
-        private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security option)
+        private void AssertIndexOptionContractOrder(OrderEvent orderEvent, Security option)
         {
             if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != -1)
             {

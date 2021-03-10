@@ -25,51 +25,46 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests Out of The Money (OTM) future option expiry for short calls.
+    /// This regression algorithm tests Out of The Money (OTM) index option expiry for short calls.
     /// We expect 2 orders from the algorithm, which are:
     ///
-    ///   * Initial entry, sell ES Call Option (expiring OTM)
+    ///   * Initial entry, sell SPX Call Option (expiring OTM)
     ///     - Profit the option premium, since the option was not assigned.
     ///
-    ///   * Liquidation of ES call OTM contract on the last trade date
+    ///   * Liquidation of SPX call OTM contract on the last trade date
     ///
-    /// Additionally, we test delistings for future options and assert that our
+    /// Additionally, we test delistings for index options and assert that our
     /// portfolio holdings reflect the orders the algorithm has submitted.
     /// </summary>
     public class IndexOptionShortCallOTMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _es19m20;
-        private Symbol _esOption;
+        private Symbol _spx;
+        private Symbol _spxOption;
         private Symbol _expectedContract;
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 5);
-            SetEndDate(2020, 6, 30);
+            SetStartDate(2021, 1, 4);
+            SetEndDate(2021, 1, 31);
 
-            _es19m20 = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(
-                    Futures.Indices.SP500EMini,
-                    Market.CME,
-                    new DateTime(2020, 6, 19)),
-                Resolution.Minute).Symbol;
+            _spx = AddIndex("SPX", Resolution.Minute).Symbol;
 
-            // Select a future option expiring ITM, and adds it to the algorithm.
-            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
-                .Where(x => x.ID.StrikePrice >= 3400m && x.ID.OptionRight == OptionRight.Call)
+            // Select a index option expiring ITM, and adds it to the algorithm.
+            _spxOption = AddIndexOptionContract(OptionChainProvider.GetOptionContractList(_spx, Time)
+                .Where(x => x.ID.StrikePrice >= 3400m && x.ID.OptionRight == OptionRight.Call && x.ID.Date.Year == 2021 && x.ID.Date.Month == 1)
                 .OrderBy(x => x.ID.StrikePrice)
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 
-            _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3400m, new DateTime(2020, 6, 19));
-            if (_esOption != _expectedContract)
+            _expectedContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 3400m, new DateTime(2021, 1, 15));
+            if (_spxOption != _expectedContract)
             {
                 throw new Exception($"Contract {_expectedContract} was not found in the chain");
             }
 
-            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1), () =>
+            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_spx, 1), () =>
             {
-                MarketOrder(_esOption, -1);
+                MarketOrder(_spxOption, -1);
             });
         }
 
@@ -81,14 +76,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    if (delisting.Time != new DateTime(2020, 6, 19))
+                    if (delisting.Time != new DateTime(2021, 1, 15))
                     {
                         throw new Exception($"Delisting warning issued at unexpected date: {delisting.Time}");
                     }
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
-                    if (delisting.Time != new DateTime(2020, 6, 20))
+                    if (delisting.Time != new DateTime(2021, 1, 16))
                     {
                         throw new Exception($"Delisting happened at unexpected date: {delisting.Time}");
                     }
@@ -110,14 +105,14 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var security = Securities[orderEvent.Symbol];
-            if (security.Symbol == _es19m20)
+            if (security.Symbol == _spx)
             {
                 throw new Exception($"Expected no order events for underlying Symbol {security.Symbol}");
             }
 
             if (security.Symbol == _expectedContract)
             {
-                AssertFutureOptionContractOrder(orderEvent, security);
+                AssertIndexOptionContractOrder(orderEvent, security);
             }
             else
             {
@@ -127,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{orderEvent}");
         }
 
-        private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security optionContract)
+        private void AssertIndexOptionContractOrder(OrderEvent orderEvent, Security optionContract)
         {
             if (orderEvent.Direction == OrderDirection.Sell && optionContract.Holdings.Quantity != -1)
             {

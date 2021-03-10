@@ -35,38 +35,33 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class IndexOptionCallITMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _es19m20;
-        private Symbol _esOption;
+        private Symbol _spx;
+        private Symbol _spxOption;
         private Symbol _expectedOptionContract;
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 5);
-            SetEndDate(2020, 6, 30);
+            SetStartDate(2021, 1, 4);
+            SetEndDate(2021, 1, 31);
 
-            _es19m20 = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(
-                    Futures.Indices.SP500EMini,
-                    Market.CME,
-                    new DateTime(2020, 6, 19)),
-                Resolution.Minute).Symbol;
+            _spx = AddIndex("SPX", Resolution.Minute).Symbol;
 
-            // Select a future option expiring ITM, and adds it to the algorithm.
-            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
-                .Where(x => x.ID.StrikePrice <= 3200m && x.ID.OptionRight == OptionRight.Call)
+            // Select an index option expiring ITM, and adds it to the algorithm.
+            _spxOption = AddIndexOptionContract(OptionChainProvider.GetOptionContractList(_spx, Time)
+                .Where(x => x.ID.StrikePrice <= 3200m && x.ID.OptionRight == OptionRight.Call && x.ID.Date.Year == 2021 && x.ID.Date.Month == 1)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 
-            _expectedOptionContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3200m, new DateTime(2020, 6, 19));
-            if (_esOption != _expectedOptionContract)
+            _expectedOptionContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 3200m, new DateTime(2021, 1, 15));
+            if (_spxOption != _expectedOptionContract)
             {
                 throw new Exception($"Contract {_expectedOptionContract} was not found in the chain");
             }
 
-            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1), () =>
+            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_spx, 1), () =>
             {
-                MarketOrder(_esOption, 1);
+                MarketOrder(_spxOption, 1);
             });
         }
 
@@ -78,14 +73,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    if (delisting.Time != new DateTime(2020, 6, 19))
+                    if (delisting.Time != new DateTime(2021, 1, 15))
                     {
                         throw new Exception($"Delisting warning issued at unexpected date: {delisting.Time}");
                     }
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
-                    if (delisting.Time != new DateTime(2020, 6, 20))
+                    if (delisting.Time != new DateTime(2021, 1, 16))
                     {
                         throw new Exception($"Delisting happened at unexpected date: {delisting.Time}");
                     }
@@ -107,13 +102,13 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var security = Securities[orderEvent.Symbol];
-            if (security.Symbol == _es19m20)
+            if (security.Symbol == _spx)
             {
-                AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedOptionContract]);
+                AssertIndexOptionOrderExercise(orderEvent, security, Securities[_expectedOptionContract]);
             }
             else if (security.Symbol == _expectedOptionContract)
             {
-                AssertFutureOptionContractOrder(orderEvent, security);
+                AssertIndexOptionContractOrder(orderEvent, security);
             }
             else
             {
@@ -123,19 +118,9 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{Time:yyyy-MM-dd HH:mm:ss} -- {orderEvent.Symbol} :: Price: {Securities[orderEvent.Symbol].Holdings.Price} Qty: {Securities[orderEvent.Symbol].Holdings.Quantity} Direction: {orderEvent.Direction} Msg: {orderEvent.Message}");
         }
 
-        private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
+        private void AssertIndexOptionOrderExercise(OrderEvent orderEvent, Security index, Security optionContract)
         {
-            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 19, 20, 0, 0);
-
-            if (orderEvent.Direction == OrderDirection.Sell && future.Holdings.Quantity != 0)
-            {
-                // We expect the contract to have been liquidated immediately
-                throw new Exception($"Did not liquidate existing holdings for Symbol {future.Symbol}");
-            }
-            if (orderEvent.Direction == OrderDirection.Sell && orderEvent.UtcTime != expectedLiquidationTimeUtc)
-            {
-                throw new Exception($"Liquidated future contract, but not at the expected time. Expected: {expectedLiquidationTimeUtc:yyyy-MM-dd HH:mm:ss} - found {orderEvent.UtcTime:yyyy-MM-dd HH:mm:ss}");
-            }
+            var expectedLiquidationTimeUtc = new DateTime(2021, 1, 16, 3, 0, 0);
 
             // No way to detect option exercise orders or any other kind of special orders
             // other than matching strings, for now.
@@ -145,11 +130,6 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception("Option did not exercise at expected strike price (3200)");
                 }
-                if (future.Holdings.Quantity != 1)
-                {
-                    // Here, we expect to have some holdings in the underlying, but not in the future option anymore.
-                    throw new Exception($"Exercised option contract, but we have no holdings for Future {future.Symbol}");
-                }
 
                 if (optionContract.Holdings.Quantity != 0)
                 {
@@ -158,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security option)
+        private void AssertIndexOptionContractOrder(OrderEvent orderEvent, Security option)
         {
             if (orderEvent.Direction == OrderDirection.Buy && option.Holdings.Quantity != 1)
             {
