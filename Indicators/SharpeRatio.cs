@@ -32,14 +32,19 @@ namespace QuantConnect.Indicators
     public class SharpeRatio : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// RollingWindow for storing historical values for percent change calculation
+        /// Counter for storing the warmup period prior to determining the indicator is ready
         /// </summary>
-        private RollingWindow<IndicatorDataPoint> _values;
+        private int _counter;
+        
+        /// <summary>
+        /// RateOfChange indicator for calculating the sharpe ratio
+        /// </summary>
+        private RateOfChange _roc;
 
         /// <summary>
-        /// StandardDeviation indicator for calculating the standard deviation over period
+        /// Indicator to store the calculation of the sharpe ratio
         /// </summary>
-        private StandardDeviation _std;
+        private CompositeIndicator<IndicatorDataPoint> _sharpeRatio;
 
         /// <summary>
         /// Stores the period of the historical percent changes used for calculating sharpe ratio
@@ -59,7 +64,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Returns whether the indicator is properly initalized with data
         /// </summary>
-        public override bool IsReady => _values.IsReady && _std.IsReady;
+        public override bool IsReady => _counter == SharpePeriod + 1 && _sharpeRatio.IsReady && _roc.IsReady;
 
         /// <summary>
         /// Creates a new SharpeRatio indicator using the specified periods
@@ -70,9 +75,14 @@ namespace QuantConnect.Indicators
         public SharpeRatio(string name, int sharpePeriod, decimal riskFreeRate = 0.0m)
             : base(name)
         {
-            // init private variables
-            _std = new StandardDeviation(sharpePeriod);
-            _values = new RollingWindow<IndicatorDataPoint>(sharpePeriod + 1);
+            // set counter to 0
+            _counter = 0;
+
+            // calculate sharpe ratio using indicators
+            _roc = new RateOfChange(1);
+            var std = new StandardDeviation(sharpePeriod).Of(_roc);
+            var sma = _roc.SMA(sharpePeriod);
+            _sharpeRatio = sma.Minus(riskFreeRate).Over(std);
 
             // init public variables
             SharpePeriod = sharpePeriod;
@@ -97,23 +107,13 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
+            // increments counter until warmup period has been successfully reached
+            if (_counter < SharpePeriod + 1)
+                _counter++;
+
             // update indicators
-            _values.Add(input);
-            _std.Update(input);
-
-            // check for IsReady
-            if (!IsReady)
-                return 0.0m;
-
-            // calculates SharpeRatio
-            // makes sure no divisibilty errors occur
-            // define percent change from prior value SharpePeriod values away
-            decimal percentChange = input.Value != 0.0m ? ((input.Value - _values[SharpePeriod].Value) / input.Value) : 0.0m;
-            // define std as a percent value over input
-            decimal stdAsPercentage = input.Value != 0.0m ? _std / input.Value : 0.0m;
-            // calculate the sharpe ratio
-            var sharpe = stdAsPercentage != 0.0m ? (percentChange - RiskFreeRate) / stdAsPercentage : 0.0m;
-            return sharpe;
+            _roc.Update(input);
+            return _sharpeRatio;
         }
 
         /// <summary>
@@ -121,8 +121,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _std.Reset();
-            _values.Reset();
+            _counter = 0;
+            _sharpeRatio.Reset();
+            _roc.Reset();
             base.Reset();
         }
     }
