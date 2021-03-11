@@ -325,8 +325,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (liveJob.BrokerageData.TryGetValue(MaxAllocationLimitConfig, out maxCashLimitStr))
                 {
                     var maxCashLimit = decimal.Parse(maxCashLimitStr, NumberStyles.Any, CultureInfo.InvariantCulture);
-
-                    if (algorithm.Portfolio.TotalPortfolioValue > maxCashLimit)
+                    
+                    // If allocation exceeded by more than $10,000; block deployment
+                    if (algorithm.Portfolio.TotalPortfolioValue > (maxCashLimit + 10000m))
                     {
                         var exceptionMessage = $"TotalPortfolioValue '{algorithm.Portfolio.TotalPortfolioValue}' exceeds allocation limit '{maxCashLimit}'";
                         algorithm.Debug(exceptionMessage);
