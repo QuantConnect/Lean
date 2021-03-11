@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -31,37 +28,36 @@ namespace QuantConnect.Indicators
     public class SharpeRatio : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
-        
+
         /// <summary>
         /// RateOfChange indicator for calculating the sharpe ratio
         /// </summary>
-        private RateOfChange _roc;
+        private readonly RateOfChange _roc;
 
         /// <summary>
         /// Indicator to store the calculation of the sharpe ratio
         /// </summary>
-        private CompositeIndicator<IndicatorDataPoint> _sharpeRatio;
-        
+        private readonly CompositeIndicator<IndicatorDataPoint> _sharpeRatio;
+
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; }
 
         /// <summary>
-        /// Returns whether the indicator is properly initalized with data
+        /// Returns whether the indicator is properly initialized with data
         /// </summary>
         public override bool IsReady => _sharpeRatio.Samples > _period + 1;
 
         /// <summary>
-        /// Creates a new SharpeRatio indicator using the specified periods
+        /// Creates a new Sharpe Ratio indicator using the specified periods
         /// </summary>
-		/// <param name="name">The name of this indicator</param>
-		/// <param name="sharpePeriod">Period of historical observation for sharpe ratio calculation</param>
-		/// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="period">Period of historical observation for sharpe ratio calculation</param>
+        /// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
         public SharpeRatio(string name, int period, decimal riskFreeRate = 0.0m)
             : base(name)
         {
-            // set counter to 0
             _period = period;
 
             // calculate sharpe ratio using indicators
@@ -71,27 +67,26 @@ namespace QuantConnect.Indicators
             _sharpeRatio = sma.Minus(riskFreeRate).Over(std);
 
             // define warmup value
-            WarmUpPeriod = period + 2;
+            WarmUpPeriod = _period + 2;
         }
 
         /// <summary>
         /// Creates a new SharpeRatio indicator using the specified periods
         /// </summary>
-        /// <param name="sharpePeriod">Period of historical observation for sharpe ratio calculation</param>
-		/// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
-        public SharpeRatio(int sharpePeriod, decimal riskFreeRate = 0.0m)
-            : this($"SR({sharpePeriod})", sharpePeriod, riskFreeRate)
+        /// <param name="period">Period of historical observation for sharpe ratio calculation</param>
+        /// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
+        public SharpeRatio(int period, decimal riskFreeRate = 0.0m)
+            : this($"SR({period},{riskFreeRate})", period, riskFreeRate)
         {
         }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
         /// </summary>
-		/// <param name="input">The input given to the indicator</param>
+        /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            // update indicators
             _roc.Update(input);
             return _sharpeRatio;
         }
