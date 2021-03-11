@@ -1470,7 +1470,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose RSR we want</param>
         /// <param name="sharpePeriod">Period of historical observation for sharpe ratio calculation</param>
-		/// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
+        /// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The RollingSharpeRatio indicator for the requested symbol over the specified period</returns>

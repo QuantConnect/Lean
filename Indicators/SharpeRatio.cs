@@ -20,7 +20,6 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Calculation of the Sharpe Ratio (SR) developed by William F. Sharpe.
-    /// You can optionally specify a different moving average type to be used in the computation.
     ///
     /// Reference: https://www.investopedia.com/articles/07/sharpe_ratio.asp
     /// Formula: S(x) = (Rx - Rf) / stdDev(Rx)
