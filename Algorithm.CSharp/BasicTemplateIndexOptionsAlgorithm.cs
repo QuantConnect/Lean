@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 1);
+            SetStartDate(2021, 1, 4);
             SetEndDate(2021, 2, 1);
             SetCash(1000000);
 
@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             // We will instead trade on SPX options
             _spx = AddIndex("SPX", Resolution.Minute).Symbol;
             var spxOptions = AddIndexOption(_spx, Resolution.Minute);
-            spxOptions.SetFilter(filterFunc => filterFunc.CallsOnly().Strikes(-30, 30).Expiration(30, 90));
+            spxOptions.SetFilter(filterFunc => filterFunc.CallsOnly());
 
             _emaSlow = EMA(_spx, 80);
             _emaFast = EMA(_spx, 200);

@@ -199,6 +199,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.FutureOption:
                 case SecurityType.Future:
                 case SecurityType.Index:
+                case SecurityType.IndexOption:
                 default:
                     return 1m;
             }

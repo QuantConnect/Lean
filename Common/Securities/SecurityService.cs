@@ -146,7 +146,7 @@ namespace QuantConnect.Securities
 
                 case SecurityType.IndexOption:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    security = new IndexOption.IndexOption(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
+                    security = new IndexOption.IndexOption(symbol, exchangeHours, quoteCash, new IndexOption.IndexOptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.FutureOption:

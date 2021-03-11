@@ -1673,16 +1673,15 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The ticker of the Index Option</param>
         /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
+        /// <param name="market">Market of the index option. If no market is provided, we default to <see cref="Market.USA"/>
         /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
-        /// <param name="leverage">The leverage to apply to the index option contracts</param>
         /// <returns>Canonical Option security</returns>
-        public Option AddIndexOption(string ticker, Resolution? resolution = null, string market = Market.USA, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        public Option AddIndexOption(string ticker, Resolution? resolution = null, string market = Market.USA, bool fillDataForward = true)
         {
             return AddIndexOption(
                 QuantConnect.Symbol.Create(ticker, SecurityType.Index, market),
                 resolution,
-                fillDataForward,
-                leverage);
+                fillDataForward);
         }
 
         /// <summary>
@@ -1691,16 +1690,15 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The Symbol of the <see cref="Security"/> returned from <see cref="AddIndex"/></param>
         /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
         /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
-        /// <param name="leverage">The leverage to apply to the index option contracts</param>
         /// <returns>Canonical Option security</returns>
-        public Option AddIndexOption(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        public Option AddIndexOption(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true)
         {
             if (symbol.SecurityType != SecurityType.Index)
             {
                 throw new ArgumentException("Symbol provided must be of type SecurityType.Index");
             }
 
-            return AddOption(symbol, resolution, symbol.ID.Market, fillDataForward, leverage);
+            return AddOption(symbol, resolution, symbol.ID.Market, fillDataForward);
         }
 
         /// <summary>
@@ -1709,17 +1707,16 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Symbol of the index option contract</param>
         /// <param name="resolution">Resolution of the index option contract, i.e. the granularity of the data</param>
         /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
-        /// <param name="leverage">The leverage to apply to the index option contract</param>
         /// <returns>Index Option Contract</returns>
         /// <exception cref="ArgumentException">The provided Symbol is not an Index Option</exception>
-        public Option AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        public Option AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true)
         {
             if (symbol.SecurityType != SecurityType.IndexOption)
             {
                 throw new ArgumentException("Symbol provided must be of type SecurityType.IndexOption");
             }
 
-            return AddOptionContract(symbol, resolution, fillDataForward, leverage);
+            return AddOptionContract(symbol, resolution, fillDataForward);
         }
 
         /// <summary>
@@ -1826,7 +1823,6 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
         /// <param name="market">The index trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
-        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Index"/> security</returns>
         public Index AddIndex(string ticker, Resolution? resolution = null, string market = null, bool fillDataForward = true)
         {

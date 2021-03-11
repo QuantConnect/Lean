@@ -63,10 +63,6 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            Debug($"\r\n{slice.Bars[_spy].Time}: {slice.Bars[_spy]}");
-            Debug($"{slice.Bars[_spx].Time}: {slice.Bars[_spx]}");
-            Debug($"===============================================");
-
             // Warm up indicators
             if (!_emaSlow.IsReady)
             {

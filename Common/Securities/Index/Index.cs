@@ -102,15 +102,5 @@ namespace QuantConnect.Securities.Index
             Holdings = new IndexHolding(this, currencyConverter);
             IsTradable = false;
         }
-
-        /// <summary>
-        /// Gets the contract multiplier for this INDEX security
-        /// </summary>
-        public decimal ContractMultiplier => SymbolProperties.ContractMultiplier;
-
-        /// <summary>
-        /// Gets the minimum price variation for this INDEX security
-        /// </summary>
-        public decimal MinimumPriceVariation => SymbolProperties.MinimumPriceVariation;
     }
 }

@@ -40,7 +40,7 @@ namespace QuantConnect.Securities.IndexOption
         public IndexOption(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
-            OptionSymbolProperties symbolProperties,
+            IndexOptionSymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCache securityCache,
@@ -48,7 +48,7 @@ namespace QuantConnect.Securities.IndexOption
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
-                new IndexOptionExchange(exchangeHours),
+                new OptionExchange(exchangeHours),
                 securityCache,
                 new OptionPortfolioModel(),
                 new ImmediateFillModel(),
@@ -78,7 +78,7 @@ namespace QuantConnect.Securities.IndexOption
         protected override void UpdateConsumersMarketPrice(BaseData data)
         {
             base.UpdateConsumersMarketPrice(data);
-            ((OptionSymbolProperties)SymbolProperties).UpdateMinimumPriceVariation(data.Price >= 3 ? 0.10m : 0.05m);
+            ((IndexOptionSymbolProperties)SymbolProperties).UpdateMarketPrice(data);
         }
     }
 }

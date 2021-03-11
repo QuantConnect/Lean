@@ -71,15 +71,5 @@ namespace QuantConnect.Securities.Option
         {
             ContractMultiplier = multiplier;
         }
-
-        /// <summary>
-        /// Updates the minimum price variation, required for some
-        /// index options contracts that have a variable step size for premium quotes
-        /// </summary>
-        /// <param name="minimumPriceVariation">Minimum price variation</param>
-        internal void UpdateMinimumPriceVariation(decimal minimumPriceVariation)
-        {
-            MinimumPriceVariation = minimumPriceVariation;
-        }
     }
 }
