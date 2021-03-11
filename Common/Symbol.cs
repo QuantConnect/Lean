@@ -30,6 +30,7 @@ namespace QuantConnect
     [ProtoContract(SkipConstructor = true)]
     public sealed class Symbol : IEquatable<Symbol>, IComparable
     {
+        private Symbol _canonical;
         // for performance we register how we compare with empty
         private bool? _isEmpty;
 
@@ -195,6 +196,39 @@ namespace QuantConnect
                 (ID.SecurityType == SecurityType.Option && HasUnderlying) ||
                 (ID.SecurityType == SecurityType.FutureOption && HasUnderlying)) &&
                 ID.Date == SecurityIdentifier.DefaultDate;
+        }
+
+        /// <summary>
+        /// Get's the canonical representation of this symbol
+        /// </summary>
+        /// <remarks>This is useful for access and performance</remarks>
+        public Symbol Canonical
+        {
+            get
+            {
+                if (_canonical != null)
+                {
+                    return _canonical;
+                }
+
+                _canonical = this;
+                if (!IsCanonical())
+                {
+                    if (SecurityType == SecurityType.Option || SecurityType == SecurityType.FutureOption)
+                    {
+                        _canonical = CreateOption(Underlying, ID.Market, default(OptionStyle), default(OptionRight), 0m, SecurityIdentifier.DefaultDate);
+                    }
+                    else if (SecurityType == SecurityType.Future)
+                    {
+                        _canonical = Create(ID.Symbol, SecurityType.Future, ID.Market);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Canonical is only defined for SecurityType.Option, SecurityType.Future, SecurityType.FutureOption");
+                    }
+                }
+                return _canonical;
+            }
         }
 
         /// <summary>
