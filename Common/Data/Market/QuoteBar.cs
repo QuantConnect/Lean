@@ -471,7 +471,8 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
         public QuoteBar ParseOption(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
         {
-            return ParseQuote(config, date, streamReader, config.Symbol.SecurityType != SecurityType.FutureOption);
+            // scale factor only applies for equity and index options
+            return ParseQuote(config, date, streamReader, useScaleFactor: config.Symbol.SecurityType != SecurityType.FutureOption);
         }
 
         /// <summary>
