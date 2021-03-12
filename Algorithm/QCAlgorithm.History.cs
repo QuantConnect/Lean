@@ -481,9 +481,9 @@ namespace QuantConnect.Algorithm
             var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)configs.GetHighestResolution());
             var isExtendedMarketHours = configs.IsExtendedMarketHours();
 
-            // request QuoteBar for Options, Futures, and Futures Options
+            // request QuoteBar for Futures and all option types
             var dataType = typeof(BaseData);
-            if (security.Type == SecurityType.Option || security.Type == SecurityType.Future || security.Type == SecurityType.FutureOption)
+            if (security.Type.IsOption() || security.Type == SecurityType.Future)
             {
                 dataType = LeanData.GetDataType(resolution, TickType.Quote);
             }

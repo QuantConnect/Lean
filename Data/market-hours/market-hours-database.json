@@ -39307,6 +39307,392 @@
         "12/24/2019": "13:00:00",
         "12/24/2020": "13:00:00"
       }
+    },
+    "Index-usa-[*]": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Index-usa-VIX": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Index-usa-NDX": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Index-usa-SPX": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "IndexOption-usa-[*]": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "IndexOption-usa-VIX": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "02:15:00",
+          "end": "08:15:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "IndexOption-usa-NDX": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:30:00",
+          "end": "16:15:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "IndexOption-usa-SPX": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:30:00",
+          "end": "15:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
     }
   }
 }

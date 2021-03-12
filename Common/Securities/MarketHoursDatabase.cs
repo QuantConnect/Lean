@@ -292,6 +292,7 @@ namespace QuantConnect.Securities
                     case SecurityType.Option:
                         stringSymbol = symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
                         break;
+                    case SecurityType.IndexOption:
                     case SecurityType.FutureOption:
                         stringSymbol = symbol.HasUnderlying ? symbol.ID.Symbol : string.Empty;
                         break;

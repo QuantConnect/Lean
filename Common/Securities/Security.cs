@@ -130,7 +130,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets or sets whether or not this security should be considered tradable
         /// </summary>
-        public bool IsTradable
+        public virtual bool IsTradable
         {
             get; set;
         }
@@ -630,10 +630,10 @@ namespace QuantConnect.Securities
         /// <param name="leverage">Leverage for this asset</param>
         public void SetLeverage(decimal leverage)
         {
-            if (Symbol.ID.SecurityType == SecurityType.Future ||
-                Symbol.ID.SecurityType == SecurityType.Option ||
-                Symbol.ID.SecurityType == SecurityType.FutureOption)
+            if (Symbol.ID.SecurityType == SecurityType.Future || Symbol.ID.SecurityType.IsOption())
+            {
                 return;
+            }
 
             BuyingPowerModel.SetLeverage(this, leverage);
         }
@@ -817,7 +817,7 @@ namespace QuantConnect.Securities
             UpdateSubscriptionProperties();
         }
 
-        private void UpdateConsumersMarketPrice(BaseData data)
+        protected virtual void UpdateConsumersMarketPrice(BaseData data)
         {
             if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);

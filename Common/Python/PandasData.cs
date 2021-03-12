@@ -327,7 +327,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             _symbol = ((IBaseData)data).Symbol;
 
             if (_symbol.SecurityType == SecurityType.Future) Levels = 3;
-            if (_symbol.SecurityType == SecurityType.Option || _symbol.SecurityType == SecurityType.FutureOption) Levels = 5;
+            if (_symbol.SecurityType.IsOption()) Levels = 5;
 
             var columns = new HashSet<string>
             {
@@ -507,7 +507,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 list[0] = _symbol.ID.Date.ToPython();
                 list[3] = _symbol.ID.ToString().ToPython();
             }
-            if (_symbol.SecurityType == SecurityType.Option || _symbol.SecurityType == SecurityType.FutureOption)
+            if (_symbol.SecurityType.IsOption())
             {
                 list[0] = _symbol.ID.Date.ToPython();
                 list[1] = _symbol.ID.StrikePrice.ToPython();

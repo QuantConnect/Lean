@@ -50,9 +50,10 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The minimum price variation (tick size) for the security
         /// </summary>
-        public decimal MinimumPriceVariation
+        public virtual decimal MinimumPriceVariation
         {
             get;
+            protected set;
         }
 
         /// <summary>

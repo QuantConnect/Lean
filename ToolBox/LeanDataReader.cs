@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox
         private readonly string _zipPath;
         private readonly string _zipentry;
         private readonly SubscriptionDataConfig _config;
-        
+
         /// <summary>
         /// The LeanDataReader constructor
         /// </summary>
@@ -53,7 +53,7 @@ namespace QuantConnect.ToolBox
 
         /// <summary>
         /// Initialize a instance of LeanDataReader from a path to a zipped data file.
-        /// It also supports declaring the zip entry CSV file for options and futures.  
+        /// It also supports declaring the zip entry CSV file for options and futures.
         /// </summary>
         /// <param name="filepath">Absolute or relative path to a zipped data file, optionally the zip entry file can be declared by using '#' as separator.</param>
         /// <example>
@@ -74,7 +74,7 @@ namespace QuantConnect.ToolBox
                 zipEntry = filepath.Split('#')[1];
                 filepath = filepath.Split('#')[0];
             }
-            
+
             var fileInfo = new FileInfo(filepath);
             if (!LeanData.TryParsePath(fileInfo.FullName, out symbol, out date, out resolution))
             {
@@ -117,7 +117,7 @@ namespace QuantConnect.ToolBox
             var factory = (BaseData) ObjectActivator.GetActivator(_config.Type).Invoke(new object[0]);
 
             // for futures and options if no entry was provided we just read all
-            if (_zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType == SecurityType.Option || _config.SecurityType == SecurityType.FutureOption))
+            if (_zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType.IsOption()))
             {
                 foreach (var entries in Compression.Unzip(_zipPath))
                 {

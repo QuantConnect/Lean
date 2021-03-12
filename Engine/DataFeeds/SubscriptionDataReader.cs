@@ -240,7 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
 
-                    if (!_config.IsCustomData && _config.SecurityType != SecurityType.Option && _config.SecurityType != SecurityType.FutureOption)
+                    if (!_config.IsCustomData && !_config.SecurityType.IsOption())
                     {
                         var factorFile = _factorFileProvider.Get(_config.Symbol);
                         _hasScaleFactors = factorFile != null;

@@ -385,7 +385,7 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             var supportedSecurityTypes = new HashSet<SecurityType>
             {
-                SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.Crypto
+                SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, SecurityType.Crypto
             };
 
             Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
@@ -467,7 +467,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + symbol.Value);
 
-                if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
+                if (symbol.SecurityType.IsOption())
                 {
                     // add current option contract to the system
                     algorithm.AddOptionContract(symbol, resolution, true, 1.0m);

@@ -87,7 +87,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (symbol.ID.SecurityType != SecurityType.Forex &&
                 symbol.ID.SecurityType != SecurityType.Equity &&
+                symbol.ID.SecurityType != SecurityType.Index &&
                 symbol.ID.SecurityType != SecurityType.Option &&
+                symbol.ID.SecurityType != SecurityType.IndexOption &&
                 symbol.ID.SecurityType != SecurityType.FutureOption &&
                 symbol.ID.SecurityType != SecurityType.Future)
                 throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
@@ -98,8 +100,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                     // Final case is for equities. We use the mapped value to select
-                    // the equity we want to trade.
+                    // the equity we want to trade. We skip mapping for index options.
                     return GetMappedTicker(symbol.Underlying);
 
                 case SecurityType.FutureOption:
@@ -113,6 +116,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case SecurityType.Equity:
                     return ticker.Replace(".", " ");
+
+                case SecurityType.Index:
+                    return ticker;
             }
 
             return ticker;
@@ -135,7 +141,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (securityType != SecurityType.Forex &&
                 securityType != SecurityType.Equity &&
+                securityType != SecurityType.Index &&
                 securityType != SecurityType.Option &&
+                securityType != SecurityType.IndexOption &&
                 securityType != SecurityType.Future &&
                 securityType != SecurityType.FutureOption)
                 throw new ArgumentException("Invalid security type: " + securityType);
@@ -149,6 +157,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     case SecurityType.Option:
                         return Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American, optionRight, strike, expirationDate);
+
+                    case SecurityType.IndexOption:
+                        // Index Options have their expiry offset from their last trading date by one day. We add one day
+                        // to get the expected expiration date.
+                        return Symbol.CreateOption(
+                            Symbol.Create(brokerageSymbol, SecurityType.Index, market),
+                            market,
+                            securityType.DefaultOptionStyle(),
+                            optionRight,
+                            strike,
+                            expirationDate.AddDays(1));
 
                     case SecurityType.FutureOption:
                         var future = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(
@@ -260,7 +279,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private string GetMappedTicker(Symbol symbol)
         {
-            var ticker = symbol.Value;
+            var ticker = symbol.ID.Symbol;
             if (symbol.ID.SecurityType == SecurityType.Equity)
             {
                 var mapFile = _mapFileProvider.Get(symbol.ID.Market).ResolveMapFile(symbol.ID.Symbol, symbol.ID.Date);

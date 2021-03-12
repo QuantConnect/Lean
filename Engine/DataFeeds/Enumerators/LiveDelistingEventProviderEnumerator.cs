@@ -123,8 +123,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             enumerator = null;
             var securityType = dataConfig.SecurityType;
-            if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future
-                || securityType == SecurityType.Option || securityType == SecurityType.Equity)
+            if (securityType.IsOption() || securityType == SecurityType.Future || securityType == SecurityType.Equity)
             {
                 var delistingEventProvider = new DelistingEventProvider();
                 MapFile mapFile = null;

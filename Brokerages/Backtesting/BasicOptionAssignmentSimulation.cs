@@ -60,9 +60,11 @@ namespace QuantConnect.Brokerages.Backtesting
                 algorithm.UtcTime - _lastUpdate > _securitiesRescanPeriod)
             {
                 var expirations = algorithm.Securities.Select(x => x.Key)
-                            .Where(x => (x.ID.SecurityType == SecurityType.Option || x.ID.SecurityType == SecurityType.FutureOption) &&
+                            .Where(x => x.ID.SecurityType.IsOption() &&
                                         x.ID.Date > algorithm.Time &&
-                                        x.ID.Date - algorithm.Time <= _securitiesRescanPeriod)
+                                        x.ID.Date - algorithm.Time <= _securitiesRescanPeriod &&
+                                        (x.ID.OptionStyle == OptionStyle.American ||
+                                        (x.ID.OptionStyle == OptionStyle.European && x.ID.Date.Date == algorithm.Time.Date)))
                             .Select(x => x.ID.Date)
                             .OrderBy(x => x)
                             .ToList();
@@ -136,8 +138,9 @@ namespace QuantConnect.Brokerages.Backtesting
 
             algorithm.Securities
                 // we take only options that expire soon
-                .Where(x => (x.Key.ID.SecurityType == SecurityType.Option || x.Key.ID.SecurityType == SecurityType.FutureOption) &&
-                            x.Key.ID.Date - algorithm.UtcTime <= _priorExpiration)
+                .Where(x => x.Key.ID.SecurityType.IsOption() &&
+                            ((x.Key.ID.OptionStyle == OptionStyle.American && x.Key.ID.Date - algorithm.UtcTime <= _priorExpiration) ||
+                            (x.Key.ID.OptionStyle == OptionStyle.European && x.Key.ID.Date.Date == algorithm.UtcTime.Date)))
                 // we look into short positions only (short for user means long for us)
                 .Where(x => x.Value.Holdings.IsShort)
                 // we take only deep ITM strikes

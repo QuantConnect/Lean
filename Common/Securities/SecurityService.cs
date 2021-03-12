@@ -144,6 +144,11 @@ namespace QuantConnect.Securities
                     security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
                     break;
 
+                case SecurityType.IndexOption:
+                    if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
+                    security = new IndexOption.IndexOption(symbol, exchangeHours, quoteCash, new IndexOption.IndexOptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
+                    break;
+
                 case SecurityType.FutureOption:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
                     var optionSymbolProperties = new Option.OptionSymbolProperties(symbolProperties);
@@ -165,6 +170,10 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Cfd:
                     security = new Cfd.Cfd(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
+                    break;
+
+                case SecurityType.Index:
+                    security = new Index.Index(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Crypto:

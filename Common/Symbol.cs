@@ -78,6 +78,10 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
                     break;
 
+                case SecurityType.Index:
+                    sid = SecurityIdentifier.GenerateIndex(ticker, market);
+                    break;
+
                 case SecurityType.Option:
                     return CreateOption(ticker, market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
 
@@ -88,6 +92,15 @@ namespace QuantConnect
                 case SecurityType.Crypto:
                     sid = SecurityIdentifier.GenerateCrypto(ticker, market);
                     break;
+
+                case SecurityType.IndexOption:
+                    return CreateOption(
+                        Create(ticker, SecurityType.Index, market),
+                        market,
+                        OptionStyle.European,
+                        default(OptionRight),
+                        0,
+                        SecurityIdentifier.DefaultDate);
 
                 case SecurityType.FutureOption:
                     throw new NotImplementedException("Cannot create future option Symbol using this method (insufficient information). Use `CreateOption(Symbol, ...)` instead.");
@@ -118,9 +131,8 @@ namespace QuantConnect
             // The SID Date is only defined for the following security types: base, equity, future, option.
             // Default to SecurityIdentifier.DefaultDate if there's no matching SecurityType
             var firstDate = underlying.SecurityType == SecurityType.Equity ||
-                underlying.SecurityType == SecurityType.Option ||
+                underlying.SecurityType.IsOption() ||
                 underlying.SecurityType == SecurityType.Future ||
-                underlying.SecurityType == SecurityType.FutureOption ||
                 underlying.SecurityType == SecurityType.Base
                     ? underlying.ID.Date
                     : (DateTime?)null;
@@ -193,8 +205,7 @@ namespace QuantConnect
         {
             return
                 (ID.SecurityType == SecurityType.Future ||
-                (ID.SecurityType == SecurityType.Option && HasUnderlying) ||
-                (ID.SecurityType == SecurityType.FutureOption && HasUnderlying)) &&
+                (ID.SecurityType.IsOption() && HasUnderlying)) &&
                 ID.Date == SecurityIdentifier.DefaultDate;
         }
 
@@ -214,9 +225,9 @@ namespace QuantConnect
                 _canonical = this;
                 if (!IsCanonical())
                 {
-                    if (SecurityType == SecurityType.Option || SecurityType == SecurityType.FutureOption)
+                    if (SecurityType.IsOption())
                     {
-                        _canonical = CreateOption(Underlying, ID.Market, default(OptionStyle), default(OptionRight), 0m, SecurityIdentifier.DefaultDate);
+                        _canonical = CreateOption(Underlying, ID.Market, SecurityType.DefaultOptionStyle(), default(OptionRight), 0m, SecurityIdentifier.DefaultDate);
                     }
                     else if (SecurityType == SecurityType.Future)
                     {
@@ -335,10 +346,10 @@ namespace QuantConnect
 
                 return new Symbol(ID, alias, underlyingSymbol);
             }
-
-            if (ID.SecurityType == SecurityType.FutureOption)
+            // Throw for the rest of our option types, we don't support mapping for them (FOPs and Index Options)
+            if (ID.SecurityType.IsOption())
             {
-                throw new ArgumentException("Future Option can not be mapped.");
+                throw new ArgumentException($"SecurityType {ID.SecurityType} can not be mapped.");
             }
 
             return new Symbol(ID, mappedSymbol, Underlying);
@@ -369,6 +380,8 @@ namespace QuantConnect
                     return SecurityType.Option;
                 case SecurityType.Future:
                     return SecurityType.FutureOption;
+                case SecurityType.Index:
+                    return SecurityType.IndexOption;
                 default:
                     throw new ArgumentException($"No option type exists for underlying SecurityType: {securityType}");
             }
@@ -608,6 +621,7 @@ namespace QuantConnect
             {
                 case SecurityType.FutureOption:
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                     if (securityIdentifier.Date == SecurityIdentifier.DefaultDate)
                     {
                         return $"?{underlying.Value.LazyToUpper()}";

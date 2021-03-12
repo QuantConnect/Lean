@@ -39,7 +39,9 @@ namespace QuantConnect.Brokerages
         {
             {SecurityType.Base, Market.USA},
             {SecurityType.Equity, Market.USA},
+            {SecurityType.Index, Market.USA},
             {SecurityType.Option, Market.USA},
+            {SecurityType.IndexOption, Market.USA},
             {SecurityType.Future, Market.CME},
             {SecurityType.FutureOption, Market.CME},
             {SecurityType.Forex, Market.Oanda},
@@ -109,7 +111,9 @@ namespace QuantConnect.Brokerages
                 security.Type != SecurityType.Forex &&
                 security.Type != SecurityType.Option &&
                 security.Type != SecurityType.Future &&
-                security.Type != SecurityType.FutureOption)
+                security.Type != SecurityType.FutureOption &&
+                security.Type != SecurityType.Index &&
+                security.Type != SecurityType.IndexOption)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {security.Type} security type.")

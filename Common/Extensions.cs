@@ -1784,9 +1784,78 @@ namespace QuantConnect
                 case SecurityType.Future:
                 case SecurityType.Cfd:
                 case SecurityType.Crypto:
+                case SecurityType.Index:
+                case SecurityType.IndexOption:
                     return true;
                 default:
                     return false;
+            }
+        }
+
+        /// <summary>
+        /// Determines if the provided SecurityType is a type of Option.
+        /// Valid option types are: Equity Options, Futures Options, and Index Options.
+        /// </summary>
+        /// <param name="securityType">The SecurityType to check if it's an option asset</param>
+        /// <returns>
+        /// true if the asset has the makings of an option (exercisable, expires, and is a derivative of some underlying),
+        /// false otherwise.
+        /// </returns>
+        public static bool IsOption(this SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Option:
+                case SecurityType.FutureOption:
+                case SecurityType.IndexOption:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Determines if the provided SecurityType has a matching option SecurityType, used to represent
+        /// the current SecurityType as a derivative.
+        /// </summary>
+        /// <param name="securityType">The SecurityType to check if it has options available</param>
+        /// <returns>true if there are options for the SecurityType, false otherwise</returns>
+        public static bool HasOptions(this SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                case SecurityType.Future:
+                case SecurityType.Index:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets the default <see cref="OptionStyle"/> for the provided <see cref="SecurityType"/>
+        /// </summary>
+        /// <param name="securityType">SecurityType to get default OptionStyle for</param>
+        /// <returns>Default OptionStyle for the SecurityType</returns>
+        /// <exception cref="ArgumentException">The SecurityType has no options available for it or it is not an option</exception>
+        public static OptionStyle DefaultOptionStyle(this SecurityType securityType)
+        {
+            if (!securityType.HasOptions() && !securityType.IsOption())
+            {
+                throw new ArgumentException($"The SecurityType {securityType} has no default OptionStyle, because it has no options available for it");
+            }
+
+            switch (securityType)
+            {
+                case SecurityType.Index:
+                case SecurityType.IndexOption:
+                    return OptionStyle.European;
+
+                default:
+                    return OptionStyle.American;
             }
         }
 
@@ -1828,12 +1897,16 @@ namespace QuantConnect
                     return "option";
                 case SecurityType.FutureOption:
                     return "futureoption";
+                case SecurityType.IndexOption:
+                    return "indexoption";
                 case SecurityType.Commodity:
                     return "commodity";
                 case SecurityType.Forex:
                     return "forex";
                 case SecurityType.Future:
                     return "future";
+                case SecurityType.Index:
+                    return "index";
                 case SecurityType.Cfd:
                     return "cfd";
                 case SecurityType.Crypto:
@@ -2473,6 +2546,8 @@ namespace QuantConnect
                     return OptionSymbol.GetLastDayOfTrading(symbol);
                 case SecurityType.FutureOption:
                     return FutureOptionSymbol.GetLastDayOfTrading(symbol);
+                case SecurityType.IndexOption:
+                    return symbol.ID.Date;
                 default:
                     return mapFile?.DelistingDate ?? SecurityIdentifier.DefaultDate;
             }
@@ -2534,9 +2609,8 @@ namespace QuantConnect
                 case MarketDataType.Tick:
                     var securityType = data.Symbol.SecurityType;
                     if (securityType != SecurityType.Equity &&
-                        securityType != SecurityType.Option &&
-                        securityType != SecurityType.FutureOption &&
-                        securityType != SecurityType.Future)
+                        securityType != SecurityType.Future &&
+                        !securityType.IsOption())
                     {
                         break;
                     }
@@ -2691,7 +2765,7 @@ namespace QuantConnect
         /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
         public static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, Func<OptionFilterUniverse, OptionFilterUniverse> filter, UniverseSettings universeSettings = null)
         {
-            if (symbol.SecurityType != SecurityType.Option && symbol.SecurityType != SecurityType.FutureOption)
+            if (!symbol.SecurityType.IsOption())
             {
                 throw new ArgumentException("CreateOptionChain requires an option symbol.");
             }
@@ -2710,7 +2784,7 @@ namespace QuantConnect
                 symbol = Symbol.CreateOption(
                     underlying,
                     market,
-                    default(OptionStyle),
+                    underlying.SecurityType.DefaultOptionStyle(),
                     default(OptionRight),
                     0m,
                     SecurityIdentifier.DefaultDate,

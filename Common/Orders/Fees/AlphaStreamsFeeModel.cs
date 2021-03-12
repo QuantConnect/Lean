@@ -38,6 +38,7 @@ namespace QuantConnect.Orders.Fees
             {SecurityType.Future, 0.4m + 0.1m},
             {SecurityType.FutureOption, 0.4m + 0.1m},
             {SecurityType.Option, 0.4m + 0.1m},
+            {SecurityType.IndexOption, 0.4m + 0.1m},
             {SecurityType.Cfd, 0m}
         };
         private const decimal _makerFee = 0.001m;
