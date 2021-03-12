@@ -51,6 +51,11 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly Resolution _resolution;
 
         /// <summary>
+        /// Total trades made in between snapshots
+        /// </summary>
+        public int Trades { get; private set; }
+
+        /// <summary>
         /// The Symbol's Security
         /// </summary>
         public Security Security { get; }
@@ -136,9 +141,11 @@ namespace QuantConnect.Lean.Engine.Results
             if (_resetMarketCapacityDollarVolume)
             {
                 _marketCapacityDollarVolume = 0;
+                Trades = 0;
                 _resetMarketCapacityDollarVolume = false;
             }
 
+            Trades++;
             _previousOrderEvent = orderEvent;
         }
 

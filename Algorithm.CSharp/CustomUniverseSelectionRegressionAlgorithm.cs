@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.251"},
             {"Treynor Ratio", "9.323"},
             {"Total Fees", "$3.26"},
-            {"Estimated Strategy Capacity", "$220000000.00"},
+            {"Estimated Strategy Capacity", "$890000000.00"},
             {"Fitness Score", "0.201"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},

@@ -141,8 +141,6 @@ namespace QuantConnect.Lean.Engine.Results
                     .OrderBy(c => c.MarketCapacityDollarVolume)
                     .First();
 
-                var days = (decimal)(_nextSnapshotDate - _previousSnapshotDate).TotalDays;
-
                 // When there is no trading, rely on the portfolio holdings
                 var percentageOfSaleVolume = totalSaleVolume != 0
                     ? smallestAsset.SaleVolume / totalSaleVolume
@@ -154,7 +152,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var percentageOfHoldings = buyingPowerUsed / totalPortfolioValue;
 
                 var scalingFactor = Math.Max(percentageOfSaleVolume, percentageOfHoldings);
-                var dailyMarketCapacityDollarVolume = smallestAsset.MarketCapacityDollarVolume / days;
+                var dailyMarketCapacityDollarVolume = smallestAsset.MarketCapacityDollarVolume / smallestAsset.Trades;
 
                 var newCapacity = scalingFactor == 0
                     ? Capacity
