@@ -188,7 +188,7 @@ namespace QuantConnect.Securities
 
             // if we're just creating this security and it only has an internal
             // feed, mark it as non-tradable since the user didn't request this data
-            if (!configList.IsInternalFeed && security.Type != SecurityType.Index)
+            if (!configList.IsInternalFeed)
             {
                 security.IsTradable = true;
             }

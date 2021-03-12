@@ -1827,10 +1827,6 @@ namespace QuantConnect.Algorithm
         public Index AddIndex(string ticker, Resolution? resolution = null, string market = null, bool fillDataForward = true)
         {
             var index = AddSecurity<Index>(SecurityType.Index, ticker, resolution, market, fillDataForward, 1, false);
-
-            // Index assets are used for indicators only and cannot be traded directly.
-            index.IsTradable = false;
-
             return index;
         }
 

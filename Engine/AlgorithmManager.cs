@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
                     {
-                        security.IsTradable = security.Type != SecurityType.Index;
+                        security.IsTradable = true;
 
                         // uses TryAdd, so don't need to worry about duplicates here
                         algorithm.Securities.Add(security);

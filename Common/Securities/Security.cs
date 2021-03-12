@@ -130,7 +130,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets or sets whether or not this security should be considered tradable
         /// </summary>
-        public bool IsTradable
+        public virtual bool IsTradable
         {
             get; set;
         }
