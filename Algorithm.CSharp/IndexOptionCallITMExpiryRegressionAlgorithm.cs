@@ -54,7 +54,6 @@ namespace QuantConnect.Algorithm.CSharp
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 
-            AddIndexOption().SetFilter((f) => f.Expiration())
             _expectedOptionContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 3200m, new DateTime(2021, 1, 15));
             if (_spxOption != _expectedOptionContract)
             {
