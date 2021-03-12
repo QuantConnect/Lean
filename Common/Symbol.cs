@@ -225,9 +225,9 @@ namespace QuantConnect
                 _canonical = this;
                 if (!IsCanonical())
                 {
-                    if (SecurityType == SecurityType.Option || SecurityType == SecurityType.FutureOption)
+                    if (SecurityType.IsOption())
                     {
-                        _canonical = CreateOption(Underlying, ID.Market, default(OptionStyle), default(OptionRight), 0m, SecurityIdentifier.DefaultDate);
+                        _canonical = CreateOption(Underlying, ID.Market, SecurityType.DefaultOptionStyle(), default(OptionRight), 0m, SecurityIdentifier.DefaultDate);
                     }
                     else if (SecurityType == SecurityType.Future)
                     {
