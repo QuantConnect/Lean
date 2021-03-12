@@ -41,7 +41,7 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
                 }
 
                 // Load settings from config.json and create downloader
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = Config.Get("data-directory", "D:\\SourceCode\\AlgoTrading\\Lean-1\\Data");
 
                 foreach (var pair in tickers)
                 {
@@ -67,17 +67,17 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
                             throw new ArgumentException("Samco Doesn't support tick resolution");
 
                         case Resolution.Minute:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end,"1").ToList();
+                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end).ToList();
                             timeSpan = Time.OneMinute;
                             break;
 
                         case Resolution.Hour:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end,"60").ToList();
+                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end).ToList();
                             timeSpan = Time.OneHour;
                             break;
 
                         case Resolution.Daily:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end,"3600").ToList();
+                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end).ToList();
                             timeSpan = Time.OneDay;
                             break;
                     }
