@@ -92,11 +92,16 @@ namespace QuantConnect.Brokerages.Samco
             return quote;
         }
 
-        public IEnumerable<TradeBar> GetIntradayCandles(string symbol, string exchange, DateTime startDateTime, DateTime endDateTime,string interval)
+        public IEnumerable<TradeBar> GetIntradayCandles(string symbol, string exchange, DateTime startDateTime, DateTime endDateTime,Resolution resolution=Resolution.Minute)
         {
 
             var start = startDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
             var end = endDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            var interval = 1;
+            if (resolution == Resolution.Hour)
+            {
+                interval = 60;
+            }
             string endpoint = $"/intraday/candleData?symbolName={HttpUtility.UrlEncode(symbol)}&fromDate={start}&toDate={end}&exchange={exchange}&interval={interval}";
 
             var restRequest = new RestRequest(endpoint, Method.GET);
@@ -133,6 +138,51 @@ namespace QuantConnect.Brokerages.Samco
                     DataType = MarketDataType.TradeBar,
                     Period = Resolution.Minute.ToTimeSpan(),
                     EndTime = candle.dateTime.AddMinutes(1)
+                };
+            }
+        }
+
+        public IEnumerable<TradeBar> GetHistoricalDailyCandles(string symbol, string exchange, DateTime startDateTime, DateTime endDateTime, Resolution resolution = Resolution.Daily)
+        {
+
+            var start = startDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var end = endDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            string endpoint = $"/history/candleData?symbolName={HttpUtility.UrlEncode(symbol)}&fromDate={start}&toDate={end}&exchange={exchange}";
+
+            var restRequest = new RestRequest(endpoint, Method.GET);
+            var response = ExecuteRestRequest(restRequest);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception(
+                    $"SamcoBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, " +
+                    $"Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            // we need to drop the last bar provided by the exchange as its open time is a history request's end time
+            var candles = JsonConvert.DeserializeObject<CandleResponse>(response.Content);
+
+            if (!candles.historicalCandleData.Any())
+            {
+
+                yield break;
+            }
+
+            foreach (var candle in candles.historicalCandleData)
+            {
+                yield return new TradeBar()
+                {
+                    Time = candle.date.AddMinutes(555),
+                    Symbol = symbol,
+                    Low = candle.low,
+                    High = candle.high,
+                    Open = candle.open,
+                    Close = candle.close,
+                    Volume = candle.volume,
+                    Value = candle.close,
+                    DataType = MarketDataType.TradeBar,
+                    Period = Resolution.Minute.ToTimeSpan(),
+                    EndTime = candle.date.AddMinutes(1)
                 };
             }
         }
