@@ -40,10 +40,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);
             var factory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, timeProvider);
 
-            var canonicalSymbol = Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CBOE, "/VX");
+            var canonicalSymbol = Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CFE, "/VX");
 
             var quoteCurrency = new Cash(Currencies.USD, 0, 1);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CBOE, canonicalSymbol, SecurityType.Future);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CFE, canonicalSymbol, SecurityType.Future);
             var config = new SubscriptionDataConfig(
                 typeof(ZipEntryName),
                 canonicalSymbol,
@@ -115,12 +115,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             private readonly Symbol[] _symbolList1 =
             {
-                Symbol.CreateFuture(Futures.Indices.VIX, Market.CBOE, new DateTime(2018, 10, 31))
+                Symbol.CreateFuture(Futures.Indices.VIX, Market.CFE, new DateTime(2018, 10, 31))
             };
             private readonly Symbol[] _symbolList2 =
             {
-                Symbol.CreateFuture(Futures.Indices.VIX, Market.CBOE, new DateTime(2018, 10, 31)),
-                Symbol.CreateFuture(Futures.Indices.VIX, Market.CBOE, new DateTime(2018, 11, 30)),
+                Symbol.CreateFuture(Futures.Indices.VIX, Market.CFE, new DateTime(2018, 10, 31)),
+                Symbol.CreateFuture(Futures.Indices.VIX, Market.CFE, new DateTime(2018, 11, 30)),
             };
 
             private readonly ITimeProvider _timeProvider;

@@ -46,13 +46,13 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     { Market.COMEX, "NYMEX" },
                     { Market.CBOT, "ECBOT" },
                     { Market.ICE, "NYBOT" },
-                    { Market.CBOE, "CFE" }
+                    { Market.CFE, "CFE" }
                 };
 
                 var tickersByMarket = new Dictionary<string, string[]>
                 {
                     {
-                        Market.CBOE,
+                        Market.CFE,
                         new[]
                         {
                             "VX"

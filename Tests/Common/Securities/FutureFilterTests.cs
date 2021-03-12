@@ -75,12 +75,12 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(0)), // 0 Standard!!
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(1)), // 1
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(2)), // 2
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(8)), // 8
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(16)), // 16
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(28)), // 28 Standard!!
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(0)), // 0 Standard!!
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(1)), // 1
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(2)), // 2
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(8)), // 8
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(16)), // 16
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(28)), // 28 Standard!!
             };
 
             var filtered = filter.Filter(new FutureFilterUniverse(symbols, underlying)).ToList();
@@ -135,12 +135,12 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(0)), // 0 Standard!!
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(1)), // 1
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(2)), // 2
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(8)), // 8
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(16)), // 16
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(28)), // 28 Standard!!
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(0)), // 0 Standard!!
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(1)), // 1
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(2)), // 2
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(8)), // 8
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(16)), // 16
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(28)), // 28 Standard!!
             };
 
             var filtered = filter.Filter(new FutureFilterUniverse(symbols, underlying)).ToList();
@@ -163,12 +163,12 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(0)), // 0 Standard!!
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(1)), // 1
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(2)), // 2
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(8)), // 8
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(16)), // 16
-                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(28)), // 28 Standard!!
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(0)), // 0 Standard!!
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(1)), // 1
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(2)), // 2
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(8)), // 8
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(16)), // 16
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(28)), // 28 Standard!!
             };
 
             var filtered = filter.Filter(new FutureFilterUniverse(symbols, underlying)).ToList();
