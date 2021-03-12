@@ -59,9 +59,21 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
             public decimal volume { get; set; }
         }
 
+        public class HistoricalCandleData
+        {
+            public DateTime date { get; set; }
+            public decimal open { get; set; }
+            public decimal high { get; set; }
+            public decimal low { get; set; }
+            public decimal close { get; set; }
+            public decimal volume { get; set; }
+        }
+
         public string serverTime { get; set; }
         public string msgId { get; set; }
         public IList<IntradayCandleData> intradayCandleData { get; set; }
+        public IList<HistoricalCandleData> historicalCandleData { get; set; }
+
     }
 
     public class SamcoOrderResponse
