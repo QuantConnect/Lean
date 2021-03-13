@@ -88,7 +88,7 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.0" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.1" />
     <PackageReference Include="DotNetZip" Version="1.13.3" />
     <PackageReference Include="fasterflect" Version="3.0.0" />
     <PackageReference Include="FSharp.Core" Version="4.5.2" />
