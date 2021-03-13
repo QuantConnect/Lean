@@ -1,10 +1,7 @@
 {
 	"name": "Lean Dev",
 
-	// Sets the run context to one level up instead of the .devcontainer folder.
-	"context": "..",
-
-	// Use Leans foundation image
+	// Use devcontainer Dockerfile that is based on Lean foundation image
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
@@ -23,7 +20,8 @@
 	// Uncomment the next line to run commands after the container is created - for example installing curl.
 	"postCreateCommand": "nuget restore",
 
-	// Give additional mounts to docker container
-	// This mount allows use docker cli
-	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ],
+	// Add mounts to docker container
+	"mounts": [ 
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" // Access to local docker install
+	],
 }
