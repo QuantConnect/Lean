@@ -11,3 +11,6 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
 RUN add-apt-repository -y ppa:git-core/ppa && \
     apt-get update && \
     apt-get install -y git
+
+# Install Python Tool for Visual Studio Debugger for remote python debugging
+RUN pip install ptvsd
