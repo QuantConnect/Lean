@@ -22,6 +22,5 @@
 
 	// Add mounts to docker container
 	"mounts": [ 
-		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" // Access to local docker install
 	],
 }
