@@ -37,17 +37,17 @@ if [ ! -f "$CONFIG" ]; then
     \"algorithm-language\": \"Python\",
     \"messaging-handler\": \"QuantConnect.Messaging.Messaging\", 
     \"job-queue-handler\": \"QuantConnect.Queues.JobQueue\", 
-    \"api-handler\": \"QuantConnect.Api.Api\" 
+    \"api-handler\": \"QuantConnect.Api.Api\", 
     \"job-user-id\": \"0\",
     \"api-access-token\": \"\",
     }" > $CONFIG
 fi
 
-# Copy over any notebooks in research directory
-LEAN_RESEARCH=$(absolute_path "../Research")
-if [ -d "$LEAN_RESEARCH" ]; then 
-    echo "Copying research files to $LEAN_RESEARCH; will not overwrite existing files"
-    cp -n $LEAN_RESEARCH/*.ipynb $NOTEBOOK_DIR
+# Copy over any notebooks from build directory to notebook directory
+RESEARCH_FILES=$BUILD_DIR/*.ipynb
+if [ -d "$BUILD_DIR" ]; then 
+    echo "Copying research files from $RESEARCH_FILES to $NOTEBOOK_DIR; will not overwrite existing files"
+    cp -n $RESEARCH_FILES $NOTEBOOK_DIR
 fi
 
 # Launch jupyter-lab
