@@ -645,6 +645,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        [Retry(3)]
         public void DelistedEventEmitted_Equity()
         {
             _startDate = new DateTime(2016, 2, 18);
@@ -1455,6 +1456,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         };
 
         [TestCaseSource(nameof(DataTypeTestCases))]
+        [Retry(3)]
         public void HandlesAllTypes<T>(
             Symbol symbol,
             Resolution resolution,
