@@ -27,9 +27,6 @@ if [ ! -d "$NOTEBOOK_DIR" ]; then
     mkdir $NOTEBOOK_DIR
 fi
 
-#Create a symbolic link to the notebook dir for easy download
-ln -s $NOTEBOOK_DIR
-
 # If the config doesn't exist, create it
 CONFIG=$NOTEBOOK_DIR/config.json
 if [ ! -f "$CONFIG" ]; then 
