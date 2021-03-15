@@ -21,8 +21,6 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Data import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-import numpy as np
 
 ### <summary>
 ### Demonstration of requesting daily resolution data for US Equities.
@@ -66,5 +64,5 @@ class NamedArgumentsRegression(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", 1)
-            self.Debug("Purchased Stock")
+            self.SetHoldings(symbol="SPY", percentage=1)
+            self.Debug(message="Purchased Stock")

@@ -14,21 +14,19 @@
 */
 
 using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
-using QuantConnect.Research;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Python
 {
     [TestFixture]
-    public class PythonNetTests
+    public class NamedArgumentsTests
     {
         [Test]
-        public void NamedArgumentsTest()
+        public void AddEquityTest()
         {
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
