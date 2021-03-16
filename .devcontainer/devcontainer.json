@@ -12,7 +12,7 @@
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": ["ms-vscode.mono-debug@0.15.8","ms-dotnettools.csharp","ms-python.python", "eamodio.gitlens", "yzhang.markdown-all-in-one"],
+	"extensions": ["ms-vscode.mono-debug@0.15.8","ms-dotnettools.csharp","ms-python.python", "ms-python.vscode-pylance", "eamodio.gitlens", "yzhang.markdown-all-in-one"],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],

@@ -6,8 +6,10 @@ RUN add-apt-repository -y ppa:git-core/ppa && \
     apt-get update && \
     apt-get install -y git
 
-# Install Python Tool for Visual Studio Debugger for remote python debugging
-RUN pip install ptvsd
+# Install useful pip packages
+RUN pip install --no-cache-dir      \
+    ptvsd                           \
+    quantconnect-stubs
 
 # Install dos2unix utility for converting pesky windows formatting when needed
 RUN apt-get install -y dos2unix
