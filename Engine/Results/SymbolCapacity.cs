@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// New order event handler. Handles the aggregation of SaleVolume and
         /// sometimes resetting the <seealso cref="MarketCapacityDollarVolume"/>
         /// </summary>
-        /// <param name="orderEvent"></param>
+        /// <param name="orderEvent">Parent class filters out other events so only fill events reach this method.</param>
         public void OnOrderEvent(OrderEvent orderEvent)
         {
             SaleVolume += Security.QuoteCurrency.ConversionRate * orderEvent.FillPrice * orderEvent.AbsoluteFillQuantity * Security.SymbolProperties.ContractMultiplier;
