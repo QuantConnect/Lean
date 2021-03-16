@@ -51,6 +51,11 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly Resolution _resolution;
 
         /// <summary>
+        /// Total trades made in between snapshots
+        /// </summary>
+        public int Trades { get; private set; }
+
+        /// <summary>
         /// The Symbol's Security
         /// </summary>
         public Security Security { get; }
@@ -122,7 +127,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// New order event handler. Handles the aggregation of SaleVolume and
         /// sometimes resetting the <seealso cref="MarketCapacityDollarVolume"/>
         /// </summary>
-        /// <param name="orderEvent"></param>
+        /// <param name="orderEvent">Parent class filters out other events so only fill events reach this method.</param>
         public void OnOrderEvent(OrderEvent orderEvent)
         {
             SaleVolume += Security.QuoteCurrency.ConversionRate * orderEvent.FillPrice * orderEvent.AbsoluteFillQuantity * Security.SymbolProperties.ContractMultiplier;
@@ -136,9 +141,11 @@ namespace QuantConnect.Lean.Engine.Results
             if (_resetMarketCapacityDollarVolume)
             {
                 _marketCapacityDollarVolume = 0;
+                Trades = 0;
                 _resetMarketCapacityDollarVolume = false;
             }
 
+            Trades++;
             _previousOrderEvent = orderEvent;
         }
 
