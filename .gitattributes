@@ -63,4 +63,4 @@
 #*.RTF   diff=astextplain
 
 #these files are used in linux, so use just LF
-*.sh lf
+*.sh text eol=lf
