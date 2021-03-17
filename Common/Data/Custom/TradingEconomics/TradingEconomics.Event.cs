@@ -7751,7 +7751,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 /// </summary>
                 public const string OecdGurriaSpeechOnUkReferendum = "oecd gurria speech on uk referendum";
                 /// <summary>
-                /// Parliamentary Debate & Vote on Part of Brexit Deal
+                /// Parliamentary Debate &amp; Vote on Part of Brexit Deal
                 /// </summary>
                 public const string ParliamentaryDebateAndVoteOnPartOfBrexitDeal = "parliamentary debate and vote on part of brexit deal";
                 /// <summary>
@@ -8089,11 +8089,11 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 /// </summary>
                 public const string ConsumerPriceIndex = "consumer price index";
                 /// <summary>
-                /// Consumer Price Index Ex Food & Energy (MoM)
+                /// Consumer Price Index Ex Food &amp; Energy (MoM)
                 /// </summary>
                 public const string ConsumerPriceIndexExcludingFoodAndEnergyMoM = "consumer price index excluding food and energy mom";
                 /// <summary>
-                /// Consumer Price Index Ex Food & Energy (YoY)
+                /// Consumer Price Index Ex Food &amp; Energy (YoY)
                 /// </summary>
                 public const string ConsumerPriceIndexExcludingFoodAndEnergyYoY = "consumer price index excluding food and energy yoy";
                 /// <summary>
@@ -8433,7 +8433,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 /// </summary>
                 public const string FedGeorgeTestimony = "fed george testimony";
                 /// <summary>
-                /// Fed Harker, Mester & Lockhart Speech
+                /// Fed Harker, Mester &amp; Lockhart Speech
                 /// </summary>
                 public const string FedHarkerMesterAndLockhartSpeech = "fed harker mester and lockhart speech";
                 /// <summary>
@@ -8537,7 +8537,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 /// </summary>
                 public const string FedWilliamsSpeech = "fed williams speech";
                 /// <summary>
-                /// Fed Yellen & IMF's Lagarde Speech
+                /// Fed Yellen &amp; IMF's Lagarde Speech
                 /// </summary>
                 public const string FedYellenAndImfsLagardeSpeech = "fed yellen and imfs lagarde speech";
                 /// <summary>
@@ -9201,11 +9201,11 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 /// </summary>
                 public const string PresidentTrumpTaxSpeech = "president trump tax speech";
                 /// <summary>
-                /// Producer Price Index ex Food & Energy (MoM)
+                /// Producer Price Index ex Food &amp; Energy (MoM)
                 /// </summary>
                 public const string ProducerPriceIndexExcludingFoodAndEnergyMoM = "producer price index excluding food and energy mom";
                 /// <summary>
-                /// Producer Price Index ex Food & Energy (YoY)
+                /// Producer Price Index ex Food &amp; Energy (YoY)
                 /// </summary>
                 public const string ProducerPriceIndexExcludingFoodAndEnergyYoY = "producer price index excluding food and energy yoy";
                 /// <summary>
@@ -9301,11 +9301,11 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 /// </summary>
                 public const string RichmondFedManufacturingIndex = "richmond fed manufacturing index";
                 /// <summary>
-                /// S&P/Case-Shiller Home Price MoM
+                /// S&amp;P/Case-Shiller Home Price MoM
                 /// </summary>
                 public const string SandpCaseShillerHomePriceMoM = "sandp case shiller home price mom";
                 /// <summary>
-                /// S&P/Case-Shiller Home Price YoY
+                /// S&amp;P/Case-Shiller Home Price YoY
                 /// </summary>
                 public const string SandpCaseShillerHomePriceYoY = "sandp case shiller home price yoy";
                 /// <summary>
