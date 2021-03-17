@@ -18,6 +18,9 @@ namespace QuantConnect.Data.Custom.Fred
 {
     public partial class Fred
     {
+        /// <summary>
+        /// Central Bank Interventions
+        /// </summary>
         public static class CentralBankInterventions
         {
             ///<summary>

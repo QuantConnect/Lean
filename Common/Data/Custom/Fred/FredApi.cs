@@ -22,6 +22,7 @@ using System.Globalization;
 
 namespace QuantConnect.Data.Custom.Fred
 {
+#pragma warning disable 1591
     public class Observation
     {
         [JsonProperty("realtime_start")]
@@ -77,6 +78,7 @@ namespace QuantConnect.Data.Custom.Fred
 
         [JsonProperty("observations")]
         public IList<Observation> Observations { get; set; }
+#pragma warning restore 1591
 
         /// <summary>
         /// Gets the FRED API token.

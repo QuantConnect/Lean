@@ -90,9 +90,21 @@ namespace QuantConnect.Data.Consolidators
 
     public struct CalendarInfo
     {
+        /// <summary>
+        /// Calendar Start
+        /// </summary>
         public readonly DateTime Start;
+
+        /// <summary>
+        /// Consolidation Period
+        /// </summary>
         public readonly TimeSpan Period;
 
+        /// <summary>
+        /// Constructor for CalendarInfo; used for consolidation calendar
+        /// </summary>
+        /// <param name="start">Calendar Start</param>
+        /// <param name="period">Consolidation Period</param>
         public CalendarInfo(DateTime start, TimeSpan period)
         {
             Start = start;

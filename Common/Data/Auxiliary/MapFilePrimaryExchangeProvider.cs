@@ -28,6 +28,10 @@ namespace QuantConnect.Data.Auxiliary
         private readonly IMapFileProvider _mapFileProvider;
         private readonly ConcurrentDictionary<SecurityIdentifier, PrimaryExchange> _primaryExchangeBySid;
 
+        /// <summary>
+        /// Constructor for Primary Exchange Provider from MapFiles
+        /// </summary>
+        /// <param name="mapFileProvider">MapFile to use</param>
         public MapFilePrimaryExchangeProvider(IMapFileProvider mapFileProvider)
         {
             _mapFileProvider = mapFileProvider;

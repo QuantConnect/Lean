@@ -22,6 +22,9 @@ using System.Linq;
 
 namespace QuantConnect.Data.Custom.CBOE
 {
+    /// <summary>
+    /// CBOE data source
+    /// </summary>
     public class CBOE : TradeBar
     {
         /// <summary>

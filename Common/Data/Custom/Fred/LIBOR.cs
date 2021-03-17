@@ -18,6 +18,9 @@ namespace QuantConnect.Data.Custom.Fred
 {
     public partial class Fred
     {
+        /// <summary>
+        /// London InterBank Offered Rate
+        /// </summary>
         public static class LIBOR
         {
             ///<summary>

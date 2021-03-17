@@ -18,6 +18,7 @@ using System.ComponentModel;
 
 namespace QuantConnect.Data.Auxiliary
 {
+#pragma warning disable 1591
     /// <summary>
     /// Flag system for trade conditions
     /// </summary>
@@ -137,4 +138,5 @@ namespace QuantConnect.Data.Auxiliary
         [Description("Denotes the trade is an odd lot less than a 100 shares.")]
         OddLot = 1L << 31,
     }
+#pragma warning restore 1591
 }

@@ -17,6 +17,9 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Custom.SEC
 {
+    /// <summary>
+    /// Company Information reported to SEC
+    /// </summary>
     public class SECReportCompanyData
     {
         /// <summary>
