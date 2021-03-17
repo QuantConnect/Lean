@@ -1862,7 +1862,7 @@ namespace QuantConnect
         /// <summary>
         /// Converts the specified <paramref name="optionRight"/> value to its corresponding string representation
         /// </summary>
-        /// <remarks>This method provides faster performance than enum <see cref="ToString"/></remarks>
+        /// <remarks>This method provides faster performance than enum <see cref="Object.ToString"/></remarks>
         /// <param name="optionRight">The optionRight value</param>
         /// <returns>A string representation of the specified OptionRight value</returns>
         public static string ToStringPerformance(this OptionRight optionRight)

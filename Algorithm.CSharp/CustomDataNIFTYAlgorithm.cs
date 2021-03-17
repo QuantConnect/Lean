@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// "Nifty" type below and fired into this event handler.
         /// </summary>
         /// <param name="data">One(1) Nifty Object, streamed into our algorithm synchronised in time with our other data streams</param>
-        public void OnData(Slice data)
+        public override void OnData(Slice data)
         {
             if (data.ContainsKey("USDINR"))
             {

@@ -20,6 +20,9 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Data.Custom.SEC
 {
+    /// <summary>
+    /// SEC Report Submission
+    /// </summary>
     public class SECReportSubmission
     {
         /// <summary>

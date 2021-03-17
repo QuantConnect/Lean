@@ -758,6 +758,10 @@ namespace QuantConnect.Data.Market
             };
         }
 
+        /// <summary>
+        /// Convert this <see cref="QuoteBar"/> to string form.
+        /// </summary>
+        /// <returns>String representation of the <see cref="QuoteBar"/></returns>
         public override string ToString()
         {
             return $"{Symbol}: " +

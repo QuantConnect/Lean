@@ -19,6 +19,9 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Custom.SEC
 {
+    /// <summary>
+    /// SEC Report Index
+    /// </summary>
     public class SECReportIndexFile
     {
         /// <summary>
@@ -28,6 +31,9 @@ namespace QuantConnect.Data.Custom.SEC
         public SECReportIndexDirectory Directory;
     }
 
+    /// <summary>
+    /// SEC Report Index Directory, contains a list of Items
+    /// </summary>
     public class SECReportIndexDirectory
     {
         /// <summary>
@@ -49,6 +55,9 @@ namespace QuantConnect.Data.Custom.SEC
         public string ParentDirectory;
     }
 
+    /// <summary>
+    /// SEC Report Index Item
+    /// </summary>
     public class SECReportIndexItem
     {
         /// <summary>

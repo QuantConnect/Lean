@@ -27,7 +27,8 @@ namespace QuantConnect.Data.UniverseSelection
     /// wrapped (or decorated) universe. This provides scaffolding for other decorators who
     /// only need to override one or two methods.
     /// </summary>
-    /// <remarks> Requires special handling due to `this != this.Universe` <see cref="GetSubscriptionRequests"/></remarks>
+    /// <remarks> Requires special handling due to `this != this.Universe` 
+    /// <see cref="GetSubscriptionRequests(Security, DateTime, DateTime, ISubscriptionDataConfigService)"/></remarks>
     public abstract class UniverseDecorator : Universe
     {
         /// <summary>

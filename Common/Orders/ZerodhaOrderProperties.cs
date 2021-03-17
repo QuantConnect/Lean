@@ -23,6 +23,9 @@ namespace QuantConnect.Orders
     /// </summary>
     public class ZerodhaOrderProperties : OrderProperties
     {
+        /// <summary>
+        /// Kite product type
+        /// </summary>
         public readonly string ProductType;
         public ZerodhaOrderProperties(KiteProductType productType)
         {
@@ -34,8 +37,19 @@ namespace QuantConnect.Orders
         /// </summary>
         public enum KiteProductType
         {
+            /// <summary>
+            /// Margin Intraday Square Off 
+            /// </summary>
             MIS,
+
+            /// <summary>
+            /// Cash and Carry 
+            /// </summary>
             CNC,
+
+            /// <summary>
+            /// Normal
+            /// </summary>
             NRML
         }
 

@@ -81,6 +81,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         Zerodha,
 
+        /// <summary>
         /// Transaction and submit/execution rules will use atreyu models
         /// </summary>
         Atreyu,
