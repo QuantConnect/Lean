@@ -24,6 +24,7 @@ namespace QuantConnect.Data.Auxiliary
     [Flags]
     public enum QuoteConditionFlags : long
     {
+#pragma warning disable 1591
         None = 0,
 
         [Description("This condition is used for the majority of quotes to indicate a normal trading environment.")]
@@ -110,5 +111,6 @@ namespace QuantConnect.Data.Auxiliary
 
         [Description("A halt condition used when there is a sudden order influx. To prevent a disorderly market, trading is temporarily suspended by the UTP participant.")]
         OrderInflux = 1L << 22
+#pragma warning restore 1591
     }
 }

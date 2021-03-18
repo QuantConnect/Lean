@@ -198,6 +198,7 @@ namespace QuantConnect.Data.Fundamental
     /// </summary>
     public static class MorningstarIndustryGroupCode
     {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public static int Agriculture = 10110;
         public static int BuildingMaterials = 10120;
         public static int Chemicals = 10130;
@@ -254,6 +255,7 @@ namespace QuantConnect.Data.Fundamental
         public static int Software = 31110;
         public static int Hardware = 31120;
         public static int Semiconductors = 31130;
+#pragma warning restore CS1591 
     }
 
     /// <summary>

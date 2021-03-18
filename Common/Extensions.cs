@@ -956,7 +956,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Will remove any trailing zeros for the provided decimal and convert to string.
-        /// Uses <see cref="Normalize"/>.
+        /// Uses <see cref="Normalize(decimal)"/>.
         /// </summary>
         /// <param name="input">The <see cref="decimal"/> to convert to <see cref="string"/></param>
         /// <returns>Input converted to <see cref="string"/> with no trailing zeros</returns>

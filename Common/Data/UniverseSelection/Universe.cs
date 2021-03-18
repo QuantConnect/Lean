@@ -401,9 +401,19 @@ namespace QuantConnect.Data.UniverseSelection
             }
         }
 
+        /// <summary>
+        /// Member of the Universe
+        /// </summary>
         public sealed class Member
         {
+            /// <summary>
+            /// DateTime when added
+            /// </summary>
             public readonly DateTime Added;
+
+            /// <summary>
+            /// The security that was added
+            /// </summary>
             public readonly Security Security;
             public Member(DateTime added, Security security)
             {

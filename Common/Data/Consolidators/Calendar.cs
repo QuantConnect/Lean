@@ -88,6 +88,9 @@ namespace QuantConnect.Data.Consolidators
         }
     }
 
+    /// <summary>
+    /// Calendar Info for storing information related to the start and period of a consolidator
+    /// </summary>
     public struct CalendarInfo
     {
         /// <summary>
