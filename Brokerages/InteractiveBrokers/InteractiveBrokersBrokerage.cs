@@ -1175,7 +1175,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Find contract details given a ticker an contract
+        /// Find contract details given a ticker and contract
         /// </summary>
         /// <param name="contract">Contract we are searching for</param>
         /// <param name="ticker">Ticker of this contract</param>
