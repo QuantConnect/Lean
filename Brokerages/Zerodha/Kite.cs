@@ -92,7 +92,6 @@ namespace QuantConnect.Brokerages.Zerodha
         /// Pre-login, this will default to None,but once you have obtained it, you should persist it in a database or session to pass 
         /// to the Kite Connect class initialisation for subsequent requests.</param>
         /// <param name="Root">API end point root. Unless you explicitly want to send API requests to a non-default endpoint, this can be ignored.</param>
-        /// <param name="Debug">If set to True, will serialise and print requests and responses to stdout.</param>
         /// <param name="Timeout">Time in milliseconds for which  the API client will wait for a request to complete before it fails</param>
         /// <param name="Proxy">To set proxy for http request. Should be an object of WebProxy.</param>
         /// <param name="Pool">Number of connections to server. Client will reuse the connections if they are alive.</param>
@@ -569,7 +568,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
                 return instruments;
             }
-            catch (Exception err)
+            catch (Exception)
             {
 
                 return instruments;

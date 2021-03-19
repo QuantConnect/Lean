@@ -177,11 +177,19 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             return $"{Definition.Name}: {string.Join("|", Legs.Select(leg => leg.Position))}";
         }
 
+        /// <summary>
+        /// OptionStrategyDefinitionMatch == Operator
+        /// </summary>
+        /// <returns>True if they are the same</returns>
         public static bool operator ==(OptionStrategyDefinitionMatch left, OptionStrategyDefinitionMatch right)
         {
             return Equals(left, right);
         }
 
+        /// <summary>
+        /// OptionStrategyDefinitionMatch != Operator
+        /// </summary>
+        /// <returns>True if they are not the same</returns>
         public static bool operator !=(OptionStrategyDefinitionMatch left, OptionStrategyDefinitionMatch right)
         {
             return !Equals(left, right);

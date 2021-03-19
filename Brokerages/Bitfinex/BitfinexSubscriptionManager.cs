@@ -170,6 +170,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             return states.All(s => s);
         }
 
+        /// <summary>
+        /// Get channel name for a given <see cref="TickType"/>
+        /// </summary>
+        /// <param name="tickType"></param>
+        /// <returns>Channel name <see cref="string"/></returns>
         protected override string ChannelNameFromTickType(TickType tickType)
         {
             string channelName;

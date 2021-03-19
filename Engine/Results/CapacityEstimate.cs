@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Processes an order whenever it's encountered so that we can calculate the capacity
         /// </summary>
-        /// <param name="order">Order to use to calculate capacity</param>
+        /// <param name="orderEvent">Order event to use to calculate capacity</param>
         public void OnOrderEvent(OrderEvent orderEvent)
         {
             if (orderEvent.Status != OrderStatus.Filled && orderEvent.Status != OrderStatus.PartiallyFilled)

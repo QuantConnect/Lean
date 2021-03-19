@@ -716,7 +716,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     orderResponse = _kite.CancelOrder(order.BrokerId[0].ToStringInvariant());
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], $"Error cancelling order: {orderResponse["status_message"]}"));
                     UnlockStream();

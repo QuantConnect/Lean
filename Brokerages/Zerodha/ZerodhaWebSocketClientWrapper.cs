@@ -24,9 +24,9 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
-    //<summary>
-    // ZerodhaWebSocketClientWrapper ..
-    //</summary>
+    /// <summary>
+    /// Zerodha Web Socket Client Wrapper
+    /// </summary>
     public class ZerodhaWebSocketClientWrapper
     {
         private const int ReceiveBufferSize = 8192;
@@ -270,8 +270,19 @@ namespace QuantConnect.Brokerages.Zerodha
     /// </summary>
     public class MessageData
     {
+        /// <summary>
+        /// Data contained in message
+        /// </summary>
         public byte[] Data { get; set; }
+
+        /// <summary>
+        /// Type of message
+        /// </summary>
         public WebSocketMessageType MessageType { get; set; }
+
+        /// <summary>
+        /// Count of message
+        /// </summary>
         public int Count { get; internal set; }
     }
 }

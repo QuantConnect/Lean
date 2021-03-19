@@ -149,12 +149,29 @@ namespace QuantConnect.Algorithm.Framework.Execution
             return false;
         }
 
+        /// <summary>
+        /// Symbol data for this Execution Model
+        /// </summary>
         protected class SymbolData
         {
+            /// <summary>
+            /// Security
+            /// </summary>
             public Security Security { get; }
+
+            /// <summary>
+            /// VWAP Indicator
+            /// </summary>
             public IntradayVwap VWAP { get; }
+
+            /// <summary>
+            /// Data Consolidator
+            /// </summary>
             public IDataConsolidator Consolidator { get; }
 
+            /// <summary>
+            /// Initialize a new instance of <see cref="SymbolData"/>
+            /// </summary>
             public SymbolData(QCAlgorithm algorithm, Security security)
             {
                 Security = security;

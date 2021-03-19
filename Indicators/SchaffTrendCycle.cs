@@ -116,7 +116,7 @@ namespace QuantConnect.Indicators
         /// <param name="value">The current value of the set</param>
         /// <param name="highest">The max value of the set within a given period</param>
         /// <param name="lowest">The min value of the set within a given period</param>
-        /// <returns>Stochastics valuereturns>
+        /// <returns>Stochastics value </returns>
         private decimal ComputeStoch(decimal value, decimal highest, decimal lowest)
         {
             var numerator = value - lowest;

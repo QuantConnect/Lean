@@ -73,6 +73,7 @@ namespace QuantConnect.Securities.Cfd
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        /// <param name="securityCache">Cache for storing Security data</param>
         public Cfd(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,

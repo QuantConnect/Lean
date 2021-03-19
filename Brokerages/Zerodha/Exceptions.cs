@@ -18,6 +18,7 @@ using System.Net;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
+#pragma warning disable 1591
     /// <summary>
     /// KiteAPI Exceptions
     /// </summary>
@@ -82,5 +83,5 @@ namespace QuantConnect.Brokerages.Zerodha
     {
         public NetworkException(string message, HttpStatusCode httpStatus = HttpStatusCode.ServiceUnavailable, Exception innerException = null) : base(message, httpStatus, innerException) { }
     }
-
+#pragma warning restore 1591
 }

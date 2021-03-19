@@ -2025,6 +2025,12 @@ namespace QuantConnect
             return orderTicket;
         }
 
+        /// <summary>
+        /// Process all items in collection through given handler
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="collection">Collection to process</param>
+        /// <param name="handler">Handler to process those items with</param>
         public static void ProcessUntilEmpty<T>(this IProducerConsumerCollection<T> collection, Action<T> handler)
         {
             T item;

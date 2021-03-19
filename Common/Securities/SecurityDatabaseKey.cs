@@ -129,11 +129,19 @@ namespace QuantConnect.Securities
             }
         }
 
+        /// <summary>
+        /// Security Database Key == operator
+        /// </summary>
+        /// <returns>True if they are the same</returns>
         public static bool operator ==(SecurityDatabaseKey left, SecurityDatabaseKey right)
         {
             return Equals(left, right);
         }
 
+        /// <summary>
+        /// Security Database Key != operator
+        /// </summary>
+        /// <returns>True if they are not the same</returns>
         public static bool operator !=(SecurityDatabaseKey left, SecurityDatabaseKey right)
         {
             return !Equals(left, right);

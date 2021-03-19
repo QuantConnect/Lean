@@ -23,6 +23,9 @@ namespace QuantConnect.Indicators
     /// </summary>
     public abstract class TimeSeriesIndicator : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
+        /// <summary>
+        /// "Integration" constants
+        /// </summary>
         protected double[] _diffHeads;
 
         /// <summary>

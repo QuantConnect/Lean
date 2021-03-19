@@ -617,11 +617,23 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// OptionPositionCollection + Operator
+        /// </summary>
+        /// <param name="positions">Collection to add to</param>
+        /// <param name="position">OptionPosition to add</param>
+        /// <returns>OptionPositionCollection with the new position added</returns>
         public static OptionPositionCollection operator+(OptionPositionCollection positions, OptionPosition position)
         {
             return positions.Add(position);
         }
 
+        /// <summary>
+        /// OptionPositionCollection - Operator
+        /// </summary>
+        /// <param name="positions">Collection to remove from</param>
+        /// <param name="position">OptionPosition to remove</param>
+        /// <returns>OptionPositionCollection with the position removed</returns>
         public static OptionPositionCollection operator-(OptionPositionCollection positions, OptionPosition position)
         {
             return positions.Remove(position);

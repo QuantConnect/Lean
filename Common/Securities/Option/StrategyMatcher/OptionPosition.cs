@@ -188,16 +188,32 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             return $"{Quantity} share{s} of {Symbol.Value}";
         }
 
+        /// <summary>
+        /// OptionPosition * Operator, will multiple quantity by given factor
+        /// </summary>
+        /// <param name="left">OptionPosition to operate on</param>
+        /// <param name="factor">Factor to multiply by</param>
+        /// <returns>Resulting OptionPosition</returns>
         public static OptionPosition operator *(OptionPosition left, int factor)
         {
             return new OptionPosition(left.Symbol, factor * left.Quantity);
         }
 
+        /// <summary>
+        /// OptionPosition * Operator, will multiple quantity by given factor
+        /// </summary>
+        /// <param name="right">OptionPosition to operate on</param>
+        /// <param name="factor">Factor to multiply by</param>
+        /// <returns>Resulting OptionPosition</returns>
         public static OptionPosition operator *(int factor, OptionPosition right)
         {
             return new OptionPosition(right.Symbol, factor * right.Quantity);
         }
 
+        /// <summary>
+        /// OptionPosition + Operator, will add quantities together if they are for the same symbol.
+        /// </summary>
+        /// <returns>Resulting OptionPosition</returns>
         public static OptionPosition operator +(OptionPosition left, OptionPosition right)
         {
             if (!Equals(left.Symbol, right.Symbol))
@@ -218,6 +234,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             return new OptionPosition(left.Symbol, left.Quantity + right.Quantity);
         }
 
+        /// <summary>
+        /// OptionPosition - Operator, will subtract left - right quantities if they are for the same symbol.
+        /// </summary>
+        /// <returns>Resulting OptionPosition</returns>
         public static OptionPosition operator -(OptionPosition left, OptionPosition right)
         {
             if (!Equals(left.Symbol, right.Symbol))
@@ -240,11 +260,19 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             return new OptionPosition(left.Symbol, left.Quantity - right.Quantity);
         }
 
+        /// <summary>
+        /// Option Position == Operator
+        /// </summary>
+        /// <returns>True if they are the same</returns>
         public static bool operator ==(OptionPosition left, OptionPosition right)
         {
             return Equals(left, right);
         }
 
+        /// <summary>
+        /// Option Position != Operator
+        /// </summary>
+        /// <returns>True if they are not the same</returns>
         public static bool operator !=(OptionPosition left, OptionPosition right)
         {
             return !Equals(left, right);

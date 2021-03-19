@@ -97,6 +97,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        /// <param name="securityCache">Cache to store security information</param>
         public Option(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,

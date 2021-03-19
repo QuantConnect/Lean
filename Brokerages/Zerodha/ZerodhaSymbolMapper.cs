@@ -278,7 +278,6 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
-        /// <summary>
         /// Checks if the symbol is supported by Zerodha
         /// </summary>
         /// <param name="brokerageSymbol">The Zerodha symbol</param>

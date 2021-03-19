@@ -35,14 +35,22 @@ namespace QuantConnect.Report
     /// ]
     /// </code>
     /// </example>
-    /// <typeparam name="T">Result type to deserialize into</typeparam>
     public class OrderTypeNormalizingJsonConverter : JsonConverter
     {
+        /// <summary>
+        /// Determine if this Converter can convert a given object type
+        /// </summary>
+        /// <param name="objectType">Object type to convert</param>
+        /// <returns>True if assignable from <see cref="Order"/></returns>
         public override bool CanConvert(Type objectType)
         {
             return typeof(Order).IsAssignableFrom(objectType);
         }
 
+        /// <summary>
+        /// Read Json and convert
+        /// </summary>
+        /// <returns>Resulting <see cref="Order"/></returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var token = JToken.ReadFrom(reader);
@@ -57,6 +65,9 @@ namespace QuantConnect.Report
             return OrderJsonConverter.CreateOrderFromJObject((JObject)token);
         }
 
+        /// <summary>
+        /// Write Json; Not implemented
+        /// </summary>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             throw new NotImplementedException();

@@ -31,6 +31,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private double _upper;
         private double _riskFreeRate;
 
+        /// <summary>
+        /// Initialize a new instance of <see cref="MaximumSharpeRatioPortfolioOptimizer"/>
+        /// </summary>
+        /// <param name="lower">Lower constraint</param>
+        /// <param name="upper">Upper constraint</param>
+        /// <param name="riskFreeRate"></param>
         public MaximumSharpeRatioPortfolioOptimizer(double lower = -1, double upper = 1, double riskFreeRate = 0.0)
         {
             _lower = lower;
@@ -42,7 +48,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Sum of all weight is one: 1^T w = 1 / Σw = 1
         /// </summary>
         /// <param name="size">number of variables</param>
-        /// <returns>linear constaraint object</returns>
+        /// <returns>linear constraint object</returns>
         protected LinearConstraint GetBudgetConstraint(int size)
         {
             return new LinearConstraint(size)
@@ -57,7 +63,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Boundary constraints on weights: lw ≤ w ≤ up
         /// </summary>
         /// <param name="size">number of variables</param>
-        /// <returns>enumeration of linear constaraint objects</returns>
+        /// <returns>enumeration of linear constraint objects</returns>
         protected IEnumerable<LinearConstraint> GetBoundaryConditions(int size)
         {
             for (int i = 0; i < size; i++)

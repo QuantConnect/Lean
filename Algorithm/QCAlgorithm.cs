@@ -1673,7 +1673,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The ticker of the Index Option</param>
         /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
-        /// <param name="market">Market of the index option. If no market is provided, we default to <see cref="Market.USA"/>
+        /// <param name="market">Market of the index option. If no market is provided, we default to <see cref="Market.USA"/> </param>
         /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
         /// <returns>Canonical Option security</returns>
         public Option AddIndexOption(string ticker, Resolution? resolution = null, string market = Market.USA, bool fillDataForward = true)
@@ -2453,6 +2453,7 @@ namespace QuantConnect.Algorithm
             return BrokerageModel.GetShortableProvider().AllShortableSymbols(Time);
         }
 
+        /// <summary>
         /// Set the properties and exchange hours for a given key into our databases
         /// </summary>
         /// <param name="key">Key for database storage</param>

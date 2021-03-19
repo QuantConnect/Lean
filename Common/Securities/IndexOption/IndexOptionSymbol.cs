@@ -17,6 +17,9 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Securities.IndexOption
 {
+    /// <summary>
+    /// Index Option Symbol
+    /// </summary>
     public static class IndexOptionSymbol
     {
         private static readonly HashSet<string> _supportedIndexOptionTickers = new HashSet<string>

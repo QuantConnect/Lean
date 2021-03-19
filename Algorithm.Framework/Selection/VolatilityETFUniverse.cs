@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// 2010-02-11   TQQQ   ProShares UltraProQQQ
     /// 2010-11-30   TVIX   VelocityShares Daily 2x VIX Short Term ETN
     /// 2011-01-04   VIXY   ProShares VIX Short-Term Futures ETF
-    /// 2011-05-05   SPLV   Invesco S&P 500® Low Volatility ETF
+    /// 2011-05-05   SPLV   Invesco S&amp;P 500® Low Volatility ETF
     /// 2011-10-04   SVXY   ProShares Short VIX Short-Term Futures
     /// 2011-10-04   UVXY   ProShares Ultra VIX Short-Term Futures
     /// 2011-10-20   EEMV   iShares Edge MSCI Min Vol Emerging Markets ETF

@@ -15,6 +15,9 @@
 
 namespace QuantConnect.Securities
 {
+    /// <summary>
+    /// Interface for various currency symbols
+    /// </summary>
     public interface IBaseCurrencySymbol
     {
         /// <summary>

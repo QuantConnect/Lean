@@ -28,6 +28,9 @@ using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
+    /// <summary>
+    /// Zerodha utility class
+    /// </summary>
     public class Utils
     {
         /// <summary>
@@ -155,6 +158,11 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
+        /// <summary>
+        /// Convert Unix TimeStamp to DateTime
+        /// </summary>
+        /// <param name="unixTimeStamp">Timestamp to convert</param>
+        /// <returns><see cref="DateTime"/> object representing the timestamp</returns>
         public static DateTime UnixToDateTime(long unixTimeStamp)
         {
             // Unix timestamp is seconds past epoch
@@ -163,6 +171,11 @@ namespace QuantConnect.Brokerages.Zerodha
             return dateTime;
         }
 
+        /// <summary>
+        /// Convert ArrayList to list of <see cref="decimal"/>
+        /// </summary>
+        /// <param name="arrayList"><see cref="ArrayList"/> to convert</param>
+        /// <returns>List of <see cref="decimal"/>s</returns>
         public static List<decimal> ToDecimalList(ArrayList arrayList)
         {
             var res = new List<decimal>();

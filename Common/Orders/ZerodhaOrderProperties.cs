@@ -27,6 +27,11 @@ namespace QuantConnect.Orders
         /// Kite product type
         /// </summary>
         public readonly string ProductType;
+
+        /// <summary>
+        /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
+        /// </summary>
+        /// <param name="productType">Product type</param>
         public ZerodhaOrderProperties(KiteProductType productType)
         {
             ProductType = productType.ToStringInvariant();
