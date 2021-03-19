@@ -875,7 +875,7 @@ namespace QuantConnect
         /// <summary>
         /// Extracts the embedded value from _otherData
         /// </summary>
-        /// <remarks>Static so it can be used in <see cref="_lazySecurityType"/> initialization</remarks>
+        /// <remarks>Static so it can be used in <see cref="SecurityIdentifier"/> initialization</remarks>
         private static ulong ExtractFromProperties(ulong offset, ulong width, ulong properties)
         {
             return (properties / offset) % width;

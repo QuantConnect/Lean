@@ -1657,7 +1657,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
         /// <param name="leverage">The leverage to apply to the option contract</param>
         /// <returns>Option security</returns>
-        /// <exception cref="ArgumentException">Symbol is canonical (i.e. a generic Symbol returned from <see cref="AddFuture"/> or <see cref="AddOption"/>)</exception>
+        /// <exception cref="ArgumentException">Symbol is canonical (i.e. a generic Symbol returned from <see cref="AddFuture"/> or <see cref="AddOption(string, Resolution?, string, bool, decimal)"/>)</exception>
         public Option AddFutureOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
         {
             if (symbol.IsCanonical())

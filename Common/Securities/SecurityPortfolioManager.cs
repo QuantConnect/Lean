@@ -629,7 +629,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets the margin available for trading a specific symbol in a specific direction.
-        /// Alias for <see cref="GetMarginRemaining"/>
+        /// Alias for <see cref="GetMarginRemaining(Symbol, OrderDirection)"/>
         /// </summary>
         /// <param name="symbol">The symbol to compute margin remaining for</param>
         /// <param name="direction">The order/trading direction</param>

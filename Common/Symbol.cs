@@ -117,7 +117,7 @@ namespace QuantConnect
         /// Creates a new Symbol for custom data. This method allows for the creation of a new Base Symbol
         /// using the first ticker and the first traded date from the provided underlying Symbol. This avoids
         /// the issue for mappable types, where the ticker is remapped supposing the provided ticker value is from today.
-        /// See method <see cref="SecurityIdentifier.GetFirstTickerAndDate(Interfaces.IMapFileProvider, string, string)"/>
+        /// See <see cref="SecurityIdentifier"/>'s private method GetFirstTickerAndDate.
         /// The provided symbol is also set to <see cref="Symbol.Underlying"/> so that it can be accessed using the custom data Symbol.
         /// This is useful for associating custom data Symbols to other asset classes so that it is possible to filter using custom data
         /// and place trades on the underlying asset based on the filtered custom data.

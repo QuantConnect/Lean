@@ -39,7 +39,7 @@ namespace QuantConnect
         /// The absolute maximum valid total portfolio value target percentage
         /// </summary>
         /// <remarks>This setting is currently being used to filter out undesired target percent values,
-        /// caused by the <see cref="IPortfolioConstructionModel"/> implementation being used.
+        /// caused by the IPortfolioConstructionModel implementation being used.
         /// For example rounding errors, math operations</remarks>
         public decimal MaxAbsolutePortfolioTargetPercentage { get; set; }
 
@@ -47,7 +47,7 @@ namespace QuantConnect
         /// The absolute minimum valid total portfolio value target percentage
         /// </summary>
         /// <remarks>This setting is currently being used to filter out undesired target percent values,
-        /// caused by the <see cref="IPortfolioConstructionModel"/> implementation being used.
+        /// caused by the IPortfolioConstructionModel implementation being used.
         /// For example rounding errors, math operations</remarks>
         public decimal MinAbsolutePortfolioTargetPercentage { get; set; }
 

@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         /// <summary>
         /// For backtesting order requests will be processed by the algorithm thread
-        /// sequentially at <see cref="WaitForOrderToBeProcess"/> and <see cref="ProcessSynchronousEvents"/>
+        /// sequentially at <see cref="WaitForOrderSubmission"/> and <see cref="ProcessSynchronousEvents"/>
         /// </summary>
         protected override void InitializeTransactionThread()
         {

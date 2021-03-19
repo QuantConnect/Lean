@@ -578,7 +578,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Retrieve quote and market depth of upto 200 instruments
         /// </summary>
-        /// <param name="InstrumentId">Indentification of instrument in the form of EXCHANGE:TRADINGSYMBOL (eg: NSE:INFY) or InstrumentToken (eg: 408065)</param>
+        /// <param name="InstrumentIds">Indentification of instrument in the form of EXCHANGE:TRADINGSYMBOL (eg: NSE:INFY) or InstrumentToken (eg: 408065)</param>
         /// <returns>Dictionary of all Quote objects with keys as in InstrumentId</returns>
         public Dictionary<string, Quote> GetQuote(string[] InstrumentIds)
         {
@@ -991,7 +991,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 if (e.Response.Equals(null))
                 {
-                    throw e;
+                    throw;
                 }
 
                 webResponse = e.Response;
