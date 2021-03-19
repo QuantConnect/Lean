@@ -21,7 +21,6 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 
 import numpy as np
-import decimal as d
 from datetime import timedelta, datetime
 
 ### <summary>
