@@ -112,9 +112,6 @@ namespace QuantConnect.Data.Custom.Intrinio
             public const string USHighYieldOptionAdjustedSpread = "$BAMLH0A0HYM2";
         }
 
-        /// <summary>
-        /// Chicago Board Options Exchange
-        /// </summary>
         public static class CBOE
         {
             /// <summary>
@@ -182,9 +179,6 @@ namespace QuantConnect.Data.Custom.Intrinio
             public const string VXV = "$VXVCLS";
         }
 
-        /// <summary>
-        /// Commodities
-        /// </summary>
         public static class Commodities
         {
             /// <summary>
@@ -244,9 +238,6 @@ namespace QuantConnect.Data.Custom.Intrinio
             public const string Propane = "$DPROPANEMBTX";
         }
 
-        /// <summary>
-        /// Exchange Rates
-        /// </summary>
         public static class ExchangeRates
         {
             /// <summary>
@@ -410,9 +401,6 @@ namespace QuantConnect.Data.Custom.Intrinio
             public const string USA_UK = "$DEXUSUK";
         }
 
-        /// <summary>
-        /// Moody's Investors Service
-        /// </summary>
         public static class Moodys
         {
             /// <summary>
@@ -451,10 +439,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             public const string SeasonedBaaCorporateBondYieldRelativeTo10YearTreasuryConstantMaturity = "$BAA10Y";
         }
 
-        /// <summary>
-        /// Trade Weighted US Dollar Index
-        /// </summary>
-        public static class TradeWeightedUsDollarIndex
+        public static class TradeWeightedUsDollaIndex
         {
             /// <summary>
             ///     A weighted average of the foreign exchange value of the U.S. dollar against the currencies of a broad group of
