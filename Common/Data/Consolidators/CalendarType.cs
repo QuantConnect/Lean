@@ -17,10 +17,11 @@ using System;
 
 namespace QuantConnect.Data.Consolidators
 {
+    /// <summary>
+    /// Calendar Type Class; now obsolete routes functions to <see cref="Calendar"/>
+    /// </summary>
     [Obsolete("CalendarType is obsolete, please use Calendar instead")]
-#pragma warning disable CS1591
     public static class CalendarType
-#pragma warning restore CS1591 
     {
         /// <summary>
         /// Computes the start of week (previous Monday) of given date/time

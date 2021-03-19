@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             security.SetBuyingPowerModel(new CustomBuyingPowerModel());
         }
 
-        public override void OnData(Slice slice)
+        public void OnData(Slice data)
         {
             if (Portfolio.Invested)
             {
