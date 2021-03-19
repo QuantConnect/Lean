@@ -218,6 +218,7 @@ namespace QuantConnect.Util
                         default:
                             throw new NotSupportedException("Index only supports writing minute data a this time.");
                     }
+                    break;
 
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
