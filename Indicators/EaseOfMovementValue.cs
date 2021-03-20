@@ -80,7 +80,7 @@ namespace QuantConnect.Indicators
             if (input.Volume == 0 || input.High == input.Low)
             {
                 _sma.Update(input.Time, 0);
-                return _sma;
+                return _sma.Current.Value;
             }
 
             var midValue = ((input.High + input.Low) / 2) - ((_previousHighMaximum + _previousLowMinimum) / 2);
@@ -91,7 +91,7 @@ namespace QuantConnect.Indicators
 
             _sma.Update(input.Time, midValue / midRatio);
 
-            return _sma;
+            return _sma.Current.Value;
         }
 
         /// <summary>

@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.IO;
+using System.Text;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -207,6 +209,126 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(quoteBar.Ask.Low, 7m);
             Assert.AreEqual(quoteBar.Ask.Close, 8m);
             Assert.AreEqual(quoteBar.LastAskSize, 1m);
+        }
+
+        [Test]
+        public void QuoteBarParseScalesOptionsWithEquityUnderlying()
+        {
+            var factory = new QuoteBar();
+            var underlying = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                QuantConnect.Market.CME,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                SecurityIdentifier.DefaultDate);
+
+            var config = new SubscriptionDataConfig(
+                typeof(QuoteBar),
+                optionSymbol,
+                Resolution.Minute,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false,
+                false,
+                TickType.Quote,
+                true,
+                DataNormalizationMode.Raw);
+
+            var quoteLine = "40560000,10000,15000,10000,15000,90,10000,15000,10000,15000,100";
+            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(quoteLine)));
+
+            var quoteBarFromLine = (QuoteBar)factory.Reader(config, quoteLine, new DateTime(2020, 9, 22), false);
+            var quoteBarFromStream = (QuoteBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), quoteBarFromLine.EndTime);
+            Assert.AreEqual(optionSymbol, quoteBarFromLine.Symbol);
+            Assert.AreEqual(1m, quoteBarFromLine.Bid.Open);
+            Assert.AreEqual(1.5m, quoteBarFromLine.Bid.High);
+            Assert.AreEqual(1m, quoteBarFromLine.Bid.Low);
+            Assert.AreEqual(1.5m, quoteBarFromLine.Bid.Close);
+            Assert.AreEqual(90m, quoteBarFromLine.LastBidSize);
+            Assert.AreEqual(1m, quoteBarFromLine.Ask.Open);
+            Assert.AreEqual(1.5m, quoteBarFromLine.Ask.High);
+            Assert.AreEqual(1m, quoteBarFromLine.Ask.Low);
+            Assert.AreEqual(1.5m, quoteBarFromLine.Ask.Close);
+            Assert.AreEqual(100m, quoteBarFromLine.LastAskSize);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), quoteBarFromStream.EndTime);
+            Assert.AreEqual(optionSymbol, quoteBarFromStream.Symbol);
+            Assert.AreEqual(1m, quoteBarFromStream.Bid.Open);
+            Assert.AreEqual(1.5m, quoteBarFromStream.Bid.High);
+            Assert.AreEqual(1m, quoteBarFromStream.Bid.Low);
+            Assert.AreEqual(1.5m, quoteBarFromStream.Bid.Close);
+            Assert.AreEqual(90m, quoteBarFromStream.LastBidSize);
+            Assert.AreEqual(1m, quoteBarFromStream.Ask.Open);
+            Assert.AreEqual(1.5m, quoteBarFromStream.Ask.High);
+            Assert.AreEqual(1m, quoteBarFromStream.Ask.Low);
+            Assert.AreEqual(1.5m, quoteBarFromStream.Ask.Close);
+            Assert.AreEqual(100m, quoteBarFromStream.LastAskSize);
+        }
+
+        [Test]
+        public void QuoteBarParseDoesNotScaleOptionsWithNonEquityUnderlying()
+        {
+            var factory = new QuoteBar();
+            var underlying = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2021, 3, 19));
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                QuantConnect.Market.CME,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                SecurityIdentifier.DefaultDate);
+
+            var config = new SubscriptionDataConfig(
+                typeof(QuoteBar),
+                optionSymbol,
+                Resolution.Minute,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false,
+                false,
+                TickType.Quote,
+                true,
+                DataNormalizationMode.Raw);
+
+            var quoteLine = "40560000,1.0,1.5,1.0,1.5,90.0,1.0,1.5,1.0,1.5,100.0";
+            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(quoteLine)));
+
+            var unscaledQuoteBarFromLine = (QuoteBar)factory.Reader(config, quoteLine, new DateTime(2020, 9, 22), false);
+            var unscaledQuoteBarFromStream = (QuoteBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), unscaledQuoteBarFromLine.EndTime);
+            Assert.AreEqual(optionSymbol, unscaledQuoteBarFromLine.Symbol);
+            Assert.AreEqual(1m, unscaledQuoteBarFromLine.Bid.Open);
+            Assert.AreEqual(1.5m, unscaledQuoteBarFromLine.Bid.High);
+            Assert.AreEqual(1m, unscaledQuoteBarFromLine.Bid.Low);
+            Assert.AreEqual(1.5m, unscaledQuoteBarFromLine.Bid.Close);
+            Assert.AreEqual(90m, unscaledQuoteBarFromLine.LastBidSize);
+            Assert.AreEqual(1m, unscaledQuoteBarFromLine.Ask.Open);
+            Assert.AreEqual(1.5m, unscaledQuoteBarFromLine.Ask.High);
+            Assert.AreEqual(1m, unscaledQuoteBarFromLine.Ask.Low);
+            Assert.AreEqual(1.5m, unscaledQuoteBarFromLine.Ask.Close);
+            Assert.AreEqual(100m, unscaledQuoteBarFromLine.LastAskSize);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), unscaledQuoteBarFromStream.EndTime);
+            Assert.AreEqual(optionSymbol, unscaledQuoteBarFromStream.Symbol);
+            Assert.AreEqual(1m, unscaledQuoteBarFromStream.Bid.Open);
+            Assert.AreEqual(1.5m, unscaledQuoteBarFromStream.Bid.High);
+            Assert.AreEqual(1m, unscaledQuoteBarFromStream.Bid.Low);
+            Assert.AreEqual(1.5m, unscaledQuoteBarFromStream.Bid.Close);
+            Assert.AreEqual(90m, unscaledQuoteBarFromStream.LastBidSize);
+            Assert.AreEqual(1m, unscaledQuoteBarFromStream.Ask.Open);
+            Assert.AreEqual(1.5m, unscaledQuoteBarFromStream.Ask.High);
+            Assert.AreEqual(1m, unscaledQuoteBarFromStream.Ask.Low);
+            Assert.AreEqual(1.5m, unscaledQuoteBarFromStream.Ask.Close);
+            Assert.AreEqual(100m, unscaledQuoteBarFromStream.LastAskSize);
         }
     }
 }

@@ -13,14 +13,15 @@
  * limitations under the License.
 */
 
+using System.Globalization;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
 {
-    internal sealed class EstimatedCapacityReportElement : ReportElement
+    public sealed class EstimatedCapacityReportElement : ReportElement
     {
-        private LiveResult _live;
-        private BacktestResult _backtest;
+        private readonly BacktestResult _backtest;
+        private readonly LiveResult _live;
 
         /// <summary>
         /// Create a new capacity estimate
@@ -37,13 +38,26 @@ namespace QuantConnect.Report.ReportElements
             Key = key;
         }
 
-        /// <summary>
-        /// The generated output string to be injected
-        /// </summary>
         public override string Render()
         {
-            // TODO: estimated capacity calculation
-            return "-";
+            var statistics = _backtest?.Statistics;
+            string capacityUsd;
+            if (statistics == null || !statistics.TryGetValue("Estimated Strategy Capacity", out capacityUsd))
+            {
+                return "-";
+            }
+
+            var capacity = decimal.Parse(capacityUsd.Replace("$", ""), NumberStyles.Any, CultureInfo.InvariantCulture)
+                .RoundToSignificantDigits(2);
+
+            Result = capacity;
+
+            if (capacity == 0m)
+            {
+                return "-";
+            }
+
+            return capacity.ToFinancialFigures();
         }
     }
 }

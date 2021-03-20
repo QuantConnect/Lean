@@ -33,8 +33,6 @@ namespace QuantConnect.Tests.ToolBox
         [TestCaseSource(nameof(HistoryTestCases))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool shouldBeEmpty)
         {
-            Log.LogHandler = new ConsoleLogHandler();
-
             var historyProvider = new PolygonDataQueueHandler(false);
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
 

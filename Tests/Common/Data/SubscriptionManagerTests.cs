@@ -24,6 +24,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Data
@@ -152,25 +153,25 @@ namespace QuantConnect.Tests.Common.Data
 
             var readTask = new TaskFactory().StartNew(() =>
             {
-                Console.WriteLine("Read task started");
+                Log.Trace("Read task started");
                 while (DateTime.UtcNow < end)
                 {
                     subscriptionManager.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
                     Thread.Sleep(1);
                 }
-                Console.WriteLine("Read task ended");
+                Log.Trace("Read task ended");
             });
 
             while (readTask.Status != TaskStatus.Running) Thread.Sleep(1);
 
             var addTask = new TaskFactory().StartNew(() =>
             {
-                Console.WriteLine("Add task started");
+                Log.Trace("Add task started");
                 foreach (var symbol in symbols)
                 {
                     subscriptionManager.Add(symbol, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false);
                 }
-                Console.WriteLine("Add task ended");
+                Log.Trace("Add task ended");
             });
 
             Task.WaitAll(addTask, readTask);

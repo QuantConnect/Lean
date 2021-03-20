@@ -41,6 +41,11 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// Under a specific agreement between the issuer and shareholder
         /// </summary>
         [EnumMember(Value = "Off Market Agreement")]
-        OffMarket
+        OffMarket,
+
+        /// <summary>
+        /// Field is not in this enum
+        /// </summary>
+        Error
     }
 }

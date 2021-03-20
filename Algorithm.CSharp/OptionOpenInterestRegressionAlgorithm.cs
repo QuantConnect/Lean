@@ -16,7 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 
@@ -60,11 +62,24 @@ namespace QuantConnect.Algorithm.CSharp
                             contract.Symbol.ID.OptionRight == OptionRight.Call &&
                             contract.Symbol.ID.Date == new DateTime(2016, 01, 15))
                         {
-                            if (slice.Time.Date == new DateTime(2014, 06, 05) && contract.OpenInterest != 50)
+                            var history = History<OpenInterest>(contract.Symbol, TimeSpan.FromDays(1)).ToList();
+                            if (history.Count == 0)
+                            {
+                                throw new Exception("Regression test failed: open interest history request is empty");
+                            }
+
+                            var security = Securities[contract.Symbol];
+                            var openInterestCache = security.Cache.GetData<OpenInterest>();
+                            if (openInterestCache == null)
+                            {
+                                throw new Exception("Regression test failed: current open interest isn't in the security cache");
+                            }
+
+                            if (slice.Time.Date == new DateTime(2014, 06, 05) && (contract.OpenInterest != 50 || security.OpenInterest != 50))
                             {
                                 throw new Exception("Regression test failed: current open interest was not correctly loaded and is not equal to 50");
                             }
-                            if (slice.Time.Date == new DateTime(2014, 06, 06) && contract.OpenInterest != 70)
+                            if (slice.Time.Date == new DateTime(2014, 06, 06) && (contract.OpenInterest != 70 || security.OpenInterest != 70))
                             {
                                 throw new Exception("Regression test failed: current open interest was not correctly loaded and is not equal to 70");
                             }
@@ -124,11 +139,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$0"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-254.23"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -143,7 +159,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1708084857"}
+            {"OrderListHash", "f9eae263aaa6586eabfd09bb2ae96175"}
         };
     }
 }

@@ -223,6 +223,97 @@ namespace QuantConnect.Tests.Python
             }
         }
 
+        /// <summary>
+        /// Specific issues for symbol LOW, reference GH issue #4886
+        /// </summary>
+        [Test]
+        public void HandlesOddTickers()
+        {
+            var converter = new PandasConverter();
+            var symbol = Symbols.LOW;
+
+            var rawBars = Enumerable
+                .Range(0, 10)
+                .Select(i => new TradeBar(DateTime.UtcNow.AddMinutes(i), symbol, i + 101m, i + 102m, i + 100m, i + 101m, 0m))
+                .ToArray();
+
+            // GetDataFrame with argument of type IEnumerable<TradeBar>
+            var history = GetHistory(symbol, Resolution.Minute, rawBars);
+            dynamic dataFrame = converter.GetDataFrame(history);
+
+            // Add LOW to our symbol cache
+            SymbolCache.Set("LOW", Symbols.LOW);
+
+            using (Py.GIL())
+            {
+
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+    $@"
+def Test(dataFrame):
+    data = dataFrame.loc['LOW']
+    if data.empty:
+        raise Exception('LOW history data is empty')
+    if data.__len__() != 10:
+        raise Exception('Expected 10 data points')
+    lowData = data.low
+    if lowData.empty:
+        raise Exception('LOW history low data is empty')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(dataFrame));
+
+            }
+        }
+
+        [Test]
+        public void BreakingOddTickers()
+        {
+            var converter = new PandasConverter();
+            var symbol = Symbols.LOW;
+
+            var rawBars = Enumerable
+                .Range(0, 10)
+                .Select(i => new TradeBar(DateTime.UtcNow.AddMinutes(i), symbol, i + 101m, i + 102m, i + 100m, i + 101m, 0m))
+                .ToArray();
+
+            // GetDataFrame with argument of type IEnumerable<TradeBar>
+            var history = GetHistory(symbol, Resolution.Minute, rawBars);
+            dynamic dataFrame = converter.GetDataFrame(history);
+
+            // Add LOW to our symbol cache
+            SymbolCache.Set("LOW", Symbols.LOW);
+
+            using (Py.GIL())
+            {
+
+                var Test = PythonEngine.ModuleFromString("testModule",
+    $@"
+def Test1(dataFrame):
+    # Should not throw, access all LOW ticker data
+    data = dataFrame.loc['LOW']
+def Test2(dataFrame):
+    # Bad accessor, expected to throw
+    data = dataFrame.LOW
+def Test3(dataFrame):
+    # Bad key, expected to throw
+    data = dataFrame.loc['low']
+def Test4(dataFrame):
+    # Should not throw, access data column low for all tickers
+    data = dataFrame.low
+");
+
+                dynamic test1 = Test.GetAttr("Test1");
+                dynamic test2 = Test.GetAttr("Test2");
+                dynamic test3 = Test.GetAttr("Test3");
+                dynamic test4 = Test.GetAttr("Test4");
+
+                Assert.DoesNotThrow(() => test1(dataFrame));
+                Assert.Throws<PythonException>(() => test2(dataFrame));
+                Assert.Throws<PythonException>(() => test3(dataFrame));
+                Assert.DoesNotThrow(() => test4(dataFrame));
+
+            }
+        }
+
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]

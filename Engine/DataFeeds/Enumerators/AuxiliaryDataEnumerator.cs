@@ -136,43 +136,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             get;
             private set;
         }
-
-        /// <summary>
-        /// Un-normalizes the PreviousUnderlyingData.Value
-        /// </summary>
-        public static decimal GetRawClose(decimal price, SubscriptionDataConfig config)
-        {
-            return GetRawValue(price, config.SumOfDividends, config.PriceScaleFactor, config.DataNormalizationMode);
-        }
-
-        /// <summary>
-        /// Un-normalizes a price
-        /// </summary>
-        private static decimal GetRawValue(decimal price,
-            decimal sumOfDividends,
-            decimal priceScaleFactor,
-            DataNormalizationMode dataNormalizationMode)
-        {
-            switch (dataNormalizationMode)
-            {
-                case DataNormalizationMode.Raw:
-                    break;
-
-                case DataNormalizationMode.SplitAdjusted:
-                case DataNormalizationMode.Adjusted:
-                    // we need to 'unscale' the price
-                    price = price / priceScaleFactor;
-                    break;
-
-                case DataNormalizationMode.TotalReturn:
-                    // we need to remove the dividends since we've been accumulating them in the price
-                    price = (price - sumOfDividends) / priceScaleFactor;
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            return price;
-        }
     }
 }

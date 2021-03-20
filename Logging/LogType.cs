@@ -21,8 +21,17 @@ namespace QuantConnect.Logging
     /// </summary>
     public enum LogType
     {
+        /// <summary>
+        /// Debug log level
+        /// </summary>
         Debug,
+        /// <summary>
+        /// Trace log level
+        /// </summary>
         Trace,
+        /// <summary>
+        /// Error log level
+        /// </summary>
         Error
     }
 }

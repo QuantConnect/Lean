@@ -68,7 +68,7 @@ namespace QuantConnect.Indicators
             _maximum.Update(input);
             _minimum.Update(input);
 
-            return (_maximum + _minimum) / 2;
+            return (_maximum.Current.Value + _minimum.Current.Value) / 2;
         }
 
         /// <summary>

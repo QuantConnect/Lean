@@ -17,10 +17,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Storage;
 using QuantConnect.Packets;
+using QuantConnect.Research;
 using QuantConnect.Storage;
 using QuantConnect.Util;
 
@@ -134,6 +136,25 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
+        [Test]
+        public void GetFilePathAndDelete()
+        {
+            using (var store = new ObjectStore(new LocalObjectStore()))
+            {
+                store.Initialize("test", 0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var key = "ILove";
+                store.SaveString(key, "Pizza");
+                var path = store.GetFilePath(key);
+
+                Assert.IsTrue(File.Exists(path));
+                store.Delete(key);
+
+                Assert.IsFalse(File.Exists(path));
+            }
+        }
+
         [TestCase(FileAccess.Read, false)]
         [TestCase(FileAccess.ReadWrite, false)]
         [TestCase(0, true)]
@@ -162,7 +183,11 @@ namespace QuantConnect.Tests.Common.Storage
             var store = new TestLocalObjectStore();
             var dir = Path.Combine(TestStorageRoot, $"CSharp-TestAlgorithm-8");
             Directory.CreateDirectory(dir);
-            File.WriteAllText(Path.Combine(dir, "Jose"), "Pepe");
+
+            //Determine filename for key "Jose" using Base64
+            var filename = Convert.ToBase64String(Encoding.UTF8.GetBytes("Jose"));
+            File.WriteAllText(Path.Combine(dir, filename), "Pepe");
+
             store.Initialize($"CSharp-TestAlgorithm-8", 0, 0, "", new Controls { StoragePermissions = permissions });
 
             if (shouldThrow)
@@ -209,8 +234,11 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsTrue(error.Message.Contains("Please use ObjectStore.ContainsKey(key)"));
         }
 
-        [TestCase("my_key", "./LocalObjectStoreTests/CSharp-TestAlgorithm/9ed6e46a3ff88783ff75296a4ba523f9.dat")]
-        [TestCase("test/123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/0a2557f6be73a1b8a6abe84104899591.dat")]
+        [TestCase("my_key", "./LocalObjectStoreTests/CSharp-TestAlgorithm/bXlfa2V5")]
+        [TestCase("test/123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/dGVzdC8xMjM=")]
+        [TestCase("**abc**", "./LocalObjectStoreTests/CSharp-TestAlgorithm/KiphYmMqKg==")]
+        [TestCase("<random>", "./LocalObjectStoreTests/CSharp-TestAlgorithm/PHJhbmRvbT4=")]
+        [TestCase("|", "./LocalObjectStoreTests/CSharp-TestAlgorithm/fA==")]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
             var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
@@ -291,6 +319,108 @@ namespace QuantConnect.Tests.Common.Storage
             }
 
             Assert.IsFalse(Directory.Exists("./LocalObjectStoreTests/unused"));
+        }
+
+        [Test]
+        public void DisposeDoesNotDeleteStoreFiles()
+        {
+            string path;
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize("test", 0, 0, "", new Controls() {PersistenceIntervalSeconds = -1});
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var validData = new byte[1024 * 1024 * 4];
+                var saved = store.SaveBytes("a.txt", validData);
+                Assert.IsTrue(saved);
+
+                path = store.GetFilePath("a.txt");
+                Assert.IsTrue(File.Exists(path));
+            }
+
+            // Check that it still exists
+            Assert.IsTrue(File.Exists(path));
+        }
+
+        [Test]
+        public void QuantBookObjectStoreBehavior()
+        {
+            // Test for issue #4811, on loop store objects would duplicate
+            for (int i = 0; i < 3; i++)
+            {
+                // Create a QuantBook and save some data
+                var qb = new QuantBook();
+                qb.ObjectStore.Save("a.txt", "1010101010101010101010");
+                Assert.IsTrue(qb.ObjectStore.ContainsKey("a.txt"));
+
+                // Assert the store has only a.txt
+                var store = qb.ObjectStore.GetEnumerator().AsEnumerable().ToList();
+                Assert.IsTrue(store.Count == 1);
+                Assert.IsTrue(store[0].Key == "a.txt");
+
+                // Get the file path and verify it exists
+                var path = qb.ObjectStore.GetFilePath("a.txt");
+                Assert.IsTrue(File.Exists(path));
+            }
+        }
+
+        [Test]
+        public void OversizedObject()
+        {
+            // Create a big byte array
+            var bytesToWrite = new byte[7000000];
+
+            // Attempt to save it to local store with 5MB cap
+            Assert.IsFalse(_store.SaveBytes("test", bytesToWrite));
+        }
+
+        [Test]
+        public void TooManyObjects()
+        {
+            // Write 100 Files first, should not throw
+            for (int i = _store.Count(); i < 100; i++)
+            {
+                Assert.IsTrue(_store.SaveString($"{i}", $"{i}"));
+            }
+
+            // Write 1 more; should throw
+            Assert.IsFalse(_store.SaveString("breaker", "gotem"));
+        }
+
+        [Test]
+        public void DeletedObjectIsNotReloaded()
+        {
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize("test", 0, 0, "", new Controls());
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var validData = new byte[1024 * 4];
+                store.SaveBytes("a.txt", validData);
+                Assert.IsTrue(store.ContainsKey("a.txt"));
+
+                store.SaveBytes("b.txt", validData);
+                Assert.IsTrue(store.ContainsKey("b.txt"));
+
+                // Assert the store has our two objects
+                var storedObj = store.GetEnumerator().AsEnumerable().ToList();
+                Assert.IsTrue(storedObj.Count == 2);
+
+                // Delete a.txt and close this store down
+                store.Delete("a.txt");
+                Assert.IsFalse(store.ContainsKey("a.txt"));
+            }
+
+            using (var store = new LocalObjectStore())
+            {
+                // Check that the dir still exists, it had files so it shouldn't have deleted
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+                store.Initialize("test", 0, 0, "", new Controls());
+
+                // Check our files; a should be gone, b should be there
+                Assert.IsFalse(store.ContainsKey("a.txt"));
+                Assert.IsTrue(store.ContainsKey("b.txt"));
+            }
         }
 
         public class TestSettings

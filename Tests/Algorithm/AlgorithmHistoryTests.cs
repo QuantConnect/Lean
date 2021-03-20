@@ -200,7 +200,6 @@ namespace QuantConnect.Tests.Algorithm
             cacheProvider.DisposeSafely();
         }
 
-
         [Test]
         public void GetLastKnownPriceOfIlliquidAsset_TestData()
         {
@@ -220,6 +219,113 @@ namespace QuantConnect.Tests.Algorithm
             var lastKnownPrice = _algorithm.GetLastKnownPrice(option);
             Assert.IsNotNull(lastKnownPrice);
             Assert.AreEqual(barTime.AddMinutes(1), lastKnownPrice.EndTime);
+        }
+
+        [Test]
+        public void TickResolutionOpenInterestHistoryRequestIsNotFilteredWhenRequestedExplicitly()
+        {
+            _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var dataProvider = new DefaultDataProvider();
+            var zipCacheProvider = new ZipDataCacheProvider(dataProvider);
+            _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                dataProvider,
+                zipCacheProvider,
+                new LocalDiskMapFileProvider(),
+                new LocalDiskFactorFileProvider(),
+                null,
+                false,
+                new DataPermissionManager()));
+            var start = new DateTime(2014, 6, 05);
+            _algorithm.SetStartDate(start);
+            _algorithm.SetDateTime(start.AddDays(2));
+
+            _algorithm.UniverseSettings.FillForward = false;
+            var optionSymbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 23, new DateTime(2015, 1, 17));
+            var openInterests = _algorithm.History<OpenInterest>(optionSymbol, start, start.AddDays(2), Resolution.Minute).ToList();
+
+            zipCacheProvider.DisposeSafely();
+            Assert.IsNotEmpty(openInterests);
+
+            Assert.AreEqual(2, openInterests.Count);
+            Assert.AreEqual(new DateTime(2014, 06, 05, 6, 32, 0), openInterests[0].Time);
+            Assert.AreEqual(optionSymbol, openInterests[0].Symbol);
+            Assert.AreEqual(new DateTime(2014, 06, 06, 6, 32, 0), openInterests[1].Time);
+            Assert.AreEqual(optionSymbol, openInterests[1].Symbol);
+        }
+
+        [Test]
+        public void TickResolutionOpenInterestHistoryRequestIsFilteredByDefault_SingleSymbol()
+        {
+            _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var dataProvider = new DefaultDataProvider();
+            var zipCacheProvider = new ZipDataCacheProvider(dataProvider);
+            _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                dataProvider,
+                zipCacheProvider,
+                new LocalDiskMapFileProvider(),
+                new LocalDiskFactorFileProvider(),
+                null,
+                false,
+                new DataPermissionManager()));
+            var start = new DateTime(2014, 6, 05);
+            _algorithm.SetStartDate(start);
+            _algorithm.SetDateTime(start.AddDays(2));
+
+            var optionSymbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 23, new DateTime(2015, 1, 17));
+            var result = _algorithm.History(new[] { optionSymbol }, start, start.AddDays(2), Resolution.Minute, fillForward:false).ToList();
+
+            zipCacheProvider.DisposeSafely();
+            Assert.IsNotEmpty(result);
+            Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol)));
+
+            var openInterests = result.Select(slice => slice.Get(typeof(OpenInterest)) as DataDictionary<OpenInterest>).Where(dataDictionary => dataDictionary.Count > 0).ToList();
+
+            Assert.AreEqual(0, openInterests.Count);
+        }
+
+        [Test]
+        public void TickResolutionOpenInterestHistoryRequestIsFilteredByDefault_MultipleSymbols()
+        {
+            _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var dataProvider = new DefaultDataProvider();
+            var zipCacheProvider = new ZipDataCacheProvider(dataProvider);
+            _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                dataProvider,
+                zipCacheProvider,
+                new LocalDiskMapFileProvider(),
+                new LocalDiskFactorFileProvider(),
+                null,
+                false,
+                new DataPermissionManager()));
+            var start = new DateTime(2014, 6, 05);
+            _algorithm.SetStartDate(start);
+            _algorithm.SetDateTime(start.AddDays(2));
+
+            var optionSymbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 23, new DateTime(2015, 1, 17));
+            var optionSymbol2 = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 500, new DateTime(2015, 1, 17));
+            var result = _algorithm.History(new[] { optionSymbol, optionSymbol2 }, start, start.AddDays(2), Resolution.Minute, fillForward: false).ToList();
+
+            zipCacheProvider.DisposeSafely();
+            Assert.IsNotEmpty(result);
+
+            Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol)));
+            Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol2)));
+
+            var openInterests = result.Select(slice => slice.Get(typeof(OpenInterest)) as DataDictionary<OpenInterest>).Where(dataDictionary => dataDictionary.Count > 0).ToList();
+
+            Assert.AreEqual(0, openInterests.Count);
         }
 
         private class TestHistoryProvider : HistoryProviderBase

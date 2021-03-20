@@ -28,7 +28,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
 using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -222,14 +221,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreNotEqual(0, internalDataCount);
         }
 
-        [Test]
+        [Test, Category("TravisExclude")]
         public void UniverseSelectionAddAndRemove()
         {
             _algorithm.SetLiveMode(true);
             _algorithm.UniverseSettings.Resolution = Resolution.Hour;
             _algorithm.UniverseSettings.MinimumTimeInUniverse = TimeSpan.Zero;
             var added = false;
-            var first = true;
+            var manualEvent = new ManualResetEvent(false);
             var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
             {
@@ -243,30 +242,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             _algorithm.UniverseSettings,
                             time =>
                             {
-                                return first ? new[] { "IBM" } : new[] { "AAPL" };
+                                return !manualEvent.WaitOne(0) ? new[] { "IBM" } : new[] { "AAPL" };
                             }
                     );
                 }
                 else if (!timeSlice.IsTimePulse)
                 {
-                    if (first)
+                    if (!manualEvent.WaitOne(0))
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any());
-                        first = false;
+                            .GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second),
+                            "IBM subscription was not found");
+                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(),
+                            "Unexpected AAPL subscription was found");
+                        manualEvent.Set();
                     }
                     else
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any());
+                            .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second),
+                            "AAPL subscription was not found");
+                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(),
+                            "Unexpected IBM subscription was found");
                         break;
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
             }
-            Assert.IsFalse(tokenSource.IsCancellationRequested);
+            Assert.IsFalse(tokenSource.IsCancellationRequested, "Test timed out");
         }
 
         private static TestCaseData[] DataTypeTestCases

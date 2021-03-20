@@ -79,7 +79,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             // convert from percent space to decimal space
             maximumPercentDeviation /= 100m;
 
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, (string) null, securityType, "USD");
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, null, securityType, "USD");
             var minimumPriceVariation = symbolProperties.MinimumPriceVariation;
 
             decimal price;

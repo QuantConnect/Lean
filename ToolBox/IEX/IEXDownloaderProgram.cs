@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using QuantConnect.Configuration;
@@ -24,7 +25,7 @@ namespace QuantConnect.ToolBox.IEX
     public static class IEXDownloaderProgram
     {
         /// <summary>
-        /// Primary entry point to the program. This program only supports FOREX for now.
+        /// Primary entry point to the program.
         /// </summary>
         public static void IEXDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate)
         {
@@ -48,7 +49,7 @@ namespace QuantConnect.ToolBox.IEX
 
                 // Create an instance of the downloader
                 const string market = Market.USA;
-                SecurityType securityType = SecurityType.Equity;
+                var securityType = SecurityType.Equity;
 
                 using (var downloader = new IEXDataDownloader())
                 {
@@ -56,7 +57,12 @@ namespace QuantConnect.ToolBox.IEX
                     {
                         // Download the data
                         var symbolObject = Symbol.Create(ticker, securityType, market);
-                        var data = downloader.Get(symbolObject, castResolution, startDate, endDate);
+                        var data = downloader.Get(symbolObject, castResolution, startDate, endDate).ToArray();
+
+                        if (data.Length == 0)
+                        {
+                            continue;
+                        }
 
                         // Save the data
                         var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory);

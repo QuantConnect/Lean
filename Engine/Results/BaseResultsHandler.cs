@@ -38,10 +38,16 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public abstract class BaseResultsHandler
     {
+        // used for resetting out/error upon completion
+        private static readonly TextWriter StandardOut = Console.Out;
+        private static readonly TextWriter StandardError = Console.Error;
+
+        private string _hostName;
+
         /// <summary>
         /// The main loop update interval
         /// </summary>
-        protected TimeSpan MainUpdateInterval = TimeSpan.FromSeconds(3);
+        protected virtual TimeSpan MainUpdateInterval => TimeSpan.FromSeconds(3);
 
         /// <summary>
         /// The chart update interval
@@ -82,6 +88,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// True if the exit has been triggered
         /// </summary>
         protected volatile bool ExitTriggered;
+
+        /// <summary>
+        /// Event set when exit is triggered
+        /// </summary>
+        protected ManualResetEvent ExitEvent { get; }
 
         /// <summary>
         /// The log store instance
@@ -193,6 +204,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected BaseResultsHandler()
         {
+            ExitEvent = new ManualResetEvent(false);
             Charts = new ConcurrentDictionary<string, Chart>();
             Messages = new ConcurrentQueue<Packet>();
             RuntimeStatistics = new Dictionary<string, string>();
@@ -213,11 +225,22 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Terminate the result thread and apply any required exit procedures like sending final results
+        /// </summary>
+        public virtual void Exit()
+        {
+            // reset standard out/error
+            Console.SetOut(StandardOut);
+            Console.SetError(StandardError);
+        }
+
+        /// <summary>
         /// Gets the current Server statistics
         /// </summary>
         protected virtual Dictionary<string, string> GetServerStatistics(DateTime utcNow)
         {
             var serverStatistics = OS.GetServerStatistics();
+            serverStatistics["Hostname"] = _hostName;
             var upTime = utcNow - StartTime;
             serverStatistics["Up Time"] = $"{upTime.Days}d {upTime:hh\\:mm\\:ss}";
             serverStatistics["Total RAM (MB)"] = RamAllocation;
@@ -291,6 +314,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="transactionHandler">The transaction handler used to get the algorithms <see cref="Order"/> information</param>
         public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
         {
+            _hostName = job.HostName ?? Environment.MachineName;
             MessagingHandler = messagingHandler;
             TransactionHandler = transactionHandler;
             CompileId = job.CompileId;
@@ -322,15 +346,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public virtual void OnSecuritiesChanged(SecurityChanges changes)
         {
-        }
-
-        /// <summary>
-        /// True if this result handler should sample charts
-        /// </summary>
-        /// <remarks>This is used to disable live trading charting on extended market hours unless user is consuming data</remarks>
-        protected virtual bool ShouldSampleCharts(DateTime utcDateTime)
-        {
-            return true;
         }
 
         /// <summary>
@@ -402,6 +417,26 @@ namespace QuantConnect.Lean.Engine.Results
         protected abstract void StoreResult(Packet packet);
 
         /// <summary>
+        /// Gets the current portfolio value
+        /// </summary>
+        /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
+        /// so we ignore extended market hours updates</remarks>
+        protected virtual decimal GetPortfolioValue()
+        {
+            return Algorithm.Portfolio.TotalPortfolioValue;
+        }
+
+        /// <summary>
+        /// Gets the current benchmark value
+        /// </summary>
+        /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
+        /// so we ignore extended market hours updates</remarks>
+        protected virtual decimal GetBenchmarkValue()
+        {
+            return Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding();
+        }
+
+        /// <summary>
         /// Samples portfolio equity, benchmark, and daily performance
         /// </summary>
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
@@ -410,7 +445,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var dayChanged = PreviousUtcSampleTime.Date != time.Date;
 
-            if (ShouldSampleCharts(time) && dayChanged || force)
+            if (dayChanged || force)
             {
                 if (force)
                 {
@@ -418,11 +453,11 @@ namespace QuantConnect.Lean.Engine.Results
                     PreviousUtcSampleTime = time;
                 }
 
-                var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
+                var currentPortfolioValue = GetPortfolioValue();
                 var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 
                 SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
-                SampleBenchmark(PreviousUtcSampleTime, Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding());
+                SampleBenchmark(PreviousUtcSampleTime, GetBenchmarkValue());
                 SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
@@ -444,7 +479,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Current equity value.</param>
         protected virtual void SampleEquity(DateTime time, decimal value)
         {
-            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
+            var accountCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
+
+            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, accountCurrencySymbol);
         }
 
         /// <summary>
@@ -495,7 +532,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// Gets the algorithm runtime statistics
         /// </summary>
         protected Dictionary<string, string> GetAlgorithmRuntimeStatistics(Dictionary<string, string> summary,
-            Dictionary<string, string> runtimeStatistics = null)
+            Dictionary<string, string> runtimeStatistics = null,
+            decimal? capacityEstimate = null)
         {
             if (runtimeStatistics == null)
             {
@@ -511,13 +549,19 @@ namespace QuantConnect.Lean.Engine.Results
                 runtimeStatistics["Probabilistic Sharpe Ratio"] = "0%";
             }
 
-            runtimeStatistics["Unrealized"] = "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
-            runtimeStatistics["Fees"] = "-$" + Algorithm.Portfolio.TotalFees.ToStringInvariant("N2");
-            runtimeStatistics["Net Profit"] = "$" + Algorithm.Portfolio.TotalProfit.ToStringInvariant("N2");
+            var accountCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
+
+            runtimeStatistics["Unrealized"] = accountCurrencySymbol + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
+            runtimeStatistics["Fees"] = $"-{accountCurrencySymbol}{Algorithm.Portfolio.TotalFees.ToStringInvariant("N2")}";
+            runtimeStatistics["Net Profit"] = accountCurrencySymbol + Algorithm.Portfolio.TotalProfit.ToStringInvariant("N2");
             runtimeStatistics["Return"] = GetNetReturn().ToStringInvariant("P");
-            runtimeStatistics["Equity"] = "$" + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
-            runtimeStatistics["Holdings"] = "$" + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
-            runtimeStatistics["Volume"] = "$" + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
+            runtimeStatistics["Equity"] = accountCurrencySymbol + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
+            runtimeStatistics["Holdings"] = accountCurrencySymbol + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
+            runtimeStatistics["Volume"] = accountCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
+            if (capacityEstimate != null)
+            {
+                runtimeStatistics["Capacity"] = accountCurrencySymbol + capacityEstimate.Value.RoundToSignificantDigits(2).ToFinancialFigures();
+            }
 
             return runtimeStatistics;
         }
@@ -526,7 +570,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Will generate the statistics results and update the provided runtime statistics
         /// </summary>
         protected StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts,
-            SortedDictionary<DateTime, decimal> profitLoss = null)
+            SortedDictionary<DateTime, decimal> profitLoss = null, decimal estimatedStrategyCapacity = 0m)
         {
             var statisticsResults = new StatisticsResults();
             if (profitLoss == null)
@@ -557,7 +601,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var trades = Algorithm.TradeBuilder.ClosedTrades;
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
-                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions);
+                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, estimatedStrategyCapacity);
                 }
             }
             catch (Exception err)

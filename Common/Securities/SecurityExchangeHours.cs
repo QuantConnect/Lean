@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using NodaTime;
 using QuantConnect.Util;
 
@@ -156,6 +157,7 @@ namespace QuantConnect.Securities
         /// <param name="endLocalDateTime">The end of the interval in local time</param>
         /// <param name="extendedMarket">True to use the extended market hours, false for just regular market hours</param>
         /// <returns>True if the exchange is considered open at the specified time, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsOpen(DateTime startLocalDateTime, DateTime endLocalDateTime, bool extendedMarket)
         {
             if (startLocalDateTime == endLocalDateTime)
@@ -240,6 +242,17 @@ namespace QuantConnect.Securities
                         continue;
                     }
 
+                    TimeSpan earlyCloseTime;
+                    if (_earlyCloses.TryGetValue(time.Date, out earlyCloseTime))
+                    {
+                        var earlyCloseDateTime = time.Date.Add(earlyCloseTime);
+                        if (time > earlyCloseDateTime)
+                        {
+                            time = time.Date + Time.OneDay;
+                            continue;
+                        }
+                    }
+
                     var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket);
                     if (marketOpenTimeOfDay.HasValue)
                     {
@@ -282,6 +295,17 @@ namespace QuantConnect.Securities
 
                         time = time.Date + Time.OneDay;
                         continue;
+                    }
+
+                    TimeSpan lateOpenTime;
+                    if (_lateOpens.TryGetValue(time.Date, out lateOpenTime))
+                    {
+                        var lateOpenDateTime = time.Date.Add(lateOpenTime);
+                        if (time < lateOpenDateTime)
+                        {
+                            time = lateOpenDateTime;
+                            continue;
+                        }
                     }
 
                     var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarket);

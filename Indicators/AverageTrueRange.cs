@@ -120,7 +120,7 @@ namespace QuantConnect.Indicators
         {
             // compute the true range and then send it to our smoother
             TrueRange.Update(input);
-            _smoother.Update(input.Time, TrueRange);
+            _smoother.Update(input.Time, TrueRange.Current.Value);
 
             return _smoother.Current.Value;
         }

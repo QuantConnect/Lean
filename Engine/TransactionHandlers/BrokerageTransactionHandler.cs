@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
@@ -230,6 +229,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 ? OrderResponse.Success(request)
                 : OrderResponse.WarmingUp(request);
 
+            var shortable = true;
+            if (request.Quantity < 0)
+            {
+                shortable = _algorithm.Shortable(request.Symbol, request.Quantity);
+            }
+
+            if (!shortable)
+            {
+                response = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
+                    $"Order exceeds maximum shortable quantity for Symbol {request.Symbol} (requested short: {Math.Abs(request.Quantity)})");
+            }
+
             request.SetResponse(response);
             var ticket = new OrderTicket(_algorithm.Transactions, request);
 
@@ -250,13 +261,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // add it to the orders collection for recall later
                 var order = Order.CreateOrder(request);
+                var orderTag = response.ErrorCode == OrderResponseErrorCode.AlgorithmWarmingUp
+                    ? "Algorithm warming up."
+                    : response.ErrorMessage;
 
                 // ensure the order is tagged with a currency
                 var security = _algorithm.Securities[order.Symbol];
                 order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
                 order.Status = OrderStatus.Invalid;
-                order.Tag = "Algorithm warming up.";
+                order.Tag = orderTag;
                 ticket.SetOrder(order);
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _completeOrders.TryAdd(order.Id, order);
@@ -297,6 +311,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 //Update the order from the behaviour
                 var order = GetOrderByIdInternal(request.OrderId);
+                var orderQuantity = request.Quantity ?? ticket.Quantity;
+
+                var shortable = true;
+                if (order?.Direction == OrderDirection.Sell || orderQuantity < 0)
+                {
+                    shortable = _algorithm.Shortable(ticket.Symbol, orderQuantity);
+                }
+
                 if (order == null)
                 {
                     // can't update an order that doesn't exist!
@@ -314,6 +336,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (_algorithm.IsWarmingUp)
                 {
                     request.SetResponse(OrderResponse.WarmingUp(request));
+                }
+                else if (!shortable)
+                {
+                    var shortableResponse = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
+                        $"Order exceeds maximum shortable quantity for Symbol {ticket.Symbol} (requested short: {Math.Abs(orderQuantity)})");
+
+                    request.SetResponse(shortableResponse);
                 }
                 else
                 {
@@ -602,20 +631,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
+            var timeout = TimeSpan.FromSeconds(60);
             if (_processingThread != null)
             {
                 // only wait if the processing thread is running
-                var timeout = TimeSpan.FromSeconds(60);
                 if (_orderRequestQueue.IsBusy && !_orderRequestQueue.WaitHandle.WaitOne(timeout))
                 {
                     Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
                 }
             }
-            _cancellationTokenSource.Cancel();
-            if (_processingThread != null && _processingThread.IsAlive)
-            {
-                _processingThread.Abort();
-            }
+
+            _processingThread?.StopSafely(timeout, _cancellationTokenSource);
             IsActive = false;
         }
 
@@ -987,6 +1013,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         orderEvent.LimitPrice = stopLimitOrder.LimitPrice;
                         orderEvent.StopPrice = stopLimitOrder.StopPrice;
                         break;
+                    case OrderType.LimitIfTouched:
+                        var limitIfTouchedOrder = order as LimitIfTouchedOrder;
+                        orderEvent.LimitPrice = limitIfTouchedOrder.LimitPrice;
+                        orderEvent.TriggerPrice = limitIfTouchedOrder.TriggerPrice;
+                        break;
                 }
 
                 //Apply the filled order to our portfolio:
@@ -1027,10 +1058,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     }
                 }
 
-                // update the ticket and order after we've processed the fill, but before the event, this way everything is ready for user code
+                // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
                 ticket.AddOrderEvent(orderEvent);
-                order.Price = ticket.AverageFillPrice;
             }
+
             //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
             if (orderEvent.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
             {
@@ -1083,10 +1114,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandlePositionAssigned(OrderEvent fill)
         {
             // informing user algorithm that option position has been assigned
-            if (fill.IsAssignment)
-            {
-                _algorithm.OnAssignmentOrderEvent(fill);
-            }
+            _algorithm.OnAssignmentOrderEvent(fill);
         }
 
         /// <summary>
@@ -1194,6 +1222,30 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             SendWarningOnPriceChange("Stop", stopRound, stopPrice);
                         }
                     }
+                    break;
+                
+                case OrderType.LimitIfTouched:
+                {
+                    var limitPrice = ((LimitIfTouchedOrder) order).LimitPrice;
+                    var increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                        new GetMinimumPriceVariationParameters(security, limitPrice));
+                    if (increment > 0)
+                    {
+                        var limitRound = Math.Round(limitPrice / increment) * increment;
+                        ((LimitIfTouchedOrder) order).LimitPrice = limitRound;
+                        SendWarningOnPriceChange("Limit", limitRound, limitPrice);
+                    }
+
+                    var triggerPrice = ((LimitIfTouchedOrder) order).TriggerPrice;
+                    increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                        new GetMinimumPriceVariationParameters(security, triggerPrice));
+                    if (increment > 0)
+                    {
+                        var triggerRound = Math.Round(triggerPrice / increment) * increment;
+                        ((LimitIfTouchedOrder) order).TriggerPrice = triggerRound;
+                        SendWarningOnPriceChange("Trigger", triggerRound, triggerPrice);
+                    }
+                }
                     break;
             }
         }

@@ -226,9 +226,28 @@ namespace QuantConnect.Securities
                 markets.Add(SecurityType.Cfd, markets[SecurityType.Forex]);
             }
 
-            var potentials = CreateSymbolList(Currencies.CurrencyPairs, marketMap, markets, SecurityType.Forex)
-                .Concat(CreateSymbolList(Currencies.CfdCurrencyPairs, marketMap, markets, SecurityType.Cfd))
-                .Concat(CreateSymbolList(Currencies.CryptoCurrencyPairs, marketMap, markets, SecurityType.Crypto));
+            var forexEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Forex, marketMap, markets);
+            var cfdEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Cfd, marketMap, markets);
+            var cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Crypto, marketMap, markets);
+
+            var potentialEntries = forexEntries
+                .Concat(cfdEntries)
+                .Concat(cryptoEntries)
+                .ToList();
+
+            if (!potentialEntries.Any(x =>
+                    Symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) ||
+                    Symbol == x.Value.QuoteCurrency))
+            {
+                // currency not found in any tradeable pair
+                Log.Error($"No tradeable pair was found for currency {Symbol}, conversion rate to account currency ({accountCurrency}) will be set to zero.");
+                ConversionRateSecurity = null;
+                ConversionRate = 0m;
+                return null;
+            }
+
+            var potentials = potentialEntries
+                .Select(x => QuantConnect.Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market));
 
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(defaultResolution).Min();
 
@@ -275,26 +294,42 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="string"/> that represents the current <see cref="Cash"/>.</returns>
         public override string ToString()
         {
+            return ToString(Currencies.USD);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the current <see cref="Cash"/>.
+        /// </summary>
+        /// <returns>A <see cref="string"/> that represents the current <see cref="Cash"/>.</returns>
+        public string ToString(string accountCurrency)
+        {
             // round the conversion rate for output
             var rate = ConversionRate;
             rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return Invariant($"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = ${Math.Round(ValueInAccountCurrency, 2)}");
+            return Invariant($"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = {Currencies.GetCurrencySymbol(accountCurrency)}{Math.Round(ValueInAccountCurrency, 2)}");
         }
 
-        private static IEnumerable<Symbol> CreateSymbolList(
-            IEnumerable<string> pairs,
+        private static IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetAvailableSymbolPropertiesDatabaseEntries(
+            SecurityType securityType,
             IReadOnlyDictionary<SecurityType, string> marketMap,
-            IReadOnlyDictionary<SecurityType, string> markets,
-            SecurityType securityType)
+            IReadOnlyDictionary<SecurityType, string> markets
+            )
         {
-            string market;
-            if (!markets.TryGetValue(securityType, out market) &&
-                !marketMap.TryGetValue(securityType, out market))
+            var marketJoin = new HashSet<string>();
             {
-                return new List<Symbol>();
+                string market;
+                if (marketMap.TryGetValue(securityType, out market))
+                {
+                    marketJoin.Add(market);
+                }
+                if (markets.TryGetValue(securityType, out market))
+                {
+                    marketJoin.Add(market);
+                }
             }
 
-            return pairs.Select(ticker => QuantConnect.Symbol.Create(ticker, securityType, market));
+            return marketJoin.SelectMany(market => SymbolPropertiesDatabase.FromDataFolder()
+                .GetSymbolPropertiesList(market, securityType));
         }
 
         private void OnUpdate()

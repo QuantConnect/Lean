@@ -33,5 +33,10 @@ namespace QuantConnect.ToolBox.CoinApi
 
         [JsonProperty("asset_id_quote")]
         public string AssetIdQuote { get; set; }
+
+        public override string ToString()
+        {
+            return SymbolId;
+        }
     }
 }

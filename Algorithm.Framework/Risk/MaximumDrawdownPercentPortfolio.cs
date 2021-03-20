@@ -67,9 +67,11 @@ namespace QuantConnect.Algorithm.Framework.Risk
             }
 
             var pnl = GetTotalDrawdownPercent(currentValue);
-            if (pnl < _maximumDrawdownPercent)
+            if (pnl < _maximumDrawdownPercent && targets.Length != 0)
             {
-                foreach(var target in targets)
+                // reset the trailing high value for restart investing on next rebalcing period
+                _initialised = false;
+                foreach (var target in targets)
                     yield return new PortfolioTarget(target.Symbol, 0);
             }
         }

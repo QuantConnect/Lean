@@ -252,7 +252,7 @@ namespace QuantConnect.Securities
                 var option = (Option.Option) parameters.Security;
                 var underlying = option.Underlying;
 
-                if (option.IsAutoExercised(underlying.Close))
+                if (option.IsAutoExercised(underlying.Close) && underlying.IsTradable)
                 {
                     var quantity = option.GetExerciseQuantity(parameters.Order.Quantity);
 

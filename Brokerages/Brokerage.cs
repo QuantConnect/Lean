@@ -124,9 +124,13 @@ namespace QuantConnect.Brokerages
         {
             try
             {
-                Log.Debug("Brokerage.OnOrderEvent(): " + e);
-
                 OrderStatusChanged?.Invoke(this, e);
+
+                if (Log.DebuggingEnabled)
+                {
+                    // log after calling the OrderStatusChanged event, the BrokerageTransactionHandler will set the order quantity
+                    Log.Debug("Brokerage.OnOrderEvent(): " + e);
+                }
             }
             catch (Exception err)
             {
@@ -160,7 +164,7 @@ namespace QuantConnect.Brokerages
         {
             try
             {
-                Log.Trace("Brokerage.OnAccountChanged(): " + e);
+                Log.Trace($"Brokerage.OnAccountChanged(): {e}");
 
                 AccountChanged?.Invoke(this, e);
             }
@@ -218,6 +222,11 @@ namespace QuantConnect.Brokerages
         /// Specifies whether the brokerage will instantly update account balances
         /// </summary>
         public virtual bool AccountInstantlyUpdated => false;
+
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public virtual string AccountBaseCurrency { get; protected set; }
 
         /// <summary>
         /// Gets the history for the requested security

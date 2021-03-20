@@ -15,6 +15,8 @@
 
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Tests.Common
@@ -22,27 +24,43 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class CurrenciesTests
     {
-        [Test]
-        public void HasCurrencySymbolForEachPair()
+        [TestCase(SecurityType.Forex, Market.FXCM)]
+        [TestCase(SecurityType.Forex, Market.Oanda)]
+        public void HasCurrencySymbolForEachForexPair(SecurityType securityType, string market)
         {
-            var allPairs = Currencies.CurrencyPairs.Concat(Currencies.CfdCurrencyPairs);
-            foreach (var currencyPair in allPairs)
+            var symbols = SymbolPropertiesDatabase
+                .FromDataFolder()
+                .GetSymbolPropertiesList(market, securityType)
+                .Select(x => x.Key.Symbol);
+
+            foreach (var symbol in symbols)
             {
-                string quotec, basec;
-                Forex.DecomposeCurrencyPair(currencyPair, out basec, out quotec);
-                Assert.IsTrue(Currencies.CurrencySymbols.ContainsKey(basec), "Missing currency symbol for: " + basec);
-                Assert.IsTrue(Currencies.CurrencySymbols.ContainsKey(quotec), "Missing currency symbol for: " + quotec);
+                string baseCurrency, quoteCurrency;
+                Forex.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency);
+
+                Assert.IsTrue(!string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(baseCurrency)), "Missing currency symbol for: " + baseCurrency);
+                Assert.IsTrue(!string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(quoteCurrency)), "Missing currency symbol for: " + quoteCurrency);
             }
         }
 
-        [Test]
-        public void HasCryptoCurrencySymbolForEachPair()
+        [TestCase(SecurityType.Crypto, Market.GDAX)]
+        [TestCase(SecurityType.Crypto, Market.Bitfinex)]
+        public void HasCurrencySymbolForEachCryptoPair(SecurityType securityType, string market)
         {
-            var allPairs = Currencies.CryptoCurrencyPairs;
-            foreach (var currencyPair in allPairs)
+            var symbols = SymbolPropertiesDatabase
+                .FromDataFolder()
+                .GetSymbolPropertiesList(market, securityType)
+                .Select(x => Symbol.Create(x.Key.Symbol, securityType, market));
+
+            foreach (var symbol in symbols)
             {
-                Assert.IsTrue(Currencies.CurrencySymbols.Keys.Any(c => currencyPair.StartsWith(c)), "Missing currency symbol for: " + currencyPair);
-                Assert.IsTrue(Currencies.CurrencySymbols.Keys.Any(c => currencyPair.EndsWith(c)), "Missing currency symbol for: " + currencyPair);
+                var symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, securityType, Currencies.USD);
+
+                string baseCurrency, quoteCurrency;
+                Crypto.DecomposeCurrencyPair(symbol, symbolProperties, out baseCurrency, out quoteCurrency);
+
+                Assert.IsTrue(!string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(baseCurrency)), "Missing currency symbol for: " + baseCurrency);
+                Assert.IsTrue(!string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(quoteCurrency)), "Missing currency symbol for: " + quoteCurrency);
             }
         }
     }

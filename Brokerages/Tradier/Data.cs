@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -157,12 +157,12 @@ namespace QuantConnect.Brokerages.Tradier
 
         /// Bid Price
         [JsonProperty(PropertyName = "bid")]
-        public decimal Bid = 0;
+        public decimal? Bid = 0;
 
         /// Bid Size:
         [JsonProperty(PropertyName = "bidsize")]
         public decimal BidSize = 0;
-        
+
         /// Bid Exchange
         [JsonProperty(PropertyName = "bidexch")]
         public string BigExchange = "";
@@ -173,7 +173,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         /// Asking Price
         [JsonProperty(PropertyName = "ask")]
-        public decimal Ask = 0;
+        public decimal? Ask = 0;
 
         /// Asking Quantity
         [JsonProperty(PropertyName = "asksize")]
@@ -205,7 +205,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         ///Option Exp Date
         [JsonProperty(PropertyName = "expiration_date")]
-        private long Options_ExpirationDate = 0;
+        private string Options_ExpirationDate;
 
         ///Option Exp Type
         [JsonProperty(PropertyName = "expiration_type")]
@@ -278,7 +278,7 @@ namespace QuantConnect.Brokerages.Tradier
         [JsonProperty(PropertyName = "next_change")]
         public string NextChange;
 
-        /// Market Status: State 
+        /// Market Status: State
         [JsonProperty(PropertyName = "state")]
         public string State;
 
@@ -397,7 +397,7 @@ namespace QuantConnect.Brokerages.Tradier
     /// </summary>
     public class TradierStreamSession
     {
-        /// Trading Stream: Session Id 
+        /// Trading Stream: Session Id
         public string SessionId;
         /// Trading Stream: Stream URL
         public string Url;
@@ -483,5 +483,15 @@ namespace QuantConnect.Brokerages.Tradier
         /// Trading Stream: Ask Date
         [JsonProperty(PropertyName = "askdate")]
         public long AskDateUnix;
+
+        /// <summary>
+        /// Gets the tick timestamp (UTC)
+        /// </summary>
+        public DateTime GetTickTimestamp()
+        {
+            var unix = Type == "trade" ? UnixDate.ConvertInvariant<long>() : Type == "quote" ? BidDateUnix : 0;
+
+            return Time.UnixMillisecondTimeStampToDateTime(unix);
+        }
     }
 }

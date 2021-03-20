@@ -78,7 +78,7 @@ namespace QuantConnect.Securities.Option
 
                 case SettlementType.Cash:
 
-                    var cashQuantity = option.GetIntrinsicValue(underlying.Close) * option.ContractUnitOfTrade * optionQuantity;
+                    var cashQuantity = -option.GetIntrinsicValue(underlying.Close) * option.ContractUnitOfTrade * optionQuantity;
 
                     // we add cash equivalent to portfolio
                     option.SettlementModel.ApplyFunds(portfolio, option, fill.UtcTime, cashQuote.Symbol, cashQuantity);

@@ -70,7 +70,7 @@ namespace QuantConnect.Indicators
             _maximum.Update(new IndicatorDataPoint { Value = input.High });
             _minimum.Update(new IndicatorDataPoint { Value = input.Low });
 
-            return (_maximum + _minimum) / 2;
+            return (_maximum.Current.Value + _minimum.Current.Value) / 2;
         }
     }
 }

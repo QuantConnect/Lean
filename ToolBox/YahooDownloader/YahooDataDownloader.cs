@@ -113,7 +113,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                         parsed.Add(new Dividend
                         {
                             Time = Parse.DateTimeExact(values[0].Replace("-", string.Empty), DateFormat.EightCharacter),
-                            Value = Parse.Decimal(values[1])
+                            Value = Parse.Decimal(values[1], System.Globalization.NumberStyles.Float)
                         });
                     }
                 }

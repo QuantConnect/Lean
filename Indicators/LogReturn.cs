@@ -63,7 +63,7 @@ namespace QuantConnect.Indicators
                 ? window[window.Count - 1]
                 : window.MostRecentlyRemoved;
 
-            return (decimal)Math.Log((double)(valuef / value0));
+            return (decimal)Math.Log((double)(valuef.Value / value0.Value));
         }
     }
 }

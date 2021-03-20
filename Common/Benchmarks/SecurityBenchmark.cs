@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Benchmarks
@@ -45,6 +47,24 @@ namespace QuantConnect.Benchmarks
         public decimal Evaluate(DateTime time)
         {
             return Security.Price * Security.QuoteCurrency.ConversionRate;
+        }
+
+        /// <summary>
+        /// Helper function that will create a security with the given SecurityManager
+        /// for a specific symbol and then create a SecurityBenchmark for it
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security</param>
+        /// <param name="symbol">The symbol to create a security benchmark with</param>
+        /// <returns>The new SecurityBenchmark</returns>
+        public static SecurityBenchmark CreateInstance(SecurityManager securities, Symbol symbol)
+        {
+            // Create the security from this symbol
+            var security = securities.CreateSecurity(symbol,
+                new List<SubscriptionDataConfig>(),
+                leverage: 1,
+                addToSymbolCache: false);
+
+            return new SecurityBenchmark(security);
         }
     }
 }

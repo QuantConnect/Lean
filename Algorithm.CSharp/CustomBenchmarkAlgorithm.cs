@@ -38,6 +38,10 @@ namespace QuantConnect.Algorithm.CSharp
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
 
+            // Disabling the benchmark / setting to a fixed value
+            // SetBenchmark(time => 0);
+
+            // Set the benchmark to AAPL US Equity
             SetBenchmark("AAPL");
         }
 
@@ -95,6 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.168"},
             {"Treynor Ratio", "2.38"},
             {"Total Fees", "$3.26"},
+            {"Estimated Strategy Capacity", "$300000000.00"},
             {"Fitness Score", "0.245"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -114,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "2069976135"}
+            {"OrderListHash", "9cd604d2c1e3c273697e2ff2cc7faef1"}
         };
     }
 }

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+// ReSharper disable InconsistentNaming
 using System;
 using System.Globalization;
 using QuantConnect.Data;
@@ -45,7 +46,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="second">The indicator that receives data from the first</param>
         /// <param name="first">The indicator that sends data via DataConsolidated even to the second</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to always send updates to second</param>
         /// <returns>The reference to the second indicator to allow for method chaining</returns>
         public static T Of<T>(this T second, IIndicator first, bool waitForFirstToReady = true)
             where T : IIndicator
@@ -128,7 +129,7 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<T> Plus<T>(this IndicatorBase<T> left, IndicatorBase<T> right)
             where T : IBaseData
         {
-            return new CompositeIndicator<T>(left, right, (l, r) => l + r);
+            return new CompositeIndicator<T>(left, right, (l, r) => l.Current.Value + r.Current.Value);
         }
 
         /// <summary>
@@ -144,7 +145,7 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<T> Plus<T>(this IndicatorBase<T> left, IndicatorBase<T> right, string name)
             where T : IBaseData
         {
-            return new CompositeIndicator<T>(name, left, right, (l, r) => l + r);
+            return new CompositeIndicator<T>(name, left, right, (l, r) => l.Current.Value + r.Current.Value);
         }
 
         /// <summary>
@@ -175,7 +176,7 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<T> Minus<T>(this IndicatorBase<T> left, IndicatorBase<T> right)
             where T : IBaseData
         {
-            return new CompositeIndicator<T>(left, right, (l, r) => l - r);
+            return new CompositeIndicator<T>(left, right, (l, r) => l.Current.Value - r.Current.Value);
         }
 
         /// <summary>
@@ -191,7 +192,7 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<T> Minus<T>(this IndicatorBase<T> left, IndicatorBase<T> right, string name)
             where T : IBaseData
         {
-            return new CompositeIndicator<T>(name, left, right, (l, r) => l - r);
+            return new CompositeIndicator<T>(name, left, right, (l, r) => l.Current.Value - r.Current.Value);
         }
 
         /// <summary>
@@ -222,7 +223,7 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<T> Over<T>(this IndicatorBase<T> left, IndicatorBase<T> right)
             where T : IBaseData
         {
-            return new CompositeIndicator<T>(left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
+            return new CompositeIndicator<T>(left, right, (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value));
         }
 
         /// <summary>
@@ -238,7 +239,7 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<T> Over<T>(this IndicatorBase<T> left, IndicatorBase<T> right, string name)
             where T : IBaseData
         {
-            return new CompositeIndicator<T>(name, left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
+            return new CompositeIndicator<T>(name, left, right, (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value));
         }
 
         /// <summary>
@@ -269,7 +270,7 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<T> Times<T>(this IndicatorBase<T> left, IndicatorBase<T> right)
             where T : IBaseData
         {
-            return new CompositeIndicator<T>(left, right, (l, r) => l * r);
+            return new CompositeIndicator<T>(left, right, (l, r) => l.Current.Value * r.Current.Value);
         }
 
         /// <summary>
@@ -285,7 +286,7 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<T> Times<T>(this IndicatorBase<T> left, IndicatorBase<T> right, string name)
             where T : IBaseData
         {
-            return new CompositeIndicator<T>(name, left, right, (l, r) => l * r);
+            return new CompositeIndicator<T>(name, left, right, (l, r) => l.Current.Value * r.Current.Value);
         }
 
         /// <summary>Creates a new ExponentialMovingAverage indicator with the specified period and smoothingFactor from the left indicator
@@ -293,12 +294,12 @@ namespace QuantConnect.Indicators
         /// <param name="left">The ExponentialMovingAverage indicator will be created using the data from left</param>
         /// <param name="period">The period of the ExponentialMovingAverage indicators</param>
         /// <param name="smoothingFactor">The percentage of data from the previous value to be carried into the next value</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to always send updates</param>
         /// <returns>A reference to the ExponentialMovingAverage indicator to allow for method chaining</returns>
         public static ExponentialMovingAverage EMA<T>(this IndicatorBase<T> left, int period, decimal? smoothingFactor = null, bool waitForFirstToReady = true)
             where T : IBaseData
         {
-            decimal k = smoothingFactor.HasValue ? k = smoothingFactor.Value : ExponentialMovingAverage.SmoothingFactorDefault(period);
+            var k = smoothingFactor ?? ExponentialMovingAverage.SmoothingFactorDefault(period);
             return new ExponentialMovingAverage($"EMA{period}_Of_{left.Name}", period, k).Of(left, waitForFirstToReady);
         }
 
@@ -306,7 +307,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="left">The Maximum indicator will be created using the data from left</param>
         /// <param name="period">The period of the Maximum indicator</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to always send updates</param>
         /// <returns>A reference to the Maximum indicator to allow for method chaining</returns>
         public static Maximum MAX(this IIndicator left, int period, bool waitForFirstToReady = true)
         {
@@ -317,7 +318,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="left">The Minimum indicator will be created using the data from left</param>
         /// <param name="period">The period of the Minimum indicator</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to always send updates</param>
         /// <returns>A reference to the Minimum indicator to allow for method chaining</returns>
         public static Minimum MIN<T>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
             where T : IBaseData
@@ -329,7 +330,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="left">The SimpleMovingAverage indicator will be created using the data from left</param>
         /// <param name="period">The period of the SMA</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to always send updates to second</param>
         /// <returns>The reference to the SimpleMovingAverage indicator to allow for method chaining</returns>
         public static SimpleMovingAverage SMA<T>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
             where T : IBaseData
@@ -347,7 +348,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="second">The indicator that receives data from the first</param>
         /// <param name="first">The indicator that sends data via DataConsolidated even to the second</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to always send updates to second</param>
         /// <returns>The reference to the second indicator to allow for method chaining</returns>
         public static object Of(PyObject second, PyObject first, bool waitForFirstToReady = true)
         {
@@ -363,6 +364,7 @@ namespace QuantConnect.Indicators
         /// <param name="weight">Indicator that provides the average weights</param>
         /// <param name="period">Average period</param>
         /// <returns>Indicator that results of the average of first by weights given by second</returns>
+        // ReSharper disable once UnusedMember.Global
         public static CompositeIndicator<IndicatorDataPoint> WeightedBy(PyObject value, PyObject weight, int period)
         {
             dynamic indicator1 = value.AsManagedObject((Type)value.GetPythonType().AsManagedObject(typeof(Type)));
@@ -376,7 +378,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The ExponentialMovingAverage indicator will be created using the data from left</param>
         /// <param name="period">The period of the ExponentialMovingAverage indicators</param>
         /// <param name="smoothingFactor">The percentage of data from the previous value to be carried into the next value</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to always send updates</param>
         /// <returns>A reference to the ExponentialMovingAverage indicator to allow for method chaining</returns>
         public static ExponentialMovingAverage EMA(PyObject left, int period, decimal? smoothingFactor = null, bool waitForFirstToReady = true)
         {
@@ -389,7 +391,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="left">The Maximum indicator will be created using the data from left</param>
         /// <param name="period">The period of the Maximum indicator</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to always send updates</param>
         /// <returns>A reference to the Maximum indicator to allow for method chaining</returns>
         public static Maximum MAX(PyObject left, int period, bool waitForFirstToReady = true)
         {
@@ -402,7 +404,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="left">The Minimum indicator will be created using the data from left</param>
         /// <param name="period">The period of the Minimum indicator</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to always send updates</param>
         /// <returns>A reference to the Minimum indicator to allow for method chaining</returns>
         public static Minimum MIN(PyObject left, int period, bool waitForFirstToReady = true)
         {
@@ -415,7 +417,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="left">The SimpleMovingAverage indicator will be created using the data from left</param>
         /// <param name="period">The period of the SMA</param>
-        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to always send updates to second</param>
         /// <returns>The reference to the SimpleMovingAverage indicator to allow for method chaining</returns>
         public static SimpleMovingAverage SMA(PyObject left, int period, bool waitForFirstToReady = true)
         {

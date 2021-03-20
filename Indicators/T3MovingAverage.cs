@@ -75,16 +75,16 @@ namespace QuantConnect.Indicators
             _gd1.Update(input);
 
             if (!_gd1.IsReady)
-                return _gd1;
+                return _gd1.Current.Value;
 
             _gd2.Update(_gd1.Current);
 
             if (!_gd2.IsReady)
-                return _gd2;
+                return _gd2.Current.Value;
 
             _gd3.Update(_gd2.Current);
 
-            return _gd3;
+            return _gd3.Current.Value;
         }
 
         /// <summary>

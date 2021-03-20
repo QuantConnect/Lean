@@ -97,8 +97,8 @@ namespace QuantConnect.Indicators
             {
                 return decimal.Zero;
             }
-            _lwma.Update(input.Time, _shortRoc + _longRoc);
-            return _lwma;
+            _lwma.Update(input.Time, _shortRoc.Current.Value + _longRoc.Current.Value);
+            return _lwma.Current.Value;
         }
     }
 }

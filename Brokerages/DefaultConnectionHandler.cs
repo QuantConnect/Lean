@@ -192,6 +192,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnConnectionLost()
         {
+            Log.Error("DefaultConnectionHandler.OnConnectionLost(): WebSocket connection lost.");
             ConnectionLost?.Invoke(this, EventArgs.Empty);
         }
 
@@ -200,6 +201,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnConnectionRestored()
         {
+            Log.Trace("DefaultConnectionHandler.OnConnectionRestored(): WebSocket connection restored.");
             ConnectionRestored?.Invoke(this, EventArgs.Empty);
         }
 

@@ -101,7 +101,7 @@ namespace QuantConnect.Indicators
             _standardDeviation.Update(input);
             LinearRegression.Update(input);
 
-            return LinearRegression.Current;
+            return LinearRegression.Current.Value;
         }
 
         /// <summary>

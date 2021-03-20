@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.IBDownloader
         /// </summary>
         public IBDataDownloader()
         {
-            _brokerage = new InteractiveBrokersBrokerage(null, null, null, null);
+            _brokerage = new InteractiveBrokersBrokerage(null, null, null, null, null);
             _brokerage.Connect();
         }
 
@@ -80,12 +80,11 @@ namespace QuantConnect.ToolBox.IBDownloader
         /// <summary>
         /// Returns an IEnumerable of Future/Option contract symbols for the given root ticker
         /// </summary>
-        /// <param name="ticker">The root ticker</param>
-        /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
+        /// <param name="symbol">The Symbol to get futures/options chain for</param>
         /// <param name="includeExpired">Include expired contracts</param>
-        public IEnumerable<Symbol> GetChainSymbols(string ticker, SecurityType securityType, bool includeExpired)
+        public IEnumerable<Symbol> GetChainSymbols(Symbol symbol, bool includeExpired)
         {
-            return _brokerage.LookupSymbols(ticker, securityType, includeExpired);
+            return _brokerage.LookupSymbols(symbol, includeExpired);
         }
 
         /// <summary>

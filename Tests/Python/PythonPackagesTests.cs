@@ -826,6 +826,37 @@ def RunTest():
     return cop.summary()"
             );
         }
+        [Test]
+        public void SanityClrInstallation()
+        {
+            AssetCode(
+                @"
+from os import walk
+import setuptools as _
+
+def RunTest():
+    try:
+        import clr
+        clr.AddReference()
+        print('No clr errors')
+        #Checks complete
+    except: #isolate error cause
+        try:
+            import clr
+            print('clr exists') #Module exists
+            try:
+                f = []
+                for (dirpath, dirnames, filenames) in walk(print(clr.__path__)):
+                    f.extend(filenames)
+                    break
+                return(f.values['style_builder.py']) #If this is reached, likely due to an issue with this file itself
+            except:
+                print('no style_builder') #pythonnet install error, most likely
+
+        except:
+            print('clr does not exist') #Only remaining cause"
+            );
+        }
 
         /// <summary>
         /// Simple test for modules that don't have short test example

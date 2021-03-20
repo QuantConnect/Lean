@@ -133,6 +133,48 @@ namespace QuantConnect.Brokerages.GDAX.Messages
         public decimal StopPrice { get; set; }
     }
 
+    public class Fill
+    {
+        [JsonProperty("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [JsonProperty("trade_id")]
+        public long TradeId { get; set; }
+
+        [JsonProperty("product_id")]
+        public string ProductId { get; set; }
+
+        [JsonProperty("order_id")]
+        public string OrderId { get; set; }
+
+        [JsonProperty("user_id")]
+        public string UserId { get; set; }
+
+        [JsonProperty("profile_id")]
+        public string ProfileId { get; set; }
+
+        [JsonProperty("liquidity")]
+        public string Liquidity { get; set; }
+
+        [JsonProperty("price")]
+        public decimal Price { get; set; }
+
+        [JsonProperty("size")]
+        public decimal Size { get; set; }
+
+        [JsonProperty("fee")]
+        public decimal Fee { get; set; }
+
+        [JsonProperty("side")]
+        public string Side { get; set; }
+
+        [JsonProperty("settled")]
+        public bool Settled { get; set; }
+
+        [JsonProperty("usd_volume")]
+        public decimal UsdVolume { get; set; }
+    }
+
     public class Account
     {
         public string Id { get; set; }

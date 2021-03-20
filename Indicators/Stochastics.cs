@@ -116,7 +116,7 @@ namespace QuantConnect.Indicators
             StochK.Update(input);
             StochD.Update(input);
 
-            return FastStoch;
+            return FastStoch.Current.Value;
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace QuantConnect.Indicators
         /// <returns>The Fast Stochastics %K value.</returns>
         private decimal ComputeFastStoch(int period, IBaseDataBar input)
         {
-            var denominator = _maximum - _minimum;
+            var denominator = _maximum.Current.Value - _minimum.Current.Value;
             
             // if there's no range, just return constant zero
             if (denominator == 0m)
@@ -135,7 +135,7 @@ namespace QuantConnect.Indicators
                 return 0m;
             }
 
-            var numerator = input.Close - _minimum;
+            var numerator = input.Close - _minimum.Current.Value;
             var fastStoch = _maximum.Samples >= period ? numerator / denominator : decimal.Zero;
 
             _sumFastK.Update(input.Time, fastStoch);
@@ -151,7 +151,7 @@ namespace QuantConnect.Indicators
         /// <returns>The Slow Stochastics %K value.</returns>
         private decimal ComputeStochK(int period, int constantK, IBaseData input)
         {
-            var stochK = _maximum.Samples >= (period + constantK - 1) ? _sumFastK / constantK : decimal.Zero;
+            var stochK = _maximum.Samples >= (period + constantK - 1) ? _sumFastK.Current.Value / constantK : decimal.Zero;
             _sumSlowK.Update(input.Time, stochK);
             return stochK * 100;
         }
@@ -165,7 +165,7 @@ namespace QuantConnect.Indicators
         /// <returns>The Slow Stochastics %D value.</returns>
         private decimal ComputeStochD(int period, int constantK, int constantD)
         {
-            var stochD = _maximum.Samples >= (period + constantK + constantD - 2) ? _sumSlowK / constantD : decimal.Zero;
+            var stochD = _maximum.Samples >= (period + constantK + constantD - 2) ? _sumSlowK.Current.Value / constantD : decimal.Zero;
             return stochD * 100;
         }
         /// <summary>

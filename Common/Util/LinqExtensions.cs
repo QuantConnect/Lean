@@ -356,10 +356,24 @@ namespace QuantConnect.Util
         /// <param name="key">Lookup key</param>
         /// <param name="defaultValue">Default value</param>
         /// <returns>Value associated with the specified key or  default value</returns>
-        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dictionary, K key, V defaultValue)
+        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dictionary, K key, V defaultValue = default(V))
         {
             V obj;
             return dictionary.TryGetValue(key, out obj) ? obj : defaultValue;
+        }
+
+        /// <summary>
+        /// Performs an action for each element in collection source
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">Collection source</param>
+        /// <param name="action">An action to perform</param>
+        public static void DoForEach<T>(this IEnumerable<T> source, Action<T> action)
+        {
+            foreach (var element in source)
+            {
+                action(element);
+            }
         }
     }
 }

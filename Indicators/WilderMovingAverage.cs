@@ -76,9 +76,9 @@ namespace QuantConnect.Indicators
             if (!IsReady)
             {
                 _sma.Update(input);
-                return _sma;
+                return _sma.Current.Value;
             }
-            return input * _k + Current * (1 - _k);
+            return input.Value * _k + Current.Value * (1 - _k);
         }
     }
 }

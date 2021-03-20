@@ -6,7 +6,8 @@
     <ProjectHome>.</ProjectHome>
     <StartupFile>
     </StartupFile>
-    <SearchPath>stubs</SearchPath>
+    <SearchPath>
+    </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>QuantConnect.Algorithm.PythonTools</Name>
@@ -45,6 +46,7 @@
     <Compile Include="ConstituentsQC500GeneratorAlgorithm.py" />
     <Compile Include="ConstituentsUniverseRegressionAlgorithm.py" />
     <Compile Include="ConvertToFrameworkAlgorithm.py" />
+    <Compile Include="CustomBuyingPowerModelAlgorithm.py" />
     <Compile Include="CustomDataAddDataCoarseSelectionRegressionAlgorithm.py" />
     <Compile Include="CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm.py" />
     <Compile Include="CustomDataAddDataRegressionAlgorithm.py" />

@@ -15,12 +15,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Securities.Option
 {
+    /// <summary>
+    /// Provides methods for creating popular <see cref="OptionStrategy"/> instances.
+    /// These strategies can be directly bought and sold via:
+    ///     QCAlgorithm.Buy(OptionStrategy strategy, int quantity)
+    ///     QCAlgorithm.Sell(OptionStrategy strategy, int quantity)
+    ///
+    /// See also <see cref="OptionStrategyDefinitions"/>
+    /// </summary>
     public static class OptionStrategies
     {
         /// <summary>
@@ -32,29 +38,48 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the long call</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy BearCallSpread (Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
+        public static OptionStrategy BearCallSpread(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            DateTime expiration
+            )
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("BearCallSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (leg1Strike >= leg2Strike)
+            {
                 throw new ArgumentException("BearCallSpread: leg1Strike must be less than leg2Strike", "leg1Strike, leg2Strike");
+            }
 
             if (expiration == DateTime.MaxValue ||
                 expiration == DateTime.MinValue)
+            {
                 throw new ArgumentException("BearCallSpread: expiration must contain expiration date", nameof(expiration));
+            }
 
             return new OptionStrategy
-                        {
-                            Name = "Bear Call Spread",
-                            Underlying = canonicalOption.Underlying,
-                            OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = leg1Strike, Quantity = -1, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration }
-                                        }
-                        };
+            {
+                Name = "Bear Call Spread",
+                Underlying = canonicalOption.Underlying,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = -1,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    }
+                }
+            };
         }
 
         /// <summary>
@@ -66,28 +91,47 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the short put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy BearPutSpread(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
+        public static OptionStrategy BearPutSpread(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            DateTime expiration
+            )
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("BearPutSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (leg1Strike <= leg2Strike)
+            {
                 throw new ArgumentException("BearPutSpread: leg1Strike must be greater than leg2Strike", "leg1Strike, leg2Strike");
+            }
 
             if (expiration == DateTime.MaxValue ||
                 expiration == DateTime.MinValue)
+            {
                 throw new ArgumentException("BearPutSpread: expiration must contain expiration date", nameof(expiration));
+            }
 
             return new OptionStrategy
             {
                 Name = "Bear Put Spread",
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1, OrderType = Orders.OrderType.Market, Expiration = expiration }
-                                        }
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    }
+                }
             };
         }
 
@@ -100,28 +144,47 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the short call</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy BullCallSpread(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
+        public static OptionStrategy BullCallSpread(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            DateTime expiration
+            )
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("BullCallSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (leg1Strike >= leg2Strike)
+            {
                 throw new ArgumentException("BullCallSpread: leg1Strike must be less than leg2Strike", "leg1Strike, leg2Strike");
+            }
 
             if (expiration == DateTime.MaxValue ||
                 expiration == DateTime.MinValue)
+            {
                 throw new ArgumentException("BullCallSpread: expiration must contain expiration date", nameof(expiration));
+            }
 
             return new OptionStrategy
             {
                 Name = "Bull Call Spread",
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = leg2Strike, Quantity = -1, OrderType = Orders.OrderType.Market, Expiration = expiration }
-                                        }
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -1,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    }
+                }
             };
         }
 
@@ -134,28 +197,47 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the long put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy BullPutSpread(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
+        public static OptionStrategy BullPutSpread(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            DateTime expiration
+            )
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("BullPutSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (leg1Strike <= leg2Strike)
+            {
                 throw new ArgumentException("BullPutSpread: leg1Strike must be greater than leg2Strike", "leg1Strike, leg2Strike");
+            }
 
             if (expiration == DateTime.MaxValue ||
                 expiration == DateTime.MinValue)
+            {
                 throw new ArgumentException("BullPutSpread: expiration must contain expiration date", nameof(expiration));
+            }
 
             return new OptionStrategy
             {
                 Name = "Bull Put Spread",
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = leg1Strike, Quantity = -1, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration }
-                                        }
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = -1,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration
+                    }
+                }
             };
         }
 
@@ -170,21 +252,33 @@ namespace QuantConnect.Securities.Option
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("Straddle: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (expiration == DateTime.MaxValue ||
                 expiration == DateTime.MinValue)
+            {
                 throw new ArgumentException("Straddle: expiration must contain expiration date", nameof(expiration));
+            }
 
             return new OptionStrategy
             {
                 Name = "Straddle",
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration }
-                                        }
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration
+                    }
+                }
             };
         }
 
@@ -197,34 +291,49 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the long put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy Strangle(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
+        public static OptionStrategy Strangle(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            DateTime expiration
+            )
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("Strangle: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (leg1Strike <= leg2Strike)
+            {
                 throw new ArgumentException("Strangle: leg1Strike must be greater than leg2Strike", "leg1Strike, leg2Strike");
+            }
 
             if (expiration == DateTime.MaxValue ||
                 expiration == DateTime.MinValue)
+            {
                 throw new ArgumentException("Strangle: expiration must contain expiration date", nameof(expiration));
+            }
 
             return new OptionStrategy
             {
                 Name = "Strangle",
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration }
-                                        }
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration
+                    }
+                }
             };
         }
-
-
-
-
 
         /// <summary>
         /// Method creates new Call Butterfly strategy, that consists of two short calls at a middle strike, and one long call each at a lower and upper strike.
@@ -236,31 +345,55 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg3Strike">The lower strike price of the long call</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy CallButterfly(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, decimal leg3Strike, DateTime expiration)
+        public static OptionStrategy CallButterfly(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            decimal leg3Strike,
+            DateTime expiration
+            )
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("CallButterfly: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (leg1Strike <= leg2Strike ||
                 leg3Strike >= leg2Strike ||
                 leg1Strike - leg2Strike != leg2Strike - leg3Strike)
+            {
                 throw new ArgumentException("CallButterfly: upper and lower strikes must both be equidistant from the middle strike", "leg1Strike, leg2Strike, leg3Strike");
+            }
 
             if (expiration == DateTime.MaxValue ||
                 expiration == DateTime.MinValue)
+            {
                 throw new ArgumentException("CallButterfly: expiration must contain expiration date", nameof(expiration));
+            }
 
             return new OptionStrategy
             {
                 Name = "Call Butterfly",
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = leg2Strike, Quantity = -2, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = leg3Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration }
-                                        }
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -2,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg3Strike, Quantity = 1,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    }
+                }
             };
         }
 
@@ -274,34 +407,57 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg3Strike">The lower strike price of the long put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy PutButterfly(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, decimal leg3Strike, DateTime expiration)
+        public static OptionStrategy PutButterfly(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            decimal leg3Strike,
+            DateTime expiration
+            )
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("PutButterfly: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (leg1Strike <= leg2Strike ||
                 leg3Strike >= leg2Strike ||
                 leg1Strike - leg2Strike != leg2Strike - leg3Strike)
+            {
                 throw new ArgumentException("PutButterfly: upper and lower strikes must both be equidistant from the middle strike", "leg1Strike, leg2Strike, leg3Strike");
+            }
 
             if (expiration == DateTime.MaxValue ||
                 expiration == DateTime.MinValue)
+            {
                 throw new ArgumentException("PutButterfly: expiration must contain expiration date", nameof(expiration));
+            }
 
             return new OptionStrategy
             {
                 Name = "Put Butterfly",
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = leg2Strike, Quantity = -2, OrderType = Orders.OrderType.Market, Expiration = expiration },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = leg3Strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration }
-                                        }
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -2,
+                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg3Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration
+                    }
+                }
             };
         }
-
 
         /// <summary>
         /// Method creates new Call Calendar Spread strategy, that is a short one call option and long a second call option with a more distant expiration.
@@ -311,30 +467,49 @@ namespace QuantConnect.Securities.Option
         /// <param name="expiration1">Option expiration near date</param>
         /// <param name="expiration2">Option expiration far date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy CallCalendarSpread(Symbol canonicalOption, decimal strike, DateTime expiration1, DateTime expiration2)
+        public static OptionStrategy CallCalendarSpread(
+            Symbol canonicalOption,
+            decimal strike,
+            DateTime expiration1,
+            DateTime expiration2
+            )
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("CallCalendarSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (expiration1 == DateTime.MaxValue ||
                 expiration1 == DateTime.MinValue ||
                 expiration2 == DateTime.MaxValue ||
                 expiration2 == DateTime.MinValue)
+            {
                 throw new ArgumentException("CallCalendarSpread: expiration must contain expiration date", "expiration1, expiration2");
+            }
 
             if (expiration1 >= expiration2)
+            {
                 throw new ArgumentException("CallCalendarSpread: near expiration must be less than far expiration", "expiration1, expiration2");
+            }
 
             return new OptionStrategy
             {
                 Name = "Call Calendar Spread",
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = strike, Quantity = -1, OrderType = Orders.OrderType.Market, Expiration = expiration1 },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Call, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration2 }
-                                        }
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = strike, Quantity = -1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration1
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration2
+                    }
+                }
             };
         }
 
@@ -346,32 +521,50 @@ namespace QuantConnect.Securities.Option
         /// <param name="expiration1">Option expiration near date</param>
         /// <param name="expiration2">Option expiration far date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy PutCalendarSpread(Symbol canonicalOption, decimal strike, DateTime expiration1, DateTime expiration2)
+        public static OptionStrategy PutCalendarSpread(
+            Symbol canonicalOption,
+            decimal strike,
+            DateTime expiration1,
+            DateTime expiration2
+            )
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
+            {
                 throw new ArgumentException("PutCalendarSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
 
             if (expiration1 == DateTime.MaxValue ||
                 expiration1 == DateTime.MinValue ||
                 expiration2 == DateTime.MaxValue ||
                 expiration2 == DateTime.MinValue)
+            {
                 throw new ArgumentException("PutCalendarSpread: expiration must contain expiration date", "expiration1, expiration2");
+            }
 
             if (expiration1 >= expiration2)
+            {
                 throw new ArgumentException("PutCalendarSpread: near expiration must be less than far expiration", "expiration1, expiration2");
+            }
 
             return new OptionStrategy
             {
                 Name = "Put Calendar Spread",
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
-                                        {
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = strike, Quantity = -1, OrderType = Orders.OrderType.Market, Expiration = expiration1 },
-                                            new OptionStrategy.OptionLegData { Right = OptionRight.Put, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market, Expiration = expiration2 }
-                                        }
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = strike, Quantity = -1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration1
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Expiration = expiration2
+                    }
+                }
             };
         }
-
     }
 }

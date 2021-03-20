@@ -24,7 +24,7 @@ namespace QuantConnect.Brokerages.GDAX
     /// </summary>
     public class GDAXFill
     {
-        private readonly List<Matched> _messages = new List<Matched>();
+        private readonly List<Fill> _messages = new List<Fill>();
 
         /// <summary>
         /// The Lean order
@@ -35,11 +35,6 @@ namespace QuantConnect.Brokerages.GDAX
         /// Lean orderId
         /// </summary>
         public int OrderId => Order.Id;
-
-        /// <summary>
-        /// The list of match messages
-        /// </summary>
-        public List<Matched> Messages => _messages.ToList();
 
         /// <summary>
         /// Total amount executed across all fills
@@ -65,7 +60,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// Adds a trade message
         /// </summary>
         /// <param name="msg"></param>
-        public void Add(Matched msg)
+        public void Add(Fill msg)
         {
             _messages.Add(msg);
         }

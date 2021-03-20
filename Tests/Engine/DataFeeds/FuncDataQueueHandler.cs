@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Tests.Common.Data;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -37,6 +38,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private readonly HashSet<SubscriptionDataConfig> _subscriptions;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly AggregationManager _aggregationManager;
+        private readonly DataQueueHandlerSubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// Gets the subscriptions configurations currently being managed by the queue handler
@@ -49,7 +51,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <summary>
         /// Gets the subscriptions Symbols currently being managed by the queue handler
         /// </summary>
-        public List<Symbol> Subscriptions { get; private set; }
+        public List<Symbol> Subscriptions => _subscriptionManager.GetSubscribedSymbols().ToList();
 
         /// <summary>
         /// Returns whether the data provider is connected
@@ -64,10 +66,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <param name="timeProvider">The time provider to use</param>
         public FuncDataQueueHandler(Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction, ITimeProvider timeProvider)
         {
-            Subscriptions = new List<Symbol>();
             _subscriptions = new HashSet<SubscriptionDataConfig>();
             _cancellationTokenSource = new CancellationTokenSource();
             _aggregationManager = new TestAggregationManager(timeProvider);
+            _subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => "quote-trade");
+
             Task.Factory.StartNew(() =>
             {
                 while (!_cancellationTokenSource.IsCancellationRequested)
@@ -126,7 +129,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             lock (_subscriptions)
             {
                 _subscriptions.Add(dataConfig);
-                Subscriptions = _subscriptions.Select(config => config.Symbol).Distinct().ToList();
+                _subscriptionManager.Subscribe(dataConfig);
             }
             return enumerator;
         }
@@ -140,7 +143,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             lock (_subscriptions)
             {
                 _subscriptions.Remove(dataConfig);
-                Subscriptions = _subscriptions.Select(config => config.Symbol).Distinct().ToList();
+                _subscriptionManager.Subscribe(dataConfig);
             }
             _aggregationManager.Remove(dataConfig);
         }

@@ -18,7 +18,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using Log = QuantConnect.Logging.Log;
+using System.Threading;
+using System.Threading.Tasks;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -29,7 +30,10 @@ namespace QuantConnect
     /// <remarks>Good design should remove the need for this function. Over time it should disappear.</remarks>
     public static class OS
     {
-        private static PerformanceCounter _cpuUsageCounter;
+        /// <summary>
+        /// CPU performance counter measures percentage of CPU used in a background thread.
+        /// </summary>
+        public static readonly CpuPerformance CpuPerformanceCounter = new CpuPerformance();
 
         /// <summary>
         /// Global Flag :: Operating System
@@ -120,31 +124,7 @@ namespace QuantConnect
         /// <summary>
         /// Total CPU usage as a percentage
         /// </summary>
-        public static decimal CpuUsage
-        {
-            get
-            {
-                if (_cpuUsageCounter == null)
-                {
-                    try
-                    {
-                        _cpuUsageCounter = new PerformanceCounter(
-                            "Process",
-                            "% Processor Time",
-                            IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToStringInvariant());
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
-                        return 0;
-                    }
-                }
-
-                var newSample = (decimal) _cpuUsageCounter.NextValue();
-                // mono is reporting double https://github.com/mono/mono/issues/20128
-                return IsWindows ? newSample : newSample / 2;
-            }
-        }
+        public static decimal CpuUsage => (decimal)CpuPerformanceCounter.CpuPercentage;
 
         /// <summary>
         /// Gets the statistics of the machine, including CPU% and RAM
@@ -159,6 +139,67 @@ namespace QuantConnect
                 { "Hostname", Environment.MachineName },
                 { "LEAN Version", $"v{Globals.Version}"}
             };
+        }
+
+        /// <summary>
+        /// Calculates the CPU usage in a background thread
+        /// </summary>
+        public class CpuPerformance : IDisposable
+        {
+            private readonly CancellationTokenSource _cancellationToken;
+            private readonly Task _cpuPerformanceTask;
+
+            /// <summary>
+            /// CPU usage as a percentage (0-100)
+            /// </summary>
+            /// <remarks>Float to avoid any atomicity issues</remarks>
+            public float CpuPercentage { get; private set; }
+
+            /// <summary>
+            /// Initializes an instance of the class and starts a new thread.
+            /// </summary>
+            public CpuPerformance()
+            {
+                _cancellationToken = new CancellationTokenSource();
+                _cpuPerformanceTask = Task.Factory.StartNew(CalculateCpu, _cancellationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            }
+
+            /// <summary>
+            /// Event loop that calculates the CPU percentage the process is using
+            /// </summary>
+            private void CalculateCpu()
+            {
+                var process = Process.GetCurrentProcess();
+                while (!_cancellationToken.IsCancellationRequested)
+                {
+                    var startTime = DateTime.UtcNow;
+                    var startCpuUsage = process.TotalProcessorTime;
+
+                    if (_cancellationToken.Token.WaitHandle.WaitOne(1000))
+                    {
+                        return;
+                    }
+
+                    var endTime = DateTime.UtcNow;
+                    var endCpuUsage = process.TotalProcessorTime;
+
+                    var cpuUsedMs = (endCpuUsage - startCpuUsage).TotalMilliseconds;
+                    var totalMsPassed = (endTime - startTime).TotalMilliseconds;
+                    var cpuUsageTotal = cpuUsedMs / totalMsPassed;
+
+                    CpuPercentage = (float)cpuUsageTotal * 100;
+                }
+            }
+
+            /// <summary>
+            /// Stops the execution of the task
+            /// </summary>
+            public void Dispose()
+            {
+                _cancellationToken.Cancel();
+                _cpuPerformanceTask.Wait();
+                _cpuPerformanceTask.Dispose();
+            }
         }
     }
 }

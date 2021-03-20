@@ -108,7 +108,7 @@ namespace QuantConnect.Statistics
                         (1 / variance + 2 * averagePowered / variancePowered)
                         / _insightValues.Count - 1);
 
-                    KellyCriterionProbabilityValue =
+                    KellyCriterionProbabilityValue = kellyCriterionStandardDeviation.IsNaNOrZero() ? 1 :
                         1 - _normalDistribution.CumulativeDistribution(kellyCriterionEstimate / kellyCriterionStandardDeviation)
                             .SafeDecimalCast();
                 }

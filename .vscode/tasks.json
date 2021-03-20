@@ -21,6 +21,34 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "rebuild",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "/p:Configuration=Debug",
+                "/p:DebugType=portable",
+                "/t:rebuild",
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "/t:clean",
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "force build linux",
             "type": "shell",
             "command": "msbuild",
@@ -51,13 +79,13 @@
                 "command": "${workspaceFolder}/run_docker.sh"
             },
             "args": [
-                "image=quantconnect/lean:latest",
-                "config_file=${workspaceFolder}/Launcher/config.json",
-                "data_dir=${workspaceFolder}/Data",
-                "results_dir=${workspaceFolder}/",
-                "debugging=Y",
-                "python_dir=${workspaceFolder}/Algorithm.Python",
-                "exit=Y"
+                "IMAGE=quantconnect/lean:latest",
+                "CONFIG_FILE=${workspaceFolder}/Launcher/config.json",
+                "DATA_DIR=${workspaceFolder}/Data",
+                "RESULTS_DIR=${workspaceFolder}/Results",
+                "DEBUGGING=Y",
+                "PYTHON_DIR=${workspaceFolder}/Algorithm.Python",
+                "EXIT=Y"
             ],
             "problemMatcher": [
                 {

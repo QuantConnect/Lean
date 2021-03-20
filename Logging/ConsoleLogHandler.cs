@@ -54,12 +54,12 @@ namespace QuantConnect.Logging
         /// Write error message to log
         /// </summary>
         /// <param name="text">The error text to log</param>
-        public void Error(string text)
+        public virtual void Error(string text)
         {
 #if DEBUG
             Console.ForegroundColor = ConsoleColor.Red;
 #endif
-            _error.WriteLine(DateTime.Now.ToString(_dateFormat, CultureInfo.InvariantCulture) + " ERROR:: " + text);
+            _error.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} ERROR:: {text}");
 #if DEBUG
             Console.ResetColor();
 #endif
@@ -69,18 +69,18 @@ namespace QuantConnect.Logging
         /// Write debug message to log
         /// </summary>
         /// <param name="text">The debug text to log</param>
-        public void Debug(string text)
+        public virtual void Debug(string text)
         {
-            _trace.WriteLine(DateTime.Now.ToString(_dateFormat, CultureInfo.InvariantCulture) + " DEBUG:: " + text);
+            _trace.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} DEBUG:: {text}");
         }
 
         /// <summary>
         /// Write debug message to log
         /// </summary>
         /// <param name="text">The trace text to log</param>
-        public void Trace(string text)
+        public virtual void Trace(string text)
         {
-            _trace.WriteLine(DateTime.Now.ToString(_dateFormat, CultureInfo.InvariantCulture) + " Trace:: " + text);
+            _trace.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} TRACE:: {text}");
         }
 
         /// <summary>

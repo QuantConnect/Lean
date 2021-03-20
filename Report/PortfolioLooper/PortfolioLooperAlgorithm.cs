@@ -40,7 +40,18 @@ namespace QuantConnect.Report
         {
             foreach (var symbol in orders.Select(x => x.Symbol).Distinct())
             {
-                var resolution = symbol.SecurityType == SecurityType.Option ? Resolution.Minute : Resolution.Daily;
+                Resolution resolution;
+                switch (symbol.SecurityType)
+                {
+                    case SecurityType.Option:
+                    case SecurityType.Future:
+                        resolution = Resolution.Minute;
+                        break;
+                    default:
+                        resolution = Resolution.Daily;
+                        break;
+                }
+
                 var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, false, false);
                 var security = Securities.CreateSecurity(symbol, configs, 0m);
                 if (symbol.SecurityType == SecurityType.Crypto)

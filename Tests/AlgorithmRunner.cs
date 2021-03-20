@@ -86,12 +86,14 @@ namespace QuantConnect.Tests
                         ? "../../../Algorithm.Python/" + algorithm + ".py"
                         : "QuantConnect.Algorithm." + language + ".dll");
 
+                // Store initial log variables
+                var initialLogHandler = Log.LogHandler;
+                var initialDebugEnabled = Log.DebuggingEnabled;
 
-                var debugEnabled = Log.DebuggingEnabled;
+                // Use our current test LogHandler and a FileLogHandler
+                var newLogHandlers = new ILogHandler[] { MaintainLogHandlerAttribute.GetLogHandler(), new FileLogHandler(logFile, false) };
 
-
-                var logHandlers = new ILogHandler[] {new ConsoleLogHandler(), new FileLogHandler(logFile, false)};
-                using (Log.LogHandler = new CompositeLogHandler(logHandlers))
+                using (Log.LogHandler = new CompositeLogHandler(newLogHandlers))
                 using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
                 using (var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance))
                 using (var workerThread  = new TestWorkerThread())
@@ -103,7 +105,6 @@ namespace QuantConnect.Tests
                     Log.Trace("");
 
                     // run the algorithm in its own thread
-
                     var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
                     Task.Factory.StartNew(() =>
                     {
@@ -137,9 +138,11 @@ namespace QuantConnect.Tests
 
                     var defaultAlphaHandler = (DefaultAlphaHandler) algorithmHandlers.Alphas;
                     alphaStatistics = defaultAlphaHandler.RuntimeStatistics;
-
-                    Log.DebuggingEnabled = debugEnabled;
                 }
+
+                // Reset settings to initial values
+                Log.LogHandler = initialLogHandler;
+                Log.DebuggingEnabled = initialDebugEnabled;
             }
             catch (Exception ex)
             {
@@ -210,7 +213,7 @@ namespace QuantConnect.Tests
         /// <summary>
         /// Used to intercept the algorithm instance to aid the <see cref="RegressionHistoryProviderWrapper"/>
         /// </summary>
-        internal class RegressionSetupHandlerWrapper : BacktestingSetupHandler
+        public class RegressionSetupHandlerWrapper : BacktestingSetupHandler
         {
             public static IAlgorithm Algorithm { get; protected set; }
             public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
@@ -228,7 +231,7 @@ namespace QuantConnect.Tests
         /// <summary>
         /// Used to perform checks against history requests for all regression algorithms
         /// </summary>
-        class RegressionHistoryProviderWrapper : SubscriptionDataReaderHistoryProvider
+        public class RegressionHistoryProviderWrapper : SubscriptionDataReaderHistoryProvider
         {
             public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
@@ -241,7 +244,7 @@ namespace QuantConnect.Tests
             }
         }
 
-        class TestWorkerThread : WorkerThread
+        public class TestWorkerThread : WorkerThread
         {
         }
     }

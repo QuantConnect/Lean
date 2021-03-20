@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Indicators
 
             foreach (var data in TestHelper.GetDataStream(7))
             {
-                frama.Update(new TradeBar { High = data, Low = data });
+                frama.Update(new TradeBar { High = data.Value, Low = data.Value });
             }
             Assert.IsTrue(frama.IsReady);
             Assert.AreNotEqual(0m, frama.Current.Value);

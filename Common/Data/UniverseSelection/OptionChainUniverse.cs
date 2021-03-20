@@ -54,7 +54,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             Option = option;
             _underlyingSymbol = new[] { Option.Symbol.Underlying };
-            _universeSettings = universeSettings;
+            _universeSettings = new UniverseSettings(universeSettings) { DataNormalizationMode = DataNormalizationMode.Raw };
             _liveMode = liveMode;
             _optionFilterUniverse = new OptionFilterUniverse();
         }
@@ -75,7 +75,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             Option = option;
             _underlyingSymbol = new[] { Option.Symbol.Underlying };
-            _universeSettings = universeSettings;
+            _universeSettings = new UniverseSettings(universeSettings) { DataNormalizationMode = DataNormalizationMode.Raw };
             _liveMode = liveMode;
             _optionFilterUniverse = new OptionFilterUniverse();
         }
@@ -244,18 +244,20 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc,
                                                                                  ISubscriptionDataConfigService subscriptionService)
         {
-            var result = subscriptionService.Add(security.Symbol, UniverseSettings.Resolution,
-                                                 UniverseSettings.FillForward,
-                                                 UniverseSettings.ExtendedMarketHours,
-                                                 // force raw data normalization mode for underlying
-                                                 dataNormalizationMode: DataNormalizationMode.Raw);
+            if (Option.Symbol.Underlying == security.Symbol)
+            {
+                Option.Underlying = security;
+                security.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            }
+            else
+            {
+                // set the underlying security and pricing model from the canonical security
+                var option = (Option)security;
+                option.Underlying = Option.Underlying;
+                option.PriceModel = Option.PriceModel;
+            }
 
-            return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
-                                                                   universe: this,
-                                                                   security: security,
-                                                                   configuration: config,
-                                                                   startTimeUtc: currentTimeUtc,
-                                                                   endTimeUtc: maximumEndTimeUtc));
+            return base.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc, subscriptionService);
         }
     }
 }

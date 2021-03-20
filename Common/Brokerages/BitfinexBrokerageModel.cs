@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Benchmarks;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Util;
@@ -74,6 +75,17 @@ namespace QuantConnect.Brokerages
             }
 
             throw new ArgumentException($"Invalid security type: {security.Type}", nameof(security));
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public override IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>

@@ -111,6 +111,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 return source;
             }
 
+            if (_isLiveMode)
+            {
+                var result = DailyBackwardsLoop(fine, config, date, source);
+                // if we didn't fine any file we just fallback into listing the directory
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
             var cacheKey = config.Symbol.Value.ToLowerInvariant().GetHashCode();
             List<DateTime> availableDates;
 
@@ -177,6 +187,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
 
             return source;
+        }
+
+        private SubscriptionDataSource DailyBackwardsLoop(FineFundamental fine, SubscriptionDataConfig config, DateTime date, SubscriptionDataSource source)
+        {
+            var path = Path.GetDirectoryName(source.Source) ?? string.Empty;
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+            {
+                // directory does not exist
+                return source;
+            }
+
+            // loop back in time, for 10 days, until we find an existing file
+            var count = 10;
+            do
+            {
+                // get previous date
+                date = date.AddDays(-1);
+
+                // get file name for this date
+                source = fine.GetSource(config, date, _isLiveMode);
+                if (File.Exists(source.Source))
+                {
+                    break;
+                }
+            }
+            while (--count > 0);
+
+            return count == 0 ? null : source;
         }
     }
 }

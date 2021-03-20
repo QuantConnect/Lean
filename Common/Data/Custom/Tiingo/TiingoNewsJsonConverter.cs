@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Custom.Tiingo
 {
@@ -118,8 +119,14 @@ namespace QuantConnect.Data.Custom.Tiingo
             var symbols = new List<Symbol>();
             foreach (var tiingoTicker in tickers)
             {
-                var ticker = TiingoSymbolMapper.GetLeanTicker(tiingoTicker.ToString());
-
+                var rawTicker = tiingoTicker.ToString();
+                if (rawTicker.Contains(" ") || rawTicker.Contains("|"))
+                {
+                    Log.Trace($"TiingoNewsJsonConverter.DeserializeNews(): Article ID {articleID}, ignoring ticker [{rawTicker}] because it contains space or pipe character.");
+                    continue;
+                }
+                
+                var ticker = TiingoSymbolMapper.GetLeanTicker(rawTicker);
                 var sid = SecurityIdentifier.GenerateEquity(
                     ticker,
                     // for now we suppose USA market

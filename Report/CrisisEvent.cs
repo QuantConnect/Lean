@@ -79,6 +79,11 @@ namespace QuantConnect.Report
         /// <summary>
         /// 2014 - 2019 market performance
         /// </summary>
-        NewNormal
+        NewNormal,
+
+        /// <summary>
+        /// COVID-19 pandemic market crash
+        /// </summary>
+        COVID19
     }
 }

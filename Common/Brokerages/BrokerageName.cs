@@ -57,6 +57,11 @@ namespace QuantConnect.Brokerages
         Bitfinex,
 
         /// <summary>
+        /// Transaction and submit/execution rules will use binance models
+        /// </summary>
+        Binance,
+
+        /// <summary>
         /// Transaction and submit/execution rules will use gdax models
         /// </summary>
         GDAX = 12,
@@ -69,6 +74,20 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use AlphaStream models
         /// </summary>
-        AlphaStreams
+        AlphaStreams,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Zerodha models
+        /// </summary>
+        Zerodha,
+
+        /// Transaction and submit/execution rules will use atreyu models
+        /// </summary>
+        Atreyu,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use TradingTechnologies models
+        /// </summary>
+        TradingTechnologies
     }
 }

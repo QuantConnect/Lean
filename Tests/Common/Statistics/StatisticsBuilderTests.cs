@@ -68,7 +68,8 @@ namespace QuantConnect.Tests.Common.Statistics
                     testBenchmarkPoints,
                     100000m,
                     0m,
-                    1);
+                    1,
+                    0m);
             }, "Misaligned values provided, but we still generate statistics");
         }
 
@@ -120,7 +121,8 @@ namespace QuantConnect.Tests.Common.Statistics
                 testBenchmarkPoints,
                 100000m,
                 0m,
-                1);
+                1,
+                0m);
 
             Assert.AreEqual(1, Math.Round(performance.TotalPerformance.PortfolioStatistics.Beta, 5));
             Assert.AreEqual(0, performance.TotalPerformance.PortfolioStatistics.Drawdown);

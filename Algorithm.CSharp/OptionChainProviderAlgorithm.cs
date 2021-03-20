@@ -21,7 +21,7 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Demonstration of the Option Chain Provider -- a much faster mechanism for manually specifying the option contracts you'd like to recieve
+    /// Demonstration of the Option Chain Provider -- a much faster mechanism for manually specifying the option contracts you'd like to receive
     /// data for and manually subscribing to them.
     /// </summary>
     /// <meta name="tag" content="strategy example" />
@@ -117,6 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$6300000.00"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -136,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-681741301"}
+            {"OrderListHash", "9971cd25dab8481b91e68dcbc55cc835"}
         };
     }
 }

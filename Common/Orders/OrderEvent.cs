@@ -32,6 +32,7 @@ namespace QuantConnect.Orders
         private decimal _fillQuantity;
         private decimal _quantity;
         private decimal? _limitPrice;
+        private decimal? _triggerPrice;
         private decimal? _stopPrice;
 
         /// <summary>
@@ -121,6 +122,22 @@ namespace QuantConnect.Orders
                 if (value.HasValue)
                 {
                     _stopPrice = value.Value.Normalize();
+                }
+            }
+        }
+
+        /// <summary>
+        /// The current trigger price
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal? TriggerPrice
+        {
+            get { return _triggerPrice; }
+            set
+            {
+                if (value.HasValue)
+                {
+                    _triggerPrice = value.Value.Normalize();
                 }
             }
         }
@@ -241,6 +258,10 @@ namespace QuantConnect.Orders
             {
                 message += Invariant($" StopPrice: {StopPrice.Value.SmartRounding()}");
             }
+            if (TriggerPrice.HasValue)
+            {
+                message += Invariant($" TriggerPrice: {TriggerPrice.Value.SmartRounding()}");
+            }
 
             // attach the order fee so it ends up in logs properly.
             if (OrderFee.Value.Amount != 0m) message += Invariant($" OrderFee: {OrderFee}");
@@ -249,6 +270,52 @@ namespace QuantConnect.Orders
             if (!string.IsNullOrEmpty(Message))
             {
                 message += Invariant($" Message: {Message}");
+            }
+
+            if (Symbol.SecurityType.IsOption())
+            {
+                message += Invariant($" IsAssignment: {IsAssignment}");
+            }
+
+            return message;
+        }
+
+        /// <summary>
+        /// Returns a short string that represents the current object.
+        /// </summary>
+        public string ShortToString()
+        {
+            var message = Invariant($"{UtcTime} OID:{OrderId} {Symbol.Value} {Status} Q:{Quantity}");
+            if (FillQuantity != 0)
+            {
+                message += Invariant($" FQ:{FillQuantity} FP:{FillPrice.SmartRounding()} {FillPriceCurrency}");
+            }
+
+            if (LimitPrice.HasValue)
+            {
+                message += Invariant($" LP:{LimitPrice.Value.SmartRounding()}");
+            }
+            if (StopPrice.HasValue)
+            {
+                message += Invariant($" SP:{StopPrice.Value.SmartRounding()}");
+            }
+            if (TriggerPrice.HasValue)
+            {
+                message += Invariant($" TP:{TriggerPrice.Value.SmartRounding()}");
+            }
+
+            // attach the order fee so it ends up in logs properly.
+            if (OrderFee.Value.Amount != 0m) message += Invariant($" OF:{OrderFee}");
+
+            // add message from brokerage
+            if (!string.IsNullOrEmpty(Message))
+            {
+                message += Invariant($" M:{Message}");
+            }
+
+            if (Symbol.SecurityType.IsOption())
+            {
+                message += Invariant($" IA:{IsAssignment}");
             }
 
             return message;

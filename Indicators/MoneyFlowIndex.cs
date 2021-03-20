@@ -105,13 +105,13 @@ namespace QuantConnect.Indicators
             NegativeMoneyFlow.Update(input.Time, typicalPrice < PreviousTypicalPrice ? moneyFlow : 0.0m);
             PreviousTypicalPrice = typicalPrice;
 
-            var totalMoneyFlow = PositiveMoneyFlow + NegativeMoneyFlow;
+            var totalMoneyFlow = PositiveMoneyFlow.Current.Value + NegativeMoneyFlow.Current.Value;
             if (totalMoneyFlow == 0.0m)
             {
                 return 100.0m;
             }
 
-            return 100m * PositiveMoneyFlow / totalMoneyFlow;
+            return 100m * PositiveMoneyFlow.Current.Value / totalMoneyFlow;
         }
     }
 }

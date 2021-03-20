@@ -173,6 +173,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Cannot submit or update orders with quantity that is less than lot size
         /// </summary>
-        OrderQuantityLessThanLoteSize = -30
+        OrderQuantityLessThanLoteSize = -30,
+
+        /// <summary>
+        /// The order's quantity exceeds the max shortable quantity set by the brokerage
+        /// </summary>
+        ExceedsShortableQuantity = -31,
     }
 }

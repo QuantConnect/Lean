@@ -129,10 +129,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var streamCount = enumerators.Length;
             if (streamCount < 500)
             {
-                //Less than 50 streams use the brute force method:
+                //Less than 500 streams use the brute force method:
                 return GetBruteForceMethod(enumerators);
             }
-            //More than 50 streams sort the enumerators before pulling from each:
+            //More than 500 streams sort the enumerators before pulling from each:
             return GetBinarySearchMethod(enumerators);
         }
 

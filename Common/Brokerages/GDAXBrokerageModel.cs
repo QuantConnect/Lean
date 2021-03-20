@@ -20,6 +20,7 @@ using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using System.Linq;
+using QuantConnect.Benchmarks;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
@@ -99,6 +100,17 @@ namespace QuantConnect.Brokerages
         {
             // margin trading is not currently supported by GDAX
             return 1m;
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public override IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>

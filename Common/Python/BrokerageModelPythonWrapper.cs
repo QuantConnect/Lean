@@ -16,8 +16,11 @@
 using System;
 using System.Collections.Generic;
 using Python.Runtime;
+using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.Shortable;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -153,6 +156,19 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetBenchmark(securities) as PyObject).GetAndDispose<IBenchmark>();
+            }
+        }
+
+        /// <summary>
         /// Gets a new fee model that represents this brokerage's fee structure
         /// </summary>
         /// <param name="security">The security to get a fee model for</param>
@@ -233,6 +249,14 @@ namespace QuantConnect.Python
             }
         }
 
+        public bool Shortable(IAlgorithm algorithm, Symbol symbol, decimal quantity)
+        {
+            using (Py.GIL())
+            {
+                return (_model.Shortable(algorithm, symbol, quantity) as PyObject).GetAndDispose<bool>();
+            }
+        }
+
         /// <summary>
         /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
         /// For cash accounts, leverage = 1 is used.
@@ -260,6 +284,18 @@ namespace QuantConnect.Python
             {
                 return (_model.GetBuyingPowerModel(security, accountType)
                     as PyObject).GetAndDispose<IBuyingPowerModel>();
+            }
+        }
+
+        /// <summary>
+        /// Gets the shortable provider
+        /// </summary>
+        /// <returns>Shortable provider</returns>
+        public IShortableProvider GetShortableProvider()
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetShortableProvider() as PyObject).GetAndDispose<IShortableProvider>();
             }
         }
     }

@@ -157,7 +157,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, 100, 0, 0, DateTime.MinValue, "");
             openOrderRequest.SetOrderId(1);
+
+            var order = Order.CreateOrder(openOrderRequest);
             var openOrderTicket = new OrderTicket(algorithm.Transactions, openOrderRequest);
+            openOrderTicket.SetOrder(order);
+
             openOrderTicket.AddOrderEvent(new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.PartiallyFilled, OrderDirection.Buy, 250, 70, OrderFee.Zero));
 
             var orderProcessor = new Mock<IOrderProcessor>();

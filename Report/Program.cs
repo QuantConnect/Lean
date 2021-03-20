@@ -53,9 +53,10 @@ namespace QuantConnect.Report
                 Converters = new List<JsonConverter> { new NullResultValueTypeJsonConverter<BacktestResult>() },
                 FloatParseHandling = FloatParseHandling.Decimal
             };
-            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestSettings);
 
+            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestSettings);
             LiveResult live = null;
+
             if (liveDataFile != string.Empty)
             {
                 var settings = new JsonSerializerSettings
@@ -73,7 +74,10 @@ namespace QuantConnect.Report
 
             // Generate the html content
             Log.Trace("QuantConnect.Report.Main(): Starting content compile...");
-            var html = report.Compile();
+            string html;
+            string _;
+
+            report.Compile(out html, out _);
 
             //Write it to target destination.
             if (destination != string.Empty)

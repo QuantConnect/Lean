@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from quantconnect.api import Api
-from quantconnect.LeanReportCreator import LeanReportCreator
 from time import sleep
 import unittest
 import os
@@ -164,10 +163,6 @@ class TestApi(unittest.TestCase):
                 attempts = maxattempts
             attempts += 1
         return attempts, result
-
-    def test_LeanReportCreator(self):
-        lrc = LeanReportCreator(f'--backtest=../json/sample.json --output=../outputs_test/Report.html --user=user_data.json')
-        lrc.create()
 
 def get_content(file):
     with open('../../Algorithm.Python/' + file, 'r') as f:

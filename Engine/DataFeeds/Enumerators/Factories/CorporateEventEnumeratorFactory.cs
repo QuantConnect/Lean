@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 
@@ -42,6 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <param name="startTime">Start date for the data request</param>
+        /// <param name="enablePriceScaling">Applies price factor</param>
         /// <returns>The new auxiliary data enumerator</returns>
         public static IEnumerator<BaseData> CreateEnumerators(
             IEnumerator<BaseData> rawDataEnumerator,
@@ -50,32 +52,65 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             ITradableDatesNotifier tradableDayNotifier,
             MapFileResolver mapFileResolver,
             bool includeAuxiliaryData,
-            DateTime startTime)
+            DateTime startTime,
+            bool enablePriceScaling = true)
         {
             var lazyFactorFile =
-                new Lazy<FactorFile>(() => GetFactorFileToUse(config, factorFileProvider));
+                new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
+
+            var tradableEventProviders = new List<ITradableDateEventProvider>();
+
+            if (config.Symbol.SecurityType == SecurityType.Equity)
+            {
+                tradableEventProviders.Add(new SplitEventProvider());
+                tradableEventProviders.Add(new DividendEventProvider());
+            }
+
+            if (config.Symbol.SecurityType == SecurityType.Equity
+                || config.Symbol.SecurityType == SecurityType.Base
+                || config.Symbol.SecurityType == SecurityType.Option)
+            {
+                tradableEventProviders.Add(new MappingEventProvider());
+            }
+
+            tradableEventProviders.Add(new DelistingEventProvider());
 
             var enumerator = new AuxiliaryDataEnumerator(
                 config,
                 lazyFactorFile,
                 new Lazy<MapFile>(() => GetMapFileToUse(config, mapFileResolver)),
-                new ITradableDateEventProvider[]
-                {
-                    new MappingEventProvider(),
-                    new SplitEventProvider(),
-                    new DividendEventProvider(),
-                    new DelistingEventProvider()
-                },
+                tradableEventProviders.ToArray(),
                 tradableDayNotifier,
                 includeAuxiliaryData,
                 startTime);
 
-            var priceScaleFactorEnumerator = new PriceScaleFactorEnumerator(
-                rawDataEnumerator,
-                config,
-                lazyFactorFile);
+            // avoid price scaling for backtesting; calculate it directly in worker
+            // and allow subscription to extract the the data depending on config data mode
+            var dataEnumerator = rawDataEnumerator;
+            if (enablePriceScaling)
+            {
+                dataEnumerator = new PriceScaleFactorEnumerator(
+                    rawDataEnumerator,
+                    config,
+                    lazyFactorFile);
+            }
 
-            return new SynchronizingEnumerator(priceScaleFactorEnumerator, enumerator);
+            return new SynchronizingEnumerator(dataEnumerator, enumerator);
+        }
+
+        /// <summary>
+        /// Centralized logic used by the data feeds to determine if we should emit auxiliary base data points.
+        /// For equities we only want to emit split/dividends events for non internal and only for <see cref="TradeBar"/> configurations
+        /// this last part is because equities also have <see cref="QuoteBar"/> subscriptions.
+        /// </summary>
+        /// <remarks>The <see cref="TimeSliceFactory"/> does not allow for multiple dividends/splits per symbol in the same time slice
+        /// but we don't want to rely only on that and make an explicit decision here.</remarks>
+        /// <remarks>History provider is never emitting auxiliary data points</remarks>
+        public static bool ShouldEmitAuxiliaryBaseData(SubscriptionDataConfig config)
+        {
+            return !config.IsInternalFeed
+                // custom data could use remapping events, example 'CustomDataUsingMapping' regression algorithm
+                && (config.Type == typeof(TradeBar) || config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
         }
 
         private static MapFile GetMapFileToUse(
@@ -105,33 +140,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
 
             return mapFileToUse;
-        }
-
-        private static FactorFile GetFactorFileToUse(
-            SubscriptionDataConfig config,
-            IFactorFileProvider factorFileProvider)
-        {
-            var factorFileToUse = new FactorFile(config.Symbol.Value, new List<FactorFileRow>());
-
-            if (!config.IsCustomData
-                && config.SecurityType == SecurityType.Equity)
-            {
-                try
-                {
-                    var factorFile = factorFileProvider.Get(config.Symbol);
-                    if (factorFile != null)
-                    {
-                        factorFileToUse = factorFile;
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "CorporateEventEnumeratorFactory.GetFactorFileToUse(): Factors File: "
-                        + config.Symbol.ID + ": ");
-                }
-            }
-
-            return factorFileToUse;
         }
     }
 }

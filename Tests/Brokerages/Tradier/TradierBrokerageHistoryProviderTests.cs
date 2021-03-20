@@ -24,7 +24,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Tradier
 {
-    [TestFixture, Ignore("This test requires a configured and active Tradier account")]
+    [TestFixture, Explicit("This test requires a configured and active Tradier account")]
     public class TradierBrokerageHistoryProviderTests
     {
         private static TestCaseData[] TestParameters
@@ -54,10 +54,11 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         {
             TestDelegate test = () =>
             {
+                var useSandbox = Config.GetBool("tradier-use-sandbox");
+                var accountId = Config.Get("tradier-account-id");
                 var accessToken = Config.Get("tradier-access-token");
 
-                var brokerage = new TradierBrokerage(null, null, null, "");
-                brokerage.SetTokens(0, accessToken, "", DateTime.Now, Time.OneDay);
+                var brokerage = new TradierBrokerage(null, null, null, null, useSandbox, accountId, accessToken);
 
                 var now = DateTime.UtcNow;
 

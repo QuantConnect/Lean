@@ -167,12 +167,26 @@ namespace QuantConnect.Data.UniverseSelection
                     sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying, market, 0, 0, 0);
                     break;
 
+                case SecurityType.FutureOption:
+                    var underlyingFuture = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlyingFuture, market, 0, 0, 0);
+                    break;
+
+                case SecurityType.IndexOption:
+                    var underlyingIndex = SecurityIdentifier.GenerateIndex(ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlyingIndex, market, 0, 0, OptionStyle.European);
+                    break;
+
                 case SecurityType.Forex:
                     sid = SecurityIdentifier.GenerateForex(ticker, market);
                     break;
 
                 case SecurityType.Cfd:
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
+                    break;
+
+                case SecurityType.Index:
+                    sid = SecurityIdentifier.GenerateIndex(ticker, market);
                     break;
 
                 case SecurityType.Future:
@@ -239,7 +253,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Returns the symbols defined by the user for this universe
         /// </summary>
-        /// <param name="utcTime">The curren utc time</param>
+        /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
@@ -278,8 +292,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="e">The notify collection changed event arguments</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            var handler = CollectionChanged;
-            if (handler != null) handler(this, e);
+            CollectionChanged?.Invoke(this, e);
         }
 
         /// <summary>

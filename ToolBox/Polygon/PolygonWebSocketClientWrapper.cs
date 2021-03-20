@@ -61,41 +61,36 @@ namespace QuantConnect.ToolBox.Polygon
         /// Subscribes the given symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
-        public void Subscribe(Symbol symbol)
+        /// <param name="tickType">Type of tick data</param>
+        public void Subscribe(Symbol symbol, TickType tickType)
         {
-            Subscribe(symbol, true);
+            Subscribe(symbol, tickType, true);
         }
 
         /// <summary>
         /// Unsubscribes the given symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
-        public void Unsubscribe(Symbol symbol)
+        /// <param name="tickType">Type of tick data</param>
+        public void Unsubscribe(Symbol symbol, TickType tickType)
         {
-            Subscribe(symbol, false);
+            Subscribe(symbol, tickType, false);
         }
 
-        private void Subscribe(Symbol symbol, bool subscribe)
+        private void Subscribe(Symbol symbol, TickType tickType, bool subscribe)
         {
             var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
 
-            if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Crypto)
+            if (tickType == TickType.Trade && !(symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Crypto))
             {
-                // trades
-                Send(JsonConvert.SerializeObject(
-                    new
-                    {
-                        action = subscribe ? "subscribe" : "unsubscribe",
-                        @params = $"{GetSubscriptionPrefix(symbol.SecurityType, TickType.Trade)}.{ticker}"
-                    }));
+                return;
             }
 
-            // quotes
             Send(JsonConvert.SerializeObject(
                 new
                 {
                     action = subscribe ? "subscribe" : "unsubscribe",
-                    @params = $"{GetSubscriptionPrefix(symbol.SecurityType, TickType.Quote)}.{ticker}"
+                    @params = $"{GetSubscriptionPrefix(symbol.SecurityType, tickType)}.{ticker}"
                 }));
         }
 

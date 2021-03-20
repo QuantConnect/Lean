@@ -31,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
+        private static readonly int DownloadPeriod = Config.GetInt("api-data-update-period", 5);
         private readonly Api.Api _api;
 
         /// <summary>
@@ -51,40 +52,70 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A <see cref="Stream"/> of the data requested</returns>
         public Stream Fetch(string key)
         {
-            if (File.Exists(key))
-            {
-                return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
-            }
-
-            // If the file cannot be found on disc, attempt to retrieve it from the API
             Symbol symbol;
             DateTime date;
             Resolution resolution;
 
+            // Fetch the details of this data request
             if (LeanData.TryParsePath(key, out symbol, out date, out resolution))
             {
-                Log.Trace("ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
+                if (!File.Exists(key) || IsOutOfDate(resolution, key))
+                {
+                    return DownloadData(key, symbol, date, resolution);
+                }
+
+                // Use the file already on the disk
+                return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
+            }
+
+            Log.Error("ApiDataProvider.Fetch(): failed to parse key {0}", key);
+            return null;
+        }
+
+        /// <summary>
+        /// Determine if the file is out of date based on configuration and needs to be updated
+        /// </summary>
+        /// <param name="resolution">Data resolution</param>
+        /// <param name="filepath">Path to the file</param>
+        /// <returns>True if the file is out of date</returns>
+        /// <remarks>Files are only "out of date" for Hourly/Daily data because this data is stored all in one file</remarks>
+        public static bool IsOutOfDate(Resolution resolution, string filepath)
+        {
+            return resolution >= Resolution.Hour &&
+                (DateTime.Now - TimeSpan.FromDays(DownloadPeriod)) > File.GetLastWriteTime(filepath);
+        }
+
+        /// <summary>
+        /// Attempt to download data using the Api for and return a FileStream of that data.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="symbol"></param>
+        /// <param name="date"></param>
+        /// <param name="resolution"></param>
+        /// <returns>A FileStream of the data</returns>
+        private FileStream DownloadData(string filepath, Symbol symbol, DateTime date, Resolution resolution)
+        {
+            Log.Trace("ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
+                symbol.Value,
+                resolution,
+                date.Date.ToShortDateString());
+
+            var downloadSuccessful = _api.DownloadData(symbol, resolution, date);
+
+            if (downloadSuccessful)
+            {
+                Log.Trace("ApiDataProvider.Fetch(): Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
                     symbol.Value,
                     resolution,
                     date.Date.ToShortDateString());
 
-                var downloadSuccessful = _api.DownloadData(symbol, resolution, date);
-
-                if (downloadSuccessful)
-                {
-                    Log.Trace("ApiDataProvider.Fetch(): Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
-                        symbol.Value,
-                        resolution,
-                        date.Date.ToShortDateString());
-
-                    return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
-                }
+                return new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
 
+            // Failed to download
             Log.Error("ApiDataProvider.Fetch(): Unable to remotely retrieve data for path {0}. " +
-                      "Please make sure you have the necessary data in your online QuantConnect data library.",
-                       key);
-
+                "Please make sure you have the necessary data in your online QuantConnect data library.",
+                filepath);
             return null;
         }
     }

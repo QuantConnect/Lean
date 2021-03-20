@@ -99,7 +99,7 @@ namespace QuantConnect.Tests.Indicators
 
             identity.Update(DateTime.UtcNow, 3m);
             Assert.IsTrue(sma.IsReady);
-            Assert.AreEqual(2m, (decimal)sma);
+            Assert.AreEqual(2m, sma.Current.Value);
         }
 
         [Test, Parallelizable(ParallelScope.Self)]
@@ -131,7 +131,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(delay.IsReady);
             Assert.IsTrue(sma.IsReady);
 
-            Assert.AreEqual(1.5m, (decimal)sma);
+            Assert.AreEqual(1.5m, sma.Current.Value);
         }
 
         [Test, Parallelizable(ParallelScope.Self)]

@@ -48,12 +48,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Determines if we can safely remove the security member from a universe.
         /// We must ensure that we have zero holdings, no open orders, and no existing portfolio targets
         /// </summary>
-        private bool IsSafeToRemove(Security member)
+        private bool IsSafeToRemove(Security member, Universe universe)
         {
             // but don't physically remove it from the algorithm if we hold stock or have open orders against it or an open target
             var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == member.Symbol);
             if (!member.HoldStock && !openOrders.Any() && (member.Holdings.Target == null || member.Holdings.Target.Quantity == 0))
             {
+                if (universe.Securities.Any(pair =>
+                    pair.Key.Underlying == member.Symbol && !IsSafeToRemove(pair.Value.Security, universe)))
+                {
+                    // don't remove if any member in the universe which uses this 'member' as underlying can't be removed
+                    // covers the options use case
+                    return false;
+                }
                 return true;
             }
 
@@ -69,7 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The member to remove</returns>
         public List<RemovedMember> TryRemoveMember(Security member, Universe universe)
         {
-            if (IsSafeToRemove(member))
+            if (IsSafeToRemove(member, universe))
             {
                 return new List<RemovedMember> {new RemovedMember(universe, member)};
             }
@@ -86,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _pendingRemovals.Add(universe, new List<Security> { member });
             }
 
-            return new List<RemovedMember>();
+            return null;
         }
 
         /// <summary>
@@ -106,7 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var universeRemoving = kvp.Key;
                 foreach (var security in kvp.Value.ToList())
                 {
-                    var isSafeToRemove = IsSafeToRemove(security);
+                    var isSafeToRemove = IsSafeToRemove(security, universeRemoving);
                     if (isSafeToRemove
                         ||
                         // if we are re selecting it we remove it as a pending removal

@@ -22,8 +22,6 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Brokerages import *
 from QuantConnect.Orders import *
 
-import decimal as d
-
 ### <summary>
 ### The demonstration algorithm shows some of the most common order methods when working with Crypto assets.
 ### </summary>
@@ -84,16 +82,16 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
 
         if self.Time.hour == 1 and self.Time.minute == 0:
             # Sell all ETH holdings with a limit order at 1% above the current price
-            limitPrice = round(self.Securities["ETHUSD"].Price * d.Decimal(1.01), 2)
+            limitPrice = round(self.Securities["ETHUSD"].Price * 1.01, 2)
             quantity = self.Portfolio.CashBook["ETH"].Amount
             self.LimitOrder("ETHUSD", -quantity, limitPrice)
 
         elif self.Time.hour == 2 and self.Time.minute == 0:
             # Submit a buy limit order for BTC at 5% below the current price
             usdTotal = self.Portfolio.CashBook["USD"].Amount
-            limitPrice = round(self.Securities["BTCUSD"].Price * d.Decimal(0.95), 2)
+            limitPrice = round(self.Securities["BTCUSD"].Price * 0.95, 2)
             # use only half of our total USD
-            quantity = usdTotal * d.Decimal(0.5) / limitPrice
+            quantity = usdTotal * 0.5 / limitPrice
             self.LimitOrder("BTCUSD", quantity, limitPrice)
 
         elif self.Time.hour == 2 and self.Time.minute == 1:
@@ -108,7 +106,7 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
             self.Debug("usdAvailable: {}".format(usdAvailable))
 
             # Submit a marketable buy limit order for ETH at 1% above the current price
-            limitPrice = round(self.Securities["ETHUSD"].Price * d.Decimal(1.01), 2)
+            limitPrice = round(self.Securities["ETHUSD"].Price * 1.01, 2)
 
             # use all of our available USD
             quantity = usdAvailable / limitPrice
@@ -118,7 +116,7 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
             self.LimitOrder("ETHUSD", quantity, limitPrice)
 
             # use only half of our available USD
-            quantity = usdAvailable * d.Decimal(0.5) / limitPrice
+            quantity = usdAvailable * 0.5 / limitPrice
             self.LimitOrder("ETHUSD", quantity, limitPrice)
 
         elif self.Time.hour == 11 and self.Time.minute == 0:
@@ -130,7 +128,7 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
             self.Buy("BTCEUR", 1)
 
             # Submit a sell limit order at 10% above market price
-            limitPrice = round(self.Securities["BTCEUR"].Price * d.Decimal(1.1), 2)
+            limitPrice = round(self.Securities["BTCEUR"].Price * 1.1, 2)
             self.LimitOrder("BTCEUR", -1, limitPrice)
 
         elif self.Time.hour == 13 and self.Time.minute == 0:

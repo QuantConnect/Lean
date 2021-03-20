@@ -101,19 +101,19 @@ namespace QuantConnect.Indicators
             }
 
             var newTrailingValue = window[Period - 1];
-            _periodRoc = input.Value - newTrailingValue;
+            _periodRoc = input.Value - newTrailingValue.Value;
 
             if (Samples > Period)
             {
                 // Adjust sumROC1:
                 // - Remove trailing ROC1 
                 // - Add new ROC1
-                _sumRoc1 -= Math.Abs(_trailingValue - newTrailingValue);
+                _sumRoc1 -= Math.Abs(_trailingValue - newTrailingValue.Value);
                 _sumRoc1 += Math.Abs(input.Value - window[1].Value);
             }
 
             // Save the trailing value.
-            _trailingValue = newTrailingValue;
+            _trailingValue = newTrailingValue.Value;
 
             // Calculate the efficiency ratio
             var efficiencyRatio = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);

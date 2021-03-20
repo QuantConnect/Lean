@@ -25,9 +25,9 @@ namespace QuantConnect.Tests.Common.Parameters
     public class ParameterAttributeTests
     {
         [Test]
-        public void SetsParameterValues()
+        public void SetsParameterIntValues()
         {
-            var instance = new Instance();
+            var instance = new Instance<int>();
             var parameters = new Dictionary<string, string>
             {
                 {"PublicField", "1"},
@@ -41,6 +41,52 @@ namespace QuantConnect.Tests.Common.Parameters
             };
 
             ParameterAttribute.ApplyAttributes(parameters, instance);
+
+            instance.AssertValues(1);
+        }
+
+        [TestCase("1")]
+        [TestCase("1.0")]
+        public void SetsParameterDoubleValues(string actual)
+        {
+            var instance = new Instance<double>();
+            var parameters = new Dictionary<string, string>
+            {
+                {"PublicField", actual},
+                {"PublicProperty", actual},
+                {"ProtectedField", actual},
+                {"ProtectedProperty", actual},
+                {"InternalField", actual},
+                {"InternalProperty", actual},
+                {"PrivateField", actual},
+                {"PrivateProperty", actual},
+            };
+
+            ParameterAttribute.ApplyAttributes(parameters, instance);
+
+            instance.AssertValues(1);
+        }
+
+        [TestCase("1")]
+        [TestCase("1.0")]
+        public void SetsParameterDecimalValues(string actual)
+        {
+            var instance = new Instance<decimal>();
+            var parameters = new Dictionary<string, string>
+            {
+                {"PublicField", actual},
+                {"PublicProperty", actual},
+                {"ProtectedField", actual},
+                {"ProtectedProperty", actual},
+                {"InternalField", actual},
+                {"InternalProperty", actual},
+                {"PrivateField", actual},
+                {"PrivateProperty", actual},
+            };
+
+            ParameterAttribute.ApplyAttributes(parameters, instance);
+
+            instance.AssertValues(1);
         }
 
         [Test]
@@ -48,11 +94,11 @@ namespace QuantConnect.Tests.Common.Parameters
         {
             var assembly = Assembly.GetExecutingAssembly();
             var parameters = ParameterAttribute.GetParametersFromAssembly(assembly);
-            foreach (var field in typeof(Instance).GetFields(ParameterAttribute.BindingFlags).Where(x => !x.Name.Contains(">k__")))
+            foreach (var field in typeof(Instance<int>).GetFields(ParameterAttribute.BindingFlags).Where(x => !x.Name.Contains(">k__")))
             {
                 Assert.IsTrue(parameters.ContainsKey(field.Name), "Failed on Field: " + field.Name);
             }
-            foreach (var property in typeof(Instance).GetProperties(ParameterAttribute.BindingFlags))
+            foreach (var property in typeof(Instance<int>).GetProperties(ParameterAttribute.BindingFlags))
             {
                 Assert.IsTrue(parameters.ContainsKey(property.Name), "Failed on Property: " + property.Name);
             }
@@ -63,36 +109,36 @@ namespace QuantConnect.Tests.Common.Parameters
         {
             var assembly = Assembly.GetExecutingAssembly();
             var parameters = ParameterAttribute.GetParametersFromAssembly(assembly);
-            foreach (var field in typeof(Instance).GetFields(ParameterAttribute.BindingFlags).Where(x => !x.Name.Contains(">k__")))
+            foreach (var field in typeof(Instance<int>).GetFields(ParameterAttribute.BindingFlags).Where(x => !x.Name.Contains(">k__")))
             {
                 Assert.IsTrue(parameters.ContainsKey(field.Name), "Failed on Field: " + field.Name);
             }
-            foreach (var property in typeof(Instance).GetProperties(ParameterAttribute.BindingFlags))
+            foreach (var property in typeof(Instance<int>).GetProperties(ParameterAttribute.BindingFlags))
             {
                 Assert.IsTrue(parameters.ContainsKey(property.Name), "Failed on Property: " + property.Name);
             }
         }
 
-        class Instance
+        class Instance<T>
         {
             [Parameter]
-            public int PublicField = 0;
+            public T PublicField = default(T);
             [Parameter]
-            public int PublicProperty { get; set; }
+            public T PublicProperty { get; set; }
             [Parameter]
-            protected int ProtectedField = 0;
+            protected T ProtectedField = default(T);
             [Parameter]
-            protected int ProtectedProperty { get; set; }
+            protected T ProtectedProperty { get; set; }
             [Parameter]
-            internal int InternalField = 0;
+            internal T InternalField = default(T);
             [Parameter]
-            internal int InternalProperty { get; set; }
+            internal T InternalProperty { get; set; }
             [Parameter]
-            private int PrivateField = 0;
+            private T PrivateField = default(T);
             [Parameter]
-            private int PrivateProperty { get; set; }
+            private T PrivateProperty { get; set; }
 
-            public void AssertValues(int expected)
+            public void AssertValues(T expected)
             {
 
                 Assert.AreEqual(expected, PublicField);

@@ -24,6 +24,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
@@ -155,8 +156,8 @@ namespace QuantConnect
         /// Gets the date component of this identifier. For equities this
         /// is the first date the security traded. Technically speaking,
         /// in LEAN, this is the first date mentioned in the map_files.
-        /// For options this is the expiry date. For futures this is the
-        /// settlement date. For forex and cfds this property will throw an
+        /// For futures and options this is the expiry date of the contract.
+        /// For other asset classes, this property will throw an
         /// exception as the field is not specified.
         /// </summary>
         public DateTime Date
@@ -175,11 +176,14 @@ namespace QuantConnect
                         case SecurityType.Equity:
                         case SecurityType.Option:
                         case SecurityType.Future:
+                        case SecurityType.Index:
+                        case SecurityType.FutureOption:
+                        case SecurityType.IndexOption:
                             var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
                             _date = DateTime.FromOADate(oadate);
                             return _date.Value;
                         default:
-                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, and SecurityType.Base");
+                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, and SecurityType.Base");
                     }
                 }
             }
@@ -236,16 +240,25 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option)
+                    if (!SecurityType.IsOption())
                     {
-                        throw new InvalidOperationException("OptionType is only defined for SecurityType.Option");
+                        throw new InvalidOperationException("StrikePrice is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                     }
 
                     // performance: lets calculate strike price once
                     var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
                     var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
                     var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
-                    _strikePrice = unscaled * (decimal)pow;
+                    // If the 20th bit is set to 1, we have a negative strike price.
+                    // Let's normalize the strike and explicitly make it negative
+                    if (((unscaled >> 19) & 1) == 1)
+                    {
+                        _strikePrice = -((unscaled ^ 1 << 19) * (decimal)pow);
+                    }
+                    else
+                    {
+                        _strikePrice = unscaled * (decimal)pow;
+                    }
 
                     return _strikePrice.Value;
                 }
@@ -268,9 +281,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option)
+                    if (!SecurityType.IsOption())
                     {
-                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option");
+                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                     }
                     _optionRight = (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
                     return _optionRight.Value;
@@ -294,9 +307,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option)
+                    if (!SecurityType.IsOption())
                     {
-                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option");
+                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                     }
 
                     _optionStyle = (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
@@ -385,7 +398,7 @@ namespace QuantConnect
             OptionRight optionRight,
             OptionStyle optionStyle)
         {
-            return Generate(expiry, underlying.Symbol, SecurityType.Option, market, strike, optionRight, optionStyle, underlying);
+            return Generate(expiry, underlying.Symbol, QuantConnect.Symbol.GetOptionTypeFromUnderlying(underlying.SecurityType), market, strike, optionRight, optionStyle, underlying);
         }
 
         /// <summary>
@@ -532,6 +545,17 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a INDEX security
+        /// </summary>
+        /// <param name="symbol">The Index contract symbol</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified INDEX security</returns>
+        public static SecurityIdentifier GenerateIndex(string symbol, string market)
+        {
+            return Generate(DefaultDate, symbol, SecurityType.Index, market);
+        }
+
+        /// <summary>
         /// Generic generate method. This method should be used carefully as some parameters are not required and
         /// some parameters mean different things for different security types
         /// </summary>
@@ -557,6 +581,13 @@ namespace QuantConnect
             // normalize input strings
             market = market.ToLowerInvariant();
             symbol = forceSymbolToUpper ? symbol.LazyToUpper() : symbol;
+
+            if (securityType == SecurityType.FutureOption)
+            {
+                // Futures options tickers might not match, so we need
+                // to map the provided future Symbol to the actual future option Symbol.
+                symbol = FuturesOptionsSymbolMappings.Map(symbol);
+            }
 
             var marketIdentifier = QuantConnect.Market.Encode(market);
             if (!marketIdentifier.HasValue)
@@ -588,6 +619,7 @@ namespace QuantConnect
                     result._date = date;
                     break;
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
                     result._date = date;
                     result._strikePrice = strike;
                     result._optionRight = optionRight;
@@ -682,12 +714,35 @@ namespace QuantConnect
                 scale++;
             }
 
-            if (strike >= 1000000)
+            // Since our max precision was previously capped at 999999 and it had 20 bits set,
+            // we sacrifice a single bit from the strike price to allow for negative strike prices.
+            // 475711 is the maximum value that can be represented when setting the negative bit because
+            // any number greater than that will cause an overflow in the strike price width and increase
+            // its width to 7 digits.
+            // The idea behind this formula is to determine what number the overflow would happen at.
+            // We get the max number representable in 19 bits, subtract the width to normalize the value,
+            // and then get the difference between the 20 bit mask and the 19 bit normalized value to get
+            // the max strike price + 1. Subtract 1 to normalize the value, and we have established an exclusive
+            // upper bound.
+            const ulong negativeMask = 1 << 19;
+            const ulong maxStrikePrice = negativeMask - ((negativeMask ^ (negativeMask - 1)) - StrikeWidth) - 1;
+
+            if (strike >= maxStrikePrice || strike <= -(long)maxStrikePrice)
             {
                 throw new ArgumentException(Invariant($"The specified strike price\'s precision is too high: {str}"));
             }
 
-            return (ulong)strike;
+            var encodedStrike = (long)strike;
+            if (strike < 0)
+            {
+                // Flip the sign
+                encodedStrike = -encodedStrike;
+
+                // Sets the 20th bit equal to 1
+                encodedStrike |= 1 << 19;
+            }
+
+            return (ulong)encodedStrike;
         }
 
         /// <summary>

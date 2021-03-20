@@ -52,6 +52,11 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Event fired when the universe selection has changed
+        /// </summary>
+        public event EventHandler SelectionChanged;
+
+        /// <summary>
         /// Gets the security type of this universe
         /// </summary>
         public SecurityType SecurityType
@@ -190,6 +195,7 @@ namespace QuantConnect.Data.UniverseSelection
             // select empty set of symbols after dispose requested
             if (DisposeRequested)
             {
+                OnSelectionChanged();
                 return Enumerable.Empty<Symbol>();
             }
 
@@ -206,6 +212,8 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 return Unchanged;
             }
+
+            OnSelectionChanged(selections);
             return selections;
         }
 
@@ -339,9 +347,18 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Marks this universe as disposed and ready to remove all child subscriptions
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             DisposeRequested = true;
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="SelectionChanged"/> event
+        /// </summary>
+        /// <param name="selection">The current universe selection</param>
+        protected void OnSelectionChanged(HashSet<Symbol> selection = null)
+        {
+            SelectionChanged?.Invoke(this, new SelectionEventArgs(selection ?? new HashSet<Symbol>()));
         }
 
         /// <summary>
@@ -392,6 +409,25 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 Added = added;
                 Security = security;
+            }
+        }
+
+        /// <summary>
+        /// Event fired when the universe selection changes
+        /// </summary>
+        public class SelectionEventArgs : EventArgs
+        {
+            /// <summary>
+            /// The current universe selection
+            /// </summary>
+            public HashSet<Symbol> CurrentSelection { get; }
+
+            /// <summary>
+            /// Creates a new instance
+            /// </summary>
+            public SelectionEventArgs(HashSet<Symbol> currentSelection)
+            {
+                CurrentSelection = currentSelection;
             }
         }
     }

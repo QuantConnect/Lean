@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                 brokerage.Subscribe(config, (s, e) => { });
             }
             stopwatch.Stop();
-            Console.WriteLine("Subscribe: Elapsed time: " + stopwatch.Elapsed);
+            Log.Trace("Subscribe: Elapsed time: " + stopwatch.Elapsed);
 
             Thread.Sleep(10000);
 
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             {
                 brokerage.Unsubscribe(config);
             }
-            Console.WriteLine("Unsubscribe: Elapsed time: " + stopwatch.Elapsed);
+            Log.Trace("Unsubscribe: Elapsed time: " + stopwatch.Elapsed);
 
             Thread.Sleep(5000);
         }

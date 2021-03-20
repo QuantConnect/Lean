@@ -14,9 +14,9 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -105,13 +105,14 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gets a new fill model that represents this brokerage's fill behavior
+        /// Get the benchmark for this model
         /// </summary>
-        /// <param name="security">The security to get fill model for</param>
-        /// <returns>The new fill model for this brokerage</returns>
-        public override IFillModel GetFillModel(Security security)
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public override IBenchmark GetBenchmark(SecurityManager securities)
         {
-            return new ImmediateFillModel();
+            var symbol = Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>

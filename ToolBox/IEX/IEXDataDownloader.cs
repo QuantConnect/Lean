@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -28,7 +27,7 @@ namespace QuantConnect.ToolBox.IEX
 
         public IEXDataDownloader()
         {
-            _handler = new IEXDataQueueHandler(false);
+            _handler = new IEXDataQueueHandler();
         }
 
         public void Dispose()
@@ -55,16 +54,16 @@ namespace QuantConnect.ToolBox.IEX
             var historyRequests = new[] {
                 new HistoryRequest(startUtc,
                                    endUtc,
-                                   typeof(QuoteBar),
+                                   typeof(TradeBar),
                                    symbol,
                                    resolution,
-                                   SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
-                                   DateTimeZone.Utc,
+                                   SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                                   TimeZones.NewYork,
                                    resolution,
+                                   true,
                                    false,
-                                   false,
-                                   DataNormalizationMode.Adjusted,
-                                   TickType.Quote)
+                                   DataNormalizationMode.Raw,
+                                   TickType.Trade)
             };
 
             foreach (var slice in _handler.GetHistory(historyRequests, TimeZones.EasternStandard))

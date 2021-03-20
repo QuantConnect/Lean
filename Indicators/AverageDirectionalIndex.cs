@@ -105,7 +105,7 @@ namespace QuantConnect.Indicators
                     // Computes the Plus Directional Indicator(+DI period).
                     if (_smoothedTrueRange != 0 && _smoothedDirectionalMovementPlus.IsReady)
                     {
-                        return 100m * _smoothedDirectionalMovementPlus / _smoothedTrueRange;
+                        return 100m * _smoothedDirectionalMovementPlus.Current.Value / _smoothedTrueRange.Current.Value;
                     }
                     return 0m;
                 },
@@ -123,7 +123,7 @@ namespace QuantConnect.Indicators
                     // Computes the Minus Directional Indicator(-DI period).
                     if (_smoothedTrueRange != 0 && _smoothedDirectionalMovementMinus.IsReady)
                     {
-                        return 100m * _smoothedDirectionalMovementMinus / _smoothedTrueRange;
+                        return 100m * _smoothedDirectionalMovementMinus.Current.Value / _smoothedTrueRange.Current.Value;
                     }
                     return 0m;
                 },
@@ -139,8 +139,8 @@ namespace QuantConnect.Indicators
                 input =>
                 {
                     // Computes the Smoothed True Range value.
-                    var value = Samples > _period + 1 ? _smoothedTrueRange / _period : 0m;
-                    return _smoothedTrueRange + _trueRange - value;
+                    var value = Samples > _period + 1 ? _smoothedTrueRange.Current.Value / _period : 0m;
+                    return _smoothedTrueRange.Current.Value + _trueRange.Current.Value - value;
                 },
                 isReady => Samples > period
                 );
@@ -149,8 +149,8 @@ namespace QuantConnect.Indicators
                 input =>
                 {
                     // Computes the Smoothed Directional Movement Plus value.
-                    var value = Samples > _period + 1 ? _smoothedDirectionalMovementPlus / _period : 0m;
-                    return _smoothedDirectionalMovementPlus + _directionalMovementPlus - value;
+                    var value = Samples > _period + 1 ? _smoothedDirectionalMovementPlus.Current.Value / _period : 0m;
+                    return _smoothedDirectionalMovementPlus.Current.Value + _directionalMovementPlus.Current.Value - value;
                 },
                 isReady => Samples > period
                 );
@@ -159,8 +159,8 @@ namespace QuantConnect.Indicators
                 input =>
                 {
                     // Computes the Smoothed Directional Movement Minus value.
-                    var value = Samples > _period + 1 ? _smoothedDirectionalMovementMinus / _period : 0m;
-                    return _smoothedDirectionalMovementMinus + _directionalMovementMinus - value;
+                    var value = Samples > _period + 1 ? _smoothedDirectionalMovementMinus.Current.Value / _period : 0m;
+                    return _smoothedDirectionalMovementMinus.Current.Value + _directionalMovementMinus.Current.Value - value;
                 },
                 isReady => Samples > period
                 );
@@ -234,13 +234,13 @@ namespace QuantConnect.Indicators
             PositiveDirectionalIndex.Update(Current);
             NegativeDirectionalIndex.Update(Current);
 
-            var diff = Math.Abs(PositiveDirectionalIndex - NegativeDirectionalIndex);
-            var sum = PositiveDirectionalIndex + NegativeDirectionalIndex;
+            var diff = Math.Abs(PositiveDirectionalIndex.Current.Value - NegativeDirectionalIndex.Current.Value);
+            var sum = PositiveDirectionalIndex.Current.Value + NegativeDirectionalIndex.Current.Value;
             if (sum == 0) return 50m;
 
             _averageDirectionalIndex.Update(input.EndTime, 100m * diff / sum);
 
-            return _averageDirectionalIndex;
+            return _averageDirectionalIndex.Current.Value;
         }
 
         /// <summary>

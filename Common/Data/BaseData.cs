@@ -64,6 +64,11 @@ namespace QuantConnect.Data
         protected static readonly List<Resolution> MinuteResolution = new List<Resolution> { Resolution.Minute };
 
         /// <summary>
+        /// A list of high <see cref="Resolution"/>, including minute, second, and tick.
+        /// </summary>
+        protected static readonly List<Resolution> HighResolution = new List<Resolution> { Resolution.Minute, Resolution.Second, Resolution.Tick };
+
+        /// <summary>
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
         /// </summary>
         /// <remarks>Data is classed into two categories - streams of instantaneous prices and groups of OHLC data.</remarks>
@@ -86,7 +91,6 @@ namespace QuantConnect.Data
         /// The end time of this data. Some data covers spans (trade bars) and as such we want
         /// to know the entire time span covered
         /// </summary>
-        [ProtoMember(3)]
         public virtual DateTime EndTime
         {
             get { return Time; }
@@ -199,7 +203,8 @@ namespace QuantConnect.Data
         /// <returns>True indicates mapping should be used</returns>
         public virtual bool RequiresMapping()
         {
-            return Symbol.SecurityType == SecurityType.Equity || Symbol.SecurityType == SecurityType.Option;
+            return Symbol.SecurityType == SecurityType.Equity ||
+                   Symbol.SecurityType == SecurityType.Option;
         }
 
         /// <summary>
@@ -233,9 +238,14 @@ namespace QuantConnect.Data
         /// custom data types can override it</remarks>
         public virtual List<Resolution> SupportedResolutions()
         {
-            if (Symbol.SecurityType == SecurityType.Option)
+            if (Symbol.SecurityType.IsOption() || Symbol.SecurityType == SecurityType.Index)
             {
                 return MinuteResolution;
+            }
+
+            if (Symbol.SecurityType == SecurityType.Future)
+            {
+                return HighResolution;
             }
 
             return AllResolutions;

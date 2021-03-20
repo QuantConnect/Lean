@@ -170,5 +170,15 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(ticker, result);
         }
+
+        [TestCase("DC", 2023, 1, 4, "DC04Z22", true)] // Contract month is 2022-12, expires on 2023-01-04. Same situation with the rest of the test cases.
+        [TestCase("DY", 2022, 10, 4, "DY04U22", true)]
+        [TestCase("GDK", 2022, 11, 1, "GDK01V22", true)]
+        public void GenerateFutureTickerExpiringInNextMonth(string ticker, int year, int month, int day, string expectedValue, bool doubleDigitsYear)
+        {
+            var result = SymbolRepresentation.GenerateFutureTicker(ticker, new DateTime(year, month, day), doubleDigitsYear);
+
+            Assert.AreEqual(expectedValue, result);
+        }
     }
 }

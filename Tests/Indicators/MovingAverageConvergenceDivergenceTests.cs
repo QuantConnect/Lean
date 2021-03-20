@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -29,6 +30,14 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_with_macd.txt";
 
         protected override string TestColumnName => "MACD";
+
+        [Test]
+        public void FastPeriodLessThanSlowPeriod()
+        {
+            var a = new MovingAverageConvergenceDivergence(fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
+            Assert.Throws<ArgumentException>(() => new MovingAverageConvergenceDivergence(fastPeriod: 3, slowPeriod: 3, signalPeriod: 2));
+            Assert.Throws<ArgumentException>(() => new MovingAverageConvergenceDivergence(fastPeriod: 4, slowPeriod: 3, signalPeriod: 2));
+        }
 
         [Test]
         public void ComparesWithExternalDataMacdHistogram()
@@ -60,6 +69,62 @@ namespace QuantConnect.Tests.Indicators
                     delta: 1e-4
                 )
             );
+        }
+
+        [Test]
+        public void ComparesWithExternalDataMacdValue()
+        {
+            var macd = CreateIndicator();
+            TestHelper.TestIndicator(
+                macd,
+                TestFileName,
+                "MACD",
+                (ind, expected) => Assert.AreEqual(
+                    expected,
+                    (double)((MovingAverageConvergenceDivergence)ind).Current.Value,
+                    delta: 1e-4
+                )
+            );
+        }
+
+        [Test]
+        public override void WarmsUpProperly()
+        {
+            int fastPeriod = 3,
+                slowPeriod = 4,
+                signalPeriod = 2;
+            var macd = new MovingAverageConvergenceDivergence(fastPeriod: fastPeriod, slowPeriod: slowPeriod, signalPeriod: signalPeriod);
+
+            Assert.IsFalse(macd.Signal.IsReady);
+            Assert.IsFalse(macd.Histogram.IsReady);
+            Assert.IsFalse(macd.IsReady);
+
+            for (var i = 0; i < fastPeriod; i++)
+            {
+                Assert.IsFalse(macd.Fast.IsReady);
+                macd.Update(new IndicatorDataPoint(DateTime.Today.AddSeconds(i), i));
+            }
+            Assert.IsTrue(macd.Fast.IsReady);
+
+
+            for (var i = fastPeriod; i < slowPeriod; i++)
+            {
+                Assert.IsFalse(macd.Slow.IsReady);
+                macd.Update(new IndicatorDataPoint(DateTime.Today.AddSeconds(i), i));
+            }
+            Assert.IsTrue(macd.Slow.IsReady);
+
+
+            for (var i = slowPeriod; i < macd.WarmUpPeriod; i++)
+            {
+                Assert.IsFalse(macd.Signal.IsReady);
+                Assert.IsFalse(macd.Histogram.IsReady);
+                Assert.IsFalse(macd.IsReady);
+                macd.Update(new IndicatorDataPoint(DateTime.Today.AddSeconds(i), i));
+            }
+            Assert.IsTrue(macd.Signal.IsReady);
+            Assert.IsTrue(macd.Histogram.IsReady);
+            Assert.IsTrue(macd.IsReady);
         }
     }
 }

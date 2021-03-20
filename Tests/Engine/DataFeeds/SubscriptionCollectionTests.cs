@@ -25,6 +25,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Future;
@@ -61,7 +62,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var addTask = Task.Factory.StartNew(() =>
             {
-                Console.WriteLine("Add task started");
+                Log.Trace("Add task started");
 
                 while (DateTime.UtcNow < end)
                 {
@@ -73,12 +74,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Thread.Sleep(1);
                 }
 
-                Console.WriteLine("Add task ended");
+                Log.Trace("Add task ended");
             }, cts.Token);
 
             var removeTask = Task.Factory.StartNew(() =>
             {
-                Console.WriteLine("Remove task started");
+                Log.Trace("Remove task started");
 
                 while (DateTime.UtcNow < end)
                 {
@@ -88,12 +89,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Thread.Sleep(1);
                 }
 
-                Console.WriteLine("Remove task ended");
+                Log.Trace("Remove task ended");
             }, cts.Token);
 
             var readTask = Task.Factory.StartNew(() =>
             {
-                Console.WriteLine("Read task started");
+                Log.Trace("Read task started");
 
                 while (DateTime.UtcNow < end)
                 {
@@ -102,7 +103,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Thread.Sleep(1);
                 }
 
-                Console.WriteLine("Read task ended");
+                Log.Trace("Read task ended");
             }, cts.Token);
 
             Task.WaitAll(addTask, removeTask, readTask);
@@ -369,9 +370,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else if (type == SecurityType.Option)
             {
-                _symbol = new Symbol(SecurityIdentifier.GenerateOption(DateTime.Now,
-                    SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA),
-                    Market.USA, 0.0m, OptionRight.Call, OptionStyle.American), symbol);
+                _symbol = Symbol.CreateOption(
+                    new Symbol(SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA), symbol),
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    0m,
+                    DateTime.Now
+                );
                 security = new Option(
                     _symbol,
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),

@@ -101,21 +101,21 @@ while not sys.gettrace():
 count = 1
 while count <= 10:
     try:
-        pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
+        pydevd_pycharm.settrace('localhost', port=6000, stdoutToServer=True, stderrToServer=True, suspend=False)
         print('SUCCESS: Connected to local program')
         break
     except ConnectionRefusedError:
         pass
 
     try:    
-        pydevd_pycharm.settrace('host.docker.internal', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
+        pydevd_pycharm.settrace('host.docker.internal', port=6000, stdoutToServer=True, stderrToServer=True, suspend=False)
         print('SUCCESS: Connected to docker container')
         break
     except ConnectionRefusedError:
         pass
 
     print('\n')
-    print('Failed: Ensure your PyCharm Debugger is actively waiting for a connection at port 5678!')
+    print('Failed: Ensure your PyCharm Debugger is actively waiting for a connection at port 6000!')
     print('Try ' + count.__str__() + ' out of 10')
     print('\n')
     count += 1

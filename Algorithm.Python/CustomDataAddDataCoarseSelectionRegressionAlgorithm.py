@@ -21,6 +21,7 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Data import *
+from QuantConnect.Data.Custom import *
 from QuantConnect.Data.Custom.SEC import *
 from QuantConnect.Data.UniverseSelection import *
 

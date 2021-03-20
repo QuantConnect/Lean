@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("GBP", 0, 0),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m),
+                new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
@@ -178,7 +178,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                         SecurityExchangeHours.AlwaysOpen(tz),
                         new Cash("EUR", 0, 0),
                         new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE30EUR, Resolution.Minute, tz, tz, true, false, false),
-                        new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m),
+                        new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m, string.Empty),
                         ErrorCurrencyConverter.Instance,
                         RegisteredSecurityDataTypesProvider.Null
                     );

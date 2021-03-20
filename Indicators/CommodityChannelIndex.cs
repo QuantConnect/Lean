@@ -34,7 +34,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// This constant is used to ensure that CCI values fall between +100 and -100, 70% to 80% of the time
         /// </summary>
-        private const decimal _k = 0.015m;
+        private const decimal K = 0.015m;
 
         /// <summary>
         /// Gets the type of moving average
@@ -100,13 +100,13 @@ namespace QuantConnect.Indicators
 
             // compare this to zero, since if the mean deviation is very small we can get
             // precision errors due to non-floating point math
-            var weightedMeanDeviation = _k * TypicalPriceMeanDeviation.Current;
+            var weightedMeanDeviation = K * TypicalPriceMeanDeviation.Current.Value;
             if (weightedMeanDeviation == 0.0m)
             {
                 return 0.0m;
             }
 
-            return (typicalPrice - TypicalPriceAverage) / weightedMeanDeviation;
+            return (typicalPrice - TypicalPriceAverage.Current.Value) / weightedMeanDeviation;
         }
 
         /// <summary>

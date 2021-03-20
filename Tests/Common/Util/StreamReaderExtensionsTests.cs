@@ -21,6 +21,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
@@ -379,8 +380,8 @@ namespace QuantConnect.Tests.Common.Util
                 getLineReaderMilliSeconds = stopWatch.ElapsedMilliseconds;
                 zipCache.DisposeSafely();
             }
-            Console.WriteLine($"StreamReader: {streamReaderMilliSeconds}ms. Count {streamReaderCount}");
-            Console.WriteLine($"GetLine Reader: {getLineReaderMilliSeconds}ms. Count {getLineReaderCount}");
+            Log.Trace($"StreamReader: {streamReaderMilliSeconds}ms. Count {streamReaderCount}");
+            Log.Trace($"GetLine Reader: {getLineReaderMilliSeconds}ms. Count {getLineReaderCount}");
 
             // its 50% faster but lets leave some room to avoid noise
             Assert.IsTrue((streamReaderMilliSeconds * 1.5d) < getLineReaderMilliSeconds);

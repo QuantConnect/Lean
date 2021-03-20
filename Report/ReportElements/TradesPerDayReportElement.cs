@@ -51,7 +51,7 @@ namespace QuantConnect.Report.ReportElements
                 liveOrders = new List<Order>();
             }
 
-            var orders = _backtest?.Orders?.Values.Union(liveOrders);
+            var orders = _backtest?.Orders?.Values.Concat(liveOrders).OrderBy(x => x.Time);
             if (orders == null)
             {
                 return "-";
@@ -72,6 +72,7 @@ namespace QuantConnect.Report.ReportElements
             }
 
             var tradesPerDay = orders.Count() / days;
+            Result = tradesPerDay;
 
             if (tradesPerDay > 9)
             {

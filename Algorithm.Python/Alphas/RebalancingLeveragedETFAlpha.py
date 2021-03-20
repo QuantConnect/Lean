@@ -21,7 +21,6 @@ from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import QCAlgorithm
 from datetime import timedelta, datetime
-from decimal import Decimal
 
 ### <summary>
 ### Alpha Benchmark Strategy capitalizing on ETF rebalancing causing momentum during trending markets.
@@ -94,7 +93,7 @@ class RebalancingLeveragedETFAlphaModel(AlphaModel):
             # Save yesterday's price and reset the signal
             for group in self.ETFgroups:
                 history = algorithm.History([group.underlying], 1, Resolution.Daily)
-                group.yesterdayClose = None if history.empty else Decimal(history.loc[str(group.underlying)]['close'][0])
+                group.yesterdayClose = None if history.empty else history.loc[str(group.underlying)]['close'][0]
 
         # Check if the returns are > 1% at 14.15
         if algorithm.Time.hour == 14 and algorithm.Time.minute == 15:

@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             }
 
             stopwatch.Stop();
-            Console.WriteLine("Total rows: {0}, elapsed time: {1}", rows.Count, stopwatch.Elapsed);
+            Log.Trace("Total rows: {0}, elapsed time: {1}", rows.Count, stopwatch.Elapsed);
 
             Assert.AreEqual(parameters.RowCount, rows.Count);
 

@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var left = new Delay(1);
             var right = new Delay(2);
-            var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l + r);
+            var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l.Current.Value + r.Current.Value);
 
             left.Update(DateTime.Today.AddSeconds(0), 1m);
             right.Update(DateTime.Today.AddSeconds(0), 1m);
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 Assert.AreEqual(left, l);
                 Assert.AreEqual(right, r);
-                return l + r;
+                return l.Current.Value + r.Current.Value;
             });
 
             left.Update(DateTime.Today, 1m);
@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Indicators
         public void ResetsProperly() {
             var left = new Maximum("left", 2);
             var right = new Minimum("right", 2);
-            var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l + r);
+            var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l.Current.Value + r.Current.Value);
 
             left.Update(DateTime.Today, 1m);
             right.Update(DateTime.Today,-1m);

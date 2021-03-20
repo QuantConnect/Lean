@@ -88,7 +88,7 @@ namespace QuantConnect.Indicators
             var minSizeSamples = (int)Math.Min(index, window.Samples);
             for (var i = 0; i < minSizeSamples; i++)
             {
-                numerator += (index-- * window[i]);
+                numerator += (index-- * window[i].Value);
             }
             return numerator / denominator;
         }

@@ -52,15 +52,15 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         /// <summary>
-        /// The default market for FOREX should be FXCM
+        /// The default market for FOREX should be Oanda
         /// </summary>
         [Test]
-        public void DefaultBrokerageModel_IsFXCM_ForForex()
+        public void DefaultBrokerageModel_IsOanda_ForForex()
         {
             var forex = _algo.AddForex(ForexSym);
 
 
-            Assert.IsTrue(forex.Symbol.ID.Market == Market.FXCM);
+            Assert.IsTrue(forex.Symbol.ID.Market == Market.Oanda);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
         }
 
@@ -147,14 +147,14 @@ class Test(AlphaStreamsBrokerageModel):
         [Test]
         public void BrokerageModel_CanBeSpecifiedWith_AddForex()
         {
-            var forex = _algo.AddForex(ForexSym, Resolution.Minute, Market.Oanda);
+            var forex = _algo.AddForex(ForexSym, Resolution.Minute, Market.FXCM);
 
             string brokerage = GetDefaultBrokerageForSecurityType(SecurityType.Forex);
 
 
-            Assert.IsTrue(forex.Symbol.ID.Market == Market.Oanda);
+            Assert.IsTrue(forex.Symbol.ID.Market == Market.FXCM);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
-            Assert.IsTrue(brokerage == Market.FXCM);  // Doesn't change brokerage defined in BrokerageModel.DefaultMarkets
+            Assert.IsTrue(brokerage == Market.Oanda);  // Doesn't change brokerage defined in BrokerageModel.DefaultMarkets
         }
 
         /// <summary>

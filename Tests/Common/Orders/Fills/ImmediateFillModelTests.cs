@@ -349,7 +349,146 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(Math.Min(security.Price, order.StopPrice), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
+        
+        [Test]
+        public void PerformsLimitIfTouchedFillBuy()
+        {
+            var model = new ImmediateFillModel();
+            var order = new LimitIfTouchedOrder(Symbols.SPY, 100, 101.5m, 100m, Noon);
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
+            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
+            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                configTradeBar,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+                        // Sets price at time zero
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 102m, 102m, 102m, 100));
+            configProvider.SubscriptionDataConfigs.Add(configTradeBar); 
 
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                configProvider,
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            // Time jump => trigger touched but not limit
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 101m, 100.5m, 101m, 100));
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, 
+                new Bar(101m, 101m, 100.5m, 101m), 100, // Bid bar
+                new Bar(101m, 101m, 100.5m, 101m), 100) // Ask bar
+            );
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                configProvider,
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            // Time jump => limit reached, holdings sold
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 100m, 100m, 99m, 99m, 100));
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, 
+                    new Bar(100m, 100m, 99m, 99m), 100, // Bid bar
+                    new Bar(100m, 100m, 99m, 99m), 100) // Ask bar
+            );
+
+
+            fill = model.LimitIfTouchedFill(security, order);
+
+            // this fills worst case scenario
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+        }
+
+        [Test]
+        public void PerformsLimitIfTouchedFillSell()
+        {
+            var model = new ImmediateFillModel();
+            var order = new LimitIfTouchedOrder(Symbols.SPY, -100, 101.5m, 105m, Noon);
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
+            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
+            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                configTradeBar,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            
+            // Sets price at time zero
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 100m, 100m, 90m, 90m, 100));
+            configProvider.SubscriptionDataConfigs.Add(configTradeBar); 
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                configProvider,
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            // Time jump => trigger touched but not limit
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 102m, 102m, 100));
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, 
+                new Bar(101m, 102m, 100m, 100m), 100, // Bid bar
+                new Bar(103m, 104m, 102m, 102m), 100) // Ask bar
+            );
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                configProvider,
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            // Time jump => limit reached, holdings sold
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 103m, 108m, 103m, 105m, 100));
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, 
+                    new Bar(103m, 106m, 103m, 105m), 100, // Bid bar
+                    new Bar(103m, 108m, 103m, 105m), 100) // Ask bar
+            );
+
+
+            fill = model.LimitIfTouchedFill(security, order);
+
+            // this fills worst case scenario
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+        }
+        
         [Test]
         public void PerformsMarketOnOpenUsingOpenPrice()
         {

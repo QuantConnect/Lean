@@ -48,6 +48,8 @@ namespace QuantConnect.Securities
         // using concurrent bag to avoid list enumeration threading issues
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
 
+        protected IShortableProvider ShortableProvider { get; private set; }
+
         /// <summary>
         /// A null security leverage value
         /// </summary>
@@ -128,7 +130,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets or sets whether or not this security should be considered tradable
         /// </summary>
-        public bool IsTradable
+        public virtual bool IsTradable
         {
             get; set;
         }
@@ -628,9 +630,10 @@ namespace QuantConnect.Securities
         /// <param name="leverage">Leverage for this asset</param>
         public void SetLeverage(decimal leverage)
         {
-            if (Symbol.ID.SecurityType == SecurityType.Future ||
-                Symbol.ID.SecurityType == SecurityType.Option)
+            if (Symbol.ID.SecurityType == SecurityType.Future || Symbol.ID.SecurityType.IsOption())
+            {
                 return;
+            }
 
             BuyingPowerModel.SetLeverage(this, leverage);
         }
@@ -770,6 +773,11 @@ namespace QuantConnect.Securities
             SetMarginModel(new BuyingPowerModelPythonWrapper(pyObject));
         }
 
+        public void SetShortableProvider(IShortableProvider shortableProvider)
+        {
+            ShortableProvider = shortableProvider;
+        }
+
         /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
@@ -809,7 +817,7 @@ namespace QuantConnect.Securities
             UpdateSubscriptionProperties();
         }
 
-        private void UpdateConsumersMarketPrice(BaseData data)
+        protected virtual void UpdateConsumersMarketPrice(BaseData data)
         {
             if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);

@@ -117,17 +117,19 @@ namespace QuantConnect.Securities
             var configurations = SubscriptionDataConfigProvider
                 .GetSubscriptionDataConfigs(security.Symbol)
                 .ToList();
+            var configuration = configurations.First();
 
             var barCount = _window.Size + 1;
-            var extendedMarketHours = configurations.IsExtendedMarketHours();
+            // hour resolution does no have extended market hours data
+            var extendedMarketHours = _periodSpan != Time.OneHour && configurations.IsExtendedMarketHours();
             var localStartTime = Time.GetStartTimeForTradeBars(
                 security.Exchange.Hours,
                 utcTime.ConvertFromUtc(security.Exchange.TimeZone),
                 _periodSpan,
                 barCount,
-                extendedMarketHours);
+                extendedMarketHours,
+                configuration.DataTimeZone);
             var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
-            var configuration = configurations.First();
 
             return new[]
             {

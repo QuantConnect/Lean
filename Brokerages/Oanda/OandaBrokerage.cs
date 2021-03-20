@@ -20,7 +20,6 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -61,11 +60,7 @@ namespace QuantConnect.Brokerages.Oanda
             if (environment != Environment.Trade && environment != Environment.Practice)
                 throw new NotSupportedException("Oanda Environment not supported: " + environment);
 
-            // Use v20 REST API only if you have a v20 account
-            // Use v1 REST API if your account id contains only digits(ie. 2534253) as it is a legacy account
-            _api = IsLegacyAccount(accountId) ? (OandaRestApiBase)
-                new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent) :
-                new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
+            _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
 
             // forward events received from API
             _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
@@ -82,6 +77,11 @@ namespace QuantConnect.Brokerages.Oanda
         {
             get { return _api.IsConnected; }
         }
+
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => _api.AccountBaseCurrency;
 
         /// <summary>
         /// Connects the client to the broker's remote servers
@@ -321,12 +321,6 @@ namespace QuantConnect.Brokerages.Oanda
         public IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
             return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
-        }
-
-        private static bool IsLegacyAccount(string accountId)
-        {
-            long value;
-            return long.TryParse(accountId, out value);
         }
     }
 }

@@ -155,6 +155,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.188"},
             {"Treynor Ratio", "-3.318"},
             {"Total Fees", "$3.70"},
+            {"Estimated Strategy Capacity", "$52000000.00"},
             {"Fitness Score", "0.009"},
             {"Kelly Criterion Estimate", "-112.972"},
             {"Kelly Criterion Probability Value", "0.671"},
@@ -174,7 +175,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-1624258832"}
+            {"OrderListHash", "18ffd3a774c68da83d867e3b09e3e05d"}
         };
     }
 }

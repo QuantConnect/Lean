@@ -22,7 +22,6 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Securities import *
-from QuantConnect.Data.Market import *
 from QuantConnect.Data.Consolidators import *
 from CustomDataRegressionAlgorithm import Bitcoin
 from datetime import timedelta

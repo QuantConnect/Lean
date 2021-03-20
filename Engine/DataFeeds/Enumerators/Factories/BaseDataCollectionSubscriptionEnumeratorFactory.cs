@@ -52,7 +52,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     request.StartTimeLocal,
                     Time.OneDay,
                     1,
-                    false);
+                    false,
+                    configuration.DataTimeZone);
                 var tradableDays = new[] { previousTradableDay }.Concat(request.TradableDays);
 
                 // Behaves in the same way as in live trading

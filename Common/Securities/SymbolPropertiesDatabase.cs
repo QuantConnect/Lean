@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -29,10 +30,10 @@ namespace QuantConnect.Securities
         private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase;
         private static readonly object DataFolderSymbolPropertiesDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<SecurityDatabaseKey, SymbolProperties> _entries;
+        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
         private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
 
-        private SymbolPropertiesDatabase(string file)
+        protected SymbolPropertiesDatabase(string file)
         {
             var allEntries = new Dictionary<SecurityDatabaseKey, SymbolProperties>();
             var entriesBySecurityType = new Dictionary<SecurityDatabaseKey, SecurityDatabaseKey>();
@@ -108,17 +109,32 @@ namespace QuantConnect.Securities
         /// Gets the symbol properties for the specified market/symbol/security-type
         /// </summary>
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
-        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <param name="defaultQuoteCurrency">Specifies the quote currency to be used when returning a default instance of an entry is not found in the database</param>
         /// <returns>The symbol properties matching the specified market/symbol/security-type or null if not found</returns>
-        public SymbolProperties GetSymbolProperties(string market, string symbol, SecurityType securityType, string defaultQuoteCurrency)
+        /// <remarks>For any derivative options asset that is not for equities, we default to the underlying symbol's properties if no entry is found in the database</remarks>
+        public SymbolProperties GetSymbolProperties(string market, Symbol symbol, SecurityType securityType, string defaultQuoteCurrency)
         {
             SymbolProperties symbolProperties;
-            var key = new SecurityDatabaseKey(market, symbol, securityType);
+            var lookupTicker = MarketHoursDatabase.GetDatabaseSymbolKey(symbol);
+            var key = new SecurityDatabaseKey(market, lookupTicker, securityType);
 
             if (!_entries.TryGetValue(key, out symbolProperties))
             {
+                if (symbol != null && symbol.SecurityType == SecurityType.FutureOption)
+                {
+                    // Default to looking up the underlying symbol's properties and using those instead if there's
+                    // no existing entry for the future option.
+                    lookupTicker = MarketHoursDatabase.GetDatabaseSymbolKey(symbol.Underlying);
+                    key = new SecurityDatabaseKey(market, lookupTicker, symbol.Underlying.SecurityType);
+
+                    if (_entries.TryGetValue(key, out symbolProperties))
+                    {
+                        return symbolProperties;
+                    }
+                }
+
                 // now check with null symbol key
                 if (!_entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out symbolProperties))
                 {
@@ -131,20 +147,57 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the symbol properties for the specified market/symbol/security-type
+        /// Gets a list of symbol properties for the specified market/security-type
         /// </summary>
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
-        /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
         /// <param name="securityType">The security type of the symbol</param>
-        /// <param name="defaultQuoteCurrency">Specifies the quote currency to be used when returning a default instance of an entry is not found in the database</param>
-        /// <returns>The symbol properties matching the specified market/symbol/security-type or null if not found</returns>
-        public SymbolProperties GetSymbolProperties(string market, Symbol symbol, SecurityType securityType, string defaultQuoteCurrency)
+        /// <returns>An IEnumerable of symbol properties matching the specified market/security-type</returns>
+        public IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetSymbolPropertiesList(string market, SecurityType securityType)
         {
-            return GetSymbolProperties(
-                market,
-                MarketHoursDatabase.GetDatabaseSymbolKey(symbol),
-                securityType,
-                defaultQuoteCurrency);
+            foreach (var entry in _entries)
+            {
+                var key = entry.Key;
+                var symbolProperties = entry.Value;
+
+                if (key.Market == market && key.SecurityType == securityType)
+                {
+                    yield return new KeyValuePair<SecurityDatabaseKey, SymbolProperties>(key, symbolProperties);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets a list of symbol properties for the specified market
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <returns>An IEnumerable of symbol properties matching the specified market</returns>
+        public IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetSymbolPropertiesList(string market)
+        {
+            foreach (var entry in _entries)
+            {
+                var key = entry.Key;
+                var symbolProperties = entry.Value;
+
+                if (key.Market == market)
+                {
+                    yield return new KeyValuePair<SecurityDatabaseKey, SymbolProperties>(key, symbolProperties);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set SymbolProperties entry for a particular market, symbol and security type.
+        /// </summary>
+        /// <param name="market">Market of the entry</param>
+        /// <param name="symbol">Symbol of the entry</param>
+        /// <param name="securityType">Type of security for the entry</param>
+        /// <param name="properties">The new symbol properties to store</param>
+        /// <returns>True if successful</returns>
+        public bool SetEntry(string market, string symbol, SecurityType securityType, SymbolProperties properties)
+        {
+            var key = new SecurityDatabaseKey(market, symbol, securityType);
+            _entries[key] = properties;
+            return true;
         }
 
         /// <summary>
@@ -182,6 +235,10 @@ namespace QuantConnect.Securities
             {
                 SecurityDatabaseKey key;
                 var entry = FromCsvLine(line, out key);
+                if (key == null || entry == null)
+                {
+                    continue;
+                }
 
                 yield return new KeyValuePair<SecurityDatabaseKey, SymbolProperties>(key, entry);
             }
@@ -193,23 +250,29 @@ namespace QuantConnect.Securities
         /// <param name="line">The csv line to be parsed</param>
         /// <param name="key">The key used to uniquely identify this security</param>
         /// <returns>A new <see cref="SymbolProperties"/> for the specified csv line</returns>
-        private static SymbolProperties FromCsvLine(string line, out SecurityDatabaseKey key)
+        protected static SymbolProperties FromCsvLine(string line, out SecurityDatabaseKey key)
         {
             var csv = line.Split(',');
+
+            SecurityType securityType;
+            if (!csv[2].TryParseSecurityType(out securityType))
+            {
+                key = null;
+                return null;
+            }
 
             key = new SecurityDatabaseKey(
                 market: csv[0],
                 symbol: csv[1],
-                securityType: (SecurityType)Enum.Parse(typeof(SecurityType), csv[2], true));
+                securityType: securityType);
 
             return new SymbolProperties(
                 description: csv[3],
                 quoteCurrency: csv[4],
                 contractMultiplier: csv[5].ToDecimal(),
                 minimumPriceVariation: csv[6].ToDecimalAllowExponent(),
-                lotSize: csv[7].ToDecimal());
+                lotSize: csv[7].ToDecimal(),
+                marketTicker: csv.Length > 8 ? csv[8] : string.Empty);
         }
-
-
     }
 }

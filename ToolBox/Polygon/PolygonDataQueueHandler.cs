@@ -49,10 +49,10 @@ namespace QuantConnect.ToolBox.Polygon
 
         private readonly string _apiKey = Config.Get("polygon-api-key");
 
-        private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
-
         private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+
+        private readonly DataQueueHandlerSubscriptionManager _subscriptionManager;
 
         private readonly Dictionary<SecurityType, PolygonWebSocketClientWrapper> _webSocketClientWrappers = new Dictionary<SecurityType, PolygonWebSocketClientWrapper>();
         private readonly PolygonSymbolMapper _symbolMapper = new PolygonSymbolMapper();
@@ -101,6 +101,12 @@ namespace QuantConnect.ToolBox.Polygon
                     _webSocketClientWrappers.Add(securityType, client);
                 }
             }
+
+            var subscriber = new EventBasedDataQueueHandlerSubscriptionManager(t => t.ToString());
+            subscriber.SubscribeImpl += Subscribe;
+            subscriber.UnsubscribeImpl += Unsubscribe;
+
+            _subscriptionManager = subscriber;
         }
 
         #region IDataQueueHandler implementation
@@ -126,9 +132,13 @@ namespace QuantConnect.ToolBox.Polygon
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            var enumerator = _dataAggregator.Add(dataConfig, newDataAvailableHandler);
+            if (!CanSubscribe(dataConfig.Symbol))
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
 
-            Subscribe(new[] { dataConfig.Symbol });
+            var enumerator = _dataAggregator.Add(dataConfig, newDataAvailableHandler);
+            _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -139,8 +149,7 @@ namespace QuantConnect.ToolBox.Polygon
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new [] { dataConfig.Symbol });
-
+            _subscriptionManager.Unsubscribe(dataConfig);
             _dataAggregator.Remove(dataConfig);
         }
 
@@ -148,36 +157,32 @@ namespace QuantConnect.ToolBox.Polygon
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added</param>
-        private void Subscribe(IEnumerable<Symbol> symbols)
+        /// <param name="tickType">Type of tick data</param>
+        private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
             foreach (var symbol in symbols)
             {
-                if (CanSubscribe(symbol) && !_subscribedSymbols.Contains(symbol))
-                {
-                    var webSocket = GetWebSocket(symbol.SecurityType);
-                    webSocket.Subscribe(symbol);
-
-                    _subscribedSymbols.Add(symbol);
-                }
+                var webSocket = GetWebSocket(symbol.SecurityType);
+                webSocket.Subscribe(symbol, tickType);
             }
+
+            return true;
         }
 
         /// <summary>
         /// Removes the specified symbols from the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed</param>
-        private void Unsubscribe(IEnumerable<Symbol> symbols)
+        /// <param name="tickType">Type of tick data</param> 
+        private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
             foreach (var symbol in symbols)
             {
-                if (CanSubscribe(symbol) && _subscribedSymbols.Contains(symbol))
-                {
-                    var webSocket = GetWebSocket(symbol.SecurityType);
-                    webSocket.Unsubscribe(symbol);
-
-                    _subscribedSymbols.Remove(symbol);
-                }
+                var webSocket = GetWebSocket(symbol.SecurityType);
+                webSocket.Unsubscribe(symbol, tickType);
             }
+
+            return true;
         }
 
         /// <summary>
@@ -737,7 +742,7 @@ namespace QuantConnect.ToolBox.Polygon
             return client;
         }
 
-        private bool CanSubscribe(Symbol symbol)
+        private static bool CanSubscribe(Symbol symbol)
         {
             var securityType = symbol.ID.SecurityType;
 

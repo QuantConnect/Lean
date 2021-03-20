@@ -14,7 +14,6 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from QuantConnect import *
@@ -24,7 +23,6 @@ from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Brokerages import *
-from QuantConnect.Data import *
 from QuantConnect.Interfaces import *
 from QuantConnect.Orders import *
 from System import *

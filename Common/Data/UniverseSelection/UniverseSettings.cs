@@ -74,5 +74,18 @@ namespace QuantConnect.Data.UniverseSelection
             MinimumTimeInUniverse = minimumTimeInUniverse;
             DataNormalizationMode = dataNormalizationMode;
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UniverseSettings"/> class
+        /// </summary>
+        public UniverseSettings(UniverseSettings universeSettings)
+        {
+            Resolution = universeSettings.Resolution;
+            Leverage = universeSettings.Leverage;
+            FillForward = universeSettings.FillForward;
+            ExtendedMarketHours = universeSettings.ExtendedMarketHours;
+            MinimumTimeInUniverse = universeSettings.MinimumTimeInUniverse;
+            DataNormalizationMode = universeSettings.DataNormalizationMode;
+        }
     }
 }

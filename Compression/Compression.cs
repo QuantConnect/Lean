@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -872,6 +873,38 @@ namespace QuantConnect
                 {
                     yield return entry.FileName;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Extracts a 7-zip archive to disk, using the 7-zip CLI utility
+        /// </summary>
+        /// <param name="inputFile">Path to the 7z file</param>
+        /// <param name="outputDirectory">Directory to output contents of 7z</param>
+        /// <param name="execTimeout">Timeout in seconds for how long we should wait for the extraction to complete</param>
+        /// <exception cref="Exception">The extraction failed because of a timeout or the exit code was not 0</exception>
+        public static void Extract7ZipArchive(string inputFile, string outputDirectory, int execTimeout = 60)
+        {
+            var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
+            var psi = new ProcessStartInfo(zipper, " e " + inputFile + " -o" + outputDirectory)
+            {
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                RedirectStandardOutput = false
+            };
+
+            var process = new Process();
+            process.StartInfo = psi;
+            process.Start();
+
+            if (!process.WaitForExit(execTimeout * 1000))
+            {
+                throw new TimeoutException($"Timed out extracting 7Zip archive: {inputFile} ({execTimeout} seconds)");
+            }
+            if (process.ExitCode > 0)
+            {
+                throw new Exception($"Compression.Extract7ZipArchive(): 7Zip exited unsuccessfully (code {process.ExitCode})");
             }
         }
     }

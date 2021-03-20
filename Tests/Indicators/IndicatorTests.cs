@@ -300,7 +300,7 @@ namespace QuantConnect.Tests.Indicators
             /// <returns>A new value for this indicator</returns>
             protected override decimal ComputeNextValue(IndicatorDataPoint input)
             {
-                return input;
+                return input.Value;
             }
         }
     }

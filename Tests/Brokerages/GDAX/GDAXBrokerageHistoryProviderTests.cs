@@ -26,12 +26,11 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
-    [TestFixture, Ignore("This test requires a configured and testable GDAX account")]
+    [TestFixture, Explicit("This test requires a configured and testable GDAX account")]
     public class GDAXBrokerageHistoryProviderTests
     {
         [Test, TestCaseSource(nameof(TestParameters))]
@@ -47,7 +46,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             var historyProvider = new BrokerageHistoryProvider();
             historyProvider.SetBrokerage(brokerage);
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
+            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, new DataPermissionManager()));
 
             var now = DateTime.UtcNow;
 

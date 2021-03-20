@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Algorithm
             switch (resolution)
             {
                 case Resolution.Tick:
-                    estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 4) * 60 * 60;
+                    estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 4) * 60;
                     break;
                 case Resolution.Second:
                     estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 6) * 60 * 60;
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.GreaterOrEqual(_algorithm.WarmUpDataCount, estimateExpectedDataCount);
         }
 
-        internal class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             public static TestWarmupAlgorithm TestAlgorithm { get; set; }
 
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        internal class TestWarmupAlgorithm : QCAlgorithm
+        public class TestWarmupAlgorithm : QCAlgorithm
         {
             private readonly Resolution _resolution;
             private Symbol _symbol;

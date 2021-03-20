@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
@@ -69,7 +70,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
             var sw = Stopwatch.StartNew();
             var mapFileresolver = mapFileProvider.Get(Market.USA);
             sw.Stop();
-            Console.WriteLine($"elapsed: {sw.Elapsed.TotalSeconds} seconds");
+            Log.Trace($"elapsed: {sw.Elapsed.TotalSeconds} seconds");
         }
 
         [Test]

@@ -104,9 +104,9 @@ namespace QuantConnect.Data
         {
             get
             {
-                return Symbol.ID.SecurityType == SecurityType.Option ?
-                    (Symbol.HasUnderlying ? Symbol.Underlying.Value : Symbol.Value) :
-                    Symbol.Value;
+                return Symbol.ID.SecurityType.IsOption() && Symbol.HasUnderlying
+                    ? Symbol.Underlying.Value
+                    : Symbol.Value;
             }
             set
             {
@@ -266,30 +266,6 @@ namespace QuantConnect.Data
             PriceScaleFactor = config.PriceScaleFactor;
             SumOfDividends = config.SumOfDividends;
             Consolidators = config.Consolidators;
-        }
-
-        /// <summary>
-        /// Normalizes the specified price based on the DataNormalizationMode
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public decimal GetNormalizedPrice(decimal price)
-        {
-            switch (DataNormalizationMode)
-            {
-                case DataNormalizationMode.Raw:
-                    return price;
-
-                // the price scale factor will be set accordingly based on the mode in update scale factors
-                case DataNormalizationMode.Adjusted:
-                case DataNormalizationMode.SplitAdjusted:
-                    return price*PriceScaleFactor;
-
-                case DataNormalizationMode.TotalReturn:
-                    return (price*PriceScaleFactor) + SumOfDividends;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
 
         /// <summary>

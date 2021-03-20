@@ -43,6 +43,7 @@ namespace QuantConnect.Report.ReportElements
         public override string Render()
         {
             var turnover = _backtest?.AlphaRuntimeStatistics?.PortfolioTurnover;
+            Result = turnover;
             if (turnover == null)
             {
                 return "-";

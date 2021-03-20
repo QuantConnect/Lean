@@ -341,6 +341,7 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase(SecurityType.Forex, "Forex")]
         [TestCase(SecurityType.Future, "Future")]
         [TestCase(SecurityType.Option, "Option")]
+        [TestCase(SecurityType.FutureOption, "FutureOption")]
         public void ParsesDataSecurityType(SecurityType type, string path)
         {
             Assert.AreEqual(type, LeanData.ParseDataSecurityType(path));
@@ -357,6 +358,73 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("crypto"));
             Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("future"));
             Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("forex"));
+        }
+
+        [Test]
+        public void OptionZipFilePathWithUnderlyingEquity()
+        {
+            var underlying = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                new DateTime(2020, 12, 31));
+
+            var optionZipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote)
+                .Replace(Path.DirectorySeparatorChar, '/');
+            var optionEntryFilePath = LeanData.GenerateZipEntryName(optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote);
+
+            Assert.AreEqual("../../../Data/option/usa/minute/spy/20200922_quote_american.zip", optionZipFilePath);
+            Assert.AreEqual("20200922_spy_minute_quote_american_put_42000000_20201231.csv", optionEntryFilePath);
+        }
+
+        [TestCase("ES", "ES")]
+        [TestCase("DC", "DC")]
+        [TestCase("GC", "OG")]
+        [TestCase("ZT", "OZT")]
+        public void OptionZipFilePathWithUnderlyingFuture(string futureOptionTicker, string expectedFutureOptionTicker)
+        {
+            var underlying = Symbol.CreateFuture(futureOptionTicker, Market.CME, new DateTime(2021, 3, 19));
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                Market.CME,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                new DateTime(2021, 3, 18));
+
+            var optionZipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote)
+                .Replace(Path.DirectorySeparatorChar, '/');
+            var optionEntryFilePath = LeanData.GenerateZipEntryName(optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote);
+
+            Assert.AreEqual($"../../../Data/futureoption/cme/minute/{expectedFutureOptionTicker.ToLowerInvariant()}/{underlying.ID.Date:yyyyMMdd}/20200922_quote_american.zip", optionZipFilePath);
+            Assert.AreEqual($"20200922_{expectedFutureOptionTicker.ToLowerInvariant()}_minute_quote_american_put_42000000_{optionSymbol.ID.Date:yyyyMMdd}.csv", optionEntryFilePath);
+        }
+
+        [TestCase(OptionRight.Call, 1650, 2020, 3, 26)]
+        [TestCase(OptionRight.Call, 1540, 2020, 3, 26)]
+        [TestCase(OptionRight.Call, 1600, 2020, 2, 25)]
+        [TestCase(OptionRight.Call, 1545, 2020, 2, 25)]
+        public void FutureOptionSingleZipFileContainingMultipleFuturesOptionsContracts(OptionRight right, int strike, int year, int month, int day)
+        {
+            var underlying = Symbol.CreateFuture("GC", Market.COMEX, new DateTime(2020, 4, 28));
+            var expiry = new DateTime(year, month, day);
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                Market.COMEX,
+                OptionStyle.American,
+                right,
+                (decimal)strike,
+                expiry);
+
+            var optionZipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, optionSymbol, new DateTime(2020, 1, 5), Resolution.Minute, TickType.Quote)
+                .Replace(Path.DirectorySeparatorChar, '/');
+            var optionEntryFilePath = LeanData.GenerateZipEntryName(optionSymbol, new DateTime(2020, 1, 5), Resolution.Minute, TickType.Quote);
+
+            Assert.AreEqual("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", optionZipFilePath);
+            Assert.AreEqual($"20200105_og_minute_quote_american_{right.ToLower()}_{strike}0000_{expiry:yyyyMMdd}.csv", optionEntryFilePath);
         }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
@@ -402,11 +470,11 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Quote, "spy_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/daily"),
 
                 // forex
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_tick_quote.csv", "forex/fxcm/tick/eurusd"),
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_second_quote.csv", "forex/fxcm/second/eurusd"),
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_minute_quote.csv", "forex/fxcm/minute/eurusd"),
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Hour, TickType.Quote, "eurusd.zip", "eurusd.csv", "forex/fxcm/hour"),
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Daily, TickType.Quote, "eurusd.zip", "eurusd.csv", "forex/fxcm/daily"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_tick_quote.csv", "forex/oanda/tick/eurusd"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_second_quote.csv", "forex/oanda/second/eurusd"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_minute_quote.csv", "forex/oanda/minute/eurusd"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Hour, TickType.Quote, "eurusd.zip", "eurusd.csv", "forex/oanda/hour"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Daily, TickType.Quote, "eurusd.zip", "eurusd.csv", "forex/oanda/daily"),
 
                 // cfd
                 new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_de10ybeur_tick_quote.csv", "cfd/fxcm/tick/de10ybeur"),

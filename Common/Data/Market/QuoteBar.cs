@@ -298,6 +298,8 @@ namespace QuantConnect.Data.Market
                         return ParseCfd(config, stream, date);
 
                     case SecurityType.Option:
+                    case SecurityType.FutureOption:
+                    case SecurityType.IndexOption:
                         return ParseOption(config, stream, date);
 
                     case SecurityType.Future:
@@ -344,6 +346,8 @@ namespace QuantConnect.Data.Market
                         return ParseCfd(config, line, date);
 
                     case SecurityType.Option:
+                    case SecurityType.FutureOption:
+                    case SecurityType.IndexOption:
                         return ParseOption(config, line, date);
 
                     case SecurityType.Future:
@@ -455,7 +459,7 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
         public QuoteBar ParseOption(SubscriptionDataConfig config, string line, DateTime date)
         {
-            return ParseQuote(config, date, line, true);
+            return ParseQuote(config, date, line, config.Symbol.SecurityType == SecurityType.Option);
         }
 
         /// <summary>
@@ -467,7 +471,8 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
         public QuoteBar ParseOption(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
         {
-            return ParseQuote(config, date, streamReader, true);
+            // scale factor only applies for equity and index options
+            return ParseQuote(config, date, streamReader, useScaleFactor: config.Symbol.SecurityType != SecurityType.FutureOption);
         }
 
         /// <summary>
@@ -552,6 +557,7 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> with the bid/ask prices set appropriately</returns>
         private QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, StreamReader streamReader, bool useScaleFactor)
         {
+            // Non-equity asset classes will not use scaling, including options that have a non-equity underlying asset class.
             var scaleFactor = useScaleFactor
                               ? _scaleFactor
                               : 1;
@@ -711,8 +717,7 @@ namespace QuantConnect.Data.Market
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
-            if (config.SecurityType == SecurityType.Option ||
-                config.SecurityType == SecurityType.Future)
+            if (config.SecurityType == SecurityType.Future || config.SecurityType.IsOption())
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }

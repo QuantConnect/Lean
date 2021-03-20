@@ -55,7 +55,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new NewTradableDateEventArgs(
                     DateTime.UtcNow,
                     new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol
+                    _config.Symbol,
+                    null
                 )
             ).GetEnumerator();
 
@@ -92,7 +93,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new NewTradableDateEventArgs(
                     _config.Symbol.ID.Date.Subtract(TimeSpan.FromMinutes(1)),
                     new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol
+                    _config.Symbol,
+                    null
                 )
             ).GetEnumerator();
 
@@ -103,7 +105,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new NewTradableDateEventArgs(
                     _config.Symbol.ID.Date,
                     new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol
+                    _config.Symbol,
+                    null
                 )
             ).GetEnumerator();
 
@@ -133,7 +136,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new NewTradableDateEventArgs(
                     _config.Symbol.ID.Date,
                     new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol
+                    _config.Symbol,
+                    null
                 )
             ).GetEnumerator();
 
@@ -146,7 +150,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new NewTradableDateEventArgs(
                     _config.Symbol.ID.Date,
                     new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol
+                    _config.Symbol,
+                    null
                 )
             ).GetEnumerator();
             Assert.IsFalse(enumerator.MoveNext());
@@ -156,7 +161,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new NewTradableDateEventArgs(
                     _config.Symbol.ID.Date.AddMinutes(1),
                     new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol
+                    _config.Symbol,
+                    null
                 )
             ).GetEnumerator();
 

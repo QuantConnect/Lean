@@ -15,10 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Interfaces;
@@ -28,7 +26,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Tradier
 {
-    [TestFixture, Ignore("This test requires a configured and active Tradier account")]
+    [TestFixture, Explicit("This test requires a configured and active Tradier account")]
     public class TradierBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -51,20 +49,11 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var accountID = TradierBrokerageFactory.Configuration.AccountID;
-            var tradier = new TradierBrokerage(orderProvider, securityProvider, new AggregationManager(), accountID);
+            var useSandbox = TradierBrokerageFactory.Configuration.UseSandbox;
+            var accountId = TradierBrokerageFactory.Configuration.AccountId;
+            var accessToken = TradierBrokerageFactory.Configuration.AccessToken;
 
-            var qcUserID = TradierBrokerageFactory.Configuration.QuantConnectUserID;
-            var tokens = TradierBrokerageFactory.GetTokens();
-            tradier.SetTokens(qcUserID, tokens.AccessToken, tokens.RefreshToken, tokens.IssuedAt, TimeSpan.FromSeconds(tokens.ExpiresIn));
-
-            // keep the tokens up to date in the event of a refresh
-            tradier.SessionRefreshed += (sender, args) =>
-            {
-                File.WriteAllText(TradierBrokerageFactory.TokensFile, JsonConvert.SerializeObject(args, Formatting.Indented));
-            };
-
-            return tradier;
+            return new TradierBrokerage(null, orderProvider, securityProvider, new AggregationManager(), useSandbox, accountId, accessToken);
         }
 
         /// <summary>
@@ -92,10 +81,10 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         {
             var tradier = (TradierBrokerage) Brokerage;
             var quotes = tradier.GetQuotes(new List<string> {symbol.Value});
-            return quotes.Single().Ask;
+            return quotes.Single().Ask ?? 0;
         }
 
-        [Test, TestCaseSource("OrderParameters")]
+        [Test, TestCaseSource(nameof(OrderParameters))]
         public void AllowsOneActiveOrderPerSymbol(OrderTestParameters parameters)
         {
             // tradier's api gets special with zero holdings crossing in that they need to fill the order
@@ -124,10 +113,11 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             Assert.IsTrue(orderFilledOrCanceled);
         }
 
-        [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Tradier.")]
-        public void ShortZnga()
+        [Test, Explicit("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Tradier.")]
+        public void ShortInvalidSymbol()
         {
-            PlaceOrderWaitForStatus(new MarketOrder(Symbols.ZNGA, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
+            var symbol = Symbol.Create("XYZ", SecurityType.Equity, Market.USA);
+            PlaceOrderWaitForStatus(new MarketOrder(symbol, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
 
             // wait for output to be generated
             Thread.Sleep(20*1000);

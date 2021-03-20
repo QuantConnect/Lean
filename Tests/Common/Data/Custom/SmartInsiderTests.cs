@@ -38,8 +38,8 @@ namespace QuantConnect.Tests.Common.Data.Custom
 
             Assert.IsTrue(intention.ExecutionHolding.HasValue);
             Assert.IsTrue(transaction.ExecutionHolding.HasValue);
-            Assert.AreEqual(intention.ExecutionHolding, SmartInsiderExecutionHolding.SatisfyStockVesting);
-            Assert.AreEqual(transaction.ExecutionHolding, SmartInsiderExecutionHolding.SatisfyStockVesting);
+            Assert.AreEqual(SmartInsiderExecutionHolding.SatisfyStockVesting, intention.ExecutionHolding);
+            Assert.AreEqual(SmartInsiderExecutionHolding.SatisfyStockVesting, transaction.ExecutionHolding);
         }
 
         [TestCase("2019-01-01  23:59:59")]
@@ -136,13 +136,53 @@ namespace QuantConnect.Tests.Common.Data.Custom
         }
 
         [Test]
-        public void ParseFromRawDataUnexpectedEventType()
+        public void ToLineDoesNotOutputRawNullValues()
+        {
+            var intentionLine = "20200101 01:02:03	BIXYZ		20190101	20190101	USXYZ		1	Some Random Industry																	US													";
+            var transactionLine = "20200101 01:02:03	BIXYZ		20190101	20190101	USXYZ		1	Some Random Industry																																																			";
+
+            var intention = new SmartInsiderIntention(intentionLine);
+            var transaction = new SmartInsiderTransaction(transactionLine);
+
+            Assert.IsNull(intention.EventType);
+            Assert.IsNull(intention.Execution);
+            Assert.IsNull(intention.ExecutionEntity);
+            Assert.IsNull(intention.ExecutionHolding);
+            Assert.IsNull(transaction.EventType);
+            Assert.IsNull(transaction.Execution);
+            Assert.IsNull(transaction.ExecutionEntity);
+            Assert.IsNull(transaction.ExecutionHolding);
+
+            var intentionLineSerialized = intention.ToLine().Split('\t');
+            var transactionLineSerialized = transaction.ToLine().Split('\t');
+
+            Assert.AreNotEqual(intentionLineSerialized[2], "null");
+            Assert.AreNotEqual(intentionLineSerialized[26], "null");
+            Assert.AreNotEqual(intentionLineSerialized[27], "null");
+            Assert.AreNotEqual(intentionLineSerialized[28], "null");
+            Assert.AreNotEqual(transactionLineSerialized[2], "null");
+            Assert.AreNotEqual(transactionLineSerialized[27], "null");
+            Assert.AreNotEqual(transactionLineSerialized[28], "null");
+            Assert.AreNotEqual(transactionLineSerialized[29], "null");
+
+            Assert.IsTrue(string.IsNullOrWhiteSpace(intentionLineSerialized[2]));
+            Assert.IsTrue(string.IsNullOrWhiteSpace(intentionLineSerialized[26]));
+            Assert.IsTrue(string.IsNullOrWhiteSpace(intentionLineSerialized[27]));
+            Assert.IsTrue(string.IsNullOrWhiteSpace(intentionLineSerialized[28]));
+            Assert.IsTrue(string.IsNullOrWhiteSpace(transactionLineSerialized[2]));
+            Assert.IsTrue(string.IsNullOrWhiteSpace(transactionLineSerialized[27]));
+            Assert.IsTrue(string.IsNullOrWhiteSpace(transactionLineSerialized[28]));
+            Assert.IsTrue(string.IsNullOrWhiteSpace(transactionLineSerialized[29]));
+        }
+
+        [Test]
+        public void ParseFromRawDataUnexpectedEventTypes()
         {
             var realRawIntentionLine = "\"BI12345\"\t\"Some new event\"\t2020-07-27\t2009-11-11\t\"US1234567890\"\t\"\"\t12345\t\"https://smartinsidercompanypage.com\"\t\"Consumer Staples\"\t" +
                                        "\"Personal Care, Drug and Grocery Stores\"\t\"Personal Care, Drug and Grocery Stores\"\t\"Personal Products\"\t12345678\t\"Some Company Corp\"\t\"Some-Comapny C\"\t" +
                                        "\"\"\t\"\"\t\"\"\t\"\"\t\"Com\"\t\"US\"\t\"SCC\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\t\t-999\t\"Some unexpected event.\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"" +
-                                       "\"\t2020-07-27\t\"\"\t\"\"\t\"\"\t2020-07-27  13:57:37\t\"US\"\t\"https://smartinsiderdatapage.com\"\t\"On Market\"\t\"Issuer\"\t\"Not Reported\"\t\"\"\t\"\"\t\t" +
-                                       "\"\"\t\t\t\"\"\t\t\t\"\""; 
+                                       "\"\t2020-07-27\t\"\"\t\"\"\t\"\"\t2020-07-27  13:57:37\t\"US\"\t\"https://smartinsiderdatapage.com\"\t\"UnexpectedEvent\"\t\"UnexpectedIssuer\"\t\"UnexpectedReported\"\t\"\"\t\"\"\t\t" +
+                                       "\"\"\t\t\t\"\"\t\t\t\"\"";
 
             var tsv = realRawIntentionLine.Split('\t')
                 .Take(60)
@@ -159,11 +199,13 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var filteredRawIntentionLine = string.Join("\t", tsv);
 
             var intention = new SmartInsiderIntention();
-            intention.FromRawData(filteredRawIntentionLine);
-            Assert.DoesNotThrow(() =>intention.FromRawData(filteredRawIntentionLine));
+            Assert.DoesNotThrow(() => intention.FromRawData(filteredRawIntentionLine));
 
             Assert.IsTrue(intention.EventType.HasValue);
-            Assert.AreEqual(intention.EventType, SmartInsiderEventType.NotSpecified);
+            Assert.AreEqual(SmartInsiderEventType.NotSpecified, intention.EventType);
+            Assert.AreEqual(SmartInsiderExecution.Error, intention.Execution);
+            Assert.AreEqual(SmartInsiderExecutionEntity.Error, intention.ExecutionEntity);
+            Assert.AreEqual(SmartInsiderExecutionHolding.Error, intention.ExecutionHolding);
         }
     }
 }

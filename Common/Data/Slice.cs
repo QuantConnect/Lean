@@ -337,7 +337,8 @@ namespace QuantConnect.Data
             object dictionary;
             if (!instance._dataByType.TryGetValue(type, out dictionary))
             {
-                if (type == typeof(Tick))
+                var requestedOpenInterest = type == typeof(OpenInterest);
+                if (type == typeof(Tick) || requestedOpenInterest)
                 {
                     var dataDictionaryCache = GenericDataDictionary.Get(type);
                     dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
@@ -345,9 +346,13 @@ namespace QuantConnect.Data
                     foreach (var data in instance.Ticks)
                     {
                         var symbol = data.Key;
-                        var listOfTicks = data.Value;
-                        // preserving existing behavior we will return the last data point, users expect a 'DataDictionary<Tick> : IDictionary<Symbol, Tick>'
-                        var lastDataPoint = listOfTicks[listOfTicks.Count - 1];
+                        // preserving existing behavior we will return the last data point, users expect a 'DataDictionary<Tick> : IDictionary<Symbol, Tick>'.
+                        // openInterest is stored with the Ticks collection
+                        var lastDataPoint = data.Value.LastOrDefault(tick => requestedOpenInterest && tick.TickType == TickType.OpenInterest || !requestedOpenInterest && tick.TickType != TickType.OpenInterest);
+                        if (lastDataPoint == null)
+                        {
+                            continue;
+                        }
                         dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { symbol, lastDataPoint });
                     }
                 }
