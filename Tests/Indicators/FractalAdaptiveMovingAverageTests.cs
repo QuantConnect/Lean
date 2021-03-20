@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(expected, (double) indicator.Current.Value, 0.006);
 
         [Test]
-        public void ResetsProperly()
+        public override void ResetsProperly()
         {
             var frama = new FractalAdaptiveMovingAverage(6);
 

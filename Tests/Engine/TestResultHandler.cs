@@ -178,11 +178,11 @@ namespace QuantConnect.Tests.Engine
         {
         }
 
-        public void OrderEvent(OrderEvent newEvent)
+        public override void OrderEvent(OrderEvent newEvent)
         {
         }
 
-        public void Exit()
+        public override void Exit()
         {
             _cancellationTokenSource.Cancel();
         }
