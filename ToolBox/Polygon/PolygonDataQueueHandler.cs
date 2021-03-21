@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -566,48 +567,100 @@ namespace QuantConnect.ToolBox.Polygon
 
             var start = request.StartTimeUtc;
             var end = request.EndTimeUtc;
+            var currentDate = start.Date;
 
-            while (start <= end)
+            while (currentDate <= end.Date)
             {
-                using (var client = new WebClient())
+                int counter = -1;
+                int ticksCounter = 0;
+
+                // If this is a very first iteration set offset exactly on request's start time. Otherwise use date start as an offset.
+                var offset = currentDate == start.Date
+                    ? Time.DateTimeToUnixTimeStampNanoseconds(start)
+                    : Time.DateTimeToUnixTimeStampNanoseconds(currentDate);
+
+                int lastHash = 0;
+                while (true)
                 {
-                    var offset = Time.DateTimeToUnixTimeStampNanoseconds(start);
-                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offset}";
+                    counter++;
 
-                    var response = client.DownloadString(url);
-
-                    var obj = JObject.Parse(response);
-                    var objTicks = obj["results"];
-                    if (objTicks.Type == JTokenType.Null || !objTicks.Any())
+                    using (var client = new WebClient())
                     {
-                        // current date finished, move to next day
-                        start = start.Date.AddDays(1);
-                        continue;
-                    }
+                        var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{currentDate:yyyy-MM-dd}?" +
+                                  $"apiKey={_apiKey}&timestamp={offset}&limit={BaseAggregateBarsLimit}";
 
-                    foreach (var objTick in objTicks)
-                    {
-                        var row = objTick.ToObject<EquityTradeTickResponse>();
+                        Log.Trace(url);
 
-                        var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
-
-                        if (utcTime < start)
+                        string response = "";
+                        try
                         {
-                            continue;
+                            response = client.DownloadString(url);
+                        }
+                        catch (WebException ex)
+                        {
+                            String responseFromServer = ex.Message.ToString() + " ";
+                            if (ex.Response != null)
+                            {
+                                using (WebResponse resp = ex.Response)
+                                {
+                                    Stream dataRs = resp.GetResponseStream();
+                                    using (StreamReader reader = new StreamReader(dataRs))
+                                    {
+                                        responseFromServer += reader.ReadToEnd();
+                                    }
+                                }
+                            }
+                            Log.Error("Server Response: " + responseFromServer);
                         }
 
-                        start = utcTime.AddMilliseconds(1);
+                        // Get ticks
+                        var obj = JObject.Parse(response)["results"]?.ToString();
+                        var tradeTicksList = JsonConvert.DeserializeObject<EquityTradeTickResponse[]>(obj).ToList();
 
-                        if (utcTime > end)
+                        //Log.Trace($"COUNTER: {counter} RESPONSE : {obj}");
+
+                        Log.Trace($"Counter: {counter++ } time: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.First().ExchangeTimestamp)}");
+
+                        // This is the way to check this is the end of the ticks for the current date :
+                        // .. 
+                        if (tradeTicksList.Count == 1 && tradeTicksList.GetHashCode() == lastHash)
                         {
-                            yield break;
+                            Log.Trace($"Breaks() FirstHash:{tradeTicksList.First().GetHashCode()} LastHash:{lastHash}");
+                            break;
                         }
 
-                        var time = GetTickTime(request.Symbol, utcTime);
+                        // Drop the first element if these are the results of the next page
+                        if (counter > 0)
+                        {
+                            tradeTicksList.RemoveAt(0);
+                        }
 
-                        yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
+                        foreach (var row in tradeTicksList)
+                        {
+                            var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
+
+                            if (utcTime > end)
+                            {
+                                yield break;
+                            }
+
+                            var time = GetTickTime(request.Symbol, utcTime);
+
+                            var tick = new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
+
+                            yield return tick;
+
+                            // Save the values before to jump to the next iteration
+                            offset = row.ExchangeTimestamp;
+                            lastHash = row.GetHashCode();
+
+                            ticksCounter++;
+                        }
                     }
                 }
+
+                // Jump to the next iteration
+                currentDate = currentDate.AddDays(1);
             }
         }
 

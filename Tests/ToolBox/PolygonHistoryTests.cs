@@ -38,10 +38,14 @@ namespace QuantConnect.Tests.ToolBox
         {
             Config.Set("polygon-api-key", "");
 
+            Log.LogHandler = new CompositeLogHandler();
+
             _historyProvider = new PolygonDataQueueHandler(false);
             _historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
 
         }
+
+        #region General
 
         [TestCaseSource(nameof(HistoryTestCases))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool shouldBeEmpty)
@@ -149,6 +153,10 @@ namespace QuantConnect.Tests.ToolBox
             new TestCaseData(Symbols.DE30EUR, Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), true)
         };
 
+        #endregion
+
+        #region Aggregate Bars
+
         private static TestCaseData[] HistoricalTradeBarsTestCaseDatas => new[]
         {
             // long requests
@@ -159,22 +167,7 @@ namespace QuantConnect.Tests.ToolBox
         [TestCaseSource(nameof(HistoricalTradeBarsTestCaseDatas))]
         public void GetHistoricalTradeBarsTest(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool isNonEmptyResult)
         {
-            var now = new DateTime(2020, 5, 20, 15, 0, 0).RoundDown(resolution.ToTimeSpan());
-            var dataType = LeanData.GetDataType(resolution, tickType);
-
-            var request = new HistoryRequest(now.Add(-period),
-                now,
-                dataType,
-                symbol,
-                resolution,
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                TimeZones.NewYork,
-                null,
-                true,
-                false,
-                DataNormalizationMode.Adjusted,
-                tickType);
-
+            var request = CreateHistoryRequest(symbol, resolution, tickType, period);
             var historyArray = _historyProvider.GetHistory(request).ToArray();
 
             Log.Trace("Data points retrieved: " + _historyProvider.DataPointCount);
@@ -184,7 +177,7 @@ namespace QuantConnect.Tests.ToolBox
                 var i = -1;
                 foreach (var baseData in historyArray)
                 {
-                    var bar = (TradeBar) baseData;
+                    var bar = (TradeBar)baseData;
                     Log.Trace($"{++i} {bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}");
                 }
 
@@ -197,5 +190,61 @@ namespace QuantConnect.Tests.ToolBox
             }
         }
 
+        #endregion
+
+        #region Ticks
+
+        private static TestCaseData[] HistoricalTicksTestCaseDatas => new[]
+        {
+            new TestCaseData(Symbols.AAPL, Resolution.Tick, TickType.Trade, TimeSpan.FromDays(9), true),
+        };
+
+        [TestCaseSource(nameof(HistoricalTicksTestCaseDatas))]
+        public void GetHistoricalTicksTest(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool isNonEmptyResult)
+        {
+            var request = CreateHistoryRequest(symbol, resolution, tickType, period);
+            var historyArray = _historyProvider.GetHistory(request).ToArray();
+
+            Log.Trace("Data points retrieved: " + _historyProvider.DataPointCount);
+
+            if (isNonEmptyResult)
+            {
+                var i = -1;
+                foreach (var baseData in historyArray)
+                {
+                    var bar = (TradeBar)baseData;
+                    Log.Trace($"{++i} {bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}");
+                }
+
+                // Ordered by time
+                Assert.That(historyArray, Is.Ordered.By("Time"));
+
+                // No repeating bars
+                var timesArray = historyArray.Select(x => x.Time).ToArray();
+                Assert.AreEqual(timesArray.Length, timesArray.Distinct().Count());
+            }
+        }
+
+        #endregion
+
+
+        private HistoryRequest CreateHistoryRequest(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period)
+        {
+            var now = DateTime.UtcNow;
+            var dataType = LeanData.GetDataType(resolution, tickType);
+
+            return new HistoryRequest(now.Add(-period),
+                now,
+                dataType,
+                symbol,
+                resolution,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                TimeZones.NewYork,
+                null,
+                true,
+                false,
+                DataNormalizationMode.Adjusted,
+                tickType);
+        }
     }
 }
