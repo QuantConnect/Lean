@@ -27,8 +27,6 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private bool _isWarmUpIndicatorWarningSent = false;
-
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators/>
         /// </summary>
