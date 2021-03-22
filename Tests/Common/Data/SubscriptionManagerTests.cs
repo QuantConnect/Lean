@@ -267,7 +267,10 @@ namespace QuantConnect.Tests.Common.Data
 
         private class TestConsolidator : IDataConsolidator
         {
+#pragma warning disable 0067 // TestConsolidator never uses this event; just ignore the warning
             public event DataConsolidatedHandler DataConsolidated;
+#pragma warning restore 0067
+
             public IBaseData Consolidated { get; }
             public IBaseData WorkingData { get; }
             public Type InputType { get; }

@@ -54,7 +54,9 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Event fired when the start date has been limited
         /// </summary>
+#pragma warning disable 0067 // StartDateLimited is currently not used; remove once implemented
         public event EventHandler<StartDateLimitedEventArgs> StartDateLimited;
+#pragma warning restore 0067
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider

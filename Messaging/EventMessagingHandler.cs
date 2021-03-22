@@ -72,7 +72,9 @@ namespace QuantConnect.Messaging
         public event DebugEventRaised DebugEvent;
 
         public delegate void SystemDebugEventRaised(SystemDebugPacket packet);
+#pragma warning disable 0067 // SystemDebugEvent is not used currently; ignore the warning
         public event SystemDebugEventRaised SystemDebugEvent;
+#pragma warning restore 0067
 
         public delegate void LogEventRaised(LogPacket packet);
         public event LogEventRaised LogEvent;
