@@ -56,6 +56,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         // Existing orders created in TWS can *only* be cancelled/modified when connected with ClientId = 0
         private const int ClientId = 0;
+        private const string _futuresCmeCrypto = "CMECRYPTO";
 
         // next valid order id (or request id, or ticker id) for this client
         private int _nextValidId;
@@ -1963,10 +1964,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 contract.Symbol = ibSymbol;
                 contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter);
-
-                contract.Exchange = _futuresExchanges.ContainsKey(symbol.ID.Market) ?
-                                        _futuresExchanges[symbol.ID.Market] :
-                                        symbol.ID.Market;
+                contract.Exchange = GetSymbolExchange(symbol);
 
                 var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
                     symbol.ID.Market,
@@ -3214,7 +3212,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="securityType">SecurityType of the Symbol</param>
         /// <param name="market">Market of the Symbol</param>
-        private string GetSymbolExchange(SecurityType securityType, string market)
+        private string GetSymbolExchange(SecurityType securityType, string market, string ticker = null)
         {
             switch (securityType)
             {
@@ -3227,7 +3225,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case SecurityType.FutureOption:
                 case SecurityType.Future:
                     return _futuresExchanges.ContainsKey(market)
-                        ? _futuresExchanges[market]
+                        ? ticker == "BTC"
+                            ? _futuresCmeCrypto
+                            : _futuresExchanges[market]
                         : market;
 
                 default:
@@ -3241,7 +3241,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="symbol">Symbol to route</param>
         private string GetSymbolExchange(Symbol symbol)
         {
-            return GetSymbolExchange(symbol.SecurityType, symbol.ID.Market);
+            return GetSymbolExchange(symbol.SecurityType, symbol.ID.Market, symbol.ID.Symbol);
         }
 
         /// <summary>
