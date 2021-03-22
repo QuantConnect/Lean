@@ -55,6 +55,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indicators" />
     public class OpeningBreakoutAlgorithm : QCAlgorithm
     {
+#pragma warning disable 00162 // File contains unreachable code when EnableOrderUpdateLogging is false
+
         // the equity symbol we're trading
         private const string symbol = "SPY";
 
@@ -544,5 +546,6 @@ namespace QuantConnect.Algorithm.CSharp
             return (Security.Holdings.IsLong && PSARMin > stopPrice)
                 || (Security.Holdings.IsShort && PSARMin < stopPrice);
         }
+#pragma warning restore 00162
     }
 }

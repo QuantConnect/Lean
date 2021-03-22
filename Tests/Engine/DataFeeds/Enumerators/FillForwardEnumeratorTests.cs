@@ -1157,7 +1157,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // updates expected data
             if (false)
             {
+#pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
+#pragma warning restore CS0162 
                     "../../TestData/FillForwardBars.zip", expectedDataFile, FillForwardTestAlgorithm.Result.Value);
             }
             QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
@@ -1591,7 +1593,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // updates expected data
             if (false)
             {
+#pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
+#pragma warning restore CS0162
                     "../../TestData/FillForwardBars.zip",
                     expectedDataFile,
                     string.Join(Environment.NewLine, ffbars),
@@ -1859,7 +1863,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // updates expected data
             if (false)
             {
+#pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
+#pragma warning restore CS0162
                     "../../TestData/FillForwardBars.zip",
                     expectedDataFile,
                     string.Join(Environment.NewLine, FillForwardDaylightMovementTestAlgorithm.Result.Value),
