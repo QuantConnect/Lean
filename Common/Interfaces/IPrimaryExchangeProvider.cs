@@ -15,6 +15,9 @@
 
 namespace QuantConnect.Interfaces
 {
+    /// <summary>
+    /// Primary Exchange Provider interface
+    /// </summary>
     public interface IPrimaryExchangeProvider
     {
         /// <summary>

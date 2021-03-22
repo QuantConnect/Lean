@@ -26,6 +26,9 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
+    /// <summary>
+    /// Brokerage Model implementation for Zerodha
+    /// </summary>
     public class ZerodhaBrokerageModel : DefaultBrokerageModel
     {
         private readonly Type[] _supportedTimeInForces =

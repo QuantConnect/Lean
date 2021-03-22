@@ -36,6 +36,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             _enumerate = enumerate;
         }
 
+        /// <summary>
+        /// Enumerate the Option Positions Collection
+        /// </summary>
+        /// <param name="positions">The positions to enumerate on</param>
+        /// <returns>Enumerable of Option Positions</returns>
         public IEnumerable<OptionPosition> Enumerate(OptionPositionCollection positions)
         {
             return _enumerate(positions);

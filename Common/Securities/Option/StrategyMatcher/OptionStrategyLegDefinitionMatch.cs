@@ -114,11 +114,19 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             return $"{Multiplier} Matches|{Position}";
         }
 
+        /// <summary>
+        /// OptionStrategyLegDefinitionMatch == Operator
+        /// </summary>
+        /// <returns>True if they are equal</returns>
         public static bool operator ==(OptionStrategyLegDefinitionMatch left, OptionStrategyLegDefinitionMatch right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>
+        /// OptionStrategyLegDefinitionMatch != Operator
+        /// </summary>
+        /// <returns>True if they are not equal</returns>
         public static bool operator !=(OptionStrategyLegDefinitionMatch left, OptionStrategyLegDefinitionMatch right)
         {
             return !left.Equals(right);

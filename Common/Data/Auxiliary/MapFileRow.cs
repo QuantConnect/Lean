@@ -170,6 +170,10 @@ namespace QuantConnect.Data.Auxiliary
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}";
         }
 
+        /// <summary>
+        /// Convert this row into string form
+        /// </summary>
+        /// <returns>resulting string</returns>
         public override string ToString()
         {
             var mainExchange = PrimaryExchange == PrimaryExchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange.ToString()}";

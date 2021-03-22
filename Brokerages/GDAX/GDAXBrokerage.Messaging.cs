@@ -47,10 +47,13 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly IAlgorithm _algorithm;
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
-        private readonly bool _isDataQueueHandler;
-        protected readonly IDataAggregator _aggregator;
-
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
+        private readonly bool _isDataQueueHandler;
+
+        /// <summary>
+        /// Data Aggregator
+        /// </summary>
+        protected readonly IDataAggregator _aggregator;
 
         // GDAX has different rate limits for public and private endpoints
         // https://docs.gdax.com/#rate-limits

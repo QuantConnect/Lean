@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages
     public interface IOrderBookUpdater<K, V>
     {
         /// <summary>
-        /// Event fired each time <see cref="BestBidPrice"/> or <see cref="BestAskPrice"/> are changed
+        /// Event fired each time BestBidPrice or BestAskPrice are changed
         /// </summary>
         event EventHandler<BestBidAskUpdatedEventArgs> BestBidAskUpdated;
 

@@ -19,8 +19,14 @@ using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 {
+    /// <summary>
+    /// Class to represent a work item
+    /// </summary>
     public class WorkItem
     {
+        /// <summary>
+        /// Function to determine weight of item
+        /// </summary>
         private Func<int> _weightFunc;
 
         /// <summary>

@@ -126,6 +126,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
+        /// <param name="securityProvider">Security provider for fetching holdings</param>
         public ZerodhaBrokerage(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, IAlgorithm algorithm, ISecurityProvider securityProvider, IDataAggregator aggregator)
             : base("Zerodha")
         {
@@ -716,7 +717,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     orderResponse = _kite.CancelOrder(order.BrokerId[0].ToStringInvariant());
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], $"Error cancelling order: {orderResponse["status_message"]}"));
                     UnlockStream();

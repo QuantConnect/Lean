@@ -1030,6 +1030,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return $"{contract.ToString().ToUpperInvariant()} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
         }
 
+        /// <summary>
+        /// Get Contract Description
+        /// </summary>
+        /// <param name="contract">Contract to retrieve description of</param>
+        /// <returns>string description</returns>
         public static string GetContractDescription(Contract contract)
         {
             return $"{contract} {contract.PrimaryExch ?? string.Empty} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
@@ -1170,6 +1175,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return contractDetailsList.FirstOrDefault();
         }
 
+        /// <summary>
+        /// Find contract details given a ticker and contract
+        /// </summary>
+        /// <param name="contract">Contract we are searching for</param>
+        /// <param name="ticker">Ticker of this contract</param>
+        /// <returns></returns>
         public IEnumerable<ContractDetails> FindContracts(Contract contract, string ticker)
         {
             const int timeout = 60; // sec

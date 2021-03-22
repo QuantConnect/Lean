@@ -145,9 +145,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public class RemovedMember
         {
+            /// <summary>
+            /// Universe the security was removed from
+            /// </summary>
             public Universe Universe { get; }
+
+            /// <summary>
+            /// Security that is removed
+            /// </summary>
             public Security Security { get; }
 
+            /// <summary>
+            /// Initialize a new instance of <see cref="RemovedMember"/>
+            /// </summary>
+            /// <param name="universe"><see cref="Universe"/> the security was removed from</param>
+            /// <param name="security"><see cref="Security"/> that is removed</param>
             public RemovedMember(Universe universe, Security security)
             {
                 Universe = universe;

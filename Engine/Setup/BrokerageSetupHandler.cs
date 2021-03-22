@@ -43,6 +43,9 @@ namespace QuantConnect.Lean.Engine.Setup
     {
         private bool _notifiedDefaultResolutionUsed;
 
+        /// <summary>
+        /// Max allocation limit configuration variable name
+        /// </summary>
         public static string MaxAllocationLimitConfig = "max-allocation-limit";
 
         /// <summary>

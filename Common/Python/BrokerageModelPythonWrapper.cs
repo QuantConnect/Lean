@@ -249,6 +249,13 @@ namespace QuantConnect.Python
             }
         }
 
+        /// <summary>
+        /// Determine if this symbol is shortable
+        /// </summary>
+        /// <param name="algorithm">The algorithm running</param>
+        /// <param name="symbol">The symbol to short</param>
+        /// <param name="quantity">The amount to short</param>
+        /// <returns></returns>
         public bool Shortable(IAlgorithm algorithm, Symbol symbol, decimal quantity)
         {
             using (Py.GIL())

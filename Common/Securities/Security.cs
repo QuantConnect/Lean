@@ -45,9 +45,16 @@ namespace QuantConnect.Securities
         private readonly ICurrencyConverter _currencyConverter;
 
         private LocalTimeKeeper _localTimeKeeper;
-        // using concurrent bag to avoid list enumeration threading issues
+
+        /// <summary>
+        /// Collection of SubscriptionDataConfigs for this security.
+        /// Uses concurrent bag to avoid list enumeration threading issues
+        /// </summary>
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
 
+        /// <summary>
+        /// This securities <see cref="IShortableProvider"/>
+        /// </summary>
         protected IShortableProvider ShortableProvider { get; private set; }
 
         /// <summary>
@@ -773,6 +780,10 @@ namespace QuantConnect.Securities
             SetMarginModel(new BuyingPowerModelPythonWrapper(pyObject));
         }
 
+        /// <summary>
+        /// Set Shortable Provider for this <see cref="Security"/>
+        /// </summary>
+        /// <param name="shortableProvider">Provider to use</param>
         public void SetShortableProvider(IShortableProvider shortableProvider)
         {
             ShortableProvider = shortableProvider;
@@ -817,6 +828,10 @@ namespace QuantConnect.Securities
             UpdateSubscriptionProperties();
         }
 
+        /// <summary>
+        /// Update market price of this Security
+        /// </summary>
+        /// <param name="data">Data to pull price from</param>
         protected virtual void UpdateConsumersMarketPrice(BaseData data)
         {
             if (data is OpenInterest || data.Price == 0m) return;

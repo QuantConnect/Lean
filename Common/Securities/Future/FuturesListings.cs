@@ -21,7 +21,7 @@ namespace QuantConnect.Securities.Future
 {
     /// <summary>
     /// Helpers for getting the futures contracts that are trading on a given date.
-    /// This is a substitute for the <see cref="BacktestingFutureChainProvider"/>, but
+    /// This is a substitute for the BacktestingFutureChainProvider, but
     /// does not outright replace it because of missing entries. This will resolve
     /// the listed contracts without having any data in place. We follow the listing rules
     /// set forth by the exchange to get the <see cref="Symbol"/>s that are listed at a given date.

@@ -9,6 +9,11 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class ZerodhaFeeModel : IFeeModel
     {
+        /// <summary>
+        /// Gets the order fee associated with the specified order.
+        /// </summary>
+        /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
+        /// containing the security and order</param>
         public OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             if (parameters.Security == null)

@@ -23,6 +23,9 @@ namespace QuantConnect.Data.Custom.SEC
     /// </summary>
     public class SECReportDateTimeConverter : IsoDateTimeConverter
     {
+        /// <summary>
+        /// Constructor, initializes DateTime format
+        /// </summary>
         public SECReportDateTimeConverter()
         {
             DateTimeFormat = "yyyyMMdd HH:mm:ss";

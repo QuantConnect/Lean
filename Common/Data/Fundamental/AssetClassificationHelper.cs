@@ -76,6 +76,7 @@ namespace QuantConnect.Data.Fundamental
     /// <remarks>Please refer to https://www.morningstar.com/InvGlossary/morningstar_style_box.aspx </remarks>
     public static class StyleBox
     {
+#pragma warning disable 1591
         public static int LargeValue = 1;
         public static int LargeCore = 2;
         public static int LargeGrowth = 3;
@@ -85,6 +86,7 @@ namespace QuantConnect.Data.Fundamental
         public static int SmallValue = 7;
         public static int SmallCore = 8;
         public static int SmallGrowth = 9;
+#pragma warning restore 1591
     }
 
     /// <summary>
@@ -196,6 +198,7 @@ namespace QuantConnect.Data.Fundamental
     /// </summary>
     public static class MorningstarIndustryGroupCode
     {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public static int Agriculture = 10110;
         public static int BuildingMaterials = 10120;
         public static int Chemicals = 10130;
@@ -252,6 +255,7 @@ namespace QuantConnect.Data.Fundamental
         public static int Software = 31110;
         public static int Hardware = 31120;
         public static int Semiconductors = 31130;
+#pragma warning restore CS1591 
     }
 
     /// <summary>

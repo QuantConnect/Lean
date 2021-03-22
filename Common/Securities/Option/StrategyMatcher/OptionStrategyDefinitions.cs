@@ -37,6 +37,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     .ToImmutableList()
             );
 
+        /// <summary>
+        /// Collection of all OptionStrategyDefinitions
+        /// </summary>
         public static ImmutableList<OptionStrategyDefinition> AllDefinitions => All.Value;
 
         /// <summary>

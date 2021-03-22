@@ -152,10 +152,12 @@ namespace QuantConnect
         /// </summary>
         public const string BSE = "bse";
 
+        /// <summary>
         /// BSE Futures and Options
         /// </summary>
         public const string BFO = "bfo";
 
+        /// <summary>
         /// BSE Currency Derivatives
         /// </summary>
         public const string BCD = "bcd";

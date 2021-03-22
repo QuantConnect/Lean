@@ -18,6 +18,9 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
 {
+    /// <summary>
+    /// Capacity Estimation Report Element
+    /// </summary>
     public sealed class EstimatedCapacityReportElement : ReportElement
     {
         private readonly BacktestResult _backtest;
@@ -38,6 +41,9 @@ namespace QuantConnect.Report.ReportElements
             Key = key;
         }
 
+        /// <summary>
+        /// Render element
+        /// </summary>
         public override string Render()
         {
             var statistics = _backtest?.Statistics;

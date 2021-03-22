@@ -456,6 +456,10 @@ namespace QuantConnect.Lean.Engine.Results
             AddToLogStore(message);
         }
 
+        /// <summary>
+        /// Add message to LogStore
+        /// </summary>
+        /// <param name="message">Message to add</param>
         protected override void AddToLogStore(string message)
         {
             lock (LogStore)
@@ -682,6 +686,10 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
+        /// <summary>
+        /// Handle order event
+        /// </summary>
+        /// <param name="newEvent">Event to process</param>
         public override void OrderEvent(OrderEvent newEvent)
         {
             _capacityEstimate?.OnOrderEvent(newEvent);

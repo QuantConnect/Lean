@@ -16,6 +16,7 @@
 
 namespace QuantConnect.Brokerages.Zerodha
 {
+#pragma warning disable 1591
     /// <summary>
     /// Types of product supported by Kite
     /// </summary>
@@ -115,4 +116,5 @@ namespace QuantConnect.Brokerages.Zerodha
         public const string GTT_TRIGGER_OCO = "two-leg";
         public const string GTT_TRIGGER_SINGLE = "single";
     }
+#pragma warning restore 1591
 }

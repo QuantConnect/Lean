@@ -25,6 +25,7 @@ using CsvHelper.Configuration.Attributes;
 
 namespace QuantConnect.Brokerages.Zerodha.Messages
 {
+#pragma warning disable 1591
     /// <summary>
     /// Tick data structure
     /// </summary>
@@ -1078,4 +1079,5 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
         public UInt32 InstrumentToken { get; set; }
         public decimal LastPrice { get; }
     }
+#pragma warning restore 1591
 }

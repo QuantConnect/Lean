@@ -158,6 +158,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fastPeriod">The period of the fast moving average associated with the AO</param>
         /// <param name="slowPeriod">The period of the slow moving average associated with the AO</param>
         /// <param name="type">The type of moving average used when computing the fast and slow term. Defaults to simple moving average.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         public AwesomeOscillator AO(Symbol symbol, int slowPeriod, int fastPeriod, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"AO({fastPeriod},{slowPeriod},{type})", resolution);
@@ -451,7 +452,7 @@ namespace QuantConnect.Algorithm
         ///</summary>
         /// <param name="symbol">The symbol whose DEM we seek.</param>
         /// <param name="period">The period of the moving average implemented</param>
-        /// <param name="movingAverageType">Specifies the type of moving average to be used</param>
+        /// <param name="type">Specifies the type of moving average to be used</param>
         /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The DeMarker indicator for the requested symbol.</returns>
@@ -1964,6 +1965,14 @@ namespace QuantConnect.Algorithm
         {
             return CreateIndicatorName(symbol, Invariant(type), resolution);
         }
+
+        /// <summary>
+        /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, ect...)
+        /// </summary>
+        /// <param name="symbol">The symbol this indicator is registered to</param>
+        /// <param name="type">The indicator type, for example, 'SMA(5)'</param>
+        /// <param name="resolution">The resolution requested</param>
+        /// <returns>A unique for the given parameters</returns>
         public string CreateIndicatorName(Symbol symbol, string type, Resolution? resolution)
         {
             if (!resolution.HasValue)

@@ -29,6 +29,11 @@ namespace QuantConnect
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly SecurityManager _securityManager;
 
+        /// <summary>
+        /// Initialize a new <see cref="TradingCalendar"/> instance.
+        /// </summary>
+        /// <param name="securityManager">SecurityManager for this calendar</param>
+        /// <param name="marketHoursDatabase">MarketHoursDatabase for this calendar</param>
         public TradingCalendar(SecurityManager securityManager, MarketHoursDatabase marketHoursDatabase)
         {
             _securityManager = securityManager;

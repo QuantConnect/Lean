@@ -98,6 +98,7 @@ namespace QuantConnect.Securities.FutureOption
         /// Gets the Future Option's expiry from the Future Symbol provided
         /// </summary>
         /// <param name="futureSymbol">Future (non-canonical) Symbol</param>
+        /// <param name="canonicalFutureOption">The canonical Future Option Symbol</param>
         /// <returns>Future Option Expiry for the Future with the same contract month</returns>
         public static DateTime GetFutureOptionExpiryFromFutureExpiry(Symbol futureSymbol, Symbol canonicalFutureOption = null)
         {

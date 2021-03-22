@@ -3,6 +3,9 @@ using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities.IndexOption
 {
+    /// <summary>
+    /// Index Option Symbol Properties
+    /// </summary>
     public class IndexOptionSymbolProperties : OptionSymbolProperties
     {
         private BaseData _lastData;
@@ -44,7 +47,7 @@ namespace QuantConnect.Securities.IndexOption
         /// Updates the last data received, required for calculating some
         /// index options contracts that have a variable step size for their premium's quotes
         /// </summary>
-        /// <param name="minimumPriceVariation">Minimum price variation</param>
+        /// <param name="marketData">Data to update with</param>
         internal void UpdateMarketPrice(BaseData marketData)
         {
             _lastData = marketData;

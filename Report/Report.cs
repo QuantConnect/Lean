@@ -27,12 +27,18 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Report
 {
+    /// <summary>
+    /// Report class
+    /// </summary>
     public class Report
     {
         private const string _template = "template.html";
-        public const string StatisticsFileName = "report-statistics.json";
-
         private readonly IReadOnlyCollection<IReportElement> _elements;
+
+        /// <summary>
+        /// File name for statistics
+        /// </summary>
+        public const string StatisticsFileName = "report-statistics.json";
 
         /// <summary>
         /// Create beautiful HTML and PDF Reports based on backtest and live data.

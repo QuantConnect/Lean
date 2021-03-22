@@ -314,7 +314,7 @@ namespace QuantConnect.Orders
 
         /// <summary>
         /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
-        /// the ticker with limitprice specified in <paramref name="limitPrice"/> and with tag specified in <paramref name="quantity"/>
+        /// the ticker with limit price specified in <paramref name="limitPrice"/> and with tag specified in <paramref name="tag"/>
         /// </summary>
         /// <param name="limitPrice"></param>
         /// <param name="tag"></param>
@@ -331,7 +331,7 @@ namespace QuantConnect.Orders
 
         /// <summary>
         /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
-        /// the ticker with stopprice specified in <paramref name="stopPrice"/> and with tag specified in <paramref name="quantity"/>
+        /// the ticker with stop price specified in <paramref name="stopPrice"/> and with tag specified in <paramref name="tag"/>
         /// </summary>
         /// <param name="stopPrice"></param>
         /// <param name="tag"></param>

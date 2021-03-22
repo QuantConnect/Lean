@@ -217,11 +217,13 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <returns></returns>
         private Dictionary<string, decimal> LoadSymbolMultipliers()
         {
+#pragma warning disable 0219
             const int columnsCount = 4;
             const int columnUnderlying = 0;
             const int columnProductName = 1;
             const int columnMultipleFactor = 2;
             const int columnInfo = 3;
+#pragma warning restore 0219
 
             return File.ReadAllLines("AlgoSeekFuturesConverter/AlgoSeek.US.Futures.PriceMultipliers.1.1.csv")
                     .Select(line => line.ToCsvData())
