@@ -274,6 +274,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _ibAutomater.OutputDataReceived += OnIbAutomaterOutputDataReceived;
             _ibAutomater.ErrorDataReceived += OnIbAutomaterErrorDataReceived;
             _ibAutomater.Exited += OnIbAutomaterExited;
+            _ibAutomater.Restarted += OnIbAutomaterRestarted;
 
             CheckIbAutomaterError(_ibAutomater.Start(false));
 
@@ -3308,7 +3309,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
 
                 Disconnect();
+
                 CheckIbAutomaterError(_ibAutomater.Start(false));
+
+                Connect();
+            }
+        }
+
+        private void OnIbAutomaterRestarted(object sender, EventArgs e)
+        {
+            Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterRestarted()");
+
+            // check if IBGateway was closed because of an IBAutomater error
+            var result = _ibAutomater.GetLastStartResult();
+            CheckIbAutomaterError(result, false);
+
+            if (!result.HasError && !_isDisposeCalled)
+            {
+                // IBGateway was restarted automatically
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterRestarted(): IBGateway restart detected, reconnecting...");
+
+                Disconnect();
+
                 Connect();
             }
         }
