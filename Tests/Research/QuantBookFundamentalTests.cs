@@ -17,6 +17,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Research;
@@ -56,6 +57,19 @@ namespace QuantConnect.Tests.Research
         {
             // Reset to initial handler
             Log.LogHandler = _logHandler;
+        }
+
+        [Test]
+        public void DefaultEndDate()
+        {
+            var qb = new QuantBook();
+            var startDate = DateTime.UtcNow.Date.AddDays(-2);
+            var expectedDate = DateTime.UtcNow.Date;
+            IEnumerable<DataDictionary<dynamic>> data = qb.GetFundamental("AAPL", "ValuationRatios.PERatio", startDate);
+
+            // Check that the last day in the collection is as expected (today)
+            var lastDay = data.Last();
+            Assert.AreEqual(expectedDate, lastDay.Time);
         }
 
         [TestCaseSource(nameof(DataTestCases))]
