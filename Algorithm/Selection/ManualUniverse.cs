@@ -34,18 +34,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Creates a new instance of the <see cref="ManualUniverse"/>
         /// </summary>
-        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        public ManualUniverse(SubscriptionDataConfig configuration,
-            UniverseSettings universeSettings,
-            ISecurityInitializer securityInitializer,
-            IEnumerable<Symbol> symbols)
-            : base(configuration, universeSettings, securityInitializer, Time.MaxTimeSpan, symbols)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="ManualUniverse"/>
-        /// </summary>
         public ManualUniverse(SubscriptionDataConfig configuration,
             UniverseSettings universeSettings,
             IEnumerable<Symbol> symbols)

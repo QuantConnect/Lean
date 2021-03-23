@@ -38,7 +38,7 @@ class CoarseTiingoNewsUniverseSelectionAlgorithm(QCAlgorithm):
 
         self.__numberOfSymbols = 3
         
-        self.AddUniverse(CustomDataCoarseFundamentalUniverse(self.UniverseSettings, self.SecurityInitializer, self.CoarseSelectionFunction));
+        self.AddUniverse(CustomDataCoarseFundamentalUniverse(self.UniverseSettings, self.CoarseSelectionFunction));
 
         self._symbols = []
 

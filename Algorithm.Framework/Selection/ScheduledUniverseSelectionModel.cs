@@ -34,7 +34,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         private readonly Func<DateTime, IEnumerable<Symbol>> _selector;
         private readonly DateTimeZone _timeZone;
         private readonly UniverseSettings _settings;
-        private readonly ISecurityInitializer _initializer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ScheduledUniverseSelectionModel"/> class using the algorithm's time zone
@@ -43,14 +42,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        /// <param name="initializer">Security initializer for new securities created via this universe, null will default to algorithm's security initializer</param>
-        public ScheduledUniverseSelectionModel(IDateRule dateRule, ITimeRule timeRule, Func<DateTime, IEnumerable<Symbol>> selector, UniverseSettings settings = null, ISecurityInitializer initializer = null)
+        public ScheduledUniverseSelectionModel(IDateRule dateRule, ITimeRule timeRule, Func<DateTime, IEnumerable<Symbol>> selector, UniverseSettings settings = null)
         {
             _dateRule = dateRule;
             _timeRule = timeRule;
             _selector = selector;
             _settings = settings;
-            _initializer = initializer;
         }
 
         /// <summary>
@@ -61,15 +58,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        /// <param name="initializer">Security initializer for new securities created via this universe, null will default to algorithm's security initializer</param>
-        public ScheduledUniverseSelectionModel(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, Func<DateTime, IEnumerable<Symbol>> selector, UniverseSettings settings = null, ISecurityInitializer initializer = null)
+        public ScheduledUniverseSelectionModel(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, Func<DateTime, IEnumerable<Symbol>> selector, UniverseSettings settings = null)
         {
             _timeZone = timeZone;
             _dateRule = dateRule;
             _timeRule = timeRule;
             _selector = selector;
             _settings = settings;
-            _initializer = initializer;
         }
 
         /// <summary>
@@ -79,9 +74,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        /// <param name="initializer">Security initializer for new securities created via this universe, null will default to algorithm's security initializer</param>
-        public ScheduledUniverseSelectionModel(IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null, ISecurityInitializer initializer = null)
-            : this(null, dateRule, timeRule, selector, settings, initializer)
+        public ScheduledUniverseSelectionModel(IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null)
+            : this(null, dateRule, timeRule, selector, settings)
         {
         }
 
@@ -93,8 +87,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        /// <param name="initializer">Security initializer for new securities created via this universe, null will default to algorithm's security initializer</param>
-        public ScheduledUniverseSelectionModel(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null, ISecurityInitializer initializer = null)
+        public ScheduledUniverseSelectionModel(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null)
         {
             Func<DateTime, object> func;
             selector.TryConvertToDelegate(out func);
@@ -103,7 +96,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _timeRule = timeRule;
             _selector = func.ConvertToUniverseSelectionSymbolDelegate();
             _settings = settings;
-            _initializer = initializer;
         }
 
         /// <summary>
@@ -119,8 +111,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 _dateRule,
                 _timeRule,
                 _selector,
-                _settings ?? algorithm.UniverseSettings,
-                _initializer ?? algorithm.SecurityInitializer
+                _settings ?? algorithm.UniverseSettings
             );
         }
     }

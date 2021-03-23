@@ -29,14 +29,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
     {
         private readonly bool _filterFineData;
         private readonly UniverseSettings _universeSettings;
-        private readonly ISecurityInitializer _securityInitializer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
         /// </summary>
         /// <param name="filterFineData">True to also filter using fine fundamental data, false to only filter on coarse data</param>
         protected FundamentalUniverseSelectionModel(bool filterFineData)
-            : this(filterFineData, null, null)
+            : this(filterFineData, null)
         {
         }
 
@@ -44,13 +43,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
         /// </summary>
         /// <param name="filterFineData">True to also filter using fine fundamental data, false to only filter on coarse data</param>
-        /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings</param>
-        /// <param name="securityInitializer">Optional security initializer invoked when creating new securities, specify null to use algorithm.SecurityInitializer</param>
-        protected FundamentalUniverseSelectionModel(bool filterFineData, UniverseSettings universeSettings, ISecurityInitializer securityInitializer)
+        /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings</param>
+        protected FundamentalUniverseSelectionModel(bool filterFineData, UniverseSettings universeSettings)
         {
             _filterFineData = filterFineData;
             _universeSettings = universeSettings;
-            _securityInitializer = securityInitializer;
         }
 
         /// <summary>
@@ -77,8 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithm algorithm)
         {
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
-            var securityInitializer = _securityInitializer ?? algorithm.SecurityInitializer;
-            return new CoarseFundamentalUniverse(universeSettings, securityInitializer, coarse =>
+            return new CoarseFundamentalUniverse(universeSettings, coarse =>
             {
                 // if we're using fine fundamental selection than exclude symbols without fine data
                 if (_filterFineData)

@@ -32,13 +32,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
         public CoarseFundamentalUniverseSelectionModel(
             Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector,
-            UniverseSettings universeSettings = null,
-            ISecurityInitializer securityInitializer = null
+            UniverseSettings universeSettings = null
             )
-            : base(false, universeSettings, securityInitializer)
+            : base(false, universeSettings)
         {
             _coarseSelector = coarseSelector;
         }
@@ -48,13 +46,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
         public CoarseFundamentalUniverseSelectionModel(
             PyObject coarseSelector,
-            UniverseSettings universeSettings = null,
-            ISecurityInitializer securityInitializer = null
+            UniverseSettings universeSettings = null
             )
-            : base(false, universeSettings, securityInitializer)
+            : base(false, universeSettings)
         {
             Func<IEnumerable<CoarseFundamental>, object> func;
             if (coarseSelector.TryConvertToDelegate(out func))

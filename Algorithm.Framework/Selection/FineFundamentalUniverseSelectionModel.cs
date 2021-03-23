@@ -36,14 +36,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
         /// <param name="fineSelector">Selects symbols from the provided fine data set (this set has already been filtered according to the coarse selection)</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
         public FineFundamentalUniverseSelectionModel(
             Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector,
             Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector,
-            UniverseSettings universeSettings = null,
-            ISecurityInitializer securityInitializer = null
-            )
-            : base(true, universeSettings, securityInitializer)
+            UniverseSettings universeSettings = null)
+            : base(true, universeSettings)
         {
             _coarseSelector = coarseSelector;
             _fineSelector = fineSelector;
@@ -55,14 +52,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
         /// <param name="fineSelector">Selects symbols from the provided fine data set (this set has already been filtered according to the coarse selection)</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
         public FineFundamentalUniverseSelectionModel(
             PyObject coarseSelector,
             PyObject fineSelector,
-            UniverseSettings universeSettings = null,
-            ISecurityInitializer securityInitializer = null
+            UniverseSettings universeSettings = null
             )
-            : base(true, universeSettings, securityInitializer)
+            : base(true, universeSettings)
         {
             Func<IEnumerable<FineFundamental>, object> fineFunc;
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
