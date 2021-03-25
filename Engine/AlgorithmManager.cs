@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Fasterflect;
+using NodaTime;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -765,7 +766,14 @@ namespace QuantConnect.Lean.Engine
                                 // while algorithm is warming up, i.e retrieving historical data in another thread
                                 _tempSynchronizerTimeSlicesQueue.Enqueue(timeSlice);
 
-                                // No yield just continue
+                                TimeSlice ts;
+                                // Dequeue history time slices if any
+                                while (_historicalTimeSlicesQueue.TryDequeue(out ts))
+                                {
+                                    yield return ts;
+                                }
+
+                                // Then jump to next iteration
                                 continue;
                             }
 
@@ -807,104 +815,136 @@ namespace QuantConnect.Lean.Engine
 
         private void ProcessHistoryTimeSlices(ICollection<HistoryRequest> historyRequests)
         {
-            var timeZone = _algorithm.TimeZone;
-            var history = _algorithm.HistoryProvider;
+            Log.Trace("Algorithm warming up...");
 
-            // initialize variables for progress computation
-            var warmUpStartTicks = DateTime.UtcNow.Ticks;
-
-            if (historyRequests.Count != 0)
+            // rewrite internal feed requests
+            var subscriptions = _algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).ToList();
+            var minResolution = subscriptions.Count > 0 ? subscriptions.Min(x => x.Resolution) : Resolution.Second;
+            foreach (var request in historyRequests)
             {
-                Log.Trace("Algorithm warming up...");
-
-                // rewrite internal feed requests
-                var subscriptions = _algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).ToList();
-                var minResolution = subscriptions.Count > 0 ? subscriptions.Min(x => x.Resolution) : Resolution.Second;
-                foreach (var request in historyRequests)
+                Security security;
+                if (_algorithm.Securities.TryGetValue(request.Symbol, out security) && security.IsInternalFeed())
                 {
-                    Security security;
-                    if (_algorithm.Securities.TryGetValue(request.Symbol, out security) && security.IsInternalFeed())
+                    if (request.Resolution < minResolution)
                     {
-                        if (request.Resolution < minResolution)
-                        {
-                            request.Resolution = minResolution;
-                            request.FillForwardResolution = request.FillForwardResolution.HasValue ? minResolution : (Resolution?)null;
-                        }
+                        request.Resolution = minResolution;
+                        request.FillForwardResolution = request.FillForwardResolution.HasValue ? minResolution : (Resolution?)null;
                     }
                 }
+            }
 
-                // rewrite all to share the same fill forward resolution
-                if (historyRequests.Any(x => x.FillForwardResolution.HasValue))
+            // rewrite all to share the same fill forward resolution
+            if (historyRequests.Any(x => x.FillForwardResolution.HasValue))
+            {
+                minResolution = historyRequests.Where(x => x.FillForwardResolution.HasValue).Min(x => x.FillForwardResolution.Value);
+                foreach (var request in historyRequests.Where(x => x.FillForwardResolution.HasValue))
                 {
-                    minResolution = historyRequests.Where(x => x.FillForwardResolution.HasValue).Min(x => x.FillForwardResolution.Value);
-                    foreach (var request in historyRequests.Where(x => x.FillForwardResolution.HasValue))
-                    {
-                        request.FillForwardResolution = minResolution;
-                    }
+                    request.FillForwardResolution = minResolution;
                 }
+            }
 
-                foreach (var request in historyRequests)
+            foreach (var request in historyRequests)
+            {
+                Log.Trace($"AlgorithmManager.Stream(): WarmupHistoryRequest: {request.Symbol}: Start: {request.StartTimeUtc} End: {request.EndTimeUtc} Resolution: {request.Resolution}");
+            }
+
+            var timeZone = _algorithm.TimeZone;
+            
+            // If the request is very long we need to split it otherwise we may run out of memory if requests are bulky
+            // Consider example: All SNP constituent stocks (500 securities), 1 min resolution data, 1 year deep history
+            // Memory will be running off when composing Slices from BaseData and when packing back to time slices.
+
+            const int chop = 10;
+            var minStartTime = historyRequests.Min(hr => hr.StartTimeUtc);
+            var maxEndTime = historyRequests.Max(hr => hr.EndTimeUtc);
+
+            if (maxEndTime - minStartTime > TimeSpan.FromDays(chop))
+            {
+                var currentStart = minStartTime;
+                var currentEnd = minStartTime.AddDays(chop);
+                var n = 0;
+
+                while (currentStart < maxEndTime)
                 {
-                    warmUpStartTicks = Math.Min(request.StartTimeUtc.Ticks, warmUpStartTicks);
-                    Log.Trace($"AlgorithmManager.Stream(): WarmupHistoryRequest: {request.Symbol}: Start: {request.StartTimeUtc} End: {request.EndTimeUtc} Resolution: {request.Resolution}");
-                }
+                    Log.Trace($" -- CHOP -- {n++}");
 
-                var timeSliceFactory = new TimeSliceFactory(timeZone);
+                    var smallTempRequests = historyRequests.Select(hr =>
+                        new HistoryRequest(currentStart, currentEnd, hr.DataType, hr.Symbol, hr.Resolution,
+                            hr.ExchangeHours, hr.DataTimeZone,
+                            hr.FillForwardResolution, hr.IncludeExtendedMarketHours, hr.IsCustomData,
+                            hr.DataNormalizationMode, hr.TickType)).ToList();
+
+                    PackInTimeSlices(_algorithm.HistoryProvider.GetHistory(smallTempRequests, timeZone), timeZone);
+
+                    currentStart = currentEnd;
+                    currentEnd = currentEnd.AddDays(chop);
+                    currentEnd = maxEndTime < currentEnd ? maxEndTime : currentEnd;
+                }
+            }
+            else
+            {
                 // make the history request and build time slices
-                foreach (var slice in history.GetHistory(historyRequests, timeZone))
-                {
-                    TimeSlice timeSlice;
-                    try
-                    {
-                        // we need to recombine this slice into a time slice
-                        var paired = new List<DataFeedPacket>();
-                        foreach (var symbol in slice.Keys)
-                        {
-                            var security = _algorithm.Securities[symbol];
-                            var data = slice[symbol];
-                            var list = new List<BaseData>();
-                            Type dataType;
-
-                            var ticks = data as List<Tick>;
-                            if (ticks != null)
-                            {
-                                list.AddRange(ticks);
-                                dataType = typeof(Tick);
-                            }
-                            else
-                            {
-                                list.Add(data);
-                                dataType = data.GetType();
-                            }
-
-                            var config = _algorithm.SubscriptionManager.SubscriptionDataConfigService
-                                .GetSubscriptionDataConfigs(symbol)
-                                .FirstOrDefault(subscription => dataType.IsAssignableFrom(subscription.Type));
-
-                            if (config == null)
-                            {
-                                throw new Exception($"A data subscription for type '{dataType.Name}' was not found.");
-                            }
-                            paired.Add(new DataFeedPacket(security, config, list));
-                        }
-
-                        timeSlice = timeSliceFactory.Create(slice.Time.ConvertToUtc(timeZone), paired, SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>());
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                        _algorithm.RunTimeError = err;
-                        return;
-                    }
-
-                    _historicalTimeSlicesQueue.Enqueue(timeSlice);
-                    _lastHistoryTimeUtc = timeSlice.Time;
-                }
+                PackInTimeSlices(_algorithm.HistoryProvider.GetHistory(historyRequests, timeZone) , timeZone);
             }
 
             lock (_lock)
             {
                 _warmupState = AlgorithmWarmupState.Completed;
+            }
+        }
+
+        private void PackInTimeSlices(IEnumerable<Slice> slices, DateTimeZone timeZone)
+        {
+            var timeSliceFactory = new TimeSliceFactory(timeZone);
+
+            foreach (var slice in slices)
+            {
+                TimeSlice timeSlice;
+                try
+                {
+                    // we need to recombine this slice into a time slice
+                    var paired = new List<DataFeedPacket>();
+                    foreach (var symbol in slice.Keys)
+                    {
+                        var security = _algorithm.Securities[symbol];
+                        var data = slice[symbol];
+                        var list = new List<BaseData>();
+                        Type dataType;
+
+                        var ticks = data as List<Tick>;
+                        if (ticks != null)
+                        {
+                            list.AddRange(ticks);
+                            dataType = typeof(Tick);
+                        }
+                        else
+                        {
+                            list.Add(data);
+                            dataType = data.GetType();
+                        }
+
+                        var config = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                            .GetSubscriptionDataConfigs(symbol)
+                            .FirstOrDefault(subscription => dataType.IsAssignableFrom(subscription.Type));
+
+                        if (config == null)
+                        {
+                            throw new Exception($"A data subscription for type '{dataType.Name}' was not found.");
+                        }
+                        paired.Add(new DataFeedPacket(security, config, list));
+                    }
+
+                    timeSlice = timeSliceFactory.Create(slice.Time.ConvertToUtc(timeZone), paired, SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>());
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    _algorithm.RunTimeError = err;
+                    return;
+                }
+
+                _historicalTimeSlicesQueue.Enqueue(timeSlice);
+                _lastHistoryTimeUtc = timeSlice.Time;
             }
         }
 
