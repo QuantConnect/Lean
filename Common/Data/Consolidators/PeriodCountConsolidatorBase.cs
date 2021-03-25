@@ -214,8 +214,8 @@ namespace QuantConnect.Data.Consolidators
                     }
                 }
 
-                OnDataConsolidated(_workingBar);
                 _lastEmit = IsTimeBased && _workingBar != null ? _workingBar.Time.Add(Period ?? TimeSpan.Zero) : data.Time;
+                OnDataConsolidated(_workingBar);
             }
 
             if (!aggregateBeforeFire)
