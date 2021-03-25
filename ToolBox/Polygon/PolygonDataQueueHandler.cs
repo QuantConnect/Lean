@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
@@ -96,7 +97,7 @@ namespace QuantConnect.ToolBox.Polygon
         {
             if (streamingEnabled)
             {
-                foreach (var securityType in new[] { SecurityType.Equity, SecurityType.Forex, SecurityType.Crypto })
+                foreach (var securityType in new[] { SecurityType.Equity /*, SecurityType.Forex, SecurityType.Crypto */})
                 {
                     var client = new PolygonWebSocketClientWrapper(_apiKey, _symbolMapper, securityType, OnMessage);
                     _webSocketClientWrappers.Add(securityType, client);
@@ -219,7 +220,17 @@ namespace QuantConnect.ToolBox.Polygon
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
+            var tasks = requests.Select(request => Task.Run(async () => await GetHistoryAsync(request).ConfigureAwait(false)));
+            var requestsAndHistory = Task.WhenAll(tasks).Result;
+            
             // create subscription objects from the configs
+            var subscriptions = 
+                (from kvp in requestsAndHistory 
+                let request = kvp.Key 
+                let history = kvp.Value 
+                select CreateSubscription(request, history)).ToList();
+
+            /*
             var subscriptions = new List<Subscription>();
             foreach (var request in requests)
             {
@@ -228,6 +239,7 @@ namespace QuantConnect.ToolBox.Polygon
 
                 subscriptions.Add(subscription);
             }
+            */
 
             return CreateSliceEnumerableFromSubscriptions(subscriptions, sliceTimeZone);
         }
@@ -240,6 +252,19 @@ namespace QuantConnect.ToolBox.Polygon
         public IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
             return ProcessHistoryRequest(request);
+        }
+
+        private Task<KeyValuePair<HistoryRequest, BaseData[]>> GetHistoryAsync(HistoryRequest request)
+        {
+            var tcs = new TaskCompletionSource<KeyValuePair<HistoryRequest, BaseData[]>>();
+            Task.Run(() =>
+            {
+                var result = GetHistory(request).ToArray();
+                var kvp = new KeyValuePair<HistoryRequest, BaseData[]> (request, result);
+                tcs.SetResult(kvp);
+            });
+
+            return tcs.Task;
         }
 
         #endregion
