@@ -67,7 +67,7 @@ class Bitcoin(PythonData):
 
         #return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
         # OR simply return a fixed small data file. Large files will slow down your backtest
-        return SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.RemoteFile);
+        return SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile);
 
 
     def Reader(self, config, line, date, isLiveMode):
@@ -111,7 +111,7 @@ class Bitcoin(PythonData):
             value = data[4]
             if value == 0: return None
 
-            coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
+            coin.Time = datetime.strptime(data[0], "%Y-%m-%d") + timedelta(days=1)
             coin.Value = value
             coin["Open"] = float(data[1])
             coin["High"] = float(data[2])

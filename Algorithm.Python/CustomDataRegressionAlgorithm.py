@@ -98,7 +98,7 @@ class Bitcoin(PythonData):
 
         try:
             data = line.split(',')
-            coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
+            coin.Time = datetime.strptime(data[0], "%Y-%m-%d") + timedelta(days=1)
             coin.Value = float(data[4])
             coin["Open"] = float(data[1])
             coin["High"] = float(data[2])
