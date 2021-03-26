@@ -115,5 +115,46 @@ namespace QuantConnect.Tests.Common.Data
                 lastBarTime = consolidated.EndTime;
             }
         }
+
+        [Test]
+        public void ConsolidatorEmitsOffsetBarsCorrectly()
+        {
+            // This test is to cover an issue seen with the live data stack
+            // The consolidator would fail to emit every other bar because of a 
+            // ms delay in data from a live stream
+            var period = TimeSpan.FromHours(1);
+            var consolidator = new TradeBarConsolidator(period);
+            var consolidatedBarsCount = 0;
+
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidatedBarsCount++;
+            };
+
+            var random = new Random();
+            var time = new DateTime(2015, 04, 13);
+
+            // The bars time is accurate, covering the hour perfectly
+            // But the emit time is slightly offset (the timeslice that contains the bar)
+            // So add a random ms offset to the scan time
+            consolidator.Update(new TradeBar { Time = time, Period = Time.OneHour });
+            time = time.Add(period);
+            consolidator.Scan(time.AddMilliseconds(random.Next(800))); 
+
+            consolidator.Update(new TradeBar { Time = time, Period = Time.OneHour });
+            time = time.Add(period);
+            consolidator.Scan(time.AddMilliseconds(random.Next(800)));
+
+            consolidator.Update(new TradeBar { Time = time, Period = Time.OneHour });
+            time = time.Add(period);
+            consolidator.Scan(time.AddMilliseconds(random.Next(800)));
+
+            consolidator.Update(new TradeBar { Time = time, Period = Time.OneHour });
+            time = time.Add(period);
+            consolidator.Scan(time.AddMilliseconds(random.Next(800)));
+
+            // We should expect to see 4 bars emitted from the consolidator
+            Assert.AreEqual(4,consolidatedBarsCount);
+        }
     }
 }
