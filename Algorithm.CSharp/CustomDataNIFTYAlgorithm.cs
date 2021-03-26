@@ -180,7 +180,8 @@ namespace QuantConnect.Algorithm.CSharp
                 //Date,       Open       High        Low       Close     Volume      Turnover
                 //2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
                 var data = line.Split(',');
-                index.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture).AddDays(1);
+                index.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
+                index.EndTime = index.Time.AddDays(1);
                 index.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                 index.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
                 index.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
@@ -246,7 +247,8 @@ namespace QuantConnect.Algorithm.CSharp
             try
             {
                 var data = line.Split(',');
-                currency.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture).AddDays(1);
+                currency.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
+                currency.EndTime = currency.Time.AddDays(1);
                 currency.Close = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                 currency.Symbol = "USDINR";
                 currency.Value = currency.Close;

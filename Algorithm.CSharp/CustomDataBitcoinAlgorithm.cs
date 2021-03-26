@@ -153,7 +153,8 @@ namespace QuantConnect.Algorithm.CSharp
                 try
                 {
                     string[] data = line.Split(',');
-                    coin.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture).AddDays(1);
+                    coin.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
+                    coin.EndTime = coin.Time.AddDays(1);
                     coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                     coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
                     coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);

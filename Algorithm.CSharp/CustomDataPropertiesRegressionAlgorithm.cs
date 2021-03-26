@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "1.736"},
-            {"Beta", "0.142"},
+            {"Beta", "0.136"},
             {"Annual Standard Deviation", "0.84"},
             {"Annual Variance", "0.706"},
             {"Information Ratio", "1.925"},
@@ -242,7 +242,8 @@ namespace QuantConnect.Algorithm.CSharp
                 try
                 {
                     string[] data = line.Split(',');
-                    coin.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture).AddDays(1);
+                    coin.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
+                    coin.EndTime = coin.Time.AddDays(1);
                     coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                     coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
                     coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);

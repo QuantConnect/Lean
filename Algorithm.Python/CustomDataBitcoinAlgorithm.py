@@ -111,7 +111,8 @@ class Bitcoin(PythonData):
             value = data[4]
             if value == 0: return None
 
-            coin.Time = datetime.strptime(data[0], "%Y-%m-%d") + timedelta(days=1)
+            coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
+            coin.EndTime = coin.Time + timedelta(days=1)
             coin.Value = value
             coin["Open"] = float(data[1])
             coin["High"] = float(data[2])
