@@ -190,7 +190,7 @@ namespace QuantConnect.Data.Consolidators
 
             if (aggregateBeforeFire)
             {
-                if (data.Time >= _lastEmit)
+                if (data.EndTime >= _lastEmit)
                 {
                     AggregateBar(ref _workingBar, data);
                 }
@@ -220,7 +220,7 @@ namespace QuantConnect.Data.Consolidators
 
             if (!aggregateBeforeFire)
             {
-                if (data.Time >= _lastEmit)
+                if (data.EndTime >= _lastEmit)
                 {
                     AggregateBar(ref _workingBar, data);
                 }
