@@ -52,7 +52,9 @@ class CustomDataBitcoinAlgorithm(QCAlgorithm):
         # If we don't have any weather "SHARES" -- invest"
         if not self.Portfolio.Invested:
             # Weather used as a tradable asset, like stocks, futures etc.
-            self.SetHoldings("BTC", 1)
+            # It's only OK to use SetHoldings with crypto when using custom data. When trading with built-in crypto data, 
+            # use the cashbook. Reference https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/BasicTemplateCryptoAlgorithm.py 
+            self.SetHoldings("BTC", 1) 
             self.Debug("Buying BTC 'Shares': BTC: {0}".format(close))
 
         self.Debug("Time: {0} {1}".format(datetime.now(), close))

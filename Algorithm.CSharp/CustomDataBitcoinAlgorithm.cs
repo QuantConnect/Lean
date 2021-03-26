@@ -58,6 +58,8 @@ namespace QuantConnect.Algorithm.CSharp
                 //Weather used as a tradable asset, like stocks, futures etc.
                 if (data.Close != 0)
                 {
+                    // It's only OK to use SetHoldings with crypto when using custom data. When trading with built-in crypto data, 
+                    // use the cashbook. Reference https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/BasicTemplateCryptoAlgorithm.py 
                     SetHoldings("BTC", 1);
                 }
                 Console.WriteLine("Buying BTC 'Shares': BTC: " + data.Close);
