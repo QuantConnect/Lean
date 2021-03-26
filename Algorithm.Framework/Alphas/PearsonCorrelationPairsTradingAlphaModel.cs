@@ -124,12 +124,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 .Select(x =>
                 {
                     var array = x.Select(b => Math.Log((double)b.Price)).ToArray();
-                    for (var i = array.Length - 1; i > 0; i--)
+                    if (array.Length > 1)
                     {
-                        array[i] = array[i] - array[i - 1];
+                        for (var i = array.Length - 1; i > 0; i--)
+                        {
+                            array[i] = array[i] - array[i - 1];
+                        }
+                        array[0] = array[1];
+                        return array;
                     }
-                    array[0] = array[1];
-                    return array;
+                    else
+                    {
+                        return new double[0];
+                    }
                 }).ToArray();
         }
     }
