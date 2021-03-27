@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
+from datetime import datetime
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Indicators import *
@@ -25,21 +26,31 @@ class BasicTemplateIndexAlgorithm(QCAlgorithm):
 
         # Use indicator for signal; but it cannot be traded
         self.spx = self.AddIndex("SPX", Resolution.Minute).Symbol
+
+        # Trade on SPX ITM calls
+        self.spxOption = Symbol.CreateOption(
+            self.spx,
+            Market.USA,
+            OptionStyle.European,
+            OptionRight.Call,
+            3200,
+            datetime(2021, 1, 15)
+        )
+
+        self.AddIndexOptionContract(self.spxOption, Resolution.Minute)
+
         self.emaSlow = self.EMA(self.spx, 80)
         self.emaFast = self.EMA(self.spx, 200)
 
-        # Trade on SPY
-        self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
-
     def OnData(self, data: Slice):
-        if self.spx not in data.Bars or self.spy not in data.Bars:
+        if self.spx not in data.Bars or self.spxOption not in data.Bars:
             return
 
         if not self.emaSlow.IsReady:
             return
 
         if self.emaFast > self.emaSlow:
-            self.SetHoldings(self.spy, 1)
+            self.SetHoldings(self.spxOption, 1)
         else:
             self.Liquidate()
 
