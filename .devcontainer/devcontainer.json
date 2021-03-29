@@ -1,6 +1,9 @@
 {
 	"name": "Lean Dev",
 
+	"workspaceMount": "source=${localWorkspaceFolder},target=/Lean,type=bind",
+	"workspaceFolder": "/Lean",
+
 	// Use devcontainer Dockerfile that is based on Lean foundation image
 	"build": {
 		"dockerfile": "Dockerfile"
@@ -18,7 +21,7 @@
 	// "forwardPorts": [],
 
 	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	"postCreateCommand": "dotnet nuget add source /workspaces/Lean/LocalPackages",
+	"postCreateCommand": "dotnet nuget add source /Lean/LocalPackages",
 
 	// Add mounts to docker container
 	"mounts": [ 
