@@ -282,6 +282,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // read the lines, skipping the headers
                 var lines = fileContent.Split(new[] { "\r\n" }, StringSplitOptions.None).Skip(7);
 
+                // Example of a line:
+                // SPY		2021	03	26	190	000	C P 	0	612	360000000
+
                 // parse the lines, creating the Lean option symbols
                 foreach (var line in lines)
                 {
@@ -294,21 +297,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var expiryDate = new DateTime(fields[2].ToInt32(), fields[3].ToInt32(), fields[4].ToInt32());
                     var strike = (fields[5] + "." + fields[6]).ToDecimal();
 
-                    OptionRight? right = fields[7].Contains("C")
-                        ? OptionRight.Call
-                        : fields[7].Contains("P")
-                            ? (OptionRight?)OptionRight.Put
-                            : null;
-
-                    if (right.HasValue)
-                    {
+                    Action<OptionRight> addSymbol = right =>
                         symbols.Add(Symbol.CreateOption(
                             underlyingSymbol,
                             underlyingSymbol.ID.Market,
                             underlyingSymbol.SecurityType.DefaultOptionStyle(),
-                            right.Value,
+                            right,
                             strike,
                             expiryDate));
+
+                    foreach (var right in fields[7].Trim().Split(' '))
+                    {
+                        if (right.Contains("C"))
+                        {
+                            addSymbol(OptionRight.Call);
+                        }
+
+                        if (right.Contains("P"))
+                        {
+                            addSymbol(OptionRight.Put);
+                        }
                     }
                 }
             }
