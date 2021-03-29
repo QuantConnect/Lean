@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Take(1)
                 .Single(), Resolution.Minute);
 
-            _spxOption.PriceModel = OptionPriceModels.BjerksundStensland();
+            _spxOption.PriceModel = OptionPriceModels.BlackScholes();
 
             _expectedOptionContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 3200m, new DateTime(2021, 1, 15));
             if (_spxOption.Symbol != _expectedOptionContract)
@@ -90,16 +90,16 @@ namespace QuantConnect.Algorithm.CSharp
             var vega = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Vega).ToList();
 
             // The commented out test cases all return zero.
-            // This is because of failure to evaluate the greeks in the option pricing model.
-            // For now, let's skip those.
+            // This is because of failure to evaluate the greeks in the option pricing model, most likely
+            // due to us not clearing the default 30 day requirement for the volatility model to start being updated.
             if (deltas.Any(d => d == 0))
             {
                 throw new AggregateException("Option contract Delta was equal to zero");
             }
-            if (gammas.Any(g => g == 0))
-            {
-                throw new AggregateException("Option contract Gamma was equal to zero");
-            }
+            //if (gammas.Any(g => g == 0))
+            //{
+            //    throw new AggregateException("Option contract Gamma was equal to zero");
+            //}
             //if (lambda.Any(l => l == 0))
             //{
             //    throw new AggregateException("Option contract Lambda was equal to zero");
@@ -108,10 +108,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new AggregateException("Option contract Rho was equal to zero");
             }
-            //if (theta.Any(t => t == 0))
-            //{
-            //    throw new AggregateException("Option contract Theta was equal to zero");
-            //}
+            if (theta.Any(t => t == 0))
+            {
+                throw new AggregateException("Option contract Theta was equal to zero");
+            }
             //if (vega.Any(v => v == 0))
             //{
             //    throw new AggregateException("Option contract Vega was equal to zero");
@@ -148,40 +148,40 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "3"},
-            {"Average Win", "27.44%"},
-            {"Average Loss", "-62.81%"},
-            {"Compounding Annual Return", "-80.444%"},
-            {"Drawdown", "52.600%"},
-            {"Expectancy", "-0.282"},
-            {"Net Profit", "-52.604%"},
-            {"Sharpe Ratio", "-0.867"},
-            {"Probabilistic Sharpe Ratio", "0.021%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.44"},
-            {"Alpha", "-0.611"},
-            {"Beta", "-0.033"},
-            {"Annual Standard Deviation", "0.695"},
-            {"Annual Variance", "0.484"},
-            {"Information Ratio", "-0.513"},
-            {"Tracking Error", "0.718"},
-            {"Treynor Ratio", "18.473"},
-            {"Total Fees", "$66.60"},
-            {"Estimated Strategy Capacity", "$1200000.00"},
-            {"Fitness Score", "0.162"},
+            {"Total Trades", "2"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-56.91%"},
+            {"Compounding Annual Return", "44.906%"},
+            {"Drawdown", "9.800%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "2.644%"},
+            {"Sharpe Ratio", "7.691"},
+            {"Probabilistic Sharpe Ratio", "91.027%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.417"},
+            {"Annual Variance", "0.174"},
+            {"Information Ratio", "7.691"},
+            {"Tracking Error", "0.417"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$46000000.00"},
+            {"Fitness Score", "0.023"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.136"},
-            {"Return Over Maximum Drawdown", "-1.529"},
-            {"Portfolio Turnover", "0.427"},
+            {"Sortino Ratio", "0.535"},
+            {"Return Over Maximum Drawdown", "5.789"},
+            {"Portfolio Turnover", "0.03"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -195,7 +195,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "a7f76d1e2d6f27651465217c92deea80"}
+            {"OrderListHash", "3cccf8c2409ee8a9020ba79a6c45742a"}
         };
     }
 }

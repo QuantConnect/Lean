@@ -63,11 +63,16 @@ namespace QuantConnect.Tests.Research
         public void DefaultEndDate()
         {
             var qb = new QuantBook();
-            var startDate = DateTime.UtcNow.Date.AddDays(-2);
-            var expectedDate = DateTime.UtcNow.Date;
+            var startDate = DateTime.UtcNow.Date.AddDays(-7);
+
+            // Expected end date should be either today if tradable, or last tradable day
+            var aapl = qb.AddEquity("AAPL");
+            var now = DateTime.UtcNow.ConvertFromUtc(aapl.Exchange.TimeZone).Date;
+            var expectedDate = aapl.Exchange.Hours.IsDateOpen(now) ? now : aapl.Exchange.Hours.GetPreviousTradingDay(now);
+
             IEnumerable<DataDictionary<dynamic>> data = qb.GetFundamental("AAPL", "ValuationRatios.PERatio", startDate);
 
-            // Check that the last day in the collection is as expected (today)
+            // Check that the last day in the collection is as expected
             var lastDay = data.Last();
             Assert.AreEqual(expectedDate, lastDay.Time);
         }

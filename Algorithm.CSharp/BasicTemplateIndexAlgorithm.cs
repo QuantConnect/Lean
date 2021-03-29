@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateIndexAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spx;
-        private Symbol _spy;
+        private Symbol _spxOption;
         private ExponentialMovingAverage _emaSlow;
         private ExponentialMovingAverage _emaFast;
 
@@ -40,17 +40,26 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2021, 2, 25);
-            SetEndDate(2021, 3, 3);
+            SetStartDate(2021, 1, 4);
+            SetEndDate(2021, 1, 15);
             SetCash(1000000);
 
             // Use indicator for signal; but it cannot be traded
             _spx = AddIndex("SPX", Resolution.Minute).Symbol;
+
+            // Trade on SPX ITM calls
+            _spxOption = QuantConnect.Symbol.CreateOption(
+                _spx,
+                Market.USA,
+                OptionStyle.European,
+                OptionRight.Call,
+                3200m,
+                new DateTime(2021, 1, 15));
+
+            AddIndexOptionContract(_spxOption, Resolution.Minute);
+
             _emaSlow = EMA(_spx, 80);
             _emaFast = EMA(_spx, 200);
-
-            // Trade on SPY
-            _spy = AddEquity("SPY", Resolution.Minute).Symbol;
         }
 
         /// <summary>
@@ -58,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnData(Slice slice)
         {
-            if (!slice.Bars.ContainsKey(_spx) || !slice.Bars.ContainsKey(_spy))
+            if (!slice.Bars.ContainsKey(_spx) || !slice.Bars.ContainsKey(_spxOption))
             {
                 return;
             }
@@ -71,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_emaFast > _emaSlow)
             {
-                SetHoldings(_spy, 1);
+                SetHoldings(_spxOption, 1);
             }
             else
             {
@@ -102,33 +111,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "8220"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "13.500%"},
-            {"Expectancy", "-0.818"},
-            {"Net Profit", "-13.517%"},
-            {"Sharpe Ratio", "-2.678"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "89%"},
-            {"Win Rate", "11%"},
-            {"Profit-Loss Ratio", "0.69"},
-            {"Alpha", "4.398"},
-            {"Beta", "-0.989"},
-            {"Annual Standard Deviation", "0.373"},
-            {"Annual Variance", "0.139"},
-            {"Information Ratio", "-12.816"},
-            {"Tracking Error", "0.504"},
-            {"Treynor Ratio", "1.011"},
-            {"Total Fees", "$15207.00"},
-            {"Estimated Strategy Capacity", "$8800000.00"},
-            {"Fitness Score", "0.033"},
+            {"Total Trades", "4"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-53.10%"},
+            {"Compounding Annual Return", "-96.172%"},
+            {"Drawdown", "10.100%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-9.915%"},
+            {"Sharpe Ratio", "-4.217"},
+            {"Probabilistic Sharpe Ratio", "0.052%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.139"},
+            {"Annual Variance", "0.019"},
+            {"Information Ratio", "-4.217"},
+            {"Tracking Error", "0.139"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$14000000.00"},
+            {"Fitness Score", "0.044"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-8.62"},
-            {"Return Over Maximum Drawdown", "-7.81"},
-            {"Portfolio Turnover", "302.321"},
+            {"Sortino Ratio", "-1.96"},
+            {"Return Over Maximum Drawdown", "-10.171"},
+            {"Portfolio Turnover", "0.34"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -142,7 +151,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "35b3f4b7a225468d42ca085386a2383e"}
+            {"OrderListHash", "52521ab779446daf4d38a7c9bbbdd893"}
         };
     }
 }
