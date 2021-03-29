@@ -3223,6 +3223,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="securityType">SecurityType of the Symbol</param>
         /// <param name="market">Market of the Symbol</param>
+        /// <param name="ticker">Ticker for the symbol</param>
         private string GetSymbolExchange(SecurityType securityType, string market, string ticker = null)
         {
             switch (securityType)
