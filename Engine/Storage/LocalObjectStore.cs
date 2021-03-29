@@ -313,7 +313,9 @@ namespace QuantConnect.Lean.Engine.Storage
                 }
 
                 // if the object store was not used, delete the empty storage directory created in Initialize.
-                if (AlgorithmStorageRoot != null && !Directory.GetFileSystemEntries(AlgorithmStorageRoot).Any())
+                if (AlgorithmStorageRoot != null &&
+                    Directory.Exists(AlgorithmStorageRoot) &&
+                    !Directory.GetFileSystemEntries(AlgorithmStorageRoot).Any())
                 {
                     Directory.Delete(AlgorithmStorageRoot);
                 }

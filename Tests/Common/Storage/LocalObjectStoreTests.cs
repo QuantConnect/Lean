@@ -21,6 +21,7 @@ using System.Text;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Storage;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Research;
 using QuantConnect.Storage;
@@ -35,6 +36,7 @@ namespace QuantConnect.Tests.Common.Storage
         private static readonly string StorageRootConfigurationValue = Config.Get("object-store-root");
 
         private ObjectStore _store;
+        private ILogHandler _logHandler;
 
         [OneTimeSetUp]
         public void Setup()
@@ -43,6 +45,9 @@ namespace QuantConnect.Tests.Common.Storage
 
             _store = new ObjectStore(new LocalObjectStore());
             _store.Initialize("CSharp-TestAlgorithm", 0, 0, "", new Controls());
+
+            // Store initial Log Handler
+            _logHandler = Log.LogHandler;
         }
 
         [OneTimeTearDown]
@@ -58,6 +63,9 @@ namespace QuantConnect.Tests.Common.Storage
             {
             }
             Config.Reset();
+
+            // Restore initial Log Handler
+            Log.LogHandler = _logHandler;
         }
 
         [TestCase(FileAccess.Read, false)]
@@ -319,6 +327,23 @@ namespace QuantConnect.Tests.Common.Storage
             }
 
             Assert.IsFalse(Directory.Exists("./LocalObjectStoreTests/unused"));
+        }
+
+        [Test]
+        public void DisposeDoesNotErrorWhenStorageFolderAlreadyDeleted()
+        {
+            var testHandler = new QueueLogHandler();
+            Log.LogHandler = testHandler;
+
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize("unused", 0, 0, "", new Controls());
+
+                Directory.Delete("./LocalObjectStoreTests/unused");
+            }
+
+            Assert.IsFalse(testHandler.Logs.Any(message =>
+                message.Message.Contains("Error deleting storage directory.")));
         }
 
         [Test]
