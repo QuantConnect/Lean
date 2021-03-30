@@ -214,6 +214,7 @@ namespace QuantConnect.Data.Consolidators
                     }
                 }
 
+                // Set _lastEmit first because OnDataConsolidated will set _workingBar to null
                 _lastEmit = IsTimeBased && _workingBar != null ? _workingBar.Time.Add(Period ?? TimeSpan.Zero) : data.Time;
                 OnDataConsolidated(_workingBar);
             }

@@ -156,5 +156,96 @@ namespace QuantConnect.Tests.Common.Data
             // We should expect to see 4 bars emitted from the consolidator
             Assert.AreEqual(4,consolidatedBarsCount);
         }
+
+        [Test]
+        public void ConsolidatorEmitsAllWorkingBars()
+        {
+            // This test is to ensure that no bars get swallowed by the consolidator
+            // even if it doesn't get the data on regular intervals.
+            var period = TimeSpan.FromHours(1);
+            var consolidator = new TradeBarConsolidator(period);
+            TradeBar latestConsolidated = null;
+            var consolidatedBarsCount = 0;
+
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                latestConsolidated = bar;
+                consolidatedBarsCount++;
+            };
+
+            var time = new DateTime(2015, 04, 13);
+
+            // ---- TEST UPDATE WILL EMIT OLD BARS ----
+            // Update this consolidator with minute tradebars but one less than 60, which would trigger emit
+            PushBarsThrough( 59, Time.OneMinute, consolidator, ref time);
+
+            // Should be zero since it is 12:59AM
+            Assert.IsTrue(time.Minute == 59);
+            Assert.AreEqual(0, consolidatedBarsCount);
+
+            // Advance time way past (3 hours) the the next expected data time (1 min)
+            // Time = 3:59AM
+            time += TimeSpan.FromHours(3);
+
+            // Push one bar through and check that we have the 12AM - 1AM Bar emitted
+            PushBarsThrough(1, Time.OneMinute, consolidator, ref time);
+            Assert.AreEqual(1, consolidatedBarsCount);
+            Assert.IsTrue(latestConsolidated != null && latestConsolidated.Time == new DateTime(2015, 04, 13));
+
+            // Then check the new working bar is 3AM to 4AM
+            Assert.IsTrue(consolidator.WorkingBar.Time == new DateTime(2015, 04, 13, 3, 0, 0));
+
+
+            // ---- TEST SCAN WILL EMIT OLD BARS ----
+            // Now advance time way past the bar end time of 4AM (3 Hours)
+            // Time = 6:59AM
+            time += TimeSpan.FromHours(3);
+
+            // Scan the time, it should emit the 3AM - 4AM Bar
+            consolidator.Scan(time);
+            Assert.AreEqual(2, consolidatedBarsCount);
+            Assert.IsTrue(latestConsolidated != null && latestConsolidated.Time == new DateTime(2015, 04, 13, 3, 0, 0));
+
+            // WorkingBar should be null, ready for whatever data comes through next
+            Assert.IsTrue(consolidator.WorkingBar == null);
+        }
+
+        [Test]
+        public void ConsolidatorEmitsRegularly()
+        {
+            // This test just pushes through 1000 bars
+            // and ensures that the emit time and count are correct
+            var period = TimeSpan.FromHours(1);
+            var consolidator = new TradeBarConsolidator(period);
+            var consolidatedBarsCount = 0;
+            var time = new DateTime(2015, 04, 13);
+
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                Assert.IsTrue(bar.EndTime == time);
+                consolidatedBarsCount++;
+            };
+
+            PushBarsThrough(1000, Time.OneHour, consolidator, ref time);
+
+            // Scan one last time so we can emit the 1000th bar
+            consolidator.Scan(time);
+            Assert.AreEqual(1000, consolidatedBarsCount);
+        }
+
+        private void PushBarsThrough (int barCount, TimeSpan period, TradeBarConsolidator consolidator, ref DateTime time)
+        {
+            TradeBar bar;
+            
+            for (int i = 0; i < barCount; i++)
+            {
+                bar = new TradeBar { Time = time, Period = Time.OneMinute };
+                consolidator.Update(bar);
+                consolidator.Scan(time);
+
+                // Advance time
+                time += period;
+            }
+        }
     }
 }
