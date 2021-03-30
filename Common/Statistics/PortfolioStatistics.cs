@@ -278,11 +278,11 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <param name="performance">Dictionary collection of double performance values</param>
         /// <param name="tradingDaysPerYear">Trading days per year for the assets in portfolio</param>
-        /// <remarks>May be unaccurate for forex algorithms with more trading days in a year</remarks>
+        /// <remarks>May be inaccurate for forex algorithms with more trading days in a year</remarks>
         /// <returns>Double annual performance percentage</returns>
         private static decimal GetAnnualPerformance(List<double> performance, int tradingDaysPerYear = 252)
         {
-            return (decimal)Statistics.AnnualPerformance(performance, (double)tradingDaysPerYear);
+            return Statistics.AnnualPerformance(performance, tradingDaysPerYear).SafeDecimalCast();
         }
 
         /// <summary>
