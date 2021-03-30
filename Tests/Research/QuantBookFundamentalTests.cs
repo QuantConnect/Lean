@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Research
 
             // Expected end date should be either today if tradable, or last tradable day
             var aapl = _qb.AddEquity("AAPL");
-            var now = DateTime.UtcNow.ConvertFromUtc(aapl.Exchange.TimeZone).Date;
+            var now = DateTime.UtcNow.Date;
             var expectedDate = aapl.Exchange.Hours.IsDateOpen(now) ? now : aapl.Exchange.Hours.GetPreviousTradingDay(now);
 
             IEnumerable<DataDictionary<dynamic>> data = _qb.GetFundamental("AAPL", "ValuationRatios.PERatio", startDate);
