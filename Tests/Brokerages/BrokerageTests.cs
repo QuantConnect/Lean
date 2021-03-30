@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Brokerages
             return brokerage;
         }
 
-        internal static Security CreateSecurity(Symbol symbol)
+        public static Security CreateSecurity(Symbol symbol)
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
