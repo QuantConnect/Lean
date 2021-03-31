@@ -330,7 +330,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             Log.Trace($"CoarseUniverseGeneratorProgram.PopulateSidContex(): Generating SID context from QuantQuote's map files.");
             foreach (var mapFile in mapFileResolver)
             {
-                if (exclusions.Contains(mapFile.Last().MappedSymbol))
+                if (!mapFile.Any() || exclusions.Contains(mapFile.Last().MappedSymbol))
                 {
                     continue;
                 }
