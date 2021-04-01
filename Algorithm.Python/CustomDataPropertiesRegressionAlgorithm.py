@@ -25,7 +25,7 @@ from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 from QuantConnect.Securities import *
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 ### <summary>
