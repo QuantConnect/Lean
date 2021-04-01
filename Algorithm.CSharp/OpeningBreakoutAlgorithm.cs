@@ -396,9 +396,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// If we're still invested by the end of the day, liquidate
         /// </summary>
-        public override void OnEndOfDay()
+        public override void OnEndOfDay(Symbol symbol)
         {
-            if (Security.Invested)
+            if (symbol == Security.Symbol && Security.Invested)
             {
                 Liquidate();
             }

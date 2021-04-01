@@ -57,53 +57,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         /// <param name="algorithm">The algorithm instance the event is fo</param>
         /// <param name="resultHandler">The result handler, used to communicate run time errors</param>
-        /// <param name="start">The date to start the events</param>
-        /// <param name="end">The date to end the events</param>
-        /// <param name="endOfDayDelta">The time difference between the market close and the event, positive time will fire before market close</param>
-        /// <param name="currentUtcTime">Specfies the current time in UTC, before which, no events will be scheduled. Specify null to skip this filter.</param>
-        /// <returns>The new <see cref="ScheduledEvent"/> that will fire near market close each tradeable dat</returns>
-        [Obsolete("This method is deprecated. It will generate ScheduledEvents for the deprecated IAlgorithm.OnEndOfDay()")]
-        public static ScheduledEvent EveryAlgorithmEndOfDay(IAlgorithm algorithm, IResultHandler resultHandler, DateTime start, DateTime end, TimeSpan endOfDayDelta, DateTime? currentUtcTime = null)
-        {
-            if (endOfDayDelta >= Time.OneDay)
-            {
-                throw new ArgumentException("Delta must be less than a day", "endOfDayDelta");
-            }
-
-            // set up an event to fire every tradeable date for the algorithm as a whole
-            var eodEventTime = Time.OneDay.Subtract(endOfDayDelta);
-
-            // create enumerable of end of day in algorithm's time zone
-            var times =
-                // for every date any exchange is open in the algorithm
-                from date in Time.EachTradeableDay(algorithm.Securities.Values, start, end)
-                // define the time of day we want the event to fire, a little before midnight
-                let eventTime = date + eodEventTime
-                // convert the event time into UTC
-                let eventUtcTime = eventTime.ConvertToUtc(algorithm.TimeZone)
-                // perform filter to verify it's not before the current time
-                where !currentUtcTime.HasValue || eventUtcTime > currentUtcTime.Value
-                select eventUtcTime;
-
-            return new ScheduledEvent(CreateEventName("Algorithm", "EndOfDay"), times, (name, triggerTime) =>
-            {
-                try
-                {
-                    algorithm.OnEndOfDay();
-                }
-                catch (Exception err)
-                {
-                    resultHandler.RuntimeError($"Runtime error in {name} event: {err.Message}", err.StackTrace);
-                    Log.Error(err, $"ScheduledEvent.{name}:");
-                }
-            });
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ScheduledEvent"/> that will fire before market close by the specified time
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance the event is fo</param>
-        /// <param name="resultHandler">The result handler, used to communicate run time errors</param>
         /// <param name="security">The security used for defining tradeable dates</param>
         /// <param name="start">The first date for the events</param>
         /// <param name="end">The date to end the events</param>

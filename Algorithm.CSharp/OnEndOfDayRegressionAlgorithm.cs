@@ -56,14 +56,6 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Obsolete overload to be removed.
-        /// </summary>
-        public override void OnEndOfDay()
-        {
-            _onEndOfDayCallCount++;
-        }
-
-        /// <summary>
         /// We expect it to be called for the universe selected <see cref="Symbol"/>
         /// and the post initialize manually added equity <see cref="Symbol"/>
         /// </summary>
@@ -114,10 +106,6 @@ namespace QuantConnect.Algorithm.CSharp
             if (_onEndOfDayIbmCallCount != 1)
             {
                 throw new Exception($"OnEndOfDay(IBM) unexpected count call {_onEndOfDayIbmCallCount}");
-            }
-            if (_onEndOfDayCallCount != 4)
-            {
-                throw new Exception($"OnEndOfDay() unexpected count call {_onEndOfDayCallCount}");
             }
         }
 
