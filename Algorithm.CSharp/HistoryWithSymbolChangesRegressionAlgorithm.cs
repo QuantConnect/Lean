@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var firstBar = history.First().Bars.GetValue(symbol);
-            if (firstBar.EndTime != new DateTime(1998, 3, 3) || firstBar.Close != 25.11427695m)
+            if (firstBar.EndTime != new DateTime(1998, 3, 3) || firstBar.Close != 24.88039125m)
             {
                 throw new Exception("First History bar - unexpected data received");
             }
@@ -90,8 +90,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-7.068"},
-            {"Tracking Error", "0.193"},
+            {"Information Ratio", "-7.163"},
+            {"Tracking Error", "0.195"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
