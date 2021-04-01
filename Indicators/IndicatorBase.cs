@@ -77,7 +77,7 @@ namespace QuantConnect.Indicators
         public bool Update(IBaseData input)
         {
             T _previousSymbolInput = default(T);
-            if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
+            if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime <= _previousSymbolInput.EndTime)
             {
                 // if we receive a time in the past, log and return
                 Log.Error($"This is a forward only indicator: {Name} Input: {input.EndTime:u} Previous: {_previousSymbolInput.EndTime:u}. It will not be updated with this input.");
