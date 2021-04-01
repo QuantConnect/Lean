@@ -1155,10 +1155,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var expectedDataFile = $"ff_{resolution}_{anotherSymbolResolution}.txt";
 
             // updates expected data
-            if (false)
+            const bool overrideEntry = false;
+            if (overrideEntry)
             {
                 QuantConnect.Compression.ZipCreateAppendData(
-                    "../../TestData/FillForwardBars.zip", expectedDataFile, FillForwardTestAlgorithm.Result.Value);
+                    "../../TestData/FillForwardBars.zip", expectedDataFile, FillForwardTestAlgorithm.Result.Value, overrideEntry);
             }
             QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
             var expected = File.ReadAllLines(expectedDataFile);

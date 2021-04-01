@@ -215,7 +215,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     CostOfRevenue3M = 35748000000m,
                     CostOfRevenue12M = 106606000000m,
                     EquityPerShareGrowth1Y = 0.091652m,
-                    PeRatio = 13.012858m,
+                    PeRatio = 13.012856m,
                     LiveMode = liveMode
                 },
                 new FineFundamentalTestParameters("AAPL-AfterFirstDate")
@@ -230,7 +230,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     CostOfRevenue3M = 35748000000m,
                     CostOfRevenue12M = 106606000000m,
                     EquityPerShareGrowth1Y = 0.091652m,
-                    PeRatio = 13.012858m
+                    PeRatio = 13.012856m
                 },
                 new FineFundamentalTestParameters("AAPL-PreviousBeforeLastDate")
                 {
@@ -244,7 +244,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     CostOfRevenue3M = 35748000000m,
                     CostOfRevenue12M = 106606000000m,
                     EquityPerShareGrowth1Y = 0.091652m,
-                    PeRatio = 13.272502m,
+                    PeRatio = 13.2725m,
                     LiveMode = liveMode
                 },
                 new FineFundamentalTestParameters("AAPL-BeforeLastDate")
@@ -259,7 +259,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     CostOfRevenue3M = 27699000000m,
                     CostOfRevenue12M = 106606000000m,
                     EquityPerShareGrowth1Y = 0.091652m,
-                    PeRatio = 13.272502m,
+                    PeRatio = 13.2725m,
                     FinancialHealthGrade = "A",
                     LiveMode = liveMode
                 },
@@ -275,7 +275,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     CostOfRevenue3M = 27699000000m,
                     CostOfRevenue12M = 106606000000m,
                     EquityPerShareGrowth1Y = 0.091652m,
-                    PeRatio = 13.272502m,
+                    PeRatio = 13.2725m,
                     // different than AAPL-BeforeLastDate
                     FinancialHealthGrade = "B",
                     LiveMode = liveMode
@@ -292,7 +292,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     CostOfRevenue3M = 27699000000m,
                     CostOfRevenue12M = 106606000000m,
                     EquityPerShareGrowth1Y = 0.091652m,
-                    PeRatio = 13.272502m,
+                    PeRatio = 13.2725m,
                     // different than AAPL-BeforeLastDate
                     FinancialHealthGrade = "B",
                     LiveMode = liveMode

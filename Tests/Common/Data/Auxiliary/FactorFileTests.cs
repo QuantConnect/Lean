@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         {
             var factorFile = FactorFile.Read("AAPL", "usa");
 
-            Assert.AreEqual(29, factorFile.SortedFactorFileData.Count);
+            Assert.AreEqual(41, factorFile.SortedFactorFileData.Count);
 
             Assert.AreEqual(new DateTime(1998, 01, 01), factorFile.FactorFileMinimumDate.Value);
         }
