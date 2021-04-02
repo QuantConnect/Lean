@@ -457,6 +457,14 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Call this method at the end of each day of data.
         /// </summary>
+        /// <remarks>Deprecated because different assets have different market close times,
+        /// and because Python does not support two methods with the same name</remarks>
+        [Obsolete("This method is deprecated. Please use this overload: OnEndOfDay(Symbol symbol)")]
+        void OnEndOfDay();
+
+        /// <summary>
+        /// Call this method at the end of each day of data.
+        /// </summary>
         void OnEndOfDay(Symbol symbol);
 
         /// <summary>

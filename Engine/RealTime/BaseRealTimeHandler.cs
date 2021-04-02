@@ -90,6 +90,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         protected void Setup(DateTime start, DateTime end, Language language, DateTime? currentUtcTime = null)
         {
+            AddAlgorithmEndOfDayEvent(start, end, currentUtcTime);
 
             if (language == Language.CSharp)
             {
@@ -119,6 +120,35 @@ namespace QuantConnect.Lean.Engine.RealTime
         protected int GetScheduledEventUniqueId()
         {
             return Interlocked.Increment(ref _scheduledEventUniqueId);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ScheduledEvent"/> that will fire before market close by the specified time
+        /// </summary>
+        /// <param name="start">The date to start the events</param>
+        /// <param name="end">The date to end the events</param>
+        /// <param name="currentUtcTime">Specifies the current time in UTC, before which,
+        /// no events will be scheduled. Specify null to skip this filter.</param>
+        [Obsolete("This method is deprecated. It will add ScheduledEvents for the deprecated IAlgorithm.OnEndOfDay()")]
+        protected void AddAlgorithmEndOfDayEvent(DateTime start, DateTime end, DateTime? currentUtcTime = null)
+        {
+            if (_algorithmOnEndOfDay != null)
+            {
+                // if we already set it once we remove the previous and
+                // add a new one, we don't want to keep both
+                Remove(_algorithmOnEndOfDay);
+            }
+
+            // add end of day events for each tradeable day
+            _algorithmOnEndOfDay = ScheduledEventFactory.EveryAlgorithmEndOfDay(
+                Algorithm,
+                ResultHandler,
+                start,
+                end,
+                ScheduledEvent.AlgorithmEndOfDayDelta,
+                currentUtcTime);
+
+            Add(_algorithmOnEndOfDay);
         }
 
         /// <summary>
