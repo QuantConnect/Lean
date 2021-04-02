@@ -850,11 +850,12 @@ namespace QuantConnect.Lean.Engine
 
             var timeZone = _algorithm.TimeZone;
             
-            // If the request is very long we need to split it otherwise we may run out of memory if requests are bulky
+            // If there are a lot of historical warm up requests and they are very long
+            // We may need to split them into smaller chops and proceed one by one otherwise we may run out of memory
             // Consider example: All SNP constituent stocks (500 securities), 1 min resolution data, 1 year deep history
             // Memory will be running off when composing Slices from BaseData and when packing back to time slices.
 
-            const int chop = 10;
+            var chop = Config.GetInt("algorithm-manager-warmup-requests-breakdown-span", 10);
             var minStartTime = historyRequests.Min(hr => hr.StartTimeUtc);
             var maxEndTime = historyRequests.Max(hr => hr.EndTimeUtc);
 
@@ -862,12 +863,9 @@ namespace QuantConnect.Lean.Engine
             {
                 var currentStart = minStartTime;
                 var currentEnd = minStartTime.AddDays(chop);
-                var n = 0;
 
                 while (currentStart < maxEndTime)
                 {
-                    Log.Trace($" -- CHOP -- {n++}");
-
                     var smallTempRequests = historyRequests.Select(hr =>
                         new HistoryRequest(currentStart, currentEnd, hr.DataType, hr.Symbol, hr.Resolution,
                             hr.ExchangeHours, hr.DataTimeZone,
