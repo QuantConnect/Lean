@@ -35,9 +35,9 @@ namespace QuantConnect.Tests.Indicators
             second.Of(first);
 
             var data1 = new IndicatorDataPoint(DateTime.UtcNow, 1m);
-            var data2 = new IndicatorDataPoint(DateTime.UtcNow, 2m);
-            var data3 = new IndicatorDataPoint(DateTime.UtcNow, 3m);
-            var data4 = new IndicatorDataPoint(DateTime.UtcNow, 4m);
+            var data2 = new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(1), 2m);
+            var data3 = new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(2), 3m);
+            var data4 = new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(3), 4m);
 
             // sma has one item
             first.Update(data1);
@@ -70,13 +70,13 @@ namespace QuantConnect.Tests.Indicators
             var third = value.WeightedBy(weight, period);
 
             var data = Enumerable.Range(1, 10).ToList();
-            var window = Enumerable.Reverse(data).Take(period);
+            var window = Enumerable.Reverse(data).Take(period).ToList();
             var current = window.Sum(x => 2 * x * x) / (decimal)window.Sum(x => x);
 
             foreach (var item in data)
             {
-                value.Update(new IndicatorDataPoint(DateTime.UtcNow, Convert.ToDecimal(2 * item)));
-                weight.Update(new IndicatorDataPoint(DateTime.UtcNow, Convert.ToDecimal(item)));
+                value.Update(new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(item), Convert.ToDecimal(2 * item)));
+                weight.Update(new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(item), Convert.ToDecimal(item)));
             }
 
             Assert.AreEqual(current, third.Current.Value);
@@ -116,17 +116,17 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(delay.IsReady);
             Assert.IsFalse(sma.IsReady);
 
-            identity.Update(DateTime.UtcNow, 2m);
+            identity.Update(DateTime.UtcNow.AddSeconds(1), 2m);
             Assert.IsTrue(identity.IsReady);
             Assert.IsFalse(delay.IsReady);
             Assert.IsFalse(sma.IsReady);
 
-            identity.Update(DateTime.UtcNow, 3m);
+            identity.Update(DateTime.UtcNow.AddSeconds(2), 3m);
             Assert.IsTrue(identity.IsReady);
             Assert.IsTrue(delay.IsReady);
             Assert.IsFalse(sma.IsReady);
 
-            identity.Update(DateTime.UtcNow, 4m);
+            identity.Update(DateTime.UtcNow.AddSeconds(3), 4m);
             Assert.IsTrue(identity.IsReady);
             Assert.IsTrue(delay.IsReady);
             Assert.IsTrue(sma.IsReady);
@@ -149,17 +149,17 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(delay.IsReady);
             Assert.IsFalse(ema.IsReady);
 
-            identity.Update(DateTime.UtcNow, 2m);
+            identity.Update(DateTime.UtcNow.AddDays(1), 2m);
             Assert.IsTrue(identity.IsReady);
             Assert.IsFalse(delay.IsReady);
             Assert.IsFalse(ema.IsReady);
 
-            identity.Update(DateTime.UtcNow, 3m);
+            identity.Update(DateTime.UtcNow.AddDays(2), 3m);
             Assert.IsTrue(identity.IsReady);
             Assert.IsTrue(delay.IsReady);
             Assert.IsFalse(ema.IsReady);
 
-            identity.Update(DateTime.UtcNow, 4m);
+            identity.Update(DateTime.UtcNow.AddDays(3), 4m);
             Assert.IsTrue(identity.IsReady);
             Assert.IsTrue(delay.IsReady);
             Assert.IsTrue(ema.IsReady);
@@ -179,17 +179,17 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(delay.IsReady);
             Assert.IsFalse(max.IsReady);
 
-            identity.Update(DateTime.UtcNow, 2m);
+            identity.Update(DateTime.UtcNow.AddSeconds(1), 2m);
             Assert.IsTrue(identity.IsReady);
             Assert.IsFalse(delay.IsReady);
             Assert.IsFalse(max.IsReady);
 
-            identity.Update(DateTime.UtcNow, 3m);
+            identity.Update(DateTime.UtcNow.AddSeconds(2), 3m);
             Assert.IsTrue(identity.IsReady);
             Assert.IsTrue(delay.IsReady);
             Assert.IsFalse(max.IsReady);
 
-            identity.Update(DateTime.UtcNow, 4m);
+            identity.Update(DateTime.UtcNow.AddSeconds(3), 4m);
             Assert.IsTrue(identity.IsReady);
             Assert.IsTrue(delay.IsReady);
             Assert.IsTrue(max.IsReady);
@@ -236,13 +236,13 @@ namespace QuantConnect.Tests.Indicators
             right.Update(DateTime.Today, 1m);
             Assert.AreEqual(2m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 2m);
+            left.Update(DateTime.Today.AddDays(1), 2m);
             Assert.AreEqual(2m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 3m);
+            left.Update(DateTime.Today.AddDays(2), 3m);
             Assert.AreEqual(2m, composite.Current.Value);
 
-            right.Update(DateTime.Today, 4m);
+            right.Update(DateTime.Today.AddDays(2), 4m);
             Assert.AreEqual(7m, composite.Current.Value);
         }
 
@@ -255,7 +255,7 @@ namespace QuantConnect.Tests.Indicators
             left.Update(DateTime.Today, 1m);
             Assert.AreEqual(6m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 2m);
+            left.Update(DateTime.Today.AddDays(1), 2m);
             Assert.AreEqual(7m, composite.Current.Value);
         }
 
@@ -270,13 +270,13 @@ namespace QuantConnect.Tests.Indicators
             right.Update(DateTime.Today, 1m);
             Assert.AreEqual(0m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 2m);
+            left.Update(DateTime.Today.AddDays(1), 2m);
             Assert.AreEqual(0m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 3m);
+            left.Update(DateTime.Today.AddDays(2), 3m);
             Assert.AreEqual(0m, composite.Current.Value);
 
-            right.Update(DateTime.Today, 4m);
+            right.Update(DateTime.Today.AddDays(2), 4m);
             Assert.AreEqual(-1m, composite.Current.Value);
         }
 
@@ -289,7 +289,7 @@ namespace QuantConnect.Tests.Indicators
             left.Update(DateTime.Today, 1m);
             Assert.AreEqual(0m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 2m);
+            left.Update(DateTime.Today.AddDays(1), 2m);
             Assert.AreEqual(1m, composite.Current.Value);
         }
 
@@ -304,13 +304,13 @@ namespace QuantConnect.Tests.Indicators
             right.Update(DateTime.Today, 1m);
             Assert.AreEqual(1m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 2m);
+            left.Update(DateTime.Today.AddDays(1), 2m);
             Assert.AreEqual(1m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 3m);
+            left.Update(DateTime.Today.AddDays(2), 3m);
             Assert.AreEqual(1m, composite.Current.Value);
 
-            right.Update(DateTime.Today, 4m);
+            right.Update(DateTime.Today.AddDays(2), 4m);
             Assert.AreEqual(3m / 4m, composite.Current.Value);
         }
 
@@ -323,7 +323,7 @@ namespace QuantConnect.Tests.Indicators
             left.Update(DateTime.Today, 2m);
             Assert.AreEqual(1m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 4m);
+            left.Update(DateTime.Today.AddDays(1), 4m);
             Assert.AreEqual(2m, composite.Current.Value);
         }
 
@@ -342,9 +342,9 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(updatedEventFired);
 
             // submitting another update to right won't cause an update without corresponding update to left
-            right.Update(DateTime.Today, 1m);
+            right.Update(DateTime.Today.AddDays(1), 1m);
             Assert.IsFalse(updatedEventFired);
-            left.Update(DateTime.Today, 1m);
+            left.Update(DateTime.Today.AddDays(1), 1m);
             Assert.IsTrue(updatedEventFired);
         }
 
@@ -359,13 +359,13 @@ namespace QuantConnect.Tests.Indicators
             right.Update(DateTime.Today, 1m);
             Assert.AreEqual(1m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 2m);
+            left.Update(DateTime.Today.AddDays(1), 2m);
             Assert.AreEqual(1m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 3m);
+            left.Update(DateTime.Today.AddDays(2), 3m);
             Assert.AreEqual(1m, composite.Current.Value);
 
-            right.Update(DateTime.Today, 4m);
+            right.Update(DateTime.Today.AddDays(2), 4m);
             Assert.AreEqual(12m, composite.Current.Value);
         }
 
@@ -378,7 +378,7 @@ namespace QuantConnect.Tests.Indicators
             left.Update(DateTime.Today, 1m);
             Assert.AreEqual(10m, composite.Current.Value);
 
-            left.Update(DateTime.Today, 2m);
+            left.Update(DateTime.Today.AddDays(1), 2m);
             Assert.AreEqual(20m, composite.Current.Value);
 
         }
@@ -415,7 +415,7 @@ namespace QuantConnect.Tests.Indicators
                 left.Update(DateTime.Today, 1);
                 Assert.AreEqual(-9, composite.Current.Value);
 
-                left.Update(DateTime.Today, 2);
+                left.Update(DateTime.Today.AddDays(1), 2);
                 Assert.AreEqual(-8, composite.Current.Value);
             }
         }
@@ -431,7 +431,7 @@ namespace QuantConnect.Tests.Indicators
                 left.Update(DateTime.Today, 1);
                 Assert.AreEqual(11, composite.Current.Value);
 
-                left.Update(DateTime.Today, 2);
+                left.Update(DateTime.Today.AddDays(1), 2);
                 Assert.AreEqual(12, composite.Current.Value);
             }
         }
@@ -447,7 +447,7 @@ namespace QuantConnect.Tests.Indicators
                 left.Update(DateTime.Today, 10);
                 Assert.AreEqual(2, composite.Current.Value);
 
-                left.Update(DateTime.Today, 20);
+                left.Update(DateTime.Today.AddDays(1), 20);
                 Assert.AreEqual(4, composite.Current.Value);
             }
         }
@@ -463,7 +463,7 @@ namespace QuantConnect.Tests.Indicators
                 left.Update(DateTime.Today, 10);
                 Assert.AreEqual(50, composite.Current.Value);
 
-                left.Update(DateTime.Today, 20);
+                left.Update(DateTime.Today.AddDays(1), 20);
                 Assert.AreEqual(100, composite.Current.Value);
             }
         }

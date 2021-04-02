@@ -137,9 +137,9 @@ class CustomSimpleMovingAverage(PythonIndicator):
             var sma = new SimpleMovingAverage(3);
 
             sma.Update(DateTime.UtcNow, 1m);
-            sma.Update(DateTime.UtcNow, 1m);
+            sma.Update(DateTime.UtcNow.AddSeconds(1), 1m);
             Assert.IsFalse(sma.IsReady);
-            sma.Update(DateTime.UtcNow, 1m);
+            sma.Update(DateTime.UtcNow.AddSeconds(2), 1m);
             Assert.IsTrue(sma.IsReady);
         }
 

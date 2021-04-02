@@ -40,10 +40,13 @@ namespace QuantConnect.Tests.Indicators
 
             for (var i = 0; i < prices.Length; i++)
             {
-                indicator.Update(time.AddMinutes(i), prices[i]);
-                stdDev.Update(time, prices[i]);
+                indicator.Update(time.AddMinutes(i + 1), prices[i]);
+                stdDev.Update(time.AddMinutes(i + 1), prices[i]);
                 actual[i] = Math.Round(indicator.Current.Value, 4);
             }
+
+            var s = string.Join(";", actual);
+
             Assert.AreEqual(expected, actual);
 
             var expectedUpper = indicator.Current.Value + stdDev.Current.Value * 2;

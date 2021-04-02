@@ -46,9 +46,9 @@ namespace QuantConnect.Tests.Indicators
             var indicator = new WindowIdentity(3);
 
             indicator.Update(DateTime.UtcNow, 1m);
-            indicator.Update(DateTime.UtcNow, 1m);
+            indicator.Update(DateTime.UtcNow.AddSeconds(1), 1m);
             Assert.IsFalse(indicator.IsReady);
-            indicator.Update(DateTime.UtcNow, 1m);
+            indicator.Update(DateTime.UtcNow.AddSeconds(2), 1m);
             Assert.IsTrue(indicator.IsReady);
         }
 

@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Indicators
             delay.Update(data);
             Assert.AreEqual(1m, delay.Current.Value);
 
-            data = new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(1), 2m);
+            data = new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(2), 2m);
             delay.Update(data);
             Assert.AreEqual(2m, delay.Current.Value);
         }

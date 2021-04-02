@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Indicators
             var mad = new MeanAbsoluteDeviation(3);
             mad.Update(DateTime.Today, 1m);
             mad.Update(DateTime.Today.AddSeconds(1), 2m);
-            mad.Update(DateTime.Today.AddSeconds(1), 1m);
+            mad.Update(DateTime.Today.AddSeconds(2), 1m);
             Assert.IsTrue(mad.IsReady);
 
             mad.Reset();
