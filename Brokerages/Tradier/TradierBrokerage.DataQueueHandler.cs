@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
@@ -39,7 +40,10 @@ namespace QuantConnect.Brokerages.Tradier
         private const int ConnectionTimeout = 30000;
 
         private readonly WebSocketClientWrapper _webSocketClient = new WebSocketClientWrapper();
+
+        private bool _isDataQueueHandlerInitialized;
         private TradierStreamSession _streamSession;
+
         private readonly ConcurrentDictionary<string, Symbol> _subscribedTickers = new ConcurrentDictionary<string, Symbol>();
 
         /// <summary>
@@ -63,6 +67,29 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 throw new NotSupportedException(
                     "TradierBrokerage.DataQueueHandler.Subscribe(): The sandbox does not support data streaming.");
+            }
+
+            // initialize data queue handler on-demand
+            if (!_isDataQueueHandlerInitialized)
+            {
+                _isDataQueueHandlerInitialized = true;
+
+                _streamSession = CreateStreamSession();
+
+                using (var resetEvent = new ManualResetEvent(false))
+                {
+                    EventHandler triggerEvent = (o, args) => resetEvent.Set();
+                    _webSocketClient.Open += triggerEvent;
+
+                    _webSocketClient.Connect();
+
+                    if (!resetEvent.WaitOne(ConnectionTimeout))
+                    {
+                        throw new TimeoutException("Websockets connection timeout.");
+                    }
+
+                    _webSocketClient.Open -= triggerEvent;
+                }
             }
 
             if (!CanSubscribe(dataConfig.Symbol))
