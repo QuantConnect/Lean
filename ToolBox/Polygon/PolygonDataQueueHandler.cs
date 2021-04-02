@@ -596,69 +596,57 @@ namespace QuantConnect.ToolBox.Polygon
 
             while (currentDate <= end.Date)
             {
-                int counter = -1;
-                int ticksCounter = 0;
+                Log.Trace($"GetEquityTradeTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
 
-                // If this is a very first iteration set offset exactly on request's start time. Otherwise use date start as an offset.
+                // If this is a very first iteration set offset exactly as request's start time.
+                // Otherwise use date start as an offset.
                 var offset = currentDate == start.Date
                     ? Time.DateTimeToUnixTimeStampNanoseconds(start)
                     : Time.DateTimeToUnixTimeStampNanoseconds(currentDate);
 
-                int lastHash = 0;
+                var counter = 0;
+                EquityTradeTickResponse lastTick = null;
                 while (true)
                 {
                     counter++;
 
                     using (var client = new WebClient())
                     {
-                        var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{currentDate:yyyy-MM-dd}?" +
+                        var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.ID.Symbol}/{currentDate:yyyy-MM-dd}?" +
                                   $"apiKey={_apiKey}&timestamp={offset}&limit={BaseAggregateBarsLimit}";
 
-                        Log.Trace(url);
-
-                        string response = "";
+                        string response;
                         try
                         {
                             response = client.DownloadString(url);
                         }
                         catch (WebException ex)
                         {
-                            String responseFromServer = ex.Message.ToString() + " ";
-                            if (ex.Response != null)
-                            {
-                                using (WebResponse resp = ex.Response)
-                                {
-                                    Stream dataRs = resp.GetResponseStream();
-                                    using (StreamReader reader = new StreamReader(dataRs))
-                                    {
-                                        responseFromServer += reader.ReadToEnd();
-                                    }
-                                }
-                            }
-                            Log.Error("Server Response: " + responseFromServer);
+                            Log.Error($"GetEquityTradeTicks(): No data for {currentDate:yyyy-MM-dd}. Server Response: " + ex.Message);
+
+                            // If server returned an error most likely on this day there is no data we are going to the next cycle
+                            break;
                         }
 
                         // Get ticks
                         var obj = JObject.Parse(response)["results"]?.ToString();
                         var tradeTicksList = JsonConvert.DeserializeObject<EquityTradeTickResponse[]>(obj).ToList();
 
-                        //Log.Trace($"COUNTER: {counter} RESPONSE : {obj}");
+                        // The first results of the next page will coincide with last results of previous page
+                        // We distinguish these results by exchange timestamp, lets clear from repeating values
+                        var lastTickExchangeTimeStamp = lastTick?.ExchangeTimestamp ?? 0;
+                        tradeTicksList = tradeTicksList.Where(x => x.ExchangeTimestamp != lastTickExchangeTimeStamp).ToList();
 
-                        Log.Trace($"Counter: {counter++ } time: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.First().ExchangeTimestamp)}");
-
-                        // This is the way to check this is the end of the ticks for the current date :
-                        // .. 
-                        if (tradeTicksList.Count == 1 && tradeTicksList.GetHashCode() == lastHash)
+                        // API will send at the end only such repeating ticks that coincide with last results of previous page
+                        // If there are no other ticks other than these then we break
+                        if (!tradeTicksList.Any())
                         {
-                            Log.Trace($"Breaks() FirstHash:{tradeTicksList.First().GetHashCode()} LastHash:{lastHash}");
                             break;
                         }
 
-                        // Drop the first element if these are the results of the next page
-                        if (counter > 0)
-                        {
-                            tradeTicksList.RemoveAt(0);
-                        }
+                        Log.Trace($"GetEquityTradeTicks(): Page # {counter}; " +
+                                  $"from: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.First().ExchangeTimestamp)}; " +
+                                  $"to: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.Last().ExchangeTimestamp)}");
 
                         foreach (var row in tradeTicksList)
                         {
@@ -669,18 +657,14 @@ namespace QuantConnect.ToolBox.Polygon
                                 yield break;
                             }
 
-                            var time = GetTickTime(request.Symbol, utcTime);
-
-                            var tick = new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
-
-                            yield return tick;
+                            yield return new Tick(GetTickTime(request.Symbol, utcTime), request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
 
                             // Save the values before to jump to the next iteration
                             offset = row.ExchangeTimestamp;
-                            lastHash = row.GetHashCode();
-
-                            ticksCounter++;
+                            lastTick = row;
                         }
+
+                        _dataPointCount += tradeTicksList.Count;
                     }
                 }
 

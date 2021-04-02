@@ -196,32 +196,23 @@ namespace QuantConnect.Tests.ToolBox
 
         private static TestCaseData[] HistoricalTicksTestCaseDatas => new[]
         {
-            new TestCaseData(Symbols.AAPL, Resolution.Tick, TickType.Trade, TimeSpan.FromDays(9), true),
+            new TestCaseData(Symbols.AAPL, Resolution.Tick, TickType.Trade, TimeSpan.FromDays(7), true),
         };
 
         [TestCaseSource(nameof(HistoricalTicksTestCaseDatas))]
         public void GetHistoricalTicksTest(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool isNonEmptyResult)
         {
             var request = CreateHistoryRequest(symbol, resolution, tickType, period);
-            var historyArray = _historyProvider.GetHistory(request).ToArray();
+            var historicalData = _historyProvider.GetHistory(request);
 
             Log.Trace("Data points retrieved: " + _historyProvider.DataPointCount);
 
             if (isNonEmptyResult)
             {
-                var i = -1;
-                foreach (var baseData in historyArray)
+                foreach (var group in historicalData.GroupBy(x => x.Time.Date))
                 {
-                    var bar = (TradeBar)baseData;
-                    Log.Trace($"{++i} {bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}");
+                    Log.Trace($"Downloaded ticks for {group.Key:yyyy-MM-dd} - {group.Count()}");
                 }
-
-                // Ordered by time
-                Assert.That(historyArray, Is.Ordered.By("Time"));
-
-                // No repeating bars
-                var timesArray = historyArray.Select(x => x.Time).ToArray();
-                Assert.AreEqual(timesArray.Length, timesArray.Distinct().Count());
             }
         }
 
