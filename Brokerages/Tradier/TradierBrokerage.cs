@@ -1870,5 +1870,4 @@ namespace QuantConnect.Brokerages.Tradier
             }
         }
     }
-
 }
