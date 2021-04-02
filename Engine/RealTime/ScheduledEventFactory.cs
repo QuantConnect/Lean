@@ -90,7 +90,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 try
                 {
                     algorithm.OnEndOfDay();
-                    algorithm.Debug("Usage of QCAlgorithm.OnEndOfDay() without a symbol will be deprecated August 2021. Always use a symbol when using this method: OnEndOfDay(symbol)");
+                    algorithm.Debug("Usage of QCAlgorithm.OnEndOfDay() without a symbol will be deprecated August 2021. Always use a symbol when overriding this method: OnEndOfDay(symbol)");
                 }
                 catch (Exception err)
                 {
