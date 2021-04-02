@@ -817,6 +817,18 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
+        /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
+        /// <remarks>Deprecated because different assets have different market close times,
+        /// and because Python does not support two methods with the same name</remarks>
+        [Obsolete("This method is deprecated and will be removed after August 2021. Please use this overload: OnEndOfDay(Symbol symbol)")]
+        public virtual void OnEndOfDay()
+        {
+            
+        }
+
+        /// <summary>
+        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
+        /// </summary>
         /// <remarks>
         /// This method is left for backwards compatibility and is invoked via <see cref="OnEndOfDay(Symbol)"/>, if that method is
         /// override then this method will not be called without a called to base.OnEndOfDay(string)
@@ -824,18 +836,6 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
         public virtual void OnEndOfDay(string symbol)
         {
-        }
-
-        /// <summary>
-        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
-        /// </summary>
-        /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
-        /// <remarks>Deprecated because different assets have different market close times,
-        /// and because Python does not support two methods with the same name</remarks>
-        [Obsolete("This method is deprecated. Please use this overload: OnEndOfDay(Symbol symbol)")]
-        public virtual void OnEndOfDay()
-        {
-            Debug("Usage of QCAlgorithm.OnEndOfDay() without a symbol will be deprecated August 2021. Always use a symbol when using this method: OnEndOfDay(symbol)");
         }
 
         /// <summary>

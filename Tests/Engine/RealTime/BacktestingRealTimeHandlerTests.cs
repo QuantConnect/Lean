@@ -473,6 +473,11 @@ namespace QuantConnect.Tests.Engine.RealTime
         {
             public bool OnEndOfDayFired { get; set; }
 
+            public override void OnEndOfDay()
+            {
+                OnEndOfDayFired = true;
+            }
+
             public override void OnEndOfDay(Symbol symbol)
             {
             }

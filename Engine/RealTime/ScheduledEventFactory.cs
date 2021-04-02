@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             var times =
                 // for every date any exchange is open in the algorithm
                 from date in Time.EachTradeableDay(algorithm.Securities.Values, start, end)
-                    // define the time of day we want the event to fire, a little before midnight
+                // define the time of day we want the event to fire, a little before midnight
                 let eventTime = date + eodEventTime
                 // convert the event time into UTC
                 let eventUtcTime = eventTime.ConvertToUtc(algorithm.TimeZone)
@@ -90,6 +90,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 try
                 {
                     algorithm.OnEndOfDay();
+                    algorithm.Debug("Usage of QCAlgorithm.OnEndOfDay() without a symbol will be deprecated August 2021. Always use a symbol when using this method: OnEndOfDay(symbol)");
                 }
                 catch (Exception err)
                 {
@@ -122,7 +123,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             var times =
                 // for every date the exchange is open for this security
                 from date in Time.EachTradeableDay(security, start, end)
-                    // get the next market close for the specified date
+                // get the next market close for the specified date
                 let marketClose = security.Exchange.Hours.GetNextMarketClose(date, security.IsExtendedMarketHours)
                 // define the time of day we want the event to fire before marketclose
                 let eventTime = marketClose.Subtract(endOfDayDelta)

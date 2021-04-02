@@ -210,6 +210,10 @@ namespace QuantConnect.Lean.Engine.RealTime
                         }
                     }
                 }
+
+                // we re add the algorithm end of day event because it depends on the securities
+                // tradable dates
+                AddAlgorithmEndOfDayEvent(Algorithm.UtcTime, Algorithm.EndDate, Algorithm.UtcTime);
             }
         }
     }
