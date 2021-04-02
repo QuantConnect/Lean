@@ -823,7 +823,7 @@ namespace QuantConnect.Algorithm
         [Obsolete("This method is deprecated and will be removed after August 2021. Please use this overload: OnEndOfDay(Symbol symbol)")]
         public virtual void OnEndOfDay()
         {
-            
+
         }
 
         /// <summary>
