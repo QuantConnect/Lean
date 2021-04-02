@@ -41,9 +41,8 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         private DateTime lastTradeTradeBars;
-        private DateTime lastTradeTicks;
         private TimeSpan tradeEvery = TimeSpan.FromMinutes(1);
-        public void OnData(Slice data)
+        public override void OnData(Slice data)
         {
             if (Time - lastTradeTradeBars < tradeEvery) return;
             lastTradeTradeBars = Time;

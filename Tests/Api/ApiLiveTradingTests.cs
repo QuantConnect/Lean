@@ -209,12 +209,10 @@ namespace QuantConnect.Tests.API
 
             // Oanda Custom Variables
             string accessToken = "";
-            var dateIssuedString = "20160920";
 
             // Tradier Custom Variables
             string dateIssued = "";
             string refreshToken = "";
-            string lifetime = "";
 
             // Create and test settings for each brokerage
             foreach (BrokerageName brokerageName in Enum.GetValues(typeof(BrokerageName)))

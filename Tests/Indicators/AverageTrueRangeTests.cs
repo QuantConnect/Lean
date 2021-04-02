@@ -33,14 +33,14 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => "Average True Range 14";
 
         [Test]
-        public void ComparesAgainstExternalData()
+        public override void ComparesAgainstExternalData()
         {
             var atrSimple = new AverageTrueRange(14, MovingAverageType.Simple);
             TestHelper.TestIndicator(atrSimple, "spy_atr.txt", "Average True Range 14");
         }
 
         [Test]
-        public void ResetsProperly()
+        public override void ResetsProperly()
         {
             var atr = new AverageTrueRange(14, MovingAverageType.Simple);
             atr.Update(new TradeBar

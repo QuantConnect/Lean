@@ -18,7 +18,6 @@ namespace QuantConnect.Tests.ToolBox
         private Symbol _cfd;
         private Symbol _equity;
         private Symbol _crypto;
-        private List<Tick> _ticks;
         private DateTime _date;
 
         [OneTimeSetUp]

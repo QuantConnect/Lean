@@ -139,7 +139,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 return (Date.GetHashCode() * 397) ^ 
                        (MappedSymbol != null ? MappedSymbol.GetHashCode() : 0) ^
-                       (PrimaryExchange != null ? PrimaryExchange.GetHashCode() : 0);
+                       (PrimaryExchange.GetHashCode());
             }
         }
 

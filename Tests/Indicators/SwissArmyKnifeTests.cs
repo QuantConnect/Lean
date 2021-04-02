@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(expected, (double) indicator.Current.Value, 0.01);
 
         [Test]
-        public void ResetsProperly()
+        public override void ResetsProperly()
         {
             var sak = new SwissArmyKnife(4, 0.1, SwissArmyKnifeTool.BandPass);
 

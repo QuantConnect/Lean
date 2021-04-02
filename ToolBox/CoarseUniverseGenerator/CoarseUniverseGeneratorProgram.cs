@@ -172,7 +172,6 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         foreach (var tradeBar in tickerDailyData.Where(tb => tb.Time >= startDate && tb.Time <= endDate))
                         {
                             var coarseRow = GenerateFactorFileRow(ticker, sidContext, factorFile, tradeBar, fineAvailableDates, fineFundamentalFolder);
-                            List<string> tempList;
 
                             outputCoarseContent.AddOrUpdate(tradeBar.Time,
                                 new List<string> { coarseRow },

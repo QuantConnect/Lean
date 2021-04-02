@@ -802,35 +802,5 @@ namespace QuantConnect.Orders.Fills
             }
             return true;
         }
-
-        public class Prices
-        {
-            public readonly DateTime EndTime;
-            public readonly decimal Current;
-            public readonly decimal Open;
-            public readonly decimal High;
-            public readonly decimal Low;
-            public readonly decimal Close;
-
-            public Prices(IBaseDataBar bar)
-                : this(bar.EndTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
-            {
-            }
-
-            public Prices(DateTime endTime, IBar bar)
-                : this(endTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
-            {
-            }
-
-            public Prices(DateTime endTime, decimal current, decimal open, decimal high, decimal low, decimal close)
-            {
-                EndTime = endTime;
-                Current = current;
-                Open = open == 0 ? current : open;
-                High = high == 0 ? current : high;
-                Low = low == 0 ? current : low;
-                Close = close == 0 ? current : close;
-            }
-        }
     }
 }

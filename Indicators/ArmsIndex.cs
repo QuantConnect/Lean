@@ -24,7 +24,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class ArmsIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private int _stockCount;
         private readonly IndicatorBase<IndicatorDataPoint> _arms;
 
         /// <summary>

@@ -381,6 +381,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _emptyFuturesChains.Clear();
             _emptySymbolChangedEvents.Clear();
 
+#pragma warning disable 0618 // DataDictionary.Time is deprecated, ignore until removed entirely
             _emptyTradeBars.Time
                 = _emptyQuoteBars.Time
                 = _emptyTicks.Time
@@ -390,6 +391,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 = _emptyOptionChains.Time
                 = _emptyFuturesChains.Time
                 = _emptySymbolChangedEvents.Time = algorithmTime;
+#pragma warning restore 0618
         }
 
         private bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, ISecurityPrice security, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)

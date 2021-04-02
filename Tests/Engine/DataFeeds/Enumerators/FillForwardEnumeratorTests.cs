@@ -1157,8 +1157,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // updates expected data
             if (false)
             {
+#pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
                     "../../TestData/FillForwardBars.zip", expectedDataFile, FillForwardTestAlgorithm.Result.Value);
+#pragma warning restore CS0162 
             }
             QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
             var expected = File.ReadAllLines(expectedDataFile);
@@ -1591,11 +1593,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // updates expected data
             if (false)
             {
+#pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
                     "../../TestData/FillForwardBars.zip",
                     expectedDataFile,
                     string.Join(Environment.NewLine, ffbars),
                     overrideEntry: true);
+#pragma warning restore CS0162
             }
             QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
             var expected = File.ReadAllLines(expectedDataFile);
@@ -1859,11 +1863,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // updates expected data
             if (false)
             {
+#pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
                     "../../TestData/FillForwardBars.zip",
                     expectedDataFile,
                     string.Join(Environment.NewLine, FillForwardDaylightMovementTestAlgorithm.Result.Value),
                     overrideEntry: true);
+#pragma warning restore CS0162
             }
             QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
             var expected = File.ReadAllLines(expectedDataFile);

@@ -223,6 +223,15 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Get Hash Code for this Object
+        /// </summary>
+        /// <returns>Integer Hash Code</returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        /// <summary>
         /// ToString Overload for Indicator Base
         /// </summary>
         /// <returns>String representation of the indicator</returns>
