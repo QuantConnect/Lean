@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void EmitsData()
         {
             var endDate = _startDate.AddDays(10);
-            var feed = RunDataFeed(forex: new List<string> { Symbols.EURUSD });
+            var feed = RunDataFeed(forex: new List<string> { Symbols.EURUSD.ToString() });
 
             var emittedData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
@@ -1116,9 +1116,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var lastTime = _manualTimeProvider.GetUtcNow();
             var feed = RunDataFeed(Resolution.Minute,
-                equities: securityType == SecurityType.Equity ? new List<string> { Symbols.SPY } : new List<string>(),
-                forex: securityType == SecurityType.Forex ? new List<string> { Symbols.EURUSD } : new List<string>(),
-                crypto: securityType == SecurityType.Crypto ? new List<string> { Symbols.BTCUSD } : new List<string>(),
+                equities: securityType == SecurityType.Equity ? new List<string> { Symbols.SPY.ToString() } : new List<string>(),
+                forex: securityType == SecurityType.Forex ? new List<string> { Symbols.EURUSD.ToString() } : new List<string>(),
+                crypto: securityType == SecurityType.Crypto ? new List<string> { Symbols.BTCUSD.ToString() } : new List<string>(),
                 getNextTicksFunction: (fdqh =>
                 {
                     var time = _manualTimeProvider.GetUtcNow();

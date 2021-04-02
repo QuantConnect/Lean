@@ -51,6 +51,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 output
             );
 
+            if (settings.Start.Year < 1998)
+            {
+                output.Error.WriteLine($"Required parameter --start must be at least 19980101");
+                Environment.Exit(1);
+            }
+
             GenerateRandomData(settings, output);
 
             if (settings.IncludeCoarse && settings.SecurityType == SecurityType.Equity)
@@ -124,6 +130,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 var aggregators = settings.CreateAggregators().ToList();
                 var tickHistory = tickGenerator.GenerateTicks(symbol).ToList();
 
+                // Companies rarely IPO then disappear within 6 months
+                if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() >= 6)
+                {
+                    willBeDelisted = false;
+                }
+
                 var dividendsSplitsMaps = new DividendSplitMapGenerator(
                     symbol, 
                     settings, 
@@ -152,7 +164,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     if (symbol != dividendsSplitsMaps.CurrentSymbol)
                     {
                         // Add all symbol rename events to dictionary
-                        foreach (var renameEvent in dividendsSplitsMaps.MapRows)
+                        // We skip the first row as it contains the listing event instead of a rename event
+                        foreach (var renameEvent in dividendsSplitsMaps.MapRows.Skip(1))
                         {
                             // Symbol.UpdateMappedSymbol does not update the underlying security ID symbol, which 
                             // is used to create the hash code. Create a new equity symbol from scratch instead.

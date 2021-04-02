@@ -2002,7 +2002,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case IB.ActionSide.Sell: return OrderDirection.Sell;
                 case IB.ActionSide.Undefined: return OrderDirection.Hold;
                 default:
-                    throw new ArgumentException(direction, "direction");
+                    throw new ArgumentException(direction, nameof(direction));
             }
         }
 
@@ -2017,7 +2017,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderDirection.Sell: return IB.ActionSide.Sell;
                 case OrderDirection.Hold: return IB.ActionSide.Undefined;
                 default:
-                    throw new InvalidEnumArgumentException("direction", (int)direction, typeof(OrderDirection));
+                    throw new InvalidEnumArgumentException(nameof(direction), (int)direction, typeof(OrderDirection));
             }
         }
 
@@ -2036,7 +2036,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.MarketOnOpen:    return IB.OrderType.Market;
                 case OrderType.MarketOnClose:   return IB.OrderType.MarketOnClose;
                 default:
-                    throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
+                    throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(OrderType));
             }
         }
 
@@ -2192,7 +2192,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // not sure how to map these guys
                 default:
-                    throw new ArgumentException(status, "status");
+                    throw new ArgumentException(status, nameof(status));
             }
         }
 
@@ -3223,6 +3223,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="securityType">SecurityType of the Symbol</param>
         /// <param name="market">Market of the Symbol</param>
+        /// <param name="ticker">Ticker for the symbol</param>
         private string GetSymbolExchange(SecurityType securityType, string market, string ticker = null)
         {
             switch (securityType)

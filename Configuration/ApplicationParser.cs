@@ -52,7 +52,9 @@ namespace QuantConnect.Configuration
             {
                 foreach (var commandOption in listOfOptions.Where(option => option.HasValue()))
                 {
+#pragma warning disable CS0618 // Type or member is obsolete; Works fine, will use until replacement is required
                     var optionKey = commandOption.Template.Replace("--", "");
+#pragma warning restore CS0618
                     var matchingOption = options.Find(o => o.Name == optionKey);
                     switch (matchingOption.Type)
                     {

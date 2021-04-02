@@ -34,8 +34,6 @@ namespace QuantConnect.Parameters
         /// </summary>
         public const BindingFlags BindingFlags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
 
-        private static readonly string ParameterAttributeNameProperty = "Name";
-
         /// <summary>
         /// Gets the name of this parameter
         /// </summary>

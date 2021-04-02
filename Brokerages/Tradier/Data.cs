@@ -206,7 +206,9 @@ namespace QuantConnect.Brokerages.Tradier
 
         ///Option Exp Date
         [JsonProperty(PropertyName = "expiration_date")]
+#pragma warning disable 0169 // Field is not currently used, but is good for future use
         private string Options_ExpirationDate;
+#pragma warning restore 0169
 
         ///Option Exp Type
         [JsonProperty(PropertyName = "expiration_type")]

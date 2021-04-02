@@ -61,7 +61,6 @@ namespace QuantConnect.Tests.Common
             Task.Run(() =>
             {
                 consumeStarted.Set();
-                var name = nameof(ConsumeRequestsAdditionalTimeAfterOneMinute);
                 provider.Consume(timeProvider, code, _timeMonitor);
                 consumeCompleted.Set();
             });

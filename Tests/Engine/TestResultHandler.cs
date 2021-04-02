@@ -39,9 +39,9 @@ namespace QuantConnect.Tests.Engine
         private readonly Action<Packet> _packetHandler;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-        public ConcurrentQueue<Packet> Messages { get; set; }
-        public ConcurrentDictionary<string, Chart> Charts { get; set; }
-        public bool IsActive { get; private set; }
+        public new ConcurrentQueue<Packet> Messages { get; set; }
+        public new ConcurrentDictionary<string, Chart> Charts { get; set; }
+        public new bool IsActive { get; private set; }
 
         public TestResultHandler(Action<Packet> packetHandler = null)
         {
@@ -178,11 +178,11 @@ namespace QuantConnect.Tests.Engine
         {
         }
 
-        public void OrderEvent(OrderEvent newEvent)
+        public override void OrderEvent(OrderEvent newEvent)
         {
         }
 
-        public void Exit()
+        public override void Exit()
         {
             _cancellationTokenSource.Cancel();
         }

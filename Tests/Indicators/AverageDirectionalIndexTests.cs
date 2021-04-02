@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => "ADX 14";
 
         [Test]
-        public void ComparesAgainstExternalData()
+        public override void ComparesAgainstExternalData()
         {
             const double epsilon = .0001;
             var adx = CreateIndicator();

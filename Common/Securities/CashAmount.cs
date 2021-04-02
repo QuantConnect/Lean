@@ -77,5 +77,14 @@ namespace QuantConnect.Securities
             }
             return false;
         }
+
+        /// <summary>
+        /// Get Hash Code for this Object
+        /// </summary>
+        /// <returns>Integer Hash Code</returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }
