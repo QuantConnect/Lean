@@ -63,21 +63,13 @@ namespace QuantConnect.Tests.Research
         public void DefaultEndDate()
         {
             var qb = new QuantBook();
-            var startDate = DateTime.UtcNow.Date.AddDays(-3);
-            var expectedDate = DateTime.UtcNow.Date;
+            var startDate = DateTime.UtcNow.Date.AddDays(-7);
+
+            // Expected end date should be the last trade day before now
+            var aapl = qb.AddEquity("AAPL");
+            var expectedDate = aapl.Exchange.Hours.GetPreviousTradingDay(DateTime.UtcNow.Date);
+
             IEnumerable<DataDictionary<dynamic>> data = qb.GetFundamental("AAPL", "ValuationRatios.PERatio", startDate);
-
-            // If its saturday or sunday, the end date will be friday
-            // so lets take care of that case
-            if (expectedDate.DayOfWeek == DayOfWeek.Saturday)
-            {
-                expectedDate = expectedDate.AddDays(-1);
-            }
-
-            if (expectedDate.DayOfWeek == DayOfWeek.Sunday)
-            {
-                expectedDate = expectedDate.AddDays(-2);
-            }
 
             // Check that the last day in the collection is as expected
             var lastDay = data.Last();
