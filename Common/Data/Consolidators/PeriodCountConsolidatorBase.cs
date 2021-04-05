@@ -190,7 +190,7 @@ namespace QuantConnect.Data.Consolidators
 
             if (aggregateBeforeFire)
             {
-                if (data.EndTime >= _lastEmit)
+                if (data.Time >= _lastEmit)
                 {
                     AggregateBar(ref _workingBar, data);
                 }
@@ -215,13 +215,13 @@ namespace QuantConnect.Data.Consolidators
                 }
 
                 // Set _lastEmit first because OnDataConsolidated will set _workingBar to null
-                _lastEmit = IsTimeBased && _workingBar != null ? _workingBar.Time.Add(Period ?? TimeSpan.Zero) : data.Time;
+                _lastEmit = IsTimeBased && _workingBar != null ? _workingBar.EndTime : data.Time;
                 OnDataConsolidated(_workingBar);
             }
 
             if (!aggregateBeforeFire)
             {
-                if (data.EndTime >= _lastEmit)
+                if (data.Time >= _lastEmit)
                 {
                     AggregateBar(ref _workingBar, data);
                 }
@@ -237,8 +237,8 @@ namespace QuantConnect.Data.Consolidators
             if (_workingBar != null && _period.HasValue && _period.Value != TimeSpan.Zero
                 && currentLocalTime - _workingBar.Time >= _period.Value && GetRoundedBarTime(currentLocalTime) > _lastEmit)
             {
+                _lastEmit = _workingBar.EndTime;
                 OnDataConsolidated(_workingBar);
-                _lastEmit = currentLocalTime;
             }
         }
 
