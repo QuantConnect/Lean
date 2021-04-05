@@ -21,7 +21,7 @@ using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Data
 {
-    [TestFixture, Parallelizable(ParallelScope.All)]
+    [TestFixture]
     public class PeriodCountConsolidatorTests
     {
         private static readonly object[] PeriodCases =
