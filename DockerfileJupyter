@@ -46,11 +46,8 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
 RUN chmod -R 777 ${WORK}
 
 # Install clr-loader for PythonNet
-RUN pip install clr-loader==0.1.5
+RUN pip install clr-loader==0.1.6
 
-# Work around for https://github.com/pythonnet/clr-loader/issues/8
-COPY fix_ffi_mono.py /opt/miniconda3/lib/python3.6/site-packages/clr_loader/ffi/mono.py
-COPY fix_mono.py /opt/miniconda3/lib/python3.6/site-packages/clr_loader/mono.py
 ENV LD_LIBRARY_PATH=/lib/
 RUN ln -s /lib/x86_64-linux-gnu/libc.so.6 /lib/x86_64-linux-gnu/libc.so
 
