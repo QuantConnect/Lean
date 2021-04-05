@@ -183,7 +183,10 @@ namespace QuantConnect.Brokerages.Tradier
 
                 if (!raw.IsSuccessful)
                 {
-                    throw new Exception($"TradierBrokerage.Execute(): Status: {raw.StatusCode}, Response: {raw.Content}");
+                    throw new Exception("TradierBrokerage.Execute(): " +
+                        $"Status: {raw.StatusCode}, " +
+                        $"Response: {raw.Content}, " +
+                        $"Error: {(raw.ErrorException != null ? raw.ErrorException.ToString() : string.Empty)}");
                 }
 
                 try
