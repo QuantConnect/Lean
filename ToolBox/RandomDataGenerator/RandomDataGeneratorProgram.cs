@@ -131,7 +131,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 var tickHistory = tickGenerator.GenerateTicks(symbol).ToList();
 
                 // Companies rarely IPO then disappear within 6 months
-                if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() >= 6)
+                if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() <= 6)
                 {
                     willBeDelisted = false;
                 }
