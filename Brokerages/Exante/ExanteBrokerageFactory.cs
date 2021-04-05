@@ -49,7 +49,12 @@ namespace QuantConnect.Brokerages.Exante
         /// <summary>
         /// provides brokerage connection data
         /// </summary>
-        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>();
+        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
+        {
+            {"exante-data-url", Config.Get("exante-data-url", "https://api-live.exante.eu/md/")},
+            {"exante-trading-url", Config.Get("exante-trading-url", "https://api-live.exante.eu/trade/")},
+            {"exante-access-token", Config.Get("exante-access-token")},
+        };
 
         public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider)
         {
