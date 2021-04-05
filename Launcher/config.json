@@ -112,6 +112,9 @@
   // binance configuration
   "binance-api-secret": "",
   "binance-api-key": "",
+  
+  // exante configuration
+  "exante-access-token": "",
 
   // arteyu configuration
   "atreyu-host": "",
