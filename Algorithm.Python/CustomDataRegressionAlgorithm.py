@@ -22,7 +22,7 @@ from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 ### <summary>
