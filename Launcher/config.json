@@ -119,7 +119,9 @@
   "binance-api-key": "",
   
   // exante configuration
-  "exante-access-token": "",
+  "exante-client-id": "",
+  "exante-application-id": "",
+  "exante-shared-key": "",
 
   // arteyu configuration
   "atreyu-host": "",

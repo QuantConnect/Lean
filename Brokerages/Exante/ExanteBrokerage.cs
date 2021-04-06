@@ -36,14 +36,16 @@ namespace QuantConnect.Brokerages.Exante
     public class ExanteBrokerage : Brokerage, IDataQueueHandler
     {
         private bool _isConnected;
+        private readonly ExanteClient _client;
 
         public ExanteBrokerage(
-            string dataUrl,
-            string tradingUrl,
-            string accessToken
+            string clientId,
+            string applicationId,
+            string sharedKey
             )
             : base("Exante Brokerage")
         {
+            _client = new ExanteClient(clientId, applicationId, sharedKey);
         }
 
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
@@ -75,7 +77,18 @@ namespace QuantConnect.Brokerages.Exante
 
         public override List<CashAmount> GetCashBalance()
         {
-            throw new NotImplementedException();
+            var cashAmounts = new List<CashAmount>();
+            var accounts = _client.GetAccountsAsync().Result.Data;
+            foreach (var account in accounts)
+            {
+                var accountSummary = _client.GetAccountSummaryAsync(account.AccountId, "USD", DateTime.Now).Result;
+                var freeMoney = accountSummary.Data.FreeMoney.GetValueOrDefault();
+                var currency = accountSummary.Data.Currency;
+                var cashAmount = new CashAmount(freeMoney, currency);
+                cashAmounts.Add(cashAmount);
+            }
+
+            return cashAmounts;
         }
 
         public override bool PlaceOrder(Order order)

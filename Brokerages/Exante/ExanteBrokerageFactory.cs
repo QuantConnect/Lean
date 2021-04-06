@@ -67,9 +67,9 @@ namespace QuantConnect.Brokerages.Exante
             var errors = new List<string>();
 
             // read values from the brokerage data
-            var dataUrl = Read<string>(job.BrokerageData, "exante-data-url", errors);
-            var tradingUrl = Read<string>(job.BrokerageData, "exante-trading-url", errors);
-            var accessToken = Read<string>(job.BrokerageData, "exante-access-token", errors);
+            var clientId = Read<string>(job.BrokerageData, "exante-client-id", errors);
+            var applicationId = Read<string>(job.BrokerageData, "exante-application-id", errors);
+            var sharedKey = Read<string>(job.BrokerageData, "exante-shared-key", errors);
 
             if (errors.empty())
             {
@@ -78,9 +78,9 @@ namespace QuantConnect.Brokerages.Exante
             }
 
             var brokerage = new ExanteBrokerage(
-                dataUrl,
-                tradingUrl,
-                accessToken);
+                clientId,
+                applicationId,
+                sharedKey);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;
