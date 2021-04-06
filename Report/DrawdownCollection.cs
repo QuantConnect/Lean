@@ -97,7 +97,7 @@ namespace QuantConnect.Report
             var backtestPoints = ResultsUtil.EquityPoints(backtestResult);
             var livePoints = ResultsUtil.EquityPoints(liveResult);
 
-            if (backtestPoints.Count == 0 && livePoints.Count == 0)
+            if (backtestPoints.Count < 2 && livePoints.Count < 2)
             {
                 return new Series<DateTime, double>(new DateTime[] { }, new double[] { });
             }
