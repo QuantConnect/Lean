@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QLNet;
 using QuantConnect.Brokerages.Exante;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -63,7 +64,26 @@ namespace QuantConnect.Brokerages.Exante
 
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
-            throw new NotImplementedException();
+            var errors = new List<string>();
+
+            // read values from the brokerage data
+            var dataUrl = Read<string>(job.BrokerageData, "exante-data-url", errors);
+            var tradingUrl = Read<string>(job.BrokerageData, "exante-trading-url", errors);
+            var accessToken = Read<string>(job.BrokerageData, "exante-access-token", errors);
+
+            if (errors.empty())
+            {
+                // if we had errors then we can't create the instance
+                throw new Exception(string.Join(System.Environment.NewLine, errors));
+            }
+
+            var brokerage = new ExanteBrokerage(
+                dataUrl,
+                tradingUrl,
+                accessToken);
+            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
+
+            return brokerage;
         }
     }
 }

@@ -25,19 +25,40 @@ using System.Linq;
 using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Packets;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Exante
 {
-    public class ExanteBrokerage : Brokerage
+    public class ExanteBrokerage : Brokerage, IDataQueueHandler
     {
         private bool _isConnected;
 
-        public ExanteBrokerage(string name)
+        public ExanteBrokerage(
+            string dataUrl,
+            string tradingUrl,
+            string accessToken
+            )
             : base("Exante Brokerage")
         {
+        }
+
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetJob(LiveNodePacket job)
+        {
+            throw new NotImplementedException();
         }
 
         public override bool IsConnected => _isConnected;
