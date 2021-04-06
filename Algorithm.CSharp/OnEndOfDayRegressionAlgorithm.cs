@@ -30,7 +30,6 @@ namespace QuantConnect.Algorithm.CSharp
         private int _onEndOfDaySpyCallCount;
         private int _onEndOfDayBacCallCount;
         private int _onEndOfDayIbmCallCount;
-        private int _onEndOfDayCallCount;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.

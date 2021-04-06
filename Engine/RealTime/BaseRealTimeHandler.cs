@@ -112,10 +112,11 @@ namespace QuantConnect.Lean.Engine.RealTime
             else if (language == Language.Python)
             {
                 var wrapper = Algorithm as AlgorithmPythonWrapper;
-                _implementsOnEndOfDaySymbol = wrapper.IsOnEndOfDayImplemented;
-
-                // Since we can't differentiate the methods in Python we have to set this to the same
-                _implementsOnEndOfDay = _implementsOnEndOfDaySymbol;
+                if (wrapper != null)
+                {
+                    _implementsOnEndOfDaySymbol = wrapper.IsOnEndOfDaySymbolImplemented;
+                    _implementsOnEndOfDay = wrapper.IsOnEndOfDayImplemented;
+                }
             }
             else
             {

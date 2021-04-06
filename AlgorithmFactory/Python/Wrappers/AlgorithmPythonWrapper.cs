@@ -54,6 +54,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public bool IsOnEndOfDayImplemented { get; }
 
         /// <summary>
+        /// True if the underlying python algorithm implements "OnEndOfDay(symbol)"
+        /// </summary>
+        public bool IsOnEndOfDaySymbolImplemented { get; }
+
+        /// <summary>
         /// <see cref = "AlgorithmPythonWrapper"/> constructor.
         /// Creates and wraps the algorithm written in python.
         /// </summary>
@@ -100,7 +105,29 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                             _onOrderEvent = pyAlgorithm.GetAttr("OnOrderEvent");
 
-                            IsOnEndOfDayImplemented = pyAlgorithm.GetPythonMethod("OnEndOfDay") != null;
+                            PyObject endOfDayMethod = pyAlgorithm.GetPythonMethod("OnEndOfDay");
+                            if (endOfDayMethod != null)
+                            {
+                                // Since we have a EOD method implemented
+                                // Determine which one it is by inspecting its arg count
+                                int argCount;
+                                var pyArgCount = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                                "from inspect import signature\n" +
+                                    "def GetArgCount(method):\n" +
+                                    "   return len(signature(method).parameters)\n"
+                                ).GetAttr("GetArgCount").Invoke(endOfDayMethod);
+                                pyArgCount.TryConvert(out argCount);
+
+                                switch (argCount)
+                                {
+                                    case 0: // EOD()
+                                        IsOnEndOfDayImplemented = true;
+                                        break;
+                                    case 1: // EOD(Symbol)
+                                        IsOnEndOfDaySymbolImplemented = true;
+                                        break;
+                                }
+                            }
                         }
                         attr.Dispose();
                     }
