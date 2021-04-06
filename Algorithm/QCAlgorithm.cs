@@ -45,8 +45,8 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Selection;
-using QuantConnect.Securities.Index;
 using QuantConnect.Storage;
+using Index = QuantConnect.Securities.Index.Index;
 
 namespace QuantConnect.Algorithm
 {
