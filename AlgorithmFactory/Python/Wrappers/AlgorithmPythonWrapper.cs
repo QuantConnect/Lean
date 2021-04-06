@@ -110,14 +110,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             {
                                 // Since we have a EOD method implemented
                                 // Determine which one it is by inspecting its arg count
-                                int argCount;
-                                var pyArgCount = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                                "from inspect import signature\n" +
-                                    "def GetArgCount(method):\n" +
-                                    "   return len(signature(method).parameters)\n"
-                                ).GetAttr("GetArgCount").Invoke(endOfDayMethod);
-                                pyArgCount.TryConvert(out argCount);
-
+                                var argCount = endOfDayMethod.GetPythonArgCount();
                                 switch (argCount)
                                 {
                                     case 0: // EOD()
@@ -127,6 +120,10 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                                         IsOnEndOfDaySymbolImplemented = true;
                                         break;
                                 }
+
+                                // Its important to note that even if both are implemented
+                                // python will only use the last implemented, meaning only one will
+                                // be used and seen.
                             }
                         }
                         attr.Dispose();
