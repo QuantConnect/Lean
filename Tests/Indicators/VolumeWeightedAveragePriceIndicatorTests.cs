@@ -57,11 +57,11 @@ namespace QuantConnect.Tests.Indicators
         public void IsReadyAfterPeriodUpdates()
         {
             var ind = new VolumeWeightedAveragePriceIndicator(3);
-
-            ind.Update(new TradeBar(DateTime.UtcNow, Symbols.SPY, 1m, 1m, 1m, 1m, 1));
-            ind.Update(new TradeBar(DateTime.UtcNow.AddSeconds(1), Symbols.SPY, 1m, 1m, 1m, 1m, 1));
+            var reference = new DateTime(2021, 4, 6);
+            ind.Update(new TradeBar(reference, Symbols.SPY, 1m, 1m, 1m, 1m, 1));
+            ind.Update(new TradeBar(reference.AddDays(1), Symbols.SPY, 1m, 1m, 1m, 1m, 1));
             Assert.IsFalse(ind.IsReady);
-            ind.Update(new TradeBar(DateTime.UtcNow.AddSeconds(2), Symbols.SPY, 1m, 1m, 1m, 1m, 1));
+            ind.Update(new TradeBar(reference.AddDays(2), Symbols.SPY, 1m, 1m, 1m, 1m, 1));
             Assert.IsTrue(ind.IsReady);
         }
 

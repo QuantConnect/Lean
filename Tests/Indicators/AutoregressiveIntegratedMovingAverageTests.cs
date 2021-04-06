@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Indicators
             var startDate = new DateTime(2019, 1, 1);
             for (var i = 0; i < period.Value; i++)
             {
-                indicator.Update(startDate.AddSeconds(i), 100m * (1m + 0.05m * i)); // Values should be sufficiently different, now.
+                indicator.Update(startDate.AddDays(i), 100m * (1m + 0.05m * i)); // Values should be sufficiently different, now.
                 Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
             }
 

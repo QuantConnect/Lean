@@ -14,7 +14,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
 
@@ -37,12 +36,12 @@ namespace QuantConnect.Tests.Indicators
         {
             // With the value not changing, the indicator should return default value 0m.
             var sharpeRatio = new SharpeRatio("SR", 10);
-            var time = DateTime.Now;
+            var reference = new DateTime(2021, 4, 6);
 
             // push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
             for (var i = 0; i < 20; i++)
             {
-                sharpeRatio.Update(time.AddSeconds(i), 100000m);
+                sharpeRatio.Update(reference.AddDays(i), 100000m);
             }
 
             Assert.AreEqual(sharpeRatio.Current.Value, 0m);
@@ -53,12 +52,12 @@ namespace QuantConnect.Tests.Indicators
         {
             // With the value changing, the indicator should return a value that is not the default 0m.
             var sharpeRatio = new SharpeRatio("SR", 10);
-            var time = DateTime.Now;
+            var reference = new DateTime(2021, 4, 6);
 
             // push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
             for (var i = 0; i < 20; i++)
             {
-                sharpeRatio.Update(time.AddSeconds(i), 100000m + i);
+                sharpeRatio.Update(reference.AddDays(i), 100000m + i);
             }
 
             Assert.AreNotEqual(sharpeRatio.Current.Value, 0m);
@@ -69,12 +68,12 @@ namespace QuantConnect.Tests.Indicators
         {
             // With the value changing, the indicator should return a value that is not the default 0m.
             var sharpeRatio = new SharpeRatio("SR", 10);
-            var time = DateTime.Now;
+            var reference = new DateTime(2021, 4, 6);
 
             // push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
             for (var i = 0; i < 20; i++)
             {
-                sharpeRatio.Update(time.AddSeconds(i), 0);
+                sharpeRatio.Update(reference.AddDays(i), 0);
             }
 
             Assert.AreEqual(sharpeRatio.Current.Value, 0m);

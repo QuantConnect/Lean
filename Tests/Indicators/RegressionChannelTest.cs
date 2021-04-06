@@ -45,8 +45,6 @@ namespace QuantConnect.Tests.Indicators
                 actual[i] = Math.Round(indicator.Current.Value, 4);
             }
 
-            var s = string.Join(";", actual);
-
             Assert.AreEqual(expected, actual);
 
             var expectedUpper = indicator.Current.Value + stdDev.Current.Value * 2;
@@ -77,7 +75,7 @@ namespace QuantConnect.Tests.Indicators
             var indicator = new RegressionChannel(20, 2);
             var period = ((IIndicatorWarmUpPeriodProvider)indicator).WarmUpPeriod;
             var prices = LeastSquaresMovingAverageTest.Prices;
-            var time = DateTime.Now;
+            var time = new DateTime(2021, 4, 6);
 
             for (var i = 0; i < period; i++)
             {

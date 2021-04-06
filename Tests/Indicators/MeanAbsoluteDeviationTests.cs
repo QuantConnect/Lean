@@ -50,9 +50,10 @@ namespace QuantConnect.Tests.Indicators
         public void ResetsProperly()
         {
             var mad = new MeanAbsoluteDeviation(3);
-            mad.Update(DateTime.Today, 1m);
-            mad.Update(DateTime.Today.AddSeconds(1), 2m);
-            mad.Update(DateTime.Today.AddSeconds(2), 1m);
+            var reference = new DateTime(2021, 4, 6);
+            mad.Update(reference, 1m);
+            mad.Update(reference.AddDays(1), 2m);
+            mad.Update(reference.AddDays(2), 1m);
             Assert.IsTrue(mad.IsReady);
 
             mad.Reset();
@@ -65,12 +66,12 @@ namespace QuantConnect.Tests.Indicators
         public void WarmsUpProperly()
         {
             var mad = new MeanAbsoluteDeviation(20);
-            var time = DateTime.Today;
+            var reference = new DateTime(2021, 4, 6);
             var period = ((IIndicatorWarmUpPeriodProvider)mad).WarmUpPeriod;
 
             for (var i = 0; i < period; i++)
             {
-                mad.Update(time.AddDays(i), i);
+                mad.Update(reference.AddDays(i), i);
                 Assert.AreEqual(i == period - 1, mad.IsReady);
             }
         }
