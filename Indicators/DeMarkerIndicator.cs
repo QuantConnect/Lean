@@ -81,6 +81,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
+            _lastHigh = 0m;
+            _lastLow = 0m;
             _maxMA.Reset();
             _minMA.Reset();
             base.Reset();
