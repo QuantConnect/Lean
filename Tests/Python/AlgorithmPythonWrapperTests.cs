@@ -20,7 +20,6 @@ using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using org.apache.log4j.lf5.util;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Python
