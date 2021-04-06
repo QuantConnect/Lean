@@ -23,6 +23,10 @@ using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
+using com.sun.security.ntlm;
+using Exante.Net;
+using Exante.Net.Enums;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -93,7 +97,30 @@ namespace QuantConnect.Brokerages.Exante
 
         public override bool PlaceOrder(Order order)
         {
-            throw new NotImplementedException();
+            var account = _client.GetAccountsAsync().Result.Data.GetEnumerator().Current;
+            var orderSide = default(ExanteOrderSide);
+            switch (order.Direction)
+            {
+                case OrderDirection.Buy:
+                    orderSide = ExanteOrderSide.Buy;
+                    break;
+                case OrderDirection.Sell:
+                    orderSide = ExanteOrderSide.Sell;
+                    break;
+            }
+
+            var orderPlacementTask = _client.PlaceOrderAsync(
+                account.AccountId,
+                order.Symbol.ID.Symbol,
+                ExanteOrderType.Market,
+                orderSide,
+                order.Quantity,
+                ExanteOrderDuration.AtTheClose
+            );
+            var orderPlacement = orderPlacementTask.Result.Data.ToList()[0];
+
+            var isPlaced = orderPlacement.OrderState.Status != ExanteOrderStatus.Cancelled;
+            return isPlaced;
         }
 
         public override bool UpdateOrder(Order order)
