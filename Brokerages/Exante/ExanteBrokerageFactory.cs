@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages.Exante
 
         public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider)
         {
-            throw new NotImplementedException();
+            return new ExanteBrokerageModel();
         }
 
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
