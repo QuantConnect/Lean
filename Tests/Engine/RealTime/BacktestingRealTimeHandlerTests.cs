@@ -395,13 +395,13 @@ namespace QuantConnect.Tests.Engine.RealTime
                 _resultHandler,
                 null,
                 new TestTimeLimitManager());
-            // the generic OnEndOfDay()
-            Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
+
+            Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
             realTimeHandler.OnSecuritiesChanged(
                 new SecurityChanges(new[] { security }, Enumerable.Empty<Security>()));
 
-            Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
+            Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
             realTimeHandler.Exit();
         }
