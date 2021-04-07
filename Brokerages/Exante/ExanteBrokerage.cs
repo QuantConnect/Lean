@@ -43,13 +43,12 @@ namespace QuantConnect.Brokerages.Exante
         private readonly ExanteClient _client;
 
         public ExanteBrokerage(
-            string clientId,
-            string applicationId,
-            string sharedKey
+            ExanteClient client,
+            string accountId
             )
             : base("Exante Brokerage")
         {
-            _client = new ExanteClient(clientId, applicationId, sharedKey);
+            _client = client;
         }
 
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)

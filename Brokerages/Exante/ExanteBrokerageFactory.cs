@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using Exante.Net;
+using Exante.Net.Enums;
 using QLNet;
 using QuantConnect.Brokerages.Exante;
 using QuantConnect.Configuration;
@@ -52,9 +54,11 @@ namespace QuantConnect.Brokerages.Exante
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            {"exante-data-url", Config.Get("exante-data-url", "https://api-live.exante.eu/md/")},
-            {"exante-trading-url", Config.Get("exante-trading-url", "https://api-live.exante.eu/trade/")},
-            {"exante-access-token", Config.Get("exante-access-token")},
+            {"exante-client-id", Config.Get("exante-client-id")},
+            {"exante-application-id", Config.Get("exante-application-id")},
+            {"exante-shared-key", Config.Get("exante-shared-key")},
+            {"exante-account-id", Config.Get("exante-account-id")},
+            {"exante-platform-type", Config.Get("exante-platform-type")},
         };
 
         public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider)
@@ -70,6 +74,8 @@ namespace QuantConnect.Brokerages.Exante
             var clientId = Read<string>(job.BrokerageData, "exante-client-id", errors);
             var applicationId = Read<string>(job.BrokerageData, "exante-application-id", errors);
             var sharedKey = Read<string>(job.BrokerageData, "exante-shared-key", errors);
+            var accountId = Read<string>(job.BrokerageData, "exante-account-id", errors);
+            var platformTypeStr = Read<string>(job.BrokerageData, "exante-platform-type", errors);
 
             if (errors.empty())
             {
@@ -77,10 +83,27 @@ namespace QuantConnect.Brokerages.Exante
                 throw new Exception(string.Join(System.Environment.NewLine, errors));
             }
 
+            ExantePlatformType platformType;
+            var platformTypeParsed = Enum.TryParse(platformTypeStr, true, out platformType);
+            if (!platformTypeParsed)
+            {
+                throw new Exception($"ExantePlatformType parse error: {platformTypeStr}");
+            }
+
+            var exanteClientOptions =
+                new ExanteClientOptions(
+                    new ExanteApiCredentials(
+                        clientId,
+                        applicationId,
+                        sharedKey
+                    ),
+                    platformType
+                );
+            var client = new ExanteClient(exanteClientOptions);
+
             var brokerage = new ExanteBrokerage(
-                clientId,
-                applicationId,
-                sharedKey);
+                client,
+                accountId);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

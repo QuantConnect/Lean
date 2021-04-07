@@ -122,6 +122,8 @@
   "exante-client-id": "",
   "exante-application-id": "",
   "exante-shared-key": "",
+  "exante-account-id": "", 
+  "exante-platform-type": "",
 
   // arteyu configuration
   "atreyu-host": "",
