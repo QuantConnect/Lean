@@ -41,6 +41,7 @@ namespace QuantConnect.Brokerages.Exante
     {
         private bool _isConnected;
         private readonly ExanteClient _client;
+        private string _accountId;
 
         public ExanteBrokerage(
             ExanteClient client,
@@ -49,6 +50,7 @@ namespace QuantConnect.Brokerages.Exante
             : base("Exante Brokerage")
         {
             _client = client;
+            _accountId = accountId;
         }
 
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
@@ -80,18 +82,15 @@ namespace QuantConnect.Brokerages.Exante
 
         public override List<CashAmount> GetCashBalance()
         {
-            var cashAmounts = new List<CashAmount>();
-            var accounts = _client.GetAccountsAsync().Result.Data;
-            foreach (var account in accounts)
-            {
-                var accountSummary = _client.GetAccountSummaryAsync(account.AccountId, "USD", DateTime.Now).Result;
-                var freeMoney = accountSummary.Data.FreeMoney.GetValueOrDefault();
-                var currency = accountSummary.Data.Currency;
-                var cashAmount = new CashAmount(freeMoney, currency);
-                cashAmounts.Add(cashAmount);
-            }
-
-            return cashAmounts;
+            const string reportCurrency = "USD";
+            var accountSummary =
+                _client
+                    .GetAccountSummaryAsync(_accountId, reportCurrency)
+                    .SynchronouslyAwaitTaskResult();
+            var cashAmounts =
+                from currencyData in accountSummary.Data.Currencies
+                select new CashAmount(currencyData.Value, currencyData.Currency);
+            return cashAmounts.ToList();
         }
 
         public override bool PlaceOrder(Order order)
