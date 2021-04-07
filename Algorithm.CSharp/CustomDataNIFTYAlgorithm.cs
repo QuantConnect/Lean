@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
         /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
-        public override void OnEndOfDay()
+        public override void OnEndOfDay(Symbol symbol)
         {
             Plot("Nifty Closing Price", _today.NiftyPrice);
         }

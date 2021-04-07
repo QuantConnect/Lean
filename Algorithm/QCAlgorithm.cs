@@ -820,7 +820,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
         /// <remarks>Deprecated because different assets have different market close times,
         /// and because Python does not support two methods with the same name</remarks>
-        [Obsolete("This method is deprecated. Please use this overload: OnEndOfDay(Symbol symbol)")]
+        [Obsolete("This method is deprecated and will be removed after August 2021. Please use this overload: OnEndOfDay(Symbol symbol)")]
         public virtual void OnEndOfDay()
         {
 

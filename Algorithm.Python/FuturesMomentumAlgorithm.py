@@ -73,7 +73,7 @@ class FuturesMomentumAlgorithm(QCAlgorithm):
             if self.Portfolio.Invested and self.IsDownTrend:
                 self.Liquidate()
 
-    def OnEndOfDay(self):
+    def OnEndOfDay(self, symbol):
         if self.IsUpTrend:
             self.Plot("Indicator Signal", "EOD",1)
         elif self.IsDownTrend:

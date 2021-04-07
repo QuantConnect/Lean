@@ -158,8 +158,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Fire plotting events once per day.
         /// </summary>
-        public override void OnEndOfDay()
+        public override void OnEndOfDay(Symbol symbol)
         {
+            if (symbol != _symbol) return;
+
             if (!_indicators.BB.IsReady) return;
 
             Plot("BB", "Price", _price);

@@ -436,6 +436,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Get a python methods arg count
+        /// </summary>
+        /// <param name="method">The Python method</param>
+        /// <returns>Count of arguments</returns>
+        public static int GetPythonArgCount(this PyObject method)
+        {
+            using (Py.GIL())
+            {
+                int argCount;
+                var pyArgCount = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                    "from inspect import signature\n" +
+                    "def GetArgCount(method):\n" +
+                    "   return len(signature(method).parameters)\n"
+                ).GetAttr("GetArgCount").Invoke(method);
+                pyArgCount.TryConvert(out argCount);
+
+                return argCount;
+            }
+        }
+
+        /// <summary>
         /// Returns an ordered enumerable where position reducing orders are executed first
         /// and the remaining orders are executed in decreasing order value.
         /// Will NOT return targets for securities that have no data yet.

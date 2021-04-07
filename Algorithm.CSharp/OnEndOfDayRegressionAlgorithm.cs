@@ -30,7 +30,6 @@ namespace QuantConnect.Algorithm.CSharp
         private int _onEndOfDaySpyCallCount;
         private int _onEndOfDayBacCallCount;
         private int _onEndOfDayIbmCallCount;
-        private int _onEndOfDayCallCount;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -53,14 +52,6 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 return new List<string> { _spySymbol.Value };
             });
-        }
-
-        /// <summary>
-        /// Obsolete overload to be removed.
-        /// </summary>
-        public override void OnEndOfDay()
-        {
-            _onEndOfDayCallCount++;
         }
 
         /// <summary>
@@ -114,10 +105,6 @@ namespace QuantConnect.Algorithm.CSharp
             if (_onEndOfDayIbmCallCount != 1)
             {
                 throw new Exception($"OnEndOfDay(IBM) unexpected count call {_onEndOfDayIbmCallCount}");
-            }
-            if (_onEndOfDayCallCount != 4)
-            {
-                throw new Exception($"OnEndOfDay() unexpected count call {_onEndOfDayCallCount}");
             }
         }
 

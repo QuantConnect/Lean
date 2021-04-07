@@ -89,7 +89,7 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
 
     # End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
     # Method is called 10 minutes before closing to allow user to close out position.
-    def OnEndOfDay(self):
+    def OnEndOfDay(self, symbol):
         
         i = 0
         for symbol in sorted(self.Data.keys()):
