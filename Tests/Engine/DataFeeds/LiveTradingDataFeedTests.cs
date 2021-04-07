@@ -693,9 +693,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             secondsTimeStep: 3600 * 6,
             endDate: delistingDate.AddDays(2));
 
+            Log.Error($"Finished Test DelistedEventEmitted_Equity at: {DateTime.UtcNow}");
             Assert.AreEqual(1, receivedDelistedWarning, $"Did not receive {DelistingType.Warning}");
             Assert.AreEqual(1, receivedDelisted, $"Did not receive {DelistingType.Delisted}");
-            Log.Error($"Finished Test DelistedEventEmitted_Equity at: {DateTime.UtcNow}");
         }
 
         [Test]
