@@ -25,8 +25,10 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using com.sun.security.ntlm;
+using CryptoExchange.Net.Objects;
 using Exante.Net;
 using Exante.Net.Enums;
+using Exante.Net.Objects;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -95,7 +97,6 @@ namespace QuantConnect.Brokerages.Exante
 
         public override bool PlaceOrder(Order order)
         {
-            var account = _client.GetAccountsAsync().Result.Data.GetEnumerator().Current;
             var orderSide = default(ExanteOrderSide);
             switch (order.Direction)
             {
@@ -105,19 +106,31 @@ namespace QuantConnect.Brokerages.Exante
                 case OrderDirection.Sell:
                     orderSide = ExanteOrderSide.Sell;
                     break;
+                case OrderDirection.Hold:
+                    throw new NotSupportedException(
+                        $"ExanteBrokerage.ConvertOrderDirection: Unsupported order direction: {order.Direction}");
             }
 
-            var orderPlacementTask = _client.PlaceOrderAsync(
-                account.AccountId,
-                order.Symbol.ID.Symbol,
-                ExanteOrderType.Market,
-                orderSide,
-                order.Quantity,
-                ExanteOrderDuration.AtTheClose
-            );
-            var orderPlacement = orderPlacementTask.Result.Data.ToList()[0];
+            WebCallResult<IEnumerable<ExanteOrder>> orderPlacement;
+            switch (order.Type)
+            {
+                case OrderType.Market:
+                    orderPlacement = _client.PlaceOrderAsync(
+                        _accountId,
+                        order.Symbol.ID.Symbol,
+                        ExanteOrderType.Market,
+                        orderSide,
+                        order.Quantity,
+                        ExanteOrderDuration.AtTheClose
+                    ).SynchronouslyAwaitTaskResult();
+                    break;
 
-            var isPlaced = orderPlacement.OrderState.Status != ExanteOrderStatus.Cancelled;
+                default:
+                    throw new NotSupportedException(
+                        $"ExanteBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
+            }
+
+            var isPlaced = orderPlacement.Data.ToList()[0].OrderState.Status != ExanteOrderStatus.Cancelled;
             return isPlaced;
         }
 
