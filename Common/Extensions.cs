@@ -442,15 +442,18 @@ namespace QuantConnect
         /// <returns>Count of arguments</returns>
         public static int GetPythonArgCount(this PyObject method)
         {
-            int argCount;
-            var pyArgCount = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                "from inspect import signature\n" +
-                "def GetArgCount(method):\n" +
-                "   return len(signature(method).parameters)\n"
-            ).GetAttr("GetArgCount").Invoke(method);
-            pyArgCount.TryConvert(out argCount);
+            using (Py.GIL())
+            {
+                int argCount;
+                var pyArgCount = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                    "from inspect import signature\n" +
+                    "def GetArgCount(method):\n" +
+                    "   return len(signature(method).parameters)\n"
+                ).GetAttr("GetArgCount").Invoke(method);
+                pyArgCount.TryConvert(out argCount);
 
-            return argCount;
+                return argCount;
+            }
         }
 
         /// <summary>
