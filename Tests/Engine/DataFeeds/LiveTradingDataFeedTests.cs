@@ -647,10 +647,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void DelistedEventEmitted_Equity()
         {
-            _startDate = new DateTime(2016, 2, 18);
+            Log.Error($"Starting Test DelistedEventEmitted_Equity at: {DateTime.UtcNow}");
+            _startDate = new DateTime(2016, 2, 18, 6, 0, 0);
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
-            var delistingDate = _startDate.AddDays(1);
+            var delistingDate = _startDate.Date.AddDays(1);
 
             var autoResetEvent = new AutoResetEvent(false);
             var feed = RunDataFeed(getNextTicksFunction: handler =>
@@ -658,16 +659,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 autoResetEvent.Set();
                 return new[] { new Delisting(Symbols.AAPL, delistingDate, 1, DelistingType.Warning) };
             });
-
             _algorithm.AddEquity(Symbols.AAPL);
             _algorithm.OnEndOfTimeStep();
             _algorithm.SetFinishedWarmingUp();
-
             Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
 
             var receivedDelistedWarning = 0;
             var receivedDelisted = 0;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
             {
                 foreach (var delistingEvent in ts.Slice.Delistings)
                 {
@@ -678,10 +677,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     if (delistingEvent.Value.Type == DelistingType.Warning)
                     {
+                        Log.Error("Received Delisted Warning");
                         Interlocked.Increment(ref receivedDelistedWarning);
                     }
                     if (delistingEvent.Value.Type == DelistingType.Delisted)
                     {
+                        Log.Error("Received Delisted Event");
                         Interlocked.Increment(ref receivedDelisted);
                         // we got what we wanted, end unit test
                         _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
@@ -689,9 +690,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             },
             alwaysInvoke: false,
-            secondsTimeStep: 3600 * 8,
+            secondsTimeStep: 3600 * 6,
             endDate: delistingDate.AddDays(2));
 
+            Log.Error($"Finished Test DelistedEventEmitted_Equity at: {DateTime.UtcNow}");
             Assert.AreEqual(1, receivedDelistedWarning, $"Did not receive {DelistingType.Warning}");
             Assert.AreEqual(1, receivedDelisted, $"Did not receive {DelistingType.Delisted}");
         }
