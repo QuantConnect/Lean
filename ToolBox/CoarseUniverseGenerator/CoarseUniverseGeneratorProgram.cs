@@ -144,9 +144,15 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         var dailyFile = new FileInfo(Path.Combine(_dailyDataFolder.FullName, $"{ticker}.zip"));
                         if (!dailyFile.Exists)
                         {
-                            Log.Error($"CoarseUniverseGeneratorProgram.Run(): {dailyFile} not found!");
-                            Interlocked.Increment(ref dailyFilesNotFound);
-                            continue;
+                            Log.Trace($"CoarseUniverseGeneratorProgram.Run(): {dailyFile.FullName} not found, looking for daily data in data folder");
+
+                            dailyFile = new FileInfo(Path.Combine(Globals.DataFolder, "equity", "usa", "daily", $"{ticker}.zip"));
+                            if (!dailyFile.Exists)
+                            {
+                                Log.Error($"CoarseUniverseGeneratorProgram.Run(): {dailyFile} not found!");
+                                Interlocked.Increment(ref dailyFilesNotFound);
+                                continue;
+                            }
                         }
 
                         if (!dailyPricesByTicker.ContainsKey(ticker))
