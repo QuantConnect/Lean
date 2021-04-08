@@ -6,7 +6,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     public class NoTickersAvailableException : RandomValueGeneratorException
     {
         public NoTickersAvailableException(SecurityType securityType, string market)
-            : base($"Failed to generate {securityType} symbol for market '{market}', there are no tickers left")
+            : base($"Failed to generate {securityType} symbol for {market}, there are no tickers left")
         {
         }
     }

@@ -129,5 +129,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="maxExpiry">The maximum expiry date, inclusive</param>
         /// <returns>A new future contract symbol with the specified expiration parameters</returns>
         Symbol NextFuture(string market, DateTime minExpiry, DateTime maxExpiry);
+
+        /// <summary>
+        /// Returns the number of symbols with the specified parameters can be generated.
+        /// Returns int.MaxValue if there is no limit for the given parameters.
+        /// </summary>
+        /// <param name="securityType">The security type of the generated symbols</param>
+        /// <param name="market">The market of the generated symbols</param>
+        /// <returns>The number of available symbols for the given parameters, or int.MaxValue if no limit</returns>
+        int GetAvailableSymbolCount(SecurityType securityType, string market);
     }
 }

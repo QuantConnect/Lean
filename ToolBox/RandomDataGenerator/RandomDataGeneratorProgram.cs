@@ -100,6 +100,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 random = new Random(settings.RandomSeed);
                 randomValueGenerator = new RandomValueGenerator(settings.RandomSeed);
             }
+
+            var maxSymbolCount = randomValueGenerator.GetAvailableSymbolCount(settings.SecurityType, settings.Market);
+            if (settings.SymbolCount > maxSymbolCount)
+            {
+                output.Warn.WriteLine($"Limiting symbol count to {maxSymbolCount}, we don't have more {settings.SecurityType} tickers for {settings.Market}");
+                settings.SymbolCount = maxSymbolCount;
+            }
+
             var symbolGenerator = new SymbolGenerator(settings, randomValueGenerator);
             var tickGenerator = new TickGenerator(settings, randomValueGenerator);
 

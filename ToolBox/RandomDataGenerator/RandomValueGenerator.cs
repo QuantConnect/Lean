@@ -324,6 +324,22 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return Symbol.CreateFuture(ticker, market, expiry);
         }
 
+        public virtual int GetAvailableSymbolCount(SecurityType securityType, string market)
+        {
+            // there is no limit to the number of option/future contracts we can generate
+            if (securityType == SecurityType.Option || securityType == SecurityType.Future)
+            {
+                return int.MaxValue;
+            }
+
+            // check the symbol properties database to determine how many symbols we can generate
+            // if there is a wildcard entry, we can generate as many symbols as we want
+            // if there is no wildcard entry, we can only generate as many symbols as there are entries
+            return _symbolPropertiesDatabase.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType)
+                ? int.MaxValue
+                : _symbolPropertiesDatabase.GetSymbolPropertiesList(market, securityType).Count();
+        }
+
         private string NextTickerFromSymbolPropertiesDatabase(SecurityType securityType, string market)
         {
             // prevent returning a ticker matching any previously generated symbol

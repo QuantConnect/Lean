@@ -387,5 +387,25 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var db = SymbolPropertiesDatabase.FromDataFolder();
             Assert.IsTrue(db.ContainsKey(Market.CME, symbol, SecurityType.Future));
         }
+
+        [Test]
+        [TestCase(SecurityType.Equity, Market.USA, true)]
+        [TestCase(SecurityType.Cfd, Market.FXCM, false)]
+        [TestCase(SecurityType.Cfd, Market.Oanda, false)]
+        [TestCase(SecurityType.Forex, Market.FXCM, false)]
+        [TestCase(SecurityType.Forex, Market.Oanda, false)]
+        [TestCase(SecurityType.Crypto, Market.GDAX, false)]
+        [TestCase(SecurityType.Crypto, Market.Bitfinex, false)]
+        [TestCase(SecurityType.Option, Market.USA, true)]
+        [TestCase(SecurityType.Future, Market.CME, true)]
+        [TestCase(SecurityType.Future, Market.CBOE, true)]
+        public void GetAvailableSymbolCount(SecurityType securityType, string market, bool expectInfinity)
+        {
+            var expected = expectInfinity
+                ? int.MaxValue
+                : SymbolPropertiesDatabase.FromDataFolder().GetSymbolPropertiesList(market, securityType).Count();
+
+            Assert.AreEqual(expected, randomValueGenerator.GetAvailableSymbolCount(securityType, market));
+        }
     }
 }
