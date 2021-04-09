@@ -78,5 +78,12 @@ namespace QuantConnect.Brokerages.Exante
             checkIfResponseOk(response);
             return response.Data;
         }
+
+        public IEnumerable<ExanteOrder> GetActiveOrders()
+        {
+            var response = _client.GetActiveOrdersAsync().SynchronouslyAwaitTaskResult();
+            checkIfResponseOk(response);
+            return response.Data;
+        }
     }
 }

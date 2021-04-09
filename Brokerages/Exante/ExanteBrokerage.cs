@@ -39,11 +39,12 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Exante
 {
-    public class ExanteBrokerage : Brokerage, IDataQueueHandler
+    public partial class ExanteBrokerage : Brokerage, IDataQueueHandler
     {
         private bool _isConnected;
         private readonly ExanteClientWrapper _client;
         private string _accountId;
+        private readonly ExanteSymbolMapper _symbolMapper = new ExanteSymbolMapper();
 
         public ExanteBrokerage(
             ExanteClient client,
@@ -74,7 +75,66 @@ namespace QuantConnect.Brokerages.Exante
 
         public override List<Order> GetOpenOrders()
         {
-            throw new NotImplementedException();
+            var orders = _client.GetActiveOrders();
+            List<Order> list = new List<Order>();
+            foreach (var item in orders)
+            {
+                Order order;
+                switch (item.OrderParameters.Type)
+                {
+                    case ExanteOrderType.Market:
+                        order = new MarketOrder();
+                        break;
+                    case ExanteOrderType.Limit:
+                        if (item.OrderParameters.LimitPrice == null)
+                        {
+                            throw new ArgumentNullException(nameof(item.OrderParameters.LimitPrice));
+                        }
+
+                        order = new LimitOrder {LimitPrice = item.OrderParameters.LimitPrice.Value};
+                        break;
+                    case ExanteOrderType.Stop:
+                        if (item.OrderParameters.StopPrice == null)
+                        {
+                            throw new ArgumentNullException(nameof(item.OrderParameters.StopPrice));
+                        }
+
+                        order = new StopMarketOrder {StopPrice = item.OrderParameters.StopPrice.Value};
+                        break;
+                    case ExanteOrderType.StopLimit:
+                        if (item.OrderParameters.LimitPrice == null)
+                        {
+                            throw new ArgumentNullException(nameof(item.OrderParameters.LimitPrice));
+                        }
+
+                        if (item.OrderParameters.StopPrice == null)
+                        {
+                            throw new ArgumentNullException(nameof(item.OrderParameters.StopPrice));
+                        }
+
+                        order = new StopLimitOrder
+                        {
+                            StopPrice = item.OrderParameters.StopPrice.Value,
+                            LimitPrice = item.OrderParameters.LimitPrice.Value
+                        };
+                        break;
+
+                    default:
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1,
+                            $"ExanteBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: {item.OrderParameters.Type}"));
+                        continue;
+                }
+
+                order.Quantity = item.OrderParameters.Quantity;
+                order.BrokerId = new List<string> {item.OrderId.ToString()};
+                order.Symbol = _symbolMapper.GetLeanSymbol(item.OrderParameters.SymbolId);
+                order.Time = item.Date;
+                order.Status = ConvertOrderStatus(item.OrderState.Status);
+                // order.Price = ; // TODO: what's the price?
+                list.Add(order);
+            }
+
+            return list;
         }
 
         public override List<Holding> GetAccountHoldings()
