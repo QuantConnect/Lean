@@ -98,11 +98,13 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        [TestCase(SecurityType.Cfd, Market.FXCM)]
-        [TestCase(SecurityType.Base, Market.USA)]
-        [TestCase(SecurityType.Forex, Market.FXCM)]
         [TestCase(SecurityType.Equity, Market.USA)]
+        [TestCase(SecurityType.Cfd, Market.FXCM)]
+        [TestCase(SecurityType.Cfd, Market.Oanda)]
+        [TestCase(SecurityType.Forex, Market.FXCM)]
+        [TestCase(SecurityType.Forex, Market.Oanda)]
         [TestCase(SecurityType.Crypto, Market.GDAX)]
+        [TestCase(SecurityType.Crypto, Market.Bitfinex)]
         public void NextSymbol_CreatesSymbol_WithRequestedSecurityTypeAndMarket(SecurityType securityType, string market)
         {
             var symbol = randomValueGenerator.NextSymbol(securityType, market);
@@ -112,27 +114,54 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        [TestCase(SecurityType.Cfd)]
-        [TestCase(SecurityType.Base)]
-        [TestCase(SecurityType.Forex)]
-        [TestCase(SecurityType.Equity)]
-        [TestCase(SecurityType.Crypto)]
-        public void NextSymbol_CreatesSymbol_WithThreeCharacterTicker(SecurityType securityType)
+        [TestCase(SecurityType.Equity, Market.USA)]
+        [TestCase(SecurityType.Cfd, Market.FXCM)]
+        [TestCase(SecurityType.Cfd, Market.Oanda)]
+        [TestCase(SecurityType.Forex, Market.FXCM)]
+        [TestCase(SecurityType.Forex, Market.Oanda)]
+        [TestCase(SecurityType.Crypto, Market.GDAX)]
+        [TestCase(SecurityType.Crypto, Market.Bitfinex)]
+        public void NextSymbol_CreatesSymbol_WithEntryInSymbolPropertiesDatabase(SecurityType securityType, string market)
         {
-            var defaultMarket = DefaultBrokerageModel.DefaultMarketMap[securityType];
-            var symbol = randomValueGenerator.NextSymbol(securityType, defaultMarket);
+            var symbol = randomValueGenerator.NextSymbol(securityType, market);
 
-            // for derivatives, check the underlying ticker
-            if (securityType == SecurityType.Option || securityType == SecurityType.Future)
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            if (db.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType))
             {
-                symbol = symbol.Underlying;
+                // there is a wildcard entry, so no need to check whether there is a specific entry for the symbol
+                Assert.Pass();
             }
-
-            Assert.AreEqual(3, symbol.Value.Length);
+            else
+            {
+                // there is no wildcard entry, so there should be a specific entry for the symbol instead
+                Assert.IsTrue(db.ContainsKey(market, symbol, securityType));
+            }
         }
 
         [Test]
-        public void NextOptionSymbol_CreatesOptionSymbol_WithCorrectSecurityTypeAndEquitUnderlying()
+        [TestCase(SecurityType.Cfd, Market.FXCM)]
+        [TestCase(SecurityType.Cfd, Market.Oanda)]
+        [TestCase(SecurityType.Forex, Market.FXCM)]
+        [TestCase(SecurityType.Forex, Market.Oanda)]
+        [TestCase(SecurityType.Crypto, Market.GDAX)]
+        [TestCase(SecurityType.Crypto, Market.Bitfinex)]
+        public void NextSymbol_ThrowsNoTickersAvailableException_WhenAllSymbolsGenerated(SecurityType securityType, string market)
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            var symbolCount = db.GetSymbolPropertiesList(market, securityType).Count();
+
+            for (var i = 0; i < symbolCount; i++)
+            {
+                randomValueGenerator.NextSymbol(securityType, market);
+            }
+
+            Assert.Throws<NoTickersAvailableException>(() =>
+                randomValueGenerator.NextSymbol(securityType, market)
+            );
+        }
+
+        [Test]
+        public void NextOptionSymbol_CreatesOptionSymbol_WithCorrectSecurityTypeAndEquityUnderlying()
         {
             var minExpiry = new DateTime(2000, 01, 01);
             var maxExpiry = new DateTime(2001, 01, 01);
@@ -334,6 +363,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             Assert.AreEqual(Market.CME, symbol.ID.Market);
             Assert.AreEqual(SecurityType.Future, symbol.SecurityType);
         }
+
         [Test]
         public void NextFuture_CreatesSymbol_WithFutureWithValidFridayExpiry()
         {
@@ -345,6 +375,37 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             Assert.Greater(expiry, minExpiry);
             Assert.LessOrEqual(expiry, maxExpiry);
             Assert.AreEqual(DayOfWeek.Friday, expiry.DayOfWeek);
+        }
+
+        [Test]
+        public void NextFuture_CreatesSymbol_WithEntryInSymbolPropertiesDatabase()
+        {
+            var minExpiry = new DateTime(2000, 01, 01);
+            var maxExpiry = new DateTime(2001, 01, 01);
+            var symbol = randomValueGenerator.NextFuture(Market.CME, minExpiry, maxExpiry);
+
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            Assert.IsTrue(db.ContainsKey(Market.CME, symbol, SecurityType.Future));
+        }
+
+        [Test]
+        [TestCase(SecurityType.Equity, Market.USA, true)]
+        [TestCase(SecurityType.Cfd, Market.FXCM, false)]
+        [TestCase(SecurityType.Cfd, Market.Oanda, false)]
+        [TestCase(SecurityType.Forex, Market.FXCM, false)]
+        [TestCase(SecurityType.Forex, Market.Oanda, false)]
+        [TestCase(SecurityType.Crypto, Market.GDAX, false)]
+        [TestCase(SecurityType.Crypto, Market.Bitfinex, false)]
+        [TestCase(SecurityType.Option, Market.USA, true)]
+        [TestCase(SecurityType.Future, Market.CME, true)]
+        [TestCase(SecurityType.Future, Market.CBOE, true)]
+        public void GetAvailableSymbolCount(SecurityType securityType, string market, bool expectInfinity)
+        {
+            var expected = expectInfinity
+                ? int.MaxValue
+                : SymbolPropertiesDatabase.FromDataFolder().GetSymbolPropertiesList(market, securityType).Count();
+
+            Assert.AreEqual(expected, randomValueGenerator.GetAvailableSymbolCount(securityType, market));
         }
     }
 }
