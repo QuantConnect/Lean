@@ -665,7 +665,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var receivedDelistedWarning = 0;
             var receivedDelisted = 0;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 foreach (var delistingEvent in ts.Slice.Delistings)
                 {
