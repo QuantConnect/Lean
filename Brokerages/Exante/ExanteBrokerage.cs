@@ -42,7 +42,7 @@ namespace QuantConnect.Brokerages.Exante
     public class ExanteBrokerage : Brokerage, IDataQueueHandler
     {
         private bool _isConnected;
-        private readonly ExanteClient _client;
+        private readonly ExanteClientWrapper _client;
         private string _accountId;
 
         public ExanteBrokerage(
@@ -51,7 +51,7 @@ namespace QuantConnect.Brokerages.Exante
             )
             : base("Exante Brokerage")
         {
-            _client = client;
+            _client = new ExanteClientWrapper(client);
             _accountId = accountId;
         }
 
@@ -85,12 +85,9 @@ namespace QuantConnect.Brokerages.Exante
         public override List<CashAmount> GetCashBalance()
         {
             const string reportCurrency = "USD";
-            var accountSummary =
-                _client
-                    .GetAccountSummaryAsync(_accountId, reportCurrency)
-                    .SynchronouslyAwaitTaskResult();
+            var accountSummary = _client.GetAccountSummary(_accountId, reportCurrency);
             var cashAmounts =
-                from currencyData in accountSummary.Data.Currencies
+                from currencyData in accountSummary.Currencies
                 select new CashAmount(currencyData.Value, currencyData.Currency);
             return cashAmounts.ToList();
         }
@@ -111,18 +108,18 @@ namespace QuantConnect.Brokerages.Exante
                         $"ExanteBrokerage.ConvertOrderDirection: Unsupported order direction: {order.Direction}");
             }
 
-            WebCallResult<IEnumerable<ExanteOrder>> orderPlacement;
+            IEnumerable<ExanteOrder> orderPlacement;
             switch (order.Type)
             {
                 case OrderType.Market:
-                    orderPlacement = _client.PlaceOrderAsync(
+                    orderPlacement = _client.PlaceOrder(
                         _accountId,
                         order.Symbol.ID.Symbol,
                         ExanteOrderType.Market,
                         orderSide,
                         order.Quantity,
                         ExanteOrderDuration.AtTheClose
-                    ).SynchronouslyAwaitTaskResult();
+                    );
                     break;
 
                 default:
@@ -130,7 +127,7 @@ namespace QuantConnect.Brokerages.Exante
                         $"ExanteBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
             }
 
-            var isPlaced = orderPlacement.Data.ToList()[0].OrderState.Status != ExanteOrderStatus.Cancelled;
+            var isPlaced = orderPlacement.ToList()[0].OrderState.Status != ExanteOrderStatus.Cancelled;
             return isPlaced;
         }
 
