@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="factorFile">The factor file to use</param>
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
         /// <param name="startTime">Start date for the data request</param>
-        public void Initialize(
+        public virtual void Initialize(
             SubscriptionDataConfig config,
             FactorFile factorFile,
             MapFile mapFile,
