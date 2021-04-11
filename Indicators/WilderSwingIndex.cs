@@ -87,8 +87,7 @@ namespace QuantConnect.Indicators
     ///       <term>T</term>
     ///       <description>
     ///         The limit move, or the maximum change in price during the time
-    ///         period for the bar. Passed as <paramref name="limitMove"/>
-    ///         via the constructor.
+    ///         period for the bar. Passed as limitMove via the constructor.
     ///         <para>
     ///           <i>See <see cref="T"/></i>
     ///         </para>
