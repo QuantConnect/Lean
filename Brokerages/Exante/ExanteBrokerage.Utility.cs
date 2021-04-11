@@ -1,5 +1,6 @@
 using System;
 using Exante.Net.Enums;
+using Exante.Net.Objects;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Brokerages.Exante
@@ -29,6 +30,35 @@ namespace QuantConnect.Brokerages.Exante
                 default:
                     throw new ArgumentOutOfRangeException(nameof(status), status, null);
             }
+        }
+
+        private Holding ConvertHolding(ExantePosition position)
+        {
+            var symbol = _symbolMapper.GetLeanSymbol(position.SymbolId);
+            var holding = new Holding
+            {
+                Symbol = symbol,
+                Quantity = position.Quantity,
+                CurrencySymbol = Currencies.GetCurrencySymbol(position.Currency),
+                Type = symbol.SecurityType
+            };
+
+            if (position.AveragePrice != null)
+            {
+                holding.AveragePrice = position.AveragePrice.Value;
+            }
+
+            if (position.PnL != null)
+            {
+                holding.UnrealizedPnL = position.PnL.Value;
+            }
+
+            if (position.Price != null)
+            {
+                holding.MarketPrice = position.Price.Value;
+            }
+
+            return holding;
         }
     }
 }

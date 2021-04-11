@@ -85,5 +85,26 @@ namespace QuantConnect.Brokerages.Exante
             checkIfResponseOk(response);
             return response.Data;
         }
+
+        public IEnumerable<ExanteTick> GetTicks(
+            string symbolId,
+            DateTime? from = null,
+            DateTime? to = null,
+            int limit = 60,
+            ExanteTickType tickType = ExanteTickType.Quotes,
+            CancellationToken ct = default(CancellationToken)
+            )
+        {
+            var response = _client.GetTicksAsync(
+                symbolId,
+                from,
+                to,
+                limit,
+                tickType,
+                ct
+            ).SynchronouslyAwaitTaskResult();
+            checkIfResponseOk(response);
+            return response.Data;
+        }
     }
 }

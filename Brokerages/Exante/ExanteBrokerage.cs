@@ -45,6 +45,7 @@ namespace QuantConnect.Brokerages.Exante
         private readonly ExanteClientWrapper _client;
         private string _accountId;
         private readonly ExanteSymbolMapper _symbolMapper = new ExanteSymbolMapper();
+        private const string ReportCurrency = "USD";
 
         public ExanteBrokerage(
             ExanteClient client,
@@ -139,13 +140,17 @@ namespace QuantConnect.Brokerages.Exante
 
         public override List<Holding> GetAccountHoldings()
         {
-            throw new NotImplementedException();
+            var accountSummary = _client.GetAccountSummary(_accountId, ReportCurrency);
+            var positions = accountSummary.Positions
+                .Where(position => position.Quantity != 0)
+                .Select(ConvertHolding)
+                .ToList();
+            return positions;
         }
 
         public override List<CashAmount> GetCashBalance()
         {
-            const string reportCurrency = "USD";
-            var accountSummary = _client.GetAccountSummary(_accountId, reportCurrency);
+            var accountSummary = _client.GetAccountSummary(_accountId, ReportCurrency);
             var cashAmounts =
                 from currencyData in accountSummary.Currencies
                 select new CashAmount(currencyData.Value, currencyData.Currency);
