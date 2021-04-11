@@ -33,7 +33,7 @@ namespace QuantConnect.Indicators
     ///       <description>
     ///         Equals: Cₜ - Cₜ₋₁ + 0.5 * (Cₜ - Oₜ) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)
     ///         <para>
-    ///           <i>See <see cref="N"/></i>
+    ///           <i>See <see cref="GetNValue"/></i>
     ///         </para>
     ///       </description>
     ///     </item>
@@ -69,7 +69,7 @@ namespace QuantConnect.Indicators
     ///           </list>
     ///         </para>
     ///         <para>
-    ///           <i>See <see cref="R"/></i>
+    ///           <i>See <see cref="GetRValue"/></i>
     ///         </para>
     ///       </description>
     ///     </item>
@@ -79,7 +79,7 @@ namespace QuantConnect.Indicators
     ///         Found by selecting the larger of the two expressions:
     ///         |Hₜ - Cₜ₋₁|, |Lₜ - Cₜ₋₁|
     ///         <para>
-    ///           <i>See <see cref="K"/></i>
+    ///           <i>See <see cref="GetKValue"/></i>
     ///         </para>
     ///       </description>
     ///     </item>
@@ -108,6 +108,11 @@ namespace QuantConnect.Indicators
         /// Holds the bar for the previous period.
         /// </summary>
         protected IBaseDataBar _previousInput;
+
+        /// <summary>
+        /// Gets the value for T (the limit move value) set in the constructor.
+        /// </summary>
+        private readonly decimal T;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WilderSwingIndex"/> class using the specified name.
@@ -155,6 +160,10 @@ namespace QuantConnect.Indicators
             _previousInput = _currentInput;
             _currentInput = input;
 
+            decimal N = GetNValue();
+            decimal R = GetRValue();
+            decimal K = GetKValue();
+
             if (R == Decimal.Zero || T == Decimal.Zero)
                 return 0m;
             else
@@ -167,15 +176,12 @@ namespace QuantConnect.Indicators
         /// N = Cₜ - Cₜ₋₁ + 0.5 * (Cₜ - Oₜ) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)
         /// </para>
         /// </summary>
-        protected virtual decimal N
+        private decimal GetNValue()
         {
-            get
-            {
-                return _currentInput.Close
-                    - _previousInput.Close
-                    + (0.5m * (_currentInput.Close - _currentInput.Open))
-                    + (0.25m * (_previousInput.Close - _previousInput.Open));
-            }
+            return _currentInput.Close
+                - _previousInput.Close
+                + (0.5m * (_currentInput.Close - _currentInput.Open))
+                + (0.25m * (_previousInput.Close - _previousInput.Open));
         }
 
         /// <summary>
@@ -210,49 +216,46 @@ namespace QuantConnect.Indicators
         ///   </list>
         /// </para>
         /// </summary>
-        protected virtual decimal R
+        private decimal GetRValue()
         {
-            get
+            var expressions = new decimal[]
             {
-                var expressions = new decimal[]
-                {
-                    Math.Abs(_currentInput.High - _previousInput.Close),
-                    Math.Abs(_currentInput.Low - _previousInput.Close),
-                    Math.Abs(_currentInput.High - _currentInput.Low)
-                };
+                Math.Abs(_currentInput.High - _previousInput.Close),
+                Math.Abs(_currentInput.Low - _previousInput.Close),
+                Math.Abs(_currentInput.High - _currentInput.Low)
+            };
 
-                int expressionIndex = Array.IndexOf(expressions, expressions.Max());
+            int expressionIndex = Array.IndexOf(expressions, expressions.Max());
 
-                decimal result;
-                switch (expressionIndex)
-                {
-                    case 0:
-                        result = _currentInput.High
-                            - _previousInput.Close
-                            - (0.5m * (_currentInput.Low - _previousInput.Close))
-                            + (0.25m * (_previousInput.Close - _previousInput.Open));
-                        break;
+            decimal result;
+            switch (expressionIndex)
+            {
+                case 0:
+                    result = _currentInput.High
+                        - _previousInput.Close
+                        - (0.5m * (_currentInput.Low - _previousInput.Close))
+                        + (0.25m * (_previousInput.Close - _previousInput.Open));
+                    break;
 
-                    case 1:
-                        result = _currentInput.Low
-                            - _previousInput.Close
-                            - (0.5m * (_currentInput.High - _previousInput.Close))
-                            + (0.25m * (_previousInput.Close - _previousInput.Open));
-                        break;
+                case 1:
+                    result = _currentInput.Low
+                        - _previousInput.Close
+                        - (0.5m * (_currentInput.High - _previousInput.Close))
+                        + (0.25m * (_previousInput.Close - _previousInput.Open));
+                    break;
 
-                    case 2:
-                        result = _currentInput.High
-                            - _currentInput.Low
-                            + (0.25m * (_previousInput.Close - _previousInput.Open));
-                        break;
+                case 2:
+                    result = _currentInput.High
+                        - _currentInput.Low
+                        + (0.25m * (_previousInput.Close - _previousInput.Open));
+                    break;
 
-                    default:
-                        result = 0m;
-                        break;
-                }
-
-                return Math.Abs(result);
+                default:
+                    result = 0m;
+                    break;
             }
+
+            return Math.Abs(result);
         }
 
         /// <summary>
@@ -269,23 +272,15 @@ namespace QuantConnect.Indicators
         ///   </list>
         /// </para>
         /// </summary>
-        protected virtual decimal K
+        private decimal GetKValue()
         {
-            get
+            var values = new decimal[]
             {
-                var values = new decimal[]
-                {
-                    _currentInput.High - _previousInput.Close,
-                    _currentInput.Low - _previousInput.Close
-                };
+                _currentInput.High - _previousInput.Close,
+                _currentInput.Low - _previousInput.Close
+            };
 
-                return values.Max(x => Math.Abs(x));
-            }
+            return values.Max(x => Math.Abs(x));
         }
-
-        /// <summary>
-        /// Gets the value for T (the limit move value) set in the constructor.
-        /// </summary>
-        protected virtual decimal T { get; set; }
     }
 }
