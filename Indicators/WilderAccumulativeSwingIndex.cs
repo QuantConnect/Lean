@@ -18,53 +18,56 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator calculates the Accumulative Swing Index (ASI) as defined by Welles Wilder in his book:
-    /// New Concepts in Technical Trading Systems
+    /// This indicator calculates the Accumulative Swing Index (ASI) as defined by
+    /// Welles Wilder in his book 'New Concepts in Technical Trading Systems'.
+    /// <para>
+    /// ASIₜ = ASIₜ₋₁ + SIₜ
+    /// </para>
+    /// <para>
+    ///   Where:
+    ///   <list type="bullet">
+    ///     <item>
+    ///       <term>ASIₜ₋₁</term>
+    ///       <description>
+    ///         The <see cref="WilderAccumulativeSwingIndex"/> for the previous period.
+    ///       </description>
+    ///     </item>
+    ///     <item>
+    ///       <term>SIₜ</term>
+    ///       <description>
+    ///         The <see cref="WilderSwingIndex"/> calculated for the current period.
+    ///       </description>
+    ///     </item>
+    ///   </list>
+    /// </para>
     /// </summary>
+    /// <seealso cref="WilderSwingIndex"/>
     public class WilderAccumulativeSwingIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
+        /// <summary>
+        /// The Swing Index (SI) used in calculating the Accumulative Swing Index.
+        /// </summary>
         private readonly WilderSwingIndex _si;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WilderAccumulativeSwingIndex"/> class using the specified name.
         /// </summary>
-        /// <param name="absoluteLimitMove">The maximum change in price for the trading session as a fixed value</param>
-        public WilderAccumulativeSwingIndex(decimal absoluteLimitMove)
+        /// <param name="limitMove">A decimal representing the limit move value for the period.</param>
+        public WilderAccumulativeSwingIndex(decimal limitMove)
             : base ("ASI")
         {
-            _si = new WilderSwingIndex(absoluteLimitMove);
+            _si = new WilderSwingIndex(limitMove);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WilderAccumulativeSwingIndex"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="absoluteLimitMove">The maximum change in price for the trading session as a fixed value</param>
-        public WilderAccumulativeSwingIndex(string name, decimal absoluteLimitMove)
+        /// <param name="limitMove">A decimal representing the limit move value for the period.</param>
+        public WilderAccumulativeSwingIndex(string name, decimal limitMove)
             : base (name)
         {
-            _si = new WilderSwingIndex(absoluteLimitMove); 
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="WilderAccumulativeSwingIndex"/> class using the specified name.
-        /// </summary>
-        /// <param name="relativeLimitMove">The maximum change in price for the trading session in basis points of the open price</param>
-        public WilderAccumulativeSwingIndex(int relativeLimitMove)
-            : base("ASI")
-        {
-            _si = new WilderSwingIndex(relativeLimitMove);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="WilderAccumulativeSwingIndex"/> class using the specified name.
-        /// </summary>
-        /// <param name="name">The name of this indicator</param>
-        /// <param name="relativeLimitMove">The maximum change in price for the trading session in basis points of the open price</param>
-        public WilderAccumulativeSwingIndex(string name, int relativeLimitMove)
-            : base(name)
-        {
-            _si = new WilderSwingIndex(relativeLimitMove);
+            _si = new WilderSwingIndex(limitMove); 
         }
 
         /// <summary>
@@ -75,7 +78,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => 3;
+        public int WarmUpPeriod => 2;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -88,12 +91,19 @@ namespace QuantConnect.Indicators
 
             if (_si.IsReady)
             {
-                Current.Value += _si.Current.Value;
+                return IsReady
+                    ? Current.Value + _si.Current.Value
+                    : _si.Current.Value;
             }
-            
-            return IsReady ? Current.Value : 0m;
+            else
+            {
+                return 0m;
+            }
         }
 
+        /// <summary>
+        /// Resets this indicator to its initial state.
+        /// </summary>
         public override void Reset()
         {
             _si.Reset();
