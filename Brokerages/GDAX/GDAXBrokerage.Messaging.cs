@@ -67,8 +67,7 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly Task _fillMonitorTask;
         private readonly AutoResetEvent _fillMonitorResetEvent = new AutoResetEvent(false);
         private readonly int _fillMonitorTimeout = Config.GetInt("gdax-fill-monitor-timeout", 500);
-        private readonly ConcurrentDictionary<string, Order> _pendingOrders = new ConcurrentDictionary<string, Order>();
-        private long _lastEmittedFillTradeId;
+        private readonly ConcurrentDictionary<string, PendingOrder> _pendingOrders = new ConcurrentDictionary<string, PendingOrder>();
 
         #endregion
 
@@ -317,7 +316,8 @@ namespace QuantConnect.Brokerages.GDAX
                 Order outOrder;
                 CachedOrderIDs.TryRemove(order.Id, out outOrder);
 
-                _pendingOrders.TryRemove(fill.OrderId, out outOrder);
+                PendingOrder removed;
+                _pendingOrders.TryRemove(fill.OrderId, out removed);
             }
 
             OnOrderEvent(orderEvent);
@@ -525,7 +525,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 foreach (var order in GetOpenOrders())
                 {
-                    _pendingOrders.TryAdd(order.BrokerId.First(), order);
+                    _pendingOrders.TryAdd(order.BrokerId.First(), new PendingOrder(order));
                 }
 
                 while (!_ctsFillMonitor.IsCancellationRequested)
@@ -535,12 +535,12 @@ namespace QuantConnect.Brokerages.GDAX
                     foreach (var kvp in _pendingOrders)
                     {
                         var orderId = kvp.Key;
-                        var order = kvp.Value;
+                        var pendingOrder = kvp.Value;
 
                         var request = new RestRequest($"/fills?order_id={orderId}", Method.GET);
                         GetAuthenticationToken(request);
 
-                        var response = ExecuteRestRequest(request, GdaxEndpointType.Private);
+                        var response = ExecuteRestRequest(request, GdaxEndpointType.Private, false);
 
                         if (response.StatusCode != HttpStatusCode.OK)
                         {
@@ -555,16 +555,15 @@ namespace QuantConnect.Brokerages.GDAX
                         var fills = JsonConvert.DeserializeObject<List<Messages.Fill>>(response.Content);
                         foreach (var fill in fills.OrderBy(x => x.TradeId))
                         {
-                            if (fill.TradeId <= _lastEmittedFillTradeId)
+                            if (fill.TradeId <= pendingOrder.LastEmittedFillTradeId)
                             {
                                 continue;
                             }
 
-                            EmitFillOrderEvent(fill, order);
+                            EmitFillOrderEvent(fill, pendingOrder.Order);
 
-                            _lastEmittedFillTradeId = fill.TradeId;
+                            pendingOrder.LastEmittedFillTradeId = fill.TradeId;
                         }
-
                     }
                 }
             }
@@ -574,6 +573,17 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             Log.Trace("GDAXBrokerage.FillMonitorAction(): task ended");
+        }
+
+        private class PendingOrder
+        {
+            public Order Order { get; }
+            public long LastEmittedFillTradeId { get; set; }
+
+            public PendingOrder(Order order)
+            {
+                Order = order;
+            }
         }
     }
 }
