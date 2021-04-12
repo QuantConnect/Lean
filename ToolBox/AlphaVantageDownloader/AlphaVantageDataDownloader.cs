@@ -1,4 +1,19 @@
-﻿using CsvHelper;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using CsvHelper;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using RestSharp;
@@ -37,7 +52,14 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
             _avClient.Authenticator = new AlphaVantageAuthenticator(apiKey);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Get data from API
+        /// </summary>
+        /// <param name="symbol">Symbol to download</param>
+        /// <param name="resolution">Resolution to download</param>
+        /// <param name="startUtc">Start time</param>
+        /// <param name="endUtc">End time</param>
+        /// <returns></returns>
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
             var request = new RestRequest("query", DataFormat.Json);
@@ -72,9 +94,12 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         private IEnumerable<TimeSeries> GetDailyData(RestRequest request, DateTime startUtc, DateTime endUtc)
         {
             request.AddParameter("function", "TIME_SERIES_DAILY");
+
             // The default output only includes 100 trading days of data. If we want need more, specify full output
             if (GetBusinessDays(startUtc, endUtc) > 100)
+            {
                 request.AddParameter("outputsize", "full");
+            }
 
             return GetTimeSeries(request);
         }
@@ -109,7 +134,9 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
                 request.AddOrUpdateParameter("slice", slice);
                 var data = GetTimeSeries(request);
                 foreach (var record in data)
+                {
                     yield return record;
+                }
             }
         }
 
@@ -123,10 +150,14 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
             var response = _avClient.Get(request);
 
             using (var reader = new StringReader(response.Content))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                return csv.GetRecords<TimeSeries>()
-                          .OrderBy(t => t.Time)
-                          .ToList(); // Execute query before readers are disposed.
+            {
+                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                {
+                    return csv.GetRecords<TimeSeries>()
+                                .OrderBy(t => t.Time)
+                                .ToList(); // Execute query before readers are disposed.
+                }
+            }
         }
 
         /// <summary>
@@ -136,10 +167,12 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         /// <param name="startUtc">Start date</param>
         /// <param name="endUtc">End date</param>
         /// <returns>Slice names</returns>
-        private IEnumerable<string> GetSlices(DateTime startUtc, DateTime endUtc)
+        private static IEnumerable<string> GetSlices(DateTime startUtc, DateTime endUtc)
         {
             if ((DateTime.UtcNow - startUtc).TotalDays > 365 * 2)
-                throw new ArgumentOutOfRangeException("Intraday data is only available for the last 2 years.");
+            {
+                throw new ArgumentOutOfRangeException(nameof(startUtc), "Intraday data is only available for the last 2 years.");
+            }
 
             var timeSpan = endUtc - startUtc;
             var months = (int)Math.Floor(timeSpan.TotalDays / 30);
@@ -157,10 +190,12 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         /// </summary>
         public static double GetBusinessDays(DateTime start, DateTime end)
         {
-            double days = ((end - start).TotalDays * 5 - (start.DayOfWeek - end.DayOfWeek) * 2) / 7;
+            var days = ((end - start).TotalDays * 5 - (start.DayOfWeek - end.DayOfWeek) * 2) / 7;
 
-            if (end.DayOfWeek == DayOfWeek.Saturday) days--;
-            if (start.DayOfWeek == DayOfWeek.Sunday) days--;
+            if (end.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday)
+            {
+                days--;
+            }
 
             return Math.Round(days);
         }

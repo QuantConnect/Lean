@@ -13,9 +13,7 @@ using System.Threading.Tasks;
 namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
 {
     [TestFixture]
-#pragma warning disable CA1001 // Types that own disposable fields should be disposable
     public class AlphaVantageDataDownloaderTests
-#pragma warning restore CA1001 // Types that own disposable fields should be disposable
     {
         private const string API_KEY = "TESTKEY";
         private const string BASE_URL = "https://www.alphavantage.co/";
