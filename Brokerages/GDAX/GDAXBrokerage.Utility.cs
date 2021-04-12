@@ -147,7 +147,7 @@ namespace QuantConnect.Brokerages.GDAX
             return Orders.OrderStatus.None;
         }
 
-        private IRestResponse ExecuteRestRequest(IRestRequest request, GdaxEndpointType endpointType)
+        private IRestResponse ExecuteRestRequest(IRestRequest request, GdaxEndpointType endpointType, bool sendRateLimitMessage = true)
         {
             const int maxAttempts = 10;
             var attempts = 0;
@@ -159,8 +159,11 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (!rateLimiter.WaitToProceed(TimeSpan.Zero))
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
-                        "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+                    if (sendRateLimitMessage)
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
+                            "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+                    }
 
                     rateLimiter.WaitToProceed();
                 }
