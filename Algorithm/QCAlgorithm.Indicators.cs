@@ -1891,7 +1891,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>SI for Wilder Swing Index</remarks>
         public WilderSwingIndex SI(Symbol symbol, decimal limitMove, Resolution? resolution = Resolution.Daily)
         {
-            var name = CreateIndicatorName(symbol, $"ASI", resolution);
+            var name = CreateIndicatorName(symbol, $"SI", resolution);
             var si = new WilderSwingIndex(name, limitMove);
             RegisterIndicator(symbol, si, resolution);
 
