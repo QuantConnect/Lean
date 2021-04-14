@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -24,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm to test if expired options contracts chains are making their
     /// way into the timeslices being delivered to OnData()
     /// </summary>
-    public class OptionsExpiredContractRegression : QCAlgorithm
+    public class OptionsExpiredContractRegression : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initializes the algorithm state.
@@ -53,5 +55,45 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "0"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "4.106"},
+            {"Tracking Error", "0.19"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Fitness Score", "0"},
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+        };
     }
 }
