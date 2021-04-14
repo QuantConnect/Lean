@@ -44,7 +44,7 @@ namespace QuantConnect
         private HashSet<SymbolCapacity> _monitoredSymbolCapacitySet;
         private DateTime _nextSnapshotDate;
         private TimeSpan _snapshotPeriod;
-        private Symbol _smallestAssetSymbol = null;
+        private Symbol _smallestAssetSymbol;
 
         /// <summary>
         /// The total capacity of the strategy at a point in time

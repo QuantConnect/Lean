@@ -168,6 +168,14 @@ namespace QuantConnect.Statistics
         /// </summary>
         private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, CapacityEstimate estimatedStrategyCapacity, decimal totalFees, int totalTransactions)
         {
+            var capacity = 0m;
+            var lowestCapacitySymbol = Symbol.Empty;
+            if (estimatedStrategyCapacity != null)
+            {
+                capacity = estimatedStrategyCapacity.Capacity;
+                lowestCapacitySymbol = estimatedStrategyCapacity.LowestCapacityAsset ?? Symbol.Empty;
+            }
+
             return new Dictionary<string, string>
             {
                 { "Total Trades", totalTransactions.ToStringInvariant() },
@@ -190,8 +198,8 @@ namespace QuantConnect.Statistics
                 { "Tracking Error", Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToStringInvariant() },
                 { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToStringInvariant() },
                 { "Total Fees", "$" + totalFees.ToStringInvariant("0.00") },
-                { "Estimated Strategy Capacity", "$" + estimatedStrategyCapacity.Capacity.RoundToSignificantDigits(2).ToStringInvariant() },
-                { "Lowest Capacity Asset", estimatedStrategyCapacity.LowestCapacityAsset.ToString() },
+                { "Estimated Strategy Capacity", "$" + capacity.RoundToSignificantDigits(2).ToStringInvariant() },
+                { "Lowest Capacity Asset", lowestCapacitySymbol.ToString() },
             };
         }
 
