@@ -26,14 +26,48 @@ namespace QuantConnect.Brokerages.Exante
 
         public Symbol GetLeanSymbol(
             string brokerageSymbol,
-            SecurityType securityType = default(SecurityType),
-            string market = null,
+            SecurityType securityType,
+            string market,
             DateTime expirationDate = default(DateTime),
             decimal strike = 0,
             OptionRight optionRight = OptionRight.Call
             )
         {
-            return Symbol.Empty;
+            if (string.IsNullOrWhiteSpace(brokerageSymbol))
+            {
+                throw new ArgumentException("Invalid symbol: " + brokerageSymbol);
+            }
+
+            if (securityType != SecurityType.Forex &&
+                securityType != SecurityType.Equity &&
+                securityType != SecurityType.Index &&
+                securityType != SecurityType.Option &&
+                securityType != SecurityType.IndexOption &&
+                securityType != SecurityType.Future &&
+                securityType != SecurityType.FutureOption &&
+                securityType != SecurityType.Cfd)
+            {
+                throw new ArgumentException("Invalid security type: " + securityType);
+            }
+
+            Symbol symbol;
+            switch (securityType)
+            {
+                case SecurityType.Option:
+                    symbol = Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American,
+                        optionRight, strike, expirationDate);
+                    break;
+
+                case SecurityType.Future:
+                    symbol = Symbol.CreateFuture(brokerageSymbol, market, expirationDate);
+                    break;
+
+                default:
+                    symbol = Symbol.Create(brokerageSymbol, securityType, market);
+                    break;
+            }
+
+            return symbol;
         }
     }
 }

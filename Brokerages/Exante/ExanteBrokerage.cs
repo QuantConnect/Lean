@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages.Exante
         public override List<Order> GetOpenOrders()
         {
             var orders = _client.GetActiveOrders();
-            List<Order> list = new List<Order>();
+            var list = new List<Order>();
             foreach (var item in orders)
             {
                 Order order;
@@ -126,9 +126,11 @@ namespace QuantConnect.Brokerages.Exante
                         continue;
                 }
 
+                var symbol = _client.GetSymbol(item.OrderParameters.SymbolId);
+
                 order.Quantity = item.OrderParameters.Quantity;
                 order.BrokerId = new List<string> {item.OrderId.ToString()};
-                order.Symbol = _symbolMapper.GetLeanSymbol(item.OrderParameters.SymbolId);
+                order.Symbol = ConvertSymbol(symbol);
                 order.Time = item.Date;
                 order.Status = ConvertOrderStatus(item.OrderState.Status);
                 // order.Price = ; // TODO: what's the price?

@@ -106,5 +106,15 @@ namespace QuantConnect.Brokerages.Exante
             checkIfResponseOk(response);
             return response.Data;
         }
+
+        public ExanteSymbol GetSymbol(
+            string symbolId,
+            CancellationToken ct = default (CancellationToken))
+        {
+            var response = 
+                _client.GetSymbolAsync(symbolId, ct).SynchronouslyAwaitTaskResult();
+            checkIfResponseOk(response);
+            return response.Data;
+        }
     }
 }
