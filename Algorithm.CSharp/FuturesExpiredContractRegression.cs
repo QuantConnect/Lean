@@ -14,22 +14,16 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
-using QuantConnect.Securities.Future;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 
-
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Demonstration of how to rollover futures
+    /// Regression algorithm to test if expired futures contract chains are making their
+    /// way into the timeslices being delivered to OnData()
     /// </summary>
-    /// <meta name="tag" content="renko" />
-    /// <meta name="tag" content="indicators" />
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="consolidating data" />
     public class FuturesExpiredContractRegression : QCAlgorithm
     {
         /// <summary>
