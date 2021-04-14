@@ -47,17 +47,17 @@ namespace QuantConnect.Indicators
     ///           <list type="number">
     ///             <item>
     ///               <description>
-    ///                 |Hₜ - Cₜ₋₁| =&gt; |Hₜ - Cₜ - 0.5 * (Lₜ - Cₜ₋₁) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|
+    ///                 |Hₜ - Cₜ₋₁| =&gt; |Hₜ - Cₜ| - 0.5 * |Lₜ - Cₜ₋₁| + 0.25 * |Cₜ₋₁ - Oₜ₋₁|
     ///               </description>
     ///             </item>
     ///             <item>
     ///               <description>
-    ///                 |Lₜ - Cₜ₋₁| =&gt; |Lₜ - Cₜ - 0.5 * (Hₜ - Cₜ₋₁) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|
+    ///                 |Lₜ - Cₜ₋₁| =&gt; |Lₜ - Cₜ| - 0.5 * |Hₜ - Cₜ₋₁| + 0.25 * |Cₜ₋₁ - Oₜ₋₁|
     ///               </description>
     ///             </item>
     ///             <item>
     ///               <description>
-    ///                 |Hₜ - Lₜ| =&gt; |Hₜ - Lₜ₋₁ + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|
+    ///                 |Hₜ - Lₜ| =&gt; |Hₜ - Lₜ₋₁| + 0.25 * |Cₜ₋₁ - Oₜ₋₁|
     ///               </description>
     ///             </item>
     ///           </list>
@@ -172,8 +172,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         private decimal GetNValue()
         {
-            return _currentInput.Close
-                - _previousInput.Close
+            return (_currentInput.Close - _previousInput.Close)
                 + (0.5m * (_currentInput.Close - _currentInput.Open))
                 + (0.25m * (_previousInput.Close - _previousInput.Open));
         }
@@ -199,13 +198,13 @@ namespace QuantConnect.Indicators
         ///   <i>Formulas:</i>
         ///   <list type="number">
         ///     <item>
-        ///       <description>|Hₜ - Cₜ₋₁ - 0.5 * (Lₜ - Cₜ₋₁) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|</description>
+        ///       <description>|Hₜ - Cₜ₋₁| - 0.5 * |Lₜ - Cₜ₋₁| + 0.25 * |Cₜ₋₁ - Oₜ₋₁|</description>
         ///     </item>
         ///     <item>
-        ///       <description>|Lₜ - Cₜ₋₁ - 0.5 * (Hₜ - Cₜ₋₁) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|</description>
+        ///       <description>|Lₜ - Cₜ₋₁| - 0.5 * |Hₜ - Cₜ₋₁| + 0.25 * |Cₜ₋₁ - Oₜ₋₁|</description>
         ///     </item>
         ///     <item>
-        ///       <description>|Hₜ - Lₜ + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|</description>
+        ///       <description>|Hₜ - Lₜ| + 0.25 * |Cₜ₋₁ - Oₜ₋₁|</description>
         ///     </item>
         ///   </list>
         /// </para>
@@ -225,23 +224,20 @@ namespace QuantConnect.Indicators
             switch (expressionIndex)
             {
                 case 0:
-                    result = _currentInput.High
-                        - _previousInput.Close
-                        - (0.5m * (_currentInput.Low - _previousInput.Close))
-                        + (0.25m * (_previousInput.Close - _previousInput.Open));
+                    result = Math.Abs(_currentInput.High - _previousInput.Close)
+                        - Math.Abs(0.5m * (_currentInput.Low - _previousInput.Close))
+                        + Math.Abs(0.25m * (_previousInput.Close - _previousInput.Open));
                     break;
 
                 case 1:
-                    result = _currentInput.Low
-                        - _previousInput.Close
-                        - (0.5m * (_currentInput.High - _previousInput.Close))
-                        + (0.25m * (_previousInput.Close - _previousInput.Open));
+                    result = Math.Abs(_currentInput.Low - _previousInput.Close)
+                        - Math.Abs(0.5m * (_currentInput.High - _previousInput.Close))
+                        + Math.Abs(0.25m * (_previousInput.Close - _previousInput.Open));
                     break;
 
                 case 2:
-                    result = _currentInput.High
-                        - _currentInput.Low
-                        + (0.25m * (_previousInput.Close - _previousInput.Open));
+                    result = Math.Abs(_currentInput.High - _currentInput.Low)
+                        + Math.Abs(0.25m * (_previousInput.Close - _previousInput.Open));
                     break;
 
                 default:
@@ -249,7 +245,7 @@ namespace QuantConnect.Indicators
                     break;
             }
 
-            return Math.Abs(result);
+            return result;
         }
 
         /// <summary>
