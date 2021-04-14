@@ -21,7 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Lean.Engine.Results
+namespace QuantConnect
 {
     /// <summary>
     /// Estimates dollar volume capacity of algorithm (in account currency) using all Symbols in the portfolio.

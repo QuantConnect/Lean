@@ -21,7 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Lean.Engine.Results
+namespace QuantConnect
 {
     /// <summary>
     /// Per-symbol capacity estimations, tightly coupled with the <see cref="CapacityEstimate"/> class.
