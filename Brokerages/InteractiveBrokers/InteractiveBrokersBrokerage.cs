@@ -3305,7 +3305,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (!result.HasError && !_isDisposeCalled)
             {
-                // IBGateway was closed by the v978+ automatic logoff or it was closed manually (less likely)
+                // IBGateway was closed by IBAutomater because the auto-restart token expired or it was closed manually (less likely)
                 Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
 
                 Disconnect();
