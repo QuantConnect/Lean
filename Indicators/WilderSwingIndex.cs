@@ -43,27 +43,21 @@ namespace QuantConnect.Indicators
     ///         Found by selecting the expression with the largest value and
     ///         then using the corresponding formula.
     ///         <para>
-    ///           <i>Expression</i> ⭢ <i>Formula</i>
+    ///           Expression =&gt; Formula
     ///           <list type="number">
     ///             <item>
     ///               <description>
-    ///                 |Hₜ - Cₜ₋₁|
-    ///                 ⭢
-    ///                 |Hₜ - Cₜ - 0.5 * (Lₜ - Cₜ₋₁) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|
+    ///                 |Hₜ - Cₜ₋₁| =&gt; |Hₜ - Cₜ - 0.5 * (Lₜ - Cₜ₋₁) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|
     ///               </description>
     ///             </item>
     ///             <item>
     ///               <description>
-    ///                 |Lₜ - Cₜ₋₁|
-    ///                 ⭢
-    ///                 |Lₜ - Cₜ - 0.5 * (Hₜ - Cₜ₋₁) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|
+    ///                 |Lₜ - Cₜ₋₁| =&gt; |Lₜ - Cₜ - 0.5 * (Hₜ - Cₜ₋₁) + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|
     ///               </description>
     ///             </item>
     ///             <item>
     ///               <description>
-    ///                 |Hₜ - Lₜ|
-    ///                 ⭢
-    ///                 |Hₜ - Lₜ₋₁ + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|
+    ///                 |Hₜ - Lₜ| =&gt; |Hₜ - Lₜ₋₁ + 0.25 * (Cₜ₋₁ - Oₜ₋₁)|
     ///               </description>
     ///             </item>
     ///           </list>
