@@ -42,14 +42,19 @@ namespace QuantConnect.Lean.Engine.Results
         // (monitored meaning it is currently aggregating market dollar volume for its capacity calculation).
         // For integer indexing, we use the List above, v.s. for lookup we use this HashSet.
         private HashSet<SymbolCapacity> _monitoredSymbolCapacitySet;
-        private DateTime _previousSnapshotDate;
         private DateTime _nextSnapshotDate;
         private TimeSpan _snapshotPeriod;
+        private Symbol _smallestAssetSymbol = null;
 
         /// <summary>
         /// The total capacity of the strategy at a point in time
         /// </summary>
         public decimal Capacity { get; private set; }
+
+        /// <summary>
+        /// Provide a reference to the lowest capacity symbol used in scaling down the capacity for debugging.
+        /// </summary>
+        public Symbol LowestCapacityAsset => _smallestAssetSymbol; 
 
         /// <summary>
         /// Initializes an instance of the class.
@@ -62,8 +67,7 @@ namespace QuantConnect.Lean.Engine.Results
             _monitoredSymbolCapacity = new List<SymbolCapacity>();
             _monitoredSymbolCapacitySet = new HashSet<SymbolCapacity>();
             // Set the minimum snapshot period to one day, but use algorithm start/end if the algo runtime is less than seven days
-            _snapshotPeriod = TimeSpan.FromDays(Math.Max(Math.Min((_algorithm.EndDate - _algorithm.StartDate).TotalDays - 1, 7), 1));
-            _previousSnapshotDate = _algorithm.StartDate;
+            _snapshotPeriod = TimeSpan.FromDays(Math.Max(Math.Min((_algorithm.EndDate - _algorithm.StartDate).TotalDays - 1, 7), 1)); 
             _nextSnapshotDate = _algorithm.StartDate + _snapshotPeriod;
         }
 
@@ -141,6 +145,8 @@ namespace QuantConnect.Lean.Engine.Results
                     .OrderBy(c => c.MarketCapacityDollarVolume)
                     .First();
 
+                _smallestAssetSymbol = smallestAsset.Security.Symbol;
+
                 // When there is no trading, rely on the portfolio holdings
                 var percentageOfSaleVolume = totalSaleVolume != 0
                     ? smallestAsset.SaleVolume / totalSaleVolume
@@ -172,7 +178,6 @@ namespace QuantConnect.Lean.Engine.Results
                     symbolCapacity.Reset();
                 }
 
-                _previousSnapshotDate = utcDate;
                 _nextSnapshotDate = utcDate + _snapshotPeriod;
             }
         }
