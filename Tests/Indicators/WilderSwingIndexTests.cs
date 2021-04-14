@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new WilderSwingIndex(10);
+            return new WilderSwingIndex(8);
         }
 
         protected override string TestFileName
