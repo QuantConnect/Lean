@@ -17,6 +17,10 @@
 # Usage:
 # %run "start.py"
 
+import clr_loader
+from pythonnet import set_runtime
+set_runtime(clr_loader.get_coreclr("QuantConnect.Lean.Launcher.runtimeconfig.json"))
+
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
