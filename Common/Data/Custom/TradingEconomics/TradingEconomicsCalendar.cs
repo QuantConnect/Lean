@@ -502,7 +502,17 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// <returns>ISO 4217 currency code</returns>
         public static string CountryToCurrencyCode(string country)
         {
-            var regions = CultureInfo.GetCultures(CultureTypes.SpecificCultures).Select(x => new RegionInfo(x.LCID));
+            var regions = CultureInfo.GetCultures(CultureTypes.SpecificCultures).Select(x =>
+            {
+                try
+                {
+                    return new RegionInfo(x.LCID);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }).Where(info => info != null);
             var countryLower = country.ToLowerInvariant();
             return regions.FirstOrDefault(region => region.EnglishName.ToLowerInvariant().Contains(countryLower))?.ISOCurrencySymbol;
         }

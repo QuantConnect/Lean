@@ -194,8 +194,8 @@ class Test(AlphaStreamsBrokerageModel):
             var oandaSecurity = _algo.AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute, Market.Oanda, true, 1m, true);
 
             Assert.AreEqual(2, _algo.Securities.Count);
-            Assert.AreEqual(Market.FXCM, _algo.Securities.First().Key.ID.Market);
-            Assert.AreEqual(Market.Oanda, _algo.Securities.Last().Key.ID.Market);
+            Assert.IsNotNull(_algo.Securities.Single(pair => pair.Key.ID.Market == Market.FXCM));
+            Assert.IsNotNull(_algo.Securities.Single(pair => pair.Key.ID.Market == Market.Oanda));
             Assert.AreEqual(Market.FXCM, fxcmSecurity.Symbol.ID.Market);
             Assert.AreEqual(Market.Oanda, oandaSecurity.Symbol.ID.Market);
         }
@@ -207,8 +207,8 @@ class Test(AlphaStreamsBrokerageModel):
             var oandaSecurity = _algo.AddForex("EURUSD", Resolution.Minute, Market.Oanda);
 
             Assert.AreEqual(2, _algo.Securities.Count);
-            Assert.AreEqual(Market.FXCM, _algo.Securities.First().Key.ID.Market);
-            Assert.AreEqual(Market.Oanda, _algo.Securities.Last().Key.ID.Market);
+            Assert.IsNotNull(_algo.Securities.Single(pair => pair.Key.ID.Market == Market.FXCM));
+            Assert.IsNotNull(_algo.Securities.Single(pair => pair.Key.ID.Market == Market.Oanda));
             Assert.AreEqual(Market.FXCM, fxcmSecurity.Symbol.ID.Market);
             Assert.AreEqual(Market.Oanda, oandaSecurity.Symbol.ID.Market);
         }

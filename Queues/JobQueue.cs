@@ -96,9 +96,8 @@ namespace QuantConnect.Queues
             {
                 // Set the python path for loading python algorithms ("algorithm-location" config parameter)
                 var pythonFile = new FileInfo(location);
-
-                // PythonInitializer automatically adds the current working directory for us
-                PythonInitializer.SetPythonPathEnvironmentVariable(new string[] { pythonFile.Directory.FullName });
+                PythonInitializer.Initialize();
+                PythonInitializer.AddPythonPaths(new []{ Path.GetDirectoryName(pythonFile.FullName) });
             }
 
             var algorithmId = Config.Get("algorithm-id", AlgorithmTypeName);
