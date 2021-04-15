@@ -47,7 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             var totalBars = history.Count(slice => slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol));
 
-            if (totalBars != expectedSliceCount)
+            const int expectedBarCount = 3926;
+            if (totalBars != expectedBarCount)
             {
                 throw new Exception($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
             }
