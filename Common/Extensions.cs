@@ -2887,10 +2887,8 @@ namespace QuantConnect
         /// <remarks>History provider is never emitting auxiliary data points</remarks>
         public static bool ShouldEmitAuxiliaryBaseData(this SubscriptionDataConfig config)
         {
-            return !config.IsInternalFeed
-                // custom data could use remapping events, example 'CustomDataUsingMapping' regression algorithm
-                && (config.Type == typeof(TradeBar) || config.Type == typeof(Tick) && config.TickType == TickType.Trade ||
-                    config.IsCustomData); // || config.Type == typeof(QuoteBar)) || config.Type == typeof(OpenInterest);  
+            var typeFilter = (config.Type == typeof(TradeBar) || config.Type == typeof(Tick) && config.TickType == TickType.Trade);
+            return (!config.IsInternalFeed && typeFilter) || config.IsCustomData;
         }
     }
 }
