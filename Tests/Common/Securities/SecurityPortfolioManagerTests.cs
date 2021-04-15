@@ -77,8 +77,8 @@ namespace QuantConnect.Tests.Common.Securities
             // this test asserts the portfolio behaves according to the Test_Cash algo, see TestData\CashTestingStrategy.csv
             // also "https://www.dropbox.com/s/oiliumoyqqj1ovl/2013-cash.csv?dl=1"
 
-            const string fillsFile = "TestData\\test_cash_fills.xml";
-            const string equityFile = "TestData\\test_cash_equity.xml";
+            const string fillsFile = "TestData/test_cash_fills.xml";
+            const string equityFile = "TestData/test_cash_equity.xml";
 
             var fills = XDocument.Load(fillsFile).Descendants("OrderEvent").Select(x => new OrderEvent(
                 x.Get<int>("OrderId"),
@@ -140,10 +140,10 @@ namespace QuantConnect.Tests.Common.Securities
             // this test asserts the portfolio behaves according to the Test_Cash algo, but for a Forex security,
             // see TestData\CashTestingStrategy.csv; also "https://www.dropbox.com/s/oiliumoyqqj1ovl/2013-cash.csv?dl=1"
 
-            const string fillsFile = "TestData\\test_forex_fills.xml";
-            const string equityFile = "TestData\\test_forex_equity.xml";
-            const string mchQuantityFile = "TestData\\test_forex_fills_mch_quantity.xml";
-            const string jwbQuantityFile = "TestData\\test_forex_fills_jwb_quantity.xml";
+            const string fillsFile = "TestData/test_forex_fills.xml";
+            const string equityFile = "TestData/test_forex_equity.xml";
+            const string mchQuantityFile = "TestData/test_forex_fills_mch_quantity.xml";
+            const string jwbQuantityFile = "TestData/test_forex_fills_jwb_quantity.xml";
 
             var fills = XDocument.Load(fillsFile).Descendants("OrderEvent").Select(x => new OrderEvent(
                 x.Get<int>("OrderId"),

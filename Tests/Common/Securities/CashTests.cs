@@ -26,7 +26,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
