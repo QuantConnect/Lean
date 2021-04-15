@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var contract in chain.Value.OrderBy(x => x.Expiry))
                 {
-                    if (contract.Expiry < Time)
+                    if (contract.Expiry.Date < Time.Date)
                     {
                         throw new Exception($"Received expired contract {contract} expired: {contract.Expiry} current time: {Time}");
                     }
