@@ -836,19 +836,6 @@ namespace QuantConnect
         /// <param name="d">Double we're rounding</param>
         /// <param name="digits">Number of significant figures</param>
         /// <returns>New double rounded to digits-significant figures</returns>
-        public static double RoundToSignificantDigits(this double d, int digits)
-        {
-            if (d == 0) return 0;
-            var scale = Math.Pow(10, Math.Floor(Math.Log10(Math.Abs(d))) + 1);
-            return scale * Math.Round(d / scale, digits);
-        }
-
-        /// <summary>
-        /// Extension method to round a double value to a fixed number of significant figures instead of a fixed decimal places.
-        /// </summary>
-        /// <param name="d">Double we're rounding</param>
-        /// <param name="digits">Number of significant figures</param>
-        /// <returns>New double rounded to digits-significant figures</returns>
         public static decimal RoundToSignificantDigits(this decimal d, int digits)
         {
             if (d == 0) return 0;

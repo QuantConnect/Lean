@@ -115,27 +115,34 @@ namespace QuantConnect.Util
         // for providing the code below, fixing issue #3499 - https://github.com/QuantConnect/Lean/issues/3499
         private void ExitTimerCallback(object state)
         {
-            // While there are exit times that are passed due still in the queue,
-            // exit the semaphore and dequeue the exit time.
-            var exitTime = 0;
-            var exitTimeValid = _exitTimes.TryPeek(out exitTime);
-            while (exitTimeValid)
+            try
             {
-                if (unchecked(exitTime - Environment.TickCount) > 0)
+                // While there are exit times that are passed due still in the queue,
+                // exit the semaphore and dequeue the exit time.
+                var exitTime = 0;
+                var exitTimeValid = _exitTimes.TryPeek(out exitTime);
+                while (exitTimeValid)
                 {
-                    break;
+                    if (unchecked(exitTime - Environment.TickCount) > 0)
+                    {
+                        break;
+                    }
+                    _semaphore.Release();
+                    _exitTimes.TryDequeue(out exitTime);
+                    exitTimeValid = _exitTimes.TryPeek(out exitTime);
                 }
-                _semaphore.Release();
-                _exitTimes.TryDequeue(out exitTime);
-                exitTimeValid = _exitTimes.TryPeek(out exitTime);
-            }
-            // we are already holding the next item from the queue, do not peek again
-            // although this exit time may have already pass by this stmt.
-            var timeUntilNextCheck = exitTimeValid
-                ? Math.Min(TimeUnitMilliseconds, Math.Max(0, exitTime - Environment.TickCount))
-                : TimeUnitMilliseconds;
+                // we are already holding the next item from the queue, do not peek again
+                // although this exit time may have already pass by this stmt.
+                var timeUntilNextCheck = exitTimeValid
+                    ? Math.Min(TimeUnitMilliseconds, Math.Max(0, exitTime - Environment.TickCount))
+                    : TimeUnitMilliseconds;
 
-            _exitTimer.Change(timeUntilNextCheck, -1);
+                _exitTimer.Change(timeUntilNextCheck, -1);
+            }
+            catch (Exception)
+            {
+                // can throw if called when disposing
+            }
         }
 
         /// <summary>
