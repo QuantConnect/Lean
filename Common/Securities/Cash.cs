@@ -282,6 +282,14 @@ namespace QuantConnect.Securities
                 }
             }
 
+            // Special case; even if we don't have USDC-USD pair, still allow USDC cash because 1-1 with USD
+            if (Symbol == "USDC")
+            {
+                ConversionRateSecurity = null;
+                ConversionRate = 1.0m;
+                return null;
+            }
+
             // if this still hasn't been set then it's an error condition
             throw new ArgumentException($"In order to maintain cash in {Symbol} you are required to add a " +
                 $"subscription for Forex pair {Symbol}{accountCurrency} or {accountCurrency}{Symbol}"
