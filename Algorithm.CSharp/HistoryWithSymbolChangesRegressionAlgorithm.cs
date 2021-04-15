@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             const int expectedBarCount = 3926;
             if (totalBars != expectedBarCount)
             {
-                throw new Exception($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
+                throw new Exception($"History bars - expected: {expectedBarCount}, actual: {totalBars}");
             }
 
             var firstBar = history.First().Bars.GetValue(symbol);
