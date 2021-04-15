@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             var history = History(new [] {symbol}, TimeSpan.FromDays(5700), Resolution.Daily).ToList();
             Debug($"{Time} - history.Count: {history.Count}");
 
-            const int expectedSliceCount = 3926;
+            const int expectedSliceCount = 3935;
             if (history.Count != expectedSliceCount)
             {
                 throw new Exception($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
