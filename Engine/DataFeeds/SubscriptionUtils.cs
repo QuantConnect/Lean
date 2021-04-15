@@ -76,6 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
             var config = subscription.Configuration;
             var lastTradableDate = DateTime.MinValue;
+            var shouldEmitAuxiliaryDate = config.ShouldEmitAuxiliaryBaseData();
             decimal? currentScale = null;
 
             Func<int, bool> produce = (workBatchSize) =>
@@ -93,6 +94,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         var data = enumerator.Current;
+
+                        // Check if this subscription current data is auxiliary and if it is verify that it should emit it
+                        if (data != null && data.DataType == MarketDataType.Auxiliary && !shouldEmitAuxiliaryDate)
+                        {
+                            continue;
+                        }
+
                         var requestMode = config.DataNormalizationMode;
                         var mode = requestMode != DataNormalizationMode.Raw
                             ? requestMode

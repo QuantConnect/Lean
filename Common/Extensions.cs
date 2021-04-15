@@ -2875,5 +2875,22 @@ namespace QuantConnect
         {
             return ComparisonOperator.Compare(op, arg1, arg2);
         }
+
+        /// <summary>
+        /// Centralized logic used by the data feeds to determine if we should emit auxiliary base data points.
+        /// For equities we only want to emit split/dividends events for non internal and only for <see cref="TradeBar"/> configurations
+        /// this last part is because equities also have <see cref="QuoteBar"/> subscriptions.
+        /// </summary>
+        /// <remarks>The "TimeSliceFactory" does not allow for multiple dividends/splits per symbol in the same time slice
+        /// but we don't want to rely only on that to filter out duplicated aux data so we use this at the top of
+        /// our data enumerator stacks to define what subscription should emit this data.</remarks>
+        /// <remarks>History provider is never emitting auxiliary data points</remarks>
+        public static bool ShouldEmitAuxiliaryBaseData(this SubscriptionDataConfig config)
+        {
+            return !config.IsInternalFeed
+                // custom data could use remapping events, example 'CustomDataUsingMapping' regression algorithm
+                && (config.Type == typeof(TradeBar) || config.Type == typeof(Tick) && config.TickType == TickType.Trade ||
+                    config.IsCustomData); // || config.Type == typeof(QuoteBar)) || config.Type == typeof(OpenInterest);  
+        }
     }
 }

@@ -39,6 +39,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public SubscriptionData Current { get; private set; }
 
         /// <summary>
+        /// boolean flag if this subscription enumerator should emit auxiliary data.
+        /// </summary>
+        public bool ShouldEmitAuxiliaryData;
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="configuration">The subscription's configuration</param>
@@ -55,6 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _offsetProvider = offsetProvider;
             _exchangeHours = exchangeHours;
             _configuration = configuration;
+            ShouldEmitAuxiliaryData = _configuration.ShouldEmitAuxiliaryBaseData();
         }
 
         /// <summary>
@@ -67,6 +73,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var result = _enumerator.MoveNext();
             if (result)
             {
+                // Check if this subscription current data is auxiliary and if it is, verify that it should emit it
+                if (_enumerator.Current != null && _enumerator.Current.DataType == MarketDataType.Auxiliary && !ShouldEmitAuxiliaryData)
+                {
+                    // We shouldn't emit this data, so we will MoveNext() again.
+                    return MoveNext();
+                }
+
                 Current = SubscriptionData.Create(_configuration, _exchangeHours, _offsetProvider, _enumerator.Current, _configuration.DataNormalizationMode);
             }
             return result;

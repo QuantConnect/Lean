@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                _includeAuxiliaryData && CorporateEventEnumeratorFactory.ShouldEmitAuxiliaryBaseData(request.Configuration),
+                _includeAuxiliaryData,
                 request.StartTimeLocal,
                 _enablePriceScaling);
 
