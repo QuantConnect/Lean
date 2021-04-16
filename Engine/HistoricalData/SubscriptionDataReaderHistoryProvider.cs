@@ -159,7 +159,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                true,
                 startTimeLocal);
 
             // optionally apply fill forward behavior

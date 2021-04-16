@@ -51,7 +51,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             IFactorFileProvider factorFileProvider,
             ITradableDatesNotifier tradableDayNotifier,
             MapFileResolver mapFileResolver,
-            bool includeAuxiliaryData,
             DateTime startTime,
             bool enablePriceScaling = true)
         {
@@ -81,7 +80,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 new Lazy<MapFile>(() => GetMapFileToUse(config, mapFileResolver)),
                 tradableEventProviders.ToArray(),
                 tradableDayNotifier,
-                includeAuxiliaryData,
                 startTime);
 
             // avoid price scaling for backtesting; calculate it directly in worker
