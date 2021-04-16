@@ -24,7 +24,6 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using com.sun.security.ntlm;
 using CryptoExchange.Net.Objects;
 using Exante.Net;
 using Exante.Net.Enums;
@@ -34,6 +33,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -175,6 +175,25 @@ namespace QuantConnect.Brokerages.Exante
                         $"ExanteBrokerage.ConvertOrderDirection: Unsupported order direction: {order.Direction}");
             }
 
+            DateTime? gttExpiration = null;
+            ExanteOrderDuration orderDuration;
+            switch (order.TimeInForce)
+            {
+                case GoodTilCanceledTimeInForce _:
+                    orderDuration = ExanteOrderDuration.GoodTillCancel;
+                    break;
+                case DayTimeInForce _:
+                    orderDuration = ExanteOrderDuration.Day;
+                    break;
+                case GoodTilDateTimeInForce gtdtif:
+                    orderDuration = ExanteOrderDuration.GoodTillTime;
+                    gttExpiration = gtdtif.Expiry;
+                    break;
+                default:
+                    throw new NotSupportedException(
+                        $"ExanteBrokerage.ConvertOrderDuration: Unsupported order duration: {order.TimeInForce}");
+            }
+
             IEnumerable<ExanteOrder> orderPlacement;
             switch (order.Type)
             {
@@ -185,7 +204,8 @@ namespace QuantConnect.Brokerages.Exante
                         ExanteOrderType.Market,
                         orderSide,
                         order.Quantity,
-                        ExanteOrderDuration.AtTheClose
+                        orderDuration,
+                        gttExpiration: gttExpiration
                     );
                     break;
 
