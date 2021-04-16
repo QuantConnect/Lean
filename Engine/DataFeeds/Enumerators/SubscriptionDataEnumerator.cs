@@ -30,7 +30,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly SubscriptionDataConfig _configuration;
         private readonly SecurityExchangeHours _exchangeHours;
         private readonly TimeZoneOffsetProvider _offsetProvider;
-        private readonly bool _shouldEmitAuxiliaryData;
 
         object IEnumerator.Current => Current;
 
@@ -56,7 +55,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _offsetProvider = offsetProvider;
             _exchangeHours = exchangeHours;
             _configuration = configuration;
-            _shouldEmitAuxiliaryData = _configuration.ShouldEmitAuxiliaryBaseData();
         }
 
         /// <summary>
@@ -69,8 +67,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var result = _enumerator.MoveNext();
             if (result)
             {
-                // Check if this subscription current data is auxiliary and if it is, verify that it should emit it
-                if (_enumerator.Current != null && _enumerator.Current.DataType == MarketDataType.Auxiliary && !_shouldEmitAuxiliaryData)
+                // Use our config filter to see if we should emit this
+                // This currently catches Auxiliary data that we don't want to emit
+                if (_enumerator.Current != null && !_configuration.ShouldEmitData(_enumerator.Current))
                 {
                     // We shouldn't emit this data, so we will MoveNext() again.
                     return MoveNext();
