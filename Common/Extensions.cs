@@ -2233,6 +2233,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Safely convert PyObject to ManagedObject using Py.GIL Lock
+        /// If no type is given it will convert the PyObject's Python Type to a ManagedObject Type
+        /// in a attempt to resolve the target type to convert to.
+        /// </summary>
+        /// <param name="pyObject">PyObject to convert to managed</param>
+        /// <param name="typeToConvertTo">The target type to convert to</param>
+        /// <returns>The resulting ManagedObject</returns>
+        public static dynamic SafeAsManagedObject(this PyObject pyObject, Type typeToConvertTo = null)
+        {
+            using (Py.GIL())
+            {
+                if (typeToConvertTo == null)
+                {
+                    typeToConvertTo = pyObject.GetPythonType().AsManagedObject(typeof(Type)) as Type;
+                }
+
+                return pyObject.AsManagedObject(typeToConvertTo);
+            }
+        }
+
+        /// <summary>
         /// Wraps the provided universe selection selector checking if it returned <see cref="Universe.Unchanged"/>
         /// and returns it instead, else enumerates result as <see cref="IEnumerable{Symbol}"/>
         /// </summary>
