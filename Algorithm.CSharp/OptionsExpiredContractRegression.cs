@@ -28,6 +28,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OptionsExpiredContractRegression : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _receivedData;
+
         /// <summary>
         /// Initializes the algorithm state.
         /// </summary>
@@ -46,6 +48,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var chain in data.OptionChains)
             {
+                _receivedData = true;
+
                 foreach (var contract in chain.Value.OrderBy(x => x.Expiry))
                 {
                     if (contract.Expiry.Date < Time.Date)
@@ -53,6 +57,14 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($"Received expired contract {contract} expired: {contract.Expiry} current time: {Time}");
                     }
                 }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_receivedData)
+            {
+                throw new Exception("No Options chains were received in this regression");
             }
         }
 
