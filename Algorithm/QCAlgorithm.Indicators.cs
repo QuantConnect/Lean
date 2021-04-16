@@ -1881,6 +1881,52 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a Wilder Swing Index (SI) indicator for the symbol.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose SI we want</param>
+        /// <param name="limitMove">The maximum daily change in price for the SI</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The WilderSwingIndex for the given parameters</returns>
+        /// <remarks>SI for Wilder Swing Index</remarks>
+        public WilderSwingIndex SI(Symbol symbol, decimal limitMove, Resolution? resolution = Resolution.Daily)
+        {
+            var name = CreateIndicatorName(symbol, "SI", resolution);
+            var si = new WilderSwingIndex(name, limitMove);
+            RegisterIndicator(symbol, si, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, si, resolution);
+            }
+
+            return si;
+        }
+
+        /// <summary>
+        /// Creates a Wilder Accumulative Swing Index (ASI) indicator for the symbol.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ASI we want</param>
+        /// <param name="limitMove">The maximum daily change in price for the ASI</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The WilderAccumulativeSwingIndex for the given parameters</returns>
+        /// <remarks>ASI for Wilder Accumulative Swing Index</remarks>
+        public WilderAccumulativeSwingIndex ASI(Symbol symbol, decimal limitMove, Resolution? resolution = Resolution.Daily)
+        {
+            var name = CreateIndicatorName(symbol, "ASI", resolution);
+            var asi = new WilderAccumulativeSwingIndex(name, limitMove);
+            RegisterIndicator(symbol, asi, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, asi, resolution);
+            }
+
+            return asi;
+        }
+
+        /// <summary>
         /// Creates a new Arms Index indicator
         /// </summary>
         /// <param name="symbols">The symbols whose Arms Index we want</param>
