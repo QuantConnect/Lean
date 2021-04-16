@@ -39,19 +39,16 @@ namespace QuantConnect.Algorithm.CSharp
             var history = History(new [] {symbol}, TimeSpan.FromDays(5700), Resolution.Daily).ToList();
             Debug($"{Time} - history.Count: {history.Count}");
 
-            const int expectedSliceCount = 3935;
+            const int expectedSliceCount = 3926;
             if (history.Count != expectedSliceCount)
             {
                 throw new Exception($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
             }
 
             var totalBars = history.Count(slice => slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol));
-
-            // Bar count will be less because aux is not included in bars
-            const int expectedBarCount = 3926;
-            if (totalBars != expectedBarCount)
+            if (totalBars != expectedSliceCount)
             {
-                throw new Exception($"History bars - expected: {expectedBarCount}, actual: {totalBars}");
+                throw new Exception($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
             }
 
             var firstBar = history.First().Bars.GetValue(symbol);
