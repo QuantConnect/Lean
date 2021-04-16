@@ -54,9 +54,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="limitMove">A decimal representing the limit move value for the period.</param>
         public WilderAccumulativeSwingIndex(decimal limitMove)
-            : base ("ASI")
+            : this ("ASI", limitMove)
         {
-            _si = new WilderSwingIndex(limitMove);
         }
 
         /// <summary>
@@ -87,9 +86,9 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _si.Update(input);
+            var isReady = _si.Update(input);
 
-            if (_si.IsReady)
+            if (isReady)
             {
                 return IsReady
                     ? Current.Value + _si.Current.Value

@@ -154,14 +154,15 @@ namespace QuantConnect.Indicators
             _previousInput = _currentInput;
             _currentInput = input;
 
-            decimal N = GetNValue();
-            decimal R = GetRValue();
-            decimal K = GetKValue();
+            var N = GetNValue();
+            var R = GetRValue();
+            var K = GetKValue();
 
-            if (R == Decimal.Zero || T == Decimal.Zero)
+            if (R == decimal.Zero || T == decimal.Zero)
+            {
                 return 0m;
-            else
-                return 50m * (N / R) * (K / T);
+            }
+            return 50m * (N / R) * (K / T);
         }
 
         /// <summary>
