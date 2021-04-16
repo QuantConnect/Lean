@@ -47,6 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var totalBars = history.Count(slice => slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol));
 
+            // Bar count will be less because aux is not included in bars
             const int expectedBarCount = 3926;
             if (totalBars != expectedBarCount)
             {
