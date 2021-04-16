@@ -35,6 +35,7 @@ namespace QuantConnect.Brokerages.Bitfinex
     /// <summary>
     /// Bitfinex Brokerage implementation
     /// </summary>
+    [BrokerageFactory(typeof(BitfinexBrokerageFactory))]
     public partial class BitfinexBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Bitfinex);
