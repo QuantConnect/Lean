@@ -41,7 +41,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
-        /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <param name="startTime">Start date for the data request</param>
         /// <param name="enablePriceScaling">Applies price factor</param>
         /// <returns>The new auxiliary data enumerator</returns>

@@ -41,7 +41,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
         /// <param name="tradableDateEventProviders">The tradable dates event providers</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
-        /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <param name="startTime">Start date for the data request</param>
         public AuxiliaryDataEnumerator(
             SubscriptionDataConfig config,
