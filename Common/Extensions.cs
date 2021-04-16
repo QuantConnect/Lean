@@ -2895,17 +2895,29 @@ namespace QuantConnect
         public static bool ShouldEmitData(this SubscriptionDataConfig config, BaseData data)
         {
             // For now we are only filtering Auxiliary data; so if its another type just return true
-            if (data.DataType != MarketDataType.Auxiliary) return true;
+            if (data.DataType != MarketDataType.Auxiliary)
+            {
+                return true;
+            }
 
-            // This filter does not apply to auxiliary data outside of delisting/splits/dividends
+            // Check our config type first to be lazy about using data.GetType() unless required
+            var configTypeFilter = (config.Type == typeof(TradeBar) ||
+                config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
+
+            if (!configTypeFilter)
+            {
+                return false;
+            }
+
+            // This filter does not apply to auxiliary data outside of delisting/splits/dividends so lets those emit
             var type = data.GetType();
             if (!(type == typeof(Delisting) || type == typeof(Split) || type == typeof(Dividend)))
             {
                 return true;
             }
 
-            return (!config.IsInternalFeed &&
-                (config.Type == typeof(TradeBar) || config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData));
+            // If we made it here then only filter it if its an InternalFeed
+            return !config.IsInternalFeed;
         }
     }
 }
