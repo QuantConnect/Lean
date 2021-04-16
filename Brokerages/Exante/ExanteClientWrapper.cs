@@ -18,9 +18,9 @@ namespace QuantConnect.Brokerages.Exante
             _client = client;
         }
 
-        private void checkIfResponseOk<T>(WebCallResult<T> response)
+        private void checkIfResponseOk<T>(WebCallResult<T> response, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            if (!(response.ResponseStatusCode == HttpStatusCode.OK && response.Success))
+            if (!(response.ResponseStatusCode == statusCode && response.Success))
             {
                 throw new Exception(
                     $"ExanteBrokerage.GetActiveOrders: request failed: [{response.ResponseStatusCode}], Content: {response.Data}, ErrorMessage: {response.Error}");
@@ -75,7 +75,7 @@ namespace QuantConnect.Brokerages.Exante
                 priceDistance,
                 partQuantity,
                 ct).SynchronouslyAwaitTaskResult();
-            checkIfResponseOk(response);
+            checkIfResponseOk(response, HttpStatusCode.Created);
             return response.Data;
         }
 

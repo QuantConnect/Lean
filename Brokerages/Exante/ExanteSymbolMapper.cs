@@ -21,7 +21,44 @@ namespace QuantConnect.Brokerages.Exante
     {
         public string GetBrokerageSymbol(Symbol symbol)
         {
-            return null;
+            if (string.IsNullOrWhiteSpace(symbol?.Value))
+                throw new ArgumentException($"Invalid symbol: {(symbol == null ? "null" : symbol.ToString())}");
+
+            var ticker = symbol.ID.Symbol;
+
+            if (string.IsNullOrWhiteSpace(ticker))
+                throw new ArgumentException($"Invalid symbol: {symbol}");
+
+            if (symbol.ID.SecurityType != SecurityType.Forex &&
+                symbol.ID.SecurityType != SecurityType.Equity &&
+                symbol.ID.SecurityType != SecurityType.Index &&
+                symbol.ID.SecurityType != SecurityType.Option &&
+                symbol.ID.SecurityType != SecurityType.Future &&
+                symbol.ID.SecurityType != SecurityType.Cfd &&
+                symbol.ID.SecurityType != SecurityType.Crypto &&
+                symbol.ID.SecurityType != SecurityType.Index)
+                throw new ArgumentException($"Invalid security type: {symbol.ID.SecurityType}");
+
+            if (symbol.ID.SecurityType == SecurityType.Forex && ticker.Length != 6)
+                throw new ArgumentException($"Forex symbol length must be equal to 6: {symbol.Value}");
+
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Option:
+                    return symbol.Underlying;
+
+                case SecurityType.Future:
+                    return symbol.ID.Symbol;
+
+                case SecurityType.Equity:
+                    return $"{ticker.LazyToUpper()}.{symbol.ID.Market.LazyToUpper()}";
+
+                case SecurityType.Index:
+                    return ticker;
+
+                default:
+                    return ticker;
+            }
         }
 
         public Symbol GetLeanSymbol(

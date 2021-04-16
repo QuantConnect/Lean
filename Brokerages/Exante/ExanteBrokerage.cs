@@ -181,7 +181,7 @@ namespace QuantConnect.Brokerages.Exante
                 case OrderType.Market:
                     orderPlacement = _client.PlaceOrder(
                         _accountId,
-                        order.Symbol.ID.Symbol,
+                        _symbolMapper.GetBrokerageSymbol(order.Symbol),
                         ExanteOrderType.Market,
                         orderSide,
                         order.Quantity,
