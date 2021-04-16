@@ -44,6 +44,7 @@ namespace QuantConnect.Brokerages.Tradier
     ///  - Placing orders.
     ///  - Getting user data.
     /// </summary>
+    [BrokerageFactory(typeof(TradierBrokerageFactory))]
     public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
     {
         private readonly bool _useSandbox;
