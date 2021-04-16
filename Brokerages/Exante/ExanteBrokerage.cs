@@ -214,7 +214,7 @@ namespace QuantConnect.Brokerages.Exante
                         $"ExanteBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
             }
 
-            var isPlaced = orderPlacement.ToList()[0].OrderState.Status != ExanteOrderStatus.Cancelled;
+            var isPlaced = orderPlacement.Any(item => item.OrderState.Status == ExanteOrderStatus.Cancelled);
             return isPlaced;
         }
 
