@@ -22,6 +22,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -42,7 +43,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2021, 1, 4);
             SetEndDate(2021, 1, 31);
 
-            _spx = AddIndex("SPX", Resolution.Minute).Symbol;
+            var spx = AddIndex("SPX", Resolution.Minute);
+            spx.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(60, Resolution.Minute, TimeSpan.FromMinutes(1));
+            _spx = spx.Symbol;
 
             // Select an index option expiring ITM, and adds it to the algorithm.
             _spxOption = AddIndexOptionContract(OptionChainProvider.GetOptionContractList(_spx, Time)
@@ -96,14 +99,15 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new AggregateException("Option contract Delta was equal to zero");
             }
-            //if (gammas.Any(g => g == 0))
-            //{
-            //    throw new AggregateException("Option contract Gamma was equal to zero");
-            //}
-            //if (lambda.Any(l => l == 0))
-            //{
-            //    throw new AggregateException("Option contract Lambda was equal to zero");
-            //}
+            // Delta is 1, therefore we expect a gamma of 0
+            if (gammas.Any(g => deltas.Any() && deltas[0] == 1 ? g != 0 : g == 0))
+            {
+                throw new AggregateException("Option contract Gamma was equal to zero");
+            }
+            if (lambda.Any(l => l == 0))
+            {
+                throw new AggregateException("Option contract Lambda was equal to zero");
+            }
             if (rho.Any(r => r == 0))
             {
                 throw new AggregateException("Option contract Rho was equal to zero");
@@ -112,10 +116,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new AggregateException("Option contract Theta was equal to zero");
             }
-            //if (vega.Any(v => v == 0))
-            //{
-            //    throw new AggregateException("Option contract Vega was equal to zero");
-            //}
+            // The strike is far away from the underlying asset's price, and we're very close to expiry.
+            // Zero is an expected value here.
+            if (vega.Any(v => v != 0))
+            {
+                throw new AggregateException("Option contract Vega was equal to zero");
+            }
 
             if (!_invested)
             {

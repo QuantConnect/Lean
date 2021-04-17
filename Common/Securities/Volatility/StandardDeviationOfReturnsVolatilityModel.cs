@@ -35,7 +35,8 @@ namespace QuantConnect.Securities
         private decimal _volatility;
         private DateTime _lastUpdate = DateTime.MinValue;
         private decimal _lastPrice;
-        private readonly TimeSpan _periodSpan = TimeSpan.FromDays(1);
+        private readonly Resolution? _resolution;
+        private readonly TimeSpan _periodSpan;
         private readonly object _sync = new object();
         private readonly RollingWindow<double> _window;
 
@@ -67,11 +68,31 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initializes a new instance of the <see cref="StandardDeviationOfReturnsVolatilityModel"/> class
         /// </summary>
-        /// <param name="periods">The number of periods (days) to wait until updating the value</param>
-        public StandardDeviationOfReturnsVolatilityModel(int periods)
+        /// <param name="periods">The max number of samples in the rolling window to be considered for calculating the standard deviation of returns</param>
+        /// <param name="resolution">
+        /// Resolution of the price data inserted into the rolling window series to calculate standard deviation.
+        /// Will be used as the default value for update frequency if a value is not provided for <paramref name="updateFrequency"/>.
+        /// This only has a material effect in live mode. For backtesting, this value does not cause any behavioral changes.
+        /// </param>
+        /// <param name="updateFrequency">Frequency at which we insert new values into the rolling window for the standard deviation calculation</param>
+        /// <remarks>
+        /// The volatility model will be updated with the most granular/highest resolution data that was added to your algorithm.
+        /// That means that if I added <see cref="Resolution.Tick"/> data for my Futures strategy, that this model will be
+        /// updated using <see cref="Resolution.Tick"/> data as the algorithm progresses in time.
+        ///
+        /// Keep this in mind when setting the period and update frequency. The Resolution parameter is only used for live mode, or for
+        /// the default value of the <paramref name="updateFrequency"/> if no value is provided.
+        /// </remarks>
+        public StandardDeviationOfReturnsVolatilityModel(int periods, Resolution? resolution = null, TimeSpan? updateFrequency = null)
         {
-            if (periods < 2) throw new ArgumentOutOfRangeException("periods", "'periods' must be greater than or equal to 2.");
+            if (periods < 2)
+            {
+                throw new ArgumentOutOfRangeException("periods", "'periods' must be greater than or equal to 2.");
+            }
+            
             _window = new RollingWindow<double>(periods);
+            _resolution = resolution;
+            _periodSpan = updateFrequency ?? resolution?.ToTimeSpan() ?? TimeSpan.FromDays(1);
         }
 
         /// <summary>
@@ -79,7 +100,7 @@ namespace QuantConnect.Securities
         /// the specified security instance
         /// </summary>
         /// <param name="security">The security to calculate volatility for</param>
-        /// <param name="data"></param>
+        /// <param name="data">Data to update the volatility model with</param>
         public override void Update(Security security, BaseData data)
         {
             var timeSinceLastUpdate = data.EndTime - _lastUpdate;
@@ -131,16 +152,20 @@ namespace QuantConnect.Securities
                 configuration.DataTimeZone);
             var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
 
+            var resolution = _resolution ?? (security.GetLastData() ?? typeof(TradeBar).GetBaseDataInstance())
+                .SupportedResolutions()
+                .Max();
+
             return new[]
             {
                 new HistoryRequest(utcStartTime,
                                    utcTime,
                                    typeof(TradeBar),
                                    configuration.Symbol,
-                                   Resolution.Daily,
+                                   resolution,
                                    security.Exchange.Hours,
                                    configuration.DataTimeZone,
-                                   Resolution.Daily,
+                                   resolution,
                                    extendedMarketHours,
                                    configurations.IsCustomData(),
                                    configurations.DataNormalizationMode(),

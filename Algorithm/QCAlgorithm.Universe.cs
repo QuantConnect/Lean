@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Algorithm.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
@@ -596,7 +597,30 @@ namespace QuantConnect.Algorithm
             // ensure a volatility model has been set on the underlying
             if (security.VolatilityModel == VolatilityModel.Null)
             {
-                security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods: 30);
+                var maxSupportedResolution = (security.GetLastData() ?? typeof(TradeBar).GetBaseDataInstance())
+                    .SupportedResolutions()
+                    .Max();
+
+                var updateFrequency = maxSupportedResolution.ToTimeSpan();
+                int periods;
+                switch (maxSupportedResolution)
+                {
+                    case Resolution.Tick:
+                    case Resolution.Second:
+                        periods = 600;
+                        break;
+                    case Resolution.Minute:
+                        periods = 60 * 24;
+                        break;
+                    case Resolution.Hour:
+                        periods = 24 * 30;
+                        break;
+                    default:
+                        periods = 30;
+                        break;
+                }
+                
+                security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods, maxSupportedResolution, updateFrequency);
             }
         }
 
