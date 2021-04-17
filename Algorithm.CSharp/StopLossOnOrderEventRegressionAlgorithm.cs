@@ -42,8 +42,10 @@ namespace QuantConnect.Algorithm.CSharp
             var order = Transactions.GetOrderById(orderEvent.OrderId);
             if (order.Tag == "Entry" && orderEvent.Status == OrderStatus.Filled)
             {
-                Debug("Enter short at " + orderEvent.FillPrice + " set STOPLOSS at 151.0m");
-                StopMarketOrder(order.Symbol, -order.Quantity, 151.0m, "StopLoss");
+                // Entry short $2 below
+                var stopPrice = orderEvent.FillPrice - 2;
+                Debug($"Enter short at {orderEvent.FillPrice} set STOPLOSS at {stopPrice:C}");
+                StopMarketOrder(order.Symbol, -order.Quantity, stopPrice, "StopLoss");
             }
         }
 
@@ -75,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0.00%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.273%"},
+            {"Compounding Annual Return", "0.250%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Net Profit", "0.003%"},
@@ -88,17 +90,17 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.769"},
-            {"Tracking Error", "0.22"},
+            {"Information Ratio", "-8.91"},
+            {"Tracking Error", "0.223"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$20000000.00"},
-            {"Fitness Score", "0.076"},
+            {"Estimated Strategy Capacity", "$16000000.00"},
+            {"Fitness Score", "0.072"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.076"},
+            {"Portfolio Turnover", "0.072"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -112,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "b9ee06b64157c27274f13bf5240c4347"}
+            {"OrderListHash", "d78a4f8592bd22fae98d2e718901f5e8"}
         };
     }
 }
