@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Common.Statistics
             // This might seem arbitrary, but there's 1 missing date vs. AAPL for SPY data, and it happens to be at line 5555 for date 2020-01-31
             var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(5555).ToList(), _spyPerformance.Take(5555).ToList());
 
-            Assert.AreEqual(0.43115365020121948, result, 0.00001);
+            Assert.AreEqual(0.43108511598554822d, result, 0.00001);
         }
 
         [Test]

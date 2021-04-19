@@ -92,13 +92,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$3.25"},
-            {"Estimated Strategy Capacity", "$100000000.00"},
+            {"Total Fees", "$3.44"},
+            {"Estimated Strategy Capacity", "$94000000.00"},
             {"Fitness Score", "0.498"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-224.414"},
+            {"Return Over Maximum Drawdown", "-224.364"},
             {"Portfolio Turnover", "0.997"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "363537773ab1fd28273b257f3ee0594a"}
+            {"OrderListHash", "184d77b052ceb9b340c3154aea460b34"}
         };
 
         internal class TestBrokerageModel : DefaultBrokerageModel

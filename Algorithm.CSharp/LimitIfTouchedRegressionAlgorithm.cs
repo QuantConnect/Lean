@@ -35,10 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
         // We assert the following occur in FIFO order in OnOrderEvent
         private readonly Queue<string> _expectedEvents = new Queue<string>(new[]
         {
-            "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 152.8807 USD LimitPrice: 152.519 TriggerPrice: 151.769 OrderFee: 1 USD",
-            "Time: 10/10/2013 15:55:00 OrderID: 73 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 153.9225 USD LimitPrice: 153.8898 TriggerPrice: 153.1398 OrderFee: 1 USD",
-            "Time: 10/11/2013 14:02:00 OrderID: 74 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 154.9643 USD LimitPrice: 154.9317 TriggerPrice: 154.1817 OrderFee: 1 USD",
-        });
+            "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 144.6434 USD LimitPrice: 144.3551 TriggerPrice: 143.6051 OrderFee: 1 USD",
+            "Time: 10/10/2013 15:57:00 OrderID: 73 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 145.6636 USD LimitPrice: 145.6434 TriggerPrice: 144.8934 OrderFee: 1 USD",
+            "Time: 10/11/2013 15:37:00 OrderID: 74 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 146.7185 USD LimitPrice: 146.6723 TriggerPrice: 145.9223 OrderFee: 1 USD"        });
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -128,11 +127,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.625%"},
+            {"Compounding Annual Return", "-0.601%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Net Profit", "-0.008%"},
-            {"Sharpe Ratio", "-13.588"},
+            {"Sharpe Ratio", "-13.493"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
@@ -141,16 +140,16 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "-0.001"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.779"},
-            {"Tracking Error", "0.22"},
-            {"Treynor Ratio", "3.431"},
+            {"Information Ratio", "-8.919"},
+            {"Tracking Error", "0.223"},
+            {"Treynor Ratio", "3.402"},
             {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$1900000000.00"},
+            {"Estimated Strategy Capacity", "$3800000000.00"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-15.79"},
-            {"Return Over Maximum Drawdown", "-82.891"},
+            {"Sortino Ratio", "-16.281"},
+            {"Return Over Maximum Drawdown", "-82.895"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -165,7 +164,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "05ae058d8e98b92dcb6fa0612f9a598e"}
+            {"OrderListHash", "359ac5b8cd73a8e42b7897a883f5f73d"}
         };
     }
 }
