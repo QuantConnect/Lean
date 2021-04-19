@@ -152,9 +152,14 @@ namespace QuantConnect.Securities
                 configuration.DataTimeZone);
             var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
 
-            var resolution = _resolution ?? (security.GetLastData() ?? typeof(TradeBar).GetBaseDataInstance())
-                .SupportedResolutions()
-                .Max();
+            var bar = security.GetLastData();
+            if (bar == null)
+            {
+                bar = typeof(TradeBar).GetBaseDataInstance();
+                bar.Symbol = security.Symbol;
+            }
+            
+            var resolution = _resolution ?? bar.SupportedResolutions().Max();
 
             return new[]
             {
