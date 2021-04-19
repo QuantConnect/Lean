@@ -93,6 +93,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         var data = enumerator.Current;
+
+                        // Use our config filter to see if we should emit this
+                        // This currently catches Auxiliary data that we don't want to emit
+                        if (data != null && !config.ShouldEmitData(data))
+                        {
+                            continue;
+                        }
+
                         var requestMode = config.DataNormalizationMode;
                         var mode = requestMode != DataNormalizationMode.Raw
                             ? requestMode

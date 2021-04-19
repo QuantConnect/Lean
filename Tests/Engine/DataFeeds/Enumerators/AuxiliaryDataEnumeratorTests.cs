@@ -51,7 +51,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 null,
                 new ITradableDateEventProvider[] { eventProvider },
                 _tradableDayNotifier,
-                true,
                 DateTime.UtcNow
             );
 

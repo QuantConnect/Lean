@@ -424,13 +424,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend/delisting for trade bar
-                    Assert.AreEqual(currentSubscriptionCount - 5, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription and split/dividend/delisting for both (8)
+                    Assert.AreEqual(currentSubscriptionCount - 8, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    Assert.AreEqual(1, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 4 left because of internal subscription + its split/dividend/delisting subscriptions
+                    Assert.AreEqual(4, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
 
                     // we got what we wanted shortcut unit test
@@ -471,13 +472,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend/delisting for trade bar
-                    Assert.AreEqual(currentSubscriptionCount - 5, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription and split/dividend/delisting for both (8)
+                    Assert.AreEqual(currentSubscriptionCount - 8, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    Assert.AreEqual(1, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 4 left because of internal subscription + its split/dividend/delisting subscriptions
+                    Assert.AreEqual(4, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);

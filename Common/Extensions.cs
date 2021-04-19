@@ -2901,5 +2901,49 @@ namespace QuantConnect
         {
             return ComparisonOperator.Compare(op, arg1, arg2);
         }
+
+        /// <summary>
+        /// Centralized logic used at the top of the subscription enumerator stacks to determine if we should emit base data points
+        /// based on the configuration for this subscription and the type of data we are handling.
+        /// 
+        /// Currently we only want to emit split/dividends/delisting events for non internal <see cref="TradeBar"/> configurations
+        /// this last part is because equities also have <see cref="QuoteBar"/> subscriptions which will also subscribe to the
+        /// same aux events and we don't want duplicate emits of these events in the TimeSliceFactory
+        /// </summary>
+        /// <remarks>The "TimeSliceFactory" does not allow for multiple dividends/splits per symbol in the same time slice
+        /// but we don't want to rely only on that to filter out duplicated aux data so we use this at the top of
+        /// our data enumerator stacks to define what subscription should emit this data.</remarks>
+        /// <remarks>We use this function to filter aux data at the top of the subscription enumerator stack instead of
+        /// stopping the subscription stack from subscribing to aux data at the bottom because of a
+        /// dependency with the FF enumerators requiring that they receive aux data to properly handle delistings.
+        /// Otherwise we would have issues with delisted symbols continuing to fill forward after expiry/delisting.
+        /// Reference PR #5485 and related issues for more.</remarks>
+        public static bool ShouldEmitData(this SubscriptionDataConfig config, BaseData data)
+        {
+            // For now we are only filtering Auxiliary data; so if its another type just return true
+            if (data.DataType != MarketDataType.Auxiliary)
+            {
+                return true;
+            }
+
+            // Check our config type first to be lazy about using data.GetType() unless required
+            var configTypeFilter = (config.Type == typeof(TradeBar) ||
+                config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
+
+            if (!configTypeFilter)
+            {
+                return false;
+            }
+
+            // This filter does not apply to auxiliary data outside of delisting/splits/dividends so lets those emit
+            var type = data.GetType();
+            if (!(type == typeof(Delisting) || type == typeof(Split) || type == typeof(Dividend)))
+            {
+                return true;
+            }
+
+            // If we made it here then only filter it if its an InternalFeed
+            return !config.IsInternalFeed;
+        }
     }
 }

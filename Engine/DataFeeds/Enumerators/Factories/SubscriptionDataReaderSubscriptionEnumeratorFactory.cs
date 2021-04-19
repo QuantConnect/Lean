@@ -33,7 +33,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     public class SubscriptionDataReaderSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory, IDisposable
     {
         private readonly bool _isLiveMode;
-        private readonly bool _includeAuxiliaryData;
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly ZipDataCacheProvider _zipDataCacheProvider;
@@ -49,7 +48,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileProvider">The map file provider</param>
         /// <param name="factorFileProvider">The factor file provider</param>
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="includeAuxiliaryData">True to check for auxiliary data, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
         /// <param name="enablePriceScaling">Applies price factor</param>
@@ -57,7 +55,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
-            bool includeAuxiliaryData,
             Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null,
             bool enablePriceScaling = true
             )
@@ -68,7 +65,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _numericalPrecisionMessageSent = new ConcurrentSet<Symbol>();
             _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: false);
             _isLiveMode = false;
-            _includeAuxiliaryData = includeAuxiliaryData;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
             _enablePriceScaling = enablePriceScaling;
         }
@@ -113,7 +109,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                _includeAuxiliaryData && CorporateEventEnumeratorFactory.ShouldEmitAuxiliaryBaseData(request.Configuration),
                 request.StartTimeLocal,
                 _enablePriceScaling);
 

@@ -41,7 +41,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
         /// <param name="tradableDateEventProviders">The tradable dates event providers</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
-        /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <param name="startTime">Start date for the data request</param>
         public AuxiliaryDataEnumerator(
             SubscriptionDataConfig config,
@@ -49,7 +48,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             Lazy<MapFile> mapFile,
             ITradableDateEventProvider []tradableDateEventProviders,
             ITradableDatesNotifier tradableDayNotifier,
-            bool includeAuxiliaryData,
             DateTime startTime)
         {
             _auxiliaryData = new Queue<BaseData>();
@@ -63,16 +61,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 foreach (var tradableDateEventProvider in tradableDateEventProviders)
                 {
-                    // Call implementation
-                    // and materialize list since we need symbol changes applied to the config
-                    // regardless of the includeAuxiliaryData argument
                     var newEvents = tradableDateEventProvider.GetEvents(eventArgs).ToList();
-                    if (includeAuxiliaryData)
+                    foreach (var newEvent in newEvents)
                     {
-                        foreach (var newEvent in newEvents)
-                        {
-                            _auxiliaryData.Enqueue(newEvent);
-                        }
+                        _auxiliaryData.Enqueue(newEvent);
                     }
                 }
             };

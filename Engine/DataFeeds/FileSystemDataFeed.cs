@@ -78,7 +78,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _mapFileProvider,
                 _factorFileProvider,
                 _dataProvider,
-                includeAuxiliaryData: true,
                 enablePriceScaling: false);
 
             IsActive = true;

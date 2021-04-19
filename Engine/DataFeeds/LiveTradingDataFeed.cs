@@ -240,27 +240,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
                     enumerator = _dataQueueHandler.Subscribe(request.Configuration, handler);
 
-                    if (CorporateEventEnumeratorFactory.ShouldEmitAuxiliaryBaseData(request.Configuration))
+                    var securityType = request.Configuration.SecurityType;
+                    var auxEnumerators = new List<IEnumerator<BaseData>>();
+
+                    if (securityType == SecurityType.Equity)
                     {
-                        var securityType = request.Configuration.SecurityType;
-                        var auxEnumerators = new List<IEnumerator<BaseData>>();
+                        auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler));
+                        auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler));
+                    }
 
-                        if (securityType == SecurityType.Equity)
-                        {
-                            auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler));
-                            auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler));
-                        }
+                    IEnumerator<BaseData> delistingEnumerator;
+                    if (LiveDelistingEventProviderEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler, request.Security.Cache, _mapFileProvider, out delistingEnumerator))
+                    {
+                        auxEnumerators.Add(delistingEnumerator);
+                    }
 
-                        IEnumerator<BaseData> delistingEnumerator;
-                        if (LiveDelistingEventProviderEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler, request.Security.Cache, _mapFileProvider, out delistingEnumerator))
-                        {
-                            auxEnumerators.Add(delistingEnumerator);
-                        }
-
-                        if (auxEnumerators.Count > 0)
-                        {
-                            enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators.ToArray());
-                        }
+                    if (auxEnumerators.Count > 0)
+                    {
+                        enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators.ToArray());
                     }
                 }
 

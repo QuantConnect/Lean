@@ -1,4 +1,4 @@
-/*
+﻿/* 
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,45 +16,55 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm is a test case for a history request including symbol changes during the requested period.
+    /// Regression algorithm to test if expired futures contract chains are making their
+    /// way into the timeslices being delivered to OnData()
     /// </summary>
-    public class HistoryWithSymbolChangesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FuturesExpiredContractRegression : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _receivedData;
+
         /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// Initializes the algorithm state.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
-            SetCash(100000);
+            SetStartDate(2013, 10, 1);
+            SetEndDate(2013, 12, 23);
+            SetCash(1000000);
 
-            var symbol = AddEquity("WM", Resolution.Daily).Symbol;
+            // Subscribe to futures ES
+            var future = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, Market.CME, false);
+            future.SetFilter(TimeSpan.FromDays(0), TimeSpan.FromDays(90));
+        }
 
-            var history = History(new [] {symbol}, TimeSpan.FromDays(5700), Resolution.Daily).ToList();
-            Debug($"{Time} - history.Count: {history.Count}");
-
-            const int expectedSliceCount = 3926;
-            if (history.Count != expectedSliceCount)
+        public override void OnData(Slice data)
+        {
+            foreach (var chain in data.FutureChains)
             {
-                throw new Exception($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
+                _receivedData = true;
+
+                foreach (var contract in chain.Value.OrderBy(x => x.Expiry))
+                {
+                    if (contract.Expiry.Date < Time.Date)
+                    {
+                        throw new Exception($"Received expired contract {contract} expired: {contract.Expiry} current time: {Time}");
+                    }
+                }
             }
+        }
 
-            var totalBars = history.Count(slice => slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol));
-            if (totalBars != expectedSliceCount)
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_receivedData)
             {
-                throw new Exception($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
-            }
-
-            var firstBar = history.First().Bars.GetValue(symbol);
-            if (firstBar.EndTime != new DateTime(1998, 3, 3) || firstBar.Close != 25.11427695m)
-            {
-                throw new Exception("First History bar - unexpected data received");
+                throw new Exception("No Futures chains were received in this regression");
             }
         }
 
@@ -89,30 +99,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-7.068"},
-            {"Tracking Error", "0.193"},
+            {"Information Ratio", "-3.464"},
+            {"Tracking Error", "0.097"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
