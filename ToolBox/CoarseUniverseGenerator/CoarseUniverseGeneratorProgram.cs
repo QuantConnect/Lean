@@ -135,7 +135,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 {
                     var symbol = new Symbol(sidContext.SID, sidContext.LastTicker);
                     var symbolCount = Interlocked.Increment(ref symbolsProcessed);
-                    Log.Debug($"CoarseUniverseGeneratorProgram.Run(): Processing {symbol}");
+                    Log.Debug($"CoarseUniverseGeneratorProgram.Run(): Processing {symbol} with tickers: '{string.Join(",", sidContext.Tickers)}'");
                     var factorFile = _factorFileProvider.Get(symbol);
 
                     // Populate dailyPricesByTicker with all daily data by ticker for all tickers of this security.
@@ -182,6 +182,10 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             fineAvailableDates = Directory.GetFiles(tickerFineFundamentalFolder, "*.zip")
                                 .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
                                 .ToList();
+                        }
+                        else
+                        {
+                            Log.Debug($"CoarseUniverseGeneratorProgram.Run(): fine folder was not found at '{tickerFineFundamentalFolder}'");
                         }
 
                         // Get daily data only for the time the ticker was
@@ -297,6 +301,10 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             .ToList();
                         hasFundamentalDataForDate = previousTickerFineAvailableDates.Where(d => d >= firstDate).Any(d => date.AddMonths(-1) <= d && d <= date);
                     }
+                    else
+                    {
+                        Log.Debug($"CoarseUniverseGeneratorProgram.CheckFundamentalData(): fine folder was not found at '{previousTickerFineFundamentalFolder}'");
+                    }
                 }
             }
 
@@ -342,7 +350,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <returns></returns>
         private IEnumerable<SecurityIdentifierContext> PopulateSidContex(MapFileResolver mapFileResolver, HashSet<string> exclusions)
         {
-            Log.Trace($"CoarseUniverseGeneratorProgram.PopulateSidContex(): Generating SID context from QuantQuote's map files.");
+            Log.Trace("CoarseUniverseGeneratorProgram.PopulateSidContex(): Generating SID context from QuantQuote's map files.");
             foreach (var mapFile in mapFileResolver)
             {
                 if (exclusions.Contains(mapFile.Last().MappedSymbol))
