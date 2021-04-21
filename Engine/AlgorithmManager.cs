@@ -710,10 +710,6 @@ namespace QuantConnect.Lean.Engine
             {
                 ProcessVolatilityHistoryRequirements(algorithm);
             }
-            else
-            {
-                _algorithm.SetFinishedWarmingUp();
-            }
 
             return ProcessSynchronizerTimeSlices(algorithm, synchronizer, cancellationToken);
         }
@@ -722,7 +718,7 @@ namespace QuantConnect.Lean.Engine
         {
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
-                if (algorithm.LiveMode && algorithm.IsWarmingUp)
+                if (algorithm.IsWarmingUp)
                 {
                     if (timeSlice.IsTimePulse)
                     {
