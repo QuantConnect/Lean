@@ -209,6 +209,49 @@ namespace QuantConnect.Brokerages.Exante
                     );
                     break;
 
+                case OrderType.Limit:
+                    var limitOrder = (LimitOrder) order;
+                    orderPlacement = _client.PlaceOrder(
+                        _accountId,
+                        _symbolMapper.GetBrokerageSymbol(order.Symbol),
+                        ExanteOrderType.Limit,
+                        orderSide,
+                        order.Quantity,
+                        orderDuration,
+                        limitPrice: limitOrder.LimitPrice,
+                        gttExpiration: gttExpiration
+                    );
+                    break;
+
+                case OrderType.StopMarket:
+                    var stopMarketOrder = (StopMarketOrder) order;
+                    orderPlacement = _client.PlaceOrder(
+                        _accountId,
+                        _symbolMapper.GetBrokerageSymbol(order.Symbol),
+                        ExanteOrderType.Stop,
+                        orderSide,
+                        order.Quantity,
+                        orderDuration,
+                        stopPrice: stopMarketOrder.StopPrice,
+                        gttExpiration: gttExpiration
+                    );
+                    break;
+                
+                case OrderType.StopLimit:
+                    var stopLimitOrder = (StopLimitOrder) order;
+                    orderPlacement = _client.PlaceOrder(
+                        _accountId,
+                        _symbolMapper.GetBrokerageSymbol(order.Symbol),
+                        ExanteOrderType.Stop,
+                        orderSide,
+                        order.Quantity,
+                        orderDuration,
+                        limitPrice: stopLimitOrder.LimitPrice,
+                        stopPrice:  stopLimitOrder.StopPrice,
+                        gttExpiration: gttExpiration
+                    );
+                    break;
+
                 default:
                     throw new NotSupportedException(
                         $"ExanteBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
