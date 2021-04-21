@@ -236,7 +236,7 @@ namespace QuantConnect.Brokerages.Exante
                         gttExpiration: gttExpiration
                     );
                     break;
-                
+
                 case OrderType.StopLimit:
                     var stopLimitOrder = (StopLimitOrder) order;
                     orderPlacement = _client.PlaceOrder(
@@ -247,7 +247,7 @@ namespace QuantConnect.Brokerages.Exante
                         order.Quantity,
                         orderDuration,
                         limitPrice: stopLimitOrder.LimitPrice,
-                        stopPrice:  stopLimitOrder.StopPrice,
+                        stopPrice: stopLimitOrder.StopPrice,
                         gttExpiration: gttExpiration
                     );
                     break;
@@ -263,7 +263,65 @@ namespace QuantConnect.Brokerages.Exante
 
         public override bool UpdateOrder(Order order)
         {
-            throw new NotImplementedException();
+            var result = true;
+            foreach (var bi in order.BrokerId.Skip(1))
+            {
+                var d = _client.ModifyOrder(Guid.Parse(bi), ExanteOrderAction.Cancel);
+                if (d.OrderState.Status != ExanteOrderStatus.Cancelled)
+                {
+                    result = false;
+                }
+            }
+
+            ExanteOrder exanteOrder;
+            switch (order.Type)
+            {
+                case OrderType.Market:
+                    exanteOrder = _client.ModifyOrder(
+                        Guid.Parse(order.BrokerId.First()),
+                        ExanteOrderAction.Replace,
+                        order.Quantity);
+                    break;
+
+                case OrderType.Limit:
+                    var limitOrder = (LimitOrder) order;
+                    exanteOrder = _client.ModifyOrder(
+                        Guid.Parse(order.BrokerId.First()),
+                        ExanteOrderAction.Replace,
+                        order.Quantity,
+                        limitPrice: limitOrder.LimitPrice);
+                    break;
+
+                case OrderType.StopMarket:
+                    var stopMarketOrder = (StopMarketOrder) order;
+                    exanteOrder = _client.ModifyOrder(
+                        Guid.Parse(order.BrokerId.First()),
+                        ExanteOrderAction.Replace,
+                        order.Quantity,
+                        stopPrice: stopMarketOrder.StopPrice);
+                    break;
+
+                case OrderType.StopLimit:
+                    var stopLimitOrder = (StopLimitOrder) order;
+                    exanteOrder = _client.ModifyOrder(
+                        Guid.Parse(order.BrokerId.First()),
+                        ExanteOrderAction.Replace,
+                        order.Quantity,
+                        limitPrice: stopLimitOrder.LimitPrice,
+                        stopPrice: stopLimitOrder.StopPrice);
+                    break;
+
+                default:
+                    throw new NotSupportedException(
+                        $"ExanteBrokerage.UpdateOrder: Unsupported order type: {order.Type}");
+            }
+
+            if (exanteOrder.OrderState.Status == ExanteOrderStatus.Cancelled)
+            {
+                result = false;
+            }
+
+            return result;
         }
 
         public override bool CancelOrder(Order order)
