@@ -66,8 +66,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 CoarseUniverseGeneratorProgram.CoarseUniverseGenerator();
             }
 
-            output.Info.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+            if (!Console.IsInputRedirected)
+            {
+                output.Info.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+            }
         }
 
         public static DateTime GetDateMidpoint(DateTime start, DateTime end)
