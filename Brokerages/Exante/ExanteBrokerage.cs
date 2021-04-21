@@ -268,7 +268,17 @@ namespace QuantConnect.Brokerages.Exante
 
         public override bool CancelOrder(Order order)
         {
-            throw new NotImplementedException();
+            var result = true;
+            foreach (var bi in order.BrokerId)
+            {
+                var d = _client.ModifyOrder(Guid.Parse(bi), ExanteOrderAction.Cancel);
+                if (d.OrderState.Status != ExanteOrderStatus.Cancelled)
+                {
+                    result = false;
+                }
+            }
+
+            return result;
         }
 
         public override void Connect()

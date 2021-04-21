@@ -109,10 +109,33 @@ namespace QuantConnect.Brokerages.Exante
 
         public ExanteSymbol GetSymbol(
             string symbolId,
-            CancellationToken ct = default (CancellationToken))
+            CancellationToken ct = default(CancellationToken)
+            )
         {
-            var response = 
+            var response =
                 _client.GetSymbolAsync(symbolId, ct).SynchronouslyAwaitTaskResult();
+            checkIfResponseOk(response);
+            return response.Data;
+        }
+
+        public ExanteOrder ModifyOrder(
+            Guid orderId,
+            ExanteOrderAction action,
+            Decimal? quantity = null,
+            Decimal? stopPrice = null,
+            int? priceDistance = null,
+            Decimal? limitPrice = null,
+            CancellationToken ct = default(CancellationToken)
+            )
+        {
+            var response = _client.ModifyOrderAsync(
+                orderId,
+                action,
+                quantity,
+                stopPrice,
+                priceDistance,
+                limitPrice,
+                ct).SynchronouslyAwaitTaskResult();
             checkIfResponseOk(response);
             return response.Data;
         }
