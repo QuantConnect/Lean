@@ -86,8 +86,13 @@ namespace QuantConnect.Report
             {
                 Console.Write(html);
             }
+            
             Log.Trace("QuantConnect.Report.Main(): Completed.");
-            Console.ReadKey();
+
+            if (!Console.IsInputRedirected)
+            {
+                Console.ReadKey();
+            }
         }
     }
 }
