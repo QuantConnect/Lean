@@ -717,30 +717,29 @@ namespace QuantConnect.ToolBox.Polygon
                               $"?apiKey={_apiKey}&limit={BaseAggregateBarsLimit}";
 
                     var response = client.DownloadString(url);
+                    var aggregatesResponse = JsonConvert.DeserializeObject<AggregatesResponse>(response);
+                    var rows = aggregatesResponse.Results;
 
-                    var result = JsonConvert.DeserializeObject<AggregatesResponse>(response);
-                    if (result.Results == null)
+                    if (rows != null)
                     {
-                        yield break;
-                    }
-
-                    foreach (var row in result.Results)
-                    {
-                        var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
-
-                        if (utcTime < request.StartTimeUtc)
+                        foreach (var row in rows)
                         {
-                            continue;
+                            var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
+
+                            if (utcTime < request.StartTimeUtc)
+                            {
+                                continue;
+                            }
+
+                            if (utcTime > request.EndTimeUtc.Add(request.Resolution.ToTimeSpan()))
+                            {
+                                yield break;
+                            }
+
+                            var time = GetTickTime(request.Symbol, utcTime);
+
+                            yield return new TradeBar(time, request.Symbol, row.Open, row.High, row.Low, row.Close, row.Volume);
                         }
-
-                        if (utcTime > request.EndTimeUtc.Add(request.Resolution.ToTimeSpan()))
-                        {
-                            yield break;
-                        }
-
-                        var time = GetTickTime(request.Symbol, utcTime);
-
-                        yield return new TradeBar(time, request.Symbol, row.Open, row.High, row.Low, row.Close, row.Volume);
                     }
                 }
 
