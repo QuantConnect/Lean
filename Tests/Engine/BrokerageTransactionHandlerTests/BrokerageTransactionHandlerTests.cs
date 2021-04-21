@@ -514,6 +514,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
                 // Creates a limit order
                 var security = _algorithm.Securities[_symbol];
+                var originalFillModel = security.FillModel;
+                security.SetFillModel(new PartialFillModel(_algorithm, 0.5m));
                 var price = 1.12m;
                 security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
                 var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0,
@@ -539,15 +541,17 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 transactionHandler.Process(updateRequest);
                 Assert.AreEqual(updateRequest.Status, OrderRequestStatus.Processing);
                 Assert.IsTrue(updateRequest.Response.IsSuccess);
-                Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
+                Assert.AreEqual(OrderStatus.PartiallyFilled, orderTicket.Status);
 
                 transactionHandler.HandleOrderRequest(updateRequest);
                 Assert.IsTrue(updateRequest.Response.IsSuccess);
                 Assert.AreEqual(OrderStatus.UpdateSubmitted, orderTicket.Status);
 
-                Assert.AreEqual(_algorithm.OrderEvents.Count, 2);
+                Assert.AreEqual(_algorithm.OrderEvents.Count, 3);
                 Assert.IsTrue(_algorithm.OrderEvents[0].Status == OrderStatus.Submitted);
-                Assert.IsTrue(_algorithm.OrderEvents[1].Status == OrderStatus.UpdateSubmitted);
+                Assert.IsTrue(_algorithm.OrderEvents[1].Status == OrderStatus.PartiallyFilled);
+                Assert.IsTrue(_algorithm.OrderEvents[2].Status == OrderStatus.UpdateSubmitted);
+                security.SetFillModel(originalFillModel);
             }
         }
 
