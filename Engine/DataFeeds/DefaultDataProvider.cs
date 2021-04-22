@@ -20,7 +20,7 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Default file provider functionality that does not attempt to retrieve any data
+    /// Default file provider functionality that retrieves data from disc to be used in an algorithm
     /// </summary>
     public class DefaultDataProvider : IDataProvider, IDisposable
     {
