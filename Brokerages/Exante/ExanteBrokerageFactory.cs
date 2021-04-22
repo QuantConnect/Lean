@@ -18,14 +18,11 @@ using System.Collections.Generic;
 using Exante.Net;
 using Exante.Net.Enums;
 using QLNet;
-using QuantConnect.Brokerages.Exante;
 using QuantConnect.Configuration;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using RestSharp;
 
 namespace QuantConnect.Brokerages.Exante
 {

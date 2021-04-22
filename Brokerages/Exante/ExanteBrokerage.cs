@@ -13,29 +13,18 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.Globalization;
 using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
-using CryptoExchange.Net.Objects;
 using Exante.Net;
 using Exante.Net.Enums;
 using Exante.Net.Objects;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Packets;
-using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Exante
 {
