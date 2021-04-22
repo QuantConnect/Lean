@@ -22,9 +22,14 @@ namespace QuantConnect.Indicators
     public class RateOfChange : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized.
+        /// </summary>
+        public override bool IsReady => Samples > Period;
+
+        /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => Period;
+        public int WarmUpPeriod => Period + 1;
 
         /// <summary>
         /// Creates a new RateOfChange indicator with the specified period
