@@ -4,7 +4,7 @@
 #
 
 # Use base system
-FROM jmerle/lean:foundation-dotnet-5
+FROM quantconnect/lean:foundation
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -24,4 +24,4 @@ COPY ./Report/bin/Debug/ /Lean/Report/bin/Debug/
 # Can override with '-w'
 WORKDIR /Lean/Launcher/bin/Debug
 
-ENTRYPOINT [ "mono", "QuantConnect.Lean.Launcher.exe" ]
+ENTRYPOINT [ "dotnet", "QuantConnect.Lean.Launcher.dll" ]

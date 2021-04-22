@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Compression
             var fileBytes = File.ReadAllBytes(file);
             var zippedBytes = QuantConnect.Compression.ZipBytes(fileBytes, "entry");
 
-            Assert.AreEqual(906121, zippedBytes.Length);
+            Assert.AreEqual(OS.IsWindows ? 905921 : 906121, zippedBytes.Length);
         }
 
         [Test]

@@ -4,7 +4,7 @@
 
 # Use base system for cleaning up wayward processes
 ARG LEAN_TAG=latest
-FROM jmerle/lean:$LEAN_TAG
+FROM quantconnect/lean:$LEAN_TAG
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
