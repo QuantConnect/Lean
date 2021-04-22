@@ -138,8 +138,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Estimated Insight Value", "$-5454.712"},
             {"Mean Population Direction", "30%"},
             {"Mean Population Magnitude", "30%"},
-            {"Rolling Averaged Population Direction", "42.9591%"},
-            {"Rolling Averaged Population Magnitude", "42.9591%"},
+            {"Rolling Averaged Population Direction", "42.9939%"},
+            {"Rolling Averaged Population Magnitude", "42.9939%"},
             {"OrderListHash", "1480e456536d63f95d6b06bfaffe7eaa"}
         };
     }

@@ -85,13 +85,13 @@ namespace QuantConnect.Algorithm.CSharp
                 var actual = string.Join(Environment.NewLine, Securities.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual securities{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (_expectedUniverses.AreDifferent(Securities.Keys.ToHashSet()))
+            if (_expectedUniverses.AreDifferent(UniverseManager.Keys.ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, _expectedUniverses.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, UniverseManager.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual universes{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (_expectedData.AreDifferent(Securities.Keys.ToHashSet()))
+            if (_expectedData.AreDifferent(data.Keys.ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, _expectedData.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, data.Keys.OrderBy(s => s.ToString()));

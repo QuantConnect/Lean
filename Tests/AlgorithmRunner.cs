@@ -159,8 +159,15 @@ namespace QuantConnect.Tests
 
             foreach (var stat in expectedStatistics)
             {
-                Assert.AreEqual(true, statistics.ContainsKey(stat.Key), "Missing key: " + stat.Key);
-                Assert.AreEqual(stat.Value, statistics[stat.Key], "Failed on " + stat.Key);
+                string result;
+                Assert.IsTrue(statistics.TryGetValue(stat.Key, out result), "Missing key: " + stat.Key);
+
+                if (result == "-0")
+                {
+                    // normalize -0 & 0, they are the same thing
+                    result = "0";
+                }
+                Assert.AreEqual(stat.Value, result, "Failed on " + stat.Key);
             }
 
             if (expectedAlphaStatistics != null)
