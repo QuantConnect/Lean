@@ -142,7 +142,7 @@ namespace QuantConnect.Tests.Research
         // Different requests and their expected values
         private static readonly object[] DataTestCases =
         {
-            new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 13.272502m},
+            new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 13.2725m},
             new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", 22.5177},
             new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements.NumberOfShareHolders", 36319}
         };
