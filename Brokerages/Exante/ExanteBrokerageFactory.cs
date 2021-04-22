@@ -66,23 +66,13 @@ namespace QuantConnect.Brokerages.Exante
             return new ExanteBrokerageModel();
         }
 
-        public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
+        public static ExanteClient createExanteClient(
+            string clientId,
+            string applicationId,
+            string sharedKey,
+            string platformTypeStr
+            )
         {
-            var errors = new List<string>();
-
-            // read values from the brokerage data
-            var clientId = Read<string>(job.BrokerageData, "exante-client-id", errors);
-            var applicationId = Read<string>(job.BrokerageData, "exante-application-id", errors);
-            var sharedKey = Read<string>(job.BrokerageData, "exante-shared-key", errors);
-            var accountId = Read<string>(job.BrokerageData, "exante-account-id", errors);
-            var platformTypeStr = Read<string>(job.BrokerageData, "exante-platform-type", errors);
-
-            if (errors.empty())
-            {
-                // if we had errors then we can't create the instance
-                throw new Exception(string.Join(System.Environment.NewLine, errors));
-            }
-
             ExantePlatformType platformType;
             var platformTypeParsed = Enum.TryParse(platformTypeStr, true, out platformType);
             if (!platformTypeParsed)
@@ -100,6 +90,27 @@ namespace QuantConnect.Brokerages.Exante
                     platformType
                 );
             var client = new ExanteClient(exanteClientOptions);
+            return client;
+        }
+
+        public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
+        {
+            var errors = new List<string>();
+
+            // read values from the brokerage data
+            var clientId = Read<string>(job.BrokerageData, "exante-client-id", errors);
+            var applicationId = Read<string>(job.BrokerageData, "exante-application-id", errors);
+            var sharedKey = Read<string>(job.BrokerageData, "exante-shared-key", errors);
+            var accountId = Read<string>(job.BrokerageData, "exante-account-id", errors);
+            var platformTypeStr = Read<string>(job.BrokerageData, "exante-platform-type", errors);
+
+            if (errors.empty())
+            {
+                // if we had errors then we can't create the instance
+                throw new Exception(string.Join(System.Environment.NewLine, errors));
+            }
+
+            var client = createExanteClient(clientId, applicationId, sharedKey, platformTypeStr);
 
             var brokerage = new ExanteBrokerage(
                 client,
