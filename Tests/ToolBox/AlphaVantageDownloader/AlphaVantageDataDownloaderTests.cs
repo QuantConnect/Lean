@@ -52,6 +52,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 .Returns(new RestResponse
                 {
                     StatusCode = HttpStatusCode.OK,
+                    ContentType = "application/x-download",
                     Content = "timestamp,open,high,low,close,volume\n" +
                               "2021-04-06,135.5800,135.6400,134.0900,134.2200,3620964\n" +
                               "2021-04-05,133.6400,136.6900,133.4000,135.9300,5471616\n"
@@ -93,6 +94,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 .Returns(new RestResponse
                 {
                     StatusCode = HttpStatusCode.OK,
+                    ContentType = "application/x-download",
                     Content = "timestamp,open,high,low,close,volume\n" +
                               "2021-04-06,135.5800,135.6400,134.0900,134.2200,3620964\n" +
                               "2021-04-05,133.6400,136.6900,133.4000,135.9300,5471616\n"
@@ -147,6 +149,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 .Returns(() => new RestResponse
                 {
                     StatusCode = HttpStatusCode.OK,
+                    ContentType = "application/x-download",
                     Content = responses[requestCount++]
                 })
                 .Verifiable();
@@ -176,6 +179,27 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
             var end = DateTime.UtcNow;
 
             Assert.Throws<ArgumentOutOfRangeException>(() => _downloader.Get(symbol, resolution, start, end).ToList());
+        }
+
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Hour)]
+        [TestCase(Resolution.Daily)]
+        public void UnexpectedResponseContentTypeThrowsException(Resolution resolution)
+        {
+            var ticker = "IBM";
+            var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            var start = DateTime.UtcNow.AddMonths(-2);
+            var end = DateTime.UtcNow;
+
+            _avClient.Setup(m => m.Execute(It.IsAny<IRestRequest>(), It.IsAny<Method>()))
+                .Returns(() => new RestResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    ContentType = "application/json"
+                })
+                .Verifiable();
+
+            Assert.Throws<FormatException>(() => _downloader.Get(symbol, resolution, start, end).ToList());
         }
 
         [Test]
