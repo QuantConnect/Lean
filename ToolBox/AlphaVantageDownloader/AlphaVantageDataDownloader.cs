@@ -16,6 +16,8 @@
 using CsvHelper;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -28,9 +30,11 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
     /// <summary>
     /// Alpha Vantage data downloader
     /// </summary>
-    public class AlphaVantageDataDownloader : IDataDownloader
+    public class AlphaVantageDataDownloader : IDataDownloader, IDisposable
     {
         private readonly IRestClient _avClient;
+        private readonly RateGate _rateGate;
+        private bool _disposed;
 
         /// <summary>
         /// Construct AlphaVantageDataDownloader with default RestClient
@@ -50,6 +54,8 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
             _avClient = restClient;
             _avClient.BaseUrl = new Uri("https://www.alphavantage.co/");
             _avClient.Authenticator = new AlphaVantageAuthenticator(apiKey);
+
+            _rateGate = new RateGate(5, TimeSpan.FromMinutes(1)); // Free API is limited to 5 requests/minute
         }
 
         /// <summary>
@@ -147,6 +153,14 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         /// <returns><see cref="TimeSeries"/> data</returns>
         private IEnumerable<TimeSeries> GetTimeSeries(RestRequest request)
         {
+            if (_rateGate.IsRateLimited)
+            {
+                Log.Trace("Requests are limited to 5 per minute. Reduce the time between start and end times or simply wait, and this process will continue automatically.");
+            }
+
+            _rateGate.WaitToProceed();
+            //var url = _avClient.BuildUri(request);
+            Log.Trace("Downloading /{0}?{1}", request.Resource, string.Join("&", request.Parameters));
             var response = _avClient.Get(request);
 
             if (response.ContentType != "application/x-download")
@@ -187,7 +201,7 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
                 var year = i / 12 + 1;
                 var month = i % 12 + 1;
                 yield return $"year{year}month{month}";
-            }
+            } 
         }
 
         /// <summary>
@@ -203,6 +217,28 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
             }
 
             return Math.Round(days);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // dispose managed state (managed objects)
+                    _rateGate.Dispose();
+                }
+
+                // free unmanaged resources (unmanaged objects) and override finalizer
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

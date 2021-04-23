@@ -47,6 +47,6 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         /// <param name="client">The <see cref="IRestClient"/></param>
         /// <param name="request">The <see cref="IRestRequest"/></param>
         public void Authenticate(IRestClient client, IRestRequest request)
-            => request.AddParameter("apikey", _apiKey);
+            => request.AddOrUpdateParameter("apikey", _apiKey);
     }
 }

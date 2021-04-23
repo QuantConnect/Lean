@@ -49,16 +49,18 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-folder", "../../../Data");
 
-                var downloader = new AlphaVantageDataDownloader(apiKey);
-                foreach (var ticker in tickers)
+                using (var downloader = new AlphaVantageDataDownloader(apiKey))
                 {
-                    // Download the data
-                    var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
-                    var data = downloader.Get(symbol, castResolution, startDate, endDate);
+                    foreach (var ticker in tickers)
+                    {
+                        // Download the data
+                        var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+                        var data = downloader.Get(symbol, castResolution, startDate, endDate);
 
-                    // Save the data
-                    var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
-                    writer.Write(data);
+                        // Save the data
+                        var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
+                        writer.Write(data);
+                    }
                 }
             }
             catch (Exception err)

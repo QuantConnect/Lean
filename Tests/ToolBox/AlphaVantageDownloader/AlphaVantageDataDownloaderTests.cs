@@ -13,7 +13,9 @@ using System.Threading.Tasks;
 namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
 {
     [TestFixture]
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable
     public class AlphaVantageDataDownloaderTests
+#pragma warning restore CA1001 // Types that own disposable fields should be disposable
     {
         private const string API_KEY = "TESTKEY";
         private const string BASE_URL = "https://www.alphavantage.co/";
@@ -29,6 +31,12 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
             _avClient.SetupAllProperties();
 
             _downloader = new AlphaVantageDataDownloader(_avClient.Object, API_KEY);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _downloader.Dispose();
         }
 
         [Test]
@@ -222,7 +230,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
 
             Assert.NotNull(authenticator);
             authenticator.Authenticate(_avClient.Object, request.Object);
-            request.Verify(m => m.AddParameter("apikey", API_KEY));
+            request.Verify(m => m.AddOrUpdateParameter("apikey", API_KEY));
         }
 
         private string BuildUrl(IRestRequest request)
