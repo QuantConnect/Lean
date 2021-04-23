@@ -58,6 +58,7 @@ namespace QuantConnect.Lean.Engine
         private DateTime? _lastHistoryTimeUtc;
         private AlgorithmWarmupState _warmupState;
         private bool _appliedSecurityChanges;
+        private AutoResetEvent _historyProcessorEvent = new AutoResetEvent(false);
         private readonly ConcurrentQueue<TimeSlice> _historicalTimeSlicesQueue = new ConcurrentQueue<TimeSlice>();
         private readonly ConcurrentQueue<TimeSlice> _tempSynchronizerTimeSlicesQueue = new ConcurrentQueue<TimeSlice>();
 
@@ -727,81 +728,81 @@ namespace QuantConnect.Lean.Engine
 
                     if (_appliedSecurityChanges && _warmupState == AlgorithmWarmupState.NotStarted)
                     {
-                        // Get the required history job from the algorithm
-                        var historyRequests = _algorithm.GetWarmupHistoryRequests().ToList();
-                        
-                        // If we didn't event request warmup, then set us as not warming up and continue streaming
-                        if (historyRequests.Count == 0)
-                        {
-                            _algorithm.SetFinishedWarmingUp();
-                            yield return timeSlice;
-                        }
-                        else
-                        {
-                            _warmupState = AlgorithmWarmupState.Running;
+                        _warmupState = AlgorithmWarmupState.Running;
 
-                            // We don't want to miss ticks from synchronizer
-                            // So we will retrieve history in another thread
-                            Task.Run(() =>
+                        // We will retrieve history in another thread. In live mode we don't want to miss ticks from synchronizer,
+                        // therefore, we do not stop the flow and continue to receive data form synchronizer, which we add to the queue until the end of the warm-up
+                        Task.Run(() =>
+                        {
+                            ProcessHistoryRequests();
+                        }, cancellationToken);
+
+                        // Drop the current timeslice, this data will be in historical, continue, no yield
+                        continue;
+                    }
+
+                    if (_warmupState == AlgorithmWarmupState.Running)
+                    {
+                        // -- LIVE MODE --
+                        if (algorithm.LiveMode)
+                        {
+                            // Place timeslice to the temporary queue
+                            // while algorithm is warming up, i.e retrieving historical data in another thread
+                            _tempSynchronizerTimeSlicesQueue.Enqueue(timeSlice);
+
+                            TimeSlice ts;
+                            // Dequeue historical time slices if any
+                            while (_historicalTimeSlicesQueue.TryDequeue(out ts))
                             {
-                                ProcessHistoryTimeSlices(historyRequests);
-                            }, cancellationToken);
+                                yield return ts;
+                            }
 
-                            // Continue no yield
+                            // Then jump to next iteration
                             continue;
+                        }
+
+                        // -- BACKTESTING --
+#pragma warning disable CA1508 // Avoid dead conditional code
+                        while (_warmupState == AlgorithmWarmupState.Running)
+#pragma warning restore CA1508 // Avoid dead conditional code
+                        {
+                            _historyProcessorEvent.WaitOne();
+                            TimeSlice ts;
+                            // Dequeue history time slices if any
+                            while (_historicalTimeSlicesQueue.TryDequeue(out ts))
+                            {
+                                yield return ts;
+                            }
                         }
                     }
 
-                    lock (_lock)
+                    if (_warmupState == AlgorithmWarmupState.Completed)
                     {
-                        switch (_warmupState)
+                        TimeSlice ts;
+                        // Dequeue history time slices
+                        while (_historicalTimeSlicesQueue.TryDequeue(out ts))
                         {
-                            case AlgorithmWarmupState.Running:
-                            {
-                                // Place timeslice to the temporary queue
-                                // while algorithm is warming up, i.e retrieving historical data in another thread
-                                _tempSynchronizerTimeSlicesQueue.Enqueue(timeSlice);
-
-                                TimeSlice ts;
-                                // Dequeue history time slices if any
-                                while (_historicalTimeSlicesQueue.TryDequeue(out ts))
-                                {
-                                    yield return ts;
-                                }
-
-                                // Then jump to next iteration
-                                continue;
-                            }
-
-                            case AlgorithmWarmupState.Completed:
-                            {
-                                TimeSlice ts;
-                                // Dequeue history time slices
-                                while (_historicalTimeSlicesQueue.TryDequeue(out ts))
-                                {
-                                    yield return ts;
-                                }
-                                // Dequeue temporary sync. time slices
-                                while (_tempSynchronizerTimeSlicesQueue.TryDequeue(out ts))
-                                {
-                                    // this is hand-over logic, we spin up the data feed first and then request
-                                    // the history for warmup, so there will be some overlap between the data
-                                    if (_lastHistoryTimeUtc.HasValue)
-                                    {
-                                        if (ts.Time <= _lastHistoryTimeUtc.Value)
-                                        {
-                                            continue;
-                                        }
-                                    }
-                                    yield return ts;
-                                }
-
-                                algorithm.SetFinishedWarmingUp();
-                                Log.Trace("Algorithm finished warming up.");
-
-                                break;
-                            }
+                            yield return ts;
                         }
+                        // Dequeue temporary sync. time slices
+                        while (_tempSynchronizerTimeSlicesQueue.TryDequeue(out ts))
+                        {
+                            // this is hand-over logic, we spin up the data feed first and then request
+                            // the history for warmup, so there will be some overlap between the data
+                            if (_lastHistoryTimeUtc.HasValue)
+                            {
+                                if (ts.Time <= _lastHistoryTimeUtc.Value)
+                                {
+                                    continue;
+                                }
+                            }
+                            yield return ts;
+                        }
+
+                        algorithm.SetFinishedWarmingUp();
+                        Log.Trace("Algorithm finished warming up.");
+
+                        continue;
                     }
                 }
 
@@ -809,8 +810,18 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        private void ProcessHistoryTimeSlices(ICollection<HistoryRequest> historyRequests)
+        private void ProcessHistoryRequests()
         {
+            // Get the required history job from the algorithm
+            var historyRequests = _algorithm.GetWarmupHistoryRequests().ToList();
+
+            // If we didn't event request warmup, then set us as not warming up and continue streaming
+            if (historyRequests.Count == 0)
+            {
+                _warmupState = AlgorithmWarmupState.Completed;
+                return;
+            }
+
             Log.Trace("Algorithm warming up...");
 
             // rewrite internal feed requests
@@ -841,7 +852,7 @@ namespace QuantConnect.Lean.Engine
 
             foreach (var request in historyRequests)
             {
-                Log.Trace($"AlgorithmManager.Stream(): WarmupHistoryRequest: {request.Symbol}: Start: {request.StartTimeUtc} End: {request.EndTimeUtc} Resolution: {request.Resolution}");
+                Log.Trace($"AlgorithmManager.ProcessHistoryRequests(): WarmupHistoryRequest: {request.Symbol}: Start: {request.StartTimeUtc} End: {request.EndTimeUtc} Resolution: {request.Resolution}");
             }
 
             var timeZone = _algorithm.TimeZone;
@@ -859,9 +870,12 @@ namespace QuantConnect.Lean.Engine
             {
                 var currentStart = minStartTime;
                 var currentEnd = minStartTime.AddDays(chop);
+                var counter = 0;
 
                 while (currentStart < maxEndTime)
                 {
+                    Log.Trace($"AlgorithmManager.ProcessHistoryRequests(): Processing WarmupHistoryRequest breakdown part [{counter++}] >> START: {currentStart} END: {currentEnd}");
+
                     var smallTempRequests = historyRequests.Select(hr =>
                         new HistoryRequest(currentStart, currentEnd, hr.DataType, hr.Symbol, hr.Resolution,
                             hr.ExchangeHours, hr.DataTimeZone,
@@ -869,6 +883,7 @@ namespace QuantConnect.Lean.Engine
                             hr.DataNormalizationMode, hr.TickType)).ToList();
 
                     PackInTimeSlices(_algorithm.HistoryProvider.GetHistory(smallTempRequests, timeZone), timeZone);
+                    _historyProcessorEvent.Set();
 
                     currentStart = currentEnd;
                     currentEnd = currentEnd.AddDays(chop);
@@ -881,10 +896,8 @@ namespace QuantConnect.Lean.Engine
                 PackInTimeSlices(_algorithm.HistoryProvider.GetHistory(historyRequests, timeZone) , timeZone);
             }
 
-            lock (_lock)
-            {
-                _warmupState = AlgorithmWarmupState.Completed;
-            }
+            _warmupState = AlgorithmWarmupState.Completed;
+            _historyProcessorEvent.Set();
         }
 
         private void PackInTimeSlices(IEnumerable<Slice> slices, DateTimeZone timeZone)
