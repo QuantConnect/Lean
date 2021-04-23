@@ -1900,7 +1900,8 @@ namespace QuantConnect.Algorithm
                     }
 
                     // remove child securities (option contracts for option chain universes) if not used in other universes
-                    foreach (var child in universe.Members.Values)
+                    // we order the securities so that the removal is deterministic, it will liquidate any holdings
+                    foreach (var child in universe.Members.Values.OrderBy(security1 => security1.Symbol))
                     {
                         if (!otherUniverses.Any(u => u.Members.ContainsKey(child.Symbol)))
                         {

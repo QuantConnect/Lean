@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var symbol in ActiveSecurities.Keys)
+            foreach (var symbol in ActiveSecurities.Keys.OrderBy(symbol => symbol))
             {
                 if (!Portfolio.ContainsKey(symbol) || !Portfolio[symbol].Invested)
                 {
@@ -231,7 +231,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "f4c01c0a50562a610b65d89bdaa00c42"}
+            {"OrderListHash", "5ce14f87f21733ec686385da7404484c"}
         };
     }
 }
