@@ -231,7 +231,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "cadc":
                     case "coinapidataconverter":
-                        CoinApiDataConverterProgram.CoinApiDataProgram(GetParameterOrExit(optionsObject, "date"), GetParameterOrExit(optionsObject, "market"),
+                        CoinApiDataConverterProgram.CoinApiDataProgram(GetParameterOrExit(optionsObject, "date"), 
                             GetParameterOrExit(optionsObject, "source-dir"), GetParameterOrExit(optionsObject, "destination-dir"));
                         break;
                     case "nmdc":
