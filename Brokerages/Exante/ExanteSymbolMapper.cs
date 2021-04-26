@@ -57,7 +57,7 @@ namespace QuantConnect.Brokerages.Exante
                     return ticker;
 
                 default:
-                    return ticker;
+                    return $"{ticker.LazyToUpper()}.{symbol.ID.Market.LazyToUpper()}";
             }
         }
 
@@ -82,7 +82,8 @@ namespace QuantConnect.Brokerages.Exante
                 securityType != SecurityType.IndexOption &&
                 securityType != SecurityType.Future &&
                 securityType != SecurityType.FutureOption &&
-                securityType != SecurityType.Cfd)
+                securityType != SecurityType.Cfd &&
+                securityType != SecurityType.Crypto)
             {
                 throw new ArgumentException("Invalid security type: " + securityType);
             }

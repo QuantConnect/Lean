@@ -127,6 +127,12 @@ namespace QuantConnect.Brokerages.Exante
                     return unknownBondMarket;
                 }
 
+                case ExanteSymbolType.Fund when SupportedCryptoCurrencies.Contains(symbol.Ticker):
+                {
+                    const string unknownCryptoMarket = "EXANTE";
+                    return unknownCryptoMarket;
+                }
+
                 case ExanteSymbolType.Fund:
                 {
                     const string unknownFundMarket = "";
@@ -240,6 +246,9 @@ namespace QuantConnect.Brokerages.Exante
 
                 case ExanteSymbolType.Index:
                     return SecurityType.Index;
+
+                case ExanteSymbolType.Fund when SupportedCryptoCurrencies.Contains(symbol.Ticker):
+                    return SecurityType.Crypto;
 
                 case ExanteSymbolType.CalendarSpread:
                 case ExanteSymbolType.Bond:

@@ -37,6 +37,12 @@ namespace QuantConnect.Brokerages.Exante
         private readonly ExanteSymbolMapper _symbolMapper = new ExanteSymbolMapper();
         private const string ReportCurrency = "USD";
 
+        private static readonly HashSet<string> SupportedCryptoCurrencies = new HashSet<string>()
+        {
+            "ETC", "MKR", "BNB", "NEO", "IOTA", "QTUM", "XMR", "EOS", "ETH", "XRP", "DCR",
+            "XLM", "ZRX", "BTC", "XAI", "ZEC", "BAT", "BCH", "VEO", "DEFIX", "OMG", "LTC", "DASH"
+        };
+
         public ExanteBrokerage(
             ExanteClient client,
             string accountId
