@@ -889,7 +889,7 @@ namespace QuantConnect
         /// <param name="outputDirectory">Directory to output contents of 7z</param>
         /// <param name="execTimeout">Timeout in seconds for how long we should wait for the extraction to complete</param>
         /// <exception cref="Exception">The extraction failed because of a timeout or the exit code was not 0</exception>
-        public static void Extract7ZipArchive(string inputFile, string outputDirectory, int execTimeout = 60)
+        public static void Extract7ZipArchive(string inputFile, string outputDirectory, int execTimeout = 60000)
         {
             var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
             var psi = new ProcessStartInfo(zipper, " e " + inputFile + " -o" + outputDirectory)
@@ -904,7 +904,7 @@ namespace QuantConnect
             process.StartInfo = psi;
             process.Start();
 
-            if (!process.WaitForExit(execTimeout * 1000))
+            if (!process.WaitForExit(execTimeout))
             {
                 throw new TimeoutException($"Timed out extracting 7Zip archive: {inputFile} ({execTimeout} seconds)");
             }
