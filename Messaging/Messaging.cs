@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -172,7 +172,8 @@ namespace QuantConnect.Messaging
                     continue;
                 }
 
-                if (line.Contains("public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>"))
+                if (line.Contains("public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
+                    || line.Contains("public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>"))
                 {
                     lines.Add(line);
                     lines.Add("        {");

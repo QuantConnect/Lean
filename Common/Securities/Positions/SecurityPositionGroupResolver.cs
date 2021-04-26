@@ -39,20 +39,21 @@ namespace QuantConnect.Securities.Positions
         /// appropriate <see cref="IPositionGroupBuyingPowerModel"/> for position groups created via this
         /// resolver.
         /// </summary>
-        /// <param name="positions">The positions to be grouped</param>
+        /// <param name="newPositions">The positions to be grouped</param>
+        /// <param name="currentPositions">The currently grouped positions</param>
         /// <param name="group">The grouped positions when this resolver is able to, otherwise null</param>
         /// <returns>True if this resolver can group the specified positions, otherwise false</returns>
-        public bool TryGroup(IReadOnlyCollection<IPosition> positions, out IPositionGroup group)
+        public bool TryGroup(IReadOnlyCollection<IPosition> newPositions, PositionGroupCollection currentPositions, out IPositionGroup group)
         {
             // we can only create default groupings containing a single security
-            if (positions.Count != 1)
+            if (newPositions.Count != 1)
             {
                 group = null;
                 return false;
             }
 
-            var key = new PositionGroupKey(_buyingPowerModel, positions);
-            group = new PositionGroup(key, positions.ToDictionary(p => p.Symbol));
+            var key = new PositionGroupKey(_buyingPowerModel, newPositions);
+            group = new PositionGroup(key, newPositions.ToDictionary(p => p.Symbol));
             return true;
         }
 
@@ -63,9 +64,12 @@ namespace QuantConnect.Securities.Positions
         /// <returns>An enumerable of position groups</returns>
         public PositionGroupCollection Resolve(PositionCollection positions)
         {
-            return new PositionGroupCollection(positions
+            var result = new PositionGroupCollection(positions
                 .Select(position => new PositionGroup(_buyingPowerModel, position)).ToList()
             );
+
+            positions.Clear();
+            return result;
         }
 
         /// <summary>

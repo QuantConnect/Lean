@@ -149,6 +149,7 @@ namespace QuantConnect.Securities
             // compute the amount of quote currency we need to liquidate in order to get within margin requirements
             var deltaAccountCurrency = totalUsedMargin - totalPortfolioValue;
 
+            // TODO: get all groups for this security holdings and calculate margins
             var positionGroup = Portfolio.Positions.GetOrCreateDefaultGroup(security);
 
             var currentlyUsedBuyingPower = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup);

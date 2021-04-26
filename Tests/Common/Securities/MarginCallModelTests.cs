@@ -136,7 +136,6 @@ namespace QuantConnect.Tests.Common.Securities
                 Low = 1,
                 Close = 1
             });
-            portfolio.Positions.ResolvePositionGroups();
             var actual1 = buyingPowerModel.GetMarginRemaining(portfolio, security, OrderDirection.Buy);
             Assert.AreEqual(quantity / leverage, actual1);
 

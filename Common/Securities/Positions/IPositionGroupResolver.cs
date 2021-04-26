@@ -27,10 +27,11 @@ namespace QuantConnect.Securities.Positions
         /// appropriate <see cref="IPositionGroupBuyingPowerModel"/> for position groups created via this
         /// resolver.
         /// </summary>
-        /// <param name="positions">The positions to be grouped</param>
+        /// <param name="newPositions">The positions to be grouped</param>
+        /// <param name="currentPositions">The currently grouped positions</param>
         /// <param name="group">The grouped positions when this resolver is able to, otherwise null</param>
         /// <returns>True if this resolver can group the specified positions, otherwise false</returns>
-        bool TryGroup(IReadOnlyCollection<IPosition> positions, out IPositionGroup group);
+        bool TryGroup(IReadOnlyCollection<IPosition> newPositions, PositionGroupCollection currentPositions, out IPositionGroup group);
 
         /// <summary>
         /// Resolves the position groups that exist within the specified collection of positions.

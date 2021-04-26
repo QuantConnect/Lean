@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -33,15 +33,23 @@ namespace QuantConnect.Securities.Positions
         public SecurityPortfolioManager Portfolio { get; }
 
         /// <summary>
+        /// The order associated with this request
+        /// </summary>
+        public Order Order { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ReservedBuyingPowerImpactParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio manager</param>
         /// <param name="contemplatedChanges">The position changes being contemplated</param>
+        /// <param name="order">The order associated with this request</param>
         public ReservedBuyingPowerImpactParameters(
             SecurityPortfolioManager portfolio,
-            IPositionGroup contemplatedChanges
+            IPositionGroup contemplatedChanges,
+            Order order
             )
         {
+            Order = order;
             Portfolio = portfolio;
             ContemplatedChanges = contemplatedChanges;
         }

@@ -26,7 +26,11 @@ namespace QuantConnect.Securities.Positions
     /// </summary>
     public class PositionCollection : IEnumerable<IPosition>
     {
-        private readonly ImmutableDictionary<Symbol, IPosition> _positions;
+        private ImmutableDictionary<Symbol, IPosition> _positions;
+
+        /// <summary>Gets the number of elements in the collection.</summary>
+        /// <returns>The number of elements in the collection. </returns>
+        public int Count => _positions.Count;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PositionCollection"/> class
@@ -54,9 +58,8 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="groups">The resolved position groups</param>
         /// <returns></returns>
-        public PositionCollection Remove(IEnumerable<IPositionGroup> groups)
+        public void Remove(IEnumerable<IPositionGroup> groups)
         {
-            var positions = _positions;
             foreach (var group in groups)
             {
                 foreach (var position in group.Positions)
@@ -67,11 +70,19 @@ namespace QuantConnect.Securities.Positions
                         throw new InvalidOperationException($"Position with symbol {position.Symbol} not found.");
                     }
 
-                    positions = positions.SetItem(position.Symbol, existing.Deduct(position.Quantity));
+                    var resultingPosition = existing.Deduct(position.Quantity);
+                    // directly remove positions hows quantity is 0
+                    _positions = resultingPosition.Quantity == 0 ? _positions.Remove(position.Symbol) : _positions.SetItem(position.Symbol, resultingPosition);
                 }
             }
+        }
 
-            return new PositionCollection(positions);
+        /// <summary>
+        /// Clears this collection of all positions
+        /// </summary>
+        public void Clear()
+        {
+            _positions = _positions.Clear();
         }
 
         /// <summary>

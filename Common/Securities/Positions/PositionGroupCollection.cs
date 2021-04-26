@@ -171,6 +171,20 @@ namespace QuantConnect.Securities.Positions
             return false;
         }
 
+        /// <summary>
+        /// Merges this position group collection with the provided <paramref name="other"/> collection.
+        /// </summary>
+        public PositionGroupCollection CombineWith(PositionGroupCollection other)
+        {
+            var result = this;
+            foreach (var positionGroup in other)
+            {
+                result = result.Add(positionGroup);
+            }
+
+            return result;
+        }
+
         /// <summary>Returns an enumerator that iterates through the collection.</summary>
         /// <returns>An enumerator that can be used to iterate through the collection.</returns>
         public IEnumerator<IPositionGroup> GetEnumerator()

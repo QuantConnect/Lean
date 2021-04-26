@@ -50,7 +50,6 @@ namespace QuantConnect.Tests.Common.Securities
             var spy = InitAndGetSecurity(algorithm, 0);
             spy.Holdings.SetHoldings(25, 100);
             spy.SetLeverage(leverage);
-            algorithm.Portfolio.Positions.ResolvePositionGroups();
 
             var spyMarginAvailable = spy.Holdings.HoldingsValue - spy.Holdings.HoldingsValue * (1 / leverage);
 
@@ -428,7 +427,6 @@ namespace QuantConnect.Tests.Common.Securities
             var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
             security.Holdings.SetHoldings(25, 2000);
             security.SettlementModel.ApplyFunds(algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), Currencies.USD, -2000 * 25);
-            algo.Portfolio.Positions.ResolvePositionGroups();
 
             // Margin remaining 50k + used 50k + initial margin 50k - 5k free buying power percent (5% of 100k)
             Assert.AreEqual(145000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Sell));
@@ -452,7 +450,6 @@ namespace QuantConnect.Tests.Common.Securities
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
             security.Holdings.SetHoldings(25, 2000);
             security.SettlementModel.ApplyFunds(algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), Currencies.USD, -2000 * 25);
-            algo.Portfolio.Positions.ResolvePositionGroups();
 
             // Margin remaining 75k + used 25k + initial margin 25k - 5k free buying power percent (5% of 100k)
             Assert.AreEqual(120000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Sell));
@@ -476,7 +473,6 @@ namespace QuantConnect.Tests.Common.Securities
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
             security.Holdings.SetHoldings(25, -2000);
             security.SettlementModel.ApplyFunds(algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), Currencies.USD, 2000 * 25);
-            algo.Portfolio.Positions.ResolvePositionGroups();
 
             // Margin remaining 75k + used 25k + initial margin 25k - 5k free buying power percent (5% of 100k)
             Assert.AreEqual(120000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));

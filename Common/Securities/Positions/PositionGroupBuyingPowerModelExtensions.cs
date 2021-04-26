@@ -88,11 +88,12 @@ namespace QuantConnect.Securities.Positions
         public static decimal GetChangeInReservedBuyingPower(
             this IPositionGroupBuyingPowerModel model,
             SecurityPortfolioManager portfolio,
-            IPositionGroup positionGroup
+            IPositionGroup positionGroup,
+            Order order
             )
         {
             return model.GetReservedBuyingPowerImpact(
-                new ReservedBuyingPowerImpactParameters(portfolio, positionGroup)
+                new ReservedBuyingPowerImpactParameters(portfolio, positionGroup, order)
             ).Delta;
         }
 

@@ -91,8 +91,11 @@ namespace QuantConnect.Securities.Positions
             var impactedGroups = new List<IPositionGroup>();
 
             // 3. Determine set of impacted positions to be grouped
-            var impactedPositions = parameters.ContemplatedChanges.ToDictionary(p => p.Symbol);
-            foreach (var impactedGroup in positionManager.GetImpactedGroups(parameters.ContemplatedChanges))
+            var positions = parameters.Order.CreatePositions(parameters.Portfolio.Securities).ToList();
+
+            var impactedPositions = positions.ToDictionary(p => p.Symbol);
+
+            foreach (var impactedGroup in positionManager.GetImpactedGroups(positions))
             {
                 impactedGroups.Add(impactedGroup);
                 current += impactedGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
@@ -115,9 +118,7 @@ namespace QuantConnect.Securities.Positions
             }
 
             // 4. Resolve new position groups
-            var contemplatedGroups = positionManager.ResolvePositionGroups(
-                new PositionCollection(impactedPositions.Values)
-            );
+            var contemplatedGroups = positionManager.ResolvePositionGroups(new PositionCollection(impactedPositions.Values));
 
             // 5. Compute contemplated reserved buying power
             var contemplated = 0m;
@@ -164,7 +165,8 @@ namespace QuantConnect.Securities.Positions
             }
 
             // 3. Confirm that the new groupings arising from the change doesn't make maintenance margin exceed TPV
-            var deltaBuyingPower = this.GetChangeInReservedBuyingPower(parameters.Portfolio, parameters.PositionGroup);
+            var args = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Order);
+            var deltaBuyingPower = GetReservedBuyingPowerImpact(args).Delta;
             if (deltaBuyingPower <= availableBuyingPower)
             {
                 return parameters.Sufficient();

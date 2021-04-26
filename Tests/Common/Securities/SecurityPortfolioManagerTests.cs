@@ -633,7 +633,6 @@ namespace QuantConnect.Tests.Common.Securities
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
             var security = securities[Symbols.AAPL];
-            portfolio.Positions.ResolvePositionGroups();
             var hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, acceptedOrder).IsSufficient;
             Assert.IsTrue(hasSufficientBuyingPower);
 

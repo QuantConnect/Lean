@@ -902,6 +902,7 @@ namespace QuantConnect
             return $"{number - 5000000m:#,,,.##}B";
         }
 
+        /// <summary>
         /// Discretizes the <paramref name="value"/> to a maximum precision specified by <paramref name="quanta"/>. Quanta
         /// can be an arbitrary positive number and represents the step size. Consider a quanta equal to 0.15 and rounding
         /// a value of 1.0. Valid values would be 0.9 (6 quanta) and 1.05 (7 quanta) which would be rounded up to 1.05.
@@ -2968,6 +2969,7 @@ namespace QuantConnect
             return !config.IsInternalFeed;
         }
 
+        /// <summary>
         /// Gets the <see cref="OrderDirection"/> that corresponds to the specified <paramref name="side"/>
         /// </summary>
         /// <param name="side">The position side to be converted</param>
@@ -2977,8 +2979,8 @@ namespace QuantConnect
             switch (side)
             {
                 case PositionSide.Short: return OrderDirection.Sell;
-                case PositionSide.None:  return OrderDirection.Hold;
-                case PositionSide.Long:  return OrderDirection.Buy;
+                case PositionSide.None: return OrderDirection.Hold;
+                case PositionSide.Long: return OrderDirection.Buy;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(side), side, null);
             }
@@ -2998,7 +3000,7 @@ namespace QuantConnect
                 case PositionSide.Short:
                     switch (direction)
                     {
-                        case OrderDirection.Buy:  return true;
+                        case OrderDirection.Buy: return true;
                         case OrderDirection.Sell: return false;
                         case OrderDirection.Hold: return false;
                         default:
@@ -3008,7 +3010,7 @@ namespace QuantConnect
                 case PositionSide.Long:
                     switch (direction)
                     {
-                        case OrderDirection.Buy:  return false;
+                        case OrderDirection.Buy: return false;
                         case OrderDirection.Sell: return true;
                         case OrderDirection.Hold: return false;
                         default:
@@ -3033,7 +3035,11 @@ namespace QuantConnect
         public static bool ListEquals<T>(this IReadOnlyList<T> left, IReadOnlyList<T> right)
         {
             var count = left.Count;
-            if (count != right.Count)            
+            if (count != right.Count)
+            {
+                return false;
+            }
+
             for (int i = 0; i < count; i++)
             {
                 if (!left[i].Equals(right[i]))

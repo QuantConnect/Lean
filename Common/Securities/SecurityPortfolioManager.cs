@@ -57,6 +57,11 @@ namespace QuantConnect.Securities
         internal PositionManager Positions;
 
         /// <summary>
+        /// Current read only position groups collection
+        /// </summary>
+        public PositionGroupCollection PositionGroups => Positions.Groups;
+
+        /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only settled cash)
         /// </summary>
         public CashBook CashBook { get; }
@@ -650,7 +655,6 @@ namespace QuantConnect.Securities
         {
             var security = Securities[fill.Symbol];
             security.PortfolioModel.ProcessFill(this, security, fill);
-            Positions.ProcessFill(fill);
             InvalidateTotalPortfolioValue();
         }
 

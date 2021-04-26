@@ -446,7 +446,19 @@ namespace QuantConnect.Securities
         /// <returns>The value of the quantity of shares in the account currency</returns>
         public virtual decimal GetQuantityValue(decimal quantity)
         {
-            return _price * quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+            return GetQuantityValue(quantity, _price);
+        }
+
+        /// <summary>
+        /// Gets the total value of the specified <paramref name="quantity"/> of shares of this security
+        /// in the account currency
+        /// </summary>
+        /// <param name="quantity">The quantity of shares</param>
+        /// <param name="price">The current price</param>
+        /// <returns>The value of the quantity of shares in the account currency</returns>
+        public virtual decimal GetQuantityValue(decimal quantity, decimal price)
+        {
+            return price * quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
         }
 
         /// <summary>

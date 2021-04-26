@@ -14,11 +14,10 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Collections.Specialized;
 using System.Linq;
 using QuantConnect.Orders;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -27,21 +26,33 @@ namespace QuantConnect.Securities.Positions
     /// </summary>
     public class PositionManager
     {
+        private bool _requiresGroupResolution;
+
+        private PositionGroupCollection _groups;
+        private readonly SecurityManager _securities;
+        private readonly IPositionGroupResolver _resolver;
+        private readonly IPositionGroupBuyingPowerModel _defaultModel;
+
         /// <summary>
         /// Gets the set of currently resolved position groups
         /// </summary>
-        public PositionGroupCollection Groups { get; private set; }
+        public PositionGroupCollection Groups
+        {
+            get
+            {
+                ResolvePositionGroups();
+                return _groups;
+            }
+            private set
+            {
+                _groups = value;
+            }
+        }
 
         /// <summary>
         /// Gets whether or not the algorithm is using only default position groups
         /// </summary>
         public bool IsOnlyDefaultGroups => Groups.IsOnlyDefaultGroups;
-
-        private bool _requiresGroupResolution;
-
-        private readonly SecurityManager _securities;
-        private readonly SecurityPositionGroupResolver _resolver;
-        private readonly SecurityPositionGroupBuyingPowerModel _defaultModel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PositionManager"/> class
@@ -52,7 +63,8 @@ namespace QuantConnect.Securities.Positions
             _securities = securities;
             Groups = PositionGroupCollection.Empty;
             _defaultModel = new SecurityPositionGroupBuyingPowerModel();
-            _resolver = new SecurityPositionGroupResolver(_defaultModel);
+            _resolver = new CompositePositionGroupResolver(new OptionStrategyPositionGroupResolver(securities),
+                new SecurityPositionGroupResolver(_defaultModel));
 
             // we must be notified each time our holdings change, so each time a security is added, we
             // want to bind to its SecurityHolding.QuantityChanged event so we can trigger the resolver
@@ -117,47 +129,16 @@ namespace QuantConnect.Securities.Positions
         public IPositionGroup CreatePositionGroup(Order order)
         {
             IPositionGroup group;
-            var positions = order.CreatePositions(_securities).ToList();
-            if (!_resolver.TryGroup(positions, out group))
+            var newPositions = order.CreatePositions(_securities).ToList();
+
+            // We send new and current positions to try resolve any strategy being executed by multiple orders
+            // else the PositionGroup we will get out here will just be the default in those cases
+            if (!_resolver.TryGroup(newPositions, Groups, out group))
             {
                 throw new InvalidOperationException($"Unable to create group for order: {order.Id}");
             }
 
             return group;
-        }
-
-        /// <summary>
-        /// Applies the order fill without running the position group resolver. This aims to ensure we're
-        /// keeping track of used buying power within a single time step to handle multiple calls to SetHoldings
-        /// in the same time step. At the end of the time step
-        /// </summary>
-        /// <param name="fill">The fill event -- this should only be events that change security holdings</param>
-        public void ProcessFill(OrderEvent fill)
-        {
-            if (fill.Status.IsFill())
-            {
-                ResolvePositionGroups();
-            }
-        }
-
-        /// <summary>
-        /// Resolves the algorithm's position groups from all of its holdings
-        /// </summary>
-        public void ResolvePositionGroups()
-        {
-            if (_requiresGroupResolution)
-            {
-                _requiresGroupResolution = false;
-                // TODO : Replace w/ special IPosition impl to always equal security.Quantity and we'll
-                // use them explicitly for resolution collection so we don't do this each time
-
-                Groups = ResolvePositionGroups(new PositionCollection(_securities
-                    .Where(kvp => kvp.Value.Invested).ToImmutableDictionary(
-                        kvp => kvp.Key,
-                        kvp => (IPosition) new Position(kvp.Value)
-                    )
-                ));
-            }
         }
 
         /// <summary>
@@ -191,6 +172,9 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Gets or creates the default position group for the specified <paramref name="security"/>
         /// </summary>
+        /// <remarks>
+        /// TODO: position group used here is the default, is this what callers want?
+        /// </remarks>
         public IPositionGroup GetOrCreateDefaultGroup(Security security)
         {
             var key = CreateDefaultKey(security);
@@ -200,6 +184,22 @@ namespace QuantConnect.Securities.Positions
         private void HoldingsOnQuantityChanged(object sender, SecurityHoldingQuantityChangedEventArgs e)
         {
             _requiresGroupResolution = true;
+        }
+
+        /// <summary>
+        /// Resolves the algorithm's position groups from all of its holdings
+        /// </summary>
+        private void ResolvePositionGroups()
+        {
+            if (_requiresGroupResolution)
+            {
+                _requiresGroupResolution = false;
+                // TODO : Replace w/ special IPosition impl to always equal security.Quantity and we'll
+                // use them explicitly for resolution collection so we don't do this each time
+                var investedPositions = _securities.Where(kvp => kvp.Value.Invested).Select(kvp => (IPosition)new Position(kvp.Value));
+                var positionsCollection = new PositionCollection(investedPositions);
+                Groups = ResolvePositionGroups(positionsCollection);
+            }
         }
     }
 }
