@@ -77,6 +77,44 @@ namespace QuantConnect.Brokerages.Exante
             return holding;
         }
 
+        private ExanteOrderSide ConvertOrderDirection(OrderDirection orderDirection)
+        {
+            var orderSide = default(ExanteOrderSide);
+            switch (orderDirection)
+            {
+                case OrderDirection.Buy:
+                    orderSide = ExanteOrderSide.Buy;
+                    break;
+                case OrderDirection.Sell:
+                    orderSide = ExanteOrderSide.Sell;
+                    break;
+                case OrderDirection.Hold:
+                    throw new NotSupportedException(
+                        $"ExanteBrokerage.ConvertOrderDirection: Unsupported order direction: {orderDirection}");
+            }
+
+            return orderSide;
+        }
+
+        private OrderDirection ConvertOrderSide(ExanteOrderSide orderSide)
+        {
+            var orderDirection = default(OrderDirection);
+            switch (orderSide)
+            {
+                case ExanteOrderSide.Buy:
+                    orderDirection = OrderDirection.Buy;
+                    break;
+                case ExanteOrderSide.Sell:
+                    orderDirection = OrderDirection.Sell;
+                    break;
+                default:
+                    throw new NotSupportedException(
+                        $"ExanteBrokerage.ConvertOrderDirection: Unsupported order direction: {orderDirection}");
+            }
+
+            return orderDirection;
+        }
+
         private static string GetSymbolMarket(ExanteSymbol symbol)
         {
             switch (symbol.SymbolType)

@@ -157,19 +157,7 @@ namespace QuantConnect.Brokerages.Exante
 
         public override bool PlaceOrder(Order order)
         {
-            var orderSide = default(ExanteOrderSide);
-            switch (order.Direction)
-            {
-                case OrderDirection.Buy:
-                    orderSide = ExanteOrderSide.Buy;
-                    break;
-                case OrderDirection.Sell:
-                    orderSide = ExanteOrderSide.Sell;
-                    break;
-                case OrderDirection.Hold:
-                    throw new NotSupportedException(
-                        $"ExanteBrokerage.ConvertOrderDirection: Unsupported order direction: {order.Direction}");
-            }
+            var orderSide = ConvertOrderDirection(order.Direction);
 
             DateTime? gttExpiration = null;
             ExanteOrderDuration orderDuration;
