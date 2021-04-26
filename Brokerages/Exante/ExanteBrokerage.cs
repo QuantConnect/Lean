@@ -18,6 +18,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CryptoExchange.Net.Objects;
 using Exante.Net;
 using Exante.Net.Enums;
 using Exante.Net.Objects;
@@ -65,7 +66,7 @@ namespace QuantConnect.Brokerages.Exante
 
         public override List<Order> GetOpenOrders()
         {
-            var orders = _client.GetActiveOrders();
+            var orders = _client.GetActiveOrders().Data;
             var list = new List<Order>();
             foreach (var item in orders)
             {
@@ -115,7 +116,7 @@ namespace QuantConnect.Brokerages.Exante
                         continue;
                 }
 
-                var symbol = _client.GetSymbol(item.OrderParameters.SymbolId);
+                var symbol = _client.GetSymbol(item.OrderParameters.SymbolId).Data;
 
                 order.Quantity = item.OrderParameters.Quantity;
                 order.BrokerId = new List<string> {item.OrderId.ToString()};
@@ -183,7 +184,7 @@ namespace QuantConnect.Brokerages.Exante
                         $"ExanteBrokerage.ConvertOrderDuration: Unsupported order duration: {order.TimeInForce}");
             }
 
-            IEnumerable<ExanteOrder> orderPlacement;
+            WebCallResult<IEnumerable<ExanteOrder>> orderPlacement;
             switch (order.Type)
             {
                 case OrderType.Market:
@@ -246,23 +247,19 @@ namespace QuantConnect.Brokerages.Exante
                         $"ExanteBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
             }
 
-            var isPlaced = orderPlacement.Any(item => item.OrderState.Status == ExanteOrderStatus.Cancelled);
-            return isPlaced;
+            return orderPlacement.Success;
         }
 
         public override bool UpdateOrder(Order order)
         {
-            var result = true;
+            var updateResult = true;
             foreach (var bi in order.BrokerId.Skip(1))
             {
                 var d = _client.ModifyOrder(Guid.Parse(bi), ExanteOrderAction.Cancel);
-                if (d.OrderState.Status != ExanteOrderStatus.Cancelled)
-                {
-                    result = false;
-                }
+                updateResult = updateResult && d.Success;
             }
 
-            ExanteOrder exanteOrder;
+            WebCallResult<ExanteOrder> exanteOrder;
             switch (order.Type)
             {
                 case OrderType.Market:
@@ -305,27 +302,20 @@ namespace QuantConnect.Brokerages.Exante
                         $"ExanteBrokerage.UpdateOrder: Unsupported order type: {order.Type}");
             }
 
-            if (exanteOrder.OrderState.Status == ExanteOrderStatus.Cancelled)
-            {
-                result = false;
-            }
-
-            return result;
+            updateResult = updateResult && exanteOrder.Success;
+            return updateResult;
         }
 
         public override bool CancelOrder(Order order)
         {
-            var result = true;
+            var cancelResult = true;
             foreach (var bi in order.BrokerId)
             {
                 var d = _client.ModifyOrder(Guid.Parse(bi), ExanteOrderAction.Cancel);
-                if (d.OrderState.Status != ExanteOrderStatus.Cancelled)
-                {
-                    result = false;
-                }
+                cancelResult = cancelResult && d.Success;
             }
 
-            return result;
+            return cancelResult;
         }
 
         public override void Connect()

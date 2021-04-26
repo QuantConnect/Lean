@@ -50,7 +50,7 @@ namespace QuantConnect.Brokerages.Exante
             return response.Data;
         }
 
-        public IEnumerable<ExanteOrder> PlaceOrder(
+        public WebCallResult<IEnumerable<ExanteOrder>> PlaceOrder(
             string accountId,
             string symbolId,
             ExanteOrderType type,
@@ -91,17 +91,17 @@ namespace QuantConnect.Brokerages.Exante
                 partQuantity,
                 ct).SynchronouslyAwaitTaskResult();
             checkIfResponseOk(response, HttpStatusCode.Created);
-            return response.Data;
+            return response;
         }
 
-        public IEnumerable<ExanteOrder> GetActiveOrders()
+        public WebCallResult<IEnumerable<ExanteOrder>> GetActiveOrders()
         {
             var response = _client.GetActiveOrdersAsync().SynchronouslyAwaitTaskResult();
             checkIfResponseOk(response);
-            return response.Data;
+            return response;
         }
 
-        public IEnumerable<ExanteTick> GetTicks(
+        public WebCallResult<IEnumerable<ExanteTick>> GetTicks(
             string symbolId,
             DateTime? from = null,
             DateTime? to = null,
@@ -119,10 +119,10 @@ namespace QuantConnect.Brokerages.Exante
                 ct
             ).SynchronouslyAwaitTaskResult();
             checkIfResponseOk(response);
-            return response.Data;
+            return response;
         }
 
-        public ExanteSymbol GetSymbol(
+        public WebCallResult<ExanteSymbol> GetSymbol(
             string symbolId,
             CancellationToken ct = default(CancellationToken)
             )
@@ -130,10 +130,10 @@ namespace QuantConnect.Brokerages.Exante
             var response =
                 _client.GetSymbolAsync(symbolId, ct).SynchronouslyAwaitTaskResult();
             checkIfResponseOk(response);
-            return response.Data;
+            return response;
         }
 
-        public ExanteOrder ModifyOrder(
+        public WebCallResult<ExanteOrder> ModifyOrder(
             Guid orderId,
             ExanteOrderAction action,
             Decimal? quantity = null,
@@ -152,7 +152,7 @@ namespace QuantConnect.Brokerages.Exante
                 limitPrice,
                 ct).SynchronouslyAwaitTaskResult();
             checkIfResponseOk(response);
-            return response.Data;
+            return response;
         }
     }
 }

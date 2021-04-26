@@ -49,7 +49,7 @@ namespace QuantConnect.Brokerages.Exante
 
         private Holding ConvertHolding(ExantePosition position)
         {
-            var exanteSymbol = _client.GetSymbol(position.SymbolId);
+            var exanteSymbol = _client.GetSymbol(position.SymbolId).Data;
             var symbol = ConvertSymbol(exanteSymbol);
             var holding = new Holding
             {
