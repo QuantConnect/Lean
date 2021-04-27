@@ -874,7 +874,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             return order.Status != OrderStatus.Filled
                 && order.Status != OrderStatus.Canceled
-                && order.Status != OrderStatus.PartiallyFilled
                 && order.Status != OrderStatus.Invalid;
         }
 
