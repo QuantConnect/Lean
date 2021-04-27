@@ -282,8 +282,10 @@ namespace QuantConnect.Securities
                 }
             }
 
-            // Special case; even if we don't have USDC-USD pair, still allow USDC cash because 1-1 with USD
-            if (Symbol == "USDC")
+            // Special case for crypto markets without direct pairs (They wont be found by the above)
+            // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
+            // So far only Binance and Coinbase don't have USDCUSD pairs but can hold USDC
+            if (Currencies.StableCoinsWithoutPairs.Contains(QuantConnect.Symbol.Create(normal, SecurityType.Crypto, marketMap[SecurityType.Crypto])))
             {
                 ConversionRateSecurity = null;
                 ConversionRate = 1.0m;
