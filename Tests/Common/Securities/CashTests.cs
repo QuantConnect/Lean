@@ -601,9 +601,58 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsEmpty(added);
         }
 
+        [TestCaseSource(nameof(CryptoBrokerageModelCases))]
+        public void CryptoStableCoinMappingIsCorrect(IBrokerageModel brokerageModel, Symbol expectedConversionSymbol)
+        {
+            var cashBook = new CashBook();
+
+            var cash = new Cash("USDC", 10m, 1m);
+            cashBook.Add(cash.Symbol, cash);
+
+            var subscriptions = new SubscriptionManager();
+            var dataManager = new DataManagerStub(TimeKeeper);
+            subscriptions.SetDataManager(dataManager);
+            var abcConfig = subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone);
+            var securities = new SecurityManager(TimeKeeper);
+            securities.Add(
+                Symbols.SPY,
+                new Security(
+                    SecurityExchangeHours,
+                    abcConfig,
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(cashBook.AccountCurrency),
+                    cashBook,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()));
+
+
+            // Assert that this call does not throw
+            Assert.DoesNotThrow(() =>
+            {
+                cash.EnsureCurrencyDataFeed(securities, subscriptions, brokerageModel.DefaultMarkets, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
+            }); 
+
+            // Verify the conversion symbol is correct
+            if (expectedConversionSymbol == null)
+            {
+                Assert.IsNull(cash.ConversionRateSecurity);
+            }
+            else
+            {
+                Assert.AreEqual(expectedConversionSymbol, cash.ConversionRateSecurity.Symbol);
+            }
+        }
+
         private static TimeKeeper TimeKeeper
         {
             get { return new TimeKeeper(DateTime.Now, new[] { TimeZone }); }
         }
+
+        private static object[] CryptoBrokerageModelCases =
+        {
+            new object[] { new BitfinexBrokerageModel(), Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex)},
+            new object[] { new GDAXBrokerageModel(), null  },
+            new object[] { new BinanceBrokerageModel(), null }
+        };
     }
 }
