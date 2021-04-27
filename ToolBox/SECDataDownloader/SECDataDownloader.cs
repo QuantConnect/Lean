@@ -115,7 +115,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 {
                     try
                     {
-                        using (var client = new WebClient())
+                        using (var client = new HttpClient())
                         {
                             if (File.Exists(rawFile))
                             {
@@ -126,7 +126,10 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             _indexGate.WaitToProceed();
                             
                             Log.Trace($"SECDataDownloader.Download(): Downloading temp filing archive to: {tmpFile}");
-                            client.DownloadFile($"{BaseUrl}/Feed/{currentDate.Year}/{quarter}/{currentDate:yyyyMMdd}.nc.tar.gz", tmpFile);
+                            var tempFilingArchiveBytes = client.GetByteArrayAsync($"{BaseUrl}/Feed/{currentDate.Year}/{quarter}/{currentDate:yyyyMMdd}.nc.tar.gz")
+                                .SynchronouslyAwaitTaskResult();
+                            
+                            File.WriteAllBytes(tmpFile, tempFilingArchiveBytes);
 
                             var tmpFileStat = new FileInfo(tmpFile);
                             var tmpFileSizeInKB = tmpFileStat.Length / 1024;
@@ -147,24 +150,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             break;
                         }
                     }
-                    catch (WebException e)
+                    catch (HttpRequestException err)
                     {
-                        var response = (HttpWebResponse)e.Response;
-
-                        if (response == null)
-                        {
-                            Log.Error("SECDataDownloader.Download(): Archive download response is null");
-                            continue;
-                        }
-
-                        // SEC website uses s3, which returns a 403 if the given file does not exist
-                        if (response?.StatusCode != null && response.StatusCode == HttpStatusCode.Forbidden)
-                        {
-                            Log.Error($"SECDataDownloader.Download(): Report files not found on date {currentDate:yyyy-MM-dd}");
-                            break;
-                        }
-
-                        Log.Error($"SECDataDownloader.Download(): Received status code {(int)response.StatusCode} - Retrying...");
+                        Log.Error($"SECDataDownloader.Download(): Received status code {(int)err.StatusCode} - Retrying...");
                     }
                     catch (Exception e)
                     {
@@ -204,11 +192,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
                     catch (HttpRequestException err)
                     {
-                        if (err.StatusCode == HttpStatusCode.Forbidden)
-                        {
-                            Log.Error($"SECDataDownloader.Download(): Index files not found on date {currentDate:yyyy-MM-dd}");
-                            break;
-                        }
+                        Log.Error($"SECDataDownloader.Download(): Got error code {(int)err.StatusCode} attempting to download index manifest for date {currentDate:yyyy-MM-dd} - retrying");
                     }
                     catch (Exception e)
                     {
@@ -428,10 +412,10 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 // its size and make sure it's within +-1% of the original file on the server
                 try
                 {
-                    using (var client = new WebClient())
+                    using (var client = new HttpClient())
                     {
                         Log.Trace($"SECDataDownloader.GetFileSize(): Downloading archive index file for file size verification");
-                        var contents = client.DownloadString($"{BaseUrl}/Feed/{year}/{quarter}/index.json");
+                        var contents = client.GetStringAsync($"{BaseUrl}/Feed/{year}/{quarter}/index.json").SynchronouslyAwaitTaskResult();
 
                         var indexFile = JsonConvert.DeserializeObject<SECReportIndexFile>(contents);
                         Log.Trace($"SECDataDownloader.GetFileSize(): Successfully downloaded {BaseUrl}/Feed/{year}/{quarter}/index.json");
@@ -439,17 +423,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         return indexFile;
                     }
                 }
-                catch (WebException e)
+                catch (HttpRequestException err)
                 {
-                    var response = (HttpWebResponse)e.Response;
-
-                    if (response == null)
-                    {
-                        Log.Error("SECDataDownloader.GetFileSize(): Archive download response is null");
-                        continue;
-                    }
-
-                    Log.Error($"SECDataDownloader.GetFileSize(): Received status code {(int)response.StatusCode} - Retrying...");
+                    Log.Error($"SECDataDownloader.GetFileSize(): Received status code {(int)err.StatusCode} - Retrying...");
                 }
                 catch (Exception e)
                 {
