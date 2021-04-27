@@ -5,7 +5,7 @@
 #
 
 # Use base system for cleaning up wayward processes
-FROM phusion/baseimage:0.9.22
+FROM phusion/baseimage:bionic-1.0.0
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -35,12 +35,12 @@ RUN wget https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-li
 # From https://github.com/mono/docker/blob/master/
 RUN apt-get update && rm -rf /var/lib/apt/lists/*
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-RUN echo "deb http://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/5.12.0.226 main" > /etc/apt/sources.list.d/mono-xamarin.list && \
+RUN echo "deb http://download.mono-project.com/repo/ubuntu stable-bionic/snapshots/5.12.0.226 main" > /etc/apt/sources.list.d/mono-xamarin.list && \
     apt-get update && apt-fast install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl && \
     apt-fast install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Install dotnet 5 sdk & runtime
-RUN wget https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update; \
     apt-get install -y apt-transport-https && \
@@ -251,7 +251,7 @@ RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
     rm -rf h2o-3.30.0.3
 
 # Install R 3.6
-RUN echo deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/ >> /etc/apt/sources.list \
+RUN echo deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/ >> /etc/apt/sources.list \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
     && apt-get update && apt-fast -y install r-base
 
