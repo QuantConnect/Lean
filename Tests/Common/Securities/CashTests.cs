@@ -601,12 +601,11 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsEmpty(added);
         }
 
-        [TestCaseSource(nameof(CryptoBrokerageModelCases))]
-        public void CryptoStableCoinMappingIsCorrect(IBrokerageModel brokerageModel, Symbol expectedConversionSymbol)
+        [TestCaseSource(nameof(cryptoBrokerageStableCoinCases))]
+        public void CryptoStableCoinMappingIsCorrect(IBrokerageModel brokerageModel, string accountCurrency, string stableCoin, bool shouldThrow, Symbol expectedConversionSymbol)
         {
-            var cashBook = new CashBook();
-
-            var cash = new Cash("USDC", 10m, 1m);
+            var cashBook = new CashBook() {AccountCurrency = accountCurrency};
+            var cash = new Cash(stableCoin, 10m, 1m);
             cashBook.Add(cash.Symbol, cash);
 
             var subscriptions = new SubscriptionManager();
@@ -619,18 +618,28 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     abcConfig,
-                    new Cash(Currencies.USD, 0, 1m),
+                    new Cash(accountCurrency, 0, 1m),
                     SymbolProperties.GetDefault(cashBook.AccountCurrency),
                     cashBook,
                     RegisteredSecurityDataTypesProvider.Null,
                     new SecurityCache()));
 
 
-            // Assert that this call does not throw
-            Assert.DoesNotThrow(() =>
+            // Verify the behavior throws or doesn't throw depending on the case
+            if (shouldThrow)
             {
-                cash.EnsureCurrencyDataFeed(securities, subscriptions, brokerageModel.DefaultMarkets, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
-            }); 
+                Assert.Throws<ArgumentException>(() =>
+                {
+                    cash.EnsureCurrencyDataFeed(securities, subscriptions, brokerageModel.DefaultMarkets, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
+                });
+            }
+            else
+            {
+                Assert.DoesNotThrow(() =>
+                {
+                    cash.EnsureCurrencyDataFeed(securities, subscriptions, brokerageModel.DefaultMarkets, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
+                });
+            }
 
             // Verify the conversion symbol is correct
             if (expectedConversionSymbol == null)
@@ -648,11 +657,45 @@ namespace QuantConnect.Tests.Common.Securities
             get { return new TimeKeeper(DateTime.Now, new[] { TimeZone }); }
         }
 
-        private static object[] CryptoBrokerageModelCases =
+        // Crypto brokerage model stable coin and account currency cases
+        // The last var is expectedConversionSymbol, and is null when we expect there
+        // not to be a conversion security for our tests output
+        private static object[] cryptoBrokerageStableCoinCases =
         {
-            new object[] { new BitfinexBrokerageModel(), Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex)},
-            new object[] { new GDAXBrokerageModel(), null  },
-            new object[] { new BinanceBrokerageModel(), null }
+            // *** Bitfinex ***
+            // Trades USDC, EURS, and USDT
+            // USDC Cases
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDC", false, Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex) },
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDC", true, null }, // No USDCEUR, does throw!
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDC", true, null }, // No USDCGBP, does throw!
+
+            // EURS Cases
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "EURS", false, Symbol.Create("EURSUSD", SecurityType.Crypto, Market.Bitfinex) },
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "EURS", false, null }, // No EURSEUR, but does not throw! Conversion 1-1
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "EURS", true, null }, // No EURSGBP, does throw!
+
+            // USDT (Tether) Cases
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDT", false, Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Bitfinex) },
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDT", true, null }, // No USDTEUR, does throw!
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDT", true, null }, // No USDTGBP, does throw!
+
+            // *** GDAX ***
+            // Trades USDC and USDT* (*Not yet trading live, but expected soon)
+            // USDC Cases
+            new object[] { new GDAXBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
+            new object[] { new GDAXBrokerageModel(), Currencies.EUR, "USDC", false, Symbol.Create("USDCEUR", SecurityType.Crypto, Market.GDAX) },
+            new object[] { new GDAXBrokerageModel(), Currencies.GBP, "USDC", false, Symbol.Create("USDCGBP", SecurityType.Crypto, Market.GDAX) }, 
+
+            // *** Binance ***
+            // USDC Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", true, null }, // No USDCEUR, does throw!
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", true, null }, // No USDCGBP, does throw!
+
+            // BGBP Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "BGBP", true, null }, // No BGBPUSD, does throw!
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "BGBP", true, null }, // No BGBPEUR, does throw!
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "BGBP", false, null }, // No BGBPGBP, but does not throw! Conversion 1-1
         };
     }
 }

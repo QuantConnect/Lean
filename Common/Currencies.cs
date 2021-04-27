@@ -113,7 +113,7 @@ namespace QuantConnect
             Symbol.Create("USDCUSD", SecurityType.Crypto, Market.GDAX), // USD -> USDC
 
             // Bitfinex StableCoins Missing 1-1 Pairs
-            Symbol.Create("EURSEUR", SecurityType.Crypto, Market.GDAX), // EUR -> EURS
+            Symbol.Create("EURSEUR", SecurityType.Crypto, Market.Bitfinex), // EUR -> EURS
         };
 
         /// <summary>
