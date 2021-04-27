@@ -24,6 +24,7 @@ using QuantConnect.Data.Custom.SEC;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using System.Globalization;
+using System.Net.Http;
 
 namespace QuantConnect.ToolBox.SECDataDownloader
 {
@@ -174,10 +175,13 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 {
                     try
                     {
-                        using (var client = new WebClient())
+                        using (var client = new HttpClient())
                         {
                             Log.Trace($"SECDataDownloader.Download(): Downloading temp index manifest to: {dailyIndexTmp.FullName}");
-                            client.DownloadFile($"{BaseUrl}/daily-index/{currentDate.Year}/{quarter}/master.{currentDate:yyyyMMdd}.idx", dailyIndexTmp.FullName);
+                            var indexBytes = client.GetByteArrayAsync($"{BaseUrl}/daily-index/{currentDate.Year}/{quarter}/master.{currentDate:yyyyMMdd}.idx")
+                                .SynchronouslyAwaitTaskResult();
+
+                            File.WriteAllBytes(dailyIndexTmp.FullName, indexBytes);
 
                             if (dailyIndexRaw.Exists)
                             {
@@ -193,23 +197,13 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             break;
                         }
                     }
-                    catch (WebException e)
+                    catch (HttpRequestException err)
                     {
-                        var response = (HttpWebResponse)e.Response;
-
-                        if (response == null)
-                        {
-                            Log.Error("SECDataDownloader.Download(): Daily index file response is null");
-                        }
-
-                        // SEC website uses s3, which returns a 403 if the given file does not exist
-                        if (response?.StatusCode != null && response.StatusCode == HttpStatusCode.Forbidden)
+                        if (err.StatusCode == HttpStatusCode.Forbidden)
                         {
                             Log.Error($"SECDataDownloader.Download(): Index files not found on date {currentDate:yyyy-MM-dd}");
                             break;
                         }
-
-                        Log.Error($"SECDataDownloader.Download(): Received status code {(int)response.StatusCode} - Retrying...");
                     }
                     catch (Exception e)
                     {
@@ -270,19 +264,8 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         continue;
                     }
 
-                    var indexPathTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json"));
-                    var indexPath = new FileInfo(Path.Combine(rawDestination, "indexes", $"{cik}.json"));
-
-                    // If we re-use the webclient per request, we get a concurrent I/O operations error
-                    using (var client = new WebClient())
-                    {
-                        // Makes sure we don't overrun SEC rate limits accidentally
-                        _indexGate.WaitToProceed();
-
-                        downloadTasks.Add(client.DownloadFileTaskAsync($"{BaseUrl}/data/{cik}/index.json", indexPathTmp.FullName)
-                            .ContinueWith(_ => OnIndexFileDownloaded(indexPathTmp, indexPath)));
-                    }
-
+                    _indexGate.WaitToProceed();
+                    downloadTasks.Add(DownloadIndexFile(cik, rawDestination));
                     _downloadedIndexFiles.Add(cik);
                     previousCik = cik;
                 }
@@ -329,21 +312,54 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         }
 
         /// <summary>
+        /// Attempt to download SEC index files for a given CIK, with added
+        /// fault tolerance
+        /// </summary>
+        /// <param name="cik">CIK of the equity</param>
+        /// <param name="rawDestination">Destination where we will write to</param>
+        /// <exception cref="Exception">We were unable to download the index file</exception>
+        private async Task DownloadIndexFile(string cik, string rawDestination)
+        {
+            for (var i = 0; i < MaxRetries; i++)
+            {
+                try
+                {
+                    using (var client = new HttpClient())
+                    {
+                        var indexFileBytes = await client.GetByteArrayAsync($"{BaseUrl}/data/{cik}/index.json");
+                        var indexPathTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json"));
+                        var indexPath = new FileInfo(Path.Combine(rawDestination, "indexes", $"{cik}.json"));
+
+                        await File.WriteAllBytesAsync(indexPathTmp.FullName, indexFileBytes);
+                        await OnIndexFileDownloaded(indexPathTmp, indexPath);
+
+                        return;
+                    }
+                }
+                catch (HttpRequestException err)
+                {
+                    if (err.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        Log.Trace($"Rate limited downloading index file for {cik} - retrying in 10s");
+                        // We've been rate limited, sleep for 10 seconds then try again
+                        await Task.Delay(TimeSpan.FromSeconds(10));
+                    }
+                }
+            }
+
+            throw new Exception($"Failed to download index file \"{cik}.json\" after {MaxRetries} attempts");
+        }
+
+        /// <summary>
         /// Moves temporary file to permanent path
         /// </summary>
         /// <param name="source">Path we will move index file from</param>
         /// <param name="destination">Path we will move index file to</param>
-        private void OnIndexFileDownloaded(FileInfo source, FileInfo destination)
+        private async Task OnIndexFileDownloaded(FileInfo source, FileInfo destination)
         {
             try
             {
-                if (destination.Exists)
-                {
-                    Log.Trace($"SECDataDownloader.OnIndexFileDownloaded(): Deleting index file: {destination.FullName}");
-                    destination.Delete();
-                }
-
-                source.MoveTo(destination.FullName);
+                source.MoveTo(destination.FullName, true);
                 Log.Trace($"SECDataDownloader.OnIndexFileDownloaded(): Successfully downloaded {destination.FullName}");
             }
             catch (Exception e)
