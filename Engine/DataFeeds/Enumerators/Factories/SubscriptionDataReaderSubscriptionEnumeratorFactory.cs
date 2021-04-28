@@ -116,8 +116,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            _resultHandler.DebugMessage($"Due to numerical precision issues in the factor file, data from the following" +
-                $" symbols was adjust to start later than the algorithms start date: { string.Join(", ", _numericalPrecisionLimitedSymbols.Take(10).Select(x => x.Value)) }");
+            if (!_numericalPrecisionLimitedSymbols.IsNullOrEmpty())
+            {
+                _resultHandler.DebugMessage($"Due to numerical precision issues in the factor file, data from the following" +
+                    $" symbols was adjust to start later than the algorithms start date: { string.Join(", ", _numericalPrecisionLimitedSymbols.Take(10).Select(x => x.Value)) }");
+            }
+           
             _zipDataCacheProvider?.DisposeSafely();
         }
     }
