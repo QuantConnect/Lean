@@ -125,6 +125,7 @@ namespace QuantConnect.Securities
 
             var configurations = SubscriptionDataConfigProvider
                 .GetSubscriptionDataConfigs(security.Symbol)
+                .OrderBy(c => c.TickType)
                 .ToList();
 
             return GetHistoryRequirements(

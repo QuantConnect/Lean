@@ -97,6 +97,7 @@ namespace QuantConnect.Securities.Volatility
 
             var configurations = SubscriptionDataConfigProvider
                 .GetSubscriptionDataConfigs(security.Symbol)
+                .OrderBy(c => c.TickType)
                 .ToList();
             var configuration = configurations.First();
             
