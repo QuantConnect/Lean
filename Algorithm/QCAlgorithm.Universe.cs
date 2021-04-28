@@ -597,12 +597,9 @@ namespace QuantConnect.Algorithm
             // ensure a volatility model has been set on the underlying
             if (security.VolatilityModel == VolatilityModel.Null)
             {
-                var bar = security.GetLastData();
-                if (bar == null)
-                {
-                    bar = typeof(TradeBar).GetBaseDataInstance();
-                    bar.Symbol = security.Symbol;
-                }
+                var config = configs.FirstOrDefault();
+                var bar = config?.Type.GetBaseDataInstance() ?? typeof(TradeBar).GetBaseDataInstance();
+                bar.Symbol = security.Symbol;
                 
                 var maxSupportedResolution = bar.SupportedResolutions().Max();
 

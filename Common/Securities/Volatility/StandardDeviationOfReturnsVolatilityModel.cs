@@ -61,6 +61,7 @@ namespace QuantConnect.Securities
                         _volatility = std * (decimal)Math.Sqrt(252.0);
                     }
                 }
+
                 return _volatility;
             }
         }
@@ -83,13 +84,17 @@ namespace QuantConnect.Securities
         /// Keep this in mind when setting the period and update frequency. The Resolution parameter is only used for live mode, or for
         /// the default value of the <paramref name="updateFrequency"/> if no value is provided.
         /// </remarks>
-        public StandardDeviationOfReturnsVolatilityModel(int periods, Resolution? resolution = null, TimeSpan? updateFrequency = null)
+        public StandardDeviationOfReturnsVolatilityModel(
+            int periods,
+            Resolution? resolution = null,
+            TimeSpan? updateFrequency = null
+            )
         {
             if (periods < 2)
             {
                 throw new ArgumentOutOfRangeException("periods", "'periods' must be greater than or equal to 2.");
             }
-            
+
             _window = new RollingWindow<double>(periods);
             _resolution = resolution;
             _periodSpan = updateFrequency ?? resolution?.ToTimeSpan() ?? TimeSpan.FromDays(1);
@@ -114,6 +119,7 @@ namespace QuantConnect.Securities
                         _window.Add((double)(data.Price / _lastPrice) - 1.0);
                     }
                 }
+
                 _lastUpdate = data.EndTime;
                 _lastPrice = data.Price;
             }
@@ -127,55 +133,11 @@ namespace QuantConnect.Securities
         /// <returns>History request object list, or empty if no requirements</returns>
         public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
-            if (SubscriptionDataConfigProvider == null)
-            {
-                throw new InvalidOperationException(
-                    "RelativeStandardDeviationVolatilityModel.GetHistoryRequirements(): " +
-                    "SubscriptionDataConfigProvider was not set."
-                );
-            }
-
-            var configurations = SubscriptionDataConfigProvider
-                .GetSubscriptionDataConfigs(security.Symbol)
-                .ToList();
-            var configuration = configurations.First();
-
-            var barCount = _window.Size + 1;
-            // hour resolution does no have extended market hours data
-            var extendedMarketHours = _periodSpan != Time.OneHour && configurations.IsExtendedMarketHours();
-            var localStartTime = Time.GetStartTimeForTradeBars(
-                security.Exchange.Hours,
-                utcTime.ConvertFromUtc(security.Exchange.TimeZone),
-                _periodSpan,
-                barCount,
-                extendedMarketHours,
-                configuration.DataTimeZone);
-            var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
-
-            var bar = security.GetLastData();
-            if (bar == null)
-            {
-                bar = typeof(TradeBar).GetBaseDataInstance();
-                bar.Symbol = security.Symbol;
-            }
-            
-            var resolution = _resolution ?? bar.SupportedResolutions().Max();
-
-            return new[]
-            {
-                new HistoryRequest(utcStartTime,
-                                   utcTime,
-                                   typeof(TradeBar),
-                                   configuration.Symbol,
-                                   resolution,
-                                   security.Exchange.Hours,
-                                   configuration.DataTimeZone,
-                                   resolution,
-                                   extendedMarketHours,
-                                   configurations.IsCustomData(),
-                                   configurations.DataNormalizationMode(),
-                                   LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type))
-            };
+            return base.GetHistoryRequirements(
+                security,
+                utcTime,
+                _resolution,
+                _window.Size + 1);
         }
     }
 }
