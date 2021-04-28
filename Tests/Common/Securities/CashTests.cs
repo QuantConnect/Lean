@@ -611,19 +611,7 @@ namespace QuantConnect.Tests.Common.Securities
             var subscriptions = new SubscriptionManager();
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
-            var abcConfig = subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone);
             var securities = new SecurityManager(TimeKeeper);
-            securities.Add(
-                Symbols.SPY,
-                new Security(
-                    SecurityExchangeHours,
-                    abcConfig,
-                    new Cash(accountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(cashBook.AccountCurrency),
-                    cashBook,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()));
-
 
             // Verify the behavior throws or doesn't throw depending on the case
             if (shouldThrow)
