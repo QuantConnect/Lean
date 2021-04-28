@@ -172,7 +172,7 @@ namespace QuantConnect.Algorithm
 
             if (!_rawNormalizationWarningSymbols.IsNullOrEmpty())
             {
-                Debug($"Warning: The following securities were set to raw price normalization mode to work with options: {string.Join(", ", _rawNormalizationWarningSymbols.Take(10).Select(x => x.Value))}");
+                Debug($"Warning: The following securities were set to raw price normalization mode to work with options: {string.Join(", ", _rawNormalizationWarningSymbols.Select(x => x.Value))}");
                 _rawNormalizationWarningSymbols.Clear();
             }
         }
@@ -595,7 +595,12 @@ namespace QuantConnect.Algorithm
             if (configs.DataNormalizationMode() != DataNormalizationMode.Raw)
             {
                 // Add this symbol to our set of raw normalization warning symbols to alert the user at the end
-                _rawNormalizationWarningSymbols.Add(security.Symbol);
+                // Set a hard limit of 10 to avoid growing this collection unnecessarily large
+                if (_rawNormalizationWarningSymbols.Count < 10)
+                {
+                    _rawNormalizationWarningSymbols.Add(security.Symbol);
+                }
+
                 configs.SetDataNormalizationMode(DataNormalizationMode.Raw);
                 // For backward compatibility we need to refresh the security DataNormalizationMode Property
                 security.RefreshDataNormalizationModeProperty();
