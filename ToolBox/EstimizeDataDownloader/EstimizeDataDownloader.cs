@@ -53,7 +53,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
         protected EstimizeDataDownloader()
         {
-            _clientKey = Config.Get("estimize-economics-auth-token");
+            _clientKey = Config.Get("estimize-api-key");
 
             // Represents rate limits of 10 requests per 1.1 second
             IndexGate = new RateGate(10, TimeSpan.FromSeconds(1.1));
@@ -141,14 +141,14 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
         protected void SaveContentToFile(string destinationFolder, string ticker, IEnumerable<string> contents)
         {
             ticker = ticker.ToLowerInvariant();
-            var finalPath = Path.Combine(destinationFolder, $"{ticker}.csv");
-            var finalFileExists = File.Exists(finalPath);
+            var finalPath = new FileInfo(Path.Combine(destinationFolder, $"{ticker}.csv"));
+            finalPath.Directory.Create();
 
             var lines = new HashSet<string>(contents);
-            if (finalFileExists)
+            if (finalPath.Exists)
             {
                 Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Adding to existing file: {finalPath}");
-                foreach (var line in File.ReadAllLines(finalPath))
+                foreach (var line in File.ReadAllLines(finalPath.FullName))
                 {
                     lines.Add(line);
                 }
@@ -161,7 +161,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
             var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
                 .ToList();
 
-            File.WriteAllLines(finalPath, finalLines);
+            File.WriteAllLines(finalPath.FullName, finalLines);
         }
 
         /// <summary>
