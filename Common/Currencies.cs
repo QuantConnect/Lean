@@ -97,6 +97,26 @@ namespace QuantConnect
         };
 
         /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB
+        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
+        ///
+        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
+        /// security.
+        /// </summary>
+        public static HashSet<Symbol> StableCoinsWithoutPairs = new HashSet<Symbol>
+        {
+            // Binance StableCoins Missing 1-1 Pairs
+            Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Binance), // USD -> USDC
+            Symbol.Create("BGBPGBP", SecurityType.Crypto, Market.Binance), // GBP -> BGBP
+
+            // Coinbase StableCoins Missing 1-1 Pairs
+            Symbol.Create("USDCUSD", SecurityType.Crypto, Market.GDAX), // USD -> USDC
+
+            // Bitfinex StableCoins Missing 1-1 Pairs
+            Symbol.Create("EURSEUR", SecurityType.Crypto, Market.Bitfinex), // EUR -> EURS
+        };
+
+        /// <summary>
         /// Gets the currency symbol for the specified currency code
         /// </summary>
         /// <param name="currency">The currency code</param>

@@ -601,9 +601,89 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsEmpty(added);
         }
 
+        [TestCaseSource(nameof(cryptoBrokerageStableCoinCases))]
+        public void CryptoStableCoinMappingIsCorrect(IBrokerageModel brokerageModel, string accountCurrency, string stableCoin, bool shouldThrow, Symbol expectedConversionSymbol)
+        {
+            var cashBook = new CashBook() {AccountCurrency = accountCurrency};
+            var cash = new Cash(stableCoin, 10m, 1m);
+            cashBook.Add(cash.Symbol, cash);
+
+            var subscriptions = new SubscriptionManager();
+            var dataManager = new DataManagerStub(TimeKeeper);
+            subscriptions.SetDataManager(dataManager);
+            var securities = new SecurityManager(TimeKeeper);
+
+            // Verify the behavior throws or doesn't throw depending on the case
+            if (shouldThrow)
+            {
+                Assert.Throws<ArgumentException>(() =>
+                {
+                    cash.EnsureCurrencyDataFeed(securities, subscriptions, brokerageModel.DefaultMarkets, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
+                });
+            }
+            else
+            {
+                Assert.DoesNotThrow(() =>
+                {
+                    cash.EnsureCurrencyDataFeed(securities, subscriptions, brokerageModel.DefaultMarkets, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
+                });
+            }
+
+            // Verify the conversion symbol is correct
+            if (expectedConversionSymbol == null)
+            {
+                Assert.IsNull(cash.ConversionRateSecurity);
+            }
+            else
+            {
+                Assert.AreEqual(expectedConversionSymbol, cash.ConversionRateSecurity.Symbol);
+            }
+        }
+
         private static TimeKeeper TimeKeeper
         {
             get { return new TimeKeeper(DateTime.Now, new[] { TimeZone }); }
         }
+
+        // Crypto brokerage model stable coin and account currency cases
+        // The last var is expectedConversionSymbol, and is null when we expect there
+        // not to be a conversion security for our tests output
+        private static object[] cryptoBrokerageStableCoinCases =
+        {
+            // *** Bitfinex ***
+            // Trades USDC, EURS, and USDT
+            // USDC Cases
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDC", false, Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex) },
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDC", true, null }, // No USDCEUR, does throw!
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDC", true, null }, // No USDCGBP, does throw!
+
+            // EURS Cases
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "EURS", false, Symbol.Create("EURSUSD", SecurityType.Crypto, Market.Bitfinex) },
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "EURS", false, null }, // No EURSEUR, but does not throw! Conversion 1-1
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "EURS", true, null }, // No EURSGBP, does throw!
+
+            // USDT (Tether) Cases
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDT", false, Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Bitfinex) },
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDT", true, null }, // No USDTEUR, does throw!
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDT", true, null }, // No USDTGBP, does throw!
+
+            // *** GDAX ***
+            // Trades USDC and USDT* (*Not yet trading live, but expected soon)
+            // USDC Cases
+            new object[] { new GDAXBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
+            new object[] { new GDAXBrokerageModel(), Currencies.EUR, "USDC", false, Symbol.Create("USDCEUR", SecurityType.Crypto, Market.GDAX) },
+            new object[] { new GDAXBrokerageModel(), Currencies.GBP, "USDC", false, Symbol.Create("USDCGBP", SecurityType.Crypto, Market.GDAX) }, 
+
+            // *** Binance ***
+            // USDC Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", true, null }, // No USDCEUR, does throw!
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", true, null }, // No USDCGBP, does throw!
+
+            // BGBP Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "BGBP", true, null }, // No BGBPUSD, does throw!
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "BGBP", true, null }, // No BGBPEUR, does throw!
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "BGBP", false, null }, // No BGBPGBP, but does not throw! Conversion 1-1
+        };
     }
 }

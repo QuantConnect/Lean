@@ -444,6 +444,8 @@ gdax,UMAEUR,crypto,UMA-Euro,EUR,1,0.001,0.001,UMA-EUR
 gdax,UMAGBP,crypto,UMA-British Pound,GBP,1,0.001,0.001,UMA-GBP
 gdax,UMAUSD,crypto,UMA-United States Dollar,USD,1,0.001,0.001,UMA-USD
 gdax,UNIUSD,crypto,Uniswap-United States Dollar,USD,1,0.0001,0.000001,UNI-USD
+gdax,USDCEUR,crypto,USDC-Eur,EUR,1,0.001,0.01,USDC-EUR
+gdax,USDCGBP,crypto,USDC-GBP,GBP,1,0.001,0.01,USDC-GBP
 gdax,WBTCBTC,crypto,Wrapped Bitcoin-Bitcoin,BTC,1,0.0001,0.00000001,WBTC-BTC
 gdax,WBTCUSD,crypto,Wrapped Bitcoin-United States Dollar,USD,1,0.01,0.00000001,WBTC-USD
 gdax,XLMBTC,crypto,Stellar-Bitcoin,BTC,1,0.00000001,1,XLM-BTC
