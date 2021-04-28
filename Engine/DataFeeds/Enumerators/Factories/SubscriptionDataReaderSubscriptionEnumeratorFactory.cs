@@ -97,7 +97,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             dataReader.StartDateLimited += (sender, args) => { _resultHandler.DebugMessage(args.Message); };
             dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
             dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
-            dataReader.NumericalPrecisionLimited += (sender, args) => { _numericalPrecisionLimitedSymbols.TryAdd(args.Symbol, args.Message); };
+            dataReader.NumericalPrecisionLimited += (sender, args) =>
+            {
+                // Set a hard limit to keep this warning list from getting unnecessarily large
+                if (_numericalPrecisionLimitedSymbols.Count < 10)
+                {
+                    _numericalPrecisionLimitedSymbols.TryAdd(args.Symbol, args.Message);
+                }
+            };
 
             var result = CorporateEventEnumeratorFactory.CreateEnumerators(
                 dataReader,
@@ -120,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             if (!_numericalPrecisionLimitedSymbols.IsNullOrEmpty())
             {
                 _resultHandler.DebugMessage($"Due to numerical precision issues in the factor file, data for the following" +
-                    $" symbols was adjust to a later starting date: { string.Join(", ", _numericalPrecisionLimitedSymbols.Values.Take(10)) }");
+                    $" symbols was adjust to a later starting date: { string.Join(", ", _numericalPrecisionLimitedSymbols.Values) }");
             }
            
             _zipDataCacheProvider?.DisposeSafely();
