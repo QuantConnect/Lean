@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm
         private readonly List<Universe> _pendingUniverseAdditions = new List<Universe>();
         // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove these user universes from the UniverseManager
         private readonly HashSet<Symbol> _userAddedUniverses = new HashSet<Symbol>();
-        private readonly ConcurrentSet<Symbol> _rawNormalizationWarningSymbols = new ConcurrentSet<Symbol>();
+        private ConcurrentSet<Symbol> _rawNormalizationWarningSymbols = new ConcurrentSet<Symbol>();
 
         /// <summary>
         /// Gets universe manager which holds universes keyed by their symbol
@@ -173,7 +173,9 @@ namespace QuantConnect.Algorithm
             if (!_rawNormalizationWarningSymbols.IsNullOrEmpty())
             {
                 Debug($"Warning: The following securities were set to raw price normalization mode to work with options: {string.Join(", ", _rawNormalizationWarningSymbols.Select(x => x.Value))}");
-                _rawNormalizationWarningSymbols.Clear();
+
+                // Set our warning list to null to stop emitting these warnings after its done once
+                _rawNormalizationWarningSymbols = null;
             }
         }
 
@@ -595,8 +597,8 @@ namespace QuantConnect.Algorithm
             if (configs.DataNormalizationMode() != DataNormalizationMode.Raw)
             {
                 // Add this symbol to our set of raw normalization warning symbols to alert the user at the end
-                // Set a hard limit of 10 to avoid growing this collection unnecessarily large
-                if (_rawNormalizationWarningSymbols.Count < 10)
+                // Set a hard limit to avoid growing this collection unnecessarily large
+                if (_rawNormalizationWarningSymbols != null && _rawNormalizationWarningSymbols.Count < 10)
                 {
                     _rawNormalizationWarningSymbols.Add(security.Symbol);
                 }
