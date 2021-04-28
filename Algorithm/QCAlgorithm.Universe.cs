@@ -37,6 +37,7 @@ namespace QuantConnect.Algorithm
         // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove these user universes from the UniverseManager
         private readonly HashSet<Symbol> _userAddedUniverses = new HashSet<Symbol>();
         private ConcurrentSet<Symbol> _rawNormalizationWarningSymbols = new ConcurrentSet<Symbol>();
+        private readonly int _rawNormalizationWarningSymbolsMaxCount = 10;
 
         /// <summary>
         /// Gets universe manager which holds universes keyed by their symbol
@@ -172,7 +173,17 @@ namespace QuantConnect.Algorithm
 
             if (!_rawNormalizationWarningSymbols.IsNullOrEmpty())
             {
-                Debug($"Warning: The following securities were set to raw price normalization mode to work with options: {string.Join(", ", _rawNormalizationWarningSymbols.Select(x => x.Value))}");
+                // Log our securities being set to raw price mode
+                var message =
+                    $"Warning: The following securities were set to raw price normalization mode to work with options: {string.Join(", ", _rawNormalizationWarningSymbols.Select(x => x.Value))}";
+
+                // If we are at max capacity post suggest additional exist in the message
+                if (_rawNormalizationWarningSymbols.Count == _rawNormalizationWarningSymbolsMaxCount)
+                {
+                    message += "...";
+                }
+                
+                Debug(message);
 
                 // Set our warning list to null to stop emitting these warnings after its done once
                 _rawNormalizationWarningSymbols = null;
@@ -598,7 +609,7 @@ namespace QuantConnect.Algorithm
             {
                 // Add this symbol to our set of raw normalization warning symbols to alert the user at the end
                 // Set a hard limit to avoid growing this collection unnecessarily large
-                if (_rawNormalizationWarningSymbols != null && _rawNormalizationWarningSymbols.Count < 10)
+                if (_rawNormalizationWarningSymbols != null && _rawNormalizationWarningSymbols.Count <= _rawNormalizationWarningSymbolsMaxCount)
                 {
                     _rawNormalizationWarningSymbols.Add(security.Symbol);
                 }
