@@ -166,7 +166,7 @@ namespace QuantConnect.ToolBox
                             fromDate,
                             toDate,
                             GetParameterOrExit(optionsObject, "destination-dir"),
-                            GetParameterOrExit(optionsObject, "api-key")
+                            GetParameterOrDefault(optionsObject, "api-key", string.Empty)
                         );
                         break;
 
