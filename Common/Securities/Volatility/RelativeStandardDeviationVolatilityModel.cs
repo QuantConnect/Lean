@@ -125,38 +125,14 @@ namespace QuantConnect.Securities
 
             var configurations = SubscriptionDataConfigProvider
                 .GetSubscriptionDataConfigs(security.Symbol)
+                .OrderBy(c => c.TickType)
                 .ToList();
 
-            var barCount = _window.Size + 1;
-            // hour resolution does no have extended market hours data
-            var extendedMarketHours = _periodSpan != Time.OneHour && configurations.IsExtendedMarketHours();
-            var configuration = configurations.First();
-
-            var localStartTime = Time.GetStartTimeForTradeBars(
-                security.Exchange.Hours,
-                utcTime.ConvertFromUtc(security.Exchange.TimeZone),
-                _periodSpan,
-                barCount,
-                extendedMarketHours,
-                configuration.DataTimeZone);
-
-            var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
-
-            return new[]
-            {
-                new HistoryRequest(utcStartTime,
-                                   utcTime,
-                                   typeof(TradeBar),
-                                   configuration.Symbol,
-                                   configurations.GetHighestResolution(),
-                                   security.Exchange.Hours,
-                                   configuration.DataTimeZone,
-                                   configurations.GetHighestResolution(),
-                                   extendedMarketHours,
-                                   configurations.IsCustomData(),
-                                   configurations.DataNormalizationMode(),
-                                   LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type))
-            };
+            return GetHistoryRequirements(
+                security,
+                utcTime,
+                configurations.GetHighestResolution(),
+                _window.Size + 1);
         }
     }
 }
