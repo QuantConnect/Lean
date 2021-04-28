@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
@@ -36,7 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly ZipDataCacheProvider _zipDataCacheProvider;
-        private readonly ConcurrentSet<Symbol> _numericalPrecisionMessageSent;
+        private readonly ConcurrentSet<Symbol> _numericalPrecisionLimitedSymbols;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly bool _enablePriceScaling;
@@ -62,7 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _numericalPrecisionMessageSent = new ConcurrentSet<Symbol>();
+            _numericalPrecisionLimitedSymbols = new ConcurrentSet<Symbol>();
             _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: false);
             _isLiveMode = false;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
@@ -95,13 +96,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             dataReader.StartDateLimited += (sender, args) => { _resultHandler.DebugMessage(args.Message); };
             dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
             dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
-            dataReader.NumericalPrecisionLimited += (sender, args) =>
-            {
-                if (_numericalPrecisionMessageSent.Add(args.Symbol))
-                {
-                    _resultHandler.DebugMessage(args.Message);
-                }
-            };
+            dataReader.NumericalPrecisionLimited += (sender, args) => { _numericalPrecisionLimitedSymbols.Add(args.Symbol); };
 
             var result = CorporateEventEnumeratorFactory.CreateEnumerators(
                 dataReader,
@@ -121,6 +116,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            _resultHandler.DebugMessage($"Due to numerical precision issues in the factor file, data from the following" +
+                $" symbols was adjust to start later than the algorithms start date: { string.Join(", ", _numericalPrecisionLimitedSymbols.Take(10).Select(x => x.Value)) }");
             _zipDataCacheProvider?.DisposeSafely();
         }
     }
