@@ -174,16 +174,8 @@ namespace QuantConnect.Algorithm
             if (!_rawNormalizationWarningSymbols.IsNullOrEmpty())
             {
                 // Log our securities being set to raw price mode
-                var message =
-                    $"Warning: The following securities were set to raw price normalization mode to work with options: {string.Join(", ", _rawNormalizationWarningSymbols.Select(x => x.Value))}";
-
-                // If we are at max capacity post suggest additional exist in the message
-                if (_rawNormalizationWarningSymbols.Count == _rawNormalizationWarningSymbolsMaxCount)
-                {
-                    message += "...";
-                }
-                
-                Debug(message);
+                Debug($"Warning: The following securities were set to raw price normalization mode to work with options: " +
+                    $"{string.Join(", ", _rawNormalizationWarningSymbols.Take(_rawNormalizationWarningSymbolsMaxCount).Select(x => x.Value))}...");
 
                 // Set our warning list to null to stop emitting these warnings after its done once
                 _rawNormalizationWarningSymbols = null;
