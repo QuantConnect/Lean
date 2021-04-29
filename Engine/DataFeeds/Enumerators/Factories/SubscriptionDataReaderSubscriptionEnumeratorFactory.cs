@@ -128,10 +128,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             if (!_numericalPrecisionLimitedWarnings.IsNullOrEmpty())
             {
                 var message = $"Due to numerical precision issues in the factor file, data for the following" +
-                    $" symbols was adjust to a later starting date: {string.Join(", ", _numericalPrecisionLimitedWarnings.Values)}";
+                    $" symbols was adjust to a later starting date: {string.Join(", ", _numericalPrecisionLimitedWarnings.Values.Take(_numericalPrecisionLimitedWarningsMaxCount))}";
 
-                // If we reached our max warnings count suggest that more are left out
-                if (_numericalPrecisionLimitedWarnings.Count == _numericalPrecisionLimitedWarningsMaxCount)
+                // If we reached our max warnings count suggest that more may have been left out
+                if (_numericalPrecisionLimitedWarnings.Count >= _numericalPrecisionLimitedWarningsMaxCount)
                 {
                     message += "...";
                 }
