@@ -257,8 +257,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                                     OnNumericalPrecisionLimited(
                                         new NumericalPrecisionLimitedEventArgs(_config.Symbol,
-                                            $"Data for symbol {_config.Symbol.Value} has been limited due to numerical precision issues in the factor file. " +
-                                            $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
+                                            $"[{_config.Symbol.Value}, {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}]"));
                                 }
                             }
                         }
