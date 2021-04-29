@@ -38,11 +38,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly ZipDataCacheProvider _zipDataCacheProvider;
-        private readonly ConcurrentDictionary<Symbol, string> _numericalPrecisionLimitedSymbols;
+        private readonly ConcurrentDictionary<Symbol, string> _numericalPrecisionLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
+        private readonly int _numericalPrecisionLimitedWarningsMaxCount = 10;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly bool _enablePriceScaling;
-
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataReaderSubscriptionEnumeratorFactory"/> class
         /// </summary>
@@ -64,7 +65,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _numericalPrecisionLimitedSymbols = new ConcurrentDictionary<Symbol, string>();
             _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: false);
             _isLiveMode = false;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
@@ -100,9 +100,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             dataReader.NumericalPrecisionLimited += (sender, args) =>
             {
                 // Set a hard limit to keep this warning list from getting unnecessarily large
-                if (_numericalPrecisionLimitedSymbols.Count < 10)
+                if (_numericalPrecisionLimitedWarnings.Count <= _numericalPrecisionLimitedWarningsMaxCount)
                 {
-                    _numericalPrecisionLimitedSymbols.TryAdd(args.Symbol, args.Message);
+                    _numericalPrecisionLimitedWarnings.TryAdd(args.Symbol, args.Message);
                 }
             };
 
@@ -124,10 +124,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            if (!_numericalPrecisionLimitedSymbols.IsNullOrEmpty())
+            // Log our numerical precision limited warnings if any
+            if (!_numericalPrecisionLimitedWarnings.IsNullOrEmpty())
             {
-                _resultHandler.DebugMessage($"Due to numerical precision issues in the factor file, data for the following" +
-                    $" symbols was adjust to a later starting date: { string.Join(", ", _numericalPrecisionLimitedSymbols.Values) }");
+                var message = $"Due to numerical precision issues in the factor file, data for the following" +
+                    $" symbols was adjust to a later starting date: {string.Join(", ", _numericalPrecisionLimitedWarnings.Values)}";
+
+                // If we reached our max warnings count suggest that more are left out
+                if (_numericalPrecisionLimitedWarnings.Count == _numericalPrecisionLimitedWarningsMaxCount)
+                {
+                    message += "...";
+                }
+
+                _resultHandler.DebugMessage(message);
             }
            
             _zipDataCacheProvider?.DisposeSafely();
