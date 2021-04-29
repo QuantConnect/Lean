@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly ZipDataCacheProvider _zipDataCacheProvider;
-        private readonly ConcurrentDictionary<Symbol, string> _numericalPrecisionLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
+        private readonly ConcurrentDictionary<Symbol, string> _numericalPrecisionLimitedWarnings;
         private readonly int _numericalPrecisionLimitedWarningsMaxCount = 10;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
@@ -66,6 +66,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: false);
+            _numericalPrecisionLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
             _isLiveMode = false;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
             _enablePriceScaling = enablePriceScaling;
