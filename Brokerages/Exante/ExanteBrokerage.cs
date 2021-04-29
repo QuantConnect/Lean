@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.Exante
         };
 
         public ExanteBrokerage(
-            ExanteClient client,
+            ExanteClientOptions client,
             string accountId
             )
             : base("Exante Brokerage")

@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages.Exante
             return new ExanteBrokerageModel();
         }
 
-        public static ExanteClient createExanteClient(
+        public static ExanteClientOptions createExanteClientOptions(
             string clientId,
             string applicationId,
             string sharedKey,
@@ -86,8 +86,7 @@ namespace QuantConnect.Brokerages.Exante
                     ),
                     platformType
                 );
-            var client = new ExanteClient(exanteClientOptions);
-            return client;
+            return exanteClientOptions;
         }
 
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
@@ -107,10 +106,10 @@ namespace QuantConnect.Brokerages.Exante
                 throw new Exception(string.Join(System.Environment.NewLine, errors));
             }
 
-            var client = createExanteClient(clientId, applicationId, sharedKey, platformTypeStr);
+            var clientOptions = createExanteClientOptions(clientId, applicationId, sharedKey, platformTypeStr);
 
             var brokerage = new ExanteBrokerage(
-                client,
+                clientOptions,
                 accountId);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 

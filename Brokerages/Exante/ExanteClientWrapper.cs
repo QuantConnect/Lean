@@ -27,10 +27,12 @@ namespace QuantConnect.Brokerages.Exante
     public class ExanteClientWrapper
     {
         private readonly ExanteClient _client;
+        public ExanteStreamClient StreamClient { get; private set; }
 
-        public ExanteClientWrapper(ExanteClient client)
+        public ExanteClientWrapper(ExanteClientOptions clientOptions)
         {
-            _client = client;
+            _client = new ExanteClient(clientOptions);
+            StreamClient = new ExanteStreamClient(clientOptions);
         }
 
         private void checkIfResponseOk<T>(WebCallResult<T> response, HttpStatusCode statusCode = HttpStatusCode.OK)

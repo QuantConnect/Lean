@@ -41,10 +41,10 @@ namespace QuantConnect.Tests.Brokerages.Exante
             var sharedKey = Config.Get("exante-shared-key");
             var accountId = Config.Get("exante-account-id");
             var platformTypeStr = Config.Get("exante-platform-type");
-            var exanteClient =
-                ExanteBrokerageFactory.createExanteClient(clientId, applicationId, sharedKey, platformTypeStr);
+            var exanteClientOptions =
+                ExanteBrokerageFactory.createExanteClientOptions(clientId, applicationId, sharedKey, platformTypeStr);
 
-            var brokerage = new ExanteBrokerage(exanteClient, accountId);
+            var brokerage = new ExanteBrokerage(exanteClientOptions, accountId);
 
             return brokerage;
         }
