@@ -26,10 +26,10 @@ namespace QuantConnect.Brokerages.Exante
         {
             switch (status)
             {
-                case ExanteOrderStatus.Placing:
-                    return OrderStatus.New;
-
                 case ExanteOrderStatus.Pending:
+                    return OrderStatus.Submitted;
+
+                case ExanteOrderStatus.Placing:
                 case ExanteOrderStatus.Working:
                     return OrderStatus.PartiallyFilled;
 

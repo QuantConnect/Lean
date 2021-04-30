@@ -16,6 +16,7 @@
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using CryptoExchange.Net.Objects;
@@ -24,6 +25,7 @@ using Exante.Net.Enums;
 using Exante.Net.Objects;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Packets;
 
@@ -35,6 +37,7 @@ namespace QuantConnect.Brokerages.Exante
         private readonly ExanteClientWrapper _client;
         private string _accountId;
         private readonly ExanteSymbolMapper _symbolMapper = new ExanteSymbolMapper();
+        private readonly ConcurrentDictionary<Guid, Order> _orderMap = new ConcurrentDictionary<Guid, Order>();
         private const string ReportCurrency = "USD";
 
         private static readonly HashSet<string> SupportedCryptoCurrencies = new HashSet<string>()
@@ -51,6 +54,18 @@ namespace QuantConnect.Brokerages.Exante
         {
             _client = new ExanteClientWrapper(client);
             _accountId = accountId;
+
+            _client.StreamClient.GetOrdersStreamAsync(exanteOrder =>
+            {
+                Order order;
+                if (_orderMap.TryGetValue(exanteOrder.OrderId, out order))
+                {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) // TODO: What's the fee?
+                    {
+                        Status = ConvertOrderStatus(exanteOrder.OrderState.Status),
+                    });
+                }
+            });
         }
 
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
@@ -239,6 +254,11 @@ namespace QuantConnect.Brokerages.Exante
                 default:
                     throw new NotSupportedException(
                         $"ExanteBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
+            }
+
+            foreach (var o in orderPlacement.Data)
+            {
+                _orderMap[o.OrderId] = order;
             }
 
             return orderPlacement.Success;
