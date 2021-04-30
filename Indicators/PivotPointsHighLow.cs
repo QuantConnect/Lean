@@ -48,8 +48,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
         /// </summary>
-        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current one's for the high pivot point be assigned</param>
-        /// <param name="lengthLow">The number of surrounding bars whose lows values should be less than the current one's for the low pivot point be assigned</param>
+        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
+        /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         public PivotPointsHighLow(int lengthHigh, int lengthLow)
             : this($"PivotPointsHighLow({lengthHigh},{lengthLow})", lengthHigh, lengthLow)
         { }
@@ -58,8 +58,8 @@ namespace QuantConnect.Indicators
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
         /// </summary>
         /// <param name="name">The name of an indicator</param>
-        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current one's for the high pivot point be assigned</param>
-        /// <param name="lengthLow">The number of surrounding bars whose lows values should be less than the current one's for the low pivot point be assigned</param>
+        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
+        /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         public PivotPointsHighLow(string name, int lengthHigh, int lengthLow) :
             base(name, 2 * Math.Max(lengthLow, lengthHigh) + 1)
         {
