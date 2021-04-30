@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -138,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // Log our numerical precision limited warnings if any
             if (!_numericalPrecisionLimitedWarnings.IsNullOrEmpty())
             {
-                var message = $"Due to numerical precision issues in the factor file, data for the following" +
+                var message = "Due to numerical precision issues in the factor file, data for the following" +
                     $" symbols was adjust to a later starting date: {string.Join(", ", _numericalPrecisionLimitedWarnings.Values.Take(_numericalPrecisionLimitedWarningsMaxCount))}";
 
                 // If we reached our max warnings count suggest that more may have been left out
@@ -153,8 +152,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // Log our start date adjustments because of map files
             if (!_startDateLimitedWarnings.IsNullOrEmpty())
             {
-                var message = $"The starting dates for the following symbols have been adjusted to match their" +
-                    $" map files first date: {string.Join(", ", _numericalPrecisionLimitedWarnings.Values.Take(_numericalPrecisionLimitedWarningsMaxCount))}";
+                var message = "The starting dates for the following symbols have been adjusted to match their" +
+                    $" map files first date: {string.Join(", ", _startDateLimitedWarnings.Values.Take(_startDateLimitedWarningsMaxCount))}";
 
                 // If we reached our max warnings count suggest that more may have been left out
                 if (_startDateLimitedWarnings.Count >= _startDateLimitedWarningsMaxCount)
