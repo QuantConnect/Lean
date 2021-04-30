@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -163,8 +163,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             var price = 1.12m;
             security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price));
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0, 0, 9, DateTime.UtcNow, "");
-            var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -1000, 0, 0, 9, DateTime.UtcNow, "");
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 2000, 0, 0, 9, DateTime.UtcNow, "");
+            var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -2000, 0, 0, 9, DateTime.UtcNow, "");
             orderRequest.SetOrderId(1);
             orderRequest2.SetOrderId(2);
 

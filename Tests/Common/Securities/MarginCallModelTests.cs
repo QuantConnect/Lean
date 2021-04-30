@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Common.Securities
             public new decimal GetInitialMarginRequiredForOrder(
                 InitialMarginRequiredForOrderParameters parameters)
             {
-                return base.GetInitialMarginRequiredForOrder(parameters);
+                return base.GetInitialMarginRequiredForOrder(parameters).Value;
             }
 
             public new decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
@@ -172,7 +172,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var order = new MarketOrder(Symbols.AAPL, quantity, time) {Price = buyPrice};
             var fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
-                { FillPrice = buyPrice, FillQuantity = quantity };
+                { FillPrice = buyPrice, FillQuantity = quantity, Status = OrderStatus.Filled};
             orderProcessor.AddOrder(order);
             var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);

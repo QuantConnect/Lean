@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
@@ -107,8 +108,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // we normalize the target buying power by the leverage so we work in the land of margin
             var targetFinalMarginPercentage = adjustedPercent / security.BuyingPowerModel.GetLeverage(security);
 
-            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
-                new GetMaximumOrderQuantityForTargetBuyingPowerParameters(algorithm.Portfolio, security, targetFinalMarginPercentage, silenceNonErrorReasons:true)
+            var positionGroup = algorithm.Portfolio.Positions.GetOrCreateDefaultGroup(security);
+            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForTargetBuyingPower(
+                algorithm.Portfolio, positionGroup, targetFinalMarginPercentage
             );
 
             if (result.IsError)
@@ -122,7 +124,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             // be sure to back out existing holdings quantity since the buying power model yields
             // the required delta quantity to reach a final target portfolio value for a symbol
-            var quantity = result.Quantity + (returnDeltaQuantity ? 0 : security.Holdings.Quantity);
+            var lotSize = security.SymbolProperties.LotSize;
+            var quantity = result.NumberOfLots * lotSize + (returnDeltaQuantity ? 0 : security.Holdings.Quantity);
 
             return new PortfolioTarget(symbol, quantity);
         }

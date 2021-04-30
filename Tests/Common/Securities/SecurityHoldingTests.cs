@@ -18,6 +18,8 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -48,6 +50,36 @@ namespace QuantConnect.Tests.Common.Securities
             expected = (ask - last) * quantity - orderFee;
             holding.SetHoldings(last, quantity);
             Assert.AreEqual(expected, holding.UnrealizedProfit);
+        }
+
+        [Test]
+        public void Raises_QuantityChanged_WhenSetHoldingsCalled()
+        {
+            var arguments = new List<SecurityHoldingQuantityChangedEventArgs>();
+            var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(Symbols.SPY, Resolution.Daily);
+            security.Holdings.QuantityChanged += (sender, args) => arguments.Add(args);
+
+            // invoke int overload
+            var firstPrice = 100m;
+            int firstQuantity = 100;
+            security.Holdings.SetHoldings(firstPrice, firstQuantity);
+
+            // invoke decimal overload
+            var secondPrice = 101m;
+            var secondQuantity = 200m;
+            security.Holdings.SetHoldings(secondPrice, secondQuantity);
+
+            Assert.AreEqual(2, arguments.Count);
+
+            var first = arguments.First();
+            Assert.AreEqual(security, first.Security);
+            Assert.AreEqual(0, first.PreviousQuantity);
+            Assert.AreEqual(0, first.PreviousAveragePrice);
+
+            var second = arguments.Last();
+            Assert.AreEqual(security, second.Security);
+            Assert.AreEqual(firstQuantity, second.PreviousQuantity);
+            Assert.AreEqual(firstPrice, second.PreviousAveragePrice);
         }
 
         private Security GetSecurity<T>(Symbol symbol, Resolution resolution)

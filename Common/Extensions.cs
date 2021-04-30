@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -900,6 +900,29 @@ namespace QuantConnect
             }
 
             return $"{number - 5000000m:#,,,.##}B";
+        }
+
+        /// <summary>
+        /// Discretizes the <paramref name="value"/> to a maximum precision specified by <paramref name="quanta"/>. Quanta
+        /// can be an arbitrary positive number and represents the step size. Consider a quanta equal to 0.15 and rounding
+        /// a value of 1.0. Valid values would be 0.9 (6 quanta) and 1.05 (7 quanta) which would be rounded up to 1.05.
+        /// </summary>
+        /// <param name="value">The value to be rounded by discretization</param>
+        /// <param name="quanta">The maximum precision allowed by the value</param>
+        /// <param name="mode">Specifies how to handle the rounding of half value, defaulting to away from zero.</param>
+        /// <returns></returns>
+        public static decimal DiscretelyRoundBy(this decimal value, decimal quanta, MidpointRounding mode = MidpointRounding.AwayFromZero)
+        {
+            if (quanta == 0m)
+            {
+                return value;
+            }
+
+            // away from zero is the 'common sense' rounding.
+            // +0.5 rounded by 1 yields +1
+            // -0.5 rounded by 1 yields -1
+            var multiplicand = Math.Round(value / quanta, mode);
+            return quanta * multiplicand;
         }
 
         /// <summary>
@@ -2944,6 +2967,109 @@ namespace QuantConnect
 
             // If we made it here then only filter it if its an InternalFeed
             return !config.IsInternalFeed;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="OrderDirection"/> that corresponds to the specified <paramref name="side"/>
+        /// </summary>
+        /// <param name="side">The position side to be converted</param>
+        /// <returns>The order direction that maps from the provided position side</returns>
+        public static OrderDirection ToOrderDirection(this PositionSide side)
+        {
+            switch (side)
+            {
+                case PositionSide.Short: return OrderDirection.Sell;
+                case PositionSide.None: return OrderDirection.Hold;
+                case PositionSide.Long: return OrderDirection.Buy;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(side), side, null);
+            }
+        }
+
+        /// <summary>
+        /// Determines if an order with the specified <paramref name="direction"/> would close a position with the
+        /// specified <paramref name="side"/>
+        /// </summary>
+        /// <param name="direction">The direction of the order, buy/sell</param>
+        /// <param name="side">The side of the position, long/short</param>
+        /// <returns>True if the order direction would close the position, otherwise false</returns>
+        public static bool Closes(this OrderDirection direction, PositionSide side)
+        {
+            switch (side)
+            {
+                case PositionSide.Short:
+                    switch (direction)
+                    {
+                        case OrderDirection.Buy: return true;
+                        case OrderDirection.Sell: return false;
+                        case OrderDirection.Hold: return false;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+                    }
+
+                case PositionSide.Long:
+                    switch (direction)
+                    {
+                        case OrderDirection.Buy: return false;
+                        case OrderDirection.Sell: return true;
+                        case OrderDirection.Hold: return false;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+                    }
+
+                case PositionSide.None:
+                    return false;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(side), side, null);
+            }
+        }
+
+        /// <summary>
+        /// Determines if the two lists are equal, including all items at the same indices.
+        /// </summary>
+        /// <typeparam name="T">The element type</typeparam>
+        /// <param name="left">The left list</param>
+        /// <param name="right">The right list</param>
+        /// <returns>True if the two lists have the same counts and items at each index evaluate as equal</returns>
+        public static bool ListEquals<T>(this IReadOnlyList<T> left, IReadOnlyList<T> right)
+        {
+            var count = left.Count;
+            if (count != right.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                if (!left[i].Equals(right[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Computes a deterministic hash code based on the items in the list. This hash code is dependent on the
+        /// ordering of items.
+        /// </summary>
+        /// <typeparam name="T">The element type</typeparam>
+        /// <param name="list">The list</param>
+        /// <returns>A hash code dependent on the ordering of elements in the list</returns>
+        public static int GetListHashCode<T>(this IReadOnlyList<T> list)
+        {
+            unchecked
+            {
+                var hashCode = 17;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    hashCode += (hashCode * 397) ^ list[i].GetHashCode();
+                }
+
+                return hashCode;
+            }
         }
     }
 }

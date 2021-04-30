@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -51,13 +51,21 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
+        /// Hold -1 lot of the underlying and sell 1 put contract
+        /// </summary>
+        public static OptionStrategyDefinition CoveredPut { get; }
+            = OptionStrategyDefinition.Create("Covered Put", -1,
+                OptionStrategyDefinition.PutLeg(-1)
+            );
+
+        /// <summary>
         /// Bear Call Spread strategy consists of two calls with the same expiration but different strikes.
         /// The strike price of the short call is below the strike of the long call. This is a credit spread.
         /// </summary>
         public static OptionStrategyDefinition BearCallSpread { get; }
             = OptionStrategyDefinition.Create("Bear Call Spread",
                 OptionStrategyDefinition.CallLeg(-1),
-                OptionStrategyDefinition.CallLeg(+1, (legs, p) => p.Strike <= legs[0].Strike,
+                OptionStrategyDefinition.CallLeg(+1, (legs, p) => p.Strike > legs[0].Strike,
                                                      (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
@@ -68,7 +76,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         public static OptionStrategyDefinition BearPutSpread { get; }
             = OptionStrategyDefinition.Create("Bear Put Spread",
                 OptionStrategyDefinition.PutLeg(1),
-                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike >= legs[0].Strike,
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike < legs[0].Strike,
                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
@@ -79,7 +87,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         public static OptionStrategyDefinition BullCallSpread { get; }
             = OptionStrategyDefinition.Create("Bull Call Spread",
                 OptionStrategyDefinition.CallLeg(+1),
-                OptionStrategyDefinition.CallLeg(-1, (legs, p) => p.Strike <= legs[0].Strike,
+                OptionStrategyDefinition.CallLeg(-1, (legs, p) => p.Strike > legs[0].Strike,
                                                      (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
@@ -91,7 +99,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         public static OptionStrategyDefinition BullPutSpread { get; }
             = OptionStrategyDefinition.Create("Bull Put Spread",
                 OptionStrategyDefinition.PutLeg(-1),
-                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike <= legs[0].Strike,
+                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike < legs[0].Strike,
                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
@@ -102,7 +110,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         public static OptionStrategyDefinition Straddle { get; }
             = OptionStrategyDefinition.Create("Straddle",
                 OptionStrategyDefinition.CallLeg(+1),
-                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike == legs[0].Strike,
+                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike == legs[0].Strike,
                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
@@ -118,11 +126,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
-        /// Call Butterfly strategy consists of two short calls at a middle strike, and one long call each at a lower
+        /// Short Butterfly Call strategy consists of two short calls at a middle strike, and one long call each at a lower
         /// and upper strike. The upper and lower strikes must both be equidistant from the middle strike.
         /// </summary>
-        public static OptionStrategyDefinition CallButterfly { get; }
-            = OptionStrategyDefinition.Create("Call Butterfly",
+        public static OptionStrategyDefinition ButterflyCall { get; }
+            = OptionStrategyDefinition.Create("Butterfly Call",
                 OptionStrategyDefinition.CallLeg(+1),
                 OptionStrategyDefinition.CallLeg(-2, (legs, p) => p.Strike >= legs[0].Strike,
                                                      (legs, p) => p.Expiration == legs[0].Expiration),
@@ -132,11 +140,25 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
-        /// Put Butterfly strategy consists of two short puts at a middle strike, and one long put each at a lower and
+        /// Butterfly Call strategy consists of two long calls at a middle strike, and one short call each at a lower
+        /// and upper strike. The upper and lower strikes must both be equidistant from the middle strike.
+        /// </summary>
+        public static OptionStrategyDefinition ShortButterflyCall { get; }
+            = OptionStrategyDefinition.Create("Short Butterfly Call",
+                OptionStrategyDefinition.CallLeg(-1),
+                OptionStrategyDefinition.CallLeg(+2, (legs, p) => p.Strike >= legs[0].Strike,
+                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(-1, (legs, p) => p.Strike >= legs[1].Strike,
+                    (legs, p) => p.Expiration == legs[0].Expiration,
+                    (legs, p) => p.Strike - legs[1].Strike == legs[1].Strike - legs[0].Strike)
+            );
+
+        /// <summary>
+        /// Butterfly Put strategy consists of two short puts at a middle strike, and one long put each at a lower and
         /// upper strike. The upper and lower strikes must both be equidistant from the middle strike.
         /// </summary>
-        public static OptionStrategyDefinition PutButterfly { get; }
-            = OptionStrategyDefinition.Create("Put Butterfly",
+        public static OptionStrategyDefinition ButterflyPut { get; }
+            = OptionStrategyDefinition.Create("Butterfly Put",
                 OptionStrategyDefinition.PutLeg(+1),
                 OptionStrategyDefinition.PutLeg(-2, (legs, p) => p.Strike >= legs[0].Strike,
                                                     (legs, p) => p.Expiration == legs[0].Expiration),
@@ -145,15 +167,30 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                     (legs, p) => p.Strike - legs[1].Strike == legs[1].Strike - legs[0].Strike)
             );
 
+
+        /// <summary>
+        /// Short Butterfly Put strategy consists of two long puts at a middle strike, and one short put each at a lower and
+        /// upper strike. The upper and lower strikes must both be equidistant from the middle strike.
+        /// </summary>
+        public static OptionStrategyDefinition ShortButterflyPut { get; }
+            = OptionStrategyDefinition.Create("Short Butterfly Put",
+                OptionStrategyDefinition.PutLeg(-1),
+                OptionStrategyDefinition.PutLeg(+2, (legs, p) => p.Strike >= legs[0].Strike,
+                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike >= legs[1].Strike,
+                    (legs, p) => p.Expiration == legs[0].Expiration,
+                    (legs, p) => p.Strike - legs[1].Strike == legs[1].Strike - legs[0].Strike)
+            );
+
         /// <summary>
         /// Call Calendar Spread strategy is a short one call option and long a second call option with a more distant
         /// expiration.
         /// </summary>
         public static OptionStrategyDefinition CallCalendarSpread { get; }
             = OptionStrategyDefinition.Create("Call Calendar Spread",
-                OptionStrategyDefinition.CallLeg(+1),
+                OptionStrategyDefinition.CallLeg(-1),
                 OptionStrategyDefinition.CallLeg(+1, (legs, p) => p.Strike == legs[0].Strike,
-                                                     (legs, p) => p.Expiration <= legs[0].Expiration)
+                                                     (legs, p) => p.Expiration > legs[0].Expiration)
             );
 
         /// <summary>
@@ -162,9 +199,24 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         public static OptionStrategyDefinition PutCalendarSpread { get; }
             = OptionStrategyDefinition.Create("Put Calendar Spread",
-                OptionStrategyDefinition.PutLeg(+1),
+                OptionStrategyDefinition.PutLeg(-1),
                 OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike == legs[0].Strike,
-                                                    (legs, p) => p.Expiration <= legs[0].Expiration)
+                                                    (legs, p) => p.Expiration > legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Iron Condor strategy is buying a put, selling a put with a higher strike price, selling a call and buying a call with a higher strike price.
+        /// All at the same expiration date
+        /// </summary>
+        public static OptionStrategyDefinition IronCondor { get; }
+            = OptionStrategyDefinition.Create("Iron Condor",
+                OptionStrategyDefinition.PutLeg(+1),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike > legs[0].Strike,
+                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(-1, (legs, p) => p.Strike > legs[1].Strike,
+                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(1, (legs, p) => p.Strike > legs[2].Strike,
+                    (legs, p) => p.Expiration == legs[0].Expiration)
             );
     }
 }

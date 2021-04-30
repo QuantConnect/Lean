@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Python;
+using QuantConnect.Securities.Positions;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
@@ -33,11 +34,12 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityPortfolioManager : ExtendedDictionary<SecurityHolding>, IDictionary<Symbol, SecurityHolding>, ISecurityProvider
     {
-        // flips to true when the user called SetCash(), if true, SetAccountCurrency will throw
-        private bool _setAccountCurrencyWasCalled;
+        private Cash _baseCurrencyCash;
         private bool _setCashWasCalled;
-        private bool _isTotalPortfolioValueValid;
         private decimal _totalPortfolioValue;
+        private bool _isTotalPortfolioValueValid;
+        private bool _setAccountCurrencyWasCalled;
+        private readonly object _unsettledCashAmountsLocker = new object();
 
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
@@ -48,6 +50,16 @@ namespace QuantConnect.Securities
         /// Local access to the transactions collection for the portfolio summation and updates.
         /// </summary>
         public SecurityTransactionManager Transactions;
+
+        /// <summary>
+        /// Local access to the position manager
+        /// </summary>
+        internal PositionManager Positions;
+
+        /// <summary>
+        /// Current read only position groups collection
+        /// </summary>
+        public PositionGroupCollection PositionGroups => Positions.Groups;
 
         /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only settled cash)
@@ -64,13 +76,6 @@ namespace QuantConnect.Securities
         /// </summary>
         private readonly List<UnsettledCashAmount> _unsettledCashAmounts;
 
-        // The _unsettledCashAmounts list has to be synchronized because order fills are happening on a separate thread
-        private readonly object _unsettledCashAmountsLocker = new object();
-
-        // Record keeping variables
-        private Cash _baseCurrencyCash;
-        private Cash _baseCurrencyUnsettledCash;
-
         /// <summary>
         /// Initialise security portfolio manager.
         /// </summary>
@@ -78,6 +83,7 @@ namespace QuantConnect.Securities
         {
             Securities = securityManager;
             Transactions = transactions;
+            Positions = new PositionManager(securityManager);
             MarginCallModel = new DefaultMarginCallModel(this, defaultOrderProperties);
 
             CashBook = new CashBook();
@@ -85,7 +91,6 @@ namespace QuantConnect.Securities
             _unsettledCashAmounts = new List<UnsettledCashAmount>();
 
             _baseCurrencyCash = CashBook[CashBook.AccountCurrency];
-            _baseCurrencyUnsettledCash = UnsettledCashBook[CashBook.AccountCurrency];
 
             // default to $100,000.00
             _baseCurrencyCash.SetAmount(100000);
@@ -488,13 +493,11 @@ namespace QuantConnect.Securities
             get
             {
                 decimal sum = 0;
-                foreach (var kvp in Securities.Where((pair, i) => pair.Value.Holdings.Quantity != 0))
+                foreach (var group in Positions.Groups)
                 {
-                    var security = kvp.Value;
-                    var context = new ReservedBuyingPowerForPositionParameters(security);
-                    var reservedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(context);
-                    sum += reservedBuyingPower.AbsoluteUsedBuyingPower;
+                    sum += group.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(this, group);
                 }
+
                 return sum;
             }
         }
@@ -580,7 +583,6 @@ namespace QuantConnect.Securities
             CashBook.AccountCurrency = accountCurrency;
 
             _baseCurrencyCash = CashBook[accountCurrency];
-            _baseCurrencyUnsettledCash = UnsettledCashBook[accountCurrency];
         }
 
         /// <summary>
@@ -623,8 +625,10 @@ namespace QuantConnect.Securities
         public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
             var security = Securities[symbol];
-            var context = new BuyingPowerParameters(this, security, direction);
-            return security.BuyingPowerModel.GetBuyingPower(context).Value;
+
+            var positionGroup = Positions.GetOrCreateDefaultGroup(security);
+            var parameters = new PositionGroupBuyingPowerParameters(this, positionGroup, direction);
+            return positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(parameters);
         }
 
         /// <summary>
@@ -829,16 +833,17 @@ namespace QuantConnect.Securities
                 var direction = orderSubmitRequest.Quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
                 var security = Securities[orderSubmitRequest.Symbol];
 
-                var marginUsed = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(
-                    new ReservedBuyingPowerForPositionParameters(security)
+                var positionGroup = Positions.GetOrCreateDefaultGroup(security);
+                var marginUsed = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
+                    this, positionGroup
                 );
 
-                var marginRemaining = security.BuyingPowerModel.GetBuyingPower(
-                    new BuyingPowerParameters(this, security, direction)
+                var marginRemaining = positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(
+                    this, positionGroup, direction
                 );
 
                 Log.Trace("Order request margin information: " +
-                    Invariant($"MarginUsed: {marginUsed.AbsoluteUsedBuyingPower:F2}, ") +
+                    Invariant($"MarginUsed: {marginUsed:F2}, ") +
                     Invariant($"MarginRemaining: {marginRemaining.Value:F2}")
                 );
             }

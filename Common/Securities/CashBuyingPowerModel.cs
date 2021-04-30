@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,6 +27,14 @@ namespace QuantConnect.Securities
     public class CashBuyingPowerModel : BuyingPowerModel
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="CashBuyingPowerModel"/> class
+        /// </summary>
+        public CashBuyingPowerModel()
+            : base(1m, 0m, 0m)
+        {
+        }
+
+        /// <summary>
         /// Gets the current leverage of the security
         /// </summary>
         /// <param name="security">The security to get leverage for</param>
@@ -54,6 +62,20 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// The margin that must be held in order to increase the position by the provided quantity
+        /// </summary>
+        /// <param name="parameters">An object containing the security and quantity of shares</param>
+        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
+        {
+            var security = parameters.Security;
+            var quantity = parameters.Quantity;
+            return security.QuoteCurrency.ConversionRate
+                * security.SymbolProperties.ContractMultiplier
+                * security.Price
+                * quantity;
+        }
+
+        /// <summary>
         /// Check if there is sufficient buying power to execute this order.
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
@@ -63,7 +85,7 @@ namespace QuantConnect.Securities
             var baseCurrency = parameters.Security as IBaseCurrencySymbol;
             if (baseCurrency == null)
             {
-                return new HasSufficientBuyingPowerForOrderResult(false, $"The '{parameters.Security.Symbol.Value}' security is not supported by this cash model. Currently only SecurityType.Crypto and SecurityType.Forex are supported.");
+                return parameters.Insufficient($"The '{parameters.Security.Symbol.Value}' security is not supported by this cash model. Currently only SecurityType.Crypto and SecurityType.Forex are supported.");
             }
 
             decimal totalQuantity;
@@ -84,18 +106,15 @@ namespace QuantConnect.Securities
             // calculate reserved quantity for open orders (in quote or base currency depending on direction)
             var openOrdersReservedQuantity = GetOpenOrdersReservedQuantity(parameters.Portfolio, parameters.Security, parameters.Order);
 
-            bool isSufficient;
-            var reason = string.Empty;
             if (parameters.Order.Direction == OrderDirection.Sell)
             {
                 // can sell available and non-reserved quantities
-                isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity;
-                if (!isSufficient)
+                if (orderQuantity <= totalQuantity - openOrdersReservedQuantity)
                 {
-                    reason = Invariant($"Your portfolio holds {totalQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}, {openOrdersReservedQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol} of which are reserved for open orders, but your Sell order is for {orderQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Cash Modeling trading does not permit short holdings so ensure you only sell what you have, including any additional open orders.");
+                    return parameters.Sufficient();
                 }
 
-                return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
+                return parameters.Insufficient(Invariant($"Your portfolio holds {totalQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}, {openOrdersReservedQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol} of which are reserved for open orders, but your Sell order is for {orderQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Cash Modeling trading does not permit short holdings so ensure you only sell what you have, including any additional open orders."));
             }
 
             if (parameters.Order.Type == OrderType.Market)
@@ -118,13 +137,12 @@ namespace QuantConnect.Securities
                     GetMaximumOrderQuantityForTargetBuyingPower(
                         new GetMaximumOrderQuantityForTargetBuyingPowerParameters(parameters.Portfolio, parameters.Security, targetPercent)).Quantity * GetOrderPrice(parameters.Security, parameters.Order);
 
-                isSufficient = orderQuantity <= Math.Abs(maximumQuantity);
-                if (!isSufficient)
+                if (orderQuantity <= Math.Abs(maximumQuantity))
                 {
-                    reason = Invariant($"Your portfolio holds {totalQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {parameters.Order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, but only a total value of {Math.Abs(maximumQuantity).Normalize()} {parameters.Security.QuoteCurrency.Symbol} is available.");
+                    return parameters.Sufficient();
                 }
 
-                return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
+                return parameters.Insufficient(Invariant($"Your portfolio holds {totalQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {parameters.Order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, but only a total value of {Math.Abs(maximumQuantity).Normalize()} {parameters.Security.QuoteCurrency.Symbol} is available."));
             }
 
             // for limit orders, add fees to the order cost
@@ -140,13 +158,12 @@ namespace QuantConnect.Securities
                         parameters.Security.QuoteCurrency.Symbol);
             }
 
-            isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
-            if (!isSufficient)
+            if (orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee)
             {
-                reason = Invariant($"Your portfolio holds {totalQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {parameters.Order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, but only a total value of {(totalQuantity - openOrdersReservedQuantity - orderFee).Normalize()} {parameters.Security.QuoteCurrency.Symbol} is available.");
+                return parameters.Sufficient();
             }
 
-            return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
+            return parameters.Insufficient(Invariant($"Your portfolio holds {totalQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {parameters.Order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, but only a total value of {(totalQuantity - openOrdersReservedQuantity - orderFee).Normalize()} {parameters.Security.QuoteCurrency.Symbol} is available."));
         }
 
         /// <summary>
@@ -310,7 +327,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
         public override BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
         {

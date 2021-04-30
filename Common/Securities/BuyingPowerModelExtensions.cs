@@ -96,5 +96,49 @@ namespace QuantConnect.Securities
             // existing implementations assume certain non-account currency units, so return raw value
             return buyingPower.Value;
         }
+
+        /// <summary>
+        /// Gets the margin currently allocated to the specified holding
+        /// </summary>
+        /// <param name="model">The buying power model</param>
+        /// <param name="security">The security</param>
+        /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
+        public static decimal GetMaintenanceMargin(this IBuyingPowerModel model, Security security)
+        {
+            return model.GetMaintenanceMargin(MaintenanceMarginParameters.ForCurrentHoldings(security));
+        }
+
+        /// <summary>
+        /// Gets the margin currently allocated to the specified holding
+        /// </summary>
+        /// <param name="model">The buying power model</param>
+        /// <param name="security">The security</param>
+        /// <param name="quantity">The quantity of shares</param>
+        /// <returns>The initial margin required for the provided security and quantity</returns>
+        public static decimal GetInitialMarginRequirement(this IBuyingPowerModel model, Security security, decimal quantity)
+        {
+            return model.GetInitialMarginRequirement(new InitialMarginParameters(security, quantity));
+        }
+
+        /// <summary>
+        /// Gets the total margin required to execute the specified order in units of the account currency including fees
+        /// </summary>
+        /// <param name="model">The buying power model</param>
+        /// <param name="currencyConverter">The currency converter used for converting asset values into the algorithm's
+        /// account currency. Common value is the portfolio's cashbook property: <see cref="SecurityPortfolioManager.CashBook"/></param>
+        /// <param name="security">The security</param>
+        /// <param name="order">The order being contemplated</param>
+        /// <returns>The total margin in terms of the currency quoted in the order</returns>
+        public static decimal GetInitialMarginRequiredForOrder(
+            this IBuyingPowerModel model,
+            ICurrencyConverter currencyConverter,
+            Security security,
+            Order order
+            )
+        {
+            return model.GetInitialMarginRequiredForOrder(new InitialMarginRequiredForOrderParameters(
+                currencyConverter, security, order
+            ));
+        }
     }
 }

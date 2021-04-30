@@ -34,8 +34,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <param name="model">Model defining how risk is managed</param>
         public RiskManagementModelPythonWrapper(PyObject model)
         {
-            model.ValidateImplementationOf<IRiskManagementModel>();
-            _model = model;
+            _model = model.ValidateImplementationOf<IRiskManagementModel>();
         }
 
         /// <summary>
