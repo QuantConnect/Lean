@@ -157,6 +157,17 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _windowHighs.Reset();
+            _windowLows.Reset();
+            _windowPivotPoints.Reset();
+            base.Reset();
+        }
+
+        /// <summary>
         /// Get current high pivot points, in the order such that first element in collection is the nearest to the present date
         /// </summary>
         /// <returns>An array of high pivot points.</returns>
