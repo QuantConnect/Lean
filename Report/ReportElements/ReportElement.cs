@@ -18,7 +18,7 @@ namespace QuantConnect.Report.ReportElements
     /// <summary>
     /// Common interface for template elements of the report
     /// </summary>
-    internal abstract class ReportElement : IReportElement
+    public abstract class ReportElement : IReportElement
     {
         /// <summary>
         /// Name of this report element
@@ -29,6 +29,16 @@ namespace QuantConnect.Report.ReportElements
         /// Template key code.
         /// </summary>
         public virtual string Key { get; protected set; }
+
+        /// <summary>
+        /// Normalizes the key into a JSON-friendly key
+        /// </summary>
+        public string JsonKey => Key.Replace("KPI-", "").Replace("$", "").Replace("{", "").Replace("}", "") .ToLowerInvariant();
+
+        /// <summary>
+        /// Result of the render as an object for serialization to JSON
+        /// </summary>
+        public virtual object Result { get; protected set; }
 
         /// <summary>
         /// The generated output string to be injected

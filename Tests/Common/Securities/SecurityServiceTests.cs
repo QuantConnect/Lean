@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
@@ -230,6 +231,35 @@ namespace QuantConnect.Tests.Common.Securities
             
             Assert.AreEqual(50, futureOptionSecurity.ContractMultiplier);
             Assert.AreEqual(1, futureOptionSecurity.ContractUnitOfTrade);
+        }
+
+        [Test]
+        public void AddPrimaryExchangeToSecurityObject()
+        {
+            // Arrange
+            var equitySymbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var mockedPrimaryExchangeProvider = new Mock<IPrimaryExchangeProvider>();
+            mockedPrimaryExchangeProvider.Setup(pep => pep.GetPrimaryExchange(equitySymbol.ID)).Returns(PrimaryExchange.NASDAQ);
+
+            var algorithm = new AlgorithmStub();
+            var securityService = new SecurityService(algorithm.Portfolio.CashBook,
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                algorithm,
+                new RegisteredSecurityDataTypesProvider(),
+                new SecurityCacheProvider(algorithm.Portfolio), 
+                mockedPrimaryExchangeProvider.Object);
+
+            var configs = _subscriptionManager.SubscriptionDataConfigService.Add(typeof(TradeBar), equitySymbol, Resolution.Second, false, false, false);
+            
+            // Act
+            var equity = securityService.CreateSecurity(equitySymbol, configs, 1.0m, false);
+
+            // Assert
+            Assert.AreEqual(equity.Subscriptions.Count(), 1);
+            Assert.AreEqual(equity.Subscriptions.First().Type, typeof(TradeBar));
+            Assert.AreEqual(equity.Subscriptions.First().TickType, TickType.Trade);
+            Assert.AreEqual(((QuantConnect.Securities.Equity.Equity)equity).PrimaryExchange, PrimaryExchange.NASDAQ);
         }
     }
 }

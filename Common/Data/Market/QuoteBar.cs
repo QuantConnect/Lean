@@ -299,6 +299,7 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Option:
                     case SecurityType.FutureOption:
+                    case SecurityType.IndexOption:
                         return ParseOption(config, stream, date);
 
                     case SecurityType.Future:
@@ -346,6 +347,7 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Option:
                     case SecurityType.FutureOption:
+                    case SecurityType.IndexOption:
                         return ParseOption(config, line, date);
 
                     case SecurityType.Future:
@@ -469,7 +471,8 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
         public QuoteBar ParseOption(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
         {
-            return ParseQuote(config, date, streamReader, config.Symbol.SecurityType == SecurityType.Option);
+            // scale factor only applies for equity and index options
+            return ParseQuote(config, date, streamReader, useScaleFactor: config.Symbol.SecurityType != SecurityType.FutureOption);
         }
 
         /// <summary>
@@ -714,9 +717,7 @@ namespace QuantConnect.Data.Market
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
-            if (config.SecurityType == SecurityType.Option ||
-                config.SecurityType == SecurityType.Future ||
-                config.SecurityType == SecurityType.FutureOption)
+            if (config.SecurityType == SecurityType.Future || config.SecurityType.IsOption())
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }
@@ -757,6 +758,10 @@ namespace QuantConnect.Data.Market
             };
         }
 
+        /// <summary>
+        /// Convert this <see cref="QuoteBar"/> to string form.
+        /// </summary>
+        /// <returns>String representation of the <see cref="QuoteBar"/></returns>
         public override string ToString()
         {
             return $"{Symbol}: " +

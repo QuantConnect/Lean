@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly()
+        public override void ResetsProperly()
         {
             var kch = CreateIndicator() as KeltnerChannels;
             foreach (var data in TestHelper.GetTradeBarStream(TestFileName, false))

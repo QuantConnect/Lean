@@ -240,7 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
 
-                    if (!_config.IsCustomData && _config.SecurityType != SecurityType.Option && _config.SecurityType != SecurityType.FutureOption)
+                    if (!_config.IsCustomData && !_config.SecurityType.IsOption())
                     {
                         var factorFile = _factorFileProvider.Get(_config.Symbol);
                         _hasScaleFactors = factorFile != null;
@@ -257,22 +257,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                                     OnNumericalPrecisionLimited(
                                         new NumericalPrecisionLimitedEventArgs(_config.Symbol,
-                                            $"Data for symbol {_config.Symbol.Value} has been limited due to numerical precision issues in the factor file. " +
-                                            $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
+                                            $"[{_config.Symbol.Value}, {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}]"));
                                 }
                             }
                         }
 
                         if (_periodStart < mapFile.FirstDate)
                         {
-                            var originalStart = _periodStart;
                             _periodStart = mapFile.FirstDate;
 
                             OnStartDateLimited(
                                 new StartDateLimitedEventArgs(_config.Symbol,
-                                    $"The starting date for symbol {_config.Symbol.Value}," +
-                                    $" {originalStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}, has been adjusted to match map file first date" +
-                                    $" {mapFile.FirstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}."));
+                                    $"[{_config.Symbol.Value}," +
+                                    $" {mapFile.FirstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}]"));
                         }
                     }
                 }
@@ -372,13 +369,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    if (instance.Time > _periodFinish)
-                    {
-                        // stop reading when we get a value after the end
-                        _endOfStream = true;
-                        return false;
-                    }
-
                     // if we move past our current 'date' then we need to do daily things, such
                     // as updating factors and symbol mapping
                     if (instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
@@ -408,6 +398,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // if we DO NOT get a new enumerator we use current instance, means its a valid source
                             // even if after 'currentTradeableDate'
                         }
+                    }
+
+                    // We have to perform this check after refreshing the enumerator, if appropriate
+                    // 'instance' could be a data point far in the future due to remapping (GH issue 5232) in which case it will be dropped
+                    if (instance.Time > _periodFinish)
+                    {
+                        // stop reading when we get a value after the end
+                        _endOfStream = true;
+                        return false;
                     }
 
                     // we've made it past all of our filters, we're withing the requested start/end of the subscription,

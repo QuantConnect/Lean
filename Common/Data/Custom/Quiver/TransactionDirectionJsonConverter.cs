@@ -23,11 +23,21 @@ namespace QuantConnect.Data.Custom.Quiver
     /// </summary>
     public class TransactionDirectionJsonConverter : TypeChangeJsonConverter<OrderDirection, string>
     {
+        /// <summary>
+        /// Convert OrderDirection to string
+        /// </summary>
+        /// <param name="value">OrderDirection to convert</param>
+        /// <returns>Resulting string</returns>
         protected override string Convert(OrderDirection value)
         {
             return value == OrderDirection.Buy ? "purchase" : "sale";
         }
 
+        /// <summary>
+        /// Convert string to OrderDirection
+        /// </summary>
+        /// <param name="value">string to convert</param>
+        /// <returns>Resulting OrderDirection</returns>
         protected override OrderDirection Convert(string value)
         {
             return value.ToLowerInvariant() == "purchase" ? OrderDirection.Buy : OrderDirection.Sell;

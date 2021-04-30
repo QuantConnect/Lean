@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -45,7 +44,26 @@ namespace QuantConnect.Algorithm.CSharp
             for (int i = 0; i < _symbols.Length; i++)
             {
                 var symbol = _symbols[i];
-                var history = History<QuoteBar>(symbol, 10, Resolution.Daily);
+                IEnumerable<BaseData> history;
+                if (symbol.SecurityType == SecurityType.Equity)
+                {
+                    try
+                    {
+
+                        history = History<QuoteBar>(symbol, 10, Resolution.Daily).Select(bar => bar as BaseData);
+                        throw new Exception("We were expecting an argument exception to be thrown. Equity does not have daily QuoteBars!");
+                    }
+                    catch (ArgumentException)
+                    {
+                        // expected
+                    }
+                    history = History<TradeBar>(symbol, 10, Resolution.Daily).Select(bar => bar as BaseData);
+                }
+                else
+                {
+                    history = History<QuoteBar>(symbol, 10, Resolution.Daily)
+                        .Select(bar => bar as BaseData);
+                }
 
                 var duplications = history
                     .GroupBy(k => k.Time)
@@ -93,6 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -112,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "371857150"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }

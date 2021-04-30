@@ -26,8 +26,15 @@ namespace QuantConnect.Report
     /// </summary>
     public class MockDataFeed : IDataFeed
     {
+        /// <summary>
+        /// Bool if the feed is active
+        /// </summary>
         public bool IsActive { get; }
 
+        /// <summary>
+        /// Initialize the data feed
+        /// This implementation does nothing
+        /// </summary>
         public void Initialize(
             IAlgorithm algorithm,
             AlgorithmNodePacket job,
@@ -42,15 +49,27 @@ namespace QuantConnect.Report
         {
         }
 
+        /// <summary>
+        /// Create Subscription
+        /// </summary>
+        /// <param name="request">Subscription request to use</param>
+        /// <returns>Always null</returns>
         public Subscription CreateSubscription(SubscriptionRequest request)
         {
             return null;
         }
 
+        /// <summary>
+        /// Remove Subscription; Not implemented
+        /// </summary>
+        /// <param name="subscription">Subscription to remove</param>
         public void RemoveSubscription(Subscription subscription)
         {
         }
 
+        /// <summary>
+        /// DataFeed Exit
+        /// </summary>
         public void Exit()
         {
         }

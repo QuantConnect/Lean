@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -164,25 +164,44 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-5.591%"},
+            {"Compounding Annual Return", "-5.337%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-0.032%"},
-            {"Sharpe Ratio", "-9.862"},
+            {"Net Profit", "-0.030%"},
+            {"Sharpe Ratio", "-9.982"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.007"},
-            {"Beta", "-0.582"},
+            {"Alpha", "0.006"},
+            {"Beta", "-0.61"},
             {"Annual Standard Deviation", "0.004"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-10.999"},
-            {"Tracking Error", "0.011"},
-            {"Treynor Ratio", "0.067"},
+            {"Information Ratio", "-10.997"},
+            {"Tracking Error", "0.01"},
+            {"Treynor Ratio", "0.061"},
             {"Total Fees", "$1.00"},
+            {"Estimated Strategy Capacity", "$33000000000.00"},
             {"Fitness Score", "0.007"},
-            {"OrderListHash", "1715759777"}
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-168.866"},
+            {"Portfolio Turnover", "0.014"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "8e894e13efd89d8cd8672c76a2e1d92d"}
         };
     }
 }

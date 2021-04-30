@@ -76,6 +76,21 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
+        [Test]
+        public void CustomEntriesStoredAndFetched()
+        {
+            var database = SymbolPropertiesDatabase.FromDataFolder();
+            var ticker = "BTC";
+            var properties = SymbolProperties.GetDefault("USD");
+
+            // Set the entry
+            Assert.IsTrue(database.SetEntry(Market.USA, ticker, SecurityType.Base, properties));
+
+            // Fetch the entry to ensure we can access it with the ticker
+            var fetchedProperties = database.GetSymbolProperties(Market.USA, ticker, SecurityType.Base, "USD");
+            Assert.AreSame(properties, fetchedProperties);
+        }
+
         [TestCase(Market.FXCM, SecurityType.Cfd)]
         [TestCase(Market.Oanda, SecurityType.Cfd)]
         [TestCase(Market.CBOE, SecurityType.Future)]
@@ -379,6 +394,39 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual((decimal)expectedMultiplier, results.ContractMultiplier);
             Assert.AreEqual((decimal)expectedMinimumPriceFluctuation, results.MinimumPriceVariation);
+        }
+
+        [TestCase("index")]
+        [TestCase("indexoption")]
+        [TestCase("bond")]
+        [TestCase("swap")]
+        public void HandlesUnknownSecurityType(string securityType)
+        {
+            var line = string.Join(",",
+                "usa",
+                "ABCXYZ",
+                securityType,
+                "Example Asset",
+                "USD",
+                "100",
+                "0.01",
+                "1");
+
+            SecurityDatabaseKey key;
+            Assert.DoesNotThrow(() => TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out key));
+        }
+
+        private class TestingSymbolPropertiesDatabase : SymbolPropertiesDatabase
+        {
+            public TestingSymbolPropertiesDatabase(string file)
+                : base(file)
+            {
+            }
+
+            public static SymbolProperties TestFromCsvLine(string line, out SecurityDatabaseKey key)
+            {
+                return FromCsvLine(line, out key);
+            }
         }
     }
 }

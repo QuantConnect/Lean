@@ -55,12 +55,12 @@ namespace QuantConnect.Tests.Brokerages
             if (order.Quantity > 0)
             {
                 // for limit buys we need to increase the limit price
-                limit.LimitPrice *= 2;
+                limit.LimitPrice = lastMarketPrice*1.05m;
             }
             else
             {
                 // for limit sells we need to decrease the limit price
-                limit.LimitPrice /= 2;
+                limit.LimitPrice =  lastMarketPrice/ 1.05m;
             }
             return true;
         }

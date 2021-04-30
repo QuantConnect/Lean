@@ -27,8 +27,6 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private bool _isWarmUpIndicatorWarningSent = false;
-
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators/>
         /// </summary>
@@ -104,6 +102,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new ARIMA indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ARIMA indicator we want</param>
+        /// <param name="arOrder">AR order (p) -- defines the number of past values to consider in the AR component of the model.</param>
+        /// <param name="diffOrder">Difference order (d) -- defines how many times to difference the model before fitting parameters.</param>
+        /// <param name="maOrder">MA order (q) -- defines the number of past values to consider in the MA component of the model.</param>
+        /// <param name="period">Size of the rolling series to fit onto</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The ARIMA indicator for the requested symbol over the specified period</returns>
+        public AutoRegressiveIntegratedMovingAverage ARIMA(Symbol symbol, int arOrder, int diffOrder, int maOrder, int period, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, $"ARIMA({arOrder},{diffOrder},{maOrder},{period})", resolution);
+            var arimaIndicator = new AutoRegressiveIntegratedMovingAverage(name, arOrder, diffOrder, maOrder, period);
+            RegisterIndicator(symbol, arimaIndicator, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, arimaIndicator, resolution);
+            }
+
+            return arimaIndicator;
+        }
+
+        /// <summary>
         /// Creates a new Average Directional Index indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
@@ -134,6 +156,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fastPeriod">The period of the fast moving average associated with the AO</param>
         /// <param name="slowPeriod">The period of the slow moving average associated with the AO</param>
         /// <param name="type">The type of moving average used when computing the fast and slow term. Defaults to simple moving average.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         public AwesomeOscillator AO(Symbol symbol, int slowPeriod, int fastPeriod, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"AO({fastPeriod},{slowPeriod},{type})", resolution);
@@ -427,7 +450,7 @@ namespace QuantConnect.Algorithm
         ///</summary>
         /// <param name="symbol">The symbol whose DEM we seek.</param>
         /// <param name="period">The period of the moving average implemented</param>
-        /// <param name="movingAverageType">Specifies the type of moving average to be used</param>
+        /// <param name="type">Specifies the type of moving average to be used</param>
         /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The DeMarker indicator for the requested symbol.</returns>
@@ -1418,6 +1441,52 @@ namespace QuantConnect.Algorithm
 
             return relativeStrengthIndex;
         }
+        /// <summary>
+        /// Creates a new RelativeVigorIndex indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose RVI we want</param>
+        /// <param name="period">The period over which to compute the RVI</param>
+        /// <param name="movingAverageType">The type of moving average to use</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The RelativeVigorIndex indicator for the requested symbol over the specified period</returns>
+        public RelativeVigorIndex RVI(Symbol symbol, int period, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RVI({period},{movingAverageType})", resolution);
+            var relativeVigorIndex = new RelativeVigorIndex(name, period, movingAverageType);
+            RegisterIndicator(symbol, relativeVigorIndex, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, relativeVigorIndex, resolution);
+            }
+
+            return relativeVigorIndex;
+        }
+
+        /// <summary>
+        /// Creates a new RollingSharpeRatio indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose RSR we want</param>
+        /// <param name="sharpePeriod">Period of historical observation for sharpe ratio calculation</param>
+        /// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The RollingSharpeRatio indicator for the requested symbol over the specified period</returns>
+        public SharpeRatio SR(Symbol symbol, int sharpePeriod, decimal riskFreeRate = 0.0m, Resolution ? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"SR({sharpePeriod},{riskFreeRate})", resolution);
+            var sharpeRatio = new SharpeRatio(name, sharpePeriod, riskFreeRate);
+            RegisterIndicator(symbol, sharpeRatio, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, sharpeRatio, resolution);
+            }
+
+            return sharpeRatio;
+        }
+
 
         /// <summary>
         /// Creates an SimpleMovingAverage indicator for the symbol. The indicator will be automatically
@@ -1812,12 +1881,69 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a Wilder Swing Index (SI) indicator for the symbol.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose SI we want</param>
+        /// <param name="limitMove">The maximum daily change in price for the SI</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The WilderSwingIndex for the given parameters</returns>
+        /// <remarks>SI for Wilder Swing Index</remarks>
+        public WilderSwingIndex SI(Symbol symbol, decimal limitMove, Resolution? resolution = Resolution.Daily)
+        {
+            var name = CreateIndicatorName(symbol, "SI", resolution);
+            var si = new WilderSwingIndex(name, limitMove);
+            RegisterIndicator(symbol, si, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, si, resolution);
+            }
+
+            return si;
+        }
+
+        /// <summary>
+        /// Creates a Wilder Accumulative Swing Index (ASI) indicator for the symbol.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ASI we want</param>
+        /// <param name="limitMove">The maximum daily change in price for the ASI</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The WilderAccumulativeSwingIndex for the given parameters</returns>
+        /// <remarks>ASI for Wilder Accumulative Swing Index</remarks>
+        public WilderAccumulativeSwingIndex ASI(Symbol symbol, decimal limitMove, Resolution? resolution = Resolution.Daily)
+        {
+            var name = CreateIndicatorName(symbol, "ASI", resolution);
+            var asi = new WilderAccumulativeSwingIndex(name, limitMove);
+            RegisterIndicator(symbol, asi, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, asi, resolution);
+            }
+
+            return asi;
+        }
+
+        /// <summary>
         /// Creates a new Arms Index indicator
         /// </summary>
         /// <param name="symbols">The symbols whose Arms Index we want</param>
         /// <param name="resolution">The resolution</param>
         /// <returns>The Arms Index indicator for the requested symbol over the specified period</returns>
         public ArmsIndex TRIN(IEnumerable<Symbol> symbols, Resolution? resolution = null)
+        {
+            return TRIN(symbols.ToArray(), resolution);
+        }
+
+        /// <summary>
+        /// Creates a new Arms Index indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose Arms Index we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The Arms Index indicator for the requested symbol over the specified period</returns>
+        public ArmsIndex TRIN(Symbol[] symbols, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(QuantConnect.Symbol.None, "TRIN", resolution ?? GetSubscription(symbols.First()).Resolution);
             var trin = new ArmsIndex(name);
@@ -1894,6 +2020,14 @@ namespace QuantConnect.Algorithm
         {
             return CreateIndicatorName(symbol, Invariant(type), resolution);
         }
+
+        /// <summary>
+        /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, ect...)
+        /// </summary>
+        /// <param name="symbol">The symbol this indicator is registered to</param>
+        /// <param name="type">The indicator type, for example, 'SMA(5)'</param>
+        /// <param name="resolution">The resolution requested</param>
+        /// <returns>A unique for the given parameters</returns>
         public string CreateIndicatorName(Symbol symbol, string type, Resolution? resolution)
         {
             if (!resolution.HasValue)

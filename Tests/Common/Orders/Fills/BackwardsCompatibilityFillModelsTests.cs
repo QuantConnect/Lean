@@ -591,6 +591,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             public bool MarketFillWasCalled;
             public bool StopMarketFillWasCalled;
             public bool StopLimitFillWasCalled;
+            public bool LimitIfTouchFillWasCalled;
             public bool LimitFillWasCalled;
             public bool MarketOnOpenFillWasCalled;
             public bool MarketOnCloseFillWasCalled;
@@ -612,6 +613,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             {
                 StopLimitFillWasCalled = true;
                 return base.StopLimitFill(asset, order);
+            }
+            public override OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
+            {
+                LimitIfTouchFillWasCalled = true;
+                return base.LimitIfTouchedFill(asset, order);
             }
 
             public override OrderEvent LimitFill(Security asset, LimitOrder order)

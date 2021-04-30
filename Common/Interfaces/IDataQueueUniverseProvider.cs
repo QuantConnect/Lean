@@ -33,10 +33,11 @@ namespace QuantConnect.Interfaces
         IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null);
 
         /// <summary>
-        /// Returns whether the time can be advanced or not.
+        /// Returns whether selection can take place or not.
         /// </summary>
-        /// <param name="securityType">The security type</param>
-        /// <returns>true if the time can be advanced</returns>
-        bool CanAdvanceTime(SecurityType securityType);
+        /// <remarks>This is useful to avoid a selection taking place during invalid times, for example IB reset times or when not connected,
+        /// because if allowed selection would fail since IB isn't running and would kill the algorithm</remarks>
+        /// <returns>True if selection can take place</returns>
+        bool CanPerformSelection();
     }
 }

@@ -164,7 +164,7 @@ namespace QuantConnect.Brokerages
         {
             try
             {
-                Log.Trace("Brokerage.OnAccountChanged(): " + e);
+                Log.Trace($"Brokerage.OnAccountChanged(): {e}");
 
                 AccountChanged?.Invoke(this, e);
             }

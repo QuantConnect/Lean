@@ -76,7 +76,7 @@ namespace QuantConnect.Lean.Launcher
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
 
             //Import external libraries specific to physical server location (cloud/local)
-            
+
             try
             {
                 leanEngineSystemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Launcher
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
-            if (VersionHelper.IsNotEqualVersion(job.Version) || job.Redelivered)
+            if (job.Redelivered)
             {
                 Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Globals.Version + " Redelivered: " + job.Redelivered);
                 //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
@@ -166,6 +166,7 @@ namespace QuantConnect.Lean.Launcher
             leanEngineSystemHandlers.DisposeSafely();
             leanEngineAlgorithmHandlers.DisposeSafely();
             Log.LogHandler.DisposeSafely();
+            OS.CpuPerformanceCounter.DisposeSafely();
 
             Log.Trace("Program.Main(): Exiting Lean...");
             Environment.Exit(exitCode);

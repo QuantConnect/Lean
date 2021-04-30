@@ -292,15 +292,14 @@ namespace QuantConnect.Securities
                     case SecurityType.Option:
                         stringSymbol = symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
                         break;
+                    case SecurityType.IndexOption:
                     case SecurityType.FutureOption:
                         stringSymbol = symbol.HasUnderlying ? symbol.ID.Symbol : string.Empty;
                         break;
-
                     case SecurityType.Base:
                     case SecurityType.Future:
                         stringSymbol = symbol.ID.Symbol;
                         break;
-
                     default:
                         stringSymbol = symbol.Value;
                         break;

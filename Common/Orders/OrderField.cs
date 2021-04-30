@@ -28,6 +28,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The stop price for a <see cref="StopMarketOrder"/> or a <see cref="StopLimitOrder"/>
         /// </summary>
-        StopPrice
+        StopPrice,
+        
+        /// <summary>
+        /// The trigger price for a <see cref="LimitIfTouchedOrder"/>
+        /// </summary>
+        TriggerPrice
     }
 }

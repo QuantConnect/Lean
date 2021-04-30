@@ -50,7 +50,7 @@ class OptionOpenInterestRegressionAlgorithm(QCAlgorithm):
                        contract.Symbol.ID.OptionRight == OptionRight.Call and \
                        contract.Symbol.ID.Date == datetime(2016, 1, 15):
 
-                        history = self.History(contract.Symbol, timedelta(1))["openinterest"]
+                        history = self.History(OpenInterest, contract.Symbol, timedelta(1))["openinterest"]
                         if len(history.index) == 0 or 0 in history.values:
                             raise ValueError("Regression test failed: open interest history request is empty")
 

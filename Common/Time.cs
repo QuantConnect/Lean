@@ -361,6 +361,33 @@ namespace QuantConnect
             return DateTime.Now;
         }
 
+        /// <summary>
+        /// Parse a standard YY MM DD date into a DateTime. Attempt common date formats
+        /// </summary>
+        /// <param name="dateToParse">String date time to parse</param>
+        /// <returns>Date time</returns>
+        public static DateTime ParseFIXUtcTimestamp(string dateToParse)
+        {
+            try
+            {
+                //First try the exact options:
+                DateTime date;
+                if (DateTime.TryParseExact(dateToParse, DateFormat.FIX, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.FIXWithMillisecond, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            return DateTime.UtcNow;
+        }
 
         /// <summary>
         /// Define an enumerable date range and return each date as a datetime object in the date range
@@ -525,6 +552,7 @@ namespace QuantConnect
         /// <param name="barSize">The length of each bar</param>
         /// <param name="barCount">The number of bars requested</param>
         /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
+        /// <param name="dataTimeZone">Timezone for this data</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
         public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours, DateTimeZone dataTimeZone)
         {

@@ -109,6 +109,9 @@ namespace QuantConnect.Securities.FutureOption.Api
         public CMEOptionExpirationEntry Expiration { get; private set; }
     }
 
+    /// <summary>
+    /// Chicago Mercantile Exchange Option Expiration Entry
+    /// </summary>
     public class CMEOptionExpirationEntry
     {
         /// <summary>

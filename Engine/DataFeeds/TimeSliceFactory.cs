@@ -253,46 +253,52 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     break;
                             }
 
-                            // special handling of options data to build the option chain
-                            if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
-                            {
-                                if (optionChains == null)
-                                {
-                                    optionChains = new OptionChains(algorithmTime);
-                                }
-
-                                if (baseData.DataType == MarketDataType.OptionChain)
-                                {
-                                    optionChains[baseData.Symbol] = (OptionChain)baseData;
-                                }
-                                else if (!HandleOptionData(algorithmTime, baseData, optionChains, packet.Security, sliceFuture, optionUnderlyingUpdates))
-                                {
-                                    continue;
-                                }
-                            }
-
-                            // special handling of futures data to build the futures chain
-                            if (symbol.SecurityType == SecurityType.Future)
-                            {
-                                if (futuresChains == null)
-                                {
-                                    futuresChains = new FuturesChains(algorithmTime);
-                                }
-                                if (baseData.DataType == MarketDataType.FuturesChain)
-                                {
-                                    futuresChains[baseData.Symbol] = (FuturesChain)baseData;
-                                }
-                                else if (!HandleFuturesData(algorithmTime, baseData, futuresChains, packet.Security))
-                                {
-                                    continue;
-                                }
-                            }
-
                             // this is data used to update consolidators
                             // do not add it if it is a Suspicious tick
                             if (tick == null || !tick.Suspicious)
                             {
                                 consolidatorUpdate.Add(baseData);
+                            }
+                        }
+
+                        // special handling of options data to build the option chain
+                        if (symbol.SecurityType.IsOption())
+                        {
+                            // internal feeds, like open interest, will not create the chain but will update it if it exists
+                            // this is because the open interest could arrive at some closed market hours in which there is no other data and we don't
+                            // want to generate a chain object in this case
+                            if (optionChains == null && !packet.Configuration.IsInternalFeed)
+                            {
+                                optionChains = new OptionChains(algorithmTime);
+                            }
+
+                            if (baseData.DataType == MarketDataType.OptionChain)
+                            {
+                                optionChains[baseData.Symbol] = (OptionChain)baseData;
+                            }
+                            else if (optionChains != null && !HandleOptionData(algorithmTime, baseData, optionChains, packet.Security, sliceFuture, optionUnderlyingUpdates))
+                            {
+                                continue;
+                            }
+                        }
+
+                        // special handling of futures data to build the futures chain
+                        if (symbol.SecurityType == SecurityType.Future)
+                        {
+                            // internal feeds, like open interest, will not create the chain but will update it if it exists
+                            // this is because the open interest could arrive at some closed market hours in which there is no other data and we don't
+                            // want to generate a chain object in this case
+                            if (futuresChains == null && !packet.Configuration.IsInternalFeed)
+                            {
+                                futuresChains = new FuturesChains(algorithmTime);
+                            }
+                            if (baseData.DataType == MarketDataType.FuturesChain)
+                            {
+                                futuresChains[baseData.Symbol] = (FuturesChain)baseData;
+                            }
+                            else if (futuresChains != null && !HandleFuturesData(algorithmTime, baseData, futuresChains, packet.Security))
+                            {
+                                continue;
                             }
                         }
 
@@ -375,6 +381,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _emptyFuturesChains.Clear();
             _emptySymbolChangedEvents.Clear();
 
+#pragma warning disable 0618 // DataDictionary.Time is deprecated, ignore until removed entirely
             _emptyTradeBars.Time
                 = _emptyQuoteBars.Time
                 = _emptyTicks.Time
@@ -384,6 +391,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 = _emptyOptionChains.Time
                 = _emptyFuturesChains.Time
                 = _emptySymbolChangedEvents.Time = algorithmTime;
+#pragma warning restore 0618
         }
 
         private bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, ISecurityPrice security, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)
@@ -391,7 +399,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = baseData.Symbol;
 
             OptionChain chain;
-            var canonical = Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
+            var canonical = symbol.Canonical;
             if (!optionChains.TryGetValue(canonical, out chain))
             {
                 chain = new OptionChain(canonical, algorithmTime);
@@ -498,7 +506,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = baseData.Symbol;
 
             FuturesChain chain;
-            var canonical = Symbol.Create(symbol.ID.Symbol, SecurityType.Future, symbol.ID.Market);
+            var canonical = symbol.Canonical;
             if (!futuresChains.TryGetValue(canonical, out chain))
             {
                 chain = new FuturesChain(canonical, algorithmTime);

@@ -46,11 +46,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2020, 1, 5);
             SetEndDate(2020, 6, 30);
 
-            // We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
-            // which causes delisting events to never be processed, thus leading to options that might never
-            // be exercised until the next data point arrives.
-            AddEquity("AAPL", Resolution.Daily);
-
             _es19m20 = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(
                     Futures.Indices.SP500EMini,
@@ -132,10 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
         {
-            // For unknown reasons, the delisting happens two minutes after the market open. Most likely
-            // stems from the placement of the ProcessDelistedSymbols and HandleDelistedSymbols methods in relation
-            // to the algorithm time update and the brokerage ProcessSynchronousEvents.
-            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 19, 13, 32, 0);
+            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 19, 20, 0, 0);
 
             if (orderEvent.Direction == OrderDirection.Buy && future.Holdings.Quantity != 0)
             {
@@ -214,28 +206,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "4.15%"},
             {"Average Loss", "-8.27%"},
-            {"Compounding Annual Return", "-8.928%"},
+            {"Compounding Annual Return", "-8.944%"},
             {"Drawdown", "4.500%"},
             {"Expectancy", "-0.249"},
             {"Net Profit", "-4.457%"},
-            {"Sharpe Ratio", "-1.389"},
+            {"Sharpe Ratio", "-1.381"},
             {"Probabilistic Sharpe Ratio", "0.002%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "0.50"},
-            {"Alpha", "-0.073"},
-            {"Beta", "-0.002"},
+            {"Alpha", "-0.072"},
+            {"Beta", "0.003"},
             {"Annual Standard Deviation", "0.052"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "0.861"},
-            {"Tracking Error", "0.179"},
-            {"Treynor Ratio", "38.365"},
+            {"Information Ratio", "-0.239"},
+            {"Tracking Error", "0.408"},
+            {"Treynor Ratio", "-28.523"},
             {"Total Fees", "$7.40"},
+            {"Estimated Strategy Capacity", "$9900000.00"},
             {"Fitness Score", "0.008"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "-0.224"},
-            {"Return Over Maximum Drawdown", "-2.003"},
+            {"Return Over Maximum Drawdown", "-2.009"},
             {"Portfolio Turnover", "0.023"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -250,7 +243,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-1705374528"}
+            {"OrderListHash", "d3fa88c3acadb9345ceac76a2dd3b520"}
         };
     }
 }

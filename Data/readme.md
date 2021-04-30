@@ -22,7 +22,7 @@ Data files are separated and nested in a few predictable layers:
 - Hour, Daily Financial Data:
 `/data/securityType/marketName/resolution/ticker.zip`
 
-The `market` value is used to separate different tradable assets with the same ticker. E.g. EURUSD is traded on multiple brokerages all with slightly different prices.
+The `marketName` value is used to separate different tradable assets with the same ticker. E.g. EURUSD is traded on multiple brokerages all with slightly different prices.
 
 ### Core Data Types
 

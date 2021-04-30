@@ -18,7 +18,6 @@ using System.Collections;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
 
 namespace QuantConnect.Logging
 {
@@ -144,18 +143,16 @@ namespace QuantConnect.Logging
         }
 
         /// <summary>
-        /// Output to the console, and sleep the thread for a little period to monitor the results.
+        /// Output to the console
         /// </summary>
-        /// <param name="text"></param>
+        /// <param name="text">The message to show</param>
         /// <param name="level">debug level</param>
-        /// <param name="delay"></param>
-        public static void Debug(string text, int level = 1, int delay = 0)
+        public static void Debug(string text, int level = 1)
         {
             try
             {
                 if (!_debuggingEnabled || level < _level) return;
                 _logHandler.Debug(text);
-                Thread.Sleep(delay);
             }
             catch (Exception err)
             {

@@ -115,7 +115,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Status of the Order
         /// </summary>
-        public OrderStatus Status { get; internal set; }
+        public OrderStatus Status { get; set; }
 
         /// <summary>
         /// Order Time In Force
@@ -353,7 +353,8 @@ namespace QuantConnect.Orders
                 serializedOrder.Tag,
                 new OrderProperties { TimeInForce = timeInForce },
                 serializedOrder.LimitPrice ?? 0,
-                serializedOrder.StopPrice ?? 0);
+                serializedOrder.StopPrice ?? 0,
+                serializedOrder.TriggerPrice ?? 0);
 
             order.OrderSubmissionData = new OrderSubmissionData(serializedOrder.SubmissionBidPrice,
                 serializedOrder.SubmissionAskPrice,
@@ -392,11 +393,11 @@ namespace QuantConnect.Orders
         public static Order CreateOrder(SubmitOrderRequest request)
         {
             return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
-                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice);
+                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
-            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice)
+            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice)
         {
             Order order;
             switch (type)
@@ -415,6 +416,10 @@ namespace QuantConnect.Orders
 
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, time, tag, properties);
+                    break;
+                
+                case OrderType.LimitIfTouched:
+                    order = new LimitIfTouchedOrder(symbol, quantity, triggerPrice, limitPrice, time, tag, properties);
                     break;
 
                 case OrderType.MarketOnOpen:

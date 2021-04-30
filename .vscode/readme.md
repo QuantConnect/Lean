@@ -67,7 +67,7 @@ Before we can use this method with Windows or Mac OS we need to share the Lean d
 
 Next we need to be sure that our Lean configuration at **.\Launcher\config.json** is properly set. Just like running lean locally the config must reflect what we want Lean to run.
 
-You configuration file should look something like this for the following languages:
+Your configuration file should look something like this for the following languages:
 
 <h3>Python:</h3>
 

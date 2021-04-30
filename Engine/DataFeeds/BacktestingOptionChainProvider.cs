@@ -30,20 +30,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the list of option contracts for a given underlying symbol
         /// </summary>
-        /// <param name="symbol">The underlying symbol</param>
+        /// <param name="underlyingSymbol">The underlying symbol</param>
         /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
         /// <returns>The list of option contracts</returns>
         public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
         {
-            if (underlyingSymbol.SecurityType != SecurityType.Equity && underlyingSymbol.SecurityType != SecurityType.Future)
+            if (!underlyingSymbol.SecurityType.HasOptions())
             {
-                throw new NotSupportedException($"BacktestingOptionChainProvider.GetOptionContractList(): SecurityType.Equity or SecurityType.Future is expected but was {underlyingSymbol.SecurityType}");
+                throw new NotSupportedException($"BacktestingOptionChainProvider.GetOptionContractList(): SecurityType.Equity, SecurityType.Future, or SecurityType.Index is expected but was {underlyingSymbol.SecurityType}");
             }
 
             // build the option contract list from the open interest zip file entry names
 
             // create a canonical option symbol for the given underlying
-            var canonicalSymbol = Symbol.CreateOption(underlyingSymbol, underlyingSymbol.ID.Market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
+            var canonicalSymbol = Symbol.CreateOption(
+                underlyingSymbol,
+                underlyingSymbol.ID.Market,
+                underlyingSymbol.SecurityType.DefaultOptionStyle(),
+                default(OptionRight),
+                0,
+                SecurityIdentifier.DefaultDate);
 
             var fileExists = false;
             var zipFileName = string.Empty;

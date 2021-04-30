@@ -48,6 +48,11 @@ namespace QuantConnect.Lean.Engine.Results
         private int _daysProcessedFrontier;
         private readonly HashSet<string> _chartSeriesExceededDataPoints;
 
+        /// <summary>
+        /// Calculates the capacity of a strategy per Symbol in real-time
+        /// </summary>
+        private CapacityEstimate _capacityEstimate;
+
         //Processing Time:
         private DateTime _nextSample;
         private string _algorithmId;
@@ -105,7 +110,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //While there's no work to do, go back to the algorithm:
                     if (Messages.Count == 0)
                     {
-                        Thread.Sleep(50);
+                        ExitEvent.WaitOne(50);
                     }
                     else
                     {
@@ -191,13 +196,14 @@ namespace QuantConnect.Lean.Engine.Results
                 var runtimeStatistics = new Dictionary<string, string>();
                 lock (RuntimeStatistics)
                 {
+
                     foreach (var pair in RuntimeStatistics)
                     {
                         runtimeStatistics.Add(pair.Key, pair.Value);
                     }
                 }
-                var summary = GenerateStatisticsResults(performanceCharts).Summary;
-                GetAlgorithmRuntimeStatistics(summary, runtimeStatistics);
+                var summary = GenerateStatisticsResults(performanceCharts, estimatedStrategyCapacity: _capacityEstimate.Capacity).Summary;
+                GetAlgorithmRuntimeStatistics(summary, runtimeStatistics, _capacityEstimate.Capacity);
 
                 var progress = (decimal)_daysProcessed / _jobDays;
                 if (progress > 0.999m) progress = 0.999m;
@@ -341,8 +347,8 @@ namespace QuantConnect.Lean.Engine.Results
                     var charts = new Dictionary<string, Chart>(Charts);
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
-                    var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
+                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate.Capacity);
+                    var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary, capacityEstimate: _capacityEstimate.Capacity);
 
                     FinalStatistics = statisticsResults.Summary;
 
@@ -394,6 +400,7 @@ namespace QuantConnect.Lean.Engine.Results
             StartingPortfolioValue = startingPortfolioValue;
             PreviousUtcSampleTime = Algorithm.UtcTime;
             DailyPortfolioValue = StartingPortfolioValue;
+            _capacityEstimate = new CapacityEstimate(Algorithm);
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;
@@ -449,6 +456,10 @@ namespace QuantConnect.Lean.Engine.Results
             AddToLogStore(message);
         }
 
+        /// <summary>
+        /// Add message to LogStore
+        /// </summary>
+        /// <param name="message">Message to add</param>
         protected override void AddToLogStore(string message)
         {
             lock (LogStore)
@@ -640,6 +651,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 // Set exit flag, update task will send any message before stopping
                 ExitTriggered = true;
+                ExitEvent.Set();
 
                 StopUpdateRunner();
 
@@ -675,6 +687,15 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Handle order event
+        /// </summary>
+        /// <param name="newEvent">Event to process</param>
+        public override void OrderEvent(OrderEvent newEvent)
+        {
+            _capacityEstimate?.OnOrderEvent(newEvent);
+        }
+
+        /// <summary>
         /// Process the synchronous result events, sampling and message reading.
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
@@ -682,6 +703,8 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void ProcessSynchronousEvents(bool forceProcess = false)
         {
             if (Algorithm == null) return;
+
+            _capacityEstimate.UpdateMarketCapacity(forceProcess);
 
             var time = Algorithm.UtcTime;
 

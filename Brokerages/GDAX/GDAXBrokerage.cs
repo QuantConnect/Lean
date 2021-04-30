@@ -141,7 +141,7 @@ namespace QuantConnect.Brokerages.GDAX
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Submitted });
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
-                _pendingOrders.TryAdd(brokerId, order);
+                _pendingOrders.TryAdd(brokerId, new PendingOrder(order));
                 _fillMonitorResetEvent.Set();
 
                 return true;
@@ -186,7 +186,7 @@ namespace QuantConnect.Brokerages.GDAX
                         OrderFee.Zero,
                         "GDAX Order Event") { Status = OrderStatus.Canceled });
 
-                    Order orderRemoved;
+                    PendingOrder orderRemoved;
                     _pendingOrders.TryRemove(id, out orderRemoved);
                 }
             }

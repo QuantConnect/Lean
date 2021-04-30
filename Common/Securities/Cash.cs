@@ -282,6 +282,16 @@ namespace QuantConnect.Securities
                 }
             }
 
+            // Special case for crypto markets without direct pairs (They wont be found by the above)
+            // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
+            // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
+            if (Currencies.StableCoinsWithoutPairs.Contains(QuantConnect.Symbol.Create(normal, SecurityType.Crypto, marketMap[SecurityType.Crypto])))
+            {
+                ConversionRateSecurity = null;
+                ConversionRate = 1.0m;
+                return null;
+            }
+
             // if this still hasn't been set then it's an error condition
             throw new ArgumentException($"In order to maintain cash in {Symbol} you are required to add a " +
                 $"subscription for Forex pair {Symbol}{accountCurrency} or {accountCurrency}{Symbol}"

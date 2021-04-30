@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using QuantConnect.Logging;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
@@ -64,14 +66,14 @@ namespace QuantConnect.Securities
         public static SecurityDatabaseKey Parse(string key)
         {
             var parts = key.Split('-');
-            if (parts.Length != 3)
+            if (parts.Length != 3 || parts[0] == Wildcard)
             {
                 throw new FormatException($"The specified key was not in the expected format: {key}");
             }
             SecurityType type;
-            if (!Enum.TryParse(parts[0], out type))
+            if (!parts[0].TryParseSecurityType(out type))
             {
-                throw new ArgumentException($"Unable to parse \'{parts[2]}\' as a SecurityType.");
+                return null;
             }
 
             return new SecurityDatabaseKey(parts[1], parts[2], type);
@@ -127,11 +129,19 @@ namespace QuantConnect.Securities
             }
         }
 
+        /// <summary>
+        /// Security Database Key == operator
+        /// </summary>
+        /// <returns>True if they are the same</returns>
         public static bool operator ==(SecurityDatabaseKey left, SecurityDatabaseKey right)
         {
             return Equals(left, right);
         }
 
+        /// <summary>
+        /// Security Database Key != operator
+        /// </summary>
+        /// <returns>True if they are not the same</returns>
         public static bool operator !=(SecurityDatabaseKey left, SecurityDatabaseKey right)
         {
             return !Equals(left, right);

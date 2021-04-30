@@ -19,6 +19,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
@@ -26,6 +27,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -1155,8 +1157,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // updates expected data
             if (false)
             {
+#pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
                     "../../TestData/FillForwardBars.zip", expectedDataFile, FillForwardTestAlgorithm.Result.Value);
+#pragma warning restore CS0162 
             }
             QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
             var expected = File.ReadAllLines(expectedDataFile);
@@ -1589,17 +1593,236 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // updates expected data
             if (false)
             {
+#pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
                     "../../TestData/FillForwardBars.zip",
                     expectedDataFile,
                     string.Join(Environment.NewLine, ffbars),
                     overrideEntry: true);
+#pragma warning restore CS0162
             }
             QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
             var expected = File.ReadAllLines(expectedDataFile);
 
             Assert.AreEqual(expected.Length, ffbars.Count);
             Assert.IsTrue(expected.SequenceEqual(ffbars));
+        }
+
+        [TestCase(15)]
+        [TestCase(18)]
+        [TestCase(19)]
+        [TestCase(21)]
+        public void FillsForwardUntilDelisted(int warningDay)
+        {
+            var exchange = new OptionExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            DateTimeZone dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var reference = new DateTime(2014, 6, 5)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var dataResolution = Time.OneDay;
+            var expiry = new DateTime(2014, 6, warningDay)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var delisted = new DateTime(2014, 6, 22)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+
+            var spy = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry);
+
+            var data = new BaseData[]
+            {
+                new BaseDataCollection(
+                    reference,
+                    reference.Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference,
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new BaseDataCollection(
+                    reference.AddDays(1),
+                    reference.AddDays(1).Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference.AddDays(1),
+                            Value = 2,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new Delisting(spy, expiry.Date.ConvertTo(dataTimeZone, exchange.TimeZone), 100, DelistingType.Warning),
+            }.ToList();
+
+            // add intermediate values between warning and delisted
+            int intermediateDay = (delisted.Day - expiry.Day) / 2;
+            if (intermediateDay > 0)
+            {
+                data.Add(new BaseDataCollection(
+                    expiry.AddDays(intermediateDay),
+                    expiry.AddDays(intermediateDay).Add(dataResolution),
+                    spy,
+                    new List<BaseData>
+                    {
+                        new TradeBar
+                        {
+                            Time = expiry.AddDays(intermediateDay),
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }));
+            }
+
+            // add delisted
+            data.Add(new Delisting(spy, delisted, 100, DelistingType.Delisted));
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(TimeSpan.FromDays(1)),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());  // 2014.06.05
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());  // 2014.06.06
+
+            var counter = 0;
+            var previous = fillForwardEnumerator.Current;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                Assert.NotNull(fillForwardEnumerator.Current);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime);
+                Assert.AreEqual(
+                    fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
+                    fillForwardEnumerator.Current.IsFillForward || (intermediateDay != 0 && fillForwardEnumerator.Current.Time.Day == expiry.Day + intermediateDay));
+                if (fillForwardEnumerator.Current.IsFillForward)
+                {
+                    Assert.AreNotEqual(MarketDataType.Auxiliary, fillForwardEnumerator.Current.DataType);
+                    counter++;
+                }
+                else
+                {
+                    Assert.True(fillForwardEnumerator.Current.DataType == MarketDataType.Auxiliary
+                        || fillForwardEnumerator.Current.Time == data[3].Time);
+                }
+                previous = fillForwardEnumerator.Current;
+            }
+
+            Assert.AreEqual(
+                (int)(data.Last().EndTime - data[1].EndTime).TotalDays - (intermediateDay > 0 ? 1 : 0),
+                counter);
+
+            fillForwardEnumerator.Dispose();
+        }
+
+        [Test]
+        public void FillsForwardUntilDelistedMinuteResolution()
+        {
+            var exchange = new OptionExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            DateTimeZone dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var reference = new DateTime(2014, 6, 5, 10, 10, 0)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var dataResolution = Time.OneMinute;
+            var expiry = new DateTime(2014, 6, 15)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var delisted = new DateTime(2014, 6, 22)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+
+            var spy = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry);
+
+            var data = new BaseData[]
+            {
+                new BaseDataCollection(
+                    reference,
+                    reference.Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference,
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new BaseDataCollection(
+                    reference.AddDays(1),
+                    reference.AddDays(1).Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference.AddDays(1),
+                            Value = 2,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new Delisting(spy, expiry.Date, 100, DelistingType.Warning),
+                new BaseDataCollection(
+                    reference.AddDays(12),
+                    reference.AddDays(12).Add(dataResolution),
+                    spy,
+                    new List<BaseData>
+                    {
+                        new TradeBar
+                        {
+                            Time = reference.AddDays(12),
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new Delisting(spy, delisted, 100, DelistingType.Delisted)
+            }.ToList();
+
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(TimeSpan.FromDays(1)),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            // Fast forward 2014.06.05 - 06
+            while (fillForwardEnumerator.MoveNext())
+            {
+                Assert.IsTrue(fillForwardEnumerator.MoveNext());
+                if (fillForwardEnumerator.Current.Time.Day == 7)
+                {
+                    break;
+                }
+            }
+
+            var dateSet = new HashSet<DateTime>();
+            while (fillForwardEnumerator.MoveNext())
+            {
+                Assert.NotNull(fillForwardEnumerator.Current);
+                if (fillForwardEnumerator.Current.IsFillForward)
+                {
+                    Assert.AreNotEqual(MarketDataType.Auxiliary, fillForwardEnumerator.Current.DataType);
+                    dateSet.Add(fillForwardEnumerator.Current.Time.Date);
+                }
+                else
+                {
+                    Assert.True(fillForwardEnumerator.Current.DataType == MarketDataType.Auxiliary
+                        || fillForwardEnumerator.Current.Time == data[3].Time);
+                }
+            }
+
+            // '+1' means receiving not-Auxiliary minute data on last day of period
+            Assert.AreEqual(
+                (int)(data.Last().EndTime - data[1].EndTime).TotalDays + 1,
+                dateSet.Count);
+
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -1640,11 +1863,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // updates expected data
             if (false)
             {
+#pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
                     "../../TestData/FillForwardBars.zip",
                     expectedDataFile,
                     string.Join(Environment.NewLine, FillForwardDaylightMovementTestAlgorithm.Result.Value),
                     overrideEntry: true);
+#pragma warning restore CS0162
             }
             QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
             var expected = File.ReadAllLines(expectedDataFile);
@@ -1761,7 +1986,97 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             fillForwardEnumerator.Dispose();
         }
 
-        internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+        [Test]
+        public void FillsForwardNotDelistingAuxiliary()
+        {
+            var exchange = new OptionExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            DateTimeZone dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var reference = new DateTime(2014, 6, 5)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var dataResolution = Time.OneDay;
+            var expiry = new DateTime(2014, 6, 15)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+
+            var spy = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry);
+
+            var data = new BaseData[]
+            {
+                new BaseDataCollection(
+                    reference,
+                    reference.Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference,
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new BaseDataCollection(
+                    reference.AddDays(1),
+                    reference.AddDays(1).Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference.AddDays(1),
+                            Value = 2,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new Dividend
+                {
+                    DataType = MarketDataType.Auxiliary,
+                    Distribution = 0.5m,
+                    ReferencePrice = decimal.MaxValue - 10000m,
+
+                    Symbol = spy,
+                    Time = reference.AddDays(5),
+                    Value = 0.5m
+                }
+            }.ToList();
+
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(TimeSpan.FromDays(1)),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());  // 2014.06.05
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());  // 2014.06.06
+
+            var counter = 0;
+            var previous = fillForwardEnumerator.Current;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                Assert.NotNull(fillForwardEnumerator.Current);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time ?? DateTime.MinValue);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime ?? DateTime.MinValue);
+                Assert.AreEqual(
+                    fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
+                    fillForwardEnumerator.Current.IsFillForward);
+                if (fillForwardEnumerator.Current.IsFillForward)
+                {
+                    counter++;
+                }
+
+                previous = fillForwardEnumerator.Current;
+            }
+
+            Assert.AreEqual(
+                (int)(data.Last().EndTime - data[1].EndTime).TotalDays,
+                counter);
+
+            fillForwardEnumerator.Dispose();
+        }
+
+        public class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
         {
             protected Symbol _symbol;
             public static List<string> FillForwardBars = new List<string>();
@@ -1796,7 +2111,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
         }
 
-        internal class FillForwardDaylightMovementTestAlgorithm : FillForwardTestAlgorithm
+        public class FillForwardDaylightMovementTestAlgorithm : FillForwardTestAlgorithm
         {
             public static DateTime RefDateTime { get; set; }
             public static int DurationInDays { get; set; }
@@ -1821,7 +2136,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
         }
 
-        internal class FillForwardTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class FillForwardTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             internal static FillForwardTestAlgorithm TestAlgorithm { get; set; }
 
@@ -1832,7 +2147,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
         }
 
-        internal class FillForwardDaylightMovementTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class FillForwardDaylightMovementTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             internal static FillForwardTestAlgorithm TestAlgorithm { get; set; }
 

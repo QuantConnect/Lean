@@ -55,6 +55,7 @@ namespace QuantConnect.Securities.Option
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
         /// <param name="security">The option to compute the initial margin for</param>
+        /// <param name="quantity">The amount desired</param>
         /// <returns>The initial margin required for the option (i.e. the equity required to enter a position for this option)</returns>
         /// <remarks>
         /// We fix the option to 1.5x the initial because of its close coupling with the underlying.

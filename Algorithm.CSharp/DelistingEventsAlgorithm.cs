@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2007, 05, 25);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "AAA", Resolution.Daily);
+            AddSecurity(SecurityType.Equity, "AAA.1", Resolution.Daily);
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
         }
 
@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             _dataCount += data.Bars.Count;
             if (Transactions.OrdersCount == 0)
             {
-                SetHoldings("AAA", 1);
+                SetHoldings("AAA.1", 1);
                 Debug("Purchased Stock");
             }
 
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // the slice can also contain delisting data: data.Delistings in a dictionary string->Delisting
 
-            var aaa = Securities["AAA"];
+            var aaa = Securities["AAA.1"];
             if (aaa.IsDelisted && aaa.IsTradable)
             {
                 throw new Exception("Delisted security must NOT be tradable");
@@ -160,6 +160,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.155"},
             {"Treynor Ratio", "1.589"},
             {"Total Fees", "$55.05"},
+            {"Estimated Strategy Capacity", "$0"},
             {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -179,7 +180,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-2022527947"}
+            {"OrderListHash", "61f4d3c109fc4b6b9eb14d2e4eec4843"}
         };
     }
 }

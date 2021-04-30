@@ -33,12 +33,12 @@ class OptionRenameRegressionAlgorithm(QCAlgorithm):
         self.SetCash(1000000)
         self.SetStartDate(2013,6,28)
         self.SetEndDate(2013,7,2)
-        option = self.AddOption("FOXA")
+        option = self.AddOption("TFCFA")
 
         # set our strike/expiry filter for this option chain
         option.SetFilter(-1, 1, timedelta(0), timedelta(3650))
         # use the underlying equity as the benchmark
-        self.SetBenchmark("FOXA")
+        self.SetBenchmark("TFCFA")
 
     def OnData(self, slice):
         ''' Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event

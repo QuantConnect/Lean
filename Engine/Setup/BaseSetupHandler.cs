@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.AlgorithmFactory;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -35,6 +36,11 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public static class BaseSetupHandler
     {
+        /// <summary>
+        /// Get the maximum time that the creation of an algorithm can take
+        /// </summary>
+        public static TimeSpan AlgorithmCreationTimeout { get; } = TimeSpan.FromSeconds(Config.GetDouble("algorithm-creation-timeout", 90));
+
         /// <summary>
         /// Will first check and add all the required conversion rate securities
         /// and later will seed an initial value to them.
@@ -72,7 +78,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 var resolution = configs.GetHighestResolution();
                 var startTime = historyRequestFactory.GetStartTimeAlgoTz(
                     cash.ConversionRateSecurity.Symbol,
-                    1,
+                    10,
                     resolution,
                     hours,
                     configToUse.DataTimeZone);

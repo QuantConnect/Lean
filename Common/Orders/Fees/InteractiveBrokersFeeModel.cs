@@ -91,6 +91,7 @@ namespace QuantConnect.Orders.Fees
                     break;
 
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                     Func<decimal, decimal, CashAmount> optionsCommissionFunc;
                     if (!_optionFee.TryGetValue(market, out optionsCommissionFunc))
                     {
@@ -198,7 +199,6 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         private static void ProcessOptionsRateSchedule(decimal monthlyOptionsTradeAmountInContracts, out Func<decimal, decimal, CashAmount> optionsCommissionFunc)
         {
-            const decimal bp = 0.0001m;
             if (monthlyOptionsTradeAmountInContracts <= 10000)
             {
                 optionsCommissionFunc = (orderSize, premium) =>

@@ -360,38 +360,6 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// Live algorithm settings for trading with Alpaca
-    /// </summary>
-    public class AlpacaLiveAlgorithmSettings : BaseLiveAlgorithmSettings
-    {
-        /// <summary>
-        /// Constructor for live trading with Alpaca
-        /// </summary>
-        /// <param name="key"> Api key to Alpaca account</param>
-        /// <param name="secret">Secret Api key to Alpaca account</param>
-        /// <param name="environment">Environment to launch the algorithm in</param>
-        public AlpacaLiveAlgorithmSettings(string key, string secret, BrokerageEnvironment environment)
-        {
-            Environment = environment;
-            Id = "AlpacaBrokerage"; //BrokerageName.Alpaca.ToString(); returns "Alpaca"
-            Key = key;
-            Secret = secret;
-        }
-
-        /// <summary>
-        /// Property specific to Alpaca account. API Key 
-        /// </summary>
-        [JsonProperty(PropertyName = "key")]
-        public string Key { get; private set; }
-
-        /// <summary>
-        /// Property specific to Alpaca account. API Secret Key
-        /// </summary>
-        [JsonProperty(PropertyName = "secret")]
-        public string Secret { get; private set; }
-    }
-
-    /// <summary>
     /// Live algorithm settings for trading with GDAX (Coinbase)
     /// </summary>
     public class GDAXLiveAlgorithmSettings : BaseLiveAlgorithmSettings

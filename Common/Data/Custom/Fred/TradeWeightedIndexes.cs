@@ -18,6 +18,9 @@ namespace QuantConnect.Data.Custom.Fred
 {
     public partial class Fred
     {
+        /// <summary>
+        /// Trade Weight Indexes
+        /// </summary>
         public static class TradeWeightedIndexes
         {
             ///<summary>

@@ -18,6 +18,9 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Custom.SEC
 {
+    /// <summary>
+    /// SEC Name Changing Report
+    /// </summary>
     public class SECReportFormerCompany 
     {
         /// <summary>

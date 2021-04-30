@@ -368,7 +368,7 @@ logging.captureWarnings(True)"
             var complete = isolator.ExecuteWithTimeLimit(_loaderTimeLimit, () =>
             {
                 success = TryCreateAlgorithmInstance(assemblyPath, out instance, out error);
-            }, ramLimit, sleepIntervalMillis:50, workerThread:_workerThread);
+            }, ramLimit, sleepIntervalMillis:100, workerThread:_workerThread);
 
             algorithmInstance = instance;
             errorMessage = error;

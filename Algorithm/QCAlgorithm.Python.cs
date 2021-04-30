@@ -36,6 +36,9 @@ namespace QuantConnect.Algorithm
     {
         private readonly Dictionary<IntPtr, PythonIndicator> _pythonIndicators = new Dictionary<IntPtr, PythonIndicator>();
 
+        /// <summary>
+        /// PandasConverter for this Algorithm
+        /// </summary>
         public PandasConverter PandasConverter { get; private set; }
 
         /// <summary>
@@ -189,11 +192,37 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// AddData a new user defined data source including symbol properties and exchange hours,
+        /// all other vars are not required and will use defaults.
+        /// This overload reflects the C# equivalent for custom properties and market hours
+        /// </summary>
+        /// <param name="type">Data source type</param>
+        /// <param name="ticker">Key/Ticker for data</param>
+        /// <param name="properties">The properties of this new custom data</param>
+        /// <param name="exchangeHours">The Exchange hours of this symbol</param>
+        /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(PyObject type, string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, bool fillDataForward = false, decimal leverage = 1.0m)
+        {
+            // Get the right key for storage of base type symbols
+            var dataType = type.CreateType();
+            var key = SecurityIdentifier.GenerateBaseSymbol(dataType, ticker);
+
+            // Add entries to our Symbol Properties DB and MarketHours DB
+            SetDatabaseEntries(key, properties, exchangeHours);
+
+            // Then add the data
+            return AddData(dataType, ticker, resolution, null, fillDataForward, leverage);
+        }
+
+        /// <summary>
         /// Creates and adds a new Future Option contract to the algorithm.
         /// </summary>
-        /// <param name="symbol">The <see cref="Future"/> canonical symbol (i.e. Symbol returned from <see cref="AddFuture"/>)</param>
+        /// <param name="futureSymbol">The Future canonical symbol (i.e. Symbol returned from <see cref="AddFuture"/>)</param>
         /// <param name="optionFilter">Filter to apply to option contracts loaded as part of the universe</param>
-        /// <returns>The new <see cref="Option"/> security, containing a <see cref="Future"/> as its underlying.</returns>
+        /// <returns>The new Option security, containing a Future as its underlying.</returns>
         /// <exception cref="ArgumentException">The symbol provided is not canonical.</exception>
         public void AddFutureOption(Symbol futureSymbol, PyObject optionFilter)
         {

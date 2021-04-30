@@ -403,6 +403,30 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual($"20200922_{expectedFutureOptionTicker.ToLowerInvariant()}_minute_quote_american_put_42000000_{optionSymbol.ID.Date:yyyyMMdd}.csv", optionEntryFilePath);
         }
 
+        [TestCase(OptionRight.Call, 1650, 2020, 3, 26)]
+        [TestCase(OptionRight.Call, 1540, 2020, 3, 26)]
+        [TestCase(OptionRight.Call, 1600, 2020, 2, 25)]
+        [TestCase(OptionRight.Call, 1545, 2020, 2, 25)]
+        public void FutureOptionSingleZipFileContainingMultipleFuturesOptionsContracts(OptionRight right, int strike, int year, int month, int day)
+        {
+            var underlying = Symbol.CreateFuture("GC", Market.COMEX, new DateTime(2020, 4, 28));
+            var expiry = new DateTime(year, month, day);
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                Market.COMEX,
+                OptionStyle.American,
+                right,
+                (decimal)strike,
+                expiry);
+
+            var optionZipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, optionSymbol, new DateTime(2020, 1, 5), Resolution.Minute, TickType.Quote)
+                .Replace(Path.DirectorySeparatorChar, '/');
+            var optionEntryFilePath = LeanData.GenerateZipEntryName(optionSymbol, new DateTime(2020, 1, 5), Resolution.Minute, TickType.Quote);
+
+            Assert.AreEqual("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", optionZipFilePath);
+            Assert.AreEqual($"20200105_og_minute_quote_american_{right.ToLower()}_{strike}0000_{expiry:yyyyMMdd}.csv", optionEntryFilePath);
+        }
+
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
             if (expected == null && actual == null)

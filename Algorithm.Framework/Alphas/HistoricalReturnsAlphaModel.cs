@@ -134,7 +134,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 Security = security;
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
                 algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
-                ROC = new RateOfChange(security.Symbol, lookback);
+                ROC = new RateOfChange(security.Symbol.ToString(), lookback);
                 algorithm.RegisterIndicator(security.Symbol, ROC, Consolidator);
             }
 

@@ -480,6 +480,57 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send a limit if touched order to the transaction handler:
+        /// </summary>
+        /// <param name="symbol">String symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for limit order</param>
+        /// <param name="triggerPrice">Trigger price for this order</param>
+        /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <returns>Order id</returns>
+        public OrderTicket LimitIfTouchedOrder(Symbol symbol, int quantity, decimal triggerPrice, decimal limitPrice, string tag = "")
+        {
+            return LimitIfTouchedOrder(symbol, (decimal)quantity, triggerPrice, limitPrice, tag);
+        }
+
+        /// <summary>
+        /// Send a limit if touched order to the transaction handler:
+        /// </summary>
+        /// <param name="symbol">String symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for limit order</param>
+        /// <param name="triggerPrice">Trigger price for this order</param>
+        /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <returns>Order id</returns>
+        public OrderTicket LimitIfTouchedOrder(Symbol symbol, double quantity, decimal triggerPrice, decimal limitPrice, string tag = "")
+        {
+            return LimitIfTouchedOrder(symbol, quantity.SafeDecimalCast(), triggerPrice, limitPrice, tag);
+        }
+
+        /// <summary>
+        /// Send a limit if touched order to the transaction handler:
+        /// </summary>
+        /// <param name="symbol">String symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for limit order</param>
+        /// <param name="triggerPrice">Trigger price for this order</param>
+        /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <returns>Order id</returns>
+        public OrderTicket LimitIfTouchedOrder(Symbol symbol, decimal quantity, decimal triggerPrice, decimal limitPrice, string tag = "")
+        {
+            var security = Securities[symbol];
+            var request = CreateSubmitOrderRequest(OrderType.LimitIfTouched, security, quantity, tag, triggerPrice: triggerPrice, limitPrice: limitPrice, properties: DefaultOrderProperties?.Clone());
+            var response = PreOrderChecks(request);
+            if (response.IsError)
+            {
+                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
+            }
+
+            //Add the order and create a new order Id.
+            return Transactions.AddOrder(request);
+        }
+
+        /// <summary>
         /// Send an exercise order to the transaction handler
         /// </summary>
         /// <param name="optionSymbol">String symbol for the option position</param>
@@ -770,7 +821,7 @@ namespace QuantConnect.Algorithm
 
             if (request.OrderType == OrderType.OptionExercise)
             {
-                if (security.Type != SecurityType.Option && security.Type != SecurityType.FutureOption)
+                if (!security.Type.IsOption())
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.NonExercisableSecurity,
                         $"The security with symbol '{request.Symbol}' is not exercisable."
@@ -1110,9 +1161,9 @@ namespace QuantConnect.Algorithm
             return exchangeHours.IsOpen(time, false);
         }
 
-        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m)
+        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m,  decimal triggerPrice = 0m)
         {
-            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, UtcTime, tag, properties);
+            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, UtcTime, tag, properties);
         }
     }
 }

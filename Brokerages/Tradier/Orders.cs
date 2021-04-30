@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,14 +47,14 @@ namespace QuantConnect.Brokerages.Tradier
         public List<TradierOrder> Orders = new List<TradierOrder>();
 
         /// Null Constructor:
-        public TradierOrders() 
+        public TradierOrders()
         { }
     }
 
     /// <summary>
     /// Intraday or pending order for user
     /// </summary>
-    public class TradierOrder 
+    public class TradierOrder
     {
         /// Unique order id.
         [JsonProperty(PropertyName = "id")]
@@ -67,6 +67,10 @@ namespace QuantConnect.Brokerages.Tradier
         /// Symbol
         [JsonProperty(PropertyName = "symbol")]
         public string Symbol;
+
+        /// Option symbol
+        [JsonProperty(PropertyName = "option_symbol")]
+        public string OptionSymbol;
 
         ///Long short.
         [JsonProperty(PropertyName = "side")]
@@ -129,7 +133,7 @@ namespace QuantConnect.Brokerages.Tradier
         public List<TradierOrderLeg> Legs;
 
         /// Closed position trade summary
-        public TradierOrder() 
+        public TradierOrder()
         { }
     }
 
@@ -173,7 +177,7 @@ namespace QuantConnect.Brokerages.Tradier
     /// Order response when purchasing equity.
     /// </summary>
     public class TradierOrderResponseOrder
-    { 
+    {
         /// id or order response
         [JsonProperty(PropertyName = "id")]
         public long Id;

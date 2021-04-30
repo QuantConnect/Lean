@@ -34,6 +34,9 @@ namespace QuantConnect.Tests
         public static readonly Symbol LODE = CreateEquitySymbol("LODE");
         public static readonly Symbol IBM = CreateEquitySymbol("IBM");
         public static readonly Symbol GOOG = CreateEquitySymbol("GOOG");
+        public static readonly Symbol SBIN = CreateEquitySymbol("SBIN",Market.NSE);
+        public static readonly Symbol IDEA = CreateEquitySymbol("IDEA", Market.NSE);
+
         public static readonly Symbol LOW = CreateEquitySymbol("LOW");
 
         public static readonly Symbol USDJPY = CreateForexSymbol("USDJPY");
@@ -72,6 +75,8 @@ namespace QuantConnect.Tests
             SPY,
             AAPL,
             MSFT,
+            SBIN,
+            IDEA,
             ZNGA,
             FXE,
             USDJPY,
@@ -120,9 +125,9 @@ namespace QuantConnect.Tests
             return Symbol.Create(symbol, SecurityType.Forex, Market.Oanda);
         }
 
-        private static Symbol CreateEquitySymbol(string symbol)
+        private static Symbol CreateEquitySymbol(string symbol, string market = Market.USA)
         {
-            return Symbol.Create(symbol, SecurityType.Equity, Market.USA);
+            return Symbol.Create(symbol, SecurityType.Equity, market);
         }
         private static Symbol CreateFutureSymbol(string symbol, DateTime expiry)
         {
@@ -139,9 +144,9 @@ namespace QuantConnect.Tests
             return Symbol.Create(symbol, SecurityType.Cfd, market);
         }
 
-        private static Symbol CreateOptionSymbol(string symbol, OptionRight right, decimal strike, DateTime expiry)
+        private static Symbol CreateOptionSymbol(string symbol, OptionRight right, decimal strike, DateTime expiry, string market = Market.USA)
         {
-            return Symbol.CreateOption(symbol, Market.USA, OptionStyle.American, right, strike, expiry);
+            return Symbol.CreateOption(symbol, market, OptionStyle.American, right, strike, expiry);
         }
 
         private static Symbol CreateCryptoSymbol(string symbol)

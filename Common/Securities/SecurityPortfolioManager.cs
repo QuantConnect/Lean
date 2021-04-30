@@ -346,17 +346,24 @@ namespace QuantConnect.Securities
         /// <seealso cref="Invested"/>
         public bool HoldStock
         {
-            get { return TotalHoldingsValue > 0; }
+            get
+            {
+                foreach (var security in Securities.Values)
+                {
+                    if (security.HoldStock)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
 
         /// <summary>
         /// Alias for HoldStock. Check if we have and holdings.
         /// </summary>
         /// <seealso cref="HoldStock"/>
-        public bool Invested
-        {
-            get { return HoldStock; }
-        }
+        public bool Invested => HoldStock;
 
         /// <summary>
         /// Get the total unrealised profit in our portfolio from the individual security unrealized profits.
@@ -622,7 +629,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets the margin available for trading a specific symbol in a specific direction.
-        /// Alias for <see cref="GetMarginRemaining"/>
+        /// Alias for <see cref="GetMarginRemaining(Symbol, OrderDirection)"/>
         /// </summary>
         /// <param name="symbol">The symbol to compute margin remaining for</param>
         /// <param name="direction">The order/trading direction</param>

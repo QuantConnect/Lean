@@ -261,8 +261,20 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 throw new ArgumentException("Please use NextOption or NextFuture for SecurityType.Option and SecurityType.Future respectively.");
             }
 
-            // let's make symbols all have 3 chars as it's acceptable for all permitted security types in this method
-            var ticker = NextUpperCaseString(3, 3);
+            string ticker;
+
+            // we must return a symbol matching an entry in the symbol properties database
+            // if there is a wildcard entry, we can generate a truly random symbol
+            // if there is no wildcard entry, the symbols we can generate are limited by the entries in the database
+            if (_symbolPropertiesDatabase.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType))
+            {
+                // let's make symbols all have 3 chars as it's acceptable for all security types with wildcard entries
+                ticker = NextUpperCaseString(3, 3);
+            }
+            else
+            {
+                ticker = NextTickerFromSymbolPropertiesDatabase(securityType, market);
+            }
 
             // by chance we may generate a ticker that actually exists, and if map files exist that match this
             // ticker then we'll end up resolving the first trading date for use in the SID, otherwise, all
@@ -303,13 +315,51 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         public virtual Symbol NextFuture(string market, DateTime minExpiry, DateTime maxExpiry)
         {
-            // futures are usually two characters
-            var ticker = NextUpperCaseString(2, 2);
+            // get a valid ticker from the symbol properties database
+            var ticker = NextTickerFromSymbolPropertiesDatabase(SecurityType.Future, market);
 
-            var marketHours = _marketHoursDatabase.GetExchangeHours(market, null, SecurityType.Future);
+            var marketHours = _marketHoursDatabase.GetExchangeHours(market, ticker, SecurityType.Future);
             var expiry = GetRandomExpiration(marketHours, minExpiry, maxExpiry);
 
             return Symbol.CreateFuture(ticker, market, expiry);
+        }
+
+        public virtual int GetAvailableSymbolCount(SecurityType securityType, string market)
+        {
+            // there is no limit to the number of option/future contracts we can generate
+            if (securityType == SecurityType.Option || securityType == SecurityType.Future)
+            {
+                return int.MaxValue;
+            }
+
+            // check the symbol properties database to determine how many symbols we can generate
+            // if there is a wildcard entry, we can generate as many symbols as we want
+            // if there is no wildcard entry, we can only generate as many symbols as there are entries
+            return _symbolPropertiesDatabase.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType)
+                ? int.MaxValue
+                : _symbolPropertiesDatabase.GetSymbolPropertiesList(market, securityType).Count();
+        }
+
+        private string NextTickerFromSymbolPropertiesDatabase(SecurityType securityType, string market)
+        {
+            // prevent returning a ticker matching any previously generated symbol
+            var existingTickers = _symbols
+                .Where(sym => sym.ID.Market == market && sym.ID.SecurityType == securityType)
+                .Select(sym => sym.Value);
+
+            // get the available tickers from the symbol properties database and remove previously generated tickers
+            var availableTickers = _symbolPropertiesDatabase.GetSymbolPropertiesList(market, securityType)
+                .Select(kvp => kvp.Key.Symbol)
+                .Except(existingTickers)
+                .ToList();
+
+            // there is a limited number of entries in the symbol properties database so we may run out of tickers
+            if (availableTickers.Count == 0)
+            {
+                throw new NoTickersAvailableException(securityType, market);
+            }
+
+            return availableTickers[_random.Next(availableTickers.Count)];
         }
 
         private bool IsWithinRange(DateTime value, DateTime min, DateTime max)

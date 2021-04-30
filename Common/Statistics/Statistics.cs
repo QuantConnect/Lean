@@ -442,7 +442,14 @@ namespace QuantConnect.Statistics
         /// <returns>Decimal fraction for annual compounding performance</returns>
         public static decimal CompoundingAnnualPerformance(decimal startingCapital, decimal finalCapital, decimal years)
         {
-            return (years == 0 ? 0d : Math.Pow((double)finalCapital / (double)startingCapital, 1 / (double)years) - 1).SafeDecimalCast();
+            if (years == 0 || startingCapital == 0)
+            {
+                return 0;
+            }
+            var power = 1 / (double)years;
+            var baseNumber = (double)finalCapital / (double)startingCapital;
+            var result = Math.Pow(baseNumber, power) - 1;
+            return result.IsNaNOrInfinity() ? 0 : result.SafeDecimalCast();
         }
 
         /// <summary>
@@ -514,6 +521,7 @@ namespace QuantConnect.Statistics
         /// <remarks>If algo = benchmark, TEV = 0</remarks>
         /// <param name="algoPerformance">Double collection of algorithm daily performance values</param>
         /// <param name="benchmarkPerformance">Double collection of benchmark daily performance values</param>
+        /// <param name="tradingDaysPerYear">Number of trading days per year</param>
         /// <returns>Value for tracking error</returns>
         public static double TrackingError(List<double> algoPerformance, List<double> benchmarkPerformance, double tradingDaysPerYear = 252)
         {

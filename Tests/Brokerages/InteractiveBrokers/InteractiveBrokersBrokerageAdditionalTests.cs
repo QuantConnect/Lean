@@ -30,13 +30,12 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
-    [Ignore("These tests require the IBGateway to be installed.")]
+    [Explicit("These tests require the IBGateway to be installed.")]
     public class InteractiveBrokersBrokerageAdditionalTests
     {
         private readonly List<Order> _orders = new List<Order>();
@@ -115,6 +114,48 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             }
         }
 
+        [Test]
+        public void GetHistoryDoesNotThrowError504WhenDisconnected()
+        {
+            using (var brokerage = GetBrokerage())
+            {
+                Assert.IsTrue(brokerage.IsConnected);
+
+                brokerage.Disconnect();
+                Assert.IsFalse(brokerage.IsConnected);
+
+                var hasError = false;
+                brokerage.Message += (s, e) =>
+                {
+                    // ErrorCode: 504 - Not connected
+                    if (e.Code == "504")
+                    {
+                        hasError = true;
+                    }
+                };
+
+                var request = new HistoryRequest(
+                    new DateTime(2021, 1, 1).ConvertToUtc(TimeZones.NewYork),
+                    new DateTime(2021, 1, 27).ConvertToUtc(TimeZones.NewYork),
+                    typeof(TradeBar),
+                    Symbols.SPY,
+                    Resolution.Daily,
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    TimeZones.NewYork,
+                    null,
+                    false,
+                    false,
+                    DataNormalizationMode.Raw,
+                    TickType.Trade);
+
+                var history = brokerage.GetHistory(request).ToList();
+
+                Assert.AreEqual(0, history.Count);
+
+                Assert.IsFalse(hasError);
+            }
+        }
+
         private InteractiveBrokersBrokerage GetBrokerage()
         {
             // grabs account info from configuration
@@ -139,8 +180,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             );
 
             var brokerage = new InteractiveBrokersBrokerage(
-                new QCAlgorithm(), 
-                new OrderProvider(_orders), 
+                new QCAlgorithm(),
+                new OrderProvider(_orders),
                 securityProvider,
                 new AggregationManager(),
                 new LocalDiskMapFileProvider());

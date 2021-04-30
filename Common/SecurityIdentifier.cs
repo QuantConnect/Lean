@@ -176,12 +176,14 @@ namespace QuantConnect
                         case SecurityType.Equity:
                         case SecurityType.Option:
                         case SecurityType.Future:
+                        case SecurityType.Index:
                         case SecurityType.FutureOption:
+                        case SecurityType.IndexOption:
                             var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
                             _date = DateTime.FromOADate(oadate);
                             return _date.Value;
                         default:
-                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, and SecurityType.Base");
+                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, and SecurityType.Base");
                     }
                 }
             }
@@ -238,9 +240,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option && SecurityType != SecurityType.FutureOption)
+                    if (!SecurityType.IsOption())
                     {
-                        throw new InvalidOperationException("StrikePrice is only defined for SecurityType.Option and SecurityType.FutureOption");
+                        throw new InvalidOperationException("StrikePrice is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                     }
 
                     // performance: lets calculate strike price once
@@ -279,9 +281,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option && SecurityType != SecurityType.FutureOption)
+                    if (!SecurityType.IsOption())
                     {
-                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option and SecurityType.FutureOption");
+                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                     }
                     _optionRight = (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
                     return _optionRight.Value;
@@ -305,9 +307,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option && SecurityType != SecurityType.FutureOption)
+                    if (!SecurityType.IsOption())
                     {
-                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option and SecurityType.FutureOption");
+                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                     }
 
                     _optionStyle = (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
@@ -540,6 +542,17 @@ namespace QuantConnect
         public static SecurityIdentifier GenerateCfd(string symbol, string market)
         {
             return Generate(DefaultDate, symbol, SecurityType.Cfd, market);
+        }
+
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a INDEX security
+        /// </summary>
+        /// <param name="symbol">The Index contract symbol</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified INDEX security</returns>
+        public static SecurityIdentifier GenerateIndex(string symbol, string market)
+        {
+            return Generate(DefaultDate, symbol, SecurityType.Index, market);
         }
 
         /// <summary>
@@ -862,7 +875,7 @@ namespace QuantConnect
         /// <summary>
         /// Extracts the embedded value from _otherData
         /// </summary>
-        /// <remarks>Static so it can be used in <see cref="_lazySecurityType"/> initialization</remarks>
+        /// <remarks>Static so it can be used in <see cref="SecurityIdentifier"/> initialization</remarks>
         private static ulong ExtractFromProperties(ulong offset, ulong width, ulong properties)
         {
             return (properties / offset) % width;

@@ -22,6 +22,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -69,6 +70,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void WontRemoveBecauseOfUnderlying()
+        {
+            var orderProvider = new FakeOrderProcessor();
+            var pendingRemovals = new PendingRemovalsManager(orderProvider);
+            var equity = CreateSecurity(Symbols.SPY);
+            var equityOption = CreateSecurity(Symbols.SPY_C_192_Feb19_2016);
+
+            // we add an order of the equity option
+            orderProvider.AddOrder(new LimitOrder(equityOption.Symbol, 1, 1, DateTime.UtcNow));
+            var universe = new TestUniverse();
+            universe.AddMember(DateTime.UtcNow, equity);
+            universe.AddMember(DateTime.UtcNow, equityOption);
+
+            // we try to remove the equity
+            Assert.IsNull(pendingRemovals.TryRemoveMember(equity, universe));
+            Assert.AreEqual(1, pendingRemovals.PendingRemovals.Keys.Count());
+            Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
+            Assert.AreEqual(universe, pendingRemovals.PendingRemovals.Keys.First());
+            Assert.AreEqual(equity, pendingRemovals.PendingRemovals.Values.First().First());
+        }
+
+        [Test]
         public void WontRemoveBecauseOpenOrder_Add()
         {
             var orderProvider = new FakeOrderProcessor();
@@ -77,7 +100,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var universe = new TestUniverse();
             orderProvider.AddOrder(new LimitOrder(security.Symbol, 1, 1, DateTime.UtcNow));
 
-            Assert.IsFalse(pendingRemovals.TryRemoveMember(security, universe).Any());
+            Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Keys.Count());
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
             Assert.AreEqual(universe, pendingRemovals.PendingRemovals.Keys.First());
@@ -93,7 +116,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var universe = new TestUniverse();
             orderProvider.AddOrder(new LimitOrder(security.Symbol, 1, 1, DateTime.UtcNow));
 
-            Assert.IsFalse(pendingRemovals.TryRemoveMember(security, universe).Any());
+            Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
             Assert.IsFalse(pendingRemovals.CheckPendingRemovals(new HashSet<Symbol>(), universe).Any());
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Keys.Count());
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
@@ -110,7 +133,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var universe = new TestUniverse();
             security.Holdings.SetHoldings(10, 10);
 
-            Assert.IsFalse(pendingRemovals.TryRemoveMember(security, universe).Any());
+            Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Keys.Count());
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
             Assert.AreEqual(universe, pendingRemovals.PendingRemovals.Keys.First());
@@ -126,7 +149,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var universe = new TestUniverse();
             security.Holdings.SetHoldings(10, 10);
 
-            Assert.IsFalse(pendingRemovals.TryRemoveMember(security, universe).Any());
+            Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
             Assert.IsFalse(pendingRemovals.CheckPendingRemovals(new HashSet<Symbol>(), universe).Any());
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Keys.Count());
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
@@ -143,7 +166,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var universe = new TestUniverse();
             security.Holdings.Target = new PortfolioTarget(security.Symbol, 10);
 
-            Assert.IsFalse(pendingRemovals.TryRemoveMember(security, universe).Any());
+            Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Keys.Count());
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
             Assert.AreEqual(universe, pendingRemovals.PendingRemovals.Keys.First());
@@ -159,7 +182,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var universe = new TestUniverse();
             security.Holdings.Target = new PortfolioTarget(security.Symbol, 10);
 
-            Assert.IsFalse(pendingRemovals.TryRemoveMember(security, universe).Any());
+            Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
             Assert.IsFalse(pendingRemovals.CheckPendingRemovals(new HashSet<Symbol>(), universe).Any());
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Keys.Count());
             Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
@@ -197,6 +220,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private static Security CreateSecurity(Symbol symbol)
+        {
+            return new Security(symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
         }
     }
 }

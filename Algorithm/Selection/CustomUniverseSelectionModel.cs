@@ -68,6 +68,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="market">The market of the universe</param>
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings</param>
+        /// <param name="interval">The interval at which selection should be performed</param>
         public CustomUniverseSelectionModel(SecurityType securityType, string name, string market, Func<DateTime, IEnumerable<string>> selector, UniverseSettings universeSettings, TimeSpan interval)
         {
             _interval = interval;
@@ -84,6 +85,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="market">The market of the universe</param>
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings</param>
+        /// <param name="interval">The interval at which selection should be performed</param>
         public CustomUniverseSelectionModel(SecurityType securityType, string name, string market, PyObject selector, UniverseSettings universeSettings, TimeSpan interval)
             : this(
                 securityType,

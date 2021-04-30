@@ -30,7 +30,6 @@ namespace QuantConnect.Algorithm.CSharp
         private int _onEndOfDaySpyCallCount;
         private int _onEndOfDayBacCallCount;
         private int _onEndOfDayIbmCallCount;
-        private int _onEndOfDayCallCount;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -53,14 +52,6 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 return new List<string> { _spySymbol.Value };
             });
-        }
-
-        /// <summary>
-        /// Obsolete overload to be removed.
-        /// </summary>
-        public override void OnEndOfDay()
-        {
-            _onEndOfDayCallCount++;
         }
 
         /// <summary>
@@ -115,10 +106,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"OnEndOfDay(IBM) unexpected count call {_onEndOfDayIbmCallCount}");
             }
-            if (_onEndOfDayCallCount != 4)
-            {
-                throw new Exception($"OnEndOfDay() unexpected count call {_onEndOfDayCallCount}");
-            }
         }
 
         /// <summary>
@@ -139,28 +126,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "469.832%"},
+            {"Compounding Annual Return", "474.494%"},
             {"Drawdown", "1.200%"},
             {"Expectancy", "0"},
-            {"Net Profit", "2.250%"},
-            {"Sharpe Ratio", "15.557"},
-            {"Probabilistic Sharpe Ratio", "78.085%"},
+            {"Net Profit", "2.260%"},
+            {"Sharpe Ratio", "15.623"},
+            {"Probabilistic Sharpe Ratio", "78.260%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.562"},
-            {"Beta", "0.933"},
-            {"Annual Standard Deviation", "0.216"},
+            {"Alpha", "1.554"},
+            {"Beta", "0.929"},
+            {"Annual Standard Deviation", "0.217"},
             {"Annual Variance", "0.047"},
-            {"Information Ratio", "20.564"},
-            {"Tracking Error", "0.07"},
-            {"Treynor Ratio", "3.602"},
-            {"Total Fees", "$20.75"},
+            {"Information Ratio", "20.529"},
+            {"Tracking Error", "0.069"},
+            {"Treynor Ratio", "3.655"},
+            {"Total Fees", "$20.84"},
+            {"Estimated Strategy Capacity", "$5200000.00"},
             {"Fitness Score", "0.249"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "63.776"},
-            {"Return Over Maximum Drawdown", "586.645"},
+            {"Sortino Ratio", "65.716"},
+            {"Return Over Maximum Drawdown", "599.744"},
             {"Portfolio Turnover", "0.249"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -175,7 +163,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1063656593"}
+            {"OrderListHash", "1ecc4599dcaed2f158c820923a97d8a2"}
         };
     }
 }

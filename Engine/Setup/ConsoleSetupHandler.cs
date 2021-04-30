@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             // don't force load times to be fast here since we're running locally, this allows us to debug
             // and step through some code that may take us longer than the default 10 seconds
-            var loader = new Loader(debugging, algorithmNodePacket.Language, TimeSpan.FromHours(1), names => names.SingleOrDefault(name => MatchTypeName(name, algorithmName)), WorkerThread);
+            var loader = new Loader(debugging, algorithmNodePacket.Language, BaseSetupHandler.AlgorithmCreationTimeout, names => names.SingleOrDefault(name => MatchTypeName(name, algorithmName)), WorkerThread);
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new AlgorithmSetupException($"During the algorithm initialization, the following exception has occurred: {error}");
 
@@ -168,10 +168,18 @@ namespace QuantConnect.Lean.Engine.Setup
                     isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
                         () =>
                         {
-                            //Setup Base Algorithm:
-                            algorithm.Initialize();
+                            try
+                            {
+                                //Setup Base Algorithm:
+                                algorithm.Initialize();
+                            }
+                            catch (Exception err)
+                            {
+                                Log.Error(err);
+                                Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: ", err));
+                            }
                         }, baseJob.Controls.RamAllocation,
-                        sleepIntervalMillis: 50,
+                        sleepIntervalMillis: 100,
                         workerThread: WorkerThread);
 
                     // set start and end date if present in the job

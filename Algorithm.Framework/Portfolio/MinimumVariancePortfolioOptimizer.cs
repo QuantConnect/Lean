@@ -30,6 +30,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private double _upper;
         private double _targetReturn;
 
+        /// <summary>
+        /// Initialize a new instance of <see cref="MinimumVariancePortfolioOptimizer"/>
+        /// </summary>
+        /// <param name="lower">Lower bound</param>
+        /// <param name="upper">Upper bound</param>
+        /// <param name="targetReturn">Target return</param>
         public MinimumVariancePortfolioOptimizer(double lower = -1, double upper = 1, double targetReturn = 0.02)
         {
             _lower = lower;

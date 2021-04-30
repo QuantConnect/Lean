@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.Selection
                     .Select(symbol => Symbol.CreateOption(
                         symbol,
                         symbol.ID.Market,
-                        default(OptionStyle),
+                        symbol.SecurityType.DefaultOptionStyle(),
                         default(OptionRight),
                         0m,
                         SecurityIdentifier.DefaultDate))

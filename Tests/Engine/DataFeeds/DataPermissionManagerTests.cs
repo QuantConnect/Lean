@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        internal class TestInvalidConfigurationAlgorithm : BasicTemplateDailyAlgorithm
+        public class TestInvalidConfigurationAlgorithm : BasicTemplateDailyAlgorithm
         {
             public static int Count;
             public override void Initialize()
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
         
-        internal class TestInvalidConfigurationSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class TestInvalidConfigurationSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
             {

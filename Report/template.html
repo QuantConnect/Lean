@@ -62,23 +62,23 @@
                                 <tbody>
                                     <tr>
                                         <td class="title">Days Live</td><td>{{$KPI-DAYS-LIVE}}</td><td class="kpi-live">{{$KPI-DAYS-LIVE}}</td>
-                                        <td class="title">CAGR</td><td>{{$KPI-CAGR}}</td><td class="kpi-live">{{$KPI-LIVE-CAGR}}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="title">Turnover</td><td>{{$KPI-TURNOVER}}</td><td class="kpi-live">{{$KPI-LIVE-TURNOVER}}</td>
                                         <td class="title">Drawdown</td><td>{{$KPI-DRAWDOWN}}</td><td class="kpi-live">{{$KPI-LIVE-DRAWDOWN}}</td>
                                     </tr>
                                     <tr>
-                                        <td class="title">Kelly Estimate</td><td>{{$KPI-KELLY-ESTIMATE}}</td><td class="kpi-live">{{$KPI-LIVE-KELLY-ESTIMATE}}</td>
+                                        <td class="title">Turnover</td><td>{{$KPI-TURNOVER}}</td><td class="kpi-live">{{$KPI-LIVE-TURNOVER}}</td>
+                                        <td class="title">Probabilistic SR</td><td>{{$KPI-PSR}}</td><td class="kpi-live">{{$KPI-LIVE-PSR}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">CAGR</td><td>{{$KPI-CAGR}}</td><td class="kpi-live">{{$KPI-LIVE-CAGR}}</td>
                                         <td class="title">{{$LIVE-MARKER}}Sharpe Ratio</td><td>{{$KPI-SHARPE}}</td><td class="kpi-live">{{$KPI-LIVE-SHARPE}}</td>
                                     </tr>
                                     <tr>
-                                        <td class="title">Probabilistic SR</td><td>{{$KPI-PSR}}</td><td class="kpi-live">{{$KPI-LIVE-PSR}}</td>
+                                        <td class="title">Markets</td> <td class="kpi-backtest">{{$KPI-MARKETS}}</td><td class="kpi-live" colspan="2">{{$KPI-MARKETS}}</td>
                                         <td class="title">Information Ratio</td><td>{{$KPI-INFORMATION-RATIO}}</td><td class="kpi-live">{{$KPI-LIVE-INFORMATION-RATIO}}</td>
                                     </tr>
                                     <tr>
-                                        <td class="title">Markets</td> <td class="kpi-backtest">{{$KPI-MARKETS}}</td><td class="kpi-live" colspan="2">{{$KPI-MARKETS}}</td>
-                                        <td class="title">Trades Per Day</td><td>{{$KPI-TRADES-PER-DAY}}</td><td class="kpi-live">{{$KPI-LIVE-TRADES-PER-DAY}}</td>
+                                        <td class="title">Trades per Day</td><td>{{$KPI-TRADES-PER-DAY}}</td><td class="kpi-live">{{$KPI-LIVE-TRADES-PER-DAY}}</td>
+                                        <td class="title">Strategy Capacity (USD)</td><td>{{$KPI-STRATEGY-CAPACITY}}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -188,7 +188,7 @@
                     </div>
                 </div>
             </div>
-            <div class="page" style="display: none;">
+            <div class="page">
                 <div class="header">
                     <div class="header-left">
                         <img src="https://cdn.quantconnect.com/web/i/logo.png">
@@ -219,7 +219,7 @@
                             <table class="table compact">
                                 <thead>
                                 <tr>
-                                    <th>Rolling Portfolio Beta to Equity</th>
+                                    <th>Rolling Portfolio Beta (6 Months)</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -273,7 +273,7 @@
                             <table class="table compact">
                                 <thead>
                                 <tr>
-                                    <th>Exposure</th>
+                                    <th>Long-Short Exposure</th>
                                 </tr>
                                 </thead>
                                 <tbody>

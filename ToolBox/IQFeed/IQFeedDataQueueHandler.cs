@@ -39,7 +39,6 @@ namespace QuantConnect.ToolBox.IQFeed
     public class IQFeedDataQueueHandler : HistoryProviderBase, IDataQueueHandler, IDataQueueUniverseProvider
     {
         private bool _isConnected;
-        private int _dataPointCount;
         private readonly HashSet<Symbol> _symbols;
         private readonly Dictionary<Symbol, Symbol> _underlyings;
         private readonly object _sync = new object();
@@ -57,7 +56,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
-        public override int DataPointCount => _dataPointCount;
+        public override int DataPointCount { get; } = 0;
 
         /// <summary>
         /// IQFeedDataQueueHandler is an implementation of IDataQueueHandler:
@@ -367,13 +366,12 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         /// <summary>
-        /// Returns whether the time can be advanced or not.
+        /// Returns whether selection can take place or not.
         /// </summary>
-        /// <param name="securityType">The security type</param>
-        /// <returns>true if the time can be advanced</returns>
-        public bool CanAdvanceTime(SecurityType securityType)
+        /// <returns>True if selection can take place</returns>
+        public bool CanPerformSelection()
         {
-            return _symbolUniverse.CanAdvanceTime(securityType);
+            return _symbolUniverse.CanPerformSelection();
         }
 
         /// <summary>

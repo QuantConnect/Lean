@@ -28,19 +28,19 @@ namespace QuantConnect.Report
         /// </summary>
         public static readonly Dictionary<CrisisEvent, Crisis> Events = new Dictionary<CrisisEvent, Crisis>
         {
-            {CrisisEvent.DotCom, new Crisis("DotCom Bubble", new DateTime(2000, 2, 26), new DateTime(2000, 9, 10)) },
-            {CrisisEvent.SeptemberEleventh, new Crisis("September 11, 2001 Attacks", new DateTime(2001, 9, 5), new DateTime(2001, 10, 10)) },
-            {CrisisEvent.USHousingBubble2003, new Crisis("U.S. Housing Bubble (2003)", new DateTime(2003, 1, 1), new DateTime(2003, 2, 20)) },
-            {CrisisEvent.GlobalFinancialCrisis, new Crisis("Global Financial Crisis", new DateTime(2007, 10, 1), new DateTime(2011, 12, 1))},
-            {CrisisEvent.FlashCrash, new Crisis("Flash Crash", new DateTime(2010, 5, 1), new DateTime(2010, 5, 22))},
-            {CrisisEvent.FukushimaMeltdown, new Crisis("Fukushima Meltdown", new DateTime(2011, 3, 1), new DateTime(2011, 4, 22)) },
-            {CrisisEvent.USDowngradeEuropeanDebt, new Crisis("U.S. Downgrade / European Debt Crisis", new DateTime(2011, 8, 5), new DateTime(2011, 9, 1))},
+            {CrisisEvent.DotCom, new Crisis("DotCom Bubble 2000", new DateTime(2000, 2, 26), new DateTime(2000, 9, 10)) },
+            {CrisisEvent.SeptemberEleventh, new Crisis("September 11, 2001", new DateTime(2001, 9, 5), new DateTime(2001, 10, 10)) },
+            {CrisisEvent.USHousingBubble2003, new Crisis("U.S. Housing Bubble 2003", new DateTime(2003, 1, 1), new DateTime(2003, 2, 20)) },
+            {CrisisEvent.GlobalFinancialCrisis, new Crisis("Global Financial Crisis 2007", new DateTime(2007, 10, 1), new DateTime(2011, 12, 1))},
+            {CrisisEvent.FlashCrash, new Crisis("Flash Crash 2010", new DateTime(2010, 5, 1), new DateTime(2010, 5, 22))},
+            {CrisisEvent.FukushimaMeltdown, new Crisis("Fukushima Meltdown 2011", new DateTime(2011, 3, 1), new DateTime(2011, 4, 22)) },
+            {CrisisEvent.USDowngradeEuropeanDebt, new Crisis("U.S. Credit Downgrade 2011", new DateTime(2011, 8, 5), new DateTime(2011, 9, 1))},
             {CrisisEvent.EurozoneSeptember2012, new Crisis("ECB IR Event 2012", new DateTime(2012, 9, 5), new DateTime(2012, 10, 12))},
-            {CrisisEvent.EurozoneOctober2014, new Crisis("European Debt Crisis Oct. 2014", new DateTime(2014, 10, 1), new DateTime(2014, 10, 29))},
+            {CrisisEvent.EurozoneOctober2014, new Crisis("European Debt Crisis 2014", new DateTime(2014, 10, 1), new DateTime(2014, 10, 29))},
             {CrisisEvent.MarketSellOff2015, new Crisis("Market Sell-Off 2015", new DateTime(2015, 8, 10), new DateTime(2015, 10, 10))},
-            {CrisisEvent.Recovery, new Crisis("Recovery", new DateTime(2010, 1, 1), new DateTime(2012, 10, 1))},
-            {CrisisEvent.NewNormal, new Crisis("New Normal", new DateTime(2014, 1, 1), new DateTime(2019, 1, 1))},
-            {CrisisEvent.COVID19, new Crisis("COVID-19 Pandemic", new DateTime(2020, 2, 10), new DateTime(2020, 9, 20))},
+            {CrisisEvent.Recovery, new Crisis("Recovery 2010-2012", new DateTime(2010, 1, 1), new DateTime(2012, 10, 1))},
+            {CrisisEvent.NewNormal, new Crisis("New Normal 2014-2019", new DateTime(2014, 1, 1), new DateTime(2019, 1, 1))},
+            {CrisisEvent.COVID19, new Crisis("COVID-19 Pandemic 2020", new DateTime(2020, 2, 10), new DateTime(2020, 9, 20))},
         };
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace QuantConnect.Report
         /// <returns></returns>
         public string ToString(DateTime start, DateTime end)
         {
-            return $"{Name} {start:MMM yyyy} - {end:MMM yyyy}";
+            return $"{Name}";
         }
     }
 }

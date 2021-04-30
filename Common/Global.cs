@@ -1,4 +1,4 @@
-﻿﻿/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -23,6 +25,44 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
+    /// <summary>
+    /// Equity US exchanges
+    /// </summary>
+    /// <remarks>
+    /// The byte value of each entry are the byte representation of the exchange single letter code.
+    /// E.g.
+    ///     - 'Q' byte representation is 81 and it maps to NASDAQ
+    ///     - 'Z' byte representation is 90 and it maps to BATS
+    /// </remarks>
+    public enum PrimaryExchange : byte
+    {
+#pragma warning disable 1591
+        UNKNOWN=0,
+        NASDAQ=81,
+        BATS=90,
+        ARCA=80,
+        NYSE=78,
+        NSE=67,
+        FINRA=68,
+        ISE=73,
+        OPRA,
+        CSE=77,
+        CBOE=87,
+        AMEX=65,
+        SIAC,
+        EDGA=74,
+        EDGX=75,
+        NASDAQ_BX=66,
+        NASDAQ_PSX=88,
+        BATS_Y,
+        C2,
+        BOSTON,
+        MIAX,
+        ISE_GEMINI,
+        ISE_MERCURY,
+#pragma warning restore 1591
+    }
+
     /// <summary>
     /// Shortcut date format strings
     /// </summary>
@@ -50,6 +90,10 @@ namespace QuantConnect
         public const string USDateOnly = "M/d/yyyy";
         /// Date format of QC forex data
         public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
+        /// Date format of FIX Protocol UTC Timestamp without milliseconds
+        public const string FIX = "yyyyMMdd-HH:mm:ss";
+        /// Date format of FIX Protocol UTC Timestamp with milliseconds
+        public const string FIXWithMillisecond = "yyyyMMdd-HH:mm:ss.fff";
         /// YYYYMM Year and Month Character Date Representation (used for futures)
         public const string YearMonth = "yyyyMM";
     }
@@ -104,7 +148,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="security">The security instance</param>
         public Holding(Security security)
-             : this()
+            : this()
         {
             var holding = security.Holdings;
 
@@ -116,7 +160,7 @@ namespace QuantConnect
             ConversionRate = security.QuoteCurrency.ConversionRate;
 
             var rounding = 2;
-            if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd)
+            if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd || holding.Type == SecurityType.Index)
             {
                 rounding = 5;
             }
@@ -147,7 +191,7 @@ namespace QuantConnect
                 MarketPrice = MarketPrice,
                 MarketValue = MarketValue,
                 UnrealizedPnL = UnrealizedPnL,
-                ConversionRate  = ConversionRate,
+                ConversionRate = ConversionRate,
                 CurrencySymbol = CurrencySymbol
             };
         }
@@ -158,8 +202,8 @@ namespace QuantConnect
         public override string ToString()
         {
             var value = Invariant($"{Symbol.Value}: {Quantity} @ ") +
-                        Invariant($"{CurrencySymbol}{AveragePrice} - ") +
-                        Invariant($"Market: {CurrencySymbol}{MarketPrice}");
+                Invariant($"{CurrencySymbol}{AveragePrice} - ") +
+                Invariant($"Market: {CurrencySymbol}{MarketPrice}");
 
             if (ConversionRate != 1m)
             {
@@ -325,7 +369,20 @@ namespace QuantConnect
         /// The contract multiplier for Futures Options plays a big part in determining the premium
         /// of the option, which can also differ from the underlying future's multiplier.
         /// </remarks>
-        FutureOption
+        FutureOption,
+
+        /// <summary>
+        /// Index Security Type.
+        /// </summary>
+        Index,
+
+        /// <summary>
+        /// Index Option Security Type.
+        /// </summary>
+        /// <remarks>
+        /// For index options traded on American markets, they tend to be European-style options and are Cash-settled.
+        /// </remarks>
+        IndexOption,
     }
 
     /// <summary>
@@ -679,40 +736,111 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Global Market Short Codes and their full versions: (used in tick objects)
+    /// Defines Lean exchanges codes and names
     /// </summary>
-    public static class MarketCodes
+    public static class Exchanges
     {
-        /// US Market Codes
-        public static Dictionary<string, string> US = new Dictionary<string, string>()
+        /// <summary>
+        /// Gets the exchange as single character representation.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetPrimaryExchangeAsSingleCharacter(this string exchange)
         {
-            {"A", "American Stock Exchange"},
-            {"B", "Boston Stock Exchange"},
-            {"C", "National Stock Exchange"},
-            {"D", "FINRA ADF"},
-            {"I", "International Securities Exchange"},
-            {"J", "Direct Edge A"},
-            {"K", "Direct Edge X"},
-            {"M", "Chicago Stock Exchange"},
-            {"N", "New York Stock Exchange"},
-            {"P", "Nyse Arca Exchange"},
-            {"Q", "NASDAQ OMX"},
-            {"T", "NASDAQ OMX"},
-            {"U", "OTC Bulletin Board"},
-            {"u", "Over-the-Counter trade in Non-NASDAQ issue"},
-            {"W", "Chicago Board Options Exchange"},
-            {"X", "Philadelphia Stock Exchange"},
-            {"Y", "BATS Y-Exchange, Inc"},
-            {"Z", "BATS Exchange, Inc"},
-            {"IEX", "Investors Exchange"},
-        };
+            return string.IsNullOrEmpty(exchange) ? null : ((char)exchange.GetPrimaryExchange()).ToString();
+        }
 
-        /// Canada Market Short Codes:
-        public static Dictionary<string, string> Canada = new Dictionary<string, string>()
+        /// <summary>
+        /// Returns the main Exchange from the single character encoding.
+        /// </summary>
+        /// <param name="exchange"></param>
+        /// <returns></returns>
+        public static PrimaryExchange GetPrimaryExchange(char exchange)
         {
-            {"T", "Toronto"},
-            {"V", "Venture"}
-        };
+            return (PrimaryExchange)exchange;
+        }
+
+        /// <summary>
+        /// Gets the exchange as PrimaryExchange object.
+        /// </summary>
+        /// <remarks>Useful for performance</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static PrimaryExchange GetPrimaryExchange(this string exchange)
+        {
+            var primaryExchange = PrimaryExchange.UNKNOWN;
+            if (string.IsNullOrEmpty(exchange) || Enum.TryParse(exchange, true, out primaryExchange))
+            {
+                return primaryExchange;
+            }
+
+            switch (exchange.LazyToUpper())
+            {
+                case "T":
+                case "Q":
+                case "NASDAQ":
+                case "NASDAQ OMX":
+                    return PrimaryExchange.NASDAQ;
+                case "Z":
+                case "BATS":
+                case "BATS Z":
+                    return PrimaryExchange.BATS;
+                case "P":
+                case "ARCA":
+                    return PrimaryExchange.ARCA;
+                case "N":
+                case "NYSE":
+                    return PrimaryExchange.NYSE;
+                case "C":
+                case "NSE":
+                    return PrimaryExchange.NSE;
+                case "D":
+                case "FINRA":
+                    return PrimaryExchange.FINRA;
+                case "I":
+                case "ISE":
+                    return PrimaryExchange.ISE;
+                case "OPRA":
+                    return PrimaryExchange.OPRA;
+                case "M":
+                case "CSE":
+                    return PrimaryExchange.CSE;
+                case "W":
+                case "CBOE":
+                    return PrimaryExchange.CBOE;
+                case "A":
+                case "AMEX":
+                    return PrimaryExchange.AMEX;
+                case "SIAC":
+                    return PrimaryExchange.SIAC;
+                case "J":
+                case "EDGA":
+                    return PrimaryExchange.EDGA;
+                case "K":
+                case "EDGX":
+                    return PrimaryExchange.EDGX;
+                case "B":
+                case "NASDAQ BX":
+                    return PrimaryExchange.NASDAQ_BX;
+                case "X":
+                case "NASDAQ PSX":
+                    return PrimaryExchange.NASDAQ_PSX;
+                case "Y":
+                case "BATS Y":
+                    return PrimaryExchange.BATS_Y;
+                case "C2":
+                    return PrimaryExchange.C2;
+                case "BOSTON":
+                    return PrimaryExchange.BOSTON;
+                case "MIAX":
+                    return PrimaryExchange.MIAX;
+                case "ISE_GEMINI":
+                    return PrimaryExchange.ISE_GEMINI;
+                case "ISE_MERCURY":
+                    return PrimaryExchange.ISE_MERCURY;
+                default:
+                case "UNKNOWN":
+                    return PrimaryExchange.UNKNOWN;
+            }
+        }
     }
 
     /// <summary>
@@ -724,6 +852,7 @@ namespace QuantConnect
         /// The channel is empty
         /// </summary>
         public const string Vacated = "channel_vacated";
+
         /// <summary>
         /// The channel has subscribers
         /// </summary>

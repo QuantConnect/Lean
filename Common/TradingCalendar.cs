@@ -29,6 +29,11 @@ namespace QuantConnect
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly SecurityManager _securityManager;
 
+        /// <summary>
+        /// Initialize a new <see cref="TradingCalendar"/> instance.
+        /// </summary>
+        /// <param name="securityManager">SecurityManager for this calendar</param>
+        /// <param name="marketHoursDatabase">MarketHoursDatabase for this calendar</param>
         public TradingCalendar(SecurityManager securityManager, MarketHoursDatabase marketHoursDatabase)
         {
             _securityManager = securityManager;
@@ -117,7 +122,7 @@ namespace QuantConnect
             }
 
             var qlCalendar = new UnitedStates();
-            var options = symbols.Where(x => x.ID.SecurityType == SecurityType.Option || x.ID.SecurityType == SecurityType.FutureOption).ToList();
+            var options = symbols.Where(x => x.ID.SecurityType.IsOption()).ToList();
             var futures = symbols.Where(x => x.ID.SecurityType == SecurityType.Future).ToList();
 
             foreach (var dayIdx in Enumerable.Range(0, (int)(end.Date.AddDays(1.0) - start.Date).TotalDays))

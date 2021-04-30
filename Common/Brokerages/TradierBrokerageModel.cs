@@ -57,10 +57,10 @@ namespace QuantConnect.Brokerages
             message = null;
 
             var securityType = order.SecurityType;
-            if (securityType != SecurityType.Equity)
+            if (securityType != SecurityType.Equity && securityType != SecurityType.Option)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model only supports equities."
+                    "This model only supports equities and options."
                 );
 
                 return false;
@@ -165,7 +165,8 @@ namespace QuantConnect.Brokerages
         /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
-            return new ConstantFeeModel(1m);
+            // Trading stocks at Tradier Brokerage is free
+            return new ConstantFeeModel(0m);
         }
 
         /// <summary>

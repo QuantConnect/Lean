@@ -22,6 +22,9 @@ using System.Linq;
 
 namespace QuantConnect.Data.Custom.CBOE
 {
+    /// <summary>
+    /// CBOE data source
+    /// </summary>
     public class CBOE : TradeBar
     {
         /// <summary>
@@ -30,6 +33,7 @@ namespace QuantConnect.Data.Custom.CBOE
         public CBOE()
         {
             DataType = MarketDataType.Base;
+            Period = TimeSpan.FromDays(1);
         }
 
         /// <summary>
@@ -89,8 +93,8 @@ namespace QuantConnect.Data.Custom.CBOE
 
             return new CBOE
             {
-                // Add a day delay to the data so that we LEAN doesn't assume that we get the data at 00:00 the day of
-                Time = QuantConnect.Parse.DateTime(csv[0]).AddDays(1),
+                // A one day delay is added to the end time automatically
+                Time = QuantConnect.Parse.DateTime(csv[0]),
                 Symbol = config.Symbol,
                 Open = open,
                 High = high,

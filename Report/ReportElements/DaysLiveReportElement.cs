@@ -28,7 +28,6 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
-        /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
         public DaysLiveReportElement(string name, string key, LiveResult live)
         {
@@ -48,7 +47,16 @@ namespace QuantConnect.Report.ReportElements
             }
 
             var equityPoints = ResultsUtil.EquityPoints(_live);
-            return (DateTime.UtcNow - equityPoints.First().Key).Days.ToStringInvariant();
+            if (equityPoints.Count == 0)
+            {
+                Result = 0;
+                return "0";
+            }
+            
+            var daysLive = (equityPoints.Last().Key - equityPoints.First().Key).Days;
+            Result = daysLive;
+
+            return daysLive.ToStringInvariant();
         }
     }
 }

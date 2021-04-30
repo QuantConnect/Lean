@@ -41,7 +41,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
-        /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <param name="startTime">Start date for the data request</param>
         /// <param name="enablePriceScaling">Applies price factor</param>
         /// <returns>The new auxiliary data enumerator</returns>
@@ -51,7 +50,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             IFactorFileProvider factorFileProvider,
             ITradableDatesNotifier tradableDayNotifier,
             MapFileResolver mapFileResolver,
-            bool includeAuxiliaryData,
             DateTime startTime,
             bool enablePriceScaling = true)
         {
@@ -59,19 +57,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
 
             var tradableEventProviders = new List<ITradableDateEventProvider>();
-            if (config.Symbol.SecurityType != SecurityType.FutureOption)
+
+            if (config.Symbol.SecurityType == SecurityType.Equity)
             {
-                // Maintain order of the old event providers to avoid any sort of potential
-                // non-deterministic errors from occurring
-                tradableEventProviders.Add(new MappingEventProvider());
                 tradableEventProviders.Add(new SplitEventProvider());
                 tradableEventProviders.Add(new DividendEventProvider());
-                tradableEventProviders.Add(new DelistingEventProvider());
             }
-            else
+
+            if (config.Symbol.SecurityType == SecurityType.Equity
+                || config.Symbol.SecurityType == SecurityType.Base
+                || config.Symbol.SecurityType == SecurityType.Option)
             {
-                tradableEventProviders.Add(new DelistingEventProvider());
+                tradableEventProviders.Add(new MappingEventProvider());
             }
+
+            tradableEventProviders.Add(new DelistingEventProvider());
 
             var enumerator = new AuxiliaryDataEnumerator(
                 config,
@@ -79,7 +79,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 new Lazy<MapFile>(() => GetMapFileToUse(config, mapFileResolver)),
                 tradableEventProviders.ToArray(),
                 tradableDayNotifier,
-                includeAuxiliaryData,
                 startTime);
 
             // avoid price scaling for backtesting; calculate it directly in worker
@@ -94,20 +93,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
 
             return new SynchronizingEnumerator(dataEnumerator, enumerator);
-        }
-
-        /// <summary>
-        /// Centralized logic used by the data feeds to determine if we should emit auxiliary base data points.
-        /// For equities we only want to emit split/dividends events for non internal and only for <see cref="TradeBar"/> configurations
-        /// this last part is because equities also have <see cref="QuoteBar"/> subscriptions.
-        /// </summary>
-        /// <remarks>The <see cref="TimeSliceFactory"/> does not allow for multiple dividends/splits per symbol in the same time slice
-        /// but we don't want to rely only on that and make an explicit decision here.</remarks>
-        /// <remarks>History provider is never emitting auxiliary data points</remarks>
-        public static bool ShouldEmitAuxiliaryBaseData(SubscriptionDataConfig config)
-        {
-            return config.SecurityType != SecurityType.Equity || !config.IsInternalFeed
-                && (config.Type == typeof(TradeBar) || config.Type == typeof(Tick) && config.TickType == TickType.Trade);
         }
 
         private static MapFile GetMapFileToUse(

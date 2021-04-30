@@ -322,7 +322,7 @@ namespace QuantConnect.Research
             }
 
             // Load a canonical option Symbol if the user provides us with an underlying Symbol
-            if (symbol.SecurityType != SecurityType.Option && symbol.SecurityType != SecurityType.FutureOption)
+            if (!symbol.SecurityType.IsOption())
             {
                 var option = AddOption(symbol, resolution, symbol.ID.Market);
 
@@ -804,7 +804,7 @@ namespace QuantConnect.Research
         {
             //SubscriptionRequest does not except nullable DateTimes, so set a startTime and endTime
             var startTime = start.HasValue ? (DateTime)start : QuantConnect.Time.BeginningOfTime;
-            var endTime = end.HasValue ? (DateTime)end : QuantConnect.Time.EndOfTime;
+            var endTime = end.HasValue ? (DateTime) end : DateTime.UtcNow.Date;
 
             //Collection to store our results
             var data = new Dictionary<DateTime, DataDictionary<dynamic>>();

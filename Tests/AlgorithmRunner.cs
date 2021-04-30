@@ -91,7 +91,7 @@ namespace QuantConnect.Tests
                 var initialDebugEnabled = Log.DebuggingEnabled;
 
                 // Use our current test LogHandler and a FileLogHandler
-                var newLogHandlers = new ILogHandler[] { MaintainLogHandlerAttribute.GetLogHandler(), new FileLogHandler(logFile, false) };
+                var newLogHandlers = new ILogHandler[] { MaintainLogHandlerAttribute.LogHandler, new FileLogHandler(logFile, false) };
 
                 using (Log.LogHandler = new CompositeLogHandler(newLogHandlers))
                 using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
@@ -213,7 +213,7 @@ namespace QuantConnect.Tests
         /// <summary>
         /// Used to intercept the algorithm instance to aid the <see cref="RegressionHistoryProviderWrapper"/>
         /// </summary>
-        internal class RegressionSetupHandlerWrapper : BacktestingSetupHandler
+        public class RegressionSetupHandlerWrapper : BacktestingSetupHandler
         {
             public static IAlgorithm Algorithm { get; protected set; }
             public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
@@ -231,7 +231,7 @@ namespace QuantConnect.Tests
         /// <summary>
         /// Used to perform checks against history requests for all regression algorithms
         /// </summary>
-        class RegressionHistoryProviderWrapper : SubscriptionDataReaderHistoryProvider
+        public class RegressionHistoryProviderWrapper : SubscriptionDataReaderHistoryProvider
         {
             public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
@@ -244,7 +244,7 @@ namespace QuantConnect.Tests
             }
         }
 
-        class TestWorkerThread : WorkerThread
+        public class TestWorkerThread : WorkerThread
         {
         }
     }

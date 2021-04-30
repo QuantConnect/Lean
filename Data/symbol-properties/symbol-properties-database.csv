@@ -84,6 +84,9 @@ usa,[*],option,,USD,100,0.01,1
 
 usa,[*],equity,,USD,1,0.01,1
 
+usa,[*],index,,USD,1,0.01,1
+usa,[*],indexoption,,USD,100,0.05,1
+
 # for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
 cboe,VX,future,VIX futures ,USD,1000.0,0.05,1.0
 cbot,AW,future,Bloomberg Commodity Index Futures,USD,100.0,0.1,1.0
@@ -235,6 +238,9 @@ nymex,YO,future,No. 11 Sugar Futures,USD,112000.0,0.0001,1.0
 sgx,NK,future,SGX Nikkei 225 Index Futures,JPY,500,5,5.0
 sgx,TW,future,MSCI Taiwan Index Futures,USD,100,0.1,50.0
 sgx,IN,future,Nifty Indices Futures,USD,2,0.5,50.0
+nfo,NIFTY,future,Nifty50 Index,INR,0.05,75,1
+nfo,BANKNIFTY,future,BankNifty Index,INR,0.05,25,1.0
+bse,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1.0
 hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0
 
 # Futures options -- will default to Futures contract specs in case no entry exists
@@ -438,6 +444,8 @@ gdax,UMAEUR,crypto,UMA-Euro,EUR,1,0.001,0.001,UMA-EUR
 gdax,UMAGBP,crypto,UMA-British Pound,GBP,1,0.001,0.001,UMA-GBP
 gdax,UMAUSD,crypto,UMA-United States Dollar,USD,1,0.001,0.001,UMA-USD
 gdax,UNIUSD,crypto,Uniswap-United States Dollar,USD,1,0.0001,0.000001,UNI-USD
+gdax,USDCEUR,crypto,USDC-Eur,EUR,1,0.001,0.01,USDC-EUR
+gdax,USDCGBP,crypto,USDC-GBP,GBP,1,0.001,0.01,USDC-GBP
 gdax,WBTCBTC,crypto,Wrapped Bitcoin-Bitcoin,BTC,1,0.0001,0.00000001,WBTC-BTC
 gdax,WBTCUSD,crypto,Wrapped Bitcoin-United States Dollar,USD,1,0.01,0.00000001,WBTC-USD
 gdax,XLMBTC,crypto,Stellar-Bitcoin,BTC,1,0.00000001,1,XLM-BTC

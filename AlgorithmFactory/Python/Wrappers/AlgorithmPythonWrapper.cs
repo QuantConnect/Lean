@@ -54,6 +54,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public bool IsOnEndOfDayImplemented { get; }
 
         /// <summary>
+        /// True if the underlying python algorithm implements "OnEndOfDay(symbol)"
+        /// </summary>
+        public bool IsOnEndOfDaySymbolImplemented { get; }
+
+        /// <summary>
         /// <see cref = "AlgorithmPythonWrapper"/> constructor.
         /// Creates and wraps the algorithm written in python.
         /// </summary>
@@ -67,6 +72,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     Logging.Log.Trace($"AlgorithmPythonWrapper(): Python version {PythonEngine.Version}: Importing python module {moduleName}");
 
                     var module = Py.Import(moduleName);
+
+                    Logging.Log.Trace($"AlgorithmPythonWrapper(): {moduleName} successfully imported.");
+
                     var pyList = module.Dir();
                     foreach (var name in pyList)
                     {
@@ -97,7 +105,26 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                             _onOrderEvent = pyAlgorithm.GetAttr("OnOrderEvent");
 
-                            IsOnEndOfDayImplemented = pyAlgorithm.GetPythonMethod("OnEndOfDay") != null;
+                            PyObject endOfDayMethod = pyAlgorithm.GetPythonMethod("OnEndOfDay");
+                            if (endOfDayMethod != null)
+                            {
+                                // Since we have a EOD method implemented
+                                // Determine which one it is by inspecting its arg count
+                                var argCount = endOfDayMethod.GetPythonArgCount();
+                                switch (argCount)
+                                {
+                                    case 0: // EOD()
+                                        IsOnEndOfDayImplemented = true;
+                                        break;
+                                    case 1: // EOD(Symbol)
+                                        IsOnEndOfDaySymbolImplemented = true;
+                                        break;
+                                }
+
+                                // Its important to note that even if both are implemented
+                                // python will only use the last implemented, meaning only one will
+                                // be used and seen.
+                            }
                         }
                         attr.Dispose();
                     }
@@ -930,5 +957,16 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="objectStore">The object store</param>
         public void SetObjectStore(IObjectStore objectStore) => _baseAlgorithm.SetObjectStore(objectStore);
+
+        /// <summary>
+        /// Checks if the asset is shortable at the brokerage
+        /// </summary>
+        /// <param name="symbol">Symbol to check if it is shortable</param>
+        /// <param name="quantity">Quantity to short</param>
+        /// <returns>True if shortable at the brokerage</returns>
+        public bool Shortable(Symbol symbol, decimal quantity)
+        {
+            return _baseAlgorithm.Shortable(symbol, quantity);
+        }
     }
 }

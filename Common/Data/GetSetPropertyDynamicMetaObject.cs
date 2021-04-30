@@ -28,6 +28,13 @@ namespace QuantConnect.Data
         private readonly MethodInfo _setPropertyMethodInfo;
         private readonly MethodInfo _getPropertyMethodInfo;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:QuantConnect.Data.GetSetPropertyDynamicMetaObject" /> class.
+        /// </summary>
+        /// <param name="expression">The expression representing this <see cref="T:System.Dynamic.DynamicMetaObject" /></param>
+        /// <param name="value">The value represented by the <see cref="T:System.Dynamic.DynamicMetaObject" /></param>
+        /// <param name="setPropertyMethodInfo">The set method to use for updating this dynamic object</param>
+        /// <param name="getPropertyMethodInfo">The get method to use for updating this dynamic object</param>
         public GetSetPropertyDynamicMetaObject(
             Expression expression,
             object value,
@@ -40,6 +47,12 @@ namespace QuantConnect.Data
             _getPropertyMethodInfo = getPropertyMethodInfo;
         }
 
+        /// <summary>
+        /// Performs the binding of the dynamic set member operation.
+        /// </summary>
+        /// <param name="binder">An instance of the <see cref="T:System.Dynamic.SetMemberBinder" /> that represents the details of the dynamic operation.</param>
+        /// <param name="value">The <see cref="T:System.Dynamic.DynamicMetaObject" /> representing the value for the set member operation.</param>
+        /// <returns>The new <see cref="T:System.Dynamic.DynamicMetaObject" /> representing the result of the binding.</returns>
         public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
         {
             // we need to build up an expression tree that represents accessing our instance
@@ -62,6 +75,9 @@ namespace QuantConnect.Data
             return new DynamicMetaObject(call, restrictions);
         }
 
+        /// <summary>Performs the binding of the dynamic get member operation.</summary>
+        /// <param name="binder">An instance of the <see cref="T:System.Dynamic.GetMemberBinder" /> that represents the details of the dynamic operation.</param>
+        /// <returns>The new <see cref="T:System.Dynamic.DynamicMetaObject" /> representing the result of the binding.</returns>
         public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
         {
             // we need to build up an expression tree that represents accessing our instance

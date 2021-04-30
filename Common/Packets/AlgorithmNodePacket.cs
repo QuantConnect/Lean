@@ -56,6 +56,12 @@ namespace QuantConnect.Packets
         public int ProjectId = 0;
 
         /// <summary>
+        /// Project name of the request
+        /// </summary>
+        [JsonProperty(PropertyName = "sProjectName")]
+        public string ProjectName;
+
+        /// <summary>
         /// Algorithm Id - BacktestId or DeployId - Common Id property between packets.
         /// </summary>
         [JsonProperty(PropertyName = "sAlgorithmID")]

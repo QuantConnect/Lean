@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,12 +38,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the unique identifier for this insight
         /// </summary>
-        public Guid Id { get; private set; }
+        public Guid Id { get; protected set; }
 
         /// <summary>
         /// Gets the group id this insight belongs to, null if not in a group
         /// </summary>
-        public Guid? GroupId { get; private set; }
+        public Guid? GroupId { get; protected set; }
 
         /// <summary>
         /// Gets an identifier for the source model that generated this insight.
@@ -115,12 +115,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the most recent scores for this insight
         /// </summary>
-        public InsightScore Score { get; private set; }
+        public InsightScore Score { get; protected set; }
 
         /// <summary>
         /// Gets the estimated value of this insight in the account currency
         /// </summary>
-        public decimal EstimatedValue { get; internal set; }
+        public decimal EstimatedValue { get; protected internal set; }
 
         /// <summary>
         /// Determines whether or not this insight is considered expired at the specified <paramref name="utcTime"/>
@@ -620,6 +620,31 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             return str;
         }
+
+        /// <summary>
+        /// Returns a short string that represents the current object.
+        /// </summary>
+        /// <returns>A string that represents the current object.</returns>
+        public string ShortToString()
+        {
+            var str = Invariant($"{Symbol.Value} {Type} {Direction} {Period}");
+
+            if (Magnitude.HasValue)
+            {
+                str += Invariant($" M:{Magnitude.Value}%");
+            }
+            if (Confidence.HasValue)
+            {
+                str += Invariant($" C:{Math.Round(100 * Confidence.Value, 1)}%");
+            }
+            if (Weight.HasValue)
+            {
+                str += Invariant($" W:{Math.Round(100 * Weight.Value, 1)}%");
+            }
+
+            return str;
+        }
+
 
         /// <summary>
         /// Distinguishes between the different ways an insight's period/close times can be specified

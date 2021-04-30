@@ -64,7 +64,7 @@ class RegressionChannelAlgorithm(QCAlgorithm):
             self.SetHoldings(self._spy, -1)
             self.Plot("Trade Plot", "Sell", value)
 
-    def OnEndOfDay(self):
+    def OnEndOfDay(self, symbol):
         self.Plot("Trade Plot", "UpperChannel", self._rc.UpperChannel.Current.Value)
         self.Plot("Trade Plot", "LowerChannel", self._rc.LowerChannel.Current.Value)
         self.Plot("Trade Plot", "Regression", self._rc.LinearRegression.Current.Value)

@@ -17,6 +17,9 @@ using System;
 
 namespace QuantConnect.Data.Consolidators
 {
+    /// <summary>
+    /// Calendar Type Class; now obsolete routes functions to <see cref="Calendar"/>
+    /// </summary>
     [Obsolete("CalendarType is obsolete, please use Calendar instead")]
     public static class CalendarType
     {

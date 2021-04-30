@@ -72,9 +72,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <exception cref="ArgumentException">Option underlying Symbol is not Future or Equity</exception>
         public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
         {
-            if (underlyingSymbol.SecurityType == SecurityType.Equity)
+            if (underlyingSymbol.SecurityType == SecurityType.Equity || underlyingSymbol.SecurityType == SecurityType.Index)
             {
-                // Source data from TheOCC if we're trading equity options
+                // Source data from TheOCC if we're trading equity or index options
                 return GetEquityOptionContractList(underlyingSymbol, date);
             }
             if (underlyingSymbol.SecurityType == SecurityType.Future)
@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return GetFutureOptionContractList(underlyingSymbol, date);
             }
 
-            throw new ArgumentException("Option Underlying SecurityType is not supported. Supported types are: Equity, Future");
+            throw new ArgumentException("Option Underlying SecurityType is not supported. Supported types are: Equity, Index, Future");
         }
 
         private IEnumerable<Symbol> GetFutureOptionContractList(Symbol futureContractSymbol, DateTime date)
@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var canonicalOption = Symbol.CreateOption(
                         futureContractSymbol,
                         futureContractSymbol.ID.Market,
-                        default(OptionStyle),
+                        futureContractSymbol.SecurityType.DefaultOptionStyle(),
                         default(OptionRight),
                         default(decimal),
                         SecurityIdentifier.DefaultDate);
@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     Log.Trace($"LiveOptionChainProvider.GetOptionContractList(): Fetching option chain for {symbol.Value} [Attempt {attempt}]");
 
-                    contracts = FindEquityOptionContracts(symbol.Value);
+                    contracts = FindOptionContracts(symbol);
                     break;
                 }
                 catch (WebException exception)
@@ -267,14 +267,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Retrieve the list of option contracts for an underlying symbol from the OCC website
         /// </summary>
-        private static IEnumerable<Symbol> FindEquityOptionContracts(string underlyingSymbol)
+        private static IEnumerable<Symbol> FindOptionContracts(Symbol underlyingSymbol)
         {
             var symbols = new List<Symbol>();
 
             using (var client = new WebClient())
             {
                 // use QC url to bypass TLS issues with Mono pre-4.8 version
-                var url = "https://www.quantconnect.com/api/v2/theocc/series-search?symbolType=U&symbol=" + underlyingSymbol;
+                var url = "https://www.quantconnect.com/api/v2/theocc/series-search?symbolType=U&symbol=" + underlyingSymbol.Value;
 
                 // download the text file
                 var fileContent = client.DownloadString(url);
@@ -282,26 +282,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // read the lines, skipping the headers
                 var lines = fileContent.Split(new[] { "\r\n" }, StringSplitOptions.None).Skip(7);
 
+                // Example of a line:
+                // SPY		2021	03	26	190	000	C P 	0	612	360000000
+
                 // parse the lines, creating the Lean option symbols
                 foreach (var line in lines)
                 {
                     var fields = line.Split('\t');
 
                     var ticker = fields[0].Trim();
-                    if (ticker != underlyingSymbol)
+                    if (ticker != underlyingSymbol.Value)
                         continue;
 
                     var expiryDate = new DateTime(fields[2].ToInt32(), fields[3].ToInt32(), fields[4].ToInt32());
                     var strike = (fields[5] + "." + fields[6]).ToDecimal();
 
-                    if (fields[7].Contains("C"))
-                    {
-                        symbols.Add(Symbol.CreateOption(underlyingSymbol, Market.USA, OptionStyle.American, OptionRight.Call, strike, expiryDate));
-                    }
+                    Action<OptionRight> addSymbol = right =>
+                        symbols.Add(Symbol.CreateOption(
+                            underlyingSymbol,
+                            underlyingSymbol.ID.Market,
+                            underlyingSymbol.SecurityType.DefaultOptionStyle(),
+                            right,
+                            strike,
+                            expiryDate));
 
-                    if (fields[7].Contains("P"))
+                    foreach (var right in fields[7].Trim().Split(' '))
                     {
-                        symbols.Add(Symbol.CreateOption(underlyingSymbol, Market.USA, OptionStyle.American, OptionRight.Put, strike, expiryDate));
+                        if (right.Contains("C"))
+                        {
+                            addSymbol(OptionRight.Call);
+                        }
+
+                        if (right.Contains("P"))
+                        {
+                            addSymbol(OptionRight.Put);
+                        }
                     }
                 }
             }

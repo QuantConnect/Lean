@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly()
+        public override void ResetsProperly()
         {
             var bb = new BollingerBands(2, 2m);
             bb.Update(DateTime.Today, 1m);

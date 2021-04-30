@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.GreaterOrEqual(_algorithm.WarmUpDataCount, estimateExpectedDataCount);
         }
 
-        internal class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             public static TestWarmupAlgorithm TestAlgorithm { get; set; }
 
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        internal class TestWarmupAlgorithm : QCAlgorithm
+        public class TestWarmupAlgorithm : QCAlgorithm
         {
             private readonly Resolution _resolution;
             private Symbol _symbol;

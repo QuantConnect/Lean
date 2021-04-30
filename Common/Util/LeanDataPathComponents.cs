@@ -142,7 +142,7 @@ namespace QuantConnect.Util
             if (securityTypeOffset == LowResSecurityTypeOffset)
             {
                 ticker = Path.GetFileNameWithoutExtension(path);
-                if (securityType == SecurityType.Option || securityType == SecurityType.FutureOption)
+                if (securityType.IsOption())
                 {
                     // ticker_trade_american
                     var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));

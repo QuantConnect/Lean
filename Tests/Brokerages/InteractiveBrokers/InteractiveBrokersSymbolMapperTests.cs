@@ -18,7 +18,9 @@ using IBApi;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using QuantConnect.Securities.FutureOption;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
@@ -66,8 +68,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         }
 
         [TestCase("AAPL", "AAPL")]
-        [TestCase("AOL", "TWX")]
-        [TestCase("NWSA", "FOXA")]
+        [TestCase("VXXB", "VXX")]
+        [TestCase("NB", "BAC")]
         public void MapCorrectBrokerageSymbol(string ticker, string ibSymbol)
         {
             var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
@@ -172,6 +174,19 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.AreEqual(expectedContract.SecType, actualContract.SecType);
             Assert.AreEqual(expectedContract.IncludeExpired, actualContract.IncludeExpired);
             Assert.AreEqual(expectedContract.Currency, actualContract.Currency);
+        }
+
+        [TestCase(2021, 2, 23)]
+        [TestCase(2021, 3, 25)]
+        public void FuturesOptionsWithUnderlyingContractMonthMappedByRuleResolvesUnderlyingGetLeanSymbol(int year, int month, int day)
+        {
+            var futuresChainProvider = new BacktestingFutureChainProvider();
+            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
+
+            var expectedUnderlyingSymbol = Symbol.CreateFuture("GC", Market.COMEX, new DateTime(2021, 4, 28));
+            var futureOption = mapper.GetLeanSymbol("OG", SecurityType.FutureOption, Market.COMEX, new DateTime(year, month, day));
+
+            Assert.AreEqual(expectedUnderlyingSymbol, futureOption.Underlying);
         }
     }
 }

@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using Fasterflect;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -30,10 +30,14 @@ namespace QuantConnect.Securities
         private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase;
         private static readonly object DataFolderSymbolPropertiesDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<SecurityDatabaseKey, SymbolProperties> _entries;
+        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
         private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
 
-        private SymbolPropertiesDatabase(string file)
+        /// <summary>
+        /// Initialize a new instance of <see cref="SymbolPropertiesDatabase"/> using the given file
+        /// </summary>
+        /// <param name="file">File to read from</param>
+        protected SymbolPropertiesDatabase(string file)
         {
             var allEntries = new Dictionary<SecurityDatabaseKey, SymbolProperties>();
             var entriesBySecurityType = new Dictionary<SecurityDatabaseKey, SecurityDatabaseKey>();
@@ -186,6 +190,21 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Set SymbolProperties entry for a particular market, symbol and security type.
+        /// </summary>
+        /// <param name="market">Market of the entry</param>
+        /// <param name="symbol">Symbol of the entry</param>
+        /// <param name="securityType">Type of security for the entry</param>
+        /// <param name="properties">The new symbol properties to store</param>
+        /// <returns>True if successful</returns>
+        public bool SetEntry(string market, string symbol, SecurityType securityType, SymbolProperties properties)
+        {
+            var key = new SecurityDatabaseKey(market, symbol, securityType);
+            _entries[key] = properties;
+            return true;
+        }
+
+        /// <summary>
         /// Gets the instance of the <see cref="SymbolPropertiesDatabase"/> class produced by reading in the symbol properties
         /// data found in /Data/symbol-properties/
         /// </summary>
@@ -220,6 +239,10 @@ namespace QuantConnect.Securities
             {
                 SecurityDatabaseKey key;
                 var entry = FromCsvLine(line, out key);
+                if (key == null || entry == null)
+                {
+                    continue;
+                }
 
                 yield return new KeyValuePair<SecurityDatabaseKey, SymbolProperties>(key, entry);
             }
@@ -231,14 +254,21 @@ namespace QuantConnect.Securities
         /// <param name="line">The csv line to be parsed</param>
         /// <param name="key">The key used to uniquely identify this security</param>
         /// <returns>A new <see cref="SymbolProperties"/> for the specified csv line</returns>
-        private static SymbolProperties FromCsvLine(string line, out SecurityDatabaseKey key)
+        protected static SymbolProperties FromCsvLine(string line, out SecurityDatabaseKey key)
         {
             var csv = line.Split(',');
+
+            SecurityType securityType;
+            if (!csv[2].TryParseSecurityType(out securityType))
+            {
+                key = null;
+                return null;
+            }
 
             key = new SecurityDatabaseKey(
                 market: csv[0],
                 symbol: csv[1],
-                securityType: (SecurityType)Enum.Parse(typeof(SecurityType), csv[2], true));
+                securityType: securityType);
 
             return new SymbolProperties(
                 description: csv[3],
@@ -248,7 +278,5 @@ namespace QuantConnect.Securities
                 lotSize: csv[7].ToDecimal(),
                 marketTicker: csv.Length > 8 ? csv[8] : string.Empty);
         }
-
-
     }
 }

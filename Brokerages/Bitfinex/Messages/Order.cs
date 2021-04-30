@@ -126,6 +126,9 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         /// </summary>
         public int PlacedId { get; set; }
 
+        /// <summary>
+        /// If this is exchange order
+        /// </summary>
         public bool IsExchange => Type.StartsWith("EXCHANGE", StringComparison.OrdinalIgnoreCase);
     }
 }

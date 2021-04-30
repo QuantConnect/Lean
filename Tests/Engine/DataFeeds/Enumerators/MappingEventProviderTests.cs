@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [SetUp]
         public void SetUp()
         {
-            var symbol = Symbol.Create("FOXA", SecurityType.Equity, Market.USA);
+            var symbol = Symbol.Create("TFCFA", SecurityType.Equity, Market.USA);
 
             _config = new SubscriptionDataConfig(typeof(TradeBar),
                 symbol,
@@ -49,11 +49,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var provider = new MappingEventProvider();
 
-            Assert.AreEqual("FOXA", _config.MappedSymbol);
+            Assert.AreEqual("TFCFA", _config.MappedSymbol);
 
             provider.Initialize(_config,
                 null,
-                MapFile.Read("FOXA", Market.USA),
+                MapFile.Read("TFCFA", Market.USA),
                 new DateTime(2006, 1, 1));
 
             Assert.AreEqual("NWSA", _config.MappedSymbol);
@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var provider = new MappingEventProvider();
             provider.Initialize(_config,
                 null,
-                MapFile.Read("FOXA", Market.USA),
+                MapFile.Read("TFCFA", Market.USA),
                 new DateTime(2006, 1, 1));
 
             Assert.AreEqual("NWSA", _config.MappedSymbol);

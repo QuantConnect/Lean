@@ -38,6 +38,34 @@ namespace QuantConnect.Securities.Equity
         public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(8, 0, 0);
 
         /// <summary>
+        /// Checks if the equity is a shortable asset. Note that this does not
+        /// take into account any open orders or existing holdings. To check if the asset
+        /// is currently shortable, use QCAlgorithm's ShortableQuantity property instead.
+        /// </summary>
+        /// <returns>True if the security is a shortable equity</returns>
+        public bool Shortable
+        {
+            get
+            {
+                var shortableQuantity = ShortableProvider.ShortableQuantity(Symbol, LocalTime);
+                return shortableQuantity == null || shortableQuantity == 0m;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total quantity shortable for this security. This does not take into account
+        /// any open orders or existing holdings. To check the asset's currently shortable quantity,
+        /// use QCAlgorithm's ShortableQuantity property instead.
+        /// </summary>
+        /// <returns>Zero if not shortable, null if infinitely shortable, or a number greater than zero if shortable</returns>
+        public long? TotalShortableQuantity => ShortableProvider.ShortableQuantity(Symbol, LocalTime);
+
+        /// <summary>
+        /// Equity primary exchange.
+        /// </summary>
+        public PrimaryExchange PrimaryExchange;
+
+        /// <summary>
         /// Construct the Equity Object
         /// </summary>
         public Equity(Symbol symbol,
@@ -46,7 +74,8 @@ namespace QuantConnect.Securities.Equity
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache)
+            SecurityCache securityCache,
+            PrimaryExchange primaryExchange=PrimaryExchange.UNKNOWN)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -66,6 +95,7 @@ namespace QuantConnect.Securities.Equity
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);
+            PrimaryExchange = primaryExchange;
         }
 
         /// <summary>
@@ -76,7 +106,8 @@ namespace QuantConnect.Securities.Equity
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes)
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            PrimaryExchange primaryExchange = PrimaryExchange.UNKNOWN)
             : base(
                 config,
                 quoteCurrency,
@@ -97,6 +128,7 @@ namespace QuantConnect.Securities.Equity
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);
+            PrimaryExchange = primaryExchange;
         }
 
         /// <summary>

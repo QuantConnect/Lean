@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
+using Deedle;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -42,18 +45,41 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var psr = _backtest?.TotalPerformance?.PortfolioStatistics?.ProbabilisticSharpeRatio;
-            if (psr == null)
+            decimal? psr;
+            if (_live == null)
+            {
+                psr = _backtest?.TotalPerformance?.PortfolioStatistics?.ProbabilisticSharpeRatio;
+                Result = psr;
+                if (psr == null)
+                {
+                    return "-";
+                }
+                
+                return $"{psr:P0}";
+            }
+
+            var equityCurvePerformance = DrawdownCollection.NormalizeResults(_backtest, _live)
+                .ResampleEquivalence(date => date.Date, s => s.LastValue())
+                .PercentChange();
+
+            if (equityCurvePerformance.IsEmpty || equityCurvePerformance.KeyCount < 180)
             {
                 return "-";
             }
 
-            if (psr > 0)
-            {
-                return $"{psr:P0}";
-            }
+            var sixMonthsBefore = equityCurvePerformance.LastKey() - TimeSpan.FromDays(180);
 
-            return "-";
+            var benchmarkSharpeRatio = 1.0d / Math.Sqrt(252);
+            psr = Statistics.Statistics.ProbabilisticSharpeRatio(
+                equityCurvePerformance
+                    .Where(kvp => kvp.Key >= sixMonthsBefore)
+                    .Values
+                    .ToList(), 
+                benchmarkSharpeRatio)
+                .SafeDecimalCast();
+            
+            Result = psr;
+            return $"{psr:P0}";
         }
     }
 }

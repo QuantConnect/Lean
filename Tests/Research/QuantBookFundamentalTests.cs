@@ -17,6 +17,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Research;
@@ -31,6 +32,7 @@ namespace QuantConnect.Tests.Research
         private DateTime _startDate;
         private DateTime _endDate;
         private ILogHandler _logHandler;
+        private QuantBook _qb;
 
         [OneTimeSetUp]
         public void Setup()
@@ -45,6 +47,9 @@ namespace QuantConnect.Tests.Research
             _startDate = new DateTime(2014, 3, 31);
             _endDate = new DateTime(2014, 3, 31);
 
+            // Our qb instance to test on
+            _qb = new QuantBook();
+
             using (Py.GIL())
             {
                 _module = Py.Import("Test_QuantBookHistory");
@@ -56,6 +61,23 @@ namespace QuantConnect.Tests.Research
         {
             // Reset to initial handler
             Log.LogHandler = _logHandler;
+        }
+
+        [Test]
+        public void DefaultEndDate()
+        {
+            var startDate = DateTime.UtcNow.Date.AddDays(-7);
+
+            // Expected end date should be either today if tradable, or last tradable day
+            var aapl = _qb.AddEquity("AAPL");
+            var now = DateTime.UtcNow.Date;
+            var expectedDate = aapl.Exchange.Hours.IsDateOpen(now) ? now : aapl.Exchange.Hours.GetPreviousTradingDay(now);
+
+            IEnumerable<DataDictionary<dynamic>> data = _qb.GetFundamental("AAPL", "ValuationRatios.PERatio", startDate);
+
+            // Check that the last day in the collection is as expected
+            var lastDay = data.Last();
+            Assert.AreEqual(expectedDate, lastDay.Time);
         }
 
         [TestCaseSource(nameof(DataTestCases))]
@@ -87,8 +109,7 @@ namespace QuantConnect.Tests.Research
         [TestCaseSource(nameof(DataTestCases))]
         public void CSharpFundamentalData(dynamic input)
         {
-            var qb = new QuantBook();
-            var data = qb.GetFundamental(input[0], input[1], _startDate, _endDate);
+            var data = _qb.GetFundamental(input[0], input[1], _startDate, _endDate);
 
             foreach (var day in data)
             {
@@ -114,8 +135,7 @@ namespace QuantConnect.Tests.Research
         [TestCaseSource(nameof(NullRequestTestCases))]
         public void CSharpReturnNullTest(dynamic input)
         {
-            var qb = new QuantBook();
-            var data = qb.GetFundamental(input[0], input[1], input[2], input[3]);
+            var data = _qb.GetFundamental(input[0], input[1], input[2], input[3]);
             Assert.IsEmpty(data);
         }
 

@@ -1,7 +1,12 @@
-QuantConnect Python Algorithm Project:
-=============
+# QuantConnect Python Algorithm Project
 
-## Local Python Autocomplete
+This document contains information regarding how to use Python with the Lean engine, this includes how to use Python Autocomplete, setting up Lean for Python algorithms, PythonNet compilation for devs, and what imports to use to replicate the web IDE experience in your local development.
+
+<br />
+
+
+------
+# Local Python Autocomplete
 To enable autocomplete for your local Python IDE, install the `quantconnect-stubs` package from PyPI using the following command:
 ```
 pip install quantconnect-stubs
@@ -16,77 +21,84 @@ Copy and paste the imports found [here](#python-autocomplete-imports) to the top
 
 In addition, you can use [Skylight](https://www.quantconnect.com/skylight) to automatically sync local changes to the cloud.
 
+<br />
+
 ------
 
-## Running LEAN Locally with Python
-Before we enable python support, follow the [installation instructions](https://github.com/QuantConnect/Lean#installation-instructions) to get LEAN running C# algorithms in your machine. 
+# Setup Lean Locally with Python
+Before setting up python support, follow the [installation instructions](https://github.com/QuantConnect/Lean#installation-instructions) to get LEAN running C# algorithms on your machine. 
 
-### Install Python 3.6:
-#### [Windows](https://github.com/QuantConnect/Lean#windows)
+
+## Installing Python 3.6:
+
+Next we must prepare a Python installation for Lean to use. Follow the instructions for your OS.
+
+<br />
+
+### [Windows](https://github.com/QuantConnect/Lean#windows)
+
 1. Use the Windows x86-64 MSI **Python 3.6.8** installer from [python.org](https://www.python.org/downloads/release/python-368/) or [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-Windows-x86_64.exe) for Windows installer. "Anaconda 5.2" installs 3.5.2 by default, after installation of Anaconda you will need to upgrade python to make it work as expected: `conda install -y python=3.6.8`
 2. When asked to select the features to be installed, make sure you select "Add python.exe to Path"
-3. `[Optional]` Create `PYTHONHOME` system variables which value must be the location of your python installation (e.g. `C:\Python36amd64` or `C:\Anaconda3`):
-   1. Right mouse button on My Computer. Click Properties.
-   2. Click Advanced System Settings -> Environment Variables -> System Variables
-   3. Click **New**. 
-        - Name of the variable: `PYTHONHOME`. 
-        - Value of the variable: python installation path.
+3. Create `PYTHONNET_PYDLL` environment variable to the location of your python dll in your installation (e.g. `C:\Dev\Python368\python36.dll` or `C:\Anaconda3\python36.dll`):
+   - Right mouse button on My Computer. Click Properties.
+   - Click Advanced System Settings -> Environment Variables -> System Variables
+   - Click **New**. 
+        - Name: `PYTHONNET_PYDLL`
+        - Value: `{python dll location}`
 4. Install [pandas=0.25.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 5. Install [wrapt=1.11.2](https://pypi.org/project/wrapt/) module.
-6. Reboot computer to ensure changes are propogated.
+6. Reboot computer to ensure changes are propagated.
 
-#### [macOS](https://github.com/QuantConnect/Lean#macos)
+<br />
+
+### [macOS](https://github.com/QuantConnect/Lean#macos)
 
 1. Use the macOS x86-64 package installer from [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-MacOSX-x86_64.pkg) and follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.
+2. Set `PYTHONNET_PYDLL` environment variable to the location of your python dll in your installation directory (e.g. `/Users/{your_user_name}/anaconda3/lib/libpython3.6m.dylib`):
+   - Open `~/.bash-profile` with a text editor of your choice.
+   - Add a new line to the file containing 
+   ```
+   export PYTHONNET_PYDLL="/{your}/{path}/{here}/libpython3.6m.dylib"
+   ```
+   - Save your changes, and either restart your terminal *or* execute 
+   ```
+   source ~/.bash-profile
+   ```
 2. Install [pandas=0.25.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 3. Install [wrapt=1.11.2](https://pypi.org/project/wrapt/) module.
 
-*Note:* If you encounter the "System.DllNotFoundException: python3.6m" runtime error when running Python algorithms, or generating reports, on macOS:
-1. Find `libpython3.6m.dylib` in your Python installation folder. If you installed Python with Anaconda, it may be found at
-    ```
-    /Users/{your_user_name}/anaconda3/lib/libpython3.6m.dylib
-    ```
-2. Open `Lean/Common/Python/Python.Runtime.dll.config`, add the following text under `<configuration> ... </configuration>` and save:
-    ```
-        <dllmap dll="python3.6m" target="{the path in step 1 including libpython3.6m.dylib}" os="osx"/>
-    ```
-Note: Specify the install of v3.6.8 _exactly_, i.e. if with conda `conda install python=3.6.8` as this is a known compatible version and other versions may have issues as of this writing. 
+<br />
 
-#### [Linux](https://github.com/QuantConnect/Lean#linux-debian-ubuntu)
-By default, **miniconda** is installed in the users home directory (`$HOME`):
+### [Linux](https://github.com/QuantConnect/Lean#linux-debian-ubuntu)
+
+1. Install Python using miniconda by following these commands; by default, **miniconda** is installed in the users home directory (`$HOME`):
 ```
 export PATH="$HOME/miniconda3/bin:$PATH"
 wget https://cdn.quantconnect.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
 bash Miniconda3-4.5.12-Linux-x86_64.sh -b
 rm -rf Miniconda3-4.5.12-Linux-x86_64.sh
-sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
 conda update -y python conda pip
-conda install -y cython=0.29.11
-conda install -y pandas=0.25.3
-conda install -y wrapt=1.11.2
 ```
-
-*Note 1:* There is a [known issue](https://github.com/pythonnet/pythonnet/issues/609) with python 3.6.5 that prevents pythonnet installation, please upgrade python to version 3.6.8:
-    ```
-    conda install -y python=3.6.8
-    ```
-    
-*Note 2:* If you encounter the "System.DllNotFoundException: python3.6m" runtime error when running Python algorithms on Linux:
-1. Find `libpython3.6m.so` in your Python installation folder. If you installed Python with Miniconda, it may be found at
-    ```
-    /home/{your_user_name}/miniconda3/envs/{qc_environment}/lib/libpython3.6m.so
-    ```
-   Note that you can create a new virtual environment with all required dependencies by executing:
+2. Create a new Python environment with the needed dependencies
+```
+conda create -n qc_lean python=3.6.8 cython=0.29.11 pandas=0.25.3 wrapt=1.11.2
+```
+3. Set `PYTHONNET_PYDLL` environment variable to location of your python dll in your installation directory (e.g. `/home/{your_user_name}/miniconda3/envs/qc_lean/lib/libpython3.6m.so`):
+   - Open `/etc/environment` with a text editor of your choice.
+   - Add a new line to the file containing 
    ```
-   conda create -n qc_environment python=3.6.8 cython=0.29.11 pandas=0.25.3 wrapt=1.11.2
-
+   PYTHONNET_PYDLL="/home/{your_user_name}/miniconda3/envs/qc_lean/lib/libpython3.6m.so"
    ```
-2. Open `Lean/Common/Python/Python.Runtime.dll.config`, add the following text under `<configuration> ... </configuration>` and save:
-    ```
-        <dllmap dll="python3.6m" target="{the path in step 1 including libpython3.6m.so}" os="linux"/>
-    ```
-### Run python algorithm
-1. Update the [config](https://github.com/QuantConnect/Lean/blob/master/Launcher/config.json) to run the python algorithm:
+   - Save your changes, and logout or reboot to reflect these changes
+
+
+
+<br />
+
+
+## Run Python Algorithms
+
+1. Update the [config](https://github.com/QuantConnect/Lean/blob/master/Launcher/config.json) to run a python algorithm:
     ```json
     "algorithm-type-name": "BasicTemplateAlgorithm",
     "algorithm-language": "Python",
@@ -95,29 +107,27 @@ conda install -y wrapt=1.11.2
  2. Rebuild LEAN.
  3. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
 
-___
+------
 
-### Python.NET development - Python.Runtime.dll compilation
-LEAN users do **not** need to compile `Python.Runtime.dll`. The information below is targeted to developers who wish to improve it. 
+# Python.NET development - Python.Runtime.dll compilation
 
-Download [QuantConnect/pythonnet](https://github.com/QuantConnect/pythonnet/) github clone or downloading the zip. If downloading the zip - unzip to a local pathway.
+LEAN users do **not** need to compile `Python.Runtime.dll`. The information below is targeted to developers who wish to improve it. Download [QuantConnect/pythonnet](https://github.com/QuantConnect/pythonnet/) github clone or downloading the zip. If downloading the zip - unzip to a local pathway.
 
 **Note:** QuantConnect's version of pythonnet is an enhanced version of [pythonnet](https://github.com/pythonnet/pythonnet) with added support for `System.Decimal` and `System.DateTime`.
 
-Below we can find the compilation flags that create a suitable `Python.Runtime.dll` for each operating system.
+Below are some examples of build commands that create a suitable `Python.Runtime.dll`.
 
-**Windows**
 ```
-msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild /p:Platform=x64 /p:PythonInteropFile="interop36.cs" /p:Configuration=ReleaseWin /p:DefineConstants="PYTHON36,PYTHON3,UCS2"
+msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild 
 ```
-**macOS**
+
+OR
+
 ```
-msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild /p:Platform=x64 /p:PythonInteropFile="interop36m.cs" /p:Configuration=ReleaseMono /p:DefineConstants="PYTHON36,PYTHON3,UCS4,MONO_OSX,PYTHON_WITH_PYMALLOC"
+dotnet build pythonnet.sln
 ```
-**Linux**
-```
-msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild /p:Platform=x64 /p:PythonInteropFile="interop36m.cs" /p:Configuration=ReleaseMono /p:DefineConstants="PYTHON36,PYTHON3,UCS4,MONO_LINUX,PYTHON_WITH_PYMALLOC"
-```
+
+------
 
 # Python Autocomplete Imports
 Copy and paste these imports to the top of your Python file to enable a development experience equal to the cloud (these imports are exactly the same as the ones used in the QuantConnect Terminal).

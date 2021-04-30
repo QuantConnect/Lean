@@ -75,8 +75,8 @@ class PortfolioRebalanceOnCustomFuncRegressionAlgorithm(QCAlgorithm):
                 # we sum up deviation for each security
                 deviation += (portfolioValuePerSecurity - reservedBuyingPowerForCurrentPosition) / portfolioValuePerSecurity;
 
-            # if securities are deviated 2% from their theoretical share of TotalPortfolioValue we rebalance
-            if deviation >= 0.02:
+            # if securities are deviated 1.5% from their theoretical share of TotalPortfolioValue we rebalance
+            if deviation >= 0.015:
                 return time
         return None
 

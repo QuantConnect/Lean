@@ -74,7 +74,10 @@ namespace QuantConnect.Report
 
             // Generate the html content
             Log.Trace("QuantConnect.Report.Main(): Starting content compile...");
-            var html = report.Compile();
+            string html;
+            string _;
+
+            report.Compile(out html, out _);
 
             //Write it to target destination.
             if (destination != string.Empty)

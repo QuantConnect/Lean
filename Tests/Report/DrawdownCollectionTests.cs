@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Packets;
 using QuantConnect.Report;
 
 namespace QuantConnect.Tests.Report
@@ -40,6 +41,30 @@ namespace QuantConnect.Tests.Report
 
             Assert.AreEqual(1, collection.Count);
             Assert.AreEqual(0.2, collection.First().Drawdown, 0.0001);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void NoDrawdown(bool hasEquityPoint)
+        {
+            var strategyEquityChart = new Chart("Strategy Equity");
+            var equitySeries = new Series("Equity");
+            strategyEquityChart.AddSeries(equitySeries);
+
+            if (hasEquityPoint)
+            {
+                equitySeries.AddPoint(new DateTime(2020, 1, 1), 100000);
+            }
+
+            var backtest = new BacktestResult
+            {
+                Charts = new Dictionary<string, Chart> {[strategyEquityChart.Name] = strategyEquityChart}
+            };
+
+            var normalizedResults = DrawdownCollection.NormalizeResults(backtest, null);
+
+            Assert.AreEqual(0, normalizedResults.KeyCount);
+            Assert.AreEqual(0, normalizedResults.ValueCount);
         }
     }
 }

@@ -110,14 +110,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Loss Rate", "75%"},
             {"Win Rate", "25%"},
             {"Profit-Loss Ratio", "1.21"},
-            {"Alpha", "-0.215"},
-            {"Beta", "0.211"},
+            {"Alpha", "-0.213"},
+            {"Beta", "0.208"},
             {"Annual Standard Deviation", "0.062"},
             {"Annual Variance", "0.004"},
-            {"Information Ratio", "-5.626"},
-            {"Tracking Error", "0.113"},
-            {"Treynor Ratio", "-0.483"},
+            {"Information Ratio", "-5.569"},
+            {"Tracking Error", "0.114"},
+            {"Treynor Ratio", "-0.488"},
             {"Total Fees", "$25.73"},
+            {"Estimated Strategy Capacity", "$5100000.00"},
             {"Fitness Score", "0.049"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -137,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "699862720"}
+            {"OrderListHash", "f01c77a20859f3a9144c3e99d32d64bb"}
         };
     }
 }
