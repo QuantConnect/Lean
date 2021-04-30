@@ -316,6 +316,8 @@ namespace QuantConnect.Brokerages.Exante
                         $"ExanteBrokerage.UpdateOrder: Unsupported order type: {order.Type}");
             }
 
+            _orderMap[exanteOrder.Data.OrderId] = order;
+
             updateResult = updateResult && exanteOrder.Success;
             return updateResult;
         }
@@ -325,8 +327,10 @@ namespace QuantConnect.Brokerages.Exante
             var cancelResult = true;
             foreach (var bi in order.BrokerId)
             {
-                var d = _client.ModifyOrder(Guid.Parse(bi), ExanteOrderAction.Cancel);
-                cancelResult = cancelResult && d.Success;
+                var biGuid = Guid.Parse(bi);
+                var exanteOrder = _client.ModifyOrder(biGuid, ExanteOrderAction.Cancel);
+                _orderMap.TryRemove(biGuid, out _);
+                cancelResult = cancelResult && exanteOrder.Success;
             }
 
             return cancelResult;
