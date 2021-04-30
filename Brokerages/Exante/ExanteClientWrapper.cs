@@ -135,6 +135,17 @@ namespace QuantConnect.Brokerages.Exante
             return response;
         }
 
+        public WebCallResult<ExanteOrder> GetOrder(
+            Guid orderId,
+            CancellationToken ct = default
+            )
+        {
+            var response =
+                _client.GetOrderAsync(orderId, ct).SynchronouslyAwaitTaskResult();
+            checkIfResponseOk(response);
+            return response;
+        }
+
         public WebCallResult<ExanteOrder> ModifyOrder(
             Guid orderId,
             ExanteOrderAction action,

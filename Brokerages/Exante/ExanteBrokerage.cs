@@ -24,21 +24,20 @@ using Exante.Net;
 using Exante.Net.Enums;
 using Exante.Net.Objects;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
-using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages.Exante
 {
-    public partial class ExanteBrokerage : Brokerage, IDataQueueHandler
+    public partial class ExanteBrokerage : Brokerage
     {
         private bool _isConnected;
         private readonly ExanteClientWrapper _client;
-        private string _accountId;
+        private readonly string _accountId;
+        private readonly IDataAggregator Aggregator;
         private readonly ExanteSymbolMapper _symbolMapper = new ExanteSymbolMapper();
         private readonly ConcurrentDictionary<Guid, Order> _orderMap = new ConcurrentDictionary<Guid, Order>();
-        private const string ReportCurrency = "USD";
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         private static readonly HashSet<string> SupportedCryptoCurrencies = new HashSet<string>()
         {
@@ -48,12 +47,17 @@ namespace QuantConnect.Brokerages.Exante
 
         public ExanteBrokerage(
             ExanteClientOptions client,
-            string accountId
+            string accountId,
+            IDataAggregator aggregator
             )
             : base("Exante Brokerage")
         {
             _client = new ExanteClientWrapper(client);
             _accountId = accountId;
+            Aggregator = aggregator;
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += Subscribe;
+            _subscriptionManager.UnsubscribeImpl += Unsubscribe;
 
             _client.StreamClient.GetOrdersStreamAsync(exanteOrder =>
             {
@@ -66,21 +70,6 @@ namespace QuantConnect.Brokerages.Exante
                     });
                 }
             });
-        }
-
-        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Unsubscribe(SubscriptionDataConfig dataConfig)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetJob(LiveNodePacket job)
-        {
-            throw new NotImplementedException();
         }
 
         public override bool IsConnected => _isConnected;

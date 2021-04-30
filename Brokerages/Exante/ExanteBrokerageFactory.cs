@@ -19,6 +19,7 @@ using Exante.Net;
 using Exante.Net.Enums;
 using QLNet;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -110,7 +111,8 @@ namespace QuantConnect.Brokerages.Exante
 
             var brokerage = new ExanteBrokerage(
                 clientOptions,
-                accountId);
+                accountId,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

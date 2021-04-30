@@ -19,6 +19,7 @@ using QuantConnect.Brokerages.Exante;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.Exante
 {
@@ -44,7 +45,10 @@ namespace QuantConnect.Tests.Brokerages.Exante
             var exanteClientOptions =
                 ExanteBrokerageFactory.createExanteClientOptions(clientId, applicationId, sharedKey, platformTypeStr);
 
-            var brokerage = new ExanteBrokerage(exanteClientOptions, accountId);
+            var brokerage = new ExanteBrokerage(
+                exanteClientOptions, 
+                accountId,
+                new AggregationManager());
 
             return brokerage;
         }
