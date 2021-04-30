@@ -30,9 +30,8 @@ namespace QuantConnect.Indicators
         private readonly int _lengthLow;
         private readonly RollingWindow<IBaseDataBar> _windowHighs;
         private readonly RollingWindow<IBaseDataBar> _windowLows;
-
-        // Indicator will keep information of the last 100 pivot points
-        private readonly RollingWindow<PivotPoint> _pivotPoints = new RollingWindow<PivotPoint>(100);
+        // Stores information of that last N pivot points
+        private readonly RollingWindow<PivotPoint> _windowPivotPoints;
 
         /// <summary>
         /// Event informs of new pivot point formed with new data update
@@ -48,8 +47,9 @@ namespace QuantConnect.Indicators
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator with an equal high and low length
         /// </summary>
         /// <param name="length">The length parameter here defines the number of surround bars that we compare against the current bar high and lows for the max/min </param>
-        public PivotPointsHighLow(int length)
-            : this($"PivotPointsHighLow({length})", length, length)
+        /// <param name="lastStoredValues">The number of last stored indicator values</param>
+        public PivotPointsHighLow(int length, int lastStoredValues = 100)
+            : this($"PivotPointsHighLow({length})", length, length, lastStoredValues)
         { }
 
         /// <summary>
@@ -57,8 +57,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
         /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
-        public PivotPointsHighLow(int lengthHigh, int lengthLow)
-            : this($"PivotPointsHighLow({lengthHigh},{lengthLow})", lengthHigh, lengthLow)
+        /// <param name="lastStoredValues">The number of last stored indicator values</param>
+        public PivotPointsHighLow(int lengthHigh, int lengthLow, int lastStoredValues = 100)
+            : this($"PivotPointsHighLow({lengthHigh},{lengthLow})", lengthHigh, lengthLow, lastStoredValues)
         { }
 
         /// <summary>
@@ -67,12 +68,14 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of an indicator</param>
         /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
         /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
-        public PivotPointsHighLow(string name, int lengthHigh, int lengthLow) : base(name)
+        /// <param name="lastStoredValues">The number of last stored indicator values</param>
+        public PivotPointsHighLow(string name, int lengthHigh, int lengthLow, int lastStoredValues = 100) : base(name)
         {
             _lengthHigh = lengthHigh;
             _lengthLow = lengthLow;
             _windowHighs = new RollingWindow<IBaseDataBar>(2 * lengthHigh + 1);
             _windowLows = new RollingWindow<IBaseDataBar>(2 * _lengthLow + 1);
+            _windowPivotPoints = new RollingWindow<PivotPoint>(lastStoredValues);
         }
 
         /// <summary>
@@ -122,11 +125,11 @@ namespace QuantConnect.Indicators
             if (isHigh && isLow)
             {
                 var pointHigh = new PivotPoint(PivotPointType.High, middlePoint1.High, middlePoint1.EndTime);
-                _pivotPoints.Add(pointHigh);
+                _windowPivotPoints.Add(pointHigh);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(pointHigh));
 
                 var pointLow = new PivotPoint(PivotPointType.Low, middlePoint2.Low, middlePoint2.EndTime);
-                _pivotPoints.Add(pointLow);
+                _windowPivotPoints.Add(pointLow);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(pointLow));
 
                 return 2m;
@@ -135,7 +138,7 @@ namespace QuantConnect.Indicators
             if (isHigh)
             {
                 var point = new PivotPoint(PivotPointType.High, middlePoint1.High, middlePoint1.EndTime);
-                _pivotPoints.Add(point);
+                _windowPivotPoints.Add(point);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(point));
 
                 return 1m;
@@ -144,7 +147,7 @@ namespace QuantConnect.Indicators
             if (isLow)
             {
                 var point = new PivotPoint(PivotPointType.Low, middlePoint2.Low, middlePoint2.EndTime);
-                _pivotPoints.Add(point);
+                _windowPivotPoints.Add(point);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(point));
 
                 return -1m;
@@ -160,7 +163,7 @@ namespace QuantConnect.Indicators
         /// <remarks>Returned array can be empty if no points have been registered yet/</remarks>
         public PivotPoint[] GetHighPivotPointsArray()
         {
-            return _pivotPoints?.Where(p => p.PivotPointType == PivotPointType.High).ToArray();
+            return _windowPivotPoints?.Where(p => p.PivotPointType == PivotPointType.High).ToArray();
         }
 
         /// <summary>
@@ -170,7 +173,7 @@ namespace QuantConnect.Indicators
         /// <remarks>Returned array can be empty if no points have been registered yet/</remarks>
         public PivotPoint[] GetLowPivotPointsArray()
         {
-            return _pivotPoints?.Where(p => p.PivotPointType == PivotPointType.Low).ToArray();
+            return _windowPivotPoints?.Where(p => p.PivotPointType == PivotPointType.Low).ToArray();
         }
 
         /// <summary>
@@ -181,7 +184,7 @@ namespace QuantConnect.Indicators
         public PivotPoint[] GetAllPivotPointsArray()
         {
             // Get all pivot points within rolling wind. collection as an array
-            return _pivotPoints?.Take(_pivotPoints.Count).ToArray();
+            return _windowPivotPoints?.Take(_windowPivotPoints.Count).ToArray();
         }
 
         /// <summary>
