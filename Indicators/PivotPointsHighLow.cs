@@ -24,10 +24,12 @@ namespace QuantConnect.Indicators
     /// Pivot Points (High/Low), also known as Bar Count Reversals, indicator.
     /// https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/pivot-points-high-low
     /// </summary>
-    public class PivotPointsHighLow : WindowIndicator<IBaseDataBar>
+    public class PivotPointsHighLow : IndicatorBase<IBaseDataBar>
     {
         private readonly int _lengthHigh;
         private readonly int _lengthLow;
+        private readonly RollingWindow<IBaseDataBar> _windowHighs;
+        private readonly RollingWindow<IBaseDataBar> _windowLows;
 
         // Indicator will keep information of the last 100 pivot points
         private readonly RollingWindow<PivotPoint> _pivotPoints = new RollingWindow<PivotPoint>(100);
@@ -36,6 +38,11 @@ namespace QuantConnect.Indicators
         /// Event informs of new pivot point formed with new data update
         /// </summary>
         public event EventHandler<PivotPointsEventArgs> NewPivotPointFormed;
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => _windowHighs.IsReady && _windowLows.IsReady;
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator with an equal high and low length
@@ -60,44 +67,58 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of an indicator</param>
         /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
         /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
-        public PivotPointsHighLow(string name, int lengthHigh, int lengthLow) :
-            base(name, 2 * Math.Max(lengthLow, lengthHigh) + 1)
+        public PivotPointsHighLow(string name, int lengthHigh, int lengthLow) : base(name)
         {
             _lengthHigh = lengthHigh;
             _lengthLow = lengthLow;
+            _windowHighs = new RollingWindow<IBaseDataBar>(2 * lengthHigh + 1);
+            _windowLows = new RollingWindow<IBaseDataBar>(2 * _lengthLow + 1);
         }
 
-        /// <inheritdoc />
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        /// <summary>
+        /// Computes the next value of this indicator from the given state
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            if (!IsReady) return 0m;
+            _windowHighs.Add(input);
+            _windowLows.Add(input);
 
-            var middlePoint1 = window[_lengthHigh];
+            IBaseDataBar middlePoint1 = null, middlePoint2 = null;
             var isHigh = false;
-            for (var k = 0; k < (2 * _lengthHigh + 1); k++)
-            {
-                // Skip the middle point
-                if (k == _lengthHigh) continue;
-
-                // Check if current high is below middle point high
-                isHigh = window[k].High < middlePoint1.High;
-
-                // If any high is not below middle point high -> this is not a pivot point
-                if (!isHigh) break;
-            }
-
-            var middlePoint2 = window[_lengthLow];
             var isLow = false;
-            for (var k = 0; k < (2 * _lengthLow + 1); k++)
+
+            if (_windowHighs.IsReady)
             {
-                if (k == _lengthLow) continue;
+                middlePoint1 = _windowHighs[_lengthHigh];
+                for (var k = 0; k < (2 * _lengthHigh + 1); k++)
+                {
+                    // Skip the middle point
+                    if (k == _lengthHigh) continue;
 
-                isLow = window[k].Low > middlePoint2.Low;
+                    // Check if current high is below middle point high
+                    isHigh = _windowHighs[k].High < middlePoint1.High;
 
-                if (!isLow) break;
+                    // If any high is not below middle point high -> this is not a pivot point
+                    if (!isHigh) break;
+                }
             }
 
-            // It's possible case when the bar forms both low and high points at the same time
+            if (_windowLows.IsReady)
+            {
+                middlePoint2 = _windowLows[_lengthLow];
+                for (var k = 0; k < (2 * _lengthLow + 1); k++)
+                {
+                    if (k == _lengthLow) continue;
+
+                    isLow = _windowLows[k].Low > middlePoint2.Low;
+
+                    if (!isLow) break;
+                }
+            }
+
+            // Can be the bar forms both high and low pivot points at the same time
             if (isHigh && isLow)
             {
                 var pointHigh = new PivotPoint(PivotPointType.High, middlePoint1.High, middlePoint1.EndTime);
