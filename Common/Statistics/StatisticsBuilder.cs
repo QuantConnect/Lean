@@ -172,7 +172,7 @@ namespace QuantConnect.Statistics
             var lowestCapacitySymbol = Symbol.Empty;
             if (estimatedStrategyCapacity != null)
             {
-                capacity = estimatedStrategyCapacity.Capacity;
+                capacity = estimatedStrategyCapacity.Capacity.Value;
                 lowestCapacitySymbol = estimatedStrategyCapacity.LowestCapacityAsset ?? Symbol.Empty;
             }
 
