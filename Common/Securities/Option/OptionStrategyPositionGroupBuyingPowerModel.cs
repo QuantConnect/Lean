@@ -168,7 +168,7 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.CoveredPut.Name)
             {
                 // Initial Stock Margin Requirement + In the Money Amount
-                var margin = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup, false));
+                var margin = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
 
                 return new InitialMargin(margin.Value);
             }

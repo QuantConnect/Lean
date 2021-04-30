@@ -31,9 +31,9 @@ namespace QuantConnect.Securities.Positions
         public IPositionGroup PositionGroup { get; }
 
         /// <summary>
-        /// The delta buying power.
+        /// The target buying power.
         /// </summary>
-        /// <remarks>Sign defines the position side to apply the delta, positive long, negative short side.</remarks>
+        /// <remarks>Sign defines the position side, positive long, negative short side.</remarks>
         public decimal TargetBuyingPower { get; }
 
         /// <summary>
@@ -47,19 +47,19 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio manager</param>
         /// <param name="positionGroup">The position group</param>
-        /// <param name="deltaBuyingPower">The delta buying power to apply. Sign defines the position side to apply the delta</param>
+        /// <param name="targetBuyingPower">The target buying power</param>
         /// <param name="silenceNonErrorReasons">True will not return <see cref="GetMaximumLotsResult.Reason"/>
         /// set for non error situation, this is for performance</param>
         public GetMaximumLotsForTargetBuyingPowerParameters(
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
-            decimal deltaBuyingPower,
+            decimal targetBuyingPower,
             bool silenceNonErrorReasons = false
             )
         {
             Portfolio = portfolio;
             PositionGroup = positionGroup;
-            TargetBuyingPower = deltaBuyingPower;
+            TargetBuyingPower = targetBuyingPower;
             SilenceNonErrorReasons = silenceNonErrorReasons;
         }
 

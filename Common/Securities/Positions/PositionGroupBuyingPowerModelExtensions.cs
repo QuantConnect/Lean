@@ -29,12 +29,11 @@ namespace QuantConnect.Securities.Positions
         public static decimal GetMaintenanceMargin(
             this IPositionGroupBuyingPowerModel model,
             SecurityPortfolioManager portfolio,
-            IPositionGroup positionGroup,
-            bool isCurrentHoldings
+            IPositionGroup positionGroup
             )
         {
             return model.GetMaintenanceMargin(
-                new PositionGroupMaintenanceMarginParameters(portfolio, positionGroup, isCurrentHoldings)
+                new PositionGroupMaintenanceMarginParameters(portfolio, positionGroup)
             );
         }
 

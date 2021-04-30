@@ -82,33 +82,22 @@ namespace QuantConnect.Securities.Positions
 
                 foreach (Security security in items)
                 {
-                    var key = new PositionGroupKey(_defaultModel, security);
                     if (args.Action == NotifyCollectionChangedAction.Add)
                     {
-                        if (!Groups.Contains(key))
+                        security.Holdings.QuantityChanged += HoldingsOnQuantityChanged;
+                        if (security.Invested)
                         {
-                            // simply adding a security doesn't require group resolution until it has holdings
-                            // all we need to do is make sure we add the default SecurityPosition
-                            var position = new Position(security);
-                            Groups = Groups.Add(new PositionGroup(key, position));
-                            security.Holdings.QuantityChanged += HoldingsOnQuantityChanged;
-                            if (security.Invested)
-                            {
-                                // if this security has holdings then we'll need to resolve position groups
-                                _requiresGroupResolution = true;
-                            }
+                            // if this security has holdings then we'll need to resolve position groups
+                            _requiresGroupResolution = true;
                         }
                     }
                     else if (args.Action == NotifyCollectionChangedAction.Remove)
                     {
-                        if (Groups.Contains(key))
+                        security.Holdings.QuantityChanged -= HoldingsOnQuantityChanged;
+                        if (security.Invested)
                         {
-                            security.Holdings.QuantityChanged -= HoldingsOnQuantityChanged;
-                            if (security.Invested)
-                            {
-                                // only trigger group resolution if we had holdings in the removed security
-                                _requiresGroupResolution = true;
-                            }
+                            // only trigger group resolution if we had holdings in the removed security
+                            _requiresGroupResolution = true;
                         }
                     }
                 }

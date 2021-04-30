@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Securities
     public class FutureMarginBuyingPowerModelTests
     {
         // Test class to enable calling protected methods
-        private FutureMarginModel futureMarginModel;
+        private FutureMarginModel _futureMarginModel;
 
         [Test]
         public void TestMarginForSymbolWithOneLinerHistory()
@@ -64,8 +64,8 @@ namespace QuantConnect.Tests.Common.Securities
             var timeKeeper = new TimeKeeper(time.ConvertToUtc(tz));
             futureSecurity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(tz));
 
-            var buyingPowerModel = GetModel(futureSecurity, out futureMarginModel);
-            Assert.AreEqual(futureMarginModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel);
+            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
         [Test]
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common.Securities
             var timeKeeper = new TimeKeeper(time.ConvertToUtc(tz));
             futureSecurity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(tz));
 
-            var buyingPowerModel = GetModel(futureSecurity, out futureMarginModel, timeKeeper: timeKeeper);
+            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel, timeKeeper: timeKeeper);
             Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
@@ -121,21 +121,21 @@ namespace QuantConnect.Tests.Common.Securities
             var timeKeeper = new TimeKeeper(time.ConvertToUtc(tz));
             futureSecurity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(tz));
 
-            var buyingPowerModel = GetModel(futureSecurity, out futureMarginModel, timeKeeper: timeKeeper);
-            Assert.AreEqual(futureMarginModel.MaintenanceOvernightMarginRequirement,
+            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel, timeKeeper: timeKeeper);
+            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement,
                 buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // now we move forward to exact date when margin req changed
             time = new DateTime(2014, 06, 13);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(tz));
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(futureMarginModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // now we fly beyond the last line of the history file (currently) to see how margin model resolves future dates
             time = new DateTime(2016, 06, 04);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(tz));
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(futureMarginModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
         [TestCase(1)]
@@ -151,17 +151,17 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal price = 1.2345m;
             var time = new DateTime(2013, 1, 1);
             var futureSecurity = algorithm.AddFuture(ticker);
-            var buyingPowerModel = GetModel(futureSecurity, out futureMarginModel);
+            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
             var res = buyingPowerModel.GetMaintenanceMargin(futureSecurity);
-            Assert.AreEqual(futureMarginModel.MaintenanceOvernightMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
+            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
 
             // We increase the quantity * 2, maintenance margin should DOUBLE
             futureSecurity.Holdings.SetHoldings(1.5m, quantity * 2);
             res = buyingPowerModel.GetMaintenanceMargin(futureSecurity);
-            Assert.AreEqual(futureMarginModel.MaintenanceOvernightMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
+            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
         }
 
         [TestCase(1)]
@@ -175,7 +175,7 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal price = 1.2345m;
             var time = new DateTime(2013, 1, 1);
             var futureSecurity = algorithm.AddFuture(ticker);
-            var buyingPowerModel = GetModel(futureSecurity, out futureMarginModel);
+            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
@@ -197,7 +197,7 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal price = 1.2345m;
             var time = new DateTime(2013, 1, 1);
             var futureSecurity = algorithm.AddFuture(ticker);
-            var buyingPowerModel = GetModel(futureSecurity, out futureMarginModel);
+            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
@@ -222,7 +222,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
-            var buyingPowerModel = GetModel(futureSecurity, out futureMarginModel);
+            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel);
             futureSecurity.Holdings.SetHoldings(20, quantity);
             Update(futureSecurity, 20, algorithm);
 
@@ -247,7 +247,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
-            var buyingPowerModel = GetModel(futureSecurity, out futureMarginModel);
+            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel);
             futureSecurity.Holdings.SetHoldings(20, quantity);
             Update(futureSecurity, 20, algorithm);
 
@@ -271,7 +271,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
-            futureSecurity.BuyingPowerModel = GetModel(futureSecurity, out futureMarginModel);
+            futureSecurity.BuyingPowerModel = GetModel(futureSecurity, out _futureMarginModel);
             futureSecurity.Holdings.SetHoldings(20, 100);
             Update(futureSecurity, 20, algorithm);
 
@@ -302,7 +302,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
-            futureSecurity.BuyingPowerModel = GetModel(futureSecurity, out futureMarginModel);
+            futureSecurity.BuyingPowerModel = GetModel(futureSecurity, out _futureMarginModel);
             futureSecurity.Holdings.SetHoldings(20, 100);
             Update(futureSecurity, 20, algorithm);
 
@@ -410,14 +410,14 @@ namespace QuantConnect.Tests.Common.Securities
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
             Update(futureSecurity, 100, algorithm);
-            var model = GetModel(futureSecurity, out futureMarginModel, algorithm.Portfolio);
+            var model = GetModel(futureSecurity, out _futureMarginModel, algorithm.Portfolio);
 
             // set closed market for simpler math
             futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 1));
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
 
-            var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target)) / futureMarginModel.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
+            var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target)) / _futureMarginModel.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
 
             Assert.AreEqual(expected * Math.Sign(target), quantity);
@@ -447,7 +447,7 @@ namespace QuantConnect.Tests.Common.Securities
             // set closed market for simpler math
             futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 1));
             Update(futureSecurity, 100, algorithm);
-            var model = GetModel(futureSecurity, out futureMarginModel, algorithm.Portfolio);
+            var model = GetModel(futureSecurity, out _futureMarginModel, algorithm.Portfolio);
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
             var request = GetOrderRequest(futureSecurity.Symbol, quantity);
@@ -475,7 +475,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
-            futureSecurity.BuyingPowerModel = GetModel(futureSecurity, out futureMarginModel, algorithm.Portfolio);
+            futureSecurity.BuyingPowerModel = GetModel(futureSecurity, out _futureMarginModel, algorithm.Portfolio);
             // set closed market for simpler math
             futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 1));
             Update(futureSecurity, 100, algorithm);
@@ -519,12 +519,12 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(100, 10 * Math.Sign(target));
             Update(futureSecurity, 100, algorithm);
 
-            var model = GetModel(futureSecurity, out futureMarginModel, algorithm.Portfolio);
+            var model = GetModel(futureSecurity, out _futureMarginModel, algorithm.Portfolio);
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
 
             var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) - Math.Abs(model.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.Quantity)))
-                           / futureMarginModel.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
+                           / _futureMarginModel.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
             Log.Trace($"Expected {expected}");
 
@@ -559,13 +559,13 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(100, 10 * -1 * Math.Sign(target));
             Update(futureSecurity, 100, algorithm);
 
-            var model = GetModel(futureSecurity, out futureMarginModel, algorithm.Portfolio);
-            futureSecurity.BuyingPowerModel = futureMarginModel;
+            var model = GetModel(futureSecurity, out _futureMarginModel, algorithm.Portfolio);
+            futureSecurity.BuyingPowerModel = _futureMarginModel;
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
 
             var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) + Math.Abs(model.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.Quantity)))
-                           / futureMarginModel.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
+                           / _futureMarginModel.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
             Log.Trace($"Expected {expected}");
 
@@ -597,7 +597,7 @@ namespace QuantConnect.Tests.Common.Securities
             var futureSecurity = algorithm.AddFuture(ticker);
             var lotSize = futureSecurity.SymbolProperties.LotSize;
             Update(futureSecurity, 100, algorithm);
-            var model = GetModel(futureSecurity, out futureMarginModel, algorithm.Portfolio);
+            var model = GetModel(futureSecurity, out _futureMarginModel, algorithm.Portfolio);
             // Close market
             futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 1));
 
@@ -614,8 +614,8 @@ namespace QuantConnect.Tests.Common.Securities
                     futureSecurity,
                     new MarketOrder(futureSecurity.Symbol, quantityClosedMarket, DateTime.UtcNow))).IsSufficient);
 
-            var initialOvernight = futureMarginModel.InitialOvernightMarginRequirement;
-            var maintenanceOvernight = futureMarginModel.MaintenanceOvernightMarginRequirement;
+            var initialOvernight = _futureMarginModel.InitialOvernightMarginRequirement;
+            var maintenanceOvernight = _futureMarginModel.MaintenanceOvernightMarginRequirement;
 
             // Open market
             futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 3));
@@ -629,8 +629,8 @@ namespace QuantConnect.Tests.Common.Securities
                     futureSecurity,
                     new MarketOrder(futureSecurity.Symbol, halfQuantity, DateTime.UtcNow))).IsSufficient);
 
-            Assert.Greater(initialOvernight, futureMarginModel.InitialIntradayMarginRequirement);
-            Assert.Greater(maintenanceOvernight, futureMarginModel.MaintenanceIntradayMarginRequirement);
+            Assert.Greater(initialOvernight, _futureMarginModel.InitialIntradayMarginRequirement);
+            Assert.Greater(maintenanceOvernight, _futureMarginModel.MaintenanceIntradayMarginRequirement);
         }
 
         [TestCase(1)]
@@ -649,9 +649,9 @@ namespace QuantConnect.Tests.Common.Securities
             var localTime = new DateTime(2020, 2, 3);
             var utcTime = localTime.ConvertToUtc(futureSecurity.Exchange.TimeZone);
             var timeKeeper = new TimeKeeper(utcTime, futureSecurity.Exchange.TimeZone);
-            var model = GetModel(futureSecurity, out futureMarginModel, algorithm.Portfolio);
+            var model = GetModel(futureSecurity, out _futureMarginModel, algorithm.Portfolio);
             // this is important
-            futureMarginModel.EnableIntradayMargins = true;
+            _futureMarginModel.EnableIntradayMargins = true;
 
             // Open market
             futureSecurity.Exchange.SetLocalDateTimeFrontier(localTime);

@@ -125,7 +125,7 @@ namespace QuantConnect.Securities.Positions
             foreach (var contemplatedGroup in contemplatedGroups)
             {
                 contemplated += contemplatedGroup.BuyingPowerModel.GetMaintenanceMargin(
-                    parameters.Portfolio, contemplatedGroup, false
+                    parameters.Portfolio, contemplatedGroup
                 );
             }
 
@@ -198,7 +198,7 @@ namespace QuantConnect.Securities.Positions
             ReservedBuyingPowerForPositionGroupParameters parameters
             )
         {
-            return this.GetMaintenanceMargin(parameters.Portfolio, parameters.PositionGroup, true);
+            return this.GetMaintenanceMargin(parameters.Portfolio, parameters.PositionGroup);
         }
 
         /// <summary>
@@ -547,7 +547,7 @@ namespace QuantConnect.Securities.Positions
                 return false;
             }
 
-            return Equals((SecurityPositionGroupBuyingPowerModel) obj);
+            return Equals((IPositionGroupBuyingPowerModel) obj);
         }
 
         /// <summary>Serves as the default hash function. </summary>

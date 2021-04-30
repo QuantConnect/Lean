@@ -55,28 +55,6 @@ namespace QuantConnect.Securities.Positions
         }
 
         /// <summary>
-        /// Creates the result using the specified buying power
-        /// </summary>
-        /// <param name="buyingPower">The buying power</param>
-        /// <param name="currency">The units the buying power is denominated in</param>
-        /// <returns>The buying power</returns>
-        public PositionGroupBuyingPower Result(decimal buyingPower, string currency)
-        {
-            // TODO: Properly account for 'currency' - not accounted for currently as only performing mechanical refactoring
-            return new PositionGroupBuyingPower(buyingPower);
-        }
-
-        /// <summary>
-        /// Creates the result using the specified buying power in units of the account currency
-        /// </summary>
-        /// <param name="buyingPower">The buying power</param>
-        /// <returns>The buying power</returns>
-        public PositionGroupBuyingPower ResultInAccountCurrency(decimal buyingPower)
-        {
-            return new PositionGroupBuyingPower(buyingPower);
-        }
-
-        /// <summary>
         /// Implicit operator to dependent function to remove noise
         /// </summary>
         public static implicit operator ReservedBuyingPowerForPositionGroupParameters(

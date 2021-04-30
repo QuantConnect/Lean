@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             reentry = true;
             var actual = PositionGroupModel.GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Quantity)), true
+                Portfolio, new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Quantity))
             ));
 
             Assert.AreEqual(expected.Value, actual.Value,
@@ -314,8 +314,6 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 return expected;
             }
-
-            reentry = true;
 
             reentry = false;
             return expected;

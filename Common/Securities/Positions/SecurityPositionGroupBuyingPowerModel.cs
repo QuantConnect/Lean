@@ -36,9 +36,8 @@ namespace QuantConnect.Securities.Positions
             foreach (var position in parameters.PositionGroup)
             {
                 var security = parameters.Portfolio.Securities[position.Symbol];
-                var result = security.BuyingPowerModel.GetMaintenanceMargin(parameters.IsCurrentHoldings
-                    ? MaintenanceMarginParameters.ForCurrentHoldings(security, position.Quantity)
-                    : MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, position.Quantity)
+                var result = security.BuyingPowerModel.GetMaintenanceMargin(
+                    MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, position.Quantity)
                 );
 
                 buyingPower += result;

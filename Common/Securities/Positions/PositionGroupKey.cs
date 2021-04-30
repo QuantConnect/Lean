@@ -14,10 +14,9 @@
 */
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -74,14 +73,7 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public IPosition[] CreateEmptyPositions()
         {
-            var positions = new IPosition[UnitQuantities.Count];
-            for (int i = 0; i < UnitQuantities.Count; i++)
-            {
-                var unitQuantity = UnitQuantities[i];
-                positions[i] = new Position(unitQuantity.Item1, 0m, unitQuantity.Item2);
-            }
-
-            return positions;
+            return CreatePositions(0);
         }
 
         /// <summary>
@@ -89,14 +81,7 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public IPosition[] CreateUnitPositions()
         {
-            var positions = new IPosition[UnitQuantities.Count];
-            for (int i = 0; i < UnitQuantities.Count; i++)
-            {
-                var unitQuantity = UnitQuantities[i];
-                positions[i] = new Position(unitQuantity.Item1, unitQuantity.Item2, unitQuantity.Item2);
-            }
-
-            return positions;
+            return CreatePositions();
         }
 
         /// <summary>
@@ -160,6 +145,20 @@ namespace QuantConnect.Securities.Positions
         public override string ToString()
         {
             return $"{string.Join("|", UnitQuantities.Select(x => $"{x.Item1}:{x.Item2.Normalize()}"))}";
+        }
+
+        /// <summary>
+        /// Creates positions with the provided quantity defaulting to the unit quantity
+        /// </summary>
+        private IPosition[] CreatePositions(decimal? quantity = null)
+        {
+            var positions = new IPosition[UnitQuantities.Count];
+            for (var i = 0; i < UnitQuantities.Count; i++)
+            {
+                var unitQuantity = UnitQuantities[i];
+                positions[i] = new Position(unitQuantity.Item1, quantity ?? unitQuantity.Item2, unitQuantity.Item2);
+            }
+            return positions;
         }
 
         /// <summary>

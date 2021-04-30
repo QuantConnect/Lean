@@ -85,8 +85,7 @@ namespace QuantConnect.Securities
         {
             if (quantity != null)
             {
-                var value = security.Holdings.GetQuantityValue(quantity.Value);
-                return new MaintenanceMarginParameters(security, quantity.Value, value, value);
+                return ForQuantityAtCurrentPrice(security, quantity.Value);
             }
 
             return new MaintenanceMarginParameters(security,
