@@ -490,10 +490,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             _internalSubscriptionManager.RemovedSubscriptionRequest(subscription);
                             member.IsTradable = false;
-
-                            // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
-                            // only remove from cache if there is no universe using this data configuration
-                            SymbolCache.TryRemove(member.Symbol);
                         }
                     }
                 }
