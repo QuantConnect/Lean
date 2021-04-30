@@ -48,8 +48,9 @@ namespace QuantConnect.Algorithm.CSharp
                     var shortCall = callContracts.First();
                     var longCall = callContracts.First(contract => contract.Strike > shortCall.Strike && contract.Expiry == shortCall.Expiry);
 
+                    var initialMargin = Portfolio.MarginRemaining;
+
                     MarketOrder(shortCall.Symbol, -10);
-                    var freeMargin = Portfolio.MarginRemaining;
 
                     AssertDefaultGroup(shortCall.Symbol, -10);
 
@@ -58,9 +59,18 @@ namespace QuantConnect.Algorithm.CSharp
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BearCallSpread.Name, 10);
 
-                    if (freeMargin >= freeMarginPostTrade)
+                    var expectedMarginUsage = (longCall.Strike - shortCall.Strike) * Securities[longCall.Symbol].SymbolProperties.ContractMultiplier * 10;
+
+                    if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
-                        throw new Exception("We expect the margin used to actually be lower once we perform the second trade");
+                        throw new Exception("Unexpect margin used!");
+                    }
+
+                    // we payed the ask and value using the assets price
+                    var priceSpreadDifference = GetPriceSpreadDifference(longCall.Symbol, shortCall.Symbol);
+                    if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
+                    {
+                        throw new Exception("Unexpect margin remaining!");
                     }
                 }
             }

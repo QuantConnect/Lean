@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public abstract class OptionEquityBaseStrategyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected decimal _paidFees;
         protected Symbol _optionSymbol;
 
         public override void Initialize()
@@ -67,6 +68,31 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        protected decimal GetPriceSpreadDifference(params Symbol[] symbols)
+        {
+            var spreadPaid = 0m;
+            foreach (var symbol in symbols)
+            {
+                var security = Securities[symbol];
+                var actualQuantity = security.Holdings.AbsoluteQuantity;
+                var spread = 0m;
+                if (security.Holdings.IsLong)
+                {
+                    if (security.AskPrice != 0)
+                    {
+                        spread = security.Price - security.AskPrice;
+                    }
+                }
+                else if(security.BidPrice != 0)
+                {
+                    spread = security.BidPrice - security.Price;
+                }
+                spreadPaid += spread * actualQuantity * security.SymbolProperties.ContractMultiplier;
+            }
+
+            return spreadPaid;
+        }
+
         /// <summary>
         /// Order fill event handler. On an order fill update the resulting information is passed to this method.
         /// </summary>
@@ -74,6 +100,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            if (orderEvent.Status == OrderStatus.Filled)
+            {
+                _paidFees += orderEvent.OrderFee.Value.Amount;
+                if (orderEvent.Symbol.SecurityType.IsOption())
+                {
+                    var security = Securities[orderEvent.Symbol];
+                    var premiumPaid = orderEvent.Quantity * orderEvent.FillPrice * security.SymbolProperties.ContractMultiplier;
+                    Log($"{orderEvent}. Premium paid: {premiumPaid}");
+                    return;
+                }
+            }
             Log($"{orderEvent}");
         }
 

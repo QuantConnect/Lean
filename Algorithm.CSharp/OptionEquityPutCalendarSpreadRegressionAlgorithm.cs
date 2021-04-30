@@ -49,21 +49,24 @@ namespace QuantConnect.Algorithm.CSharp
                     var longPut = contracts.First(contract => contract.Expiry > shortPut.Expiry && contract.Strike == shortPut.Strike);
 
                     var initialMargin = Portfolio.MarginRemaining;
+
                     MarketOrder(shortPut.Symbol, -10);
-                    var freeMargin = Portfolio.MarginRemaining;
                     MarketOrder(longPut.Symbol, +10);
+
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.PutCalendarSpread.Name, 10);
 
-                    if (freeMargin >= freeMarginPostTrade)
+                    var expectedMarginUsage = Math.Max((shortPut.Strike - longPut.Strike) * Securities[longPut.Symbol].SymbolProperties.ContractMultiplier * 10, 0);
+                    if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
-                        throw new Exception("We expect the margin used to actually be lower once we perform the second trade");
+                        throw new Exception("Unexpect margin used!");
                     }
 
-                    // No margin requirements, let's assert it leaving some space for the paid premiums
-                    if (initialMargin >= freeMarginPostTrade + 0.05m * initialMargin)
+                    // we payed the ask and value using the assets price
+                    var priceSpreadDifference = GetPriceSpreadDifference(longPut.Symbol, shortPut.Symbol);
+                    if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
                     {
-                        throw new Exception("Unexpected free margin");
+                        throw new Exception("Unexpect margin remaining!");
                     }
                 }
             }

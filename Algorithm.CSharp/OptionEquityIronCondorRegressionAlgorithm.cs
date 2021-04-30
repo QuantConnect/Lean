@@ -60,26 +60,26 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var initialMargin = Portfolio.MarginRemaining;
                     MarketOrder(oufOfTheMoneyPut.Symbol, +10);
-                    var freeMarginA = Portfolio.MarginRemaining;
                     MarketOrder(lessOufOfTheMoneyPut.Symbol, -10);
-                    var freeMarginB = Portfolio.MarginRemaining;
 
                     MarketOrder(oufOfTheMoneyCall.Symbol, -10);
-                    var freeMarginC = Portfolio.MarginRemaining;
                     MarketOrder(moreOufOfTheMoneyCall.Symbol, +10);
-                    var freeMarginD = Portfolio.MarginRemaining;
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.IronCondor.Name, 10);
 
-                    if (freeMarginC >= freeMarginD)
+                    var freeMarginPostTrade = Portfolio.MarginRemaining;
+                    var expectedMarginUsage = (lessOufOfTheMoneyPut.Strike - oufOfTheMoneyPut.Strike) * Securities[lessOufOfTheMoneyPut.Symbol].SymbolProperties.ContractMultiplier * 10; ;
+                    if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
-                        throw new Exception("Unexpected margin usage, it should have been reduced!");
+                        throw new Exception("Unexpect margin used!");
                     }
 
-                    // margin required is low, let's assert for 10% of initial margin
-                    if (initialMargin >= freeMarginD + 0.1m * initialMargin)
+                    // we payed the ask and value using the assets price
+                    var priceSpreadDifference = GetPriceSpreadDifference(oufOfTheMoneyPut.Symbol, lessOufOfTheMoneyPut.Symbol,
+                        oufOfTheMoneyCall.Symbol, moreOufOfTheMoneyCall.Symbol);
+                    if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
                     {
-                        throw new Exception("Unexpected margin usage, it should have been reduced!");
+                        throw new Exception("Unexpect margin remaining!");
                     }
                 }
             }

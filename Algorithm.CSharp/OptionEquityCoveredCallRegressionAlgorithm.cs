@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Securities.Option.StrategyMatcher;
@@ -46,17 +47,28 @@ namespace QuantConnect.Algorithm.CSharp
                         .OrderBy(x => x.Strike)
                         .First();
 
+                    var initialMargin = Portfolio.MarginRemaining;
                     // covered call
                     MarketOrder(atmContract.Symbol, -10);
                     AssertDefaultGroup(atmContract.Symbol, -10);
-                    var freeMarginPreEquity = Portfolio.MarginRemaining;
                     MarketOrder(atmContract.Symbol.Underlying, 1000);
-                    var freeMarginPostEquity = Portfolio.MarginRemaining;
+                    var freeMarginPostTrade = Portfolio.MarginRemaining;
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CoveredCall.Name, 10);
 
-                    if (freeMarginPreEquity >= freeMarginPostEquity)
+                    var underlyingMarginRequirements = Securities[atmContract.Symbol.Underlying].BuyingPowerModel
+                        .GetInitialMarginRequirement(new InitialMarginParameters(Securities[atmContract.Symbol.Underlying], 1000));
+
+                    var expectedMarginUsage = underlyingMarginRequirements;
+                    if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
-                        throw new Exception("We expect the margin used to actually be lower once we trade the underlying");
+                        throw new Exception("Unexpect margin used!");
+                    }
+
+                    // we payed the ask and value using the assets price
+                    var priceSpreadDifference = GetPriceSpreadDifference(atmContract.Symbol, atmContract.Symbol.Underlying);
+                    if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
+                    {
+                        throw new Exception("Unexpect margin remaining!");
                     }
                 }
             }

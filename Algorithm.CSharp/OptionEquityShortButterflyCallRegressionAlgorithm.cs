@@ -53,23 +53,24 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var initialMargin = Portfolio.MarginRemaining;
                     MarketOrder(lowerCall.Symbol, -10);
-                    var freeMargin = Portfolio.MarginRemaining;
                     MarketOrder(middleCall.Symbol, 20);
-                    var freeMarginPostTrade = Portfolio.MarginRemaining;
                     MarketOrder(highestCall.Symbol, -10);
-                    var freeMarginPostPostTrade = Portfolio.MarginRemaining;
+
+                    var freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ShortButterflyCall.Name, 10);
 
-                    if (freeMargin >= freeMarginPostPostTrade)
+                    var expectedMarginUsage = Math.Max((middleCall.Strike - lowerCall.Strike) * Securities[lowerCall.Symbol].SymbolProperties.ContractMultiplier * 10, 0);
+                    if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
-                        throw new Exception("We expect the margin used to actually be lower once we perform the last trade");
+                        throw new Exception("Unexpect margin used!");
                     }
 
-                    // Short Butterfly has small margin requirements
-                    if (initialMargin >= freeMarginPostPostTrade + 0.15m * initialMargin)
+                    // we payed the ask and value using the assets price
+                    var priceSpreadDifference = GetPriceSpreadDifference(middleCall.Symbol, lowerCall.Symbol, highestCall.Symbol);
+                    if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
                     {
-                        throw new Exception("Unexpected free margin");
+                        throw new Exception("Unexpect margin remaining!");
                     }
                 }
             }

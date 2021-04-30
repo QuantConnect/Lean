@@ -52,23 +52,24 @@ namespace QuantConnect.Algorithm.CSharp
                     var highestPut = contracts.First(contract => contract.Expiry == lowerPut.Expiry && contract.Strike == middlePut.Strike + distanceBetweenStrikes);
 
                     var initialMargin = Portfolio.MarginRemaining;
+
                     MarketOrder(lowerPut.Symbol, 10);
-                    var freeMargin = Portfolio.MarginRemaining;
                     MarketOrder(middlePut.Symbol, -20);
-                    var freeMarginPostTrade = Portfolio.MarginRemaining;
                     MarketOrder(highestPut.Symbol, 10);
-                    var freeMarginPostPostTrade = Portfolio.MarginRemaining;
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ButterflyPut.Name, 10);
 
-                    if (freeMargin >= freeMarginPostPostTrade)
+                    var freeMarginPostTrade = Portfolio.MarginRemaining;
+                    var expectedMarginUsage = 0;
+                    if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
-                        throw new Exception("We expect the margin used to actually be lower once we perform the last trade");
+                        throw new Exception("Unexpect margin used!");
                     }
 
-                    // Long Butterfly has no margin requirements, let's assert it leaving some space for the paid premiums
-                    if (initialMargin >= freeMarginPostPostTrade + 0.05m * initialMargin)
+                    // we payed the ask and value using the assets price
+                    var priceSpreadDifference = GetPriceSpreadDifference(lowerPut.Symbol, middlePut.Symbol, highestPut.Symbol);
+                    if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
                     {
-                        throw new Exception("Unexpected free margin");
+                        throw new Exception("Unexpect margin remaining!");
                     }
                 }
             }

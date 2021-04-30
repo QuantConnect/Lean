@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Securities.Option.StrategyMatcher;
@@ -48,16 +49,28 @@ namespace QuantConnect.Algorithm.CSharp
                     var put = contracts.Last(contract => contract.Right == OptionRight.Put && contract.Expiry == call.Expiry
                         && contract.Strike == call.Strike);
 
+                    var initialMargin = Portfolio.MarginRemaining;
                     MarketOrder(call.Symbol, 10);
-                    var freeMargin = Portfolio.MarginRemaining;
                     MarketOrder(put.Symbol, 10);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.Straddle.Name, 10);
 
-                    // there isn't a margin reduction
-                    if (freeMarginPostTrade >= freeMargin)
+                    var initialMarginRequiredPut = Securities[put.Symbol].BuyingPowerModel.GetInitialMarginRequirement(
+                        new InitialMarginParameters(Securities[put.Symbol], 10));
+                    var initialMarginRequiredCall = Securities[call.Symbol].BuyingPowerModel.GetInitialMarginRequirement(
+                        new InitialMarginParameters(Securities[call.Symbol], 10));
+
+                    var expectedMarginUsage = initialMarginRequiredPut + initialMarginRequiredCall;
+                    if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
-                        throw new Exception("We expect the margin used to actually be Higher once we perform the second trade");
+                        throw new Exception("Unexpect margin used!");
+                    }
+
+                    // we payed the ask and value using the assets price
+                    var priceSpreadDifference = GetPriceSpreadDifference(put.Symbol, call.Symbol);
+                    if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
+                    {
+                        throw new Exception("Unexpect margin remaining!");
                     }
                 }
             }
