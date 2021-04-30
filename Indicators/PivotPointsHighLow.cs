@@ -41,7 +41,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _windowHighs.IsReady && _windowLows.IsReady;
+        public override bool IsReady => _windowHighs.IsReady || _windowLows.IsReady;
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator with an equal high and low length
