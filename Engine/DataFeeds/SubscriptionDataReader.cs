@@ -264,14 +264,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         if (_periodStart < mapFile.FirstDate)
                         {
-                            var originalStart = _periodStart;
                             _periodStart = mapFile.FirstDate;
 
                             OnStartDateLimited(
                                 new StartDateLimitedEventArgs(_config.Symbol,
-                                    $"The starting date for symbol {_config.Symbol.Value}," +
-                                    $" {originalStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}, has been adjusted to match map file first date" +
-                                    $" {mapFile.FirstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}."));
+                                    $"[{_config.Symbol.Value}," +
+                                    $" {mapFile.FirstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}]"));
                         }
                     }
                 }
