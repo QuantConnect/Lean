@@ -132,7 +132,7 @@ namespace QuantConnect.Indicators
                 _windowPivotPoints.Add(pointLow);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(pointLow));
 
-                return 2m;
+                return (decimal) PivotPointType.Both;
             }
 
             if (isHigh)
@@ -141,7 +141,7 @@ namespace QuantConnect.Indicators
                 _windowPivotPoints.Add(point);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(point));
 
-                return 1m;
+                return (decimal) PivotPointType.High;
             }
 
             if (isLow)
@@ -150,10 +150,10 @@ namespace QuantConnect.Indicators
                 _windowPivotPoints.Add(point);
                 OnNewPivotPointFormed(new PivotPointsEventArgs(point));
 
-                return -1m;
+                return (decimal) PivotPointType.Low;
             }
 
-            return 0m;
+            return (decimal) PivotPointType.None;
         }
 
         /// <summary>
