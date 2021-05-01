@@ -129,7 +129,18 @@ namespace QuantConnect.Brokerages.Exante
 
                 var symbol = _client.GetSymbol(item.OrderParameters.SymbolId).Data;
 
-                order.Quantity = item.OrderParameters.Quantity;
+                switch (item.OrderParameters.Side)
+                {
+                    case ExanteOrderSide.Buy:
+                        order.Quantity = Math.Abs(item.OrderParameters.Quantity);
+                        break;
+                    case ExanteOrderSide.Sell:
+                        order.Quantity = -Math.Abs(item.OrderParameters.Quantity);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                
                 order.BrokerId = new List<string> {item.OrderId.ToString()};
                 order.Symbol = ConvertSymbol(symbol);
                 order.Time = item.Date;
@@ -183,6 +194,8 @@ namespace QuantConnect.Brokerages.Exante
                         $"ExanteBrokerage.ConvertOrderDuration: Unsupported order duration: {order.TimeInForce}");
             }
 
+            var quantity = Math.Abs(order.Quantity);
+
             WebCallResult<IEnumerable<ExanteOrder>> orderPlacement;
             switch (order.Type)
             {
@@ -192,7 +205,7 @@ namespace QuantConnect.Brokerages.Exante
                         _symbolMapper.GetBrokerageSymbol(order.Symbol),
                         ExanteOrderType.Market,
                         orderSide,
-                        order.Quantity,
+                        quantity,
                         orderDuration,
                         gttExpiration: gttExpiration
                     );
@@ -205,7 +218,7 @@ namespace QuantConnect.Brokerages.Exante
                         _symbolMapper.GetBrokerageSymbol(order.Symbol),
                         ExanteOrderType.Limit,
                         orderSide,
-                        order.Quantity,
+                        quantity,
                         orderDuration,
                         limitPrice: limitOrder.LimitPrice,
                         gttExpiration: gttExpiration
@@ -219,7 +232,7 @@ namespace QuantConnect.Brokerages.Exante
                         _symbolMapper.GetBrokerageSymbol(order.Symbol),
                         ExanteOrderType.Stop,
                         orderSide,
-                        order.Quantity,
+                        quantity,
                         orderDuration,
                         stopPrice: stopMarketOrder.StopPrice,
                         gttExpiration: gttExpiration
@@ -233,7 +246,7 @@ namespace QuantConnect.Brokerages.Exante
                         _symbolMapper.GetBrokerageSymbol(order.Symbol),
                         ExanteOrderType.Stop,
                         orderSide,
-                        order.Quantity,
+                        quantity,
                         orderDuration,
                         limitPrice: stopLimitOrder.LimitPrice,
                         stopPrice: stopLimitOrder.StopPrice,
