@@ -38,6 +38,7 @@ namespace QuantConnect.Brokerages.Exante
         private readonly ExanteSymbolMapper _symbolMapper = new ExanteSymbolMapper();
         private readonly ConcurrentDictionary<Guid, Order> _orderMap = new ConcurrentDictionary<Guid, Order>();
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
+        public override string AccountBaseCurrency => Currencies.USD;
 
         private static readonly HashSet<string> SupportedCryptoCurrencies = new HashSet<string>()
         {
@@ -142,7 +143,7 @@ namespace QuantConnect.Brokerages.Exante
 
         public override List<Holding> GetAccountHoldings()
         {
-            var accountSummary = _client.GetAccountSummary(_accountId, ReportCurrency);
+            var accountSummary = _client.GetAccountSummary(_accountId, AccountBaseCurrency);
             var positions = accountSummary.Positions
                 .Where(position => position.Quantity != 0)
                 .Select(ConvertHolding)
@@ -152,7 +153,7 @@ namespace QuantConnect.Brokerages.Exante
 
         public override List<CashAmount> GetCashBalance()
         {
-            var accountSummary = _client.GetAccountSummary(_accountId, ReportCurrency);
+            var accountSummary = _client.GetAccountSummary(_accountId, AccountBaseCurrency);
             var cashAmounts =
                 from currencyData in accountSummary.Currencies
                 select new CashAmount(currencyData.Value, currencyData.Currency);
