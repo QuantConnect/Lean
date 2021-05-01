@@ -856,7 +856,7 @@ namespace QuantConnect.Algorithm
                     // if the latest time is 3:45 it is already too late to submit one of these orders
                     return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnCloseOrderTooLate,
                         $"MarketOnClose orders must be placed within {Orders.MarketOnCloseOrder.SubmissionTimeBuffer} before market close." +
-                        "Override this TimeSpan buffer by setting Orders.MarketOnCloseOrder.SubmissionTimeBuffer in QCAlgorithm.Initialize()."
+                        " Override this TimeSpan buffer by setting Orders.MarketOnCloseOrder.SubmissionTimeBuffer in QCAlgorithm.Initialize()."
                     );
                 }
             }
