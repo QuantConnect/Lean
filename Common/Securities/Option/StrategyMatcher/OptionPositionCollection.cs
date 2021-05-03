@@ -200,13 +200,6 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         }
 
         /// <summary>
-        /// Gets the underlying security's position
-        /// </summary>
-        /// <returns></returns>
-        public OptionPosition GetUnderlyingPosition()
-            => _positions.GetValueOrDefault(Underlying, new OptionPosition(Underlying, 0));
-
-        /// <summary>
         /// Creates a new <see cref="OptionPositionCollection"/> from the specified enumerable of <paramref name="positions"/>
         /// </summary>
         public static OptionPositionCollection FromPositions(IEnumerable<OptionPosition> positions)

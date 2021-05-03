@@ -27,18 +27,6 @@ namespace QuantConnect.Util
     public static class LinqExtensions
     {
         /// <summary>
-        /// Creates a dictionary multimap from the lookup.
-        /// </summary>
-        /// <typeparam name="K">The key type</typeparam>
-        /// <typeparam name="V">The value type</typeparam>
-        /// <param name="lookup">The ILookup instance to convert to a dictionary</param>
-        /// <returns>A dictionary holding the same data as 'lookup'</returns>
-        public static Dictionary<K, List<V>> ToDictionary<K, V>(this ILookup<K, V> lookup)
-        {
-            return lookup.ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
-        }
-
-        /// <summary>
         /// Creates a dictionary enumerable of key value pairs
         /// </summary>
         /// <typeparam name="K">The key type</typeparam>
@@ -135,14 +123,6 @@ namespace QuantConnect.Util
         public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
         {
             return enumerable == null || !enumerable.Any();
-        }
-
-        /// <summary>
-        /// Performs the specified selector before calling DefaultIfEmpty. This is just short hand for Select(selector).DefaultIfEmpty(defaultValue)
-        /// </summary>
-        public static IEnumerable<TResult> DefaultIfEmpty<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector, TResult defaultValue = default(TResult))
-        {
-            return enumerable.Select(selector).DefaultIfEmpty(defaultValue);
         }
 
         /// <summary>
@@ -361,6 +341,21 @@ namespace QuantConnect.Util
                     yield return enumerator.Current;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the value associated with the specified key or provided default value if key is not found.
+        /// </summary>
+        /// <typeparam name="K">The key type</typeparam>
+        /// <typeparam name="V">The value type</typeparam>
+        /// <param name="dictionary">The dictionary instance</param>
+        /// <param name="key">Lookup key</param>
+        /// <param name="defaultValue">Default value</param>
+        /// <returns>Value associated with the specified key or  default value</returns>
+        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dictionary, K key, V defaultValue = default(V))
+        {
+            V obj;
+            return dictionary.TryGetValue(key, out obj) ? obj : defaultValue;
         }
 
         /// <summary>
