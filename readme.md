@@ -52,7 +52,7 @@ These are all configurable from the config.json file in the Launcher Project.
 
 ## Installation Instructions ##
 
-*We recommend using the docker image.* This is perfectly configured to run out of the box without interfering with your development environment. You can pull this image with `docker pull quantconnect/lean`
+*We recommend using the docker images.* These are perfectly configured to run out of the box without interfering with your development environment. You can pull these images with `docker pull quantconnect/lean` and `docker pull quantconnect/research`.
 
 Refer to the following readme files for a detailed guide regarding using our docker image with your local IDE:
 * [VS Code](.vscode/readme.md)
