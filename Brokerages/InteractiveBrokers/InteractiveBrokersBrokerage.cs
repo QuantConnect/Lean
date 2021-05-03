@@ -3310,11 +3310,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // IBGateway was closed by IBAutomater because the auto-restart token expired or it was closed manually (less likely)
                 Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
 
-                Disconnect();
+                try
+                {
+                    Disconnect();
 
-                CheckIbAutomaterError(_ibAutomater.Start(false));
+                    CheckIbAutomaterError(_ibAutomater.Start(false));
 
-                Connect();
+                    Connect();
+                }
+                catch (Exception exception)
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterRestartError", exception.ToString()));
+                }
             }
         }
 
@@ -3333,9 +3340,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // IBGateway was restarted automatically
                 Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterRestarted(): IBGateway restart detected, reconnecting...");
 
-                Disconnect();
+                try
+                {
+                    Disconnect();
 
-                Connect();
+                    Connect();
+                }
+                catch (Exception exception)
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterAutoRestartError", exception.ToString()));
+                }
             }
         }
 
