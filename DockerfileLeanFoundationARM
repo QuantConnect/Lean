@@ -1,0 +1,200 @@
+# This is a version of DockerfileLeanFoundation for ARM
+# Some packages from the AMD image are excluded because they are not available on ARM or take too long to build
+
+# Use base system for cleaning up wayward processes
+FROM phusion/baseimage:bionic-1.0.0
+
+MAINTAINER QuantConnect <contact@quantconnect.com>
+
+# Use baseimage-docker's init system.
+CMD ["/sbin/my_init"]
+
+# Have to add env TZ=UTC. See https://github.com/dotnet/coreclr/issues/602
+RUN env TZ=UTC
+
+# Install OS Packages:
+# Misc tools for running Python.NET and IB inside a headless container.
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test && apt-get update
+RUN add-apt-repository ppa:apt-fast/stable && apt-get update && apt-get -y install apt-fast
+RUN apt-fast install -y git bzip2 clang cmake curl unzip wget python3-pip python-opengl zlib1g-dev \
+    xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
+    r-base pandoc libcurl4-openssl-dev \
+    openjdk-8-jdk openjdk-8-jre bbe
+
+# Install IB Gateway: Installs to ~/Jts
+# We update the install script so it doesn't use the bundled JVM
+# The bundled JVM doesn't work on ARM64, so we update it to use the JVM installed in the previous command
+RUN wget https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
+    java_patch_version=$(java -version 2>&1 | head -n 1 | cut -d'_' -f2 | cut -d'"' -f1) && \
+    bbe -e 's|# INSTALL4J_JAVA_HOME_OVERRIDE=|INSTALL4J_JAVA_HOME_OVERRIDE="/usr/lib/jvm/java-1.8.0-openjdk-arm64"|' -e "s|-lt \"152\"|-lt \"$java_patch_version\"|" -e "s|-gt \"152\"|-gt \"$java_patch_version\"|" ibgateway-stable-standalone-linux-x64-v978.2c.sh > ibgateway-stable-standalone-linux-custom-jvm.sh && \
+    chmod 777 ibgateway-stable-standalone-linux-custom-jvm.sh && \
+    ./ibgateway-stable-standalone-linux-custom-jvm.sh -q && \
+    wget -O ~/Jts/jts.ini https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.jts.ini && \
+    rm ibgateway-stable-standalone-linux-x64-v978.2c.sh ibgateway-stable-standalone-linux-custom-jvm.sh
+
+# Mono C# for LEAN:
+# From https://github.com/mono/docker/blob/master/
+RUN apt-get update && rm -rf /var/lib/apt/lists/*
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+RUN echo "deb http://download.mono-project.com/repo/ubuntu stable-bionic/snapshots/5.12.0.226 main" > /etc/apt/sources.list.d/mono-xamarin.list && \
+    apt-get update && apt-fast install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl && \
+    apt-fast install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
+
+# Install dotnet 5 sdk & runtime
+# The .deb packages don't support ARM, the install script does
+ENV PATH="/root/.dotnet:${PATH}"
+RUN wget https://dot.net/v1/dotnet-install.sh && \
+    chmod 777 dotnet-install.sh && \
+    ./dotnet-install.sh -c 5.0 && \
+    rm dotnet-install.sh
+ENV DOTNET_ROOT="/root/.dotnet"
+
+# Install miniforge
+# miniconda doesn't support ARM, so we use miniforge instead
+ENV PATH="/opt/miniforge3/bin:${PATH}"
+RUN wget -O Miniforge3.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh && \
+    bash Miniforge3.sh -b -p /opt/miniforge3 && \
+    rm Miniforge3.sh && \
+    ln -s /opt/miniforge3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so && \
+    conda config --append channels https://repo.anaconda.com/pkgs/main
+
+# Install supported third party python packages
+# Updates conda and pip
+RUN conda update -y conda pip
+
+# Updates pip
+RUN pip install --upgrade --no-cache-dir pip
+
+# Sets python version to 3.6.7
+# There is no Python 3.6.8 for ARM, so we use 3.6.7 instead
+RUN conda install -y python=3.6.7
+RUN conda clean -y --all
+
+# Conda install required so that the packages are not
+# overwritten and have their version invalidated by
+# subsequent calls to conda install
+RUN conda install -y                \
+    cython=0.29.17                  \
+    pandas=0.25.3                   \
+    numpy=1.18.1                    \
+    wrapt=1.12.1                    \
+    jupyterlab=2.1.2                \
+    matplotlib=3.2.1                \
+    scipy=1.4.1
+
+# The list of packages in this image is shorter than the list in the AMD images
+# This list only includes packages that can be installed within 2 minutes on ARM
+RUN pip install --no-cache-dir      \
+    beautifulsoup4==4.9.0           \
+    dill==0.3.1.1                   \
+    jsonschema==3.2.0               \
+    msgpack==1.0.0                  \
+    setuptools-git==1.2             \
+    xarray==0.15.1                  \
+    plotly==4.7.1                   \
+    docutils==0.14                  \
+    nltk==3.4.5                     \
+    graphviz==0.8.4                 \
+    cmdstanpy==0.4                  \
+    featuretools==0.14.0            \
+    PuLP==1.6.8                     \
+    rauth==0.7.3                    \
+    scikit-multiflow==0.4.1         \
+    scikit-optimize==0.7.4          \
+    Theano==1.0.4                   \
+    tweepy==3.8.0                   \
+    PyWavelets==1.1.1               \
+    nvidia-ml-py3==7.352.0          \
+    copulalib==1.1.0                \
+    copulas==0.3.3                  \
+    cufflinks==0.17.3               \
+    gym==0.17.2                     \
+    ipywidgets==7.5.1               \
+    deap==1.3.1                     \
+    pykalman==0.9.5                 \
+    pyro-ppl==1.3.1                 \
+    sklearn-json==0.1.0             \
+    statistics==1.0.3.5             \
+    dtw-python==1.0.5               \
+    mxnet==1.6                      \
+    gluonts==0.4.3                  \
+    gplearn==0.4.1                  \
+    jax==0.1.68                     \
+    pennylane==0.9.0                \
+    neural-tangents==0.2.1          \
+    mplfinance==0.12.4a0            \
+    hmmlearn==0.2.3                 \
+    ppscore==0.0.2                  \
+    ta==0.5.25                      \
+    seaborn==0.11.0                 \
+    optuna==2.3.0                   \
+    findiff==0.8.5                  \
+    hyperopt==0.2.5                 \
+    bayesian-optimization==1.2.0    \
+    rpy2==3.3.6
+
+RUN wget -O mlfinlab.zip https://cdn.quantconnect.com/mlfinlab/mlfinlab-0.9.3.zip && \
+    unzip -q mlfinlab.zip && \
+    mkdir -p /opt/miniconda3/lib/python3.6/site-packages/ && \
+    mv mlfinlab /opt/miniconda3/lib/python3.6/site-packages/
+
+RUN conda install -y -c conda-forge \
+    openmpi=4.0.3
+
+RUN conda clean -y --all
+
+RUN python -m nltk.downloader -d /usr/share/nltk_data punkt
+RUN python -m nltk.downloader -d /usr/share/nltk_data vader_lexicon
+RUN python -m nltk.downloader -d /usr/share/nltk_data stopwords
+
+# Update ODO
+RUN wget https://cdn.quantconnect.com/odo/odo-master-9fce669.zip && \
+    unzip -q odo-master-9fce669.zip && cd odo-master && \
+    pip install . && cd .. && rm -rf odo-master
+
+# Install DX Analytics
+RUN wget https://cdn.quantconnect.com/dx/dx-master-4c47c25.zip && \
+    unzip -q dx-master-4c47c25.zip && cd dx-master && \
+    pip install . && cd .. && rm -rf dx-master
+
+# Install Auto-KS
+RUN wget https://cdn.quantconnect.com/auto_ks/auto_ks-master-b39e8f3.zip && \
+    unzip -q auto_ks-master-b39e8f3.zip && cd auto_ks-master && \
+    pip install . && cd .. && rm -rf auto_ks-master
+
+# Install py-earth
+RUN wget https://cdn.quantconnect.com/py-earth/py-earth-0.1.0.zip && \
+    unzip -q py-earth-0.1.0.zip && cd py-earth-0.1.0 && \
+    python setup.py install && cd .. && rm -rf py-earth-0.1.0
+
+# Install fastText
+RUN wget https://cdn.quantconnect.com/fastText/fastText-0.9.2.zip && \
+    unzip -q fastText-0.9.2.zip && cd fastText-0.9.2 && \
+    pip install . && cd .. && rm -rf fastText-0.9.2
+
+# Install Tigramite
+RUN wget https://cdn.quantconnect.com/tigramite/tigramite-4.1.zip && \
+    unzip -q tigramite-4.1.zip && cd tigramite-4.1 && \
+    python setup.py install && cd .. && rm -rf tigramite-4.1
+
+# Install H2O: https://www.h2o.ai/download/
+RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
+    unzip -q h2o-3.30.0.3.zip && \
+    pip install h2o-3.30.0.3/python/h2o-3.30.0.3-py2.py3-none-any.whl && \
+    rm -rf h2o-3.30.0.3
+
+# Delete temporary zip files
+RUN rm -rf *.zip *.gz
+
+# Remove black-listed packages
+RUN pip uninstall -y s3transfer
+RUN conda clean -y --all
+
+# Clean up any unused packages installed by apt-get
+RUN apt-get autoremove --purge -y
+
+# Set PythonDLL variable for PythonNet
+ENV PYTHONNET_PYDLL="/opt/miniforge3/lib/libpython3.6m.so"
+
+# List all packages
+RUN conda list
