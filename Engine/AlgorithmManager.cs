@@ -754,6 +754,7 @@ namespace QuantConnect.Lean.Engine
                             // Dequeue historical time slices if any
                             while (_historicalTimeSlicesQueue.TryDequeue(out ts))
                             {
+                                Log.Debug($"Dequeue TS >> {ts.Time}");
                                 yield return ts;
                             }
 
@@ -768,9 +769,10 @@ namespace QuantConnect.Lean.Engine
                         {
                             _historyProcessorEvent.WaitOne();
                             TimeSlice ts;
-                            // Dequeue history time slices if any
+                            // Dequeue historical time slices if any
                             while (_historicalTimeSlicesQueue.TryDequeue(out ts))
                             {
+                                Log.Debug($"Dequeue TS >> {ts.Time}");
                                 yield return ts;
                             }
                         }
@@ -800,7 +802,6 @@ namespace QuantConnect.Lean.Engine
                         }
 
                         algorithm.SetFinishedWarmingUp();
-                        Log.Trace("Algorithm finished warming up.");
 
                         continue;
                     }
@@ -854,50 +855,12 @@ namespace QuantConnect.Lean.Engine
             {
                 Log.Trace($"AlgorithmManager.ProcessHistoryRequests(): WarmupHistoryRequest: {request.Symbol}: Start: {request.StartTimeUtc} End: {request.EndTimeUtc} Resolution: {request.Resolution}");
             }
-
-            var timeZone = _algorithm.TimeZone;
             
-            // If there are a lot of historical warm up requests and they are very long
-            // We may need to split them into smaller chops and proceed one by one otherwise we may run out of memory
-            // Consider example: All SNP constituent stocks (500 securities), 1 min resolution data, 1 year deep history
-            // Memory will be running off when composing Slices from BaseData and when packing back to time slices.
-
-            var chop = Config.GetInt("algorithm-manager-warmup-requests-breakdown-span", 10);
-            var minStartTime = historyRequests.Min(hr => hr.StartTimeUtc);
-            var maxEndTime = historyRequests.Max(hr => hr.EndTimeUtc);
-
-            if (maxEndTime - minStartTime > TimeSpan.FromDays(chop))
-            {
-                var currentStart = minStartTime;
-                var currentEnd = minStartTime.AddDays(chop);
-                var counter = 0;
-
-                while (currentStart < maxEndTime)
-                {
-                    Log.Trace($"AlgorithmManager.ProcessHistoryRequests(): Processing WarmupHistoryRequest breakdown part [{counter++}] >> START: {currentStart} END: {currentEnd}");
-
-                    var smallTempRequests = historyRequests.Select(hr =>
-                        new HistoryRequest(currentStart, currentEnd, hr.DataType, hr.Symbol, hr.Resolution,
-                            hr.ExchangeHours, hr.DataTimeZone,
-                            hr.FillForwardResolution, hr.IncludeExtendedMarketHours, hr.IsCustomData,
-                            hr.DataNormalizationMode, hr.TickType)).ToList();
-
-                    PackInTimeSlices(_algorithm.HistoryProvider.GetHistory(smallTempRequests, timeZone), timeZone);
-                    _historyProcessorEvent.Set();
-
-                    currentStart = currentEnd;
-                    currentEnd = currentEnd.AddDays(chop);
-                    currentEnd = maxEndTime < currentEnd ? maxEndTime : currentEnd;
-                }
-            }
-            else
-            {
-                // make the history request and build time slices
-                PackInTimeSlices(_algorithm.HistoryProvider.GetHistory(historyRequests, timeZone) , timeZone);
-            }
+            PackInTimeSlices(_algorithm.HistoryProvider.GetHistory(historyRequests, _algorithm.TimeZone), _algorithm.TimeZone);
 
             _warmupState = AlgorithmWarmupState.Completed;
-            _historyProcessorEvent.Set();
+
+            Log.Trace("Algorithm finished warming up.");
         }
 
         private void PackInTimeSlices(IEnumerable<Slice> slices, DateTimeZone timeZone)
@@ -952,6 +915,8 @@ namespace QuantConnect.Lean.Engine
 
                 _historicalTimeSlicesQueue.Enqueue(timeSlice);
                 _lastHistoryTimeUtc = timeSlice.Time;
+
+                _historyProcessorEvent.Set();
             }
         }
 
