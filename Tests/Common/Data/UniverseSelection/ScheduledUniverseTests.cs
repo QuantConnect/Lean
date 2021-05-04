@@ -18,13 +18,9 @@ using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using NUnit.Framework;
-using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Common.Data.UniverseSelection
 {
