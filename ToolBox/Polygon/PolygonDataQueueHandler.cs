@@ -192,7 +192,7 @@ namespace QuantConnect.ToolBox.Polygon
         /// </summary>
         public void Dispose()
         {
-            _dataAggregator.Dispose();
+            _dataAggregator.DisposeSafely();
         }
 
         #endregion
@@ -699,7 +699,7 @@ namespace QuantConnect.ToolBox.Polygon
             var end = lastRequestedBarStartTime;
 
             // Perform a check of the number of bars requested, this must not exceed a static limit
-            var aggregatesCountPerResolution = GetArrgegatesCountPerResoltion(request.Resolution);
+            var aggregatesCountPerResolution = GetAggregatesCountPerReselection(request.Resolution);
             var dataRequestedCount = (end - start).Ticks
                                      / resolutionTimeSpan.Ticks / aggregatesCountPerResolution;
 
@@ -1004,7 +1004,7 @@ namespace QuantConnect.ToolBox.Polygon
             return _cryptoExchangeMap.TryGetValue(exchangeId, out market) ? market : string.Empty;
         }
 
-        private static int GetArrgegatesCountPerResoltion(Resolution resolution)
+        private static int GetAggregatesCountPerReselection(Resolution resolution)
         {
             switch (resolution)
             {
