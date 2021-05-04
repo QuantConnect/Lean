@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
@@ -30,66 +31,84 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
     [TestFixture]
     public class ScheduledUniverseTests
     {
-        [Test]
-        public void TimeTriggeredIsCorrect()
+        private DateTimeZone _timezone;
+        private TimeKeeper _timekeeper;
+        private SecurityManager _securities;
+        private DateRules _dateRules;
+        private TimeRules _timeRules;
+
+        [SetUp]
+        public void Setup()
         {
-            // Set up for the test; start time is 1/5/2000 a wednesday at 3PM
-            var timezone = TimeZones.NewYork;
-            var start = new DateTime(2000, 1, 5, 15, 0, 0);
-            var end = new DateTime(2000, 2, 1);
-            var timekeeper = new TimeKeeper(start, timezone);
+            _timezone = TimeZones.NewYork;
+            _timekeeper = new TimeKeeper(new DateTime(2000, 1, 1), _timezone);
+            _securities = new SecurityManager(_timekeeper);
 
-            var spy = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA),
-                    Resolution.Minute,
-                    timezone,
-                    timezone,
-                    false,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
+            _dateRules = new DateRules(_securities, _timezone);
+            _timeRules = new TimeRules(_securities, _timezone);
+        }
 
-            var securities = new SecurityManager(timekeeper)
-            {
-                spy
-            };
-
-            var dateRules = new DateRules(securities, timezone);
-            var timeRules = new TimeRules(securities, timezone);
-
+        [Test]
+        public void TimeTriggeredDoesNotReturnPastTimes()
+        {
             // Schedule our universe for 12PM each day
             var universe = new ScheduledUniverse( 
-                dateRules.EveryDay(spy.Symbol), timeRules.At(12, 0),
+                _dateRules.EveryDay(), _timeRules.At(12, 0),
                 (time =>
                 {
-                    Log.Trace($"{time} : {timekeeper.GetTimeIn(timezone)}");
                     return new List<Symbol>();
                 })
             );
 
+            // For this test; start time will be 1/5/2000 wednesday at 3PM
+            // which is after 12PM, this case will ensure we don't have a 1/5 12pm event
+            var start = new DateTime(2000, 1, 5, 15, 0, 0);
+            var end = new DateTime(2000, 1, 10);
+
             // Get our trigger times, these will be in UTC
-            var triggerTimesUtc = universe.GetTriggerTimes(start.ConvertToUtc(timezone), end.ConvertToUtc(timezone), MarketHoursDatabase.AlwaysOpen);
+            var triggerTimesUtc = universe.GetTriggerTimes(start.ConvertToUtc(_timezone), end.ConvertToUtc(_timezone), MarketHoursDatabase.AlwaysOpen);
+
+            // Setup expectDate variables to assert behavior
+            // We expect the first day to be 1/6 12PM
+            var expectedDate = new DateTime(2000, 1, 6, 12, 0, 0);
 
             foreach (var time in triggerTimesUtc)
             {
                 // Convert our UTC time back to our timezone
-                var localTime = time.ConvertFromUtc(timezone);
+                var localTime = time.ConvertFromUtc(_timezone);
 
                 // Assert we aren't receiving dates prior to our start
                 Assert.IsTrue(localTime > start);
 
-                // Assert that this time is indeed 12PM local time
-                Assert.IsTrue(localTime.Hour == 12 && localTime.Minute == 0);
+                // Verify the date
+                Assert.AreEqual(expectedDate, localTime);
+                expectedDate = expectedDate.AddDays(1);
             }
+        }
+
+        [Test]
+        public void TriggerTimesNone()
+        {
+            // Test to see what happens when we expect no trigger times.
+            // To do this we will create an everyday at 12pm rule, but ask for triggers times
+            // on a single day from 3pm-4pm, meaning we should get none.
+            var timezone = TimeZones.NewYork;
+            var start = new DateTime(2000, 1, 5, 15, 0, 0);
+            var end = new DateTime(2000, 1, 5, 16,0,0);
+
+            var dateRule = _dateRules.EveryDay();
+            var timeRule = _timeRules.At(12, 0);
+
+            var universe = new ScheduledUniverse(dateRule, timeRule, time =>
+            {
+                return new List<Symbol>();
+            });
+
+            var triggerTimesUtc = universe.GetTriggerTimes(start.ConvertToUtc(timezone), end.ConvertToUtc(timezone),
+                MarketHoursDatabase.AlwaysOpen);
+
+            // Assert that its empty
+            Assert.IsTrue(!triggerTimesUtc.Any());
         }
     }
 }
