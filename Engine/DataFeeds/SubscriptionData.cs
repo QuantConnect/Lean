@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -87,10 +88,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (normalizationMode == DataNormalizationMode.Adjusted || normalizationMode == DataNormalizationMode.SplitAdjusted)
                 {
+                    // Adjust volume for TradeBars GH #5221
+                    if (normalizedData is TradeBar)
+                    {
+                        (normalizedData as TradeBar).Volume /= factor.Value;
+                    }
+
+                    // Adjust prices
                     normalizedData.Adjust(factor.Value);
                 }
                 else if (normalizationMode == DataNormalizationMode.TotalReturn)
                 {
+                    //TODO: Probably need to adjust volume here too
                     normalizedData.Scale(p => p * factor.Value + sumOfDividends);
                 }
 
