@@ -33,9 +33,9 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void TimeTriggeredIsCorrect()
         {
-            // Set up for the test; start time is 1/5/2000 a wednesday at 10AM
+            // Set up for the test; start time is 1/5/2000 a wednesday at 3PM
             var timezone = TimeZones.NewYork;
-            var start = new DateTime(2000, 1, 5, 10, 0, 0);
+            var start = new DateTime(2000, 1, 5, 15, 0, 0);
             var end = new DateTime(2000, 2, 1);
             var timekeeper = new TimeKeeper(start, timezone);
 
@@ -89,9 +89,6 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
 
                 // Assert that this time is indeed 12PM local time
                 Assert.IsTrue(localTime.Hour == 12 && localTime.Minute == 0);
-
-                // Assert we aren't receiving dates after our end
-                Assert.IsTrue(localTime < end);
             }
         }
     }
