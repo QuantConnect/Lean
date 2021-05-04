@@ -168,7 +168,7 @@ namespace QuantConnect
 
                 foreach (var capacity in _capacityBySymbol.Select(pair => pair.Value).ToList())
                 {
-                    if (capacity.Security.IsTradable && capacity.Security.Invested)
+                    if (!capacity.ShouldRemove())
                     {
                         capacity.Reset();
                         continue;
