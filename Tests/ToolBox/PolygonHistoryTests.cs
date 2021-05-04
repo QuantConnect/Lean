@@ -197,13 +197,14 @@ namespace QuantConnect.Tests.ToolBox
         private static TestCaseData[] HistoricalTicksTestCaseDatas => new[]
         {
             new TestCaseData(Symbols.AAPL, Resolution.Tick, TickType.Trade, TimeSpan.FromDays(7), true),
+            new TestCaseData(Symbols.AAPL, Resolution.Tick, TickType.Quote, TimeSpan.FromDays(7), true),
         };
 
         [TestCaseSource(nameof(HistoricalTicksTestCaseDatas))]
         public void GetHistoricalTicksTest(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool isNonEmptyResult)
         {
             var request = CreateHistoryRequest(symbol, resolution, tickType, period);
-            var historicalData = _historyProvider.GetHistory(request);
+            var historicalData = _historyProvider.GetHistory(request).ToList();
 
             Log.Trace("Data points retrieved: " + _historyProvider.DataPointCount);
 
@@ -211,7 +212,7 @@ namespace QuantConnect.Tests.ToolBox
             {
                 foreach (var group in historicalData.GroupBy(x => x.Time.Date))
                 {
-                    Log.Trace($"Downloaded ticks for {group.Key:yyyy-MM-dd} - {group.Count()}");
+                    Log.Trace($"Downloaded {tickType} ticks count for {group.Key:yyyy-MM-dd} >> {group.Count()}");
                 }
             }
         }
@@ -219,7 +220,7 @@ namespace QuantConnect.Tests.ToolBox
         #endregion
 
 
-        private HistoryRequest CreateHistoryRequest(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period)
+        private static HistoryRequest CreateHistoryRequest(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period)
         {
             var now = DateTime.UtcNow;
             var dataType = LeanData.GetDataType(resolution, tickType);
