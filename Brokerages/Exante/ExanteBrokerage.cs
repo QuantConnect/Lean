@@ -40,6 +40,9 @@ namespace QuantConnect.Brokerages.Exante
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
         public override string AccountBaseCurrency => Currencies.USD;
 
+        public ExanteSymbolMapper SymbolMapper => _symbolMapper;
+        public ExanteClientWrapper Client => _client;
+        
         private static readonly HashSet<string> SupportedCryptoCurrencies = new HashSet<string>()
         {
             "ETC", "MKR", "BNB", "NEO", "IOTA", "QTUM", "XMR", "EOS", "ETH", "XRP", "DCR",

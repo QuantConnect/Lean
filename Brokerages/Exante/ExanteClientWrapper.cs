@@ -167,5 +167,17 @@ namespace QuantConnect.Brokerages.Exante
             checkIfResponseOk(response);
             return response;
         }
+
+        public WebCallResult<IEnumerable<ExanteTickShort>> GetFeedLastQuote(
+            IEnumerable<string> symbolIds,
+            ExanteQuoteLevel level = ExanteQuoteLevel.BestPrice,
+            CancellationToken ct = default(CancellationToken)
+            )
+        {
+            var response =
+                _client.GetFeedLastQuoteAsync(symbolIds, level, ct).SynchronouslyAwaitTaskResult();
+            checkIfResponseOk(response);
+            return response;
+        }
     }
 }

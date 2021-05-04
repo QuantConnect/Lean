@@ -14,18 +14,20 @@
 */
 
 using NUnit.Framework;
-using System;
 using QuantConnect.Brokerages.Exante;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.DataFeeds;
+using System.Linq;
 
 namespace QuantConnect.Tests.Brokerages.Exante
 {
     [TestFixture]
     public class ExanteBrokerageTests : BrokerageTests
     {
+        private readonly ExanteBrokerage _brokerage;
+
         public ExanteBrokerageTests()
         {
             var securityType = SecurityType.Equity;
@@ -33,10 +35,7 @@ namespace QuantConnect.Tests.Brokerages.Exante
             Market.Add(market, 999);
             SecurityType = securityType;
             Symbol = Symbol.Create("SPY", securityType, market);
-        }
 
-        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
-        {
             var clientId = Config.Get("exante-client-id");
             var applicationId = Config.Get("exante-application-id");
             var sharedKey = Config.Get("exante-shared-key");
@@ -45,12 +44,15 @@ namespace QuantConnect.Tests.Brokerages.Exante
             var exanteClientOptions =
                 ExanteBrokerageFactory.createExanteClientOptions(clientId, applicationId, sharedKey, platformTypeStr);
 
-            var brokerage = new ExanteBrokerage(
-                exanteClientOptions, 
+            _brokerage = new ExanteBrokerage(
+                exanteClientOptions,
                 accountId,
                 new AggregationManager());
+        }
 
-            return brokerage;
+        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
+        {
+            return _brokerage;
         }
 
         protected override Symbol Symbol { get; }
@@ -63,7 +65,11 @@ namespace QuantConnect.Tests.Brokerages.Exante
 
         protected override decimal GetAskPrice(Symbol symbol)
         {
-            throw new NotImplementedException();
+            var brokerageSymbol = _brokerage.SymbolMapper.GetBrokerageSymbol(symbol);
+            var lastQuotesWcr = _brokerage.Client.GetFeedLastQuote(new[] {brokerageSymbol});
+            var lastQuotes = lastQuotesWcr.Data.ToList();
+            var asks = lastQuotes[0].Ask.ToList();
+            return asks[0].Price;
         }
     }
 }
