@@ -1316,8 +1316,7 @@ actualDictionary.update({'IBM': 5})
             // ordering dependent
             Assert.AreNotEqual(ints1.GetListHashCode(), ints2.GetListHashCode());
 
-            // type dependent [ dependency on typeof(T).GetHashCode() ]
-            Assert.AreNotEqual(ints1.GetListHashCode(), decimals.GetListHashCode());
+            Assert.AreEqual(ints1.GetListHashCode(), decimals.GetListHashCode());
 
             // known type collision - long has same hash code as int within the int range
             // we could take a hash of typeof(T) but this would require ListEquals to enforce exact types
