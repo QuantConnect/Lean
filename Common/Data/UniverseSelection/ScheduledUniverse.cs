@@ -131,7 +131,10 @@ namespace QuantConnect.Data.UniverseSelection
             // GH #5440
             do
             {
-                times.MoveNext();
+                if (!times.MoveNext())
+                {
+                    yield break;
+                }
             }
             while (times.Current < startTimeUtc);
 
