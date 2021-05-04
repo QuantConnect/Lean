@@ -129,16 +129,18 @@ namespace QuantConnect.Data.UniverseSelection
 
             // Make sure and filter out any times before our start time
             // GH #5440
-            while (times.Current < startTimeUtc)
+            do
             {
                 times.MoveNext();
             }
+            while (times.Current < startTimeUtc);
 
-            while (times.MoveNext())
+            // Start yielding times
+            do
             {
                 yield return times.Current;
             }
-
+            while (times.MoveNext());
             times.Dispose();
         }
 
