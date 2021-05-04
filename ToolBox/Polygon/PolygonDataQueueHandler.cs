@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -27,7 +26,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -223,23 +221,12 @@ namespace QuantConnect.ToolBox.Polygon
             var tasks = requests.Select(request => Task.Run(async () => await GetHistoryAsync(request).ConfigureAwait(false)));
             var requestsAndHistory = Task.WhenAll(tasks).Result;
             
-            // create subscription objects from the configs
+            // Create subscription objects from the configs
             var subscriptions = 
                 (from kvp in requestsAndHistory 
                 let request = kvp.Key 
                 let history = kvp.Value 
                 select CreateSubscription(request, history)).ToList();
-
-            /*
-            var subscriptions = new List<Subscription>();
-            foreach (var request in requests)
-            {
-                var history = GetHistory(request);
-                var subscription = CreateSubscription(request, history);
-
-                subscriptions.Add(subscription);
-            }
-            */
 
             return CreateSliceEnumerableFromSubscriptions(subscriptions, sliceTimeZone);
         }
@@ -254,13 +241,13 @@ namespace QuantConnect.ToolBox.Polygon
             return ProcessHistoryRequest(request);
         }
 
-        private Task<KeyValuePair<HistoryRequest, BaseData[]>> GetHistoryAsync(HistoryRequest request)
+        private Task<KeyValuePair<HistoryRequest, IEnumerable<BaseData>>> GetHistoryAsync(HistoryRequest request)
         {
-            var tcs = new TaskCompletionSource<KeyValuePair<HistoryRequest, BaseData[]>>();
+            var tcs = new TaskCompletionSource<KeyValuePair<HistoryRequest, IEnumerable<BaseData>>>();
             Task.Run(() =>
             {
                 var result = GetHistory(request).ToArray();
-                var kvp = new KeyValuePair<HistoryRequest, BaseData[]> (request, result);
+                var kvp = new KeyValuePair<HistoryRequest, IEnumerable<BaseData>> (request, result);
                 tcs.SetResult(kvp);
             });
 
