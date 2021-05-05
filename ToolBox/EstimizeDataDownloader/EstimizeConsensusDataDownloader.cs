@@ -117,8 +117,6 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                         ? null
                         : Path.Combine(processedConsensusDirectory.FullName, $"{ticker}.csv");
 
-                    Log.Trace($"{ticker}, {finalPath}, {File.Exists(finalPath)} {processedConsensusDirectory.FullName}, {processedConsensusFile}, {File.Exists(processedConsensusFile)}");
-                    
                     var existingConsensus = (File.Exists(finalPath) ? File.ReadAllLines(finalPath) : new string[] { })
                         .Concat(processedConsensusFile != null && File.Exists(processedConsensusFile) 
                             ? File.ReadAllLines(processedConsensusFile)
@@ -126,8 +124,6 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                         .Distinct()
                         .Select(x => new EstimizeConsensus(x))
                         .ToList();
-                    
-                    Log.Trace($"Consensuses: {existingConsensus.Count}");
                     
                     // We don't need to apply any sort of mapfile transformations to the ticker
                     // since we've already applied mapping to the release file ticker
