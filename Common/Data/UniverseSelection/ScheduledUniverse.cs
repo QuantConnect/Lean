@@ -133,6 +133,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 if (!times.MoveNext())
                 {
+                    times.Dispose();
                     yield break;
                 }
             }
