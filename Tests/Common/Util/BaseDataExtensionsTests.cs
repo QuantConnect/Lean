@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -56,7 +56,8 @@ namespace QuantConnect.Tests.Common.Util
                 Open = 100,
                 High = 200,
                 Low = 300,
-                Close = 400
+                Close = 400,
+                Volume = 10000
             };
 
             var adjustedTb = tb.Clone(tb.IsFillForward).Adjust(_factor);
@@ -65,6 +66,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(tb.High * _factor, (adjustedTb as TradeBar).High);
             Assert.AreEqual(tb.Low * _factor, (adjustedTb as TradeBar).Low);
             Assert.AreEqual(tb.Close * _factor, (adjustedTb as TradeBar).Close);
+            Assert.AreEqual(tb.Volume / _factor, (adjustedTb as TradeBar).Volume);
         }
 
         [Test]
@@ -74,12 +76,14 @@ namespace QuantConnect.Tests.Common.Util
             {
                 Time = new DateTime(2020, 5, 21, 8, 9, 0),
                 Symbol = Symbols.SPY,
-                Value = 100
+                Value = 100,
+                Quantity = 10
             };
 
             var adjustedTick = tick.Clone(tick.IsFillForward).Adjust(_factor);
 
             Assert.AreEqual(tick.Value * _factor, (adjustedTick as Tick).Value);
+            Assert.AreEqual(tick.Quantity / _factor, (adjustedTick as Tick).Quantity);
         }
 
         [Test]
@@ -120,7 +124,8 @@ namespace QuantConnect.Tests.Common.Util
                 Open = 100,
                 High = 200,
                 Low = 300,
-                Close = 400
+                Close = 400,
+                Volume = 1000
             };
 
             var adjustedTb = tb.Clone(tb.IsFillForward).Normalize(_config);
@@ -129,6 +134,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(tb.High * _factor, (adjustedTb as TradeBar).High);
             Assert.AreEqual(tb.Low * _factor, (adjustedTb as TradeBar).Low);
             Assert.AreEqual(tb.Close * _factor, (adjustedTb as TradeBar).Close);
+            Assert.AreEqual(tb.Volume / _factor, (adjustedTb as TradeBar).Volume);
         }
 
         [Test]
@@ -138,12 +144,14 @@ namespace QuantConnect.Tests.Common.Util
             {
                 Time = new DateTime(2020, 5, 21, 8, 9, 0),
                 Symbol = Symbols.SPY,
-                Value = 100
+                Value = 100,
+                Quantity = 10
             };
 
             var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_config);
 
             Assert.AreEqual(tick.Value * _factor, (adjustedTick as Tick).Value);
+            Assert.AreEqual(tick.Quantity / _factor, (adjustedTick as Tick).Quantity);
         }
 
         [Test]
