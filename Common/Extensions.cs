@@ -2660,7 +2660,10 @@ namespace QuantConnect
         /// <summary>
         /// Scale data based on factor function
         /// </summary>
-        public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor)
+        /// <param name="data">Data to Adjust</param>
+        /// <param name="factor">Function to factor prices by</param>
+        /// <param name="volumeFactor">Factor to multiply volume by (Only important to Trade type data)</param>
+        public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor, decimal volumeFactor = decimal.One)
         {
             switch (data.DataType)
             {
@@ -2672,6 +2675,7 @@ namespace QuantConnect
                         tradeBar.High = factor(tradeBar.High);
                         tradeBar.Low = factor(tradeBar.Low);
                         tradeBar.Close = factor(tradeBar.Close);
+                        tradeBar.Volume *= volumeFactor;
                     }
                     break;
                 case MarketDataType.Tick:
@@ -2692,6 +2696,7 @@ namespace QuantConnect
                     if (tick.TickType == TickType.Trade)
                     {
                         tick.Value = factor(tick.Value);
+                        tick.Quantity *= volumeFactor;
                         break;
                     }
 
@@ -2751,7 +2756,7 @@ namespace QuantConnect
         /// <returns></returns>
         public static BaseData Normalize(this BaseData data, SubscriptionDataConfig config)
         {
-            return data?.Scale(p => config.GetNormalizedPrice(p));
+            return data?.Scale(p => config.GetNormalizedPrice(p), 1/config.PriceScaleFactor);
         }
 
         /// <summary>
@@ -2762,7 +2767,7 @@ namespace QuantConnect
         /// <returns></returns>
         public static BaseData Adjust(this BaseData data, decimal scale)
         {
-            return data?.Scale(p => p * scale);
+            return data?.Scale(p => p * scale, 1/scale);
         }
 
         /// <summary>
