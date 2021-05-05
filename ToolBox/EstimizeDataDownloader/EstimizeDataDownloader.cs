@@ -34,7 +34,8 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
     public abstract class EstimizeDataDownloader : IDataDownloader
     {
         private readonly string _clientKey;
-        private readonly int _maxRetries = 5;
+        private readonly int _maxRetries = Config.GetInt("estimize-http-retries", 5);
+        private readonly int _sleepMs = Config.GetInt("estimize-http-fail-sleep-ms", 1000);
         private static readonly List<char> _defunctDelimiters = new List<char>
         {
             '-',
@@ -125,7 +126,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                 catch (Exception e)
                 {
                     Log.Error(e, $"EstimizeDataDownloader.HttpRequester(): Error at HttpRequester. (retry {retries}/{_maxRetries})");
-                    Thread.Sleep(1000);
+                    await Task.Delay(_sleepMs);
                 }
             }
 

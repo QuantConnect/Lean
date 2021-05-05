@@ -34,6 +34,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
     {
         private readonly string _destinationFolder;
         private readonly MapFileResolver _mapFileResolver;
+        private readonly HashSet<string> _processTickers;
 
         /// <summary>
         /// Creates a new instance of <see cref="EstimizeReleaseDataDownloader"/>
@@ -44,6 +45,8 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
             _destinationFolder = Path.Combine(destinationFolder, "release");
             _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
                 .Get(Market.USA);
+
+            _processTickers = Config.Get("process-tickers", null)?.Split(",").ToHashSet();
 
             Directory.CreateDirectory(_destinationFolder);
         }
@@ -70,9 +73,6 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
                 foreach (var company in companies)
                 {
-                    // Makes sure we don't overrun Estimize rate limits accidentally
-                    IndexGate.WaitToProceed();
-
                     // Include tickers that are "defunct".
                     // Remove the tag because it cannot be part of the API endpoint.
                     // This is separate from the NormalizeTicker(...) method since
@@ -87,9 +87,18 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                         continue;
                     }
 
+                    if (_processTickers != null && !_processTickers.Contains(ticker, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        Log.Trace($"EstimizeReleaseDataDownloader.Run(): Skipping {ticker} since it is not in the list of predefined tickers");
+                        continue;
+                    }
+                    
+                    // Makes sure we don't overrun Estimize rate limits accidentally
+                    IndexGate.WaitToProceed();
+                    
                     // Begin processing ticker with a normalized value
                     Log.Trace($"EstimizeReleaseDataDownloader.Run(): Processing {ticker}");
-
+                    
                     tasks.Add(
                         HttpRequester($"/companies/{ticker}/releases")
                             .ContinueWith(
@@ -141,7 +150,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                                     return string.Empty;
                                                 }
 
-                                                if (oldTicker != newTicker)
+                                                if (!string.Equals(oldTicker, newTicker, StringComparison.InvariantCultureIgnoreCase))
                                                 {
                                                     Log.Trace($"EstimizeReleaseDataDownloader.Run(): Remapped from {oldTicker} to {newTicker} for {releaseDate}");
                                                 }
