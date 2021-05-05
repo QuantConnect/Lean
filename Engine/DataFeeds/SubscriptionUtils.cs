@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -101,10 +101,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             continue;
                         }
 
-                        var requestMode = config.DataNormalizationMode;
-                        var mode = requestMode != DataNormalizationMode.Raw
-                            ? requestMode
-                            : DataNormalizationMode.Adjusted;
+
+                        var mode = config.DataNormalizationMode;
+
                         // We update our price scale factor when the date changes for non fill forward bars or if we haven't initialized yet.
                         // We don't take into account auxiliary data because we don't scale it and because the underlying price data could be fill forwarded
                         if (enablePriceScale && data?.Time.Date > lastTradableDate && data.DataType != MarketDataType.Auxiliary && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))
