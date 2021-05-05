@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,6 +49,9 @@ class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
             self.invalidOrderTicket = self.MarketOnCloseOrder("SPY", 2)
 
     def OnEndOfAlgorithm(self):
+        # Set it back to default for other regressions
+        MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
+
         if self.validOrderTicket.Status != OrderStatus.Filled:
             raise Exception("Valid order failed to fill")
 
