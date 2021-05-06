@@ -54,6 +54,9 @@ RUN wget -O Miniforge3.sh https://github.com/conda-forge/miniforge/releases/late
 # Updates conda and pip
 RUN conda update -y conda pip
 
+# Avoid pip install read timeouts
+ENV PIP_DEFAULT_TIMEOUT=120
+
 # Updates pip
 RUN pip install --upgrade --no-cache-dir pip
 
