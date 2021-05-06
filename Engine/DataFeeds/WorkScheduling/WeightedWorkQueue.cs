@@ -21,7 +21,7 @@ using System.Threading;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 {
-    internal class WorkQueue : IWorkQueue
+    internal class WeightedWorkQueue
     {
         private readonly List<WorkItem> _workQueue;
 
@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public WorkQueue()
+        public WeightedWorkQueue()
         {
             _workQueue = new List<WorkItem>();
             _workAvailableEvent = new AutoResetEvent(false);

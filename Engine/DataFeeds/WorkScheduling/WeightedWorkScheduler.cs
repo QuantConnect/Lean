@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,8 +29,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
     /// <see cref="WorkItem"/> and not share it with another thread.
     /// This is required because the data enumerator stack yields, which state
     /// depends on the thread id</remarks>
-    public class WeightedWorkScheduler
+    public class WeightedWorkScheduler : WorkScheduler
     {
+        private static readonly Lazy<WeightedWorkScheduler> _instance = new Lazy<WeightedWorkScheduler>(() => new WeightedWorkScheduler());
+
         /// <summary>
         /// This is the size of each work sprint
         /// </summary>
@@ -49,30 +51,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <summary>
         /// Singleton instance
         /// </summary>
-        public static WeightedWorkScheduler Instance = new WeightedWorkScheduler();
+        public static WeightedWorkScheduler Instance => _instance.Value;
 
         private WeightedWorkScheduler()
         {
             _newWork = new ConcurrentQueue<WorkItem>();
             _newWorkEvent = new AutoResetEvent(false);
 
-            var work = new List<IWorkQueue>();
+            var work = new List<WeightedWorkQueue>();
             var queueManager = new Thread(() =>
             {
-                var workersCount = Configuration.Config.GetInt("data-feed-workers-count", Environment.ProcessorCount);
                 MaxWorkWeight = Configuration.Config.GetInt("data-feed-max-work-weight", 400);
-                var queueName = Configuration.Config.Get("data-feed-queue-type",
-                    "QuantConnect.Lean.Engine.DataFeeds.WorkScheduling.WorkQueue, QuantConnect.Lean.Engine");
-                var queue = Type.GetType(queueName);
-                if (queue == null)
-                {
-                    throw new InvalidOperationException($"WeightedWorkScheduler(): Queue type {queueName} not found");
-                }
-                Logging.Log.Trace($"WeightedWorkScheduler(): will use {workersCount} workers and MaxWorkWeight is {MaxWorkWeight}. Queue type: {queue.Name}");
+                Logging.Log.Trace($"WeightedWorkScheduler(): will use {WorkersCount} workers and MaxWorkWeight is {MaxWorkWeight}");
 
-                for (var i = 0; i < workersCount; i++)
+                for (var i = 0; i < WorkersCount; i++)
                 {
-                    var workQueue = (IWorkQueue)Activator.CreateInstance(queue);
+                    var workQueue = new WeightedWorkQueue();
                     work.Add(workQueue);
                     var thread = new Thread(() => workQueue.WorkerThread(_newWork, _newWorkEvent))
                     {
@@ -103,10 +97,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <summary>
         /// Add a new work item to the queue
         /// </summary>
+        /// <param name="symbol">The symbol associated with this work</param>
         /// <param name="workFunc">The work function to run</param>
         /// <param name="weightFunc">The weight function.
         /// Work will be sorted in ascending order based on this weight</param>
-        public void QueueWork(Func<int, bool> workFunc, Func<int> weightFunc)
+        public override void QueueWork(Symbol symbol, Func<int, bool> workFunc, Func<int> weightFunc)
         {
             _newWork.Enqueue(new WorkItem(workFunc, weightFunc));
             _newWorkEvent.Set();
