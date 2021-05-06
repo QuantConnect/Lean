@@ -42,7 +42,6 @@ using QuantConnect.Util;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Volatility;
 using QuantConnect.Util.RateLimit;
-using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -58,7 +57,6 @@ namespace QuantConnect.Lean.Engine
         private DateTime? _lastHistoryTimeUtc;
         private AlgorithmWarmupState _warmupState;
         private bool _appliedSecurityChanges;
-        private AutoResetEvent _historyProcessorEvent = new AutoResetEvent(false);
         private readonly ConcurrentQueue<TimeSlice> _historicalTimeSlicesQueue = new ConcurrentQueue<TimeSlice>();
         private readonly ConcurrentQueue<TimeSlice> _tempSynchronizerTimeSlicesQueue = new ConcurrentQueue<TimeSlice>();
 
@@ -767,7 +765,6 @@ namespace QuantConnect.Lean.Engine
                         while (_warmupState == AlgorithmWarmupState.Running)
 #pragma warning restore CA1508 // Avoid dead conditional code
                         {
-                            _historyProcessorEvent.WaitOne();
                             TimeSlice ts;
                             // Dequeue historical time slices if any
                             while (_historicalTimeSlicesQueue.TryDequeue(out ts))
@@ -915,8 +912,6 @@ namespace QuantConnect.Lean.Engine
 
                 _historicalTimeSlicesQueue.Enqueue(timeSlice);
                 _lastHistoryTimeUtc = timeSlice.Time;
-
-                _historyProcessorEvent.Set();
             }
         }
 
