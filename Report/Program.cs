@@ -31,9 +31,6 @@ namespace QuantConnect.Report
     {
         static void Main(string[] args)
         {
-            // Adds the current working directory to the PYTHONPATH env var.
-            PythonInitializer.SetPythonPathEnvironmentVariable();
-
             // Parse report arguments and merge with config to use in report creator:
             if (args.Length > 0)
             {
@@ -89,8 +86,13 @@ namespace QuantConnect.Report
             {
                 Console.Write(html);
             }
+            
             Log.Trace("QuantConnect.Report.Main(): Completed.");
-            Console.ReadKey();
+
+            if (!Console.IsInputRedirected)
+            {
+                Console.ReadKey();
+            }
         }
     }
 }

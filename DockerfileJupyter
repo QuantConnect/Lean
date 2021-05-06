@@ -21,24 +21,31 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-# Clone Lean; Copy Python startup file to profile; Install Lean/PythonToolbox; Remove extra files
-RUN git clone https://github.com/QuantConnect/Lean.git && \
-    mkdir -p /root/.ipython/profile_default/startup/ && cp -f Lean/Research/start.py /root/.ipython/profile_default/startup/ && \
-    cd Lean/PythonToolbox && python setup.py install \
-    && cd ../.. && rm -irf Lean
-
 RUN conda install -y -c conda-forge notebook=6.0.3
 
-#Install ICSharp (Jupyter C# Kernel)
-RUN wget https://cdn.quantconnect.com/icsharp/ICSharp.Kernel.20180820.zip && \
-    unzip ICSharp.Kernel.20180820.zip -d / && rm -irf ICSharp.Kernel.20180820.zip && cd /icsharp && \
-    jupyter kernelspec install kernel-spec --name=csharp
+# Install clr-loader for PythonNet
+RUN pip install clr-loader==0.1.6
+
+ENV LD_LIBRARY_PATH=/lib/
+RUN ln -s /lib/$(uname -m)-linux-gnu/libc.so.6 /lib/$(uname -m)-linux-gnu/libc.so
+
+# Install .NET Interactive to support C# in Jupyter notebooks
+ENV PATH="${PATH}:/root/.dotnet/tools"
+RUN dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
+    dotnet interactive jupyter install
 
 # Setting some environment variables
 ENV WORK /Lean/Launcher/bin/Debug/
 ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 
-RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'decimal.py' -delete
+# Clone Lean; Link Python startup file to profile; Install Lean/PythonToolbox; Remove extra files
+RUN git clone https://github.com/QuantConnect/Lean.git && \
+    mkdir -p /root/.ipython/profile_default/startup/ && \
+    ln -s /Lean/Launcher/bin/Debug/start.py /root/.ipython/profile_default/startup/start.py && \
+    cd Lean/PythonToolbox && python setup.py install \
+    && cd ../.. && rm -irf Lean
+
+RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'QuantConnect.Lean.Launcher.runtimeconfig.json' -not -name 'decimal.py' -delete
 
 #Create initialize script
 RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
@@ -51,13 +58,6 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     > start.sh
 
 RUN chmod -R 777 ${WORK}
-
-# Install clr-loader for PythonNet
-RUN pip install clr-loader==0.1.6
-
-ENV LD_LIBRARY_PATH=/lib/
-RUN ln -s /lib/$(uname -m)-linux-gnu/libc.so.6 /lib/$(uname -m)-linux-gnu/libc.so
-
 EXPOSE 8888
 WORKDIR $WORK
 

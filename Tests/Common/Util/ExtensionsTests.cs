@@ -717,9 +717,9 @@ namespace QuantConnect.Tests.Common.Util
 
         [Test]
         [TestCase(0.072842, 3, "0.0728")]
-        [TestCase(0.0019999, 2, "0.002")]
+        [TestCase(0.0019999, 2, "0.0020")]
         [TestCase(0.01234568423, 6, "0.0123457")]
-        public void RoundToSignificantDigits(double input, int digits, string expectedOutput)
+        public void RoundToSignificantDigits(decimal input, int digits, string expectedOutput)
         {
             var output = input.RoundToSignificantDigits(digits).ToStringInvariant();
             Assert.AreEqual(expectedOutput, output);
@@ -1316,8 +1316,7 @@ actualDictionary.update({'IBM': 5})
             // ordering dependent
             Assert.AreNotEqual(ints1.GetListHashCode(), ints2.GetListHashCode());
 
-            // type dependent [ dependency on typeof(T).GetHashCode() ]
-            Assert.AreNotEqual(ints1.GetListHashCode(), decimals.GetListHashCode());
+            Assert.AreEqual(ints1.GetListHashCode(), decimals.GetListHashCode());
 
             // known type collision - long has same hash code as int within the int range
             // we could take a hash of typeof(T) but this would require ListEquals to enforce exact types

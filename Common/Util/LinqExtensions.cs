@@ -27,18 +27,6 @@ namespace QuantConnect.Util
     public static class LinqExtensions
     {
         /// <summary>
-        /// Creates a dictionary multimap from the lookup.
-        /// </summary>
-        /// <typeparam name="K">The key type</typeparam>
-        /// <typeparam name="V">The value type</typeparam>
-        /// <param name="lookup">The ILookup instance to convert to a dictionary</param>
-        /// <returns>A dictionary holding the same data as 'lookup'</returns>
-        public static Dictionary<K, List<V>> ToDictionary<K, V>(this ILookup<K, V> lookup)
-        {
-            return lookup.ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
-        }
-
-        /// <summary>
         /// Creates a dictionary enumerable of key value pairs
         /// </summary>
         /// <typeparam name="K">The key type</typeparam>
@@ -60,17 +48,6 @@ namespace QuantConnect.Util
         public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable)
         {
             return new ReadOnlyDictionary<K, V>(enumerable.ToDictionary());
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="HashSet{T}"/> from the elements in the specified enumerable
-        /// </summary>
-        /// <typeparam name="T">The item type in the hash set</typeparam>
-        /// <param name="enumerable">The items to be placed into the enumerable</param>
-        /// <returns>A new <see cref="HashSet{T}"/> containing the items in the enumerable</returns>
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> enumerable)
-        {
-            return new HashSet<T>(enumerable);
         }
 
         /// <summary>
@@ -146,14 +123,6 @@ namespace QuantConnect.Util
         public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
         {
             return enumerable == null || !enumerable.Any();
-        }
-
-        /// <summary>
-        /// Performs the specified selector before calling DefaultIfEmpty. This is just short hand for Select(selector).DefaultIfEmpty(defaultValue)
-        /// </summary>
-        public static IEnumerable<TResult> DefaultIfEmpty<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector, TResult defaultValue = default(TResult))
-        {
-            return enumerable.Select(selector).DefaultIfEmpty(defaultValue);
         }
 
         /// <summary>
