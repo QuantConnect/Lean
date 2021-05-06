@@ -167,14 +167,17 @@ namespace QuantConnect.Algorithm
         /// <returns></returns>
         public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
         {
+            var symbolsToWarmup = Securities.Values
+                .Where(s => s.IsTradable).Select(s => s.Symbol);
+
             if (_warmupBarCount.HasValue)
             {
-                return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value, _warmupResolution);
+                return CreateBarCountHistoryRequests(symbolsToWarmup, _warmupBarCount.Value, _warmupResolution);
             }
             if (_warmupTimeSpan.HasValue)
             {
                 var end = UtcTime.ConvertFromUtc(TimeZone);
-                return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end, _warmupResolution);
+                return CreateDateRangeHistoryRequests(symbolsToWarmup, end - _warmupTimeSpan.Value, end, _warmupResolution);
             }
 
             // if not warmup requested return nothing
@@ -626,11 +629,12 @@ namespace QuantConnect.Algorithm
 
                 foreach (var config in GetMatchingSubscriptions(x, typeof(BaseData), resolution))
                 {
+                    if (config.IsInternalFeed) continue;
                     var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution);
 
                     // apply overrides
                     var res = GetResolution(x, resolution);
-                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : (Resolution?)null;
+                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : (Resolution?) null;
                     if (extendedMarket.HasValue) request.IncludeExtendedMarketHours = extendedMarket.Value;
 
                     requests.Add(request);

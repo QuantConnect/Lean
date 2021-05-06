@@ -274,6 +274,8 @@ namespace QuantConnect.Securities
                     var security = securityService.CreateSecurity(symbol,
                         config,
                         addToSymbolCache: false);
+                    // Mark security as non tradable, because so far it's being created only for currency conversion
+                    security.IsTradable = false;
 
                     ConversionRateSecurity = security;
                     securities.Add(config.Symbol, security);
