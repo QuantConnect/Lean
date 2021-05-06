@@ -101,7 +101,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             continue;
                         }
 
-                        // In the even we have "Raw" configuration, we will force our subscription data
+                        // In the event we have "Raw" configuration, we will force our subscription data
                         // to precalculate adjusted data. The data will still be emitted as raw, but
                         // if the config is changed at any point it can emit adjusted data as well
                         // See SubscriptionData.Create() and PrecalculatedSubscriptionData for more
