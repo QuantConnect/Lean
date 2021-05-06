@@ -51,6 +51,9 @@ RUN wget https://cdn.quantconnect.com/miniconda/${CONDA} && \
 # Updates conda and pip
 RUN conda update -y conda pip
 
+# Avoid pip install read timeouts
+ENV PIP_DEFAULT_TIMEOUT=120
+
 # Updates pip
 RUN pip install --upgrade --no-cache-dir pip
 
