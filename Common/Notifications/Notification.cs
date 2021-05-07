@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -154,6 +154,35 @@ namespace QuantConnect.Notifications
             Message = message ?? string.Empty;
             Subject = subject ?? string.Empty;
             Headers = headers;
+        }
+    }
+
+    /// <summary>
+    /// Telegram notification data
+    /// </summary>
+    public class NotificationTelegram : Notification
+    {
+        /// <summary>
+        /// Send a notification message to this user on Telegram
+        /// Can be either a phone number or username
+        /// </summary>
+        public string User;
+
+        /// <summary>
+        /// Message to send. Limited to 160 characters
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Message;
+
+        /// <summary>
+        /// Constructor for sending a notification SMS to a specified phone number
+        /// </summary>
+        /// <param name="number"></param>
+        /// <param name="message"></param>
+        public NotificationTelegram(string user, string message)
+        {
+            User = user;
+            Message = message;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -118,6 +118,24 @@ namespace QuantConnect.Notifications
 
             var web = new NotificationWeb(address, data, headers);
             Messages.Enqueue(web);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Send a telegram message to the user specified
+        /// </summary>
+        /// <param name="user">telegram user to send to</param>
+        /// <param name="message">Message to send</param>
+        public bool Telegram(string user, string message)
+        {
+            if (!Allow())
+            {
+                return false;
+            }
+
+            var telegram = new NotificationTelegram(user, message);
+            Messages.Enqueue(telegram);
 
             return true;
         }
