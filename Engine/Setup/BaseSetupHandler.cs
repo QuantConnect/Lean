@@ -154,7 +154,6 @@ namespace QuantConnect.Lean.Engine.Setup
             }
         }
 
-
         /// <summary>
         /// Get the available data feeds from config.json,
         /// If none available, throw an error
