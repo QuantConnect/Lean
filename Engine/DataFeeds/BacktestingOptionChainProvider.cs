@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the list of option contracts for a given underlying symbol
         /// </summary>
-        /// <param name="symbol">The underlying symbol</param>
+        /// <param name="underlyingSymbol">The underlying symbol</param>
         /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
         /// <returns>The list of option contracts</returns>
         public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)

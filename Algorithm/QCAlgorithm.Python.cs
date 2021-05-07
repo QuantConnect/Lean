@@ -36,6 +36,9 @@ namespace QuantConnect.Algorithm
     {
         private readonly Dictionary<IntPtr, PythonIndicator> _pythonIndicators = new Dictionary<IntPtr, PythonIndicator>();
 
+        /// <summary>
+        /// PandasConverter for this Algorithm
+        /// </summary>
         public PandasConverter PandasConverter { get; private set; }
 
         /// <summary>
@@ -217,9 +220,9 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Creates and adds a new Future Option contract to the algorithm.
         /// </summary>
-        /// <param name="symbol">The <see cref="Future"/> canonical symbol (i.e. Symbol returned from <see cref="AddFuture"/>)</param>
+        /// <param name="futureSymbol">The Future canonical symbol (i.e. Symbol returned from <see cref="AddFuture"/>)</param>
         /// <param name="optionFilter">Filter to apply to option contracts loaded as part of the universe</param>
-        /// <returns>The new <see cref="Option"/> security, containing a <see cref="Future"/> as its underlying.</returns>
+        /// <returns>The new Option security, containing a Future as its underlying.</returns>
         /// <exception cref="ArgumentException">The symbol provided is not canonical.</exception>
         public void AddFutureOption(Symbol futureSymbol, PyObject optionFilter)
         {

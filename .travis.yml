@@ -1,9 +1,8 @@
-sudo: required
 language: csharp
+mono: none
 dotnet: 5.0
-mono:
-  - 5.12.0
-solution: QuantConnect.Lean.sln
+os: linux
+dist: focal
 before_install:
   - export PATH="$HOME/miniconda3/bin:$PATH"
   - export PYTHONNET_PYDLL="$HOME/miniconda3/lib/libpython3.6m.so"
@@ -18,11 +17,7 @@ before_install:
   - conda install -y cython=0.29.15
   - conda install -y scipy=1.4.1
   - conda install -y wrapt=1.12.1
-install:
-  - nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
 script:
   - dotnet nuget add source $TRAVIS_BUILD_DIR/LocalPackages
-  - dotnet build /p:Configuration=Release /p:VbcToolExe=vbnc.exe /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
-  - mono ./testrunner/NUnit.ConsoleRunner.3.11.1/tools/nunit3-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --where "cat != TravisExclude" --labels=Off --params:log-handler=ConsoleErrorLogHandler
-  - chmod +x ci_build_stubs.sh
-  - sudo -E ./ci_build_stubs.sh -d -t -g -p
+  - dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+  - dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter TestCategory!=TravisExclude -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\)

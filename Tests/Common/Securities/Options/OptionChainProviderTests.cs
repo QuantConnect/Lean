@@ -92,9 +92,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             foreach (var symbol in new[] { Symbols.SPY, Symbols.AAPL, Symbols.MSFT })
             {
-                var result = provider.GetOptionContractList(symbol, DateTime.Today);
+                var result = provider.GetOptionContractList(symbol, DateTime.Today).ToList();
+                var countCall = result.Count(x => x.ID.OptionRight == OptionRight.Call);
+                var countPut = result.Count(x => x.ID.OptionRight == OptionRight.Put);
 
-                Assert.IsTrue(result.Any());
+                Assert.Greater(countCall, 0);
+                Assert.Greater(countPut, 0);
             }
         }
 

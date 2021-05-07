@@ -83,6 +83,7 @@ namespace QuantConnect.Brokerages.Tradier
     /// </summary>
     public class TradierQuote
     {
+#pragma warning disable 0414
         /// Quote Symbol
         [JsonProperty(PropertyName = "symbol")]
         public string Symbol = "";
@@ -139,7 +140,7 @@ namespace QuantConnect.Brokerages.Tradier
         [JsonProperty(PropertyName = "low")]
         public decimal? Low = 0;
 
-        /// Closng Price
+        /// Closing Price
         [JsonProperty(PropertyName = "close")]
         public decimal? Close = 0;
 
@@ -205,7 +206,9 @@ namespace QuantConnect.Brokerages.Tradier
 
         ///Option Exp Date
         [JsonProperty(PropertyName = "expiration_date")]
+#pragma warning disable 0169 // Field is not currently used, but is good for future use
         private string Options_ExpirationDate;
+#pragma warning restore 0169
 
         ///Option Exp Type
         [JsonProperty(PropertyName = "expiration_type")]
@@ -218,6 +221,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Empty Constructor
         public TradierQuote()
         { }
+#pragma warning restore 0414
     }
 
     /// <summary>

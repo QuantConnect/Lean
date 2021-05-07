@@ -45,8 +45,8 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Selection;
-using QuantConnect.Securities.Index;
 using QuantConnect.Storage;
+using Index = QuantConnect.Securities.Index.Index;
 
 namespace QuantConnect.Algorithm
 {
@@ -820,7 +820,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
         /// <remarks>Deprecated because different assets have different market close times,
         /// and because Python does not support two methods with the same name</remarks>
-        [Obsolete("This method is deprecated. Please use this overload: OnEndOfDay(Symbol symbol)")]
+        [Obsolete("This method is deprecated and will be removed after August 2021. Please use this overload: OnEndOfDay(Symbol symbol)")]
         public virtual void OnEndOfDay()
         {
 
@@ -1657,7 +1657,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
         /// <param name="leverage">The leverage to apply to the option contract</param>
         /// <returns>Option security</returns>
-        /// <exception cref="ArgumentException">Symbol is canonical (i.e. a generic Symbol returned from <see cref="AddFuture"/> or <see cref="AddOption"/>)</exception>
+        /// <exception cref="ArgumentException">Symbol is canonical (i.e. a generic Symbol returned from <see cref="AddFuture"/> or <see cref="AddOption(string, Resolution?, string, bool, decimal)"/>)</exception>
         public Option AddFutureOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
         {
             if (symbol.IsCanonical())
@@ -1673,7 +1673,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The ticker of the Index Option</param>
         /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
-        /// <param name="market">Market of the index option. If no market is provided, we default to <see cref="Market.USA"/>
+        /// <param name="market">Market of the index option. If no market is provided, we default to <see cref="Market.USA"/> </param>
         /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
         /// <returns>Canonical Option security</returns>
         public Option AddIndexOption(string ticker, Resolution? resolution = null, string market = Market.USA, bool fillDataForward = true)
@@ -1900,7 +1900,8 @@ namespace QuantConnect.Algorithm
                     }
 
                     // remove child securities (option contracts for option chain universes) if not used in other universes
-                    foreach (var child in universe.Members.Values)
+                    // we order the securities so that the removal is deterministic, it will liquidate any holdings
+                    foreach (var child in universe.Members.Values.OrderBy(security1 => security1.Symbol))
                     {
                         if (!otherUniverses.Any(u => u.Members.ContainsKey(child.Symbol)))
                         {
@@ -2453,6 +2454,7 @@ namespace QuantConnect.Algorithm
             return BrokerageModel.GetShortableProvider().AllShortableSymbols(Time);
         }
 
+        /// <summary>
         /// Set the properties and exchange hours for a given key into our databases
         /// </summary>
         /// <param name="key">Key for database storage</param>

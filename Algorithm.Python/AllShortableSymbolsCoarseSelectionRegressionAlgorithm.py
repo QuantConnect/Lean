@@ -75,7 +75,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         if self.Time.date() == self.lastTradeDate:
             return
 
-        for symbol in self.ActiveSecurities.Keys:
+        for symbol in sorted(self.ActiveSecurities.Keys, key=lambda x: x.ID.Symbol):
             if not symbol in self.Portfolio or not self.Portfolio[symbol].Invested:
                 if not self.Shortable(symbol):
                     raise Exception(f"Expected {symbol} to be shortable on {self.Time}")

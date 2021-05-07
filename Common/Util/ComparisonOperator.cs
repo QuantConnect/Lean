@@ -17,6 +17,9 @@ using System;
 
 namespace QuantConnect.Util
 {
+    /// <summary>
+    /// Utility Comparison Operator class
+    /// </summary>
     public static class ComparisonOperator
     {
         /// <summary>

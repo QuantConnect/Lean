@@ -21,7 +21,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Event args for <see cref="SecurityCache.DataStored"/> event
+    /// Event args for <see cref="SecurityCache"/>'s DataStored event
     /// </summary>
     public class SecurityCacheDataStoredEventArgs : EventArgs
     {

@@ -213,10 +213,13 @@ namespace QuantConnect.Securities
                     return null;
                 }
             }
+
             // if we've made it here we didn't find a security, so we'll need to add one
 
             // Create a SecurityType to Market mapping with the markets from SecurityManager members
-            var markets = securities.Select(x => x.Key).GroupBy(x => x.SecurityType).ToDictionary(x => x.Key, y => y.First().ID.Market);
+            var markets = securities.Select(x => x.Key)
+                .GroupBy(x => x.SecurityType)
+                .ToDictionary(x => x.Key, y => y.Select(symbol => symbol.ID.Market).ToHashSet());
             if (markets.ContainsKey(SecurityType.Cfd) && !markets.ContainsKey(SecurityType.Forex))
             {
                 markets.Add(SecurityType.Forex, markets[SecurityType.Cfd]);
@@ -282,6 +285,16 @@ namespace QuantConnect.Securities
                 }
             }
 
+            // Special case for crypto markets without direct pairs (They wont be found by the above)
+            // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
+            // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
+            if (Currencies.StableCoinsWithoutPairs.Contains(QuantConnect.Symbol.Create(normal, SecurityType.Crypto, marketMap[SecurityType.Crypto])))
+            {
+                ConversionRateSecurity = null;
+                ConversionRate = 1.0m;
+                return null;
+            }
+
             // if this still hasn't been set then it's an error condition
             throw new ArgumentException($"In order to maintain cash in {Symbol} you are required to add a " +
                 $"subscription for Forex pair {Symbol}{accountCurrency} or {accountCurrency}{Symbol}"
@@ -312,7 +325,7 @@ namespace QuantConnect.Securities
         private static IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetAvailableSymbolPropertiesDatabaseEntries(
             SecurityType securityType,
             IReadOnlyDictionary<SecurityType, string> marketMap,
-            IReadOnlyDictionary<SecurityType, string> markets
+            IReadOnlyDictionary<SecurityType, HashSet<string>> markets
             )
         {
             var marketJoin = new HashSet<string>();
@@ -322,9 +335,13 @@ namespace QuantConnect.Securities
                 {
                     marketJoin.Add(market);
                 }
-                if (markets.TryGetValue(securityType, out market))
+                HashSet<string> existingMarkets;
+                if (markets.TryGetValue(securityType, out existingMarkets))
                 {
-                    marketJoin.Add(market);
+                    foreach (var existingMarket in existingMarkets)
+                    {
+                        marketJoin.Add(existingMarket);
+                    }
                 }
             }
 

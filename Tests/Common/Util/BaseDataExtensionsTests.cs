@@ -93,7 +93,6 @@ namespace QuantConnect.Tests.Common.Util
                 new Bar(10, 10, 10, 10),
                 100);
 
-            var factor = 0.5m;
             var adjustedQb = qb.Clone(qb.IsFillForward).Adjust(_factor);
 
             Assert.AreEqual(qb.Value, qb.Close);

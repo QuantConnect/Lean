@@ -87,13 +87,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 foreach (var tick in tickHistory)
                 {
-                    // On the first trading day write relevant starting data to factor files
+                    // On the first trading day write relevant starting data to factor and map files
                     if (firstTick)
                     {
                         DividendsSplits.Add(new FactorFileRow(tick.Time,
                             previousPriceFactor,
                             previousSplitFactor,
                             tick.Value));
+
+                        MapRows.Add(new MapFileRow(tick.Time, CurrentSymbol.Value));
                     }
 
                     // Add the split to the DividendsSplits list if we have a pending

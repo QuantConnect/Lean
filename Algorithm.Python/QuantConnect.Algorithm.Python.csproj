@@ -4,7 +4,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <RootNamespace>QuantConnect.Algorithm.Python</RootNamespace>
     <AssemblyName>QuantConnect.Algorithm.Python</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <LangVersion>6</LangVersion>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <OutputPath>bin\$(Configuration)\</OutputPath>
@@ -239,6 +239,7 @@
     <None Include="main.py" />
     <None Include="MarginCallEventsAlgorithm.py" />
     <None Include="MarketOnOpenOnCloseAlgorithm.py" />
+    <None Include="MarketOnCloseOrderBufferRegressionAlgorithm.py" />
     <None Include="MaximumPortfolioDrawdownFrameworkAlgorithm.py" />
     <None Include="MeanVarianceOptimizationFrameworkAlgorithm.py" />
     <None Include="MovingAverageCrossAlgorithm.py" />

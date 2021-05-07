@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -25,18 +26,6 @@ namespace QuantConnect.Util
     /// </summary>
     public static class LinqExtensions
     {
-        /// <summary>
-        /// Creates a dictionary multimap from the lookup.
-        /// </summary>
-        /// <typeparam name="K">The key type</typeparam>
-        /// <typeparam name="V">The value type</typeparam>
-        /// <param name="lookup">The ILookup instance to convert to a dictionary</param>
-        /// <returns>A dictionary holding the same data as 'lookup'</returns>
-        public static Dictionary<K, List<V>> ToDictionary<K, V>(this ILookup<K, V> lookup)
-        {
-            return lookup.ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
-        }
-
         /// <summary>
         /// Creates a dictionary enumerable of key value pairs
         /// </summary>
@@ -64,17 +53,6 @@ namespace QuantConnect.Util
         /// <summary>
         /// Creates a new <see cref="HashSet{T}"/> from the elements in the specified enumerable
         /// </summary>
-        /// <typeparam name="T">The item type in the hash set</typeparam>
-        /// <param name="enumerable">The items to be placed into the enumerable</param>
-        /// <returns>A new <see cref="HashSet{T}"/> containing the items in the enumerable</returns>
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> enumerable)
-        {
-            return new HashSet<T>(enumerable);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="HashSet{T}"/> from the elements in the specified enumerable
-        /// </summary>
         /// <typeparam name="T">The item type of the source enumerable</typeparam>
         /// <typeparam name="TResult">The type of the items in the output <see cref="HashSet{T}"/></typeparam>
         /// <param name="enumerable">The items to be placed into the enumerable</param>
@@ -90,12 +68,38 @@ namespace QuantConnect.Util
         /// </summary>
         /// <typeparam name="T">The item type of the source enumerable</typeparam>
         /// <typeparam name="TResult">The type of the items in the output <see cref="List{T}"/></typeparam>
-        /// <param name="enumerable">The items to be placed into the enumerable</param>
+        /// <param name="enumerable">The items to be placed into the list</param>
         /// <param name="selector">Selects items from the enumerable to be placed into the <see cref="List{T}"/></param>
         /// <returns>A new <see cref="List{T}"/> containing the items in the enumerable</returns>
         public static List<TResult> ToList<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
         {
             return enumerable.Select(selector).ToList();
+        }
+
+        /// <summary>
+        /// Creates a new array from the projected elements in the specified enumerable
+        /// </summary>
+        /// <typeparam name="T">The item type of the source enumerable</typeparam>
+        /// <typeparam name="TResult">The type of the items in the output array</typeparam>
+        /// <param name="enumerable">The items to be placed into the array</param>
+        /// <param name="selector">Selects items from the enumerable to be placed into the array</param>
+        /// <returns>A new array containing the items in the enumerable</returns>
+        public static TResult[] ToArray<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        {
+            return enumerable.Select(selector).ToArray();
+        }
+
+        /// <summary>
+        /// Creates a new immutable array from the projected elements in the specified enumerable
+        /// </summary>
+        /// <typeparam name="T">The item type of the source enumerable</typeparam>
+        /// <typeparam name="TResult">The type of the items in the output array</typeparam>
+        /// <param name="enumerable">The items to be placed into the array</param>
+        /// <param name="selector">Selects items from the enumerable to be placed into the array</param>
+        /// <returns>A new array containing the items in the enumerable</returns>
+        public static ImmutableArray<TResult> ToImmutableArray<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        {
+            return enumerable.Select(selector).ToImmutableArray();
         }
 
         /// <summary>
@@ -119,14 +123,6 @@ namespace QuantConnect.Util
         public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
         {
             return enumerable == null || !enumerable.Any();
-        }
-
-        /// <summary>
-        /// Performs the specified selector before calling DefaultIfEmpty. This is just short hand for Select(selector).DefaultIfEmpty(defaultValue)
-        /// </summary>
-        public static IEnumerable<TResult> DefaultIfEmpty<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector, TResult defaultValue = default(TResult))
-        {
-            return enumerable.Select(selector).DefaultIfEmpty(defaultValue);
         }
 
         /// <summary>

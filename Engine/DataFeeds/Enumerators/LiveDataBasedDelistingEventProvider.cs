@@ -21,6 +21,7 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -32,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         private readonly SubscriptionDataConfig _dataConfig;
         private readonly IDataQueueHandler _dataQueueHandler;
-        private readonly IEnumerator<BaseData> _delistingEnumerator;
+        private IEnumerator<BaseData> _delistingEnumerator;
         
         /// <summary>
         /// Creates a new instance
@@ -42,7 +43,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _dataConfig = new SubscriptionDataConfig(dataConfig, typeof(Delisting));
 
             _dataQueueHandler = dataQueueHandler;
-            _delistingEnumerator = dataQueueHandler.Subscribe(_dataConfig, (sender, args) =>
+        }
+
+        /// <summary>
+        /// Initializes this instance
+        /// </summary>
+        /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
+        /// <param name="factorFile">The factor file to use</param>
+        /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
+        /// <param name="startTime">Start date for the data request</param>
+        public override void Initialize(
+            SubscriptionDataConfig config,
+            FactorFile factorFile,
+            MapFile mapFile,
+            DateTime startTime)
+        {
+            base.Initialize(config, factorFile, mapFile, startTime);
+
+            _delistingEnumerator = _dataQueueHandler.Subscribe(_dataConfig, (sender, args) =>
             {
                 if (_delistingEnumerator != null && _delistingEnumerator.MoveNext())
                 {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,6 +38,27 @@ namespace QuantConnect.Securities
         void SetLeverage(Security security, decimal leverage);
 
         /// <summary>
+        /// Gets the margin currently allocated to the specified holding
+        /// </summary>
+        /// <param name="parameters">An object containing the security and holdings quantity/cost/value</param>
+        /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
+        MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters);
+
+        /// <summary>
+        /// The margin that must be held in order to increase the position by the provided quantity
+        /// </summary>
+        /// <param name="parameters">An object containing the security and quantity</param>
+        /// <returns>The initial margin required for the provided security and quantity</returns>
+        InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters);
+
+        /// <summary>
+        /// Gets the total margin required to execute the specified order in units of the account currency including fees
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the security and the order</param>
+        /// <returns>The total margin in terms of the currency quoted in the order</returns>
+        InitialMargin GetInitialMarginRequiredForOrder(InitialMarginRequiredForOrderParameters parameters);
+
+        /// <summary>
         /// Check if there is sufficient buying power to execute this order.
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
@@ -71,7 +92,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
         BuyingPower GetBuyingPower(BuyingPowerParameters parameters);
     }

@@ -21,7 +21,6 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 
 import numpy as np
-import decimal as d
 from datetime import timedelta, datetime
 
 ### <summary>
@@ -85,6 +84,6 @@ class CustomChartingAlgorithm(QCAlgorithm):
             self.Plot("Trade Plot", "Sell", self.lastPrice)
             self.Liquidate()
 
-    def OnEndOfDay(self):
+    def OnEndOfDay(self, symbol):
        #Log the end of day prices:
        self.Plot("Trade Plot", "Price", self.lastPrice)

@@ -85,6 +85,9 @@ namespace QuantConnect.Lean.Engine.RealTime
                 where !currentUtcTime.HasValue || eventUtcTime > currentUtcTime.Value
                 select eventUtcTime;
 
+            // Log a message warning the user this EOD will be deprecated soon
+            algorithm.Debug("Usage of QCAlgorithm.OnEndOfDay() without a symbol will be deprecated August 2021. Always use a symbol when overriding this method: OnEndOfDay(symbol)");
+
             return new ScheduledEvent(CreateEventName("Algorithm", "EndOfDay"), times, (name, triggerTime) =>
             {
                 try

@@ -33,6 +33,10 @@ namespace QuantConnect.Securities
         private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
         private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
 
+        /// <summary>
+        /// Initialize a new instance of <see cref="SymbolPropertiesDatabase"/> using the given file
+        /// </summary>
+        /// <param name="file">File to read from</param>
         protected SymbolPropertiesDatabase(string file)
         {
             var allEntries = new Dictionary<SecurityDatabaseKey, SymbolProperties>();

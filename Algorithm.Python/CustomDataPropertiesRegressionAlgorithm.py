@@ -25,7 +25,7 @@ from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 from QuantConnect.Securities import *
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 ### <summary>
@@ -125,6 +125,7 @@ class Bitcoin(PythonData):
         try:
             data = line.split(',')
             coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
+            coin.EndTime = coin.Time + timedelta(days=1)
             coin.Value = float(data[4])
             coin["Open"] = float(data[1])
             coin["High"] = float(data[2])

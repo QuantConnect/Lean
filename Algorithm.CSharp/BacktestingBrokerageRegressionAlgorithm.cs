@@ -76,9 +76,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!_equityBought && data.ContainsKey(_spy)) {
-                //Buy our Equity
-                var quantity = CalculateOrderQuantity(_spy, .1m);
+            if (!_equityBought && data.ContainsKey(_spy))
+            {
+                //Buy our Equity.
+                //Quantity is rounded down to an even number since it will be split in two equal halves
+                var quantity = Math.Floor(CalculateOrderQuantity(_spy, .1m) / 2) * 2;
                 _equityBuy = MarketOrder(_spy, quantity, asynchronous: true);
                 _equityBought = true;
             }
@@ -119,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
             var order = Transactions.GetOrderById(orderEvent.OrderId);
 
             // Based on the type verify the order
-            switch(order.Type)
+            switch (order.Type)
             {
                 case OrderType.Market:
                     VerifyMarketOrder(order, orderEvent);
@@ -140,7 +142,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="order">Order object to analyze</param>
         public void VerifyMarketOrder(Order order, OrderEvent orderEvent)
         {
-            switch(order.Status)
+            switch (order.Status)
             {
                 case OrderStatus.Submitted:
                     break;
@@ -152,7 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception("LastFillTime should not be null");
                     }
 
-                    if (order.Quantity/2 != orderEvent.FillQuantity)
+                    if (order.Quantity / 2 != orderEvent.FillQuantity)
                     {
                         throw new Exception("Order size should be half");
                     }
@@ -215,9 +217,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             //Check equity holding, should be invested, profit should be
-            //Quantity should be 50, AveragePrice should be ticket AverageFillPrice
+            //Quantity should be 52, AveragePrice should be ticket AverageFillPrice
             var equityHolding = Portfolio[_equityBuy.Symbol];
-            if (!equityHolding.Invested || equityHolding.Quantity != 50 || equityHolding.AveragePrice != _equityBuy.AverageFillPrice)
+            if (!equityHolding.Invested || equityHolding.Quantity != 52 || equityHolding.AveragePrice != _equityBuy.AverageFillPrice)
             {
                 throw new Exception("Equity holding does not match expected outcome");
             }
@@ -299,30 +301,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.40%"},
-            {"Compounding Annual Return", "-22.335%"},
+            {"Compounding Annual Return", "-22.231%"},
             {"Drawdown", "0.400%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.323%"},
-            {"Sharpe Ratio", "-11.098"},
+            {"Net Profit", "-0.321%"},
+            {"Sharpe Ratio", "-11.083"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.002"},
-            {"Beta", "0.099"},
+            {"Alpha", "-0.003"},
+            {"Beta", "0.097"},
             {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "9.899"},
-            {"Tracking Error", "0.019"},
-            {"Treynor Ratio", "-0.23"},
+            {"Information Ratio", "9.742"},
+            {"Tracking Error", "0.021"},
+            {"Treynor Ratio", "-0.26"},
             {"Total Fees", "$2.00"},
             {"Estimated Strategy Capacity", "$0"},
-            {"Fitness Score", "0.213"},
+            {"Fitness Score", "0.212"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-73.456"},
-            {"Portfolio Turnover", "0.426"},
+            {"Return Over Maximum Drawdown", "-73.565"},
+            {"Portfolio Turnover", "0.425"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -336,7 +338,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "72a6ced0ed0c2da7136f3be652eb4744"}
+            {"OrderListHash", "7f99e1a8ce4675a1e8bbe1ba45967ccd"}
         };
     }
 }

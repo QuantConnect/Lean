@@ -341,6 +341,12 @@ namespace QuantConnect
             return Zip(textPath, Path.GetFileName(textPath), deleteOriginal);
         }
 
+        /// <summary>
+        /// Compress given data to the path given
+        /// </summary>
+        /// <param name="data">Data to write to zip</param>
+        /// <param name="zipPath">Path to write to</param>
+        /// <param name="zipEntry">Entry to save the data as</param>
         public static void Zip(string data, string zipPath, string zipEntry)
         {
             using (var stream = new ZipOutputStream(File.Create(zipPath)))

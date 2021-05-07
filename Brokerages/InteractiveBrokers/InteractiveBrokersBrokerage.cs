@@ -56,6 +56,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         // Existing orders created in TWS can *only* be cancelled/modified when connected with ClientId = 0
         private const int ClientId = 0;
+        private const string _futuresCmeCrypto = "CMECRYPTO";
 
         // next valid order id (or request id, or ticker id) for this client
         private int _nextValidId;
@@ -1029,6 +1030,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return $"{contract.ToString().ToUpperInvariant()} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
         }
 
+        /// <summary>
+        /// Get Contract Description
+        /// </summary>
+        /// <param name="contract">Contract to retrieve description of</param>
+        /// <returns>string description</returns>
         public static string GetContractDescription(Contract contract)
         {
             return $"{contract} {contract.PrimaryExch ?? string.Empty} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
@@ -1169,6 +1175,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return contractDetailsList.FirstOrDefault();
         }
 
+        /// <summary>
+        /// Find contract details given a ticker and contract
+        /// </summary>
+        /// <param name="contract">Contract we are searching for</param>
+        /// <param name="ticker">Ticker of this contract</param>
+        /// <returns></returns>
         public IEnumerable<ContractDetails> FindContracts(Contract contract, string ticker)
         {
             const int timeout = 60; // sec
@@ -1341,7 +1353,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
             }
 
-            OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
+            if (!FilteredCodes.Contains(errorCode))
+            {
+                OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
+            }
         }
 
         /// <summary>
@@ -1963,10 +1978,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 contract.Symbol = ibSymbol;
                 contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter);
-
-                contract.Exchange = _futuresExchanges.ContainsKey(symbol.ID.Market) ?
-                                        _futuresExchanges[symbol.ID.Market] :
-                                        symbol.ID.Market;
+                contract.Exchange = GetSymbolExchange(symbol);
 
                 var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
                     symbol.ID.Market,
@@ -1993,7 +2005,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case IB.ActionSide.Sell: return OrderDirection.Sell;
                 case IB.ActionSide.Undefined: return OrderDirection.Hold;
                 default:
-                    throw new ArgumentException(direction, "direction");
+                    throw new ArgumentException(direction, nameof(direction));
             }
         }
 
@@ -2008,7 +2020,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderDirection.Sell: return IB.ActionSide.Sell;
                 case OrderDirection.Hold: return IB.ActionSide.Undefined;
                 default:
-                    throw new InvalidEnumArgumentException("direction", (int)direction, typeof(OrderDirection));
+                    throw new InvalidEnumArgumentException(nameof(direction), (int)direction, typeof(OrderDirection));
             }
         }
 
@@ -2027,7 +2039,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.MarketOnOpen:    return IB.OrderType.Market;
                 case OrderType.MarketOnClose:   return IB.OrderType.MarketOnClose;
                 default:
-                    throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
+                    throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(OrderType));
             }
         }
 
@@ -2183,7 +2195,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // not sure how to map these guys
                 default:
-                    throw new ArgumentException(status, "status");
+                    throw new ArgumentException(status, nameof(status));
             }
         }
 
@@ -3214,7 +3226,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="securityType">SecurityType of the Symbol</param>
         /// <param name="market">Market of the Symbol</param>
-        private string GetSymbolExchange(SecurityType securityType, string market)
+        /// <param name="ticker">Ticker for the symbol</param>
+        private string GetSymbolExchange(SecurityType securityType, string market, string ticker = null)
         {
             switch (securityType)
             {
@@ -3227,7 +3240,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case SecurityType.FutureOption:
                 case SecurityType.Future:
                     return _futuresExchanges.ContainsKey(market)
-                        ? _futuresExchanges[market]
+                        ? ticker == "BTC"
+                            ? _futuresCmeCrypto
+                            : _futuresExchanges[market]
                         : market;
 
                 default:
@@ -3241,7 +3256,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="symbol">Symbol to route</param>
         private string GetSymbolExchange(Symbol symbol)
         {
-            return GetSymbolExchange(symbol.SecurityType, symbol.ID.Market);
+            return GetSymbolExchange(symbol.SecurityType, symbol.ID.Market, symbol.ID.Symbol);
         }
 
         /// <summary>
@@ -3363,6 +3378,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static readonly HashSet<int> InvalidatingCodes = new HashSet<int>
         {
             105, 106, 107, 109, 110, 111, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 129, 131, 132, 133, 134, 135, 136, 137, 140, 141, 146, 147, 148, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 163, 167, 168, 201, 313,314,315,325,328,329,334,335,336,337,338,339,340,341,342,343,345,347,348,349,350,352,353,355,356,358,359,360,361,362,363,364,367,368,369,370,371,372,373,374,375,376,377,378,379,380,382,383,387,388,389,390,391,392,393,394,395,396,397,398,400,401,402,403,405,406,407,408,409,410,411,412,413,417,418,419,421,423,424,427,428,429,433,434,435,436,437,439,440,441,442,443,444,445,446,447,448,449,10002,10006,10007,10008,10009,10010,10011,10012,10014,10020,2102
+        };
+
+        // these are warning messages not sent as brokerage message events
+        private static readonly HashSet<int> FilteredCodes = new HashSet<int>
+        {
+            1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158
         };
     }
 }

@@ -15,10 +15,24 @@
 
 namespace QuantConnect.Data.Market
 {
+    /// <summary>
+    /// Enum for Bar Direction
+    /// </summary>
     public enum BarDirection
     {
+        /// <summary>
+        /// Rising bar
+        /// </summary>
         Rising,
+
+        /// <summary>
+        /// No change
+        /// </summary>
         NoDelta,
+
+        /// <summary>
+        /// Falling bar
+        /// </summary>
         Falling
     }
 }

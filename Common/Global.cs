@@ -36,6 +36,7 @@ namespace QuantConnect
     /// </remarks>
     public enum PrimaryExchange : byte
     {
+#pragma warning disable 1591
         UNKNOWN=0,
         NASDAQ=81,
         BATS=90,
@@ -59,6 +60,7 @@ namespace QuantConnect
         MIAX,
         ISE_GEMINI,
         ISE_MERCURY,
+#pragma warning restore 1591
     }
 
     /// <summary>

@@ -88,7 +88,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Attempt to download data using the Api for and return a FileStream of that data.
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="filepath">Filepath to save too</param>
         /// <param name="symbol"></param>
         /// <param name="date"></param>
         /// <param name="resolution"></param>

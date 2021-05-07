@@ -20,6 +20,9 @@ using Formatting = Newtonsoft.Json.Formatting;
 
 namespace QuantConnect.Data.Custom.SEC
 {
+    /// <summary>
+    /// SEC Report Factory for deserializing XML formatted data
+    /// </summary>
     public class SECReportFactory
     {
         /// <summary>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
@@ -716,9 +717,9 @@ namespace QuantConnect.Tests.Common.Util
 
         [Test]
         [TestCase(0.072842, 3, "0.0728")]
-        [TestCase(0.0019999, 2, "0.002")]
+        [TestCase(0.0019999, 2, "0.0020")]
         [TestCase(0.01234568423, 6, "0.0123457")]
-        public void RoundToSignificantDigits(double input, int digits, string expectedOutput)
+        public void RoundToSignificantDigits(decimal input, int digits, string expectedOutput)
         {
             var output = input.RoundToSignificantDigits(digits).ToStringInvariant();
             Assert.AreEqual(expectedOutput, output);
@@ -1267,6 +1268,85 @@ actualDictionary.update({'IBM': 5})
                     }
                 }
             }
+        }
+
+        [Test]
+        [TestCase(PositionSide.Long, OrderDirection.Buy)]
+        [TestCase(PositionSide.Short, OrderDirection.Sell)]
+        [TestCase(PositionSide.None, OrderDirection.Hold)]
+        public void ToOrderDirection(PositionSide side, OrderDirection expected)
+        {
+            Assert.AreEqual(expected, side.ToOrderDirection());
+        }
+
+        [Test]
+        [TestCase(OrderDirection.Buy, PositionSide.Long, false)]
+        [TestCase(OrderDirection.Buy, PositionSide.Short, true)]
+        [TestCase(OrderDirection.Buy, PositionSide.None, false)]
+        [TestCase(OrderDirection.Sell, PositionSide.Long, true)]
+        [TestCase(OrderDirection.Sell, PositionSide.Short, false)]
+        [TestCase(OrderDirection.Sell, PositionSide.None, false)]
+        [TestCase(OrderDirection.Hold, PositionSide.Long, false)]
+        [TestCase(OrderDirection.Hold, PositionSide.Short, false)]
+        [TestCase(OrderDirection.Hold, PositionSide.None, false)]
+        public void Closes(OrderDirection direction, PositionSide side, bool expected)
+        {
+            Assert.AreEqual(expected, direction.Closes(side));
+        }
+
+        [Test]
+        public void ListEquals()
+        {
+            var left = new[] {1, 2, 3};
+            var right = new[] {1, 2, 3};
+            Assert.IsTrue(left.ListEquals(right));
+
+            right[2] = 4;
+            Assert.IsFalse(left.ListEquals(right));
+        }
+
+        [Test]
+        public void GetListHashCode()
+        {
+            var ints1 = new[] {1, 2, 3};
+            var ints2 = new[] {1, 3, 2};
+            var longs = new[] {1L, 2L, 3L};
+            var decimals = new[] {1m, 2m, 3m};
+
+            // ordering dependent
+            Assert.AreNotEqual(ints1.GetListHashCode(), ints2.GetListHashCode());
+
+            Assert.AreEqual(ints1.GetListHashCode(), decimals.GetListHashCode());
+
+            // known type collision - long has same hash code as int within the int range
+            // we could take a hash of typeof(T) but this would require ListEquals to enforce exact types
+            // and we would prefer to allow typeof(T)'s GetHashCode and Equals to make this determination.
+            Assert.AreEqual(ints1.GetListHashCode(), longs.GetListHashCode());
+
+            // deterministic
+            Assert.AreEqual(ints1.GetListHashCode(), new[] {1, 2, 3}.GetListHashCode());
+        }
+
+        [Test]
+        [TestCase("0.999", "0.0001", "0.999")]
+        [TestCase("0.999", "0.001", "0.999")]
+        [TestCase("0.999", "0.01", "1.000")]
+        [TestCase("0.999", "0.1", "1.000")]
+        [TestCase("0.999", "1", "1.000")]
+        [TestCase("0.999", "2", "0")]
+        [TestCase("1.0", "0.15", "1.05")]
+        [TestCase("1.05", "0.15", "1.05")]
+        [TestCase("0.975", "0.15", "1.05")]
+        [TestCase("-0.975", "0.15", "-1.05")]
+        [TestCase("-1.0", "0.15", "-1.05")]
+        [TestCase("-1.05", "0.15", "-1.05")]
+        public void DiscretelyRoundBy(string valueString, string quantaString, string expectedString)
+        {
+            var value = decimal.Parse(valueString, CultureInfo.InvariantCulture);
+            var quanta = decimal.Parse(quantaString, CultureInfo.InvariantCulture);
+            var expected = decimal.Parse(expectedString, CultureInfo.InvariantCulture);
+            var actual = value.DiscretelyRoundBy(quanta);
+            Assert.AreEqual(expected, actual);
         }
 
         private PyObject ConvertToPyObject(object value)

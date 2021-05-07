@@ -159,7 +159,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                false,
                 startTimeLocal);
 
             // optionally apply fill forward behavior
@@ -185,6 +184,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             {
                 // allow all ticks
                 if (config.Resolution == Resolution.Tick) return true;
+                // filter out all aux data
+                if (data.DataType == MarketDataType.Auxiliary) return false;
                 // filter out future data
                 if (data.EndTime > endTimeLocal) return false;
                 // filter out data before the start

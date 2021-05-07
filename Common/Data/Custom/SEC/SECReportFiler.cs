@@ -19,6 +19,9 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Data.Custom.SEC
 {
+    /// <summary>
+    /// SEC Filing
+    /// </summary>
     public class SECReportFiler
     {
         /// <summary>

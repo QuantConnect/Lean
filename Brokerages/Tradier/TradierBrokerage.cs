@@ -44,6 +44,7 @@ namespace QuantConnect.Brokerages.Tradier
     ///  - Placing orders.
     ///  - Getting user data.
     /// </summary>
+    [BrokerageFactory(typeof(TradierBrokerageFactory))]
     public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
     {
         private readonly bool _useSandbox;
@@ -180,6 +181,14 @@ namespace QuantConnect.Brokerages.Tradier
                 var raw = client.Execute(request);
                 _previousResponseRaw = raw.Content;
                 //Log.Trace("TradierBrokerage.Execute: " + raw.Content);
+
+                if (!raw.IsSuccessful)
+                {
+                    throw new Exception("TradierBrokerage.Execute(): " +
+                        $"Status: {raw.StatusCode}, " +
+                        $"Response: {raw.Content}, " +
+                        $"Error: {(raw.ErrorException != null ? raw.ErrorException.ToString() : string.Empty)}");
+                }
 
                 try
                 {
@@ -630,7 +639,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected => _webSocketClient.IsOpen;
+        public override bool IsConnected => !_isDataQueueHandlerInitialized || _webSocketClient.IsOpen;
 
         /// <summary>
         /// Gets all open orders on the account.
@@ -921,19 +930,6 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public override void Connect()
         {
-            _streamSession = CreateStreamSession();
-
-            var resetEvent = new ManualResetEvent(false);
-            EventHandler triggerEvent = (o, args) => resetEvent.Set();
-            _webSocketClient.Open += triggerEvent;
-
-            _webSocketClient.Connect();
-
-            if (!resetEvent.WaitOne(ConnectionTimeout))
-            {
-                throw new TimeoutException("Websockets connection timeout.");
-            }
-            _webSocketClient.Open -= triggerEvent;
         }
 
         /// <summary>
@@ -941,7 +937,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public override void Disconnect()
         {
-            if (_webSocketClient.IsOpen)
+            if (_webSocketClient != null && _webSocketClient.IsOpen)
             {
                 _webSocketClient.Close();
             }
@@ -1878,5 +1874,4 @@ namespace QuantConnect.Brokerages.Tradier
             }
         }
     }
-
 }

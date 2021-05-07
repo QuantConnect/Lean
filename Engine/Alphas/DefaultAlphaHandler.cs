@@ -280,6 +280,13 @@ namespace QuantConnect.Lean.Engine.Alphas
             private readonly IMessagingHandler _messagingHandler;
             private readonly int _maximumNumberOfInsightsPerPacket;
 
+            /// <summary>
+            /// Initialize a new instance of <see cref="AlphaResultPacketSender"/>
+            /// </summary>
+            /// <param name="job">Algorithm job</param>
+            /// <param name="messagingHandler">Message handler to use</param>
+            /// <param name="interval">Timespan interval</param>
+            /// <param name="maximumNumberOfInsightsPerPacket">Limit on insights per packet</param>
             public AlphaResultPacketSender(AlgorithmNodePacket job, IMessagingHandler messagingHandler, TimeSpan interval, int maximumNumberOfInsightsPerPacket)
             {
                 _job = job;
@@ -342,21 +349,39 @@ namespace QuantConnect.Lean.Engine.Alphas
                 }
             }
 
+            /// <summary>
+            /// No operation
+            /// </summary>
+            /// <param name="frontierTimeUtc"></param>
             public void Step(DateTime frontierTimeUtc)
             {
                 //NOP
             }
 
+            /// <summary>
+            /// No operation
+            /// </summary>
+            /// <param name="algorithmStartDate"></param>
+            /// <param name="algorithmEndDate"></param>
+            /// <param name="algorithmUtcTime"></param>
             public void InitializeForRange(DateTime algorithmStartDate, DateTime algorithmEndDate, DateTime algorithmUtcTime)
             {
                 //NOP
             }
 
+            /// <summary>
+            /// No operation
+            /// </summary>
+            /// <param name="context"></param>
             public void OnInsightGenerated(InsightAnalysisContext context)
             {
                 //NOP
             }
 
+            /// <summary>
+            /// No operation
+            /// </summary>
+            /// <param name="context"></param>
             public void OnInsightClosed(InsightAnalysisContext context)
             {
                 //NOP

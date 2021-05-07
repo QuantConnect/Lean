@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,6 +25,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
@@ -723,8 +724,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
             try
             {
-                hasSufficientBuyingPowerResult = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
-                    new HasSufficientBuyingPowerForOrderParameters(_algorithm.Portfolio, security, order));
+                var group = _algorithm.Portfolio.Positions.CreatePositionGroup(order);
+                hasSufficientBuyingPowerResult = group.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
+                    _algorithm.Portfolio, group, order
+                );
             }
             catch (Exception err)
             {
@@ -874,7 +877,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             return order.Status != OrderStatus.Filled
                 && order.Status != OrderStatus.Canceled
-                && order.Status != OrderStatus.PartiallyFilled
                 && order.Status != OrderStatus.Invalid;
         }
 

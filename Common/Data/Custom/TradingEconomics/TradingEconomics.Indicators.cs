@@ -22,6 +22,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// </summary>
         public static class Indicator
         {
+#pragma warning disable 1591
             public static class Afghanistan
             {
                 /// <summary>
@@ -2312,6 +2313,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 /// </summary>
                 public const string StockMarket = "INDZI";
             }
+#pragma warning restore 1591
         }
     }
 }

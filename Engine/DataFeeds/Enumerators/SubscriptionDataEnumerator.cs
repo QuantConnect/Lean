@@ -67,6 +67,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var result = _enumerator.MoveNext();
             if (result)
             {
+                // Use our config filter to see if we should emit this
+                // This currently catches Auxiliary data that we don't want to emit
+                if (_enumerator.Current != null && !_configuration.ShouldEmitData(_enumerator.Current))
+                {
+                    // We shouldn't emit this data, so we will MoveNext() again.
+                    return MoveNext();
+                }
+
                 Current = SubscriptionData.Create(_configuration, _exchangeHours, _offsetProvider, _enumerator.Current, _configuration.DataNormalizationMode);
             }
             return result;

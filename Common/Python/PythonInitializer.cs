@@ -15,11 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Logging;
+using System.Collections.Generic;
+using System.IO;
 
 namespace QuantConnect.Python
 {
@@ -46,6 +46,8 @@ namespace QuantConnect.Python
 
                 _isBeginAllowThreadsCalled = true;
                 Log.Trace("PythonInitializer.Initialize(): ended");
+
+                AddPythonPaths(new []{ Environment.CurrentDirectory });
             }
         }
 
@@ -58,7 +60,8 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    var code = string.Join(";", paths.Select(s => $"sys.path.append('{s}')"));
+                    var code = string.Join(";", paths.Select(s => $"sys.path.append('{s}')"))
+                        .Replace('\\', '/');
                     PythonEngine.Exec($"import sys;{code}");
                 }
             }

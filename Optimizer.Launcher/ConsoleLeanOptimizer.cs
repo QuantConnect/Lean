@@ -47,7 +47,7 @@ namespace QuantConnect.Optimizer.Launcher
             Directory.CreateDirectory(_rootResultDirectory);
 
             _leanLocation = Configuration.Config.Get("lean-binaries-location",
-                Path.Combine(Directory.GetCurrentDirectory(), "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe"));
+                Path.Combine(Directory.GetCurrentDirectory(), "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher"));
 
             var closeLeanAutomatically = Configuration.Config.GetBool("optimizer-close-automatically", true);
             _extraLeanArguments = $"--close-automatically {closeLeanAutomatically}";

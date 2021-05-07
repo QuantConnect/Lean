@@ -86,6 +86,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         /// <summary>
         /// Generates a new random <see cref="Symbol"/> object of the specified security type.
+        /// All returned symbols have a matching entry in the symbol properties database.
         /// </summary>
         /// <remarks>
         /// A valid implementation will keep track of generated symbol objects to ensure duplicates
@@ -94,8 +95,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <exception cref="ArgumentException">Throw when specifying <see cref="SecurityType.Option"/> or
         /// <see cref="SecurityType.Future"/>. To generate symbols for the derivative security types, please
         /// use <see cref="NextOption"/> and <see cref="NextFuture"/> respectively</exception>
+        /// <exception cref="NoTickersAvailableException">Thrown when there are no tickers left to use for new symbols.</exception>
         /// <param name="securityType">The security type of the generated symbol</param>
-        /// <param name="market"></param>
+        /// <param name="market">The market of the generated symbol</param>
         /// <returns>A new symbol object of the specified security type</returns>
         Symbol NextSymbol(SecurityType securityType, string market);
 
@@ -110,7 +112,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// Standard contracts expiry on the third Friday.
         /// Weekly contracts expiry every week on Friday
         /// </remarks>
-        /// <param name="market"></param>
+        /// <param name="market">The market of the generated symbol</param>
         /// <param name="minExpiry">The minimum expiry date, inclusive</param>
         /// <param name="maxExpiry">The maximum expiry date, inclusive</param>
         /// <param name="underlyingPrice">The option's current underlying price</param>
@@ -122,10 +124,19 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// Generates a new random future <see cref="Symbol"/>. The generates future contract symbol will have an
         /// expiry between the specified <paramref name="minExpiry"/> and <paramref name="maxExpiry"/>.
         /// </summary>
-        /// <param name="market"></param>
+        /// <param name="market">The market of the generated symbol</param>
         /// <param name="minExpiry">The minimum expiry date, inclusive</param>
         /// <param name="maxExpiry">The maximum expiry date, inclusive</param>
         /// <returns>A new future contract symbol with the specified expiration parameters</returns>
         Symbol NextFuture(string market, DateTime minExpiry, DateTime maxExpiry);
+
+        /// <summary>
+        /// Returns the number of symbols with the specified parameters can be generated.
+        /// Returns int.MaxValue if there is no limit for the given parameters.
+        /// </summary>
+        /// <param name="securityType">The security type of the generated symbols</param>
+        /// <param name="market">The market of the generated symbols</param>
+        /// <returns>The number of available symbols for the given parameters, or int.MaxValue if no limit</returns>
+        int GetAvailableSymbolCount(SecurityType securityType, string market);
     }
 }

@@ -24,6 +24,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class NullPortfolioConstructionModel : PortfolioConstructionModel
     {
+        /// <summary>
+        /// Create Targets; Does nothing in this implementation and returns an empty IEnumerable
+        /// </summary>
+        /// <returns>Empty IEnumerable of <see cref="IPortfolioTarget"/>s</returns>
         public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
             return Enumerable.Empty<IPortfolioTarget>();

@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Algorithm
                 }
                 Assert.AreEqual(algo.Securities.Count, 2);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Assert.Fail();
                 // We are NOT expecting it to throw an exception due to DataSubscriptionLimit

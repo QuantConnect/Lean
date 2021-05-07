@@ -257,22 +257,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                                     OnNumericalPrecisionLimited(
                                         new NumericalPrecisionLimitedEventArgs(_config.Symbol,
-                                            $"Data for symbol {_config.Symbol.Value} has been limited due to numerical precision issues in the factor file. " +
-                                            $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
+                                            $"[{_config.Symbol.Value}, {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}]"));
                                 }
                             }
                         }
 
                         if (_periodStart < mapFile.FirstDate)
                         {
-                            var originalStart = _periodStart;
                             _periodStart = mapFile.FirstDate;
 
                             OnStartDateLimited(
                                 new StartDateLimitedEventArgs(_config.Symbol,
-                                    $"The starting date for symbol {_config.Symbol.Value}," +
-                                    $" {originalStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}, has been adjusted to match map file first date" +
-                                    $" {mapFile.FirstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}."));
+                                    $"[{_config.Symbol.Value}," +
+                                    $" {mapFile.FirstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}]"));
                         }
                     }
                 }

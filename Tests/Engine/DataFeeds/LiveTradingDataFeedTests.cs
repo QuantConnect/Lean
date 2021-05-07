@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void EmitsData()
         {
             var endDate = _startDate.AddDays(10);
-            var feed = RunDataFeed(forex: new List<string> { Symbols.EURUSD });
+            var feed = RunDataFeed(forex: new List<string> { Symbols.EURUSD.ToString() });
 
             var emittedData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
@@ -424,13 +424,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend/delisting for trade bar
-                    Assert.AreEqual(currentSubscriptionCount - 5, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription and split/dividend/delisting for both (8)
+                    Assert.AreEqual(currentSubscriptionCount - 8, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    Assert.AreEqual(1, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 4 left because of internal subscription + its split/dividend/delisting subscriptions
+                    Assert.AreEqual(4, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
 
                     // we got what we wanted shortcut unit test
@@ -471,13 +472,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend/delisting for trade bar
-                    Assert.AreEqual(currentSubscriptionCount - 5, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription and split/dividend/delisting for both (8)
+                    Assert.AreEqual(currentSubscriptionCount - 8, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    Assert.AreEqual(1, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 4 left because of internal subscription + its split/dividend/delisting subscriptions
+                    Assert.AreEqual(4, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
@@ -647,10 +649,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void DelistedEventEmitted_Equity()
         {
-            _startDate = new DateTime(2016, 2, 18);
+            _startDate = new DateTime(2016, 2, 18, 6, 0, 0);
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
-            var delistingDate = _startDate.AddDays(1);
+            var delistingDate = _startDate.Date.AddDays(1);
 
             var autoResetEvent = new AutoResetEvent(false);
             var feed = RunDataFeed(getNextTicksFunction: handler =>
@@ -658,11 +660,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 autoResetEvent.Set();
                 return new[] { new Delisting(Symbols.AAPL, delistingDate, 1, DelistingType.Warning) };
             });
-
             _algorithm.AddEquity(Symbols.AAPL);
             _algorithm.OnEndOfTimeStep();
             _algorithm.SetFinishedWarmingUp();
-
             Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
 
             var receivedDelistedWarning = 0;
@@ -1116,9 +1116,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var lastTime = _manualTimeProvider.GetUtcNow();
             var feed = RunDataFeed(Resolution.Minute,
-                equities: securityType == SecurityType.Equity ? new List<string> { Symbols.SPY } : new List<string>(),
-                forex: securityType == SecurityType.Forex ? new List<string> { Symbols.EURUSD } : new List<string>(),
-                crypto: securityType == SecurityType.Crypto ? new List<string> { Symbols.BTCUSD } : new List<string>(),
+                equities: securityType == SecurityType.Equity ? new List<string> { Symbols.SPY.ToString() } : new List<string>(),
+                forex: securityType == SecurityType.Forex ? new List<string> { Symbols.EURUSD.ToString() } : new List<string>(),
+                crypto: securityType == SecurityType.Crypto ? new List<string> { Symbols.BTCUSD.ToString() } : new List<string>(),
                 getNextTicksFunction: (fdqh =>
                 {
                     var time = _manualTimeProvider.GetUtcNow();

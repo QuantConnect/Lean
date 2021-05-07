@@ -199,7 +199,6 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         private static void ProcessOptionsRateSchedule(decimal monthlyOptionsTradeAmountInContracts, out Func<decimal, decimal, CashAmount> optionsCommissionFunc)
         {
-            const decimal bp = 0.0001m;
             if (monthlyOptionsTradeAmountInContracts <= 10000)
             {
                 optionsCommissionFunc = (orderSize, premium) =>

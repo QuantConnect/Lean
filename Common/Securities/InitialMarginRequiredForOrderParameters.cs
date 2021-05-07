@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -46,11 +46,12 @@ namespace QuantConnect.Securities
         public InitialMarginRequiredForOrderParameters(
             ICurrencyConverter currencyConverter,
             Security security,
-            Order order)
+            Order order
+            )
         {
-            CurrencyConverter = currencyConverter;
-            Security = security;
             Order = order;
+            Security = security;
+            CurrencyConverter = currencyConverter;
         }
     }
 }

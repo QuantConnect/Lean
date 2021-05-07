@@ -46,7 +46,6 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var totalBars = history.Count(slice => slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol));
-
             if (totalBars != expectedSliceCount)
             {
                 throw new Exception($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
@@ -90,8 +89,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-7.068"},
-            {"Tracking Error", "0.193"},
+            {"Information Ratio", "-7.163"},
+            {"Tracking Error", "0.195"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

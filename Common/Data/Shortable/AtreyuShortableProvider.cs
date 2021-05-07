@@ -20,6 +20,11 @@ namespace QuantConnect.Data.Shortable
     /// </summary>
     public class AtreyuShortableProvider : LocalDiskShortableProvider
     {
+        /// <summary>
+        /// Initialize an instance of <see cref="AtreyuShortableProvider"/>
+        /// </summary>
+        /// <param name="securityType">SecurityType to read data</param>
+        /// <param name="market">Market to read ETB data</param>
         public AtreyuShortableProvider(SecurityType securityType, string market) : base(securityType, "atreyu", market)
         {
         }

@@ -31,7 +31,7 @@ class HistoryRequestBenchmark(QCAlgorithm):
         self.SetCash(10000)
         self.symbol = self.AddEquity("SPY").Symbol
 
-    def OnEndOfDay(self):
+    def OnEndOfDay(self, symbol):
         minuteHistory = self.History([self.symbol], 60, Resolution.Minute)
         lastHourHigh = 0
         for index, row in minuteHistory.loc["SPY"].iterrows():

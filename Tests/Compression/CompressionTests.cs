@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Compression
         {
             const string file = "../../../Data/equity/usa/minute/spy/20131008_trade.zip";
 
-            const int expected = 827;
+            const int expected = 828;
             int actual = QuantConnect.Compression.ReadLines(file).Count();
 
             Assert.AreEqual(expected, actual);
@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Compression
             var fileBytes = File.ReadAllBytes(file);
             var zippedBytes = QuantConnect.Compression.ZipBytes(fileBytes, "entry");
 
-            Assert.AreEqual(899352, zippedBytes.Length);
+            Assert.AreEqual(OS.IsWindows ? 905921 : 906121, zippedBytes.Length);
         }
 
         [Test]

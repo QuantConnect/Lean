@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine.Alpha
         void ProcessSynchronousEvents();
 
         /// <summary>
-        /// Stops processing in the <see cref="Run"/> method
+        /// Stops processing in the <see cref="Engine.Run"/> method
         /// </summary>
         void Exit();
     }

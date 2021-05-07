@@ -59,8 +59,8 @@ namespace QuantConnect.Indicators
         public DeMarkerIndicator(string name, int period, MovingAverageType type = MovingAverageType.Simple)
             : base(name)
         {
-            var _lastHigh = 0m;
-            var _lastLow = 0m;
+            _lastHigh = 0m;
+            _lastLow = 0m;
             WarmUpPeriod = period;
             _maxMA = type.AsIndicator(period);
             _minMA = type.AsIndicator(period);
@@ -81,6 +81,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
+            _lastHigh = 0m;
+            _lastLow = 0m;
             _maxMA.Reset();
             _minMA.Reset();
             base.Reset();

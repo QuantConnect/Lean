@@ -352,8 +352,8 @@ namespace QuantConnect.Indicators
         /// <returns>The reference to the second indicator to allow for method chaining</returns>
         public static object Of(PyObject second, PyObject first, bool waitForFirstToReady = true)
         {
-            dynamic indicator1 = first.AsManagedObject((Type)first.GetPythonType().AsManagedObject(typeof(Type)));
-            dynamic indicator2 = second.AsManagedObject((Type)second.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicator1 = first.SafeAsManagedObject();
+            dynamic indicator2 = second.SafeAsManagedObject();
             return Of(indicator2, indicator1, waitForFirstToReady);
         }
 
@@ -367,8 +367,8 @@ namespace QuantConnect.Indicators
         // ReSharper disable once UnusedMember.Global
         public static CompositeIndicator<IndicatorDataPoint> WeightedBy(PyObject value, PyObject weight, int period)
         {
-            dynamic indicator1 = value.AsManagedObject((Type)value.GetPythonType().AsManagedObject(typeof(Type)));
-            dynamic indicator2 = weight.AsManagedObject((Type)weight.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicator1 = value.SafeAsManagedObject();
+            dynamic indicator2 = weight.SafeAsManagedObject();
             return WeightedBy(indicator1, indicator2, period);
         }
 
@@ -382,7 +382,7 @@ namespace QuantConnect.Indicators
         /// <returns>A reference to the ExponentialMovingAverage indicator to allow for method chaining</returns>
         public static ExponentialMovingAverage EMA(PyObject left, int period, decimal? smoothingFactor = null, bool waitForFirstToReady = true)
         {
-            dynamic indicator = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicator = left.SafeAsManagedObject();
             return EMA(indicator, period, smoothingFactor, waitForFirstToReady);
         }
 
@@ -395,7 +395,7 @@ namespace QuantConnect.Indicators
         /// <returns>A reference to the Maximum indicator to allow for method chaining</returns>
         public static Maximum MAX(PyObject left, int period, bool waitForFirstToReady = true)
         {
-            dynamic indicator = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicator = left.SafeAsManagedObject();
             return MAX(indicator, period, waitForFirstToReady);
         }
 
@@ -408,7 +408,7 @@ namespace QuantConnect.Indicators
         /// <returns>A reference to the Minimum indicator to allow for method chaining</returns>
         public static Minimum MIN(PyObject left, int period, bool waitForFirstToReady = true)
         {
-            dynamic indicator = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicator = left.SafeAsManagedObject();
             return MIN(indicator, period, waitForFirstToReady);
         }
 
@@ -421,7 +421,7 @@ namespace QuantConnect.Indicators
         /// <returns>The reference to the SimpleMovingAverage indicator to allow for method chaining</returns>
         public static SimpleMovingAverage SMA(PyObject left, int period, bool waitForFirstToReady = true)
         {
-            dynamic indicator = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicator = left.SafeAsManagedObject();
             return SMA(indicator, period, waitForFirstToReady);
         }
 
@@ -436,7 +436,7 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static object Over(PyObject left, decimal constant)
         {
-            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorLeft = left.SafeAsManagedObject();
             return Over(indicatorLeft, constant);
         }
 
@@ -452,8 +452,8 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static object Over(PyObject left, PyObject right, string name = "")
         {
-            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
-            dynamic indicatorRight = right.AsManagedObject((Type)right.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorLeft = left.SafeAsManagedObject();
+            dynamic indicatorRight = right.SafeAsManagedObject();
             if (name.IsNullOrEmpty())
             {
                 return Over(indicatorLeft, indicatorRight);
@@ -472,7 +472,7 @@ namespace QuantConnect.Indicators
         /// <returns>The difference of the left and right indicators</returns>
         public static object Minus(PyObject left, decimal constant)
         {
-            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorLeft = left.SafeAsManagedObject();
             return Minus(indicatorLeft, constant);
         }
 
@@ -488,8 +488,8 @@ namespace QuantConnect.Indicators
         /// <returns>The difference of the left and right indicators</returns>
         public static object Minus(PyObject left, PyObject right, string name = "")
         {
-            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
-            dynamic indicatorRight = right.AsManagedObject((Type)right.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorLeft = left.SafeAsManagedObject();
+            dynamic indicatorRight = right.SafeAsManagedObject();
             if (name.IsNullOrEmpty())
             {
                 return Minus(indicatorLeft, indicatorRight);
@@ -508,7 +508,7 @@ namespace QuantConnect.Indicators
         /// <returns>The product of the left to the right indicators</returns>
         public static object Times(PyObject left, decimal constant)
         {
-            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorLeft = left.SafeAsManagedObject();
             return Times(indicatorLeft, constant);
         }
 
@@ -524,8 +524,8 @@ namespace QuantConnect.Indicators
         /// <returns>The product of the left to the right indicators</returns>
         public static object Times(PyObject left, PyObject right, string name = "")
         {
-            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
-            dynamic indicatorRight = right.AsManagedObject((Type)right.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorLeft = left.SafeAsManagedObject();
+            dynamic indicatorRight = right.SafeAsManagedObject();
             if (name.IsNullOrEmpty())
             {
                 return Times(indicatorLeft, indicatorRight);
@@ -544,7 +544,7 @@ namespace QuantConnect.Indicators
         /// <returns>The sum of the left and right indicators</returns>
         public static object Plus(PyObject left, decimal constant)
         {
-            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorLeft = left.SafeAsManagedObject();
             return Plus(indicatorLeft, constant);
         }
 
@@ -560,8 +560,8 @@ namespace QuantConnect.Indicators
         /// <returns>The sum of the left and right indicators</returns>
         public static object Plus(PyObject left, PyObject right, string name = "")
         {
-            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
-            dynamic indicatorRight = right.AsManagedObject((Type)right.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorLeft = left.SafeAsManagedObject();
+            dynamic indicatorRight = right.SafeAsManagedObject();
             if (name.IsNullOrEmpty())
             {
                 return Plus(indicatorLeft, indicatorRight);

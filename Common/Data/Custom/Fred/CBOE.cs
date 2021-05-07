@@ -16,8 +16,14 @@
 
 namespace QuantConnect.Data.Custom.Fred
 {
+    /// <summary>
+    /// Federal Reserve Economic Data
+    /// </summary>
     public partial class Fred
     {
+        /// <summary>
+        /// Chicago Board Options Exchange
+        /// </summary>
         public static class CBOE
         {
             ///<summary>

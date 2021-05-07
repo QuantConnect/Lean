@@ -1,7 +1,7 @@
 ![alt tag](https://cdn.quantconnect.com/web/i/20180601-1615-lean-logo-small.png)
 =========
 
-[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![LEAN Forum](https://img.shields.io/badge/debug-LEAN%20Forum-53c82b.svg)](https://www.quantconnect.com/forum) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
+[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![LEAN Forum](https://img.shields.io/badge/debug-LEAN%20Forum-53c82b.svg)](https://www.quantconnect.com/forum/discussions/1/lean) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
 
 
 [Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8]
@@ -52,7 +52,7 @@ These are all configurable from the config.json file in the Launcher Project.
 
 ## Installation Instructions ##
 
-*We recommend using the docker image.* This is perfectly configured to run out of the box without interfering with your development environment. You can pull this image with `docker pull quantconnect/lean`
+*We recommend using the docker images.* These are perfectly configured to run out of the box without interfering with your development environment. You can pull these images with `docker pull quantconnect/lean` and `docker pull quantconnect/research`.
 
 Refer to the following readme files for a detailed guide regarding using our docker image with your local IDE:
 * [VS Code](.vscode/readme.md)
@@ -76,56 +76,23 @@ Visual Studio will automatically start to restore the Nuget packages. If not, in
 
 - In the menu bar, click `Run > Start Debugging`.
 
-Alternatively, run the compiled `exe` file. First, in the menu bar, click `Build > Build All`, then:
+Alternatively, run the compiled `dll` file. First, in the menu bar, click `Build > Build All`, then:
 ```
 cd Lean/Launcher/bin/Debug
-mono QuantConnect.Lean.Launcher.exe
+dotnet QuantConnect.Lean.Launcher.dll
 ```
 
 ### Linux (Debian, Ubuntu)
 
-- Install [Mono](http://www.mono-project.com/download/#download-lin):
+- Install [dotnet 5](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
+- Compile Lean Solution:
 ```
-sudo apt-get update && sudo rm -rf /var/lib/apt/lists/*
-sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-echo "deb http://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/5.12.0.226 main" > /etc/apt/sources.list.d/mono-xamarin.list && \
-    apt-get update && apt-get install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl && \
-apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
+dotnet QuantConnect.Lean.sln
 ```
-If you get this error on the last command:
- 
-**Unable to locate package referenceassemblies-pcl**,
- 
-run the following command (it works on current version of Ubuntu - 17.10):
-```
-echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-official.list
-```
-
-```
-sudo apt-get update
-sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceassemblies-pcl fsharp
-```
-- Install Nuget
-```
-sudo apt-get update && sudo apt-get install -y nuget
-```
-- Restore NuGet packages then compile:
-```
-nuget restore QuantConnect.Lean.sln
-msbuild QuantConnect.Lean.sln
-```
-If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt-get upgrade mono-complete`
-
-If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
-
-If you get: "Confirm ... '.../QuantConnect.XX.csproj.*.props' is correct, and that the file exists on disk." -> Ensure that your installation path is free of [reserved characters](https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
-
-If you get other errors that lead to the failure of your building, please refer to the commands in "DockerfileLeanFoundation" file for help.
-
-- Run the compiled `exe` file:
+- Run Lean:
 ```
 cd Launcher/bin/Debug
-mono ./QuantConnect.Lean.Launcher.exe
+dotnet QuantConnect.Lean.Launcher.dll
 ```
 - Interactive Brokers set up details
 
@@ -140,15 +107,13 @@ If after all you still receive connection refuse error, try changing the `ib-por
 - Build the solution by clicking Build Menu -> Build Solution (this should trigger the Nuget package restore)
 - Press `F5` to run
 
-Nuget packages not being restored is the most common build issue. By default Visual Studio includes NuGet, if your installation of Visual Studio (or your IDE) cannot find DLL references, install [Nuget](https://www.nuget.org/), run nuget on the solution and re-build the Solution again. 
-
 ### Python Support
 
 A full explanation of the Python installation process can be found in the [Algorithm.Python](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) project.
 
 ### Local-Cloud Hybrid Development. 
 
-You can develop in your IDE and synchronize to the cloud with Skylight. For more information please see the [Skylight Home](https://www.quantconnect.com/skylight).
+Seamlessly develop locally in your favorite development environment, with full autocomplete and debugging support to quickly and easily identify problems with your strategy. For more information please see the [CLI Home](https://www.quantconnect.com/cli).
 
 ## Issues and Feature Requests ##
 
@@ -179,4 +144,3 @@ Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan,
   [6]: https://www.quantconnect.com/forum/discussions/1/lean
   [7]: https://github.com/QuantConnect/Lean/blob/master/CONTRIBUTING.md
   [8]: https://hub.docker.com/orgs/quantconnect/repositories
-

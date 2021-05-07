@@ -27,10 +27,9 @@ from datetime import timedelta
 ### <meta name="tag" content="limit if touched order"/>
 class LimitIfTouchedRegressionAlgorithm(QCAlgorithm):
     _expectedEvents = deque([
-        "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 152.8807 USD LimitPrice: 152.519 TriggerPrice: 151.769 OrderFee: 1 USD",
-        "Time: 10/10/2013 15:55:00 OrderID: 73 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 153.9225 USD LimitPrice: 153.8898 TriggerPrice: 153.1398 OrderFee: 1 USD",
-        "Time: 10/11/2013 14:02:00 OrderID: 74 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 154.9643 USD LimitPrice: 154.9317 TriggerPrice: 154.1817 OrderFee: 1 USD"
-    ])
+        "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 144.6434 USD LimitPrice: 144.3551 TriggerPrice: 143.6051 OrderFee: 1 USD",
+        "Time: 10/10/2013 15:57:00 OrderID: 73 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 145.6636 USD LimitPrice: 145.6434 TriggerPrice: 144.8934 OrderFee: 1 USD",
+        "Time: 10/11/2013 15:37:00 OrderID: 74 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 146.7185 USD LimitPrice: 146.6723 TriggerPrice: 145.9223 OrderFee: 1 USD"    ])
 
     def Initialize(self):
         self.SetStartDate(2013, 10, 7)

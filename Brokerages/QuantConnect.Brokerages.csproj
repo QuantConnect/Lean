@@ -4,7 +4,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <RootNamespace>QuantConnect.Brokerages</RootNamespace>
     <AssemblyName>QuantConnect.Brokerages</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <LangVersion>6</LangVersion>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <DefineConstants>NET45</DefineConstants>
@@ -32,7 +32,6 @@
   </Target>
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="19.0.0" />
-    <PackageReference Include="IKVM" Version="8.1.5717.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -52,15 +51,6 @@
     <Reference Include="CSharpAPI">
       <HintPath>InteractiveBrokers\CSharpAPI.dll</HintPath>
     </Reference>
-    <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>Fxcm\QuantConnect.Fxcm.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
@@ -80,10 +70,5 @@
     <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj" />
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj" />
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Fxcm\QuantConnect.Fxcm.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>

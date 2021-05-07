@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var resultHandler = new BacktestingResultHandler();
             var mapFileProvider = new LocalDiskMapFileProvider();
             var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, true, enablePriceScaling: false);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.Securities.Single().Value;
@@ -149,7 +149,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var resultHandler = new TestResultHandler();
             var mapFileProvider = new LocalDiskMapFileProvider();
             var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, true, enablePriceScaling: false);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.AddEquity("AAA", Resolution.Daily);
@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var message = ((DebugPacket) resultHandler.Messages.Single()).Message;
             Assert.IsTrue(message.Equals(
-                "The starting date for symbol AAA, 2001-11-30, has been adjusted to match map file first date 2020-09-09."));
+                "The starting dates for the following symbols have been adjusted to match their map files first date: [AAA, 2020-09-09]"));
         }
     }
 }

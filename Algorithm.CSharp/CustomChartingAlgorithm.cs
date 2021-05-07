@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnEndOfDay Event Handler - At the end of each trading day we fire this code.
         /// To avoid flooding, we recommend running your plotting at the end of each day.
         /// </summary>
-        public override void OnEndOfDay()
+        public override void OnEndOfDay(Symbol symbol)
         {
             //Log the end of day prices:
             Plot("Trade Plot", "Price", _lastPrice);

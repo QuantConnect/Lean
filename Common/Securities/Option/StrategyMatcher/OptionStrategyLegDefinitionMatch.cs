@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -76,6 +76,31 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 : OptionStrategy.OptionLegData.Create(quantity, Position.Symbol);
         }
 
+        /// <summary>
+        /// Creates the appropriate <see cref="OptionPosition"/> for this matched position
+        /// </summary>
+        /// <param name="multiplier">The multiplier to use for creating the OptionPosition. This multiplier will be
+        /// the minimum multiplier of all legs within a strategy definition match. Each leg defines its own
+        /// multiplier which is the max matches for that leg and the strategy definition's multiplier is the
+        /// min of the individual legs.</param>
+        public OptionPosition CreateOptionPosition(int multiplier)
+        {
+            var quantity = Position.Quantity;
+            if (Multiplier != multiplier)
+            {
+                if (multiplier > Multiplier)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(multiplier), "Unable to create strategy leg with a larger multiplier than matched.");
+                }
+
+                // back out the unit quantity and scale it up to the requested multiplier
+                var unit = Position.Quantity / Multiplier;
+                quantity = unit * multiplier;
+            }
+
+            return new OptionPosition(Position.Symbol, quantity);
+        }
+
         /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
         /// <param name="other">An object to compare with this object.</param>
         /// <returns>true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.</returns>
@@ -114,11 +139,19 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             return $"{Multiplier} Matches|{Position}";
         }
 
+        /// <summary>
+        /// OptionStrategyLegDefinitionMatch == Operator
+        /// </summary>
+        /// <returns>True if they are equal</returns>
         public static bool operator ==(OptionStrategyLegDefinitionMatch left, OptionStrategyLegDefinitionMatch right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>
+        /// OptionStrategyLegDefinitionMatch != Operator
+        /// </summary>
+        /// <returns>True if they are not equal</returns>
         public static bool operator !=(OptionStrategyLegDefinitionMatch left, OptionStrategyLegDefinitionMatch right)
         {
             return !left.Equals(right);

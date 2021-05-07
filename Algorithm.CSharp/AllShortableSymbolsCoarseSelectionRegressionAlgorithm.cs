@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var symbol in ActiveSecurities.Keys)
+            foreach (var symbol in ActiveSecurities.Keys.OrderBy(symbol => symbol))
             {
                 if (!Portfolio.ContainsKey(symbol) || !Portfolio[symbol].Invested)
                 {
@@ -194,24 +194,24 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "5"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "36.294%"},
+            {"Compounding Annual Return", "36.239%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.340%"},
-            {"Sharpe Ratio", "21.2"},
-            {"Probabilistic Sharpe Ratio", "99.990%"},
+            {"Net Profit", "0.339%"},
+            {"Sharpe Ratio", "21.173"},
+            {"Probabilistic Sharpe Ratio", "99.997%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.274"},
+            {"Alpha", "0.271"},
             {"Beta", "0.138"},
             {"Annual Standard Deviation", "0.011"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "7.202"},
-            {"Tracking Error", "0.068"},
-            {"Treynor Ratio", "1.722"},
+            {"Information Ratio", "6.894"},
+            {"Tracking Error", "0.069"},
+            {"Treynor Ratio", "1.727"},
             {"Total Fees", "$307.50"},
-            {"Estimated Strategy Capacity", "$710000.00"},
+            {"Estimated Strategy Capacity", "$2800000.00"},
             {"Fitness Score", "0.173"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -231,7 +231,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "6b1b205e5a6461ffd5bed645099714cd"}
+            {"OrderListHash", "5ce14f87f21733ec686385da7404484c"}
         };
     }
 }

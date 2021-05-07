@@ -77,13 +77,15 @@ namespace QuantConnect.Tests.AlgorithmFactory
         }
 
         [Test]
-        public void LoadsAlgorithm_UsingSingleOrAlgorithmTypeName_ExtensionMethod()
+        [TestCase("BasicTemplateAlgorithm")]
+        [TestCase("QuantConnect.Algorithm.CSharp.BasicTemplateAlgorithm")]
+        public void LoadsAlgorithm_UsingSingleOrAlgorithmTypeName_ExtensionMethod(string algorithmName)
         {
             var assemblyPath1 = "QuantConnect.Algorithm.CSharp.dll";
 
             string error1;
             IAlgorithm algorithm1;
-            var one = new Loader(false, Language.CSharp, TimeSpan.FromMinutes(1), names => names.SingleOrAlgorithmTypeName("BasicTemplateAlgorithm"), _workerThread)
+            var one = new Loader(false, Language.CSharp, TimeSpan.FromMinutes(1), names => names.SingleOrAlgorithmTypeName(algorithmName), _workerThread)
                 .TryCreateAlgorithmInstanceWithIsolator(assemblyPath1, 5120, out algorithm1, out error1);
 
             Assert.IsTrue(one);
