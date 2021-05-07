@@ -38,7 +38,7 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Gets the margin currently alloted to the specified holding.
         /// </summary>
-        /// <param name="security">The option to compute maintenance margin for</param>
+        /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the option</returns>
         /// <remarks>
         /// We fix the option to 1.5x the maintenance because of its close coupling with the underlying.
@@ -46,16 +46,15 @@ namespace QuantConnect.Securities.Option
         /// run when it comes to calculating the different market scenarios attempting to simulate VaR, resulting
         /// in a margin greater than the underlying's margin.
         /// </remarks>
-        protected override decimal GetMaintenanceMargin(Security security)
+        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
-            return base.GetMaintenanceMargin(((Option)security).Underlying) * FixedMarginMultiplier;
+            return base.GetMaintenanceMargin(parameters.ForUnderlying()) * FixedMarginMultiplier;
         }
 
         /// <summary>
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
-        /// <param name="security">The option to compute the initial margin for</param>
-        /// <param name="quantity">The amount desired</param>
+        /// <param name="parameters">An object containing the security and quantity of shares</param>
         /// <returns>The initial margin required for the option (i.e. the equity required to enter a position for this option)</returns>
         /// <remarks>
         /// We fix the option to 1.5x the initial because of its close coupling with the underlying.
@@ -63,9 +62,11 @@ namespace QuantConnect.Securities.Option
         /// run when it comes to calculating the different market scenarios attempting to simulate VaR, resulting
         /// in a margin greater than the underlying's margin.
         /// </remarks>
-        protected override decimal GetInitialMarginRequirement(Security security, decimal quantity)
+        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
-            return base.GetInitialMarginRequirement(((Option)security).Underlying, quantity) * FixedMarginMultiplier;
+            return new InitialMargin(FixedMarginMultiplier
+                * base.GetInitialMarginRequirement(parameters.ForUnderlying()).Value
+            );
         }
     }
 }

@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities;
@@ -21,11 +23,10 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests
 {
     /// <summary>
-    /// Provides symbol instancs for unit tests
+    /// Provides symbol instances for unit tests
     /// </summary>
     public static class Symbols
     {
-
         public static readonly Symbol SPY = CreateEquitySymbol("SPY");
         public static readonly Symbol AAPL = CreateEquitySymbol("AAPL");
         public static readonly Symbol MSFT = CreateEquitySymbol("MSFT");
@@ -66,6 +67,12 @@ namespace QuantConnect.Tests
         public static readonly Symbol ES_Future_Chain = CreateFuturesCanonicalSymbol(Futures.Indices.SP500EMini);
         public static readonly Symbol Future_ESZ18_Dec2018 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2018, 12, 21));
         public static readonly Symbol Future_CLF19_Jan2019 = CreateFutureSymbol("CL", new DateTime(2018, 12, 19));
+
+        public static readonly ImmutableArray<Symbol> All =
+            typeof(Symbols).GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(field => field.FieldType == typeof(Symbol))
+                .Select(field => (Symbol) field.GetValue(null))
+                .ToImmutableArray();
 
         /// <summary>
         /// Can be supplied in TestCase attribute

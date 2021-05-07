@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -120,8 +120,9 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        protected override decimal GetInitialMarginRequiredForOrder(
-            InitialMarginRequiredForOrderParameters parameters)
+        public override InitialMargin GetInitialMarginRequiredForOrder(
+            InitialMarginRequiredForOrderParameters parameters
+            )
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
@@ -132,20 +133,23 @@ namespace QuantConnect.Securities.Future
             var feesInAccountCurrency = parameters.CurrencyConverter.
                 ConvertToAccountCurrency(fees).Amount;
 
-            var orderMargin = GetInitialMarginRequirement(parameters.Security, parameters.Order.Quantity);
+            var orderMargin = this.GetInitialMarginRequirement(parameters.Security, parameters.Order.Quantity);
 
-            return orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency;
+            return new InitialMargin(orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency);
         }
 
         /// <summary>
-        /// Gets the margin currently alloted to the specified holding
+        /// Gets the margin currently allotted to the specified holding
         /// </summary>
-        /// <param name="security">The security to compute maintenance margin for</param>
+        /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the </returns>
-        protected override decimal GetMaintenanceMargin(Security security)
+        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
+            var security = parameters.Security;
             if (security?.GetLastData() == null || security.Holdings.HoldingsCost == 0m)
+            {
                 return 0m;
+            }
 
             var marginReq = GetCurrentMarginRequirements(security);
 
@@ -153,20 +157,22 @@ namespace QuantConnect.Securities.Future
                 && security.Exchange.ExchangeOpen
                 && !security.Exchange.ClosingSoon)
             {
-                return marginReq.MaintenanceIntraday * security.Holdings.AbsoluteQuantity;
+                return marginReq.MaintenanceIntraday * parameters.AbsoluteQuantity;
             }
 
             // margin is per contract
-            return marginReq.MaintenanceOvernight * security.Holdings.AbsoluteQuantity;
+            return marginReq.MaintenanceOvernight * parameters.AbsoluteQuantity;
         }
 
         /// <summary>
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
-        protected override decimal GetInitialMarginRequirement(Security security, decimal quantity)
+        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
+            var security = parameters.Security;
+            var quantity = parameters.Quantity;
             if (security?.GetLastData() == null || quantity == 0m)
-                return 0m;
+                return InitialMargin.Zero;
 
             var marginReq = GetCurrentMarginRequirements(security);
 
@@ -174,11 +180,11 @@ namespace QuantConnect.Securities.Future
                 && security.Exchange.ExchangeOpen
                 && !security.Exchange.ClosingSoon)
             {
-                return marginReq.InitialIntraday * quantity;
+                return new InitialMargin(marginReq.InitialIntraday * quantity);
             }
 
             // margin is per contract
-            return marginReq.InitialOvernight * quantity;
+            return new InitialMargin(marginReq.InitialOvernight * quantity);
         }
 
         private MarginRequirementsEntry GetCurrentMarginRequirements(Security security)

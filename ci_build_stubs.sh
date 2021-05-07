@@ -6,7 +6,7 @@ GENERATOR_REPO="https://github.com/QuantConnect/quantconnect-stubs-generator"
 GENERATOR_BRANCH="master"
 
 RUNTIME_REPO="https://github.com/dotnet/runtime"
-RUNTIME_BRANCH="master"
+RUNTIME_BRANCH="main"
 
 LEAN_DIR="$(pwd)"
 LEAN_BIN_DIR="$LEAN_DIR/Launcher/bin/Release"
@@ -28,17 +28,6 @@ function ensure_repo_up_to_date {
     git pull origin $2
 }
 
-function install_dotnet {
-    wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-    sudo dpkg -i packages-microsoft-prod.deb
-    rm packages-microsoft-prod.deb
-
-    sudo apt-get update -q
-    sudo apt-get install -y -q apt-transport-https
-    sudo apt-get update -q
-    sudo apt-get install -y -q dotnet-sdk-3.1
-}
-
 function install_twine {
     pip install -U twine -q
 }
@@ -53,8 +42,7 @@ function generate_stubs {
 
     cd "$GENERATOR_DIR/QuantConnectStubsGenerator"
 
-    NO_DEBUG="true" \
-    STUBS_VERSION="$TRAVIS_TAG" \
+    STUBS_VERSION="${GITHUB_REF#refs/tags/}" \
     dotnet run -v q $LEAN_DIR $RUNTIME_DIR $STUBS_DIR
 
     if [ $? -ne 0 ]; then
@@ -83,19 +71,14 @@ function publish_stubs {
 
 if [[ " ${CLI_ARGS[@]} " =~ " -h " ]]; then
     echo "STUBS GENERATOR (Debian distros only)"
-    echo "  -d: Install .NET Core"
     echo "  -t: Install Twine"
     echo "  -g: Generate new stubs"
     echo "  -p: Publish new stubs to PyPI"
     exit 0
 fi
 
-if [[ "$TRAVIS_TAG" == "" ]]; then
+if [[ ! "$GITHUB_REF" =~ "refs/tags/" ]]; then
     exit 0
-fi
-
-if [[ " ${CLI_ARGS[@]} " =~ " -d " ]]; then
-    install_dotnet
 fi
 
 if [[ " ${CLI_ARGS[@]} " =~ " -t " ]]; then

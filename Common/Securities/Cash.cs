@@ -213,10 +213,13 @@ namespace QuantConnect.Securities
                     return null;
                 }
             }
+
             // if we've made it here we didn't find a security, so we'll need to add one
 
             // Create a SecurityType to Market mapping with the markets from SecurityManager members
-            var markets = securities.Select(x => x.Key).GroupBy(x => x.SecurityType).ToDictionary(x => x.Key, y => y.First().ID.Market);
+            var markets = securities.Select(x => x.Key)
+                .GroupBy(x => x.SecurityType)
+                .ToDictionary(x => x.Key, y => y.Select(symbol => symbol.ID.Market).ToHashSet());
             if (markets.ContainsKey(SecurityType.Cfd) && !markets.ContainsKey(SecurityType.Forex))
             {
                 markets.Add(SecurityType.Forex, markets[SecurityType.Cfd]);
@@ -322,7 +325,7 @@ namespace QuantConnect.Securities
         private static IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetAvailableSymbolPropertiesDatabaseEntries(
             SecurityType securityType,
             IReadOnlyDictionary<SecurityType, string> marketMap,
-            IReadOnlyDictionary<SecurityType, string> markets
+            IReadOnlyDictionary<SecurityType, HashSet<string>> markets
             )
         {
             var marketJoin = new HashSet<string>();
@@ -332,9 +335,13 @@ namespace QuantConnect.Securities
                 {
                     marketJoin.Add(market);
                 }
-                if (markets.TryGetValue(securityType, out market))
+                HashSet<string> existingMarkets;
+                if (markets.TryGetValue(securityType, out existingMarkets))
                 {
-                    marketJoin.Add(market);
+                    foreach (var existingMarket in existingMarkets)
+                    {
+                        marketJoin.Add(existingMarket);
+                    }
                 }
             }
 

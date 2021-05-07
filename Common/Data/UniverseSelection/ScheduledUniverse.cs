@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -113,9 +113,11 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Returns an enumerator that defines when this user defined universe will be invoked
+        /// Get an enumerator of UTC DateTimes that defines when this universe will be invoked
         /// </summary>
-        /// <returns>An enumerator of DateTime that defines when this universe will be invoked</returns>
+        /// <param name="startTimeUtc">The start time of the range in UTC</param>
+        /// <param name="endTimeUtc">The end time of the range in UTC</param>
+        /// <returns>An enumerator of UTC DateTimes that defines when this universe will be invoked</returns>
         public IEnumerable<DateTime> GetTriggerTimes(DateTime startTimeUtc, DateTime endTimeUtc, MarketHoursDatabase marketHoursDatabase)
         {
             var startTimeLocal = startTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
@@ -123,10 +125,27 @@ namespace QuantConnect.Data.UniverseSelection
 
             // define date/time rule enumerable
             var dates = _dateRule.GetDates(startTimeLocal, endTimeLocal);
-            foreach (var time in _timeRule.CreateUtcEventTimes(dates))
+            var times = _timeRule.CreateUtcEventTimes(dates).GetEnumerator();
+
+            // Make sure and filter out any times before our start time
+            // GH #5440
+            do
             {
-                yield return time;
+                if (!times.MoveNext())
+                {
+                    times.Dispose();
+                    yield break;
+                }
             }
+            while (times.Current < startTimeUtc);
+
+            // Start yielding times
+            do
+            {
+                yield return times.Current;
+            }
+            while (times.MoveNext());
+            times.Dispose();
         }
 
         private static SubscriptionDataConfig CreateConfiguration(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule)

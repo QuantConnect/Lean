@@ -136,7 +136,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 return result;
             };
 
-            algorithm.Securities
+            foreach(var pair in algorithm.Securities
                 // we take only options that expire soon
                 .Where(x => x.Key.ID.SecurityType.IsOption() &&
                             ((x.Key.ID.OptionStyle == OptionStyle.American && x.Key.ID.Date - algorithm.UtcTime <= _priorExpiration) ||
@@ -150,9 +150,11 @@ namespace QuantConnect.Brokerages.Backtesting
                         (OptionHolding)x.Value.Holdings,
                         algorithm.Securities[x.Value.Symbol.Underlying],
                         algorithm.Portfolio.CashBook) > 0.0m)
-                .ToList()
+                .OrderBy(pair => pair.Key))
+            {
                 // we exercise options with positive expected P/L (over basic sale of option)
-                .ForEach(x => backtestingBrokerage.ActivateOptionAssignment((Option)x.Value, (int)((OptionHolding)x.Value.Holdings).AbsoluteQuantity));
+                backtestingBrokerage.ActivateOptionAssignment((Option) pair.Value, (int) ((OptionHolding) pair.Value.Holdings).AbsoluteQuantity);
+            }
 
         }
 

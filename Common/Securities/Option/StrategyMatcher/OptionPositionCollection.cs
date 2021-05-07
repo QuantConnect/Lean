@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,11 +14,12 @@
 */
 
 using System;
+using System.Linq;
+using QuantConnect.Util;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using QuantConnect.Util;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Securities.Option.StrategyMatcher
 {
@@ -199,18 +200,27 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         }
 
         /// <summary>
-        /// Gets the underlying security's position
-        /// </summary>
-        /// <returns></returns>
-        public OptionPosition GetUnderlyingPosition()
-            => LinqExtensions.GetValueOrDefault(_positions, Underlying, new OptionPosition(Underlying, 0));
-
-        /// <summary>
         /// Creates a new <see cref="OptionPositionCollection"/> from the specified enumerable of <paramref name="positions"/>
         /// </summary>
         public static OptionPositionCollection FromPositions(IEnumerable<OptionPosition> positions)
         {
             return Empty.AddRange(positions);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="OptionPositionCollection"/> from the specified enumerable of <paramref name="positions"/>
+        /// </summary>
+        public static OptionPositionCollection FromPositions(IEnumerable<IPosition> positions, decimal contractMultiplier)
+        {
+            return Empty.AddRange(positions.Select(position =>
+            {
+                var quantity = (int)position.Quantity;
+                if (position.Symbol.SecurityType.HasOptions())
+                {
+                    quantity = (int) (quantity / contractMultiplier);
+                }
+                return new OptionPosition(position.Symbol, quantity);
+            }));
         }
 
         /// <summary>

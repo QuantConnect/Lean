@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -46,10 +46,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             // 0: -C110 +C105
             // 1: -C115 +C100
             var positions = OptionPositionCollection.Empty.AddRange(
-                Position(Call[110], -1),
-                Position(Call[115], -1),
-                Position(Call[100]),
-                Position(Call[105])
+                Position(Call[100], -1),
+                Position(Call[105], -1),
+                Position(Call[110]),
+                Position(Call[115])
             );
 
             var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(BearCallSpread));

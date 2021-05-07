@@ -44,7 +44,8 @@ namespace QuantConnect.Tests
             Directory.SetCurrentDirectory(dir);
             Config.Reset();
             Globals.Reset();
-            PythonInitializer.SetPythonPathEnvironmentVariable(
+            PythonInitializer.Initialize();
+            PythonInitializer.AddPythonPaths(
                 new[]
                 {
                 "./Alphas",

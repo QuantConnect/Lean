@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,8 +33,8 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             // these positions support matching index0 3 times and index1 2 times and the multiplier
             // for the definition match should be 2, despite leg0 having multiplier=3
             var positions = OptionPositionCollection.Empty.AddRange(
-                new OptionPosition(Call[110], -3),
-                new OptionPosition(Call[100], +2)
+                new OptionPosition(Call[100], -3),
+                new OptionPosition(Call[110], +2)
             );
 
             var match = OptionStrategyDefinitions.BearCallSpread.Match(positions).Single();
