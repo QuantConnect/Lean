@@ -164,6 +164,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
+                    algorithm.SetAvailableDataTypes(BaseSetupHandler.GetConfiguredDataFeeds());
 
                     //Algorithm is backtesting, not live:
                     algorithm.SetLiveMode(false);
