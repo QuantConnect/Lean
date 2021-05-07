@@ -177,8 +177,8 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Constructor for sending a notification SMS to a specified phone number
         /// </summary>
-        /// <param name="number"></param>
-        /// <param name="message"></param>
+        /// <param name="user">User to send the message to, can be either phone number or username</param>
+        /// <param name="message">Message to send</param>
         public NotificationTelegram(string user, string message)
         {
             User = user;
