@@ -257,17 +257,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("Job must not be null");
             }
 
-            // Default for free plans
-            var maxOrders = 10000;
-
-            // For non-free users we will set it to "unlimited"
-            if (job?.UserPlan != UserPlan.Free)
-            {
-                maxOrders = int.MaxValue;
-            }
-
-            maxOrders = job.Controls.BacktestingMaxOrders;
-            return maxOrders;
+            return job.Controls.BacktestingMaxOrders;
         }
 
         /// <summary>
