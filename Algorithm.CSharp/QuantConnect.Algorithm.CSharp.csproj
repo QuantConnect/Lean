@@ -53,15 +53,35 @@
     <PackageReference Include="Accord.MachineLearning" Version="3.6.0" />
     <PackageReference Include="Accord.Math" Version="3.6.0" />
     <PackageReference Include="Accord.Statistics" Version="3.6.0" />
+    <PackageReference Include="Catalyst" Version="1.0.16767" />
+    <PackageReference Include="Catalyst.Models.English" Version="1.0.17127" />
+    <PackageReference Include="CNTK.CPUOnly" Version="2.8.0-rc0.dev20200201" />
     <PackageReference Include="DynamicInterop" Version="0.9.1" />
+    <PackageReference Include="LibTopoART" Version="0.94.0" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.ML" Version="1.5.5" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
+    <PackageReference Include="NumSharp" Version="0.30.0" />
     <PackageReference Include="R.NET" Version="1.9.0" />
+    <PackageReference Include="SharpLearning.DecisionTrees" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.AdaBoost" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.RandomForest" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.GradientBoost" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.Neural" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.Ensemble" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.Common.Interfaces" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.CrossValidation" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.Metrics" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.Optimization" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.Containers" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.InputOutput" Version="0.31.8" />
+    <PackageReference Include="SharpLearning.FeatureTransformations" Version="0.31.8" />
+    <PackageReference Include="SharpNeatLib" Version="2.4.4" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
