@@ -257,18 +257,16 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("Job must not be null");
             }
 
-            //Max Orders: 10k per backtest:
-            if (job?.UserPlan == UserPlan.Free)
+            // Default for free plans
+            var maxOrders = 10000;
+
+            // For non-free users we will set it to "unlimited"
+            if (job?.UserPlan != UserPlan.Free)
             {
-                MaxOrders = 10000;
-            }
-            else
-            {
-                MaxOrders = int.MaxValue;
-                MaximumRuntime += MaximumRuntime;
+                maxOrders = int.MaxValue;
             }
 
-            MaxOrders = job.Controls.BacktestingMaxOrders;
+            maxOrders = job.Controls.BacktestingMaxOrders;
             return MaxOrders;
         }
 
@@ -332,6 +330,12 @@ namespace QuantConnect.Lean.Engine.Setup
             if (parameters.AlgorithmNodePacket.Language == Language.Python)
             {
                 maxRunTime *= 10;
+            }
+
+            // For non-free plans double maximum runtime
+            if (parameters.AlgorithmNodePacket.UserPlan != UserPlan.Free)
+            {
+                maxRunTime += maxRunTime;
             }
 
             return TimeSpan.FromSeconds(maxRunTime);

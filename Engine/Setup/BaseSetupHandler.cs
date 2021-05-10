@@ -164,8 +164,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             if (!dataFeedsConfigString.IsNullOrEmpty())
             {
-                Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
-                dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+                var dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
                 return dataFeeds;
             }
 
