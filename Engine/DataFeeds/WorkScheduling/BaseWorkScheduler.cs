@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,30 +14,27 @@
  *
 */
 
-using System.Collections.Concurrent;
-using System.Threading;
+using System;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 {
     /// <summary>
-    /// Work queue abstraction
+    /// Base work scheduler abstraction
     /// </summary>
-    public interface IWorkQueue
+    public abstract class WorkScheduler
     {
         /// <summary>
-        /// This is the worker thread loop.
-        /// It will first try to take a work item from the new work queue else will check his own queue.
+        /// The quantity of workers to be used
         /// </summary>
-        void WorkerThread(ConcurrentQueue<WorkItem> newWork, AutoResetEvent newWorkEvent);
+        public static int WorkersCount = Configuration.Config.GetInt("data-feed-workers-count", Environment.ProcessorCount);
 
         /// <summary>
-        /// Sorts the work queue
+        /// Add a new work item to the queue
         /// </summary>
-        void Sort();
-
-        /// <summary>
-        /// Returns the thread priority to use for this work queue
-        /// </summary>
-        ThreadPriority ThreadPriority { get; }
+        /// <param name="symbol">The symbol associated with this work</param>
+        /// <param name="workFunc">The work function to run</param>
+        /// <param name="weightFunc">The weight function.
+        /// Work will be sorted in ascending order based on this weight</param>
+        public abstract void QueueWork(Symbol symbol, Func<int, bool> workFunc, Func<int> weightFunc);
     }
 }
