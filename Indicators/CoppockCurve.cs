@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -70,7 +70,7 @@ namespace QuantConnect.Indicators
             _shortRoc = new RateOfChangePercent(shortRocPeriod);
             _longRoc = new RateOfChangePercent(longRocPeriod);
             _lwma = new LinearWeightedMovingAverage(lwmaPeriod);
-            WarmUpPeriod = Math.Max(shortRocPeriod, longRocPeriod) + lwmaPeriod - 1;
+            WarmUpPeriod = Math.Max(shortRocPeriod, longRocPeriod) + lwmaPeriod;
         }
 
         /// <summary>
