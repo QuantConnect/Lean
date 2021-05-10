@@ -267,7 +267,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             maxOrders = job.Controls.BacktestingMaxOrders;
-            return MaxOrders;
+            return maxOrders;
         }
 
         /// <summary>
