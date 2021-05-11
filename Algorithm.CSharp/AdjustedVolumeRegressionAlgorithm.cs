@@ -38,12 +38,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2014, 3, 25);      //Set Start Date
             SetEndDate(2014, 4, 7);         //Set End Date
-            SetCash(100000);                            //Set Strategy Cash
 
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.SplitAdjusted;
             _googl = AddEquity(Ticker, Resolution.Daily).Symbol;
-            
-            Schedule.On(DateRules.On(2014, 4, 3), TimeRules.At(5, 0), () => Log("GOOG 2:1 split"));
 
             // Prime our expected values
             _expectedAdjustedVolume.MoveNext();
@@ -58,6 +55,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 SetHoldings(_googl, 1);
+            }
+
+            if (data.Splits.ContainsKey(_googl))
+            {
+                Log(data.Splits[_googl].ToString());
             }
 
             if (data.Bars.ContainsKey(_googl))

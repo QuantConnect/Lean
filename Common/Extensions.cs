@@ -2663,7 +2663,7 @@ namespace QuantConnect
         /// <param name="data">Data to Adjust</param>
         /// <param name="factor">Function to factor prices by</param>
         /// <param name="volumeFactor">Factor to multiply volume by (Only important to Trade type data)</param>
-        public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor, decimal volumeFactor = decimal.One)
+        public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor, decimal volumeFactor)
         {
             switch (data.DataType)
             {
