@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -155,8 +155,8 @@ namespace QuantConnect.Tests.Common
             var spy = algorithm.AddEquity(Symbols.SPY.Value);
             Update(spy, 1);
 
-            var collection = new[] {new PortfolioTarget(Symbols.SPY, 2m),
-                new PortfolioTarget(Symbols.AAPL, value * 2.1m)};
+            var collection = new[] {new PortfolioTarget(Symbols.SPY, 20m),
+                new PortfolioTarget(Symbols.AAPL, value * 21m)};
 
             var result = collection.OrderTargetsByMarginImpact(algorithm, targetIsDelta).ToList();
 
@@ -164,16 +164,39 @@ namespace QuantConnect.Tests.Common
 
             if (targetIsDelta)
             {
-                // AAPL is increasing the position by 2.1
+                // AAPL is increasing the position by 21
                 Assert.AreEqual(Symbols.AAPL, result[0].Symbol);
                 Assert.AreEqual(Symbols.SPY, result[1].Symbol);
             }
             else
             {
                 Assert.AreEqual(Symbols.SPY, result[0].Symbol);
-                // target with the least order value, AAPL is increasing the position by 1.1
+                // target with the least order value, AAPL is increasing the position by 11
                 Assert.AreEqual(Symbols.AAPL, result[1].Symbol);
             }
+        }
+
+        [TestCase(OrderDirection.Buy, false)]
+        [TestCase(OrderDirection.Sell, false)]
+        [TestCase(OrderDirection.Buy, true)]
+        [TestCase(OrderDirection.Sell, true)]
+        public void RoundQuantityInOrderTargets(OrderDirection direction, bool targetIsDelta)
+        {
+            var value = direction == OrderDirection.Sell ? -1 : 1;
+            var algorithm = GetAlgorithm(value);
+            var spy = algorithm.AddEquity(Symbols.SPY.Value);
+            Update(spy, 1);
+
+            var collection = new[] {new PortfolioTarget(Symbols.SPY, 20m),
+                new PortfolioTarget(Symbols.AAPL, value * 20.1m)};
+
+            var result = collection.OrderTargetsByMarginImpact(algorithm, targetIsDelta).ToList();
+
+            Assert.AreEqual(2, result.Count);
+
+            // Since the order value is the same SPY comes first because of its the first in collection.
+            Assert.AreEqual(Symbols.SPY, result[0].Symbol);
+            Assert.AreEqual(Symbols.AAPL, result[1].Symbol);
         }
 
         private static void Update(Security security, decimal close)
