@@ -15,17 +15,8 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
-using QuantConnect.AlgorithmFactory;
-using QuantConnect.Brokerages.Backtesting;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Setup
 {

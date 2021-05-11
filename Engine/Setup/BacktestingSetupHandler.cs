@@ -15,19 +15,17 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Algorithm;
-using QuantConnect.AlgorithmFactory;
-using QuantConnect.Brokerages.Backtesting;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Data;
+using QuantConnect.Algorithm;
+using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
+using System.Collections.Generic;
+using QuantConnect.AlgorithmFactory;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Brokerages.Backtesting;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
