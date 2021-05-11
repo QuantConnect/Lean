@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -28,6 +28,8 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// Our formula is Period + 1 because we need to fill the window and have one removed before
+        /// it is ready.
         /// </summary>
         public int WarmUpPeriod => Period + 1;
 

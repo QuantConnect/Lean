@@ -70,7 +70,11 @@ namespace QuantConnect.Indicators
             _shortRoc = new RateOfChangePercent(shortRocPeriod);
             _longRoc = new RateOfChangePercent(longRocPeriod);
             _lwma = new LinearWeightedMovingAverage(lwmaPeriod);
-            WarmUpPeriod = Math.Max(shortRocPeriod, longRocPeriod) + lwmaPeriod;
+
+            // Define our warmup
+            // LWMA does not get updated until ROC are warmed up and ready, so add our periods.
+            // Then minus 1 because on the same point ROC is ready LWMA will receive its first point.
+            WarmUpPeriod = Math.Max(_shortRoc.WarmUpPeriod, _longRoc.WarmUpPeriod) + lwmaPeriod - 1;
         }
 
         /// <summary>
