@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Brokerages
     /// </summary>
     public class OrderProvider : IOrderProvider
     {
-        private static int _orderID;
+        private int _orderId;
         private readonly IList<Order> _orders;
 
         public OrderProvider(IList<Order> orders)
@@ -42,23 +42,24 @@ namespace QuantConnect.Tests.Brokerages
 
         public void Add(Order order)
         {
-            order.Id = Interlocked.Increment(ref _orderID);
+            order.Id = Interlocked.Increment(ref _orderId);
             _orders.Add(order);
         }
 
-        public int OrdersCount
-        {
-            get { return _orders.Count; }
-        }
+        public int OrdersCount => _orders.Count;
 
         public Order GetOrderById(int orderId)
         {
-            return _orders.FirstOrDefault(x => x.Id == orderId);
+            var order = _orders.FirstOrDefault(x => x.Id == orderId);
+
+            return order?.Clone();
         }
 
         public Order GetOrderByBrokerageId(string brokerageId)
         {
-            return _orders.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
+            var order = _orders.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
+
+            return order?.Clone();
         }
 
         public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
@@ -78,12 +79,12 @@ namespace QuantConnect.Tests.Brokerages
 
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
         {
-            return _orders.Where(filter);
+            return _orders.Where(filter).Select(x => x.Clone());
         }
 
         public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
         {
-            return _orders.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).ToList();
+            return _orders.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).Select(x => x.Clone()).ToList();
         }
     }
 }
