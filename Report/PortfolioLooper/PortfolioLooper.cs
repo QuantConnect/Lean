@@ -367,10 +367,11 @@ namespace QuantConnect.Report
 
                         foreach (var quoteBar in updateSlice.QuoteBars.Values)
                         {
-                            // We need to ensure that the currency pair we're converting matches our slice symbol
-                            foreach (var cash in Algorithm.Portfolio.CashBook.Values.Where(x => x.ConversionRateSecurity != null && x.ConversionRateSecurity.Symbol == quoteBar.Symbol))
+                            Algorithm.Securities[quoteBar.Symbol].SetMarketPrice(quoteBar);
+
+                            foreach (var cash in Algorithm.Portfolio.CashBook.Values)
                             {
-                                cash.Update(quoteBar);
+                                cash.Update();
                             }
                         }
 

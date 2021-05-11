@@ -130,7 +130,10 @@ namespace QuantConnect.Securities
                     defaultResolution);
                 if (subscriptionDataConfig != null)
                 {
-                    addedSubscriptionDataConfigs.Add(subscriptionDataConfig);
+                    foreach (var s in subscriptionDataConfig)
+                    {
+                        addedSubscriptionDataConfigs.Add(s);
+                    }
                 }
             }
             return addedSubscriptionDataConfigs;
