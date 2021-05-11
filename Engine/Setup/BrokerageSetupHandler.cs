@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -240,7 +240,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                         //Set our parameters
                         algorithm.SetParameters(liveJob.Parameters);
-                        algorithm.SetAvailableDataTypes(GetConfiguredDataFeeds());
+                        algorithm.SetAvailableDataTypes(BaseSetupHandler.GetConfiguredDataFeeds());
 
                         //Algorithm is live, not backtesting:
                         algorithm.SetLiveMode(true);
@@ -526,23 +526,6 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 AddUnrequestedSecurity(algorithm, order.Symbol);
             }
-        }
-
-        /// <summary>
-        /// Get the available data feeds from config.json,
-        /// If none available, throw an error
-        /// </summary>
-        private static Dictionary<SecurityType, List<TickType>> GetConfiguredDataFeeds()
-        {
-            var dataFeedsConfigString = Config.Get("security-data-feeds");
-
-            Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
-            if (dataFeedsConfigString != string.Empty)
-            {
-                dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
-            }
-
-            return dataFeeds;
         }
 
         /// <summary>

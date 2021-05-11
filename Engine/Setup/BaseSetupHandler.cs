@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -151,6 +152,22 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 algorithm.SetAccountCurrency(job.CashAmount.Value.Currency);
             }
+        }
+
+        /// <summary>
+        /// Get the available data feeds from config.json,
+        /// </summary>
+        public static Dictionary<SecurityType, List<TickType>> GetConfiguredDataFeeds()
+        {
+            var dataFeedsConfigString = Config.Get("security-data-feeds");
+
+            if (!dataFeedsConfigString.IsNullOrEmpty())
+            {
+                var dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+                return dataFeeds;
+            }
+
+            return null;
         }
     }
 }
