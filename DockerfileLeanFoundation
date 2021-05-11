@@ -21,8 +21,7 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test && apt-get update
 RUN add-apt-repository ppa:apt-fast/stable && apt-get update && apt-get -y install apt-fast
 RUN apt-fast install -y git bzip2 clang cmake curl unzip wget python3-pip python-opengl zlib1g-dev \
     xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
-    r-base pandoc libcurl4-openssl-dev \
-    openjdk-8-jdk openjdk-8-jre
+    r-base pandoc libcurl4-openssl-dev
 
 # Install IB Gateway: Installs to ~/Jts
 RUN wget https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
@@ -153,7 +152,7 @@ RUN pip install --no-cache-dir      \
     pyflux==0.4.15                  \
     optuna==2.3.0                   \
     findiff==0.8.5                  \
-    sktime==0.3.0                   \ 
+    sktime==0.3.0                   \
     sktime-dl==0.1.0                \
     hyperopt==0.2.5                 \
     bayesian-optimization==1.2.0    \
