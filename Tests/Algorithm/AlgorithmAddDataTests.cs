@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -46,16 +46,16 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void DefaultDataFeeds_CanBeOverwritten_Successfully()
         {
-            Config.Set("security-data-feeds", "{ Forex: [\"Trade\"] }");
             var algo = new QCAlgorithm();
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
 
-            // forex defult - should be tradebar
+            // forex defult - should be quotebar
             var forexTrade = algo.AddForex("EURUSD");
             Assert.IsTrue(forexTrade.Subscriptions.Count() == 1);
             Assert.IsTrue(GetMatchingSubscription(forexTrade, typeof(QuoteBar)) != null);
 
             // Change
+            Config.Set("security-data-feeds", "{ Forex: [\"Trade\"] }");
             var dataFeedsConfigString = Config.Get("security-data-feeds");
             Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
             if (dataFeedsConfigString != string.Empty)
@@ -65,10 +65,13 @@ namespace QuantConnect.Tests.Algorithm
 
             algo.SetAvailableDataTypes(dataFeeds);
 
-            // new forex - should be quotebar
+            // new forex - should be tradebar
             var forexQuote = algo.AddForex("EURUSD");
             Assert.IsTrue(forexQuote.Subscriptions.Count() == 1);
             Assert.IsTrue(GetMatchingSubscription(forexQuote, typeof(TradeBar)) != null);
+
+            // reset to empty string, affects other tests because config is static
+            Config.Set("security-data-feeds", "");
         }
 
         [Test]

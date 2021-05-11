@@ -612,6 +612,11 @@ namespace QuantConnect.Algorithm
         /// <param name="availableDataTypes">The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
         public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes)
         {
+            if (availableDataTypes == null)
+            {
+                return;
+            }
+
             foreach (var dataFeed in availableDataTypes)
             {
                 SubscriptionManager.AvailableDataTypes[dataFeed.Key] = dataFeed.Value;
