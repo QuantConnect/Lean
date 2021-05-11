@@ -473,7 +473,7 @@ namespace QuantConnect
         {
             return targets.Select(x => new {
                     PortfolioTarget = x,
-                    TargetQuantity = x.Quantity,
+                    TargetQuantity = OrderSizing.AdjustByLotSize(algorithm.Securities[x.Symbol], x.Quantity),
                     ExistingQuantity = algorithm.Portfolio[x.Symbol].Quantity
                                        + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
                                            .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
@@ -484,7 +484,7 @@ namespace QuantConnect
                             >= x.Security.SymbolProperties.LotSize
                 )
                 .Select(x => new {
-                    PortfolioTarget = x.PortfolioTarget,
+                    x.PortfolioTarget,
                     OrderValue = Math.Abs((targetIsDelta ? x.TargetQuantity : (x.TargetQuantity - x.ExistingQuantity)) * x.Security.Price),
                     IsReducingPosition = x.ExistingQuantity != 0
                                          && Math.Abs((targetIsDelta ? (x.TargetQuantity + x.ExistingQuantity) : x.TargetQuantity)) < Math.Abs(x.ExistingQuantity)
