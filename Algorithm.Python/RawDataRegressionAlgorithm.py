@@ -25,7 +25,7 @@ from QuantConnect.Orders import OrderStatus
 from QuantConnect.Orders.Fees import ConstantFeeModel
 
 _ticker = "GOOGL";
-_factorFile = FactorFile.Read(_ticker, "USA");
+_factorFile = FactorFile.Read(_ticker, Market.USA);
 _expectedRawPrices = [ 1158.1100, 1158.7200,
 1131.7800, 1114.2800, 1119.6100, 1114.5500, 1135.3200, 567.59000, 571.4900, 545.3000, 540.6400 ]
 
