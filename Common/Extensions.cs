@@ -471,13 +471,18 @@ namespace QuantConnect
             IAlgorithm algorithm,
             bool targetIsDelta = false)
         {
-            return targets.Select(x => new {
-                    PortfolioTarget = x,
-                    TargetQuantity = OrderSizing.AdjustByLotSize(algorithm.Securities[x.Symbol], x.Quantity),
-                    ExistingQuantity = algorithm.Portfolio[x.Symbol].Quantity
-                                       + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
-                                           .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
-                    Security = algorithm.Securities[x.Symbol]
+            return targets.Select(x =>
+                {
+                    var security = algorithm.Securities[x.Symbol];
+                    return new
+                    {
+                        PortfolioTarget = x,
+                        TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
+                        ExistingQuantity = security.Holdings.Quantity
+                            + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
+                                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
+                        Security = security
+                    };
                 })
                 .Where(x => x.Security.HasData
                             && (targetIsDelta ? Math.Abs(x.TargetQuantity) : Math.Abs(x.TargetQuantity - x.ExistingQuantity))
