@@ -1,4 +1,4 @@
-﻿/* 
+/* 
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -99,8 +98,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "4.098"},
-            {"Tracking Error", "0.186"},
+            {"Information Ratio", "4.138"},
+            {"Tracking Error", "0.184"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
