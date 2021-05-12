@@ -88,6 +88,25 @@ namespace QuantConnect
         public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } = TimeSpan.FromMinutes(-15);
 
         /// <summary>
+        /// Helper method to create an order request to liquidate a delisted asset
+        /// </summary>
+        public static SubmitOrderRequest CreateDelistedSecurityOrderRequest(this Security security, DateTime utcTime)
+        {
+            var orderType = OrderType.Market;
+            var tag = "Liquidate from delisting";
+            if (security.Type.IsOption())
+            {
+                // tx handler will determine auto exercise/assignment
+                tag = "Option Expired";
+                orderType = OrderType.OptionExercise;
+            }
+
+            // submit an order to liquidate on market close or exercise (for options)
+            return new SubmitOrderRequest(orderType, security.Type, security.Symbol,
+                -security.Holdings.Quantity, 0, 0, utcTime, tag);
+        }
+
+        /// <summary>
         /// Safe multiplies a decimal by 100
         /// </summary>
         /// <param name="value">The decimal to multiply</param>

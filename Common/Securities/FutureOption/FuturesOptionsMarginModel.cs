@@ -24,7 +24,7 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class FuturesOptionsMarginModel : FutureMarginModel
     {
-        private const decimal FixedMarginMultiplier = 1.5m;
+        public const decimal FixedMarginMultiplier = 1.5m;
 
         /// <summary>
         /// Creates an instance of FutureOptionMarginModel
@@ -48,7 +48,7 @@ namespace QuantConnect.Securities.Option
         /// </remarks>
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
-            return base.GetMaintenanceMargin(parameters.ForUnderlying()) * FixedMarginMultiplier;
+            return base.GetMaintenanceMargin(parameters.ForUnderlying(parameters.Quantity)) * FixedMarginMultiplier;
         }
 
         /// <summary>
