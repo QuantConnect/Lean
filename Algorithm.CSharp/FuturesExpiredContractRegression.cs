@@ -104,6 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", " 0"},
             {"Fitness Score", "0"},
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
