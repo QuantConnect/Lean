@@ -461,6 +461,10 @@ namespace QuantConnect.Lean.Engine.Setup
             if (!algorithm.Portfolio.ContainsKey(symbol))
             {
                 var resolution = algorithm.UniverseSettings.Resolution;
+                var fillForward = algorithm.UniverseSettings.FillForward;
+                var leverage = algorithm.UniverseSettings.Leverage;
+                var extendedHours = algorithm.UniverseSettings.ExtendedMarketHours;
+
                 if (!_notifiedDefaultResolutionUsed)
                 {
                     // let's just send the message once
@@ -473,17 +477,17 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (symbol.SecurityType.IsOption())
                 {
                     // add current option contract to the system
-                    algorithm.AddOptionContract(symbol, resolution);
+                    algorithm.AddOptionContract(symbol, resolution, fillForward, leverage);
                 }
                 else if (symbol.SecurityType == SecurityType.Future)
                 {
                     // add current future contract to the system
-                    algorithm.AddFutureContract(symbol, resolution);
+                    algorithm.AddFutureContract(symbol, resolution, fillForward, leverage);
                 }
                 else
                 {
                     // for items not directly requested set leverage to 1 and at the min resolution
-                    algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market);
+                    algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, fillForward, leverage, extendedHours);
                 }
             }
         }
