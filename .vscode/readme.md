@@ -4,6 +4,8 @@ This document contains information regarding ways to use Visual Studio Code to w
 
 - Using Lean CLI -> A great tool for working with your algorithms locally, while still being able to deploy to the cloud and have access to Lean data. It is also able to run algorithms locally through our official docker images **Recommended for algorithm development.
 
+- Using a Lean Dev container -> A docker environment with all dependencies pre-installed to allow seamless Lean development across platforms. Great for open source contributors.
+
 - Locally installing all dependencies to run Lean with Visual Studio Code on your OS.
 
 <br />
@@ -16,7 +18,37 @@ To use Lean CLI follow the instructions for installation and tutorial for usage 
 
 <br />
 
-<h2>Option 2: Install Dependencies Locally</h2>
+<h2>Option 2: Lean Development Container</h2>
+
+Before anything we need to ensure a few things have been done for either option:
+
+1. Get [Visual Studio Code](https://code.visualstudio.com/download)
+    - Get [Remote Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) Extension
+
+2. Get [Docker](https://docs.docker.com/get-docker/):
+    - Follow the instructions for your Operating System
+    - New to Docker? Try docker getting-started
+
+3. Pull Lean’s latest foundation image from a terminal
+    - _docker pull quantconnect/lean:foundation_
+
+4. Get Lean into VS Code
+    - Download the repo or clone it using: _git clone[https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)_
+    - Open the folder using VS Code
+
+5. Open Development Container
+    - In VS Code, either:
+        - Select "Reopen in Container" from pop up box.
+
+            OR
+
+        - Ctrl+Shift+P (Command Palette) and select "Remote-Containers: Rebuild and Reopen in Container"
+
+You should now be in the development container, give VS Code a moment to prepare and you will be ready to go!
+
+<br />
+
+<h2>Option 3: Install Dependencies Locally</h2>
 
 1. Install [.Net 5](https://dotnet.microsoft.com/download) for the project
 
@@ -40,8 +72,6 @@ Your environment is prepared and ready to run lean
 This section will cover configuring, building, launching and debugging lean. This is only applicable to option 2 from above. This does not apply to Lean CLI, please refer to [CLI documentation](https://www.quantconnect.com/docs/v2/lean-cli/getting-started/lean-cli)
 
 <br />
-
-<h2>Configuration</h2>
 
 We need to be sure that our Lean configuration at **.\Launcher\config.json** is properly set.
 
