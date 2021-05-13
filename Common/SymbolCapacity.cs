@@ -21,13 +21,18 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Lean.Engine.Results
+namespace QuantConnect
 {
     /// <summary>
     /// Per-symbol capacity estimations, tightly coupled with the <see cref="CapacityEstimate"/> class.
     /// </summary>
     internal class SymbolCapacity
     {
+        /// <summary>
+        /// The period for which a symbol trade influentiates capacity estimate
+        /// </summary>
+        public static TimeSpan CapacityEffectPeriod = TimeSpan.FromDays(30);
+
         /// <summary>
         /// An estimate of how much volume the FX market trades per minute
         /// </summary>
@@ -283,6 +288,19 @@ namespace QuantConnect.Lean.Engine.Results
         {
             _resetMarketCapacityDollarVolume = true;
             SaleVolume = 0;
+        }
+
+        /// <summary>
+        /// Determines if we should remove a symbol from capacity estimation
+        /// </summary>
+        public bool ShouldRemove()
+        {
+            if (Security.Invested || _algorithm.UtcTime < _previousOrderEvent.UtcTime + CapacityEffectPeriod)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

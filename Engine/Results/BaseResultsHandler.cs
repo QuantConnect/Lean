@@ -532,8 +532,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Gets the algorithm runtime statistics
         /// </summary>
         protected Dictionary<string, string> GetAlgorithmRuntimeStatistics(Dictionary<string, string> summary,
-            Dictionary<string, string> runtimeStatistics = null,
-            decimal? capacityEstimate = null)
+            Dictionary<string, string> runtimeStatistics = null, CapacityEstimate capacityEstimate = null)
         {
             if (runtimeStatistics == null)
             {
@@ -560,7 +559,7 @@ namespace QuantConnect.Lean.Engine.Results
             runtimeStatistics["Volume"] = accountCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
             if (capacityEstimate != null)
             {
-                runtimeStatistics["Capacity"] = accountCurrencySymbol + capacityEstimate.Value.RoundToSignificantDigits(2).ToFinancialFigures();
+                runtimeStatistics["Capacity"] = accountCurrencySymbol + capacityEstimate.Capacity.Value.RoundToSignificantDigits(2).ToFinancialFigures();
             }
 
             return runtimeStatistics;
@@ -569,8 +568,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Will generate the statistics results and update the provided runtime statistics
         /// </summary>
-        protected StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts,
-            SortedDictionary<DateTime, decimal> profitLoss = null, decimal estimatedStrategyCapacity = 0m)
+        protected StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts, 
+            SortedDictionary<DateTime, decimal> profitLoss = null, CapacityEstimate estimatedStrategyCapacity = null)
         {
             var statisticsResults = new StatisticsResults();
             if (profitLoss == null)

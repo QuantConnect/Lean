@@ -15,13 +15,14 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
+using QuantConnect.Util;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
-namespace QuantConnect.Lean.Engine.Results
+namespace QuantConnect
 {
     /// <summary>
     /// Estimates dollar volume capacity of algorithm (in account currency) using all Symbols in the portfolio.
@@ -42,14 +43,21 @@ namespace QuantConnect.Lean.Engine.Results
         // (monitored meaning it is currently aggregating market dollar volume for its capacity calculation).
         // For integer indexing, we use the List above, v.s. for lookup we use this HashSet.
         private HashSet<SymbolCapacity> _monitoredSymbolCapacitySet;
-        private DateTime _previousSnapshotDate;
         private DateTime _nextSnapshotDate;
         private TimeSpan _snapshotPeriod;
+        private Symbol _smallestAssetSymbol;
 
         /// <summary>
         /// The total capacity of the strategy at a point in time
         /// </summary>
-        public decimal Capacity { get; private set; }
+        /// <remarks>We wrap this value type because it's being read and written by multiple threads.
+        /// <see cref="IResultHandler"/></remarks>
+        public ReferenceWrapper<decimal> Capacity { get; private set; }
+
+        /// <summary>
+        /// Provide a reference to the lowest capacity symbol used in scaling down the capacity for debugging.
+        /// </summary>
+        public Symbol LowestCapacityAsset => _smallestAssetSymbol; 
 
         /// <summary>
         /// Initializes an instance of the class.
@@ -62,9 +70,9 @@ namespace QuantConnect.Lean.Engine.Results
             _monitoredSymbolCapacity = new List<SymbolCapacity>();
             _monitoredSymbolCapacitySet = new HashSet<SymbolCapacity>();
             // Set the minimum snapshot period to one day, but use algorithm start/end if the algo runtime is less than seven days
-            _snapshotPeriod = TimeSpan.FromDays(Math.Max(Math.Min((_algorithm.EndDate - _algorithm.StartDate).TotalDays - 1, 7), 1));
-            _previousSnapshotDate = _algorithm.StartDate;
+            _snapshotPeriod = TimeSpan.FromDays(Math.Max(Math.Min((_algorithm.EndDate - _algorithm.StartDate).TotalDays - 1, 7), 1)); 
             _nextSnapshotDate = _algorithm.StartDate + _snapshotPeriod;
+            Capacity = new ReferenceWrapper<decimal>(0);
         }
 
         /// <summary>
@@ -117,17 +125,6 @@ namespace QuantConnect.Lean.Engine.Results
             var utcDate = _algorithm.UtcTime.Date;
             if (forceProcess || utcDate >= _nextSnapshotDate && _capacityBySymbol.Count != 0)
             {
-                var delistings = _capacityBySymbol.Values
-                    .Where(s => s.Security.IsDelisted)
-                    .ToList();
-
-                foreach (var delisted in delistings)
-                {
-                    _capacityBySymbol.Remove(delisted.Security.Symbol);
-                    _monitoredSymbolCapacity.Remove(delisted);
-                    _monitoredSymbolCapacitySet.Remove(delisted);
-                }
-
                 var totalPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
                 var totalSaleVolume = _capacityBySymbol.Values
                     .Sum(s => s.SaleVolume);
@@ -140,6 +137,8 @@ namespace QuantConnect.Lean.Engine.Results
                 var smallestAsset = _capacityBySymbol.Values
                     .OrderBy(c => c.MarketCapacityDollarVolume)
                     .First();
+
+                _smallestAssetSymbol = smallestAsset.Security.Symbol;
 
                 // When there is no trading, rely on the portfolio holdings
                 var percentageOfSaleVolume = totalSaleVolume != 0
@@ -155,24 +154,33 @@ namespace QuantConnect.Lean.Engine.Results
                 var dailyMarketCapacityDollarVolume = smallestAsset.MarketCapacityDollarVolume / smallestAsset.Trades;
 
                 var newCapacity = scalingFactor == 0
-                    ? Capacity
+                    ? Capacity.Value
                     : dailyMarketCapacityDollarVolume / scalingFactor;
 
-                if (Capacity == 0)
+                if (Capacity.Value == 0)
                 {
-                    Capacity = newCapacity;
+                    Capacity = new ReferenceWrapper<decimal>(newCapacity);
                 }
                 else
                 {
-                    Capacity = (0.33m * newCapacity) + (Capacity * 0.66m);
+                    Capacity = new ReferenceWrapper<decimal>((0.33m * newCapacity) + (Capacity.Value * 0.66m));
                 }
 
-                foreach (var symbolCapacity in _capacityBySymbol.Values)
+                foreach (var capacity in _capacityBySymbol.Select(pair => pair.Value).ToList())
                 {
-                    symbolCapacity.Reset();
+                    if (!capacity.ShouldRemove())
+                    {
+                        capacity.Reset();
+                        continue;
+                    }
+
+                    // we remove non invested and non tradable (delisted, deselected) securities this will allow the 'smallestAsset'
+                    // to be changing between snapshots, and avoid the collections to grow
+                    _capacityBySymbol.Remove(capacity.Security.Symbol);
+                    _monitoredSymbolCapacity.Remove(capacity);
+                    _monitoredSymbolCapacitySet.Remove(capacity);
                 }
 
-                _previousSnapshotDate = utcDate;
                 _nextSnapshotDate = utcDate + _snapshotPeriod;
             }
         }
