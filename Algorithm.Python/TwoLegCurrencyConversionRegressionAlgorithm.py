@@ -27,9 +27,14 @@ class TwoLegCurrencyConversionRegressionAlgorithm(QCAlgorithm):
         self.SetAccountCurrency("ETH")
         self.SetCash("ETH", 100000)
         self.SetCash("LTC", 100000)
+        self.SetCash("USD", 100000)
 
         self._ethUsdSymbol = self.AddCrypto("ETHUSD", Resolution.Minute).Symbol
         self._ltcUsdSymbol = self.AddCrypto("LTCUSD", Resolution.Minute).Symbol
+
+    def OnData(self, data):
+        if not self.Portfolio.Invested:
+            self.MarketOrder(self._ltcUsdSymbol, 1)
 
     def OnEndOfAlgorithm(self):
         ltcCash = self.Portfolio.CashBook["LTC"]

@@ -38,9 +38,18 @@ namespace QuantConnect.Algorithm.CSharp
             SetAccountCurrency("ETH");
             SetCash("ETH", 100000);
             SetCash("LTC", 100000);
+            SetCash("USD", 100000);
 
             _ethUsdSymbol = AddCrypto("ETHUSD", Resolution.Minute).Symbol;
             _ltcUsdSymbol = AddCrypto("LTCUSD", Resolution.Minute).Symbol;
+        }
+
+        public override void OnData(Slice slice)
+        {
+            if (!Portfolio.Invested)
+            {
+                MarketOrder(_ltcUsdSymbol, 1);
+            }
         }
 
         public override void OnEndOfAlgorithm()
@@ -97,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -117,12 +126,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
+            {"Estimated Strategy Capacity", "$1800.00"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-137.671"},
+            {"Return Over Maximum Drawdown", "-139.899"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -137,7 +146,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"OrderListHash", "9ffe1c1c11cbeaa5cc2d18048c4f3049"}
         };
     }
 }
