@@ -48,65 +48,6 @@
                 "reveal": "silent"
             },
             "problemMatcher": "$msCompile"
-        },
-
-        // Below tasks are no longer being supported
-        // Succeeded by Lean CLI
-        {
-            "label": "run-docker",
-            "type": "shell",
-            "isBackground": true,
-            "windows": {
-                "command": "${workspaceFolder}/run_docker.bat",
-            },
-            "linux": {
-                "command": "${workspaceFolder}/run_docker.sh"
-            },
-            "osx": {
-                "command": "${workspaceFolder}/run_docker.sh"
-            },
-            "args": [
-                "IMAGE=quantconnect/lean:latest",
-                "CONFIG_FILE=${workspaceFolder}/Launcher/config.json",
-                "DATA_DIR=${workspaceFolder}/Data",
-                "RESULTS_DIR=${workspaceFolder}/Results",
-                "DEBUGGING=Y",
-                "PYTHON_DIR=${workspaceFolder}/Algorithm.Python",
-                "EXIT=Y"
-            ],
-            "problemMatcher": [
-                {
-                  "pattern": [
-                    {
-                      "regexp": ".",
-                      "file": 1,
-                      "location": 2,
-                      "message": 3
-                    }
-                  ],
-                  "background": {
-                    "activeOnStart": true,
-                    "beginsPattern": ".",
-                    "endsPattern": ".",
-                  }
-                }
-              ]
-        },
-        {
-            "label": "close-docker",
-            "type": "shell",
-            "command": "docker stop LeanEngine",
-            "presentation": {
-                "echo": false,
-                "reveal": "never",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": false,
-                "clear": true,
-            },
-            "linux":{
-                "command": "sudo docker stop LeanEngine"
-            }
         }
     ]
 }
