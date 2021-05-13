@@ -20,7 +20,7 @@ To use Lean CLI follow the instructions for installation and tutorial for usage 
 
 1. Install [.Net 5](https://dotnet.microsoft.com/download) for the project
 
-2. (Optional) Get Python 3.6.8 for running Python algorithms
+2. (Optional) Get Get [Python 3.6.8](https://www.python.org/downloads/release/python-368/) for running Python algorithms
     - Follow Python instructions [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#installing-python-36) for your platform
 
 3. Get [Visual Studio Code](https://code.visualstudio.com/download)
