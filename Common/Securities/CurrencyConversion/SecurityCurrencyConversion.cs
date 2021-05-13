@@ -154,6 +154,17 @@ namespace QuantConnect.Securities.CurrencyConversion
                 .Where(x => x.SecurityType == SecurityType.Crypto || x.Value.Length == 6)
                 .ToList();
 
+            var securitiesBySymbol = existingSecurities.Aggregate(new Dictionary<Symbol, Security>(),
+                (mapping, security) =>
+                {
+                    if (!mapping.ContainsKey(security.Symbol))
+                    {
+                        mapping[security.Symbol] = security;
+                    }
+
+                    return mapping;
+                });
+
             // Search for 1 leg conversions
             foreach (var symbol in allSymbols)
             {
@@ -167,13 +178,13 @@ namespace QuantConnect.Securities.CurrencyConversion
                     continue;
                 }
 
-                var steps = new List<Step>();
+                var steps = new List<Step>(1);
 
                 var inverted = symbol.ComparePair(sourceCurrency, destinationCurrency) ==
                     CurrencyPairUtil.Match.InverseMatch;
 
-                var existingSecurity = existingSecurities.FirstOrDefault(s => s.Symbol == symbol);
-                if (existingSecurity != null)
+                Security existingSecurity;
+                if (securitiesBySymbol.TryGetValue(symbol, out existingSecurity))
                 {
                     steps.Add(new Step(existingSecurity, inverted));
                 }
@@ -207,7 +218,7 @@ namespace QuantConnect.Securities.CurrencyConversion
                         continue;
                     }
 
-                    var steps = new List<Step>();
+                    var steps = new List<Step>(2);
 
                     string baseCurrency;
                     string quoteCurrency;
@@ -215,10 +226,10 @@ namespace QuantConnect.Securities.CurrencyConversion
                     CurrencyPairUtil.DecomposeCurrencyPair(symbol1, out baseCurrency, out quoteCurrency);
 
                     // Step 1
-                    var existingSecurity = existingSecurities.FirstOrDefault(s => s.Symbol == symbol1);
-                    if (existingSecurity != null)
+                    Security existingSecurity1;
+                    if (securitiesBySymbol.TryGetValue(symbol1, out existingSecurity1))
                     {
-                        steps.Add(new Step(existingSecurity, sourceCurrency == quoteCurrency));
+                        steps.Add(new Step(existingSecurity1, sourceCurrency == quoteCurrency));
                     }
                     else
                     {
@@ -228,10 +239,10 @@ namespace QuantConnect.Securities.CurrencyConversion
                     CurrencyPairUtil.DecomposeCurrencyPair(symbol2, out baseCurrency, out quoteCurrency);
 
                     // Step 2
-                    existingSecurity = existingSecurities.FirstOrDefault(s => s.Symbol == symbol2);
-                    if (existingSecurity != null)
+                    Security existingSecurity2;
+                    if (securitiesBySymbol.TryGetValue(symbol2, out existingSecurity2))
                     {
-                        steps.Add(new Step(existingSecurity, middleCurrency == quoteCurrency));
+                        steps.Add(new Step(existingSecurity2, middleCurrency == quoteCurrency));
                     }
                     else
                     {

@@ -532,7 +532,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void UpdateEventCalledForUpdateMethod()
+        public void UpdateEventCalledWhenAccessingConversionRateAfterCallingUpdateMethod()
         {
             var called = false;
             var cash = new Cash(Currencies.USD, 1, 1);
@@ -541,6 +541,7 @@ namespace QuantConnect.Tests.Common.Securities
                 called = true;
             };
             cash.Update();
+            var conversionRate = cash.ConversionRate;
             Assert.IsTrue(called);
         }
 

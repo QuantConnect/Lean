@@ -33,6 +33,7 @@ namespace QuantConnect.Securities
     {
         private decimal _conversionRate;
         private bool _isBaseCurrency;
+        private bool _conversionRateNeedsUpdate;
 
         private readonly object _locker = new object();
 
@@ -41,6 +42,23 @@ namespace QuantConnect.Securities
         /// <see cref="AddAmount"/>, <see cref="SetAmount"/>, <see cref="Update"/>
         /// </summary>
         public event EventHandler Updated;
+
+        /// <summary>
+        /// Gets the symbol of the first security required to provide conversion rates.
+        /// If this cash represents the account currency, then <see cref="QuantConnect.Symbol.Empty"/>
+        /// is returned
+        /// </summary>
+        [Obsolete("This property has been made obsolete, use the symbols on the securities in CurrencyConversion.ConversionRateSecurities instead. This property only returns the symbol of the first security used to calculate conversion rates, there may be more.")]
+        public Symbol SecuritySymbol =>
+            CurrencyConversion?.ConversionRateSecurities.First().Symbol ?? QuantConnect.Symbol.Empty;
+
+        /// <summary>
+        /// Gets the first security used to apply conversion rates.
+        /// If this cash represents the account currency, then null is returned.
+        /// </summary>
+        [JsonIgnore]
+        [Obsolete("This property has been made obsolete, use CurrencyConversion.ConversionRateSecurities instead. This property only returns the first security used to calculate conversion rates, there may be more.")]
+        public Security ConversionRateSecurity => CurrencyConversion?.ConversionRateSecurities.First();
 
         /// <summary>
         /// Gets the object that calculates the conversion rate to account currency
@@ -65,6 +83,17 @@ namespace QuantConnect.Securities
         {
             get
             {
+                if (_conversionRateNeedsUpdate)
+                {
+                    if (CurrencyConversion != null)
+                    {
+                        _conversionRate = CurrencyConversion.Update();
+                    }
+
+                    _conversionRateNeedsUpdate = false;
+                    OnUpdate();
+                }
+
                 return _conversionRate;
             }
             internal set
@@ -103,18 +132,13 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Updates this cash object's conversion rate
+        /// Marks this cash object's conversion rate as being potentially outdated
         /// </summary>
         public void Update()
         {
             if (_isBaseCurrency) return;
 
-            if (CurrencyConversion != null)
-            {
-                ConversionRate = CurrencyConversion.Update();
-            }
-
-            OnUpdate();
+            _conversionRateNeedsUpdate = true;
         }
 
         /// <summary>
