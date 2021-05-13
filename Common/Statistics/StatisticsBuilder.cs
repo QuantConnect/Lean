@@ -199,7 +199,7 @@ namespace QuantConnect.Statistics
                 { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToStringInvariant() },
                 { "Total Fees", "$" + totalFees.ToStringInvariant("0.00") },
                 { "Estimated Strategy Capacity", "$" + capacity.RoundToSignificantDigits(2).ToStringInvariant() },
-                { "Lowest Capacity Asset", lowestCapacitySymbol != Symbol.Empty ? lowestCapacitySymbol.Value : "" },
+                { "Lowest Capacity Asset", lowestCapacitySymbol != Symbol.Empty ? lowestCapacitySymbol.ID.ToString() : "" },
             };
         }
 
