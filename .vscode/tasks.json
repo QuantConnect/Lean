@@ -8,11 +8,10 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "msbuild",
+            "command": "dotnet",
             "args": [
-                "/p:Configuration=Debug",
-                "/p:DebugType=portable",
-                "/t:build",
+                "build",
+                "--configuration", "Debug",
             ],
             "group": "build",
             "presentation": {
@@ -23,11 +22,11 @@
         {
             "label": "rebuild",
             "type": "shell",
-            "command": "msbuild",
+            "command": "dotnet",
             "args": [
-                "/p:Configuration=Debug",
-                "/p:DebugType=portable",
-                "/t:rebuild",
+                "build",
+                "--configuration", "Debug",
+                "--no-incremental"
             ],
             "group": "build",
             "presentation": {
@@ -38,26 +37,9 @@
         {
             "label": "clean",
             "type": "shell",
-            "command": "msbuild",
+            "command": "dotnet",
             "args": [
-                "/t:clean",
-            ],
-            "group": "build",
-            "presentation": {
-                "reveal": "silent"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "force build linux",
-            "type": "shell",
-            "command": "msbuild",
-            "args": [
-                "/property:GenerateFullPaths=true",
-                "/p:Configuration=Debug",
-                "/p:DebugType=portable",
-                "/t:build",
-                "/p:ForceLinuxBuild=true"
+                "clean",
             ],
             "group": "build",
             "presentation": {
@@ -119,20 +101,6 @@
             },
             "linux":{
                 "command": "sudo docker stop LeanEngine"
-            }
-        },
-        {
-            "label": "Run Application",
-            "type": "process",
-            "command": "QuantConnect.Lean.Launcher.exe",
-            "args" : [
-                "--data-folder",
-                "${workspaceFolder}/Data",
-                "--config",
-                "${workspaceFolder}/Launcher/config.json"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/Launcher/bin/Debug/"
             }
         }
     ]
