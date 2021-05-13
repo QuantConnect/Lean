@@ -62,7 +62,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 .ToList();
 
             var securitiesToUpdate = cashToUpdate
-                .SelectMany(x => x.CurrencyConversion.GetConversionRateSecurities())
+                .SelectMany(x => x.CurrencyConversion.ConversionRateSecurities)
                 .Distinct()
                 .ToList();
 

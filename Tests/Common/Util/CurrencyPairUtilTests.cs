@@ -16,6 +16,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Util;
+
 namespace QuantConnect.Tests.Common.Util
 {
     [TestFixture]
@@ -25,10 +26,10 @@ namespace QuantConnect.Tests.Common.Util
         public void DecomposeThrowsOnNullSymbol()
         {
             Symbol symbol = null;
-            string basec, quotec;
+            string baseCurrency, quoteCurrency;
 
-            Assert.Throws<ArgumentException>(() => CurrencyPairUtil.DecomposeCurrencyPair(symbol, out basec, out quotec),
-                                             "Currency pair must not be null");
+            Assert.Throws<ArgumentException>(
+                () => CurrencyPairUtil.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency));
         }
 
         [Test]
@@ -36,8 +37,8 @@ namespace QuantConnect.Tests.Common.Util
         {
             var currencyPair = Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);
 
-            Assert.AreEqual(CurrencyPairUtil.CurrencyPairDual(currencyPair, "EUR"), "USD");
-            Assert.AreEqual(CurrencyPairUtil.CurrencyPairDual(currencyPair, "USD"), "EUR");
+            Assert.AreEqual("USD", currencyPair.CurrencyPairDual("EUR"));
+            Assert.AreEqual("EUR", currencyPair.CurrencyPairDual("USD"));
         }
 
         [Test]
@@ -45,8 +46,8 @@ namespace QuantConnect.Tests.Common.Util
         {
             var currencyPair = Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Bitfinex);
 
-            Assert.AreEqual(CurrencyPairUtil.CurrencyPairDual(currencyPair, "ETH"), "BTC");
-            Assert.AreEqual(CurrencyPairUtil.CurrencyPairDual(currencyPair, "BTC"), "ETH");
+            Assert.AreEqual("BTC", currencyPair.CurrencyPairDual("ETH"));
+            Assert.AreEqual("ETH", currencyPair.CurrencyPairDual("BTC"));
         }
 
         [Test]
@@ -54,8 +55,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var currencyPair = Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Bitfinex);
 
-            Assert.Throws<ArgumentException>(() => CurrencyPairUtil.CurrencyPairDual(currencyPair, "ZRX"),
-                                             "The knownSymbol ZRX isn't contained in currencyPair ETHBTC.");
+            Assert.Throws<ArgumentException>(() => currencyPair.CurrencyPairDual("ZRX"));
         }
 
         [Test]
@@ -67,26 +67,25 @@ namespace QuantConnect.Tests.Common.Util
             var eurusd = Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);
             var usdeur = Symbol.Create("USDEUR", SecurityType.Forex, Market.FXCM);
 
-            Assert.AreEqual(ethusd.ComparePair(ethusd), CurrencyPairUtil.Match.ExactMatch);
-            Assert.AreEqual(ethusd.ComparePair("ETH", "USD"), CurrencyPairUtil.Match.ExactMatch);
+            Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, ethusd.ComparePair(ethusd));
+            Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, ethusd.ComparePair("ETH", "USD"));
 
-            Assert.AreEqual(eurusd.ComparePair(usdeur), CurrencyPairUtil.Match.InverseMatch);
-            Assert.AreEqual(eurusd.ComparePair("USD", "EUR"), CurrencyPairUtil.Match.InverseMatch);
+            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, eurusd.ComparePair(usdeur));
+            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, eurusd.ComparePair("USD", "EUR"));
 
-            Assert.AreEqual(ethusd.ComparePair(btcusd), CurrencyPairUtil.Match.NoMatch);
-            Assert.AreEqual(ethusd.ComparePair("BTC", "USD"), CurrencyPairUtil.Match.NoMatch);
+            Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, ethusd.ComparePair(btcusd));
+            Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, ethusd.ComparePair("BTC", "USD"));
         }
 
         [Test]
-        public void PairContainsCodeWorksCorrectly()
+        public void PairContainsCurrencyWorksCorrectly()
         {
             var ethusd = Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
 
-            Assert.AreEqual(CurrencyPairUtil.PairContainsCode(ethusd, "ETH"), true);
-            Assert.AreEqual(CurrencyPairUtil.PairContainsCode(ethusd, "USD"), true);
-            Assert.AreEqual(CurrencyPairUtil.PairContainsCode(ethusd, "ZRX"), false);
-            Assert.AreEqual(CurrencyPairUtil.PairContainsCode(ethusd, "BTC"), false);
+            Assert.IsTrue(ethusd.PairContainsCurrency("ETH"));
+            Assert.IsTrue(ethusd.PairContainsCurrency("USD"));
+            Assert.IsFalse(ethusd.PairContainsCurrency("ZRX"));
+            Assert.IsFalse(ethusd.PairContainsCurrency("BTC"));
         }
-
     }
 }

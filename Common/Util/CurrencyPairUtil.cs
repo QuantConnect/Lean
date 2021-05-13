@@ -14,41 +14,41 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Util
 {
+    /// <summary>
+    /// Utility methods for decomposing and comparing currency pairs
+    /// </summary>
     public static class CurrencyPairUtil
     {
-        private static Lazy<SymbolPropertiesDatabase> symbolPropertiesDatabase = new Lazy<SymbolPropertiesDatabase>(SymbolPropertiesDatabase.FromDataFolder);
+        private static readonly Lazy<SymbolPropertiesDatabase> SymbolPropertiesDatabase =
+            new Lazy<SymbolPropertiesDatabase>(Securities.SymbolPropertiesDatabase.FromDataFolder);
 
         /// <summary>
-        /// Decomposes the specified currency pair into a base and quote currency provided as out parameters.
-        /// Requires symbols in Currencies.CurrencySymbols dictionary to make accurate splits, important for crypto-currency symbols.
+        /// Decomposes the specified currency pair into a base and quote currency provided as out parameters
         /// </summary>
-        /// <param name="currencyPair">The input currency pair to be decomposed, for example, "EURUSD"</param>
+        /// <param name="currencyPair">The input currency pair to be decomposed</param>
         /// <param name="baseCurrency">The output base currency</param>
         /// <param name="quoteCurrency">The output quote currency</param>
         public static void DecomposeCurrencyPair(Symbol currencyPair, out string baseCurrency, out string quoteCurrency)
         {
             if (currencyPair == null)
             {
-                throw new ArgumentException($"Currency pair must not be null");
+                throw new ArgumentException("Currency pair must not be null");
             }
 
             if (currencyPair.SecurityType == SecurityType.Crypto)
             {
-                var symbolProperties = symbolPropertiesDatabase.Value.GetSymbolProperties(
+                var symbolProperties = SymbolPropertiesDatabase.Value.GetSymbolProperties(
                     currencyPair.ID.Market,
                     currencyPair,
                     currencyPair.SecurityType,
-                    "USD");
+                    Currencies.USD);
+
                 Crypto.DecomposeCurrencyPair(currencyPair, symbolProperties, out baseCurrency, out quoteCurrency);
             }
             else
@@ -58,50 +58,59 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// You have currencyPair AB and one known symbol (A or B). This function returns another one (B or A).
+        /// You have currencyPair AB and one known symbol (A or B). This function returns the other symbol (B or A).
         /// </summary>
         /// <param name="currencyPair">Currency pair AB</param>
         /// <param name="knownSymbol">Known part of the currencyPair (either A or B)</param>
-        /// <returns>Returns other part of currencyPair (either B or A)</returns>
+        /// <returns>The other part of currencyPair (either B or A)</returns>
         public static string CurrencyPairDual(this Symbol currencyPair, string knownSymbol)
         {
-            string CurrencyA = null;
-            string CurrencyB = null;
+            string currencyA;
+            string currencyB;
 
-            DecomposeCurrencyPair(currencyPair, out CurrencyA, out CurrencyB);
+            DecomposeCurrencyPair(currencyPair, out currencyA, out currencyB);
 
-            if (CurrencyA == knownSymbol)
+            if (currencyA == knownSymbol)
             {
-                return CurrencyB;
+                return currencyB;
             }
-            else if (CurrencyB == knownSymbol)
+
+            if (currencyB == knownSymbol)
             {
-                return CurrencyA;
+                return currencyA;
             }
-            else
-            {
-                throw new ArgumentException($"The knownSymbol {knownSymbol} isn't contained in currencyPair {currencyPair}.");
-            }
+
+            throw new ArgumentException(
+                $"The known symbol {knownSymbol} isn't contained in currency pair {currencyPair}.");
         }
 
+        /// <summary>
+        /// Represents the relation between two currency pairs
+        /// </summary>
         public enum Match
         {
             /// <summary>
-            /// No match was found
+            /// The two currency pairs don't match each other normally nor when one is reversed
             /// </summary>
             NoMatch,
 
             /// <summary>
-            /// Pair was found exact as it is
+            /// The two currency pairs match each other exactly
             /// </summary>
             ExactMatch,
 
             /// <summary>
-            /// Only inverse pair was found
+            /// The two currency pairs are the inverse of each other
             /// </summary>
             InverseMatch
         }
 
+        /// <summary>
+        /// Returns how two currency pairs are related to each other
+        /// </summary>
+        /// <param name="pairA">The first pair</param>
+        /// <param name="pairB">The second pair</param>
+        /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
         public static Match ComparePair(this Symbol pairA, Symbol pairB)
         {
             if (pairA == pairB)
@@ -109,17 +118,17 @@ namespace QuantConnect.Util
                 return Match.ExactMatch;
             }
 
-            string baseA;
-            string quoteA;
+            string baseCurrencyA;
+            string quoteCurrencyA;
 
-            DecomposeCurrencyPair(pairA, out baseA, out quoteA);
+            DecomposeCurrencyPair(pairA, out baseCurrencyA, out quoteCurrencyA);
 
-            string baseB;
-            string quoteB;
+            string baseCurrencyB;
+            string quoteCurrencyB;
 
-            DecomposeCurrencyPair(pairB, out baseB, out quoteB);
+            DecomposeCurrencyPair(pairB, out baseCurrencyB, out quoteCurrencyB);
 
-            if(baseA == quoteB && baseB == quoteA)
+            if (baseCurrencyA == quoteCurrencyB && baseCurrencyB == quoteCurrencyA)
             {
                 return Match.InverseMatch;
             }
@@ -127,19 +136,26 @@ namespace QuantConnect.Util
             return Match.NoMatch;
         }
 
-        public static Match ComparePair(this Symbol pairA, string baseB, string quoteB)
+        /// <summary>
+        /// Returns how two currency pairs are related to each other
+        /// </summary>
+        /// <param name="pairA">The first pair</param>
+        /// <param name="baseCurrencyB">The base currency of the second pair</param>
+        /// <param name="quoteCurrencyB">The quote currency of the second pair</param>
+        /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
+        public static Match ComparePair(this Symbol pairA, string baseCurrencyB, string quoteCurrencyB)
         {
-            if (pairA.Value == baseB + quoteB)
+            if (pairA.Value == baseCurrencyB + quoteCurrencyB)
             {
                 return Match.ExactMatch;
             }
 
-            string baseA;
-            string quoteA;
+            string baseCurrencyA;
+            string quoteCurrencyA;
 
-            DecomposeCurrencyPair(pairA, out baseA, out quoteA);
+            DecomposeCurrencyPair(pairA, out baseCurrencyA, out quoteCurrencyA);
 
-            if (baseA == quoteB && baseB == quoteA)
+            if (baseCurrencyA == quoteCurrencyB && baseCurrencyB == quoteCurrencyA)
             {
                 return Match.InverseMatch;
             }
@@ -147,15 +163,20 @@ namespace QuantConnect.Util
             return Match.NoMatch;
         }
 
-        public static bool PairContainsCode(this Symbol pair, string code)
+        /// <summary>
+        /// Returns whether a currency pair contains a certain currency as base or as quote
+        /// </summary>
+        /// <param name="pair">The currency pair to check the sides of</param>
+        /// <param name="currency">The currency to look for</param>
+        /// <returns>True if currency is the base or quote currency of pair, false if not</returns>
+        public static bool PairContainsCurrency(this Symbol pair, string currency)
         {
-            string baseCode;
-            string quoteCode;
+            string baseCurrency;
+            string quoteCurrency;
 
-            DecomposeCurrencyPair(pair, out baseCode, out quoteCode);
+            DecomposeCurrencyPair(pair, out baseCurrency, out quoteCurrency);
 
-            return baseCode == code || quoteCode == code;
+            return baseCurrency == currency || quoteCurrency == currency;
         }
-
     }
 }

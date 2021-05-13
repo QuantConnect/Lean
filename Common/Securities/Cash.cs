@@ -42,6 +42,9 @@ namespace QuantConnect.Securities
         /// </summary>
         public event EventHandler Updated;
 
+        /// <summary>
+        /// Gets the object that calculates the conversion rate to account currency
+        /// </summary>
         [JsonIgnore]
         public ICurrencyConversion CurrencyConversion { get; private set; }
 
@@ -100,9 +103,8 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Updates this cash object with the specified data
+        /// Updates this cash object's conversion rate
         /// </summary>
-        /// <param name="data">The new data for this cash object</param>
         public void Update()
         {
             if (_isBaseCurrency) return;
@@ -174,15 +176,11 @@ namespace QuantConnect.Securities
 
             if (Symbol == accountCurrency)
             {
-                CurrencyConversion = null;
                 _isBaseCurrency = true;
+                CurrencyConversion = null;
                 ConversionRate = 1.0m;
                 return null;
             }
-
-            // we require a security that converts this into the base currency
-            string normal = Symbol + accountCurrency;
-            string invert = accountCurrency + Symbol;
 
             // existing securities
             var securitiesToSearch = securities.Select(kvp => kvp.Value)
@@ -226,7 +224,7 @@ namespace QuantConnect.Securities
             // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
             // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
             if (marketMap.ContainsKey(SecurityType.Crypto)
-                && Currencies.StableCoinsWithoutPairs.Contains(QuantConnect.Symbol.Create(normal, SecurityType.Crypto, marketMap[SecurityType.Crypto])))
+                && Currencies.StableCoinsWithoutPairs.Contains(QuantConnect.Symbol.Create(Symbol + accountCurrency, SecurityType.Crypto, marketMap[SecurityType.Crypto])))
             {
                 CurrencyConversion = null;
                 ConversionRate = 1.0m;
@@ -251,26 +249,30 @@ namespace QuantConnect.Securities
 
                 // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                 var config = subscriptions.SubscriptionDataConfigService.Add(symbol,
-                                                                             minimumResolution,
-                                                                             fillForward: true,
-                                                                             extendedMarketHours: false,
-                                                                             isInternalFeed: true,
-                                                                             subscriptionDataTypes: new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(objectType, tickType) }).First();
+                    minimumResolution,
+                    fillForward: true,
+                    extendedMarketHours: false,
+                    isInternalFeed: true,
+                    subscriptionDataTypes: new List<Tuple<Type, TickType>>
+                        {new Tuple<Type, TickType>(objectType, tickType)}).First();
 
                 var newSecurity = securityService.CreateSecurity(symbol,
-                                                                 config,
-                                                                 addToSymbolCache: false);
+                    config,
+                    addToSymbolCache: false);
 
                 Log.Trace($"Cash.EnsureCurrencyDataFeed(): Adding {symbol.Value} for cash {Symbol} currency feed");
 
                 securities.Add(symbol, newSecurity);
-
                 requiredSecurities.Add(config);
 
                 return newSecurity;
             });
 
-            CurrencyConversion = SecurityCurrencyConversion.LinearSearch(Symbol, accountCurrency, securitiesToSearch, potentials, makeNewSecurity);
+            CurrencyConversion = SecurityCurrencyConversion.LinearSearch(Symbol,
+                accountCurrency,
+                securitiesToSearch.ToList(),
+                potentials,
+                makeNewSecurity);
 
             return requiredSecurities;
         }

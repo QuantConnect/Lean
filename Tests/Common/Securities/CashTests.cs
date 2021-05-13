@@ -643,9 +643,9 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.IsNotNull(cash.CurrencyConversion);
 
                 var actualConversionSymbols = cash.CurrencyConversion
-                                                  .GetConversionRateSecurities()
-                                                  .Select(x => x.Symbol)
-                                                  .ToArray();
+                    .ConversionRateSecurities
+                    .Select(x => x.Symbol)
+                    .ToArray();
 
                 Assert.AreEqual(expectedConversionSymbols, actualConversionSymbols);
             }
