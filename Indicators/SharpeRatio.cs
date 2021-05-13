@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -47,7 +47,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Returns whether the indicator is properly initialized with data
         /// </summary>
-        public override bool IsReady => _sharpeRatio.Samples > _period + 1;
+        public override bool IsReady => _sharpeRatio.Samples > _period;
 
         /// <summary>
         /// Creates a new Sharpe Ratio indicator using the specified periods
@@ -66,8 +66,9 @@ namespace QuantConnect.Indicators
             var sma = _roc.SMA(period);
             _sharpeRatio = sma.Minus(riskFreeRate).Over(std);
 
-            // define warmup value
-            WarmUpPeriod = _period + 2;
+            // define warmup value; 
+            // _roc is the base of our indicator chain + period of STD and SMA
+            WarmUpPeriod = _roc.WarmUpPeriod + _period;
         }
 
         /// <summary>

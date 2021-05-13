@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -59,8 +59,11 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// We have 3 EMAs chained on base period so every _period points starts the next EMA,
+        /// hence -1 on the multiplication, and finally the last ema updates our _roc which needs
+        /// to be warmed up before this indicator is warmed up.
         /// </summary>
-        public int WarmUpPeriod => 3 * (_period - 1) + 1;
+        public int WarmUpPeriod => 3 * (_period - 1) + _roc.WarmUpPeriod;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
