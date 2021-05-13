@@ -12,6 +12,7 @@
             "args": [
                 "build",
                 "--configuration", "Debug",
+                "/p:DebugType=portable"
             ],
             "group": "build",
             "presentation": {
@@ -26,7 +27,8 @@
             "args": [
                 "build",
                 "--configuration", "Debug",
-                "--no-incremental"
+                "--no-incremental",
+                "/p:DebugType=portable"
             ],
             "group": "build",
             "presentation": {
@@ -47,6 +49,9 @@
             },
             "problemMatcher": "$msCompile"
         },
+
+        // Below tasks are no longer being supported
+        // Succeeded by Lean CLI
         {
             "label": "run-docker",
             "type": "shell",
