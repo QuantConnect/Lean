@@ -31,8 +31,8 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 {
     public class SECDataDownloader
     {
-        // SEC imposes rate limits of 10 requests per second. Set to 10 req / 1.1 sec just to be safe.
-        private readonly RateGate _indexGate = new RateGate(10, TimeSpan.FromSeconds(1.1));
+        // SEC imposes rate limits of 10 requests per second. Set to 5 req / 1.1 sec just to be safe.
+        private readonly RateGate _indexGate = new RateGate(5, TimeSpan.FromSeconds(1.1));
         private readonly HashSet<string> _downloadedIndexFiles = new HashSet<string>();
         private readonly Dictionary<string, SECReportIndexFile> _archiveIndexFileCache = new Dictionary<string, SECReportIndexFile>();
 
@@ -414,6 +414,8 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 {
                     using (var client = new HttpClient())
                     {
+                        _indexGate.WaitToProceed();
+                        
                         Log.Trace($"SECDataDownloader.GetFileSize(): Downloading archive index file for file size verification");
                         var contents = client.GetStringAsync($"{BaseUrl}/Feed/{year}/{quarter}/index.json").SynchronouslyAwaitTaskResult();
 
