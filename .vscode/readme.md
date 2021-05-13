@@ -28,7 +28,7 @@ To use Lean CLI follow the instructions for installation and tutorial for usage 
     - Get the Extension [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) for Python Debugging
 
 4. Get Lean into VS Code
-    - Download the repo or clone it using: _git clone[https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)_
+    - Download the repo or clone it using: _git clone [https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)_
     - Open the folder using VS Code
 
 Your environment is prepared and ready to run lean
@@ -103,11 +103,9 @@ In setting this we are telling Lean to expect a debugger connection using ‘Pyt
 
 <h3>Using VS Code Launch Options to Connect</h3>
 
-Now that Lean is configured for the python debugger we can make use of the programmed launch options to connect.
+Now that Lean is configured for the python debugger we can make use of the programmed launch options to connect to Lean during runtime.
 
-To debug we must run the program locally using the programmed task found under Terminal > Run Task > “Run Application”. Once Lean is started you should see the messages in Figure 2.
-
-If the message is displayed, use the launch option “Attach to Python”. Then press run, VS Code will now enter and debug any breakpoints you have set in your python algorithm.
+Start Lean using the "Launch" option covered above. Once Lean starts you should see the messages in figure 2 If the message is displayed, use the launch option “Attach to Python”. Then press run, VS Code will now enter and debug any breakpoints you have set in your python algorithm.
 
 <br />
 

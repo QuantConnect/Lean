@@ -26,7 +26,7 @@ To use Lean CLI follow the instructions for installation and tutorial for usage 
 3. Get [Visual Studio](https://code.visualstudio.com/download)
 
 4. Get Lean into VS
-    - Download the repo or clone it using: _git clone[https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)_
+    - Download the repo or clone it using: _git clone [https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)_
     - Open the project file with VS (QuantConnect.Lean.sln)
 
 Your environment is prepared and ready to run lean
@@ -66,44 +66,6 @@ Your configuration file should look something like this for the following langua
 <h2>Launching Lean</h2>
 
 Now that lean is configured we can launch. Use Visual Studio's run option, Make sure QuantConnect.Lean.Launcher is selected as the launch project. Any breakpoints in Lean C# will be triggered.
-
-<br />
-
-<h2>Debugging Python</h2>
-
-Python algorithms require a little extra work in order to be able to debug them. Follow the steps below to get Python debugging working.
-
-<br />
-
-<h3>Modifying the Configuration</h3>
-
-First in order to debug a Python algorithm in VS Code we must make the following change to our configuration (Launcher\config.json) under the comment debugging configuration:
-
-    "debugging": true,
-    "debugging-method": "PTVSD",
-
-In setting this we are telling Lean to expect a debugger connection using ‘Python Tools for Visual Studio Debugger’. Once this is set Lean will stop upon initialization and await a connection to the debugger via port 5678.
-
-<br />
-
-<h3>Using VS Code Launch Options to Connect</h3>
-
-Now that Lean is configured for the python debugger we can make use of the programmed launch options to connect.
-
-To debug we must run the program locally using the programmed task found under Terminal > Run Task > “Run Application”. Once Lean is started you should see the messages in Figure 2.
-
-If the message is displayed, use the launch option “Attach to Python”. Then press run, VS Code will now enter and debug any breakpoints you have set in your python algorithm.
-
-<br />
-
-_Figure 2: Python Debugger Messages_
-
-```
-20200715 17:12:06.546 Trace:: PythonInitializer.Initialize(): ended
-20200715 17:12:06.547 Trace:: DebuggerHelper.Initialize(): python initialization done
-20200715 17:12:06.547 Trace:: DebuggerHelper.Initialize(): starting...
-20200715 17:12:06.548 Trace:: DebuggerHelper.Initialize(): waiting for debugger to attach at localhost:5678...
-```
 
 <br />
 
