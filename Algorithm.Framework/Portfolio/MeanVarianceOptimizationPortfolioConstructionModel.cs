@@ -22,6 +22,7 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -233,6 +234,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
         {
             var targets = new Dictionary<Insight, double>();
+
+            // If we have no insights just return an empty target list
+            if (activeInsights.IsNullOrEmpty())
+            {
+                return targets;
+            }
 
             var symbols = activeInsights.Select(x => x.Symbol).ToList();
 
