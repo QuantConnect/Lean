@@ -67,7 +67,7 @@ Your configuration file should look something like this for the following langua
 
 <h2>Building</h2>
 
-Next we must build the project. 
+Before running Lean, we must build the project. Currently the VS Code task will automatically build before launching. But find more information below about how to trigger building manually.
 
 In VS Code run build task (Ctrl+Shift+B or "Terminal" dropdown); there are a few options:
 
