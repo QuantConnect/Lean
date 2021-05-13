@@ -19,7 +19,7 @@ RUN add-apt-repository ppa:apt-fast/stable && apt-get update && apt-get -y insta
 RUN apt-fast install -y git bzip2 clang cmake curl unzip wget python3-pip python-opengl zlib1g-dev \
     xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
     r-base pandoc libcurl4-openssl-dev \
-    openjdk-8-jdk openjdk-8-jre bbe
+    bbe
 
 # Install IB Gateway: Installs to ~/Jts
 # We update the install script so it doesn't use the bundled JVM
