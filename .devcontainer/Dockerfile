@@ -16,9 +16,12 @@ RUN apt-get install -y dos2unix
 
 # ------ Research Specific Setup ------
 # Install clr-loader for running Py research in VS code
-RUN pip install clr-loader
+RUN pip install clr-loader==0.1.6
 
-#Install ICSharp (Jupyter C# Kernel)
-RUN wget https://cdn.quantconnect.com/icsharp/ICSharp.Kernel.20180820.zip && \
-    unzip ICSharp.Kernel.20180820.zip -d / && rm -irf ICSharp.Kernel.20180820.zip && cd /icsharp && \
-    jupyter kernelspec install kernel-spec --name=csharp
+ENV LD_LIBRARY_PATH=/lib/
+RUN ln -s /lib/$(uname -m)-linux-gnu/libc.so.6 /lib/$(uname -m)-linux-gnu/libc.so
+
+# Install .NET Interactive to support C# in Jupyter notebooks
+ENV PATH="${PATH}:/root/.dotnet/tools"
+RUN dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
+    dotnet interactive jupyter install
