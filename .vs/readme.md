@@ -1,10 +1,10 @@
 <h1>Local Development with Visual Studio</h1>
 
-This document contains information regarding ways to use Visual Studio Code to work with the Lean engine, this includes a couple options that make lean easy to develop on any machine:
+This document contains information regarding ways to use Visual Studio to work with the Lean engine, this includes a couple options that make lean easy to develop on any machine:
 
 - Using Lean CLI -> A great tool for working with your algorithms locally, while still being able to deploy to the cloud and have access to Lean data. It is also able to run algorithms locally through our official docker images **Recommended for algorithm development.
 
-- Locally installing all dependencies to run Lean on your OS.
+- Locally installing all dependencies to run Lean with Visual Studio on your OS.
 
 <br />
 
@@ -12,7 +12,7 @@ This document contains information regarding ways to use Visual Studio Code to w
 
 <h2>Option 1: Lean CLI</h2>
 
-To use Lean CLI follow the instructions for installation and tutorial for usage in our [documentation](https://www.quantconnect.com/docs/v2/lean-cli/getting-started/lean-cli)
+To use Lean CLI follow the instructions for installation and tutorial for usage in our [documentation](https://www.quantconnect.com/docs/v2/lean-cli/getting-started/lean-cli).
 
 <br />
 
@@ -23,7 +23,7 @@ To use Lean CLI follow the instructions for installation and tutorial for usage 
 2. (Optional) Get [Python 3.6.8](https://www.python.org/downloads/release/python-368/) for running Python algorithms
     - Follow Python instructions [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#installing-python-36) for your platform
 
-3. Get [Visual Studio](https://code.visualstudio.com/download)
+3. Get [Visual Studio](https://visualstudio.microsoft.com/vs/)
 
 4. Get Lean into VS
     - Download the repo or clone it using: _git clone [https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)_

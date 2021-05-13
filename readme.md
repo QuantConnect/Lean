@@ -60,7 +60,7 @@ Reference QuantConnects documentation on Lean CLI [here](https://www.quantconnec
 
 This section will cover how to install lean locally for you to use in your own environment.
 
-Refer to the following readme files for a detailed guides regarding using your local IDE with Lean:
+Refer to the following readme files for a detailed guide regarding using your local IDE with Lean:
 * [VS Code](.vscode/readme.md)
 * [VS](.vs/readme.md)
   

@@ -4,7 +4,7 @@ This document contains information regarding ways to use Visual Studio Code to w
 
 - Using Lean CLI -> A great tool for working with your algorithms locally, while still being able to deploy to the cloud and have access to Lean data. It is also able to run algorithms locally through our official docker images **Recommended for algorithm development.
 
-- Locally installing all dependencies to run Lean on your OS.
+- Locally installing all dependencies to run Lean with Visual Studio Code on your OS.
 
 <br />
 
