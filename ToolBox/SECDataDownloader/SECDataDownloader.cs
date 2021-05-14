@@ -24,13 +24,15 @@ using QuantConnect.Data.Custom.SEC;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using System.Globalization;
+using System.Net.Http;
+using System.Threading;
 
 namespace QuantConnect.ToolBox.SECDataDownloader
 {
     public class SECDataDownloader
     {
-        // SEC imposes rate limits of 10 requests per second. Set to 10 req / 1.1 sec just to be safe.
-        private readonly RateGate _indexGate = new RateGate(10, TimeSpan.FromSeconds(1.1));
+        // SEC imposes rate limits of 10 requests per second. Set to 5 req / 1.1 sec just to be safe.
+        private readonly RateGate _indexGate = new RateGate(5, TimeSpan.FromSeconds(1.1));
         private readonly HashSet<string> _downloadedIndexFiles = new HashSet<string>();
         private readonly Dictionary<string, SECReportIndexFile> _archiveIndexFileCache = new Dictionary<string, SECReportIndexFile>();
 
@@ -113,7 +115,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 {
                     try
                     {
-                        using (var client = new WebClient())
+                        using (var client = new HttpClient())
                         {
                             if (File.Exists(rawFile))
                             {
@@ -121,8 +123,13 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                                 break;
                             }
 
+                            _indexGate.WaitToProceed();
+                            
                             Log.Trace($"SECDataDownloader.Download(): Downloading temp filing archive to: {tmpFile}");
-                            client.DownloadFile($"{BaseUrl}/Feed/{currentDate.Year}/{quarter}/{currentDate:yyyyMMdd}.nc.tar.gz", tmpFile);
+                            var tempFilingArchiveBytes = client.GetByteArrayAsync($"{BaseUrl}/Feed/{currentDate.Year}/{quarter}/{currentDate:yyyyMMdd}.nc.tar.gz")
+                                .SynchronouslyAwaitTaskResult();
+                            
+                            File.WriteAllBytes(tmpFile, tempFilingArchiveBytes);
 
                             var tmpFileStat = new FileInfo(tmpFile);
                             var tmpFileSizeInKB = tmpFileStat.Length / 1024;
@@ -143,24 +150,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             break;
                         }
                     }
-                    catch (WebException e)
+                    catch (HttpRequestException err)
                     {
-                        var response = (HttpWebResponse)e.Response;
-
-                        if (response == null)
-                        {
-                            Log.Error("SECDataDownloader.Download(): Archive download response is null");
-                            continue;
-                        }
-
-                        // SEC website uses s3, which returns a 403 if the given file does not exist
-                        if (response?.StatusCode != null && response.StatusCode == HttpStatusCode.Forbidden)
-                        {
-                            Log.Error($"SECDataDownloader.Download(): Report files not found on date {currentDate:yyyy-MM-dd}");
-                            break;
-                        }
-
-                        Log.Error($"SECDataDownloader.Download(): Received status code {(int)response.StatusCode} - Retrying...");
+                        Log.Error($"SECDataDownloader.Download(): Received status code {(int)err.StatusCode} - Retrying...");
                     }
                     catch (Exception e)
                     {
@@ -174,10 +166,15 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 {
                     try
                     {
-                        using (var client = new WebClient())
+                        using (var client = new HttpClient())
                         {
+                            _indexGate.WaitToProceed();
+                            
                             Log.Trace($"SECDataDownloader.Download(): Downloading temp index manifest to: {dailyIndexTmp.FullName}");
-                            client.DownloadFile($"{BaseUrl}/daily-index/{currentDate.Year}/{quarter}/master.{currentDate:yyyyMMdd}.idx", dailyIndexTmp.FullName);
+                            var indexBytes = client.GetByteArrayAsync($"{BaseUrl}/daily-index/{currentDate.Year}/{quarter}/master.{currentDate:yyyyMMdd}.idx")
+                                .SynchronouslyAwaitTaskResult();
+
+                            File.WriteAllBytes(dailyIndexTmp.FullName, indexBytes);
 
                             if (dailyIndexRaw.Exists)
                             {
@@ -193,23 +190,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             break;
                         }
                     }
-                    catch (WebException e)
+                    catch (HttpRequestException err)
                     {
-                        var response = (HttpWebResponse)e.Response;
-
-                        if (response == null)
-                        {
-                            Log.Error("SECDataDownloader.Download(): Daily index file response is null");
-                        }
-
-                        // SEC website uses s3, which returns a 403 if the given file does not exist
-                        if (response?.StatusCode != null && response.StatusCode == HttpStatusCode.Forbidden)
-                        {
-                            Log.Error($"SECDataDownloader.Download(): Index files not found on date {currentDate:yyyy-MM-dd}");
-                            break;
-                        }
-
-                        Log.Error($"SECDataDownloader.Download(): Received status code {(int)response.StatusCode} - Retrying...");
+                        Log.Error($"SECDataDownloader.Download(): Got error code {(int)err.StatusCode} attempting to download index manifest for date {currentDate:yyyy-MM-dd} - retrying");
                     }
                     catch (Exception e)
                     {
@@ -227,6 +210,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 var downloadTasks = new List<Task>();
                 var previousCik = string.Empty;
                 var i = 0;
+                const int indexDownloadBatchLimit = 20;
 
                 // Parse CIK from text database and download the file asynchronously if we don't already have it
                 foreach (var line in dailyIndexes)
@@ -270,21 +254,17 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         continue;
                     }
 
-                    var indexPathTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json"));
-                    var indexPath = new FileInfo(Path.Combine(rawDestination, "indexes", $"{cik}.json"));
-
-                    // If we re-use the webclient per request, we get a concurrent I/O operations error
-                    using (var client = new WebClient())
-                    {
-                        // Makes sure we don't overrun SEC rate limits accidentally
-                        _indexGate.WaitToProceed();
-
-                        downloadTasks.Add(client.DownloadFileTaskAsync($"{BaseUrl}/data/{cik}/index.json", indexPathTmp.FullName)
-                            .ContinueWith(_ => OnIndexFileDownloaded(indexPathTmp, indexPath)));
-                    }
-
+                    downloadTasks.Add(DownloadIndexFile(cik, rawDestination));
                     _downloadedIndexFiles.Add(cik);
                     previousCik = cik;
+
+                    if (downloadTasks.Count == indexDownloadBatchLimit)
+                    {
+                        Log.Trace($"SECDataDownloader.Download(): Waiting for batch to finish downloading before continuing");
+                        Task.WaitAll(downloadTasks.ToArray());
+                        
+                        downloadTasks.Clear();
+                    }
                 }
 
                 Task.WaitAll(downloadTasks.ToArray());
@@ -302,30 +282,102 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             var cikLookupPath = Path.Combine(rawDestination, "cik-lookup-data.txt");
             var cikLookupTempPath = $"{cikLookupPath}.tmp";
 
-            using (var client = new WebClient())
+            for (var i = 0; i < MaxRetries; i++)
             {
-                if (!File.Exists(cikTickerListPath))
+                try 
                 {
-                    Log.Trace("SECDataDownloader.Download(): Downloading ticker-CIK mappings list");
-                    client.DownloadFile("https://www.sec.gov/include/ticker.txt", cikTickerListTempPath);
-                    File.Move(cikTickerListTempPath, cikTickerListPath);
-                    File.Delete(cikTickerListTempPath);
+                    using (var client = new HttpClient())
+                    {
+                        if (!File.Exists(cikTickerListPath))
+                        {
+                            _indexGate.WaitToProceed();
+
+                            Log.Trace("SECDataDownloader.Download(): Downloading ticker-CIK mappings list");
+                            var tickerCikMappingsBytes = client.GetByteArrayAsync("https://www.sec.gov/include/ticker.txt")
+                                .SynchronouslyAwaitTaskResult();
+                            
+                            File.WriteAllBytes(cikTickerListTempPath, tickerCikMappingsBytes);
+                            File.Move(cikTickerListTempPath, cikTickerListPath);
+                            File.Delete(cikTickerListTempPath);
+                        }
+
+                        if (!File.Exists(cikRankAndFileTickerListPath))
+                        {
+                            _indexGate.WaitToProceed();
+
+                            Log.Trace("SECDataDownloader.Download(): Downloading ticker-CIK mappings list from rankandfile");
+                            var tickerCikMappingsBytes = client.GetByteArrayAsync("http://rankandfiled.com/static/export/cik_ticker.csv")
+                                .SynchronouslyAwaitTaskResult();
+                            
+                            File.WriteAllBytes(cikRankAndFileTickerListTempPath, tickerCikMappingsBytes);
+                            File.Move(cikRankAndFileTickerListTempPath, cikRankAndFileTickerListPath);
+                            File.Delete(cikRankAndFileTickerListTempPath);
+                        }
+
+                        if (!File.Exists(cikLookupPath))
+                        {
+                            _indexGate.WaitToProceed();
+
+                            Log.Trace("SECDataDownloader.Download(): Downloading CIK lookup data");
+                            var cikLookupBytes = client.GetByteArrayAsync($"{BaseUrl}/cik-lookup-data.txt")
+                                .SynchronouslyAwaitTaskResult();
+                            
+                            File.WriteAllBytes(cikLookupTempPath, cikLookupBytes);
+                            File.Move(cikLookupTempPath, cikLookupPath);
+                            File.Delete(cikLookupTempPath);
+                        }
+                    }
                 }
-                if (!File.Exists(cikRankAndFileTickerListPath))
+                catch (HttpRequestException err)
                 {
-                    Log.Trace("SECDataDownloader.Download(): Downloading ticker-CIK mappings list from rankandfile");
-                    client.DownloadFile("http://rankandfiled.com/static/export/cik_ticker.csv", cikRankAndFileTickerListTempPath);
-                    File.Move(cikRankAndFileTickerListTempPath, cikRankAndFileTickerListPath);
-                    File.Delete(cikRankAndFileTickerListTempPath);
-                }
-                if (!File.Exists(cikLookupPath))
-                {
-                    Log.Trace("SECDataDownloader.Download(): Downloading CIK lookup data");
-                    client.DownloadFile($"{BaseUrl}/cik-lookup-data.txt", cikLookupTempPath);
-                    File.Move(cikLookupTempPath, cikLookupPath);
-                    File.Delete(cikLookupTempPath);
+                    if (err.StatusCode == HttpStatusCode.Forbidden || err.StatusCode == HttpStatusCode.TooManyRequests)
+                    {
+                        Log.Trace($"SECDataDownloader.Download(): Rate limited downloading CIK-ticker mappings - retrying in 10s");
+                        Thread.Sleep(10000);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Attempt to download SEC index files for a given CIK, with added
+        /// fault tolerance
+        /// </summary>
+        /// <param name="cik">CIK of the equity</param>
+        /// <param name="rawDestination">Destination where we will write to</param>
+        /// <exception cref="Exception">We were unable to download the index file</exception>
+        private async Task DownloadIndexFile(string cik, string rawDestination)
+        {
+            for (var i = 0; i < MaxRetries; i++)
+            {
+                try
+                {
+                    using (var client = new HttpClient())
+                    {
+                        _indexGate.WaitToProceed();
+                        
+                        var indexFileBytes = await client.GetByteArrayAsync($"{BaseUrl}/data/{cik}/index.json");
+                        var indexPathTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json"));
+                        var indexPath = new FileInfo(Path.Combine(rawDestination, "indexes", $"{cik}.json"));
+
+                        await File.WriteAllBytesAsync(indexPathTmp.FullName, indexFileBytes);
+                        OnIndexFileDownloaded(indexPathTmp, indexPath);
+
+                        return;
+                    }
+                }
+                catch (HttpRequestException err)
+                {
+                    if (err.StatusCode == HttpStatusCode.Forbidden || err.StatusCode == HttpStatusCode.TooManyRequests)
+                    {
+                        Log.Trace($"SECDataDownloader.DownloadIndexFile(): Rate limited downloading index file for {cik} ({(int)err.StatusCode}) - retrying in 10s");
+                        // We've been rate limited, sleep for 10 seconds then try again
+                        await Task.Delay(TimeSpan.FromSeconds(10));
+                    }
+                }
+            }
+
+            throw new Exception($"Failed to download index file \"{cik}.json\" after {MaxRetries} attempts");
         }
 
         /// <summary>
@@ -337,13 +389,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         {
             try
             {
-                if (destination.Exists)
-                {
-                    Log.Trace($"SECDataDownloader.OnIndexFileDownloaded(): Deleting index file: {destination.FullName}");
-                    destination.Delete();
-                }
-
-                source.MoveTo(destination.FullName);
+                source.MoveTo(destination.FullName, true);
                 Log.Trace($"SECDataDownloader.OnIndexFileDownloaded(): Successfully downloaded {destination.FullName}");
             }
             catch (Exception e)
@@ -366,10 +412,12 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 // its size and make sure it's within +-1% of the original file on the server
                 try
                 {
-                    using (var client = new WebClient())
+                    using (var client = new HttpClient())
                     {
+                        _indexGate.WaitToProceed();
+                        
                         Log.Trace($"SECDataDownloader.GetFileSize(): Downloading archive index file for file size verification");
-                        var contents = client.DownloadString($"{BaseUrl}/Feed/{year}/{quarter}/index.json");
+                        var contents = client.GetStringAsync($"{BaseUrl}/Feed/{year}/{quarter}/index.json").SynchronouslyAwaitTaskResult();
 
                         var indexFile = JsonConvert.DeserializeObject<SECReportIndexFile>(contents);
                         Log.Trace($"SECDataDownloader.GetFileSize(): Successfully downloaded {BaseUrl}/Feed/{year}/{quarter}/index.json");
@@ -377,17 +425,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         return indexFile;
                     }
                 }
-                catch (WebException e)
+                catch (HttpRequestException err)
                 {
-                    var response = (HttpWebResponse)e.Response;
-
-                    if (response == null)
-                    {
-                        Log.Error("SECDataDownloader.GetFileSize(): Archive download response is null");
-                        continue;
-                    }
-
-                    Log.Error($"SECDataDownloader.GetFileSize(): Received status code {(int)response.StatusCode} - Retrying...");
+                    Log.Error($"SECDataDownloader.GetFileSize(): Received status code {(int)err.StatusCode} - Retrying...");
                 }
                 catch (Exception e)
                 {

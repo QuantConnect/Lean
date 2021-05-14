@@ -34,7 +34,8 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
     public abstract class EstimizeDataDownloader : IDataDownloader
     {
         private readonly string _clientKey;
-        private readonly int _maxRetries = 5;
+        private readonly int _maxRetries = Config.GetInt("estimize-http-retries", 5);
+        private readonly int _sleepMs = Config.GetInt("estimize-http-fail-sleep-ms", 1000);
         private static readonly List<char> _defunctDelimiters = new List<char>
         {
             '-',
@@ -53,7 +54,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
         protected EstimizeDataDownloader()
         {
-            _clientKey = Config.Get("estimize-economics-auth-token");
+            _clientKey = Config.Get("estimize-api-key");
 
             // Represents rate limits of 10 requests per 1.1 second
             IndexGate = new RateGate(10, TimeSpan.FromSeconds(1.1));
@@ -125,7 +126,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                 catch (Exception e)
                 {
                     Log.Error(e, $"EstimizeDataDownloader.HttpRequester(): Error at HttpRequester. (retry {retries}/{_maxRetries})");
-                    Thread.Sleep(1000);
+                    await Task.Delay(_sleepMs);
                 }
             }
 
@@ -141,14 +142,14 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
         protected void SaveContentToFile(string destinationFolder, string ticker, IEnumerable<string> contents)
         {
             ticker = ticker.ToLowerInvariant();
-            var finalPath = Path.Combine(destinationFolder, $"{ticker}.csv");
-            var finalFileExists = File.Exists(finalPath);
+            var finalPath = new FileInfo(Path.Combine(destinationFolder, $"{ticker}.csv"));
+            finalPath.Directory.Create();
 
             var lines = new HashSet<string>(contents);
-            if (finalFileExists)
+            if (finalPath.Exists)
             {
                 Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Adding to existing file: {finalPath}");
-                foreach (var line in File.ReadAllLines(finalPath))
+                foreach (var line in File.ReadAllLines(finalPath.FullName))
                 {
                     lines.Add(line);
                 }
@@ -161,7 +162,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
             var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
                 .ToList();
 
-            File.WriteAllLines(finalPath, finalLines);
+            File.WriteAllLines(finalPath.FullName, finalLines);
         }
 
         /// <summary>

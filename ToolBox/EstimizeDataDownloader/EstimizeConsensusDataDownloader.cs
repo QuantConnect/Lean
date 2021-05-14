@@ -34,24 +34,43 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 {
     public class EstimizeConsensusDataDownloader : EstimizeDataDownloader
     {
-        private readonly string[] _releaseFiles;
+        private readonly List<FileInfo> _releaseFiles;
         private readonly string _destinationFolder;
-        private readonly MapFileResolver _mapFileResolver;
+        private readonly DirectoryInfo _processedDataDirectory;
+        private readonly HashSet<string> _processTickers;
 
         /// <summary>
         /// Creates a new instance of <see cref="EstimizeEstimateDataDownloader"/>
         /// </summary>
         /// <param name="destinationFolder">The folder where the data will be saved</param>
-        public EstimizeConsensusDataDownloader(string destinationFolder)
+        /// <param name="processedDataDirectory">Processed data directory, the root path of where processed data lives</param>
+        public EstimizeConsensusDataDownloader(string destinationFolder, DirectoryInfo processedDataDirectory = null)
         {
-            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
-                .Get(Market.USA);
-
             var path = Path.Combine(destinationFolder, "release");
-            Directory.CreateDirectory(path);
-            _releaseFiles = Directory.GetFiles(path);
+            var destinationReleaseDirectory = Directory.CreateDirectory(path);
+
+            _processTickers = Config.Get("process-tickers", null)?.Split(",").ToHashSet();
+            
+            _releaseFiles = destinationReleaseDirectory.EnumerateFiles("*", SearchOption.AllDirectories)
+                .ToList();
+
+            if (processedDataDirectory != null)
+            {
+                var processedReleaseDirectory = Directory.CreateDirectory(
+                    Path.Combine(
+                        processedDataDirectory.FullName,
+                        "alternative", 
+                        "estimize", 
+                        "release"));
+                
+                _releaseFiles = _releaseFiles.Concat(
+                        processedReleaseDirectory.GetFiles("*", SearchOption.AllDirectories))
+                    .ToList();
+            }
 
             _destinationFolder = Path.Combine(destinationFolder, "consensus");
+            _processedDataDirectory = processedDataDirectory;
+            
             Directory.CreateDirectory(_destinationFolder);
         }
 
@@ -63,34 +82,71 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
         {
             try
             {
-                if (_releaseFiles.Length == 0)
+                if (_releaseFiles.Count == 0)
                 {
                     Log.Trace($"EstimizeConsensusDataDownloader.Run(): No files found. Please run EstimizeEstimateDataDownloader first");
                     return false;
                 }
 
+                var processedConsensusDirectory = _processedDataDirectory == null 
+                    ? null
+                    : new DirectoryInfo(
+                        Path.Combine(
+                            _processedDataDirectory.FullName,
+                            "alternative",
+                            "estimize",
+                            "consensus"));
+
                 var utcNow = DateTime.UtcNow;
 
-                foreach (var releaseFile in _releaseFiles)
+                foreach (var releaseFileInfoGroup in _releaseFiles.GroupBy(x => x.Name))
                 {
-                    Log.Trace($"EstimizeConsensusDataDownloader.Run(): Processing release file: {releaseFile}");
                     var stopwatch = Stopwatch.StartNew();
                     var tasks = new List<Task<List<EstimizeConsensus>>>();
+                    var ticker = Path.GetFileNameWithoutExtension(releaseFileInfoGroup.Key);
+                    
+                    if (_processTickers != null && !_processTickers.Contains(ticker, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        Log.Trace($"EstimizeConsensusDataDownloader.Run(): Skipping {ticker} since it is not in the list of predefined tickers");
+                        continue;
+                    }
+                    
+                    var finalPath = Path.Combine(_destinationFolder, $"{ticker}.csv");
+                    
+                    var processedConsensusFile = processedConsensusDirectory == null
+                        ? null
+                        : Path.Combine(processedConsensusDirectory.FullName, $"{ticker}.csv");
 
+                    var existingConsensus = (File.Exists(finalPath) ? File.ReadAllLines(finalPath) : new string[] { })
+                        .Concat(processedConsensusFile != null && File.Exists(processedConsensusFile) 
+                            ? File.ReadAllLines(processedConsensusFile)
+                            : new string[] { })
+                        .Distinct()
+                        .Select(x => new EstimizeConsensus(x))
+                        .ToList();
+                    
                     // We don't need to apply any sort of mapfile transformations to the ticker
                     // since we've already applied mapping to the release file ticker
-                    var ticker = Path.GetFileNameWithoutExtension(releaseFile) ?? string.Empty;
-                    var releases = File.ReadAllLines(releaseFile).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => new EstimizeRelease(x));
-                    var finalPath = Path.Combine(_destinationFolder, $"{ticker}.csv");
-                    var existingConsensus = (File.Exists(finalPath) ? File.ReadAllLines(finalPath) : new string[] { })
-                        .Select(x => new EstimizeConsensus(x));
+                    var existingReleases = new List<EstimizeRelease>();
+                    foreach (var releaseFile in releaseFileInfoGroup)
+                    {
+                        var releasesParsed = File.ReadAllLines(releaseFile.FullName)
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .Select(x => new EstimizeRelease(x));
 
-                    foreach (var release in releases)
+                        existingReleases = existingReleases.Concat(releasesParsed).ToList();
+                    }
+
+                    existingReleases = existingReleases
+                        .DistinctBy(x => x.Id)
+                        .ToList();
+
+                    foreach (var release in existingReleases)
                     {
                         // We detect duplicates by checking for release IDs that match consensus IDs
                         // in consensus files and ensuring that no more updates will be published to
                         // consensus data by making sure the release has been made public
-                        if ((utcNow - release.ReleaseDate).TotalDays > 1 && existingConsensus.Where(x => x.Id == release.Id).Any())
+                        if ((utcNow - release.ReleaseDate).TotalDays > 1 && existingConsensus.Any(x => x.Id == release.Id))
                         {
                             Log.Trace($"EstimizeConsensusDataDownloader.Run(): Duplicate entry found for ID {release.Id} in {finalPath} on: {release.ReleaseDate}");
                             continue;

@@ -24,10 +24,10 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
     /// </summary>
     public static class CoinApiDataConverterProgram
     {
-        public static void CoinApiDataProgram(string date, string market, string rawDataFolder, string destinationFolder)
+        public static void CoinApiDataProgram(string date, string rawDataFolder, string destinationFolder)
         {
             var processingDate = DateTime.ParseExact(date, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-            var converter  = new CoinApiDataConverter(processingDate, market, rawDataFolder, destinationFolder);
+            var converter  = new CoinApiDataConverter(processingDate, rawDataFolder, destinationFolder);
             converter.Run();
         }
     }

@@ -38,6 +38,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
     {
         private readonly DirectoryInfo _dailyDataFolder;
         private readonly DirectoryInfo _destinationFolder;
+        private readonly DirectoryInfo _fineFundamentalFolder;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly string _market;
@@ -51,11 +52,12 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         {
             var dailyDataFolder = new DirectoryInfo(Path.Combine(Globals.DataFolder, SecurityType.Equity.SecurityTypeToLower(), Market.USA, Resolution.Daily.ResolutionToLower()));
             var destinationFolder = new DirectoryInfo(Path.Combine(Globals.DataFolder, SecurityType.Equity.SecurityTypeToLower(), Market.USA, "fundamental", "coarse"));
+            var fineFundamentalFolder = new DirectoryInfo(Path.Combine(dailyDataFolder.Parent.FullName, "fundamental", "fine"));
             var blackListedTickersFile = new FileInfo("blacklisted-tickers.txt");
             var reservedWordPrefix = Config.Get("reserved-words-prefix", "quantconnect-");
             var mapFileProvider = new LocalDiskMapFileProvider();
             var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var generator = new CoarseUniverseGeneratorProgram(dailyDataFolder, destinationFolder, Market.USA, blackListedTickersFile, reservedWordPrefix, mapFileProvider, factorFileProvider);
+            var generator = new CoarseUniverseGeneratorProgram(dailyDataFolder, destinationFolder, fineFundamentalFolder, Market.USA, blackListedTickersFile, reservedWordPrefix, mapFileProvider, factorFileProvider);
             return generator.Run();
         }
 
@@ -70,8 +72,16 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <param name="mapFileProvider">The map file provider.</param>
         /// <param name="factorFileProvider">The factor file provider.</param>
         /// <param name="debugEnabled">if set to <c>true</c> [debug enabled].</param>
-        public CoarseUniverseGeneratorProgram(DirectoryInfo dailyDataFolder, DirectoryInfo destinationFolder, string market, FileInfo blackListedTickersFile, string reservedWordsPrefix,
-            IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, bool debugEnabled = false)
+        public CoarseUniverseGeneratorProgram(
+            DirectoryInfo dailyDataFolder,
+            DirectoryInfo destinationFolder,
+            DirectoryInfo fineFundamentalFolder,
+            string market,
+            FileInfo blackListedTickersFile,
+            string reservedWordsPrefix,
+            IMapFileProvider mapFileProvider,
+            IFactorFileProvider factorFileProvider,
+            bool debugEnabled = false)
         {
             _blackListedTickersFile = blackListedTickersFile;
             _market = market;
@@ -79,6 +89,8 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             _mapFileProvider = mapFileProvider;
             _destinationFolder = destinationFolder;
             _dailyDataFolder = dailyDataFolder;
+            _fineFundamentalFolder = fineFundamentalFolder;
+
             Log.DebuggingEnabled = debugEnabled;
         }
 
@@ -105,11 +117,9 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 blackListedTickers = File.ReadAllLines(_blackListedTickersFile.FullName).ToHashSet();
             }
 
-            var marketFolder = _dailyDataFolder.Parent;
-            var fineFundamentalFolder = new DirectoryInfo(Path.Combine(marketFolder.FullName, "fundamental", "fine"));
-            if (!fineFundamentalFolder.Exists)
+            if (!_fineFundamentalFolder.Exists)
             {
-                Log.Error($"CoarseUniverseGenerator.Run(): FAIL, Fine Fundamental folder not found at {fineFundamentalFolder}! ");
+                Log.Error($"CoarseUniverseGenerator.Run(): FAIL, Fine Fundamental folder not found at {_fineFundamentalFolder}! ");
                 return false;
             }
 
@@ -125,7 +135,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 {
                     var symbol = new Symbol(sidContext.SID, sidContext.LastTicker);
                     var symbolCount = Interlocked.Increment(ref symbolsProcessed);
-                    Log.Debug($"CoarseUniverseGeneratorProgram.Run(): Processing {symbol}");
+                    Log.Debug($"CoarseUniverseGeneratorProgram.Run(): Processing {symbol} with tickers: '{string.Join(",", sidContext.Tickers)}'");
                     var factorFile = _factorFileProvider.Get(symbol);
 
                     // Populate dailyPricesByTicker with all daily data by ticker for all tickers of this security.
@@ -134,9 +144,15 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         var dailyFile = new FileInfo(Path.Combine(_dailyDataFolder.FullName, $"{ticker}.zip"));
                         if (!dailyFile.Exists)
                         {
-                            Log.Error($"CoarseUniverseGeneratorProgram.Run(): {dailyFile} not found!");
-                            Interlocked.Increment(ref dailyFilesNotFound);
-                            continue;
+                            Log.Debug($"CoarseUniverseGeneratorProgram.Run(): {dailyFile.FullName} not found, looking for daily data in data folder");
+
+                            dailyFile = new FileInfo(Path.Combine(Globals.DataFolder, "equity", "usa", "daily", $"{ticker}.zip"));
+                            if (!dailyFile.Exists)
+                            {
+                                Log.Error($"CoarseUniverseGeneratorProgram.Run(): {dailyFile} not found!");
+                                Interlocked.Increment(ref dailyFilesNotFound);
+                                continue;
+                            }
                         }
 
                         if (!dailyPricesByTicker.ContainsKey(ticker))
@@ -159,7 +175,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             continue;
                         }
 
-                        var tickerFineFundamentalFolder = Path.Combine(fineFundamentalFolder.FullName, ticker);
+                        var tickerFineFundamentalFolder = Path.Combine(_fineFundamentalFolder.FullName, ticker);
                         var fineAvailableDates = Enumerable.Empty<DateTime>();
                         if (Directory.Exists(tickerFineFundamentalFolder))
                         {
@@ -167,11 +183,15 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                                 .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
                                 .ToList();
                         }
+                        else
+                        {
+                            Log.Debug($"CoarseUniverseGeneratorProgram.Run(): fine folder was not found at '{tickerFineFundamentalFolder}'");
+                        }
 
                         // Get daily data only for the time the ticker was
                         foreach (var tradeBar in tickerDailyData.Where(tb => tb.Time >= startDate && tb.Time <= endDate))
                         {
-                            var coarseRow = GenerateFactorFileRow(ticker, sidContext, factorFile, tradeBar, fineAvailableDates, fineFundamentalFolder);
+                            var coarseRow = GenerateFactorFileRow(ticker, sidContext, factorFile, tradeBar, fineAvailableDates, _fineFundamentalFolder);
 
                             outputCoarseContent.AddOrUpdate(tradeBar.Time,
                                 new List<string> { coarseRow },
@@ -281,6 +301,10 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             .ToList();
                         hasFundamentalDataForDate = previousTickerFineAvailableDates.Where(d => d >= firstDate).Any(d => date.AddMonths(-1) <= d && d <= date);
                     }
+                    else
+                    {
+                        Log.Debug($"CoarseUniverseGeneratorProgram.CheckFundamentalData(): fine folder was not found at '{previousTickerFineFundamentalFolder}'");
+                    }
                 }
             }
 
@@ -326,7 +350,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <returns></returns>
         private IEnumerable<SecurityIdentifierContext> PopulateSidContex(MapFileResolver mapFileResolver, HashSet<string> exclusions)
         {
-            Log.Trace($"CoarseUniverseGeneratorProgram.PopulateSidContex(): Generating SID context from QuantQuote's map files.");
+            Log.Trace("CoarseUniverseGeneratorProgram.PopulateSidContex(): Generating SID context from QuantQuote's map files.");
             foreach (var mapFile in mapFileResolver)
             {
                 if (exclusions.Contains(mapFile.Last().MappedSymbol))
