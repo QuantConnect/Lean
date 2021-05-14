@@ -272,22 +272,35 @@ namespace QuantConnect.Securities
                     };
 
                     // we continue with this call for underlying
-                    return underlying.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
-                        parameters.ForUnderlying(newOrder)
-                    );
+                    var parametersForUnderlying = parameters.ForUnderlying(newOrder);
+
+                    var freeMargin = underlying.BuyingPowerModel.GetBuyingPower(parametersForUnderlying.Portfolio, parametersForUnderlying.Security, parametersForUnderlying.Order.Direction);
+                    // we add the margin used by the option itself
+                    freeMargin += GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(option, -parameters.Order.Quantity));
+
+                    var initialMarginRequired = underlying.BuyingPowerModel.GetInitialMarginRequiredForOrder(
+                        new InitialMarginRequiredForOrderParameters(parameters.Portfolio.CashBook, underlying, newOrder));
+
+                    return HasSufficientBuyingPowerForOrder(parametersForUnderlying, ticket, freeMargin, initialMarginRequired);
                 }
 
                 return parameters.Sufficient();
             }
 
+            return HasSufficientBuyingPowerForOrder(parameters, ticket);
+        }
+
+        private HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(HasSufficientBuyingPowerForOrderParameters parameters, OrderTicket ticket,
+            decimal? freeMarginToUse = null, decimal? initialMarginRequired = null)
+        {
             // When order only reduces or closes a security position, capital is always sufficient
             if (parameters.Security.Holdings.Quantity * parameters.Order.Quantity < 0 && Math.Abs(parameters.Security.Holdings.Quantity) >= Math.Abs(parameters.Order.Quantity))
             {
                 return parameters.Sufficient();
             }
 
-            var freeMargin = GetMarginRemaining(parameters.Portfolio, parameters.Security, parameters.Order.Direction);
-            var initialMarginRequiredForOrder = GetInitialMarginRequiredForOrder(
+            var freeMargin = freeMarginToUse ?? GetMarginRemaining(parameters.Portfolio, parameters.Security, parameters.Order.Direction);
+            var initialMarginRequiredForOrder = initialMarginRequired ?? GetInitialMarginRequiredForOrder(
                 new InitialMarginRequiredForOrderParameters(
                     parameters.Portfolio.CashBook, parameters.Security, parameters.Order
             ));

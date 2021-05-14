@@ -14,13 +14,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -187,7 +185,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.784"},
             {"Treynor Ratio", "-18.756"},
             {"Total Fees", "$66.60"},
-            {"Estimated Strategy Capacity", "$5300000.00"},
+            {"Estimated Strategy Capacity", "$7500000.00"},
             {"Lowest Capacity Asset", "ES XFH59UK0MYO1"},
             {"Fitness Score", "0.156"},
             {"Kelly Criterion Estimate", "0"},

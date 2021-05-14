@@ -146,7 +146,7 @@ namespace QuantConnect.Securities.Future
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
             var security = parameters.Security;
-            if (security?.GetLastData() == null || security.Holdings.HoldingsCost == 0m)
+            if (security?.GetLastData() == null || parameters.Quantity == 0m)
             {
                 return 0m;
             }

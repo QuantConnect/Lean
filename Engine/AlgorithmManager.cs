@@ -1059,18 +1059,8 @@ namespace QuantConnect.Lean.Engine
                     continue;
                 }
 
-                var orderType = OrderType.Market;
-                var tag = "Liquidate from delisting";
-                if (security.Type.IsOption())
-                {
-                    // tx handler will determine auto exercise/assignment
-                    tag = "Option Expired";
-                    orderType = OrderType.OptionExercise;
-                }
-
                 // submit an order to liquidate on market close or exercise (for options)
-                var request = new SubmitOrderRequest(orderType, security.Type, security.Symbol,
-                    -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, tag);
+                var request = security.CreateDelistedSecurityOrderRequest(algorithm.UtcTime);
 
                 delistings.RemoveAt(i);
                 algorithm.Transactions.ProcessRequest(request);
