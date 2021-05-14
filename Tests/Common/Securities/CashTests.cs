@@ -683,6 +683,8 @@ namespace QuantConnect.Tests.Common.Securities
             new object[] { new BinanceBrokerageModel(), Currencies.USD, "BGBP", true, null }, // No BGBPUSD, does throw!
             new object[] { new BinanceBrokerageModel(), Currencies.EUR, "BGBP", true, null }, // No BGBPEUR, does throw!
             new object[] { new BinanceBrokerageModel(), Currencies.GBP, "BGBP", false, null }, // No BGBPGBP, but does not throw! Conversion 1-1
+
+            new object[] { new OandaBrokerageModel(), Currencies.EUR, "INR", true, null }, // No INREUR, does throw!
         };
     }
 }
