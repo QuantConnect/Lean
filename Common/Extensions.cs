@@ -2701,7 +2701,9 @@ namespace QuantConnect
                     }
 
                     tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
+                    tick.BidSize *= volumeFactor;
                     tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
+                    tick.AskSize *= volumeFactor;
 
                     if (tick.BidPrice == 0)
                     {

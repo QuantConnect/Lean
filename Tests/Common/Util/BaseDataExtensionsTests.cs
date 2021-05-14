@@ -87,6 +87,28 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void AdjustQuoteTick()
+        {
+            var tick = new Tick
+            {
+                Time = new DateTime(2020, 5, 21, 8, 9, 0),
+                Symbol = Symbols.SPY,
+                TickType = TickType.Quote,
+                AskPrice = 100,
+                BidPrice = 99,
+                AskSize = 100,
+                BidSize = 10
+            };
+
+            var adjustedTick = tick.Clone(tick.IsFillForward).Adjust(_factor);
+
+            Assert.AreEqual(tick.AskPrice * _factor, (adjustedTick as Tick).AskPrice);
+            Assert.AreEqual(tick.BidPrice * _factor, (adjustedTick as Tick).BidPrice);
+            Assert.AreEqual(tick.AskSize / _factor, (adjustedTick as Tick).AskSize);
+            Assert.AreEqual(tick.BidSize / _factor, (adjustedTick as Tick).BidSize);
+        }
+
+        [Test]
         public void AdjustQuoteBar()
         {
             var qb = new QuoteBar(
@@ -154,6 +176,28 @@ namespace QuantConnect.Tests.Common.Util
 
             Assert.AreEqual(tick.Value * _factor, (adjustedTick as Tick).Value);
             Assert.AreEqual(tick.Quantity / _factor, (adjustedTick as Tick).Quantity);
+        }
+
+        [Test]
+        public void AdjustQuoteTickUsingConfig()
+        {
+            var tick = new Tick
+            {
+                Time = new DateTime(2020, 5, 21, 8, 9, 0),
+                Symbol = Symbols.SPY,
+                TickType = TickType.Quote,
+                AskPrice = 100,
+                BidPrice = 99,
+                AskSize = 100,
+                BidSize = 10
+            };
+
+            var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_config);
+
+            Assert.AreEqual(tick.AskPrice * _factor, (adjustedTick as Tick).AskPrice);
+            Assert.AreEqual(tick.BidPrice * _factor, (adjustedTick as Tick).BidPrice);
+            Assert.AreEqual(tick.AskSize / _factor, (adjustedTick as Tick).AskSize);
+            Assert.AreEqual(tick.BidSize / _factor, (adjustedTick as Tick).BidSize);
         }
 
         [Test]
