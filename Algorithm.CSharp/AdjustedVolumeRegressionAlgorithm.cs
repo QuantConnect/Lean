@@ -36,11 +36,6 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly IEnumerator<decimal> _expectedAdjustedBidSize = new List<decimal> { 700.00m, 2800.00m, 700.00m, 700.00m, 700.00m, 1400.00m, 2800.00m,
             2100.00m, 7700.01m, 700.00m }.GetEnumerator();
 
-
-        private List<decimal> _testTradeVolume = new List<decimal>();
-        private List<decimal> _testQuoteAskSize = new List<decimal>();
-        private List<decimal> _testQuoteBidSize = new List<decimal>();
-
         public override void Initialize()
         {
             SetStartDate(2014, 6, 5);      //Set Start Date
@@ -80,12 +75,12 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_expectedAdjustedVolume.Current == probableAdjustedVolume)
                     {
-                        throw new Exception($"Volume was incorrect; but manually adjusted value is correct." + 
+                        throw new ArgumentException($"Volume was incorrect; but manually adjusted value is correct." + 
                             $" Adjustment by multiplying volume by {1 / dayFactor} is not occurring.");
                     }
                     else
                     {
-                        throw new Exception($"Volume was incorrect; even when adjusted manually by" + 
+                        throw new ArgumentException($"Volume was incorrect; even when adjusted manually by" + 
                             $" multiplying volume by {1 / dayFactor}. Data may have changed.");
                     }
                 }
@@ -106,12 +101,12 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_expectedAdjustedAskSize.Current == probableAdjustedAskSize)
                     {
-                        throw new Exception($"Ask size was incorrect; but manually adjusted value is correct." +
+                        throw new ArgumentException($"Ask size was incorrect; but manually adjusted value is correct." +
                             $" Adjustment by multiplying size by {1 / dayFactor} is not occurring.");
                     }
                     else
                     {
-                        throw new Exception($"Ask size was incorrect; even when adjusted manually by" +
+                        throw new ArgumentException($"Ask size was incorrect; even when adjusted manually by" +
                             $" multiplying size by {1 / dayFactor}. Data may have changed.");
                     }
                 }
@@ -125,12 +120,12 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_expectedAdjustedBidSize.Current == probableAdjustedBidSize)
                     {
-                        throw new Exception($"Bid size was incorrect; but manually adjusted value is correct." +
+                        throw new ArgumentException($"Bid size was incorrect; but manually adjusted value is correct." +
                             $" Adjustment by multiplying size by {1 / dayFactor} is not occurring.");
                     }
                     else
                     {
-                        throw new Exception($"Bid size was incorrect; even when adjusted manually by" +
+                        throw new ArgumentException($"Bid size was incorrect; even when adjusted manually by" +
                             $" multiplying size by {1 / dayFactor}. Data may have changed.");
                     }
                 }
