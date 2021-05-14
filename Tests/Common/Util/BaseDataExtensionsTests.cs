@@ -106,11 +106,13 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(qb.Bid.Close * _factor, (adjustedQb as QuoteBar).Bid.Close);
             Assert.AreEqual(qb.Bid.High * _factor, (adjustedQb as QuoteBar).Bid.High);
             Assert.AreEqual(qb.Bid.Low * _factor, (adjustedQb as QuoteBar).Bid.Low);
+            Assert.AreEqual(qb.LastBidSize / _factor, (adjustedQb as QuoteBar).LastBidSize);
             // ask
             Assert.AreEqual(qb.Ask.Open * _factor, (adjustedQb as QuoteBar).Ask.Open);
             Assert.AreEqual(qb.Ask.Close * _factor, (adjustedQb as QuoteBar).Ask.Close);
             Assert.AreEqual(qb.Ask.High * _factor, (adjustedQb as QuoteBar).Ask.High);
             Assert.AreEqual(qb.Ask.Low * _factor, (adjustedQb as QuoteBar).Ask.Low);
+            Assert.AreEqual(qb.LastAskSize / _factor, (adjustedQb as QuoteBar).LastAskSize);
         }
 
         [Test]
@@ -174,11 +176,13 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(qb.Bid.Close * _factor, (adjustedQb as QuoteBar).Bid.Close);
             Assert.AreEqual(qb.Bid.High * _factor, (adjustedQb as QuoteBar).Bid.High);
             Assert.AreEqual(qb.Bid.Low * _factor, (adjustedQb as QuoteBar).Bid.Low);
+            Assert.AreEqual(qb.LastBidSize / _factor, (adjustedQb as QuoteBar).LastBidSize);
             // ask
             Assert.AreEqual(qb.Ask.Open * _factor, (adjustedQb as QuoteBar).Ask.Open);
             Assert.AreEqual(qb.Ask.Close * _factor, (adjustedQb as QuoteBar).Ask.Close);
             Assert.AreEqual(qb.Ask.High * _factor, (adjustedQb as QuoteBar).Ask.High);
             Assert.AreEqual(qb.Ask.Low * _factor, (adjustedQb as QuoteBar).Ask.Low);
+            Assert.AreEqual(qb.LastAskSize / _factor, (adjustedQb as QuoteBar).LastAskSize);
         }
     }
 }
