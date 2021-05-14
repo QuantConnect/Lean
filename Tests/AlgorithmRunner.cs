@@ -159,17 +159,24 @@ namespace QuantConnect.Tests
                 Assert.Fail($"Algorithm state should be {expectedFinalStatus} and is: {algorithmManager?.State}");
             }
 
-            foreach (var stat in expectedStatistics)
+            foreach (var expectedStat in expectedStatistics)
             {
                 string result;
-                Assert.IsTrue(statistics.TryGetValue(stat.Key, out result), "Missing key: " + stat.Key);
+                Assert.IsTrue(statistics.TryGetValue(expectedStat.Key, out result), "Missing key: " + expectedStat.Key);
+
+                // normalize -0 & 0, they are the same thing
+                var expected = expectedStat.Value;
+                if (expected == "-0")
+                {
+                    expected = "0";
+                }
 
                 if (result == "-0")
                 {
-                    // normalize -0 & 0, they are the same thing
                     result = "0";
                 }
-                Assert.AreEqual(stat.Value, result, "Failed on " + stat.Key);
+
+                Assert.AreEqual(expected, result, "Failed on " + expectedStat.Key);
             }
 
             if (expectedAlphaStatistics != null)

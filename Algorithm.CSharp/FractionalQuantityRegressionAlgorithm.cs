@@ -119,6 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2651.01"},
             {"Estimated Strategy Capacity", "$30000.00"},
+            {"Lowest Capacity Asset", "BTCUSD XJ"},
             {"Fitness Score", "0.467"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
