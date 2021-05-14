@@ -41,7 +41,8 @@ namespace QuantConnect.Brokerages.Binance
         private readonly IAlgorithm _algorithm;
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Binance);
 
-        private readonly RateGate _webSocketRateLimiter = new RateGate(5, TimeSpan.FromSeconds(1));
+        // Binance allows 5 messages per second, but RateGate is sometimes off by a few milliseconds, so we use 5 messages per 1.1 seconds instead
+        private readonly RateGate _webSocketRateLimiter = new RateGate(5, TimeSpan.FromSeconds(1.1));
         private long _lastRequestId;
 
         private readonly Timer _keepAliveTimer;
