@@ -2735,6 +2735,8 @@ namespace QuantConnect
                             quoteBar.Bid.Close = factor(quoteBar.Bid.Close);
                         }
                         quoteBar.Value = quoteBar.Close;
+                        quoteBar.LastAskSize *= volumeFactor;
+                        quoteBar.LastBidSize *= volumeFactor;
                     }
                     break;
                 case MarketDataType.Auxiliary:
