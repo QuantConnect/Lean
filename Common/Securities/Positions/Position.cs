@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Securities.Positions
 {
     /// <summary>
@@ -49,14 +47,6 @@ namespace QuantConnect.Securities.Positions
             Symbol = symbol;
             Quantity = quantity;
             UnitQuantity = unitQuantity;
-
-#if DEBUG
-            var lots = Quantity / UnitQuantity;
-            if (lots != Math.Truncate(lots))
-            {
-                throw new InvalidOperationException($"Position.Quantity ({Quantity}) must be a whole number multiple of the UnitQuantity ({UnitQuantity}).");
-            }
-#endif
         }
 
         /// <summary>
