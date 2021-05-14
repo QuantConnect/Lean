@@ -54,7 +54,7 @@ namespace QuantConnect.Securities.Positions
             var lots = Quantity / UnitQuantity;
             if (lots != Math.Truncate(lots))
             {
-                throw new InvalidOperationException("Position.Quantity must be a whole number multiple of the UnitQuantity.");
+                throw new InvalidOperationException($"Position.Quantity ({Quantity}) must be a whole number multiple of the UnitQuantity ({UnitQuantity}).");
             }
 #endif
         }
