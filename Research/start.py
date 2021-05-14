@@ -30,6 +30,7 @@ set_runtime(clr_loader.get_coreclr(os.path.join(os.path.dirname(os.path.realpath
 from clr import AddReference
 AddReference("System")
 
+#Load assemblies
 file_absolute_path = os.path.abspath(__file__)
 for file in os.listdir(os.path.dirname(file_absolute_path)):
     if file.endswith(".dll"):
