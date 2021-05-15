@@ -108,14 +108,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "3"},
             {"Short Insight Count", "2"},
             {"Long/Short Ratio", "150.0%"},
-            {"Estimated Monthly Alpha Value", "$801935.3197"},
-            {"Total Accumulated Estimated Alpha Value", "$129200.6904"},
-            {"Mean Population Estimated Insight Value", "$43066.8968"},
+            {"Estimated Monthly Alpha Value", "$801935.3567"},
+            {"Total Accumulated Estimated Alpha Value", "$129200.6964"},
+            {"Mean Population Estimated Insight Value", "$43066.8988"},
             {"Mean Population Direction", "100%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "100%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "705559f3feb0c608ad901f59abab1b48"}
+            {"OrderListHash", "51e72dd08bfd7ecb516995c94dcf75e4"}
         };
     }
 }
