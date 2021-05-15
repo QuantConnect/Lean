@@ -2678,7 +2678,6 @@ namespace QuantConnect
                         tradeBar.Low = factor(tradeBar.Low);
                         tradeBar.Close = factor(tradeBar.Close);
                         tradeBar.Volume = Math.Round(tradeBar.Volume * volumeFactor);
-                        
                     }
                     break;
                 case MarketDataType.Tick:
