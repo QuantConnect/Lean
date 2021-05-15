@@ -2662,7 +2662,9 @@ namespace QuantConnect
         /// </summary>
         /// <param name="data">Data to Adjust</param>
         /// <param name="factor">Function to factor prices by</param>
-        /// <param name="volumeFactor">Factor to multiply volume by (Only important to Trade type data)</param>
+        /// <param name="volumeFactor">Factor to multiply volume/askSize/bidSize/quantity by</param>
+        /// <remarks>Volume values are rounded to the nearest integer, lot size purposefully not considered
+        /// as scaling only applies to equities</remarks>
         public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor, decimal volumeFactor)
         {
             switch (data.DataType)
@@ -2675,7 +2677,8 @@ namespace QuantConnect
                         tradeBar.High = factor(tradeBar.High);
                         tradeBar.Low = factor(tradeBar.Low);
                         tradeBar.Close = factor(tradeBar.Close);
-                        tradeBar.Volume *= volumeFactor;
+                        tradeBar.Volume = Math.Round(tradeBar.Volume * volumeFactor);
+                        
                     }
                     break;
                 case MarketDataType.Tick:
@@ -2696,14 +2699,14 @@ namespace QuantConnect
                     if (tick.TickType == TickType.Trade)
                     {
                         tick.Value = factor(tick.Value);
-                        tick.Quantity *= volumeFactor;
+                        tick.Quantity = Math.Round(tick.Quantity * volumeFactor);
                         break;
                     }
 
                     tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
-                    tick.BidSize *= volumeFactor;
+                    tick.BidSize = Math.Round(tick.BidSize * volumeFactor);
                     tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
-                    tick.AskSize *= volumeFactor;
+                    tick.AskSize = Math.Round(tick.AskSize * volumeFactor);
 
                     if (tick.BidPrice == 0)
                     {
@@ -2737,8 +2740,8 @@ namespace QuantConnect
                             quoteBar.Bid.Close = factor(quoteBar.Bid.Close);
                         }
                         quoteBar.Value = quoteBar.Close;
-                        quoteBar.LastAskSize *= volumeFactor;
-                        quoteBar.LastBidSize *= volumeFactor;
+                        quoteBar.LastAskSize = Math.Round(quoteBar.LastAskSize * volumeFactor);
+                        quoteBar.LastBidSize = Math.Round(quoteBar.LastBidSize * volumeFactor);
                     }
                     break;
                 case MarketDataType.Auxiliary:

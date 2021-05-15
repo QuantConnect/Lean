@@ -29,12 +29,12 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _aapl;
         private const string Ticker = "AAPL";
         private readonly FactorFile _factorFile = FactorFile.Read(Ticker, "USA");
-        private readonly IEnumerator<decimal> _expectedAdjustedVolume = new List<decimal> { 1541212.54m, 761012.76m, 920087.92m, 867076.87m, 542486.54m, 663131.66m, 
-            374927.37m, 379554.38m, 413805.41m, 377622.38m }.GetEnumerator();
-        private readonly IEnumerator<decimal> _expectedAdjustedAskSize = new List<decimal> { 53900.05m, 1400.00m, 6300.01m, 2100.00m, 1400.00m, 1400.00m, 700.00m, 
-            2100.00m, 3500.00m, 700.00m }.GetEnumerator();
-        private readonly IEnumerator<decimal> _expectedAdjustedBidSize = new List<decimal> { 700.00m, 2800.00m, 700.00m, 700.00m, 700.00m, 1400.00m, 2800.00m,
-            2100.00m, 7700.01m, 700.00m }.GetEnumerator();
+        private readonly IEnumerator<decimal> _expectedAdjustedVolume = new List<decimal> { 1541213, 761013, 920088, 867077, 542487, 663132, 
+            374927, 379554, 413805, 377622 }.GetEnumerator();
+        private readonly IEnumerator<decimal> _expectedAdjustedAskSize = new List<decimal> { 53900, 1400, 6300, 2100, 1400, 1400, 700, 
+            2100, 3500, 700 }.GetEnumerator();
+        private readonly IEnumerator<decimal> _expectedAdjustedBidSize = new List<decimal> { 700, 2800, 700, 700, 700, 1400, 2800,
+            2100, 7700, 700 }.GetEnumerator();
 
         public override void Initialize()
         {
@@ -64,14 +64,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (data.Bars.ContainsKey(_aapl))
             {
                 var aaplData = data.Bars[_aapl];
-                var aaplVolume = decimal.Round(aaplData.Volume, 2);
 
                 // Assert our volume matches what we expect
-                if (_expectedAdjustedVolume.MoveNext() && _expectedAdjustedVolume.Current != aaplVolume)
+                if (_expectedAdjustedVolume.MoveNext() && _expectedAdjustedVolume.Current != aaplData.Volume)
                 {
                     // Our values don't match lets try and give a reason why
                     var dayFactor = _factorFile.GetSplitFactor(aaplData.Time);
-                    var probableAdjustedVolume = decimal.Round(aaplData.Volume / dayFactor, 2);
+                    var probableAdjustedVolume = aaplData.Volume / dayFactor;
 
                     if (_expectedAdjustedVolume.Current == probableAdjustedVolume)
                     {
@@ -89,15 +88,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (data.QuoteBars.ContainsKey(_aapl))
             {
                 var aaplQuoteData = data.QuoteBars[_aapl];
-                var aaplAskSize = decimal.Round(aaplQuoteData.LastAskSize, 2);
-                var aaplBidSize = decimal.Round(aaplQuoteData.LastBidSize, 2);
 
                 // Assert our askSize matches what we expect
-                if (_expectedAdjustedAskSize.MoveNext() && _expectedAdjustedAskSize.Current != aaplAskSize)
+                if (_expectedAdjustedAskSize.MoveNext() && _expectedAdjustedAskSize.Current != aaplQuoteData.LastAskSize)
                 {
                     // Our values don't match lets try and give a reason why
                     var dayFactor = _factorFile.GetSplitFactor(aaplQuoteData.Time);
-                    var probableAdjustedAskSize = decimal.Round(aaplQuoteData.LastAskSize / dayFactor, 2);
+                    var probableAdjustedAskSize = aaplQuoteData.LastAskSize / dayFactor;
 
                     if (_expectedAdjustedAskSize.Current == probableAdjustedAskSize)
                     {
@@ -112,11 +109,11 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Assert our bidSize matches what we expect
-                if (_expectedAdjustedBidSize.MoveNext() && _expectedAdjustedBidSize.Current != aaplBidSize)
+                if (_expectedAdjustedBidSize.MoveNext() && _expectedAdjustedBidSize.Current != aaplQuoteData.LastBidSize)
                 {
                     // Our values don't match lets try and give a reason why
                     var dayFactor = _factorFile.GetSplitFactor(aaplQuoteData.Time);
-                    var probableAdjustedBidSize = decimal.Round(aaplQuoteData.LastBidSize / dayFactor, 2);
+                    var probableAdjustedBidSize = aaplQuoteData.LastBidSize / dayFactor;
 
                     if (_expectedAdjustedBidSize.Current == probableAdjustedBidSize)
                     {
