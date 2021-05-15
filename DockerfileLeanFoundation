@@ -21,8 +21,7 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test && apt-get update
 RUN add-apt-repository ppa:apt-fast/stable && apt-get update && apt-get -y install apt-fast
 RUN apt-fast install -y git bzip2 clang cmake curl unzip wget python3-pip python-opengl zlib1g-dev \
     xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
-    r-base pandoc libcurl4-openssl-dev \
-    openjdk-8-jdk openjdk-8-jre
+    r-base pandoc libcurl4-openssl-dev
 
 # Install IB Gateway: Installs to ~/Jts
 RUN wget https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
@@ -129,7 +128,7 @@ RUN pip install --no-cache-dir      \
     stable-baselines==2.10.0        \
     statistics==1.0.3.5             \
     statsmodels==0.11.1             \
-    tensorforce==0.5.4              \
+    tensorforce==0.5.5              \
     QuantLib-Python==1.18           \
     xgboost==1.1.0                  \
     dtw-python==1.0.5               \
@@ -153,14 +152,25 @@ RUN pip install --no-cache-dir      \
     pyflux==0.4.15                  \
     optuna==2.3.0                   \
     findiff==0.8.5                  \
-    sktime==0.3.0                   \ 
+    sktime==0.3.0                   \
     sktime-dl==0.1.0                \
     hyperopt==0.2.5                 \
     bayesian-optimization==1.2.0    \
     rpy2==3.3.6                     \
     pingouin==0.3.8                 \
     quantecon==0.4.8                \
-    matplotlib==3.2.1
+    matplotlib==3.2.1               \
+    sdeint==0.2.1                   \
+    pandas_market_calendars==1.7    \
+    dgl==0.6.1                      \
+    ruptures==1.1.3                 \
+    simpy==4.0.1                    \
+    scikit-learn-extra==0.2.0
+
+# feature_selector has overly strict dependency version ranges
+# We already installed close-enough versions of all of its dependencies above
+# All features in the usage notebook in https://github.com/Jie-Yuan/FeatureSelector work
+RUN pip install --no-cache-dir --no-dependencies feature_selector==1.0.0
 
 # Notes about pip install:
 # sktime==0.3.1 is max version we can use without causing backwards incompatible changes to pandas (>= 1.0.0)
@@ -183,6 +193,12 @@ RUN conda install -y                \
 RUN conda install -y -c pytorch     \
     pytorch=1.5.0                   \
     torchvision=0.6.0
+
+# Install PyTorch Geometric
+RUN TORCH=$(python -c "import torch; print(torch.__version__)") && \
+    CUDA=$(python -c "import torch; print('cu' + torch.version.cuda.replace('.', ''))") && \
+    pip install --no-cache-dir -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html \
+    torch-scatter==2.0.5 torch-sparse==0.6.7 torch-cluster==1.5.7 torch-spline-conv==1.2.0 torch-geometric==1.7.0
 
 RUN conda clean -y --all
 

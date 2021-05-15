@@ -88,6 +88,25 @@ namespace QuantConnect
         public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } = TimeSpan.FromMinutes(-15);
 
         /// <summary>
+        /// Helper method to create an order request to liquidate a delisted asset
+        /// </summary>
+        public static SubmitOrderRequest CreateDelistedSecurityOrderRequest(this Security security, DateTime utcTime)
+        {
+            var orderType = OrderType.Market;
+            var tag = "Liquidate from delisting";
+            if (security.Type.IsOption())
+            {
+                // tx handler will determine auto exercise/assignment
+                tag = "Option Expired";
+                orderType = OrderType.OptionExercise;
+            }
+
+            // submit an order to liquidate on market close or exercise (for options)
+            return new SubmitOrderRequest(orderType, security.Type, security.Symbol,
+                -security.Holdings.Quantity, 0, 0, utcTime, tag);
+        }
+
+        /// <summary>
         /// Safe multiplies a decimal by 100
         /// </summary>
         /// <param name="value">The decimal to multiply</param>
@@ -471,20 +490,25 @@ namespace QuantConnect
             IAlgorithm algorithm,
             bool targetIsDelta = false)
         {
-            return targets.Select(x => new {
-                    PortfolioTarget = x,
-                    TargetQuantity = x.Quantity,
-                    ExistingQuantity = algorithm.Portfolio[x.Symbol].Quantity
-                                       + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
-                                           .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
-                    Security = algorithm.Securities[x.Symbol]
+            return targets.Select(x =>
+                {
+                    var security = algorithm.Securities[x.Symbol];
+                    return new
+                    {
+                        PortfolioTarget = x,
+                        TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
+                        ExistingQuantity = security.Holdings.Quantity
+                            + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
+                                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
+                        Security = security
+                    };
                 })
                 .Where(x => x.Security.HasData
                             && (targetIsDelta ? Math.Abs(x.TargetQuantity) : Math.Abs(x.TargetQuantity - x.ExistingQuantity))
                             >= x.Security.SymbolProperties.LotSize
                 )
                 .Select(x => new {
-                    PortfolioTarget = x.PortfolioTarget,
+                    x.PortfolioTarget,
                     OrderValue = Math.Abs((targetIsDelta ? x.TargetQuantity : (x.TargetQuantity - x.ExistingQuantity)) * x.Security.Price),
                     IsReducingPosition = x.ExistingQuantity != 0
                                          && Math.Abs((targetIsDelta ? (x.TargetQuantity + x.ExistingQuantity) : x.TargetQuantity)) < Math.Abs(x.ExistingQuantity)

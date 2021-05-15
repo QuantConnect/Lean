@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -95,6 +95,11 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         Returns:
         """
         targets = {}
+
+        # If we have no insights just return an empty target list
+        if len(activeInsights) == 0:
+            return targets
+
         symbols = [insight.Symbol for insight in activeInsights]
 
         # Create a dictionary keyed by the symbols in the insights with an pandas.Series as value to create a data frame

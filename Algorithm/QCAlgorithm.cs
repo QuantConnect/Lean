@@ -612,6 +612,11 @@ namespace QuantConnect.Algorithm
         /// <param name="availableDataTypes">The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
         public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes)
         {
+            if (availableDataTypes == null)
+            {
+                return;
+            }
+
             foreach (var dataFeed in availableDataTypes)
             {
                 SubscriptionManager.AvailableDataTypes[dataFeed.Key] = dataFeed.Value;
@@ -2257,7 +2262,7 @@ namespace QuantConnect.Algorithm
                 symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
             }
 
-            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, extendedMarketHours);
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, extendedMarketHours, dataNormalizationMode: UniverseSettings.DataNormalizationMode);
             var security = Securities.CreateSecurity(symbol, configs, leverage);
 
             AddToUserDefinedUniverse(security, configs);

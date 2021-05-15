@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -84,6 +84,47 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(symbol, security.Symbol);
             Assert.AreEqual(spy, security);
             Assert.AreEqual(expected, security.DataNormalizationMode);
+        }
+
+        [Test]
+        public void CheckManualSecurityDataNormalizationModePersistenceAfterUniverseSetting()
+        {
+            var tuple = GetAlgorithmAndDataManager();
+            var algorithm = tuple.Item1;
+            var dataManager = tuple.Item2;
+
+            // Set our universe mode to raw
+            var universeMode = DataNormalizationMode.Raw;
+            algorithm.UniverseSettings.DataNormalizationMode = universeMode;
+
+            // Verify that the security was set to raw
+            var spy = algorithm.AddEquity("SPY");
+            Assert.AreEqual(universeMode, spy.DataNormalizationMode);
+
+            // Modify the mode of the security manually
+            var manualMode = DataNormalizationMode.TotalReturn;
+            spy.SetDataNormalizationMode(manualMode);
+            Assert.AreEqual(manualMode, spy.DataNormalizationMode);
+
+            var symbol = spy.Symbol;
+            algorithm.AddUniverse(coarse => new[] { symbol });
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
+
+            var changes = dataManager.UniverseSelection
+                .ApplyUniverseSelection(
+                    algorithm.UniverseManager.First().Value,
+                    algorithm.UtcTime,
+                    new BaseDataCollection(algorithm.UtcTime, null, Enumerable.Empty<CoarseFundamental>()));
+
+            Assert.AreEqual(1, changes.AddedSecurities.Count());
+
+            var security = changes.AddedSecurities.First();
+            Assert.AreEqual(symbol, security.Symbol);
+            Assert.AreEqual(spy, security);
+
+            // Assert that our manual setting persisted
+            Assert.AreEqual(manualMode, security.DataNormalizationMode);
         }
 
         private Tuple<QCAlgorithm, DataManager> GetAlgorithmAndDataManager()

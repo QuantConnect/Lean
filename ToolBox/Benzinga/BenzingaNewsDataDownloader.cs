@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.Benzinga
 {
@@ -51,7 +52,7 @@ namespace QuantConnect.ToolBox.Benzinga
         public BenzingaNewsDataDownloader(DirectoryInfo destinationDirectory, string apiKey)
         {
             _destinationDirectory = destinationDirectory;
-            _apiKey = apiKey;
+            _apiKey = string.IsNullOrWhiteSpace(apiKey) ? Config.Get("benzinga-news-api-key") : apiKey;
 
             // Limit ourselves to 2 requests per second to Benzinga's API.
             // There are 237391 articles starting from 2017-09-12 and ending on 2019-09-13.

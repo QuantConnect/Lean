@@ -183,6 +183,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "-0.007"},
             {"Total Fees", "$20.35"},
             {"Estimated Strategy Capacity", "$19000000.00"},
+            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Fitness Score", "0.138"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},

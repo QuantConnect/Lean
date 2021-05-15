@@ -101,10 +101,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             continue;
                         }
 
+                        // In the event we have "Raw" configuration, we will force our subscription data
+                        // to precalculate adjusted data. The data will still be emitted as raw, but
+                        // if the config is changed at any point it can emit adjusted data as well
+                        // See SubscriptionData.Create() and PrecalculatedSubscriptionData for more
                         var requestMode = config.DataNormalizationMode;
                         var mode = requestMode != DataNormalizationMode.Raw
                             ? requestMode
                             : DataNormalizationMode.Adjusted;
+
                         // We update our price scale factor when the date changes for non fill forward bars or if we haven't initialized yet.
                         // We don't take into account auxiliary data because we don't scale it and because the underlying price data could be fill forwarded
                         if (enablePriceScale && data?.Time.Date > lastTradableDate && data.DataType != MarketDataType.Auxiliary && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))

@@ -16,33 +16,37 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Shows how to set a custom benchmark for you algorithms
+    /// In this algorithm we demonstrate how to use the raw data for our securities
+    /// and verify that the behavior is correct.
     /// </summary>
     /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="benchmarks" />
-    public class CustomBenchmarkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    /// <meta name="tag" content="regression test" />
+    public class RawDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
+        private const string Ticker = "GOOGL";
+        private readonly FactorFile _factorFile = FactorFile.Read(Ticker, Market.USA);
+        private readonly IEnumerator<decimal> _expectedRawPrices = new List<decimal> { 1158.1100m, 1158.7200m,
+            1131.7800m, 1114.2800m, 1119.6100m, 1114.5500m, 1135.3200m, 567.59000m, 571.4900m, 545.3000m, 540.6400m }.GetEnumerator();
+        private Symbol _googl;
+
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
-            // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
+            SetStartDate(2014, 3, 25);      //Set Start Date
+            SetEndDate(2014, 4, 7);         //Set End Date
+            SetCash(100000);                            //Set Strategy Cash
 
-            // Disabling the benchmark / setting to a fixed value
-            // SetBenchmark(time => 0);
+            // Set our DataNormalizationMode to raw
+            UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
+            _googl = AddEquity(Ticker, Resolution.Daily).Symbol;
 
-            // Set the benchmark to AAPL US Equity
-            SetBenchmark("AAPL");
+            // Prime our expected values
+            _expectedRawPrices.MoveNext();
         }
 
         /// <summary>
@@ -53,14 +57,32 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings("SPY", 1);
-                Debug("Purchased Stock");
+                SetHoldings(_googl, 1);
             }
 
-            Symbol symbol;
-            if (SymbolCache.TryGetSymbol("AAPL", out symbol))
+            if (data.Bars.ContainsKey(_googl))
             {
-                throw new Exception("Benchmark Symbol is not expected to be added to the Symbol cache");
+                var googlData = data.Bars[_googl];
+
+                // Assert our volume matches what we expected
+                if (_expectedRawPrices.Current != googlData.Close)
+                {
+                    // Our values don't match lets try and give a reason why
+                    var dayFactor = _factorFile.GetPriceScaleFactor(googlData.Time);
+                    var probableRawPrice = googlData.Close / dayFactor; // Undo adjustment
+
+                    if (_expectedRawPrices.Current == probableRawPrice)
+                    {
+                        throw new Exception($"Close price was incorrect; it appears to be the adjusted value");
+                    }
+                    else
+                    {
+                        throw new Exception($"Close price was incorrect; Data may have changed.");
+                    }
+                }
+
+                // Move to our next expected value
+                _expectedRawPrices.MoveNext();
             }
         }
 
@@ -82,31 +104,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "272.157%"},
-            {"Drawdown", "2.200%"},
+            {"Compounding Annual Return", "-85.948%"},
+            {"Drawdown", "7.300%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.694%"},
-            {"Sharpe Ratio", "8.897"},
-            {"Probabilistic Sharpe Ratio", "67.609%"},
+            {"Net Profit", "-7.251%"},
+            {"Sharpe Ratio", "-3.008"},
+            {"Probabilistic Sharpe Ratio", "3.159%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.178"},
-            {"Beta", "0.805"},
-            {"Annual Standard Deviation", "0.222"},
-            {"Annual Variance", "0.049"},
-            {"Information Ratio", "5.718"},
-            {"Tracking Error", "0.172"},
-            {"Treynor Ratio", "2.453"},
-            {"Total Fees", "$3.45"},
-            {"Estimated Strategy Capacity", "$270000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.246"},
+            {"Alpha", "-0.831"},
+            {"Beta", "-0.223"},
+            {"Annual Standard Deviation", "0.262"},
+            {"Annual Variance", "0.069"},
+            {"Information Ratio", "-2.045"},
+            {"Tracking Error", "0.289"},
+            {"Treynor Ratio", "3.525"},
+            {"Total Fees", "$1.00"},
+            {"Estimated Strategy Capacity", "$110000000.00"},
+            {"Lowest Capacity Asset", "GOOG T1AZ164W5VTX"},
+            {"Fitness Score", "0.006"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "9.761"},
-            {"Return Over Maximum Drawdown", "107.509"},
-            {"Portfolio Turnover", "0.249"},
+            {"Sortino Ratio", "-3.445"},
+            {"Return Over Maximum Drawdown", "-11.853"},
+            {"Portfolio Turnover", "0.084"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -120,7 +142,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "e10039d74166b161f3ea2851a5e85843"}
+            {"OrderListHash", "3702afa2a5d1634ed451768917394502"}
         };
     }
 }

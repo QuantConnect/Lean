@@ -207,6 +207,10 @@ namespace QuantConnect.Util
                 case SecurityType.Index:
                     switch (resolution)
                     {
+                        case Resolution.Tick:
+                            var tick = (Tick) data;
+                            return ToCsv(milliseconds, tick.LastPrice, tick.Quantity, string.Empty, string.Empty, "0");
+                        case Resolution.Second:
                         case Resolution.Minute:
                             var bar = data as TradeBar;
                             if (bar == null)
@@ -214,10 +218,12 @@ namespace QuantConnect.Util
                                 throw new ArgumentException("Expected data of type 'TradeBar'", nameof(data));
                             }
                             return ToCsv(milliseconds, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
-
-                        default:
-                            throw new NotSupportedException("Index only supports writing minute data a this time.");
+                        case Resolution.Hour:
+                        case Resolution.Daily:
+                            var bigTradeBar = data as TradeBar;
+                            return ToCsv(longTime, bigTradeBar.Open, bigTradeBar.High, bigTradeBar.Low, bigTradeBar.Close, bigTradeBar.Volume);
                     }
+                    break;
 
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
