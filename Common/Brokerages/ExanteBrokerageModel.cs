@@ -1,5 +1,8 @@
 using QuantConnect.Benchmarks;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
+using static QuantConnect.StringExtensions;
+
 
 namespace QuantConnect.Brokerages
 {
@@ -12,6 +15,29 @@ namespace QuantConnect.Brokerages
         {
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.Bitfinex);
             return SecurityBenchmark.CreateInstance(securities, symbol);
+        }
+
+        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            message = null;
+
+            if (security.Type != SecurityType.Forex &&
+                security.Type != SecurityType.Equity &&
+                security.Type != SecurityType.Index &&
+                security.Type != SecurityType.Option &&
+                security.Type != SecurityType.Future &&
+                security.Type != SecurityType.Cfd &&
+                security.Type != SecurityType.Crypto &&
+                security.Type != SecurityType.Index)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Invariant(
+                        $"The {nameof(ExanteBrokerageModel)} does not support {security.Type} security type.")
+                );
+                return false;
+            }
+
+            return true;
         }
     }
 }
