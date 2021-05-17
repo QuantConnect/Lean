@@ -1,3 +1,6 @@
+using QuantConnect.Benchmarks;
+using QuantConnect.Securities;
+
 namespace QuantConnect.Brokerages
 {
     /// <summary>
@@ -5,5 +8,10 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class ExanteBrokerageModel : DefaultBrokerageModel
     {
+        public override IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.Bitfinex);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
+        }
     }
 }
