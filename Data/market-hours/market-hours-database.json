@@ -30278,35 +30278,35 @@
       "sunday": [],
       "monday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "tuesday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "wednesday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "thursday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "friday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
