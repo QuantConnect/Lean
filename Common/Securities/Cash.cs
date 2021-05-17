@@ -48,7 +48,9 @@ namespace QuantConnect.Securities
         /// If this cash represents the account currency, then <see cref="QuantConnect.Symbol.Empty"/>
         /// is returned
         /// </summary>
-        [Obsolete("This property has been made obsolete, use the symbols on the securities in CurrencyConversion.ConversionRateSecurities instead. This property only returns the symbol of the first security used to calculate conversion rates, there may be more.")]
+        [JsonIgnore]
+        [Obsolete("This property has been made obsolete, use SecuritySymbols instead.\n" +
+            "This property only returns the symbol of the first security used to calculate conversion rates, there may be more.")]
         public Symbol SecuritySymbol =>
             CurrencyConversion?.ConversionRateSecurities.First().Symbol ?? QuantConnect.Symbol.Empty;
 
@@ -57,8 +59,16 @@ namespace QuantConnect.Securities
         /// If this cash represents the account currency, then null is returned.
         /// </summary>
         [JsonIgnore]
-        [Obsolete("This property has been made obsolete, use CurrencyConversion.ConversionRateSecurities instead. This property only returns the first security used to calculate conversion rates, there may be more.")]
+        [Obsolete("This property has been made obsolete, use CurrencyConversion.ConversionRateSecurities instead.\n" +
+            "This property only returns the first security used to calculate conversion rates, there may be more.")]
         public Security ConversionRateSecurity => CurrencyConversion?.ConversionRateSecurities.First();
+
+        /// <summary>
+        /// Gets the symbols of the securities required to provide conversion rates.
+        /// If this cash represents the account currency, then an empty enumerable is returned.
+        /// </summary>
+        public IEnumerable<Symbol> SecuritySymbols =>
+            CurrencyConversion?.ConversionRateSecurities.Select(x => x.Symbol) ?? new List<Symbol>(0);
 
         /// <summary>
         /// Gets the object that calculates the conversion rate to account currency

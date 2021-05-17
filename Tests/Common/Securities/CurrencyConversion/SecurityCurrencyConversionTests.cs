@@ -232,6 +232,27 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
         }
 
         [Test]
+        public void UpdateReturnsZeroWhenNoDataForOneOfTwoSymbols()
+        {
+            var existingSecurities = new List<Security>
+            {
+                CreateSecurity(Symbols.ETHBTC),
+                CreateSecurity(Symbols.BTCUSD)
+            };
+
+            var currencyConversion = SecurityCurrencyConversion.LinearSearch(
+                "ETH",
+                "USD",
+                existingSecurities,
+                new List<Symbol>(0),
+                CreateSecurity);
+
+            existingSecurities[0].SetMarketPrice(new Tick { Value = 15m });
+
+            Assert.AreEqual(0m, currencyConversion.Update());
+        }
+
+        [Test]
         public void ConversionRateReturnsLatestConversionRate()
         {
             var existingSecurities = new List<Security> { CreateSecurity(Symbols.BTCUSD) };

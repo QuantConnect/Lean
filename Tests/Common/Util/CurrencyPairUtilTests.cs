@@ -22,14 +22,34 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class CurrencyPairUtilTests
     {
-        [Test]
-        public void DecomposeThrowsOnNullSymbol()
+        [TestCaseSource(nameof(decomposeSuccessCases))]
+        public void DecomposeDecomposesAllCurrencyPairTypes(
+            Symbol symbol,
+            string expectedBaseCurrency,
+            string expectedQuoteCurrency)
         {
-            Symbol symbol = null;
+            string actualBaseCurrency;
+            string actualQuoteCurrency;
+
+            CurrencyPairUtil.DecomposeCurrencyPair(symbol, out actualBaseCurrency, out actualQuoteCurrency);
+
+            Assert.AreEqual(expectedBaseCurrency, actualBaseCurrency);
+            Assert.AreEqual(expectedQuoteCurrency, actualQuoteCurrency);
+        }
+
+        [TestCaseSource(nameof(decomposeThrowCases))]
+        public void DecomposeThrowsOnNonCurrencyPair(Symbol symbol)
+        {
             string baseCurrency, quoteCurrency;
 
             Assert.Throws<ArgumentException>(
                 () => CurrencyPairUtil.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency));
+        }
+
+        [TestCaseSource(nameof(isDecomposableCases))]
+        public void IsDecomposableWorksCorrectly(Symbol symbol, bool expectedResult)
+        {
+            Assert.AreEqual(expectedResult, CurrencyPairUtil.IsDecomposable(symbol));
         }
 
         [Test]
@@ -39,6 +59,15 @@ namespace QuantConnect.Tests.Common.Util
 
             Assert.AreEqual("USD", currencyPair.CurrencyPairDual("EUR"));
             Assert.AreEqual("EUR", currencyPair.CurrencyPairDual("USD"));
+        }
+
+        [Test]
+        public void CurrencyPairDualCfd()
+        {
+            var currencyPair = Symbol.Create("XAGUSD", SecurityType.Cfd, Market.Oanda);
+
+            Assert.AreEqual("XAG", currencyPair.CurrencyPairDual("USD"));
+            Assert.AreEqual("USD", currencyPair.CurrencyPairDual("XAG"));
         }
 
         [Test]
@@ -62,30 +91,77 @@ namespace QuantConnect.Tests.Common.Util
         public void ComparePairWorksCorrectly()
         {
             var ethusd = Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
-            var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
-
             var eurusd = Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);
-            var usdeur = Symbol.Create("USDEUR", SecurityType.Forex, Market.FXCM);
 
-            Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, ethusd.ComparePair(ethusd));
             Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, ethusd.ComparePair("ETH", "USD"));
-
-            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, eurusd.ComparePair(usdeur));
             Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, eurusd.ComparePair("USD", "EUR"));
-
-            Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, ethusd.ComparePair(btcusd));
             Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, ethusd.ComparePair("BTC", "USD"));
         }
 
-        [Test]
-        public void PairContainsCurrencyWorksCorrectly()
+        [TestCase("ETH", true)]
+        [TestCase("USD", true)]
+        [TestCase("Eth", true)]
+        [TestCase("Usd", true)]
+        [TestCase("ZRX", false)]
+        [TestCase("BTC", false)]
+        [TestCase("Zrx", false)]
+        [TestCase("Btc", false)]
+        public void PairContainsCurrencyWorksCorrectly(string currency, bool result)
         {
             var ethusd = Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
 
-            Assert.IsTrue(ethusd.PairContainsCurrency("ETH"));
-            Assert.IsTrue(ethusd.PairContainsCurrency("USD"));
-            Assert.IsFalse(ethusd.PairContainsCurrency("ZRX"));
-            Assert.IsFalse(ethusd.PairContainsCurrency("BTC"));
+            Assert.AreEqual(result, ethusd.PairContainsCurrency(currency));
         }
+
+        /// <summary>
+        /// DecomposeCurrencyPair test cases with successful results:
+        /// symbol, expectedBaseCurrency, expectedQuoteCurrency
+        /// </summary>
+        private static object[][] decomposeSuccessCases =
+        {
+            new object[] { Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM), "EUR", "USD" },
+            new object[] { Symbol.Create("NZDSGD", SecurityType.Forex, Market.Oanda), "NZD", "SGD" },
+            new object[] { Symbol.Create("XAGUSD", SecurityType.Cfd, Market.FXCM), "XAG", "USD" },
+            new object[] { Symbol.Create("US30USD", SecurityType.Cfd, Market.Oanda), "US30", "USD" },
+            new object[] { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex), "BTC", "USD" },
+            new object[] { Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance), "BTC", "USDT" }
+        };
+
+        /// <summary>
+        /// DecomposeCurrencyPair test cases where method should throw:
+        /// symbol
+        /// </summary>
+        private static object[][] decomposeThrowCases =
+        {
+            new object[] { null },
+            new object[] { Symbol.Empty },
+            new object[] { Symbols.SPY },
+            new object[] { Symbols.SPY_C_192_Feb19_2016 },
+            new object[] { Symbols.Fut_SPY_Feb19_2016 }
+        };
+
+        /// <summary>
+        /// IsDecomposable test cases:
+        /// symbol, expectedResult
+        /// </summary>
+        private static object[][] isDecomposableCases =
+        {
+            // Forex, CFD and crypto are usually decomposable
+            new object[] { Symbols.EURUSD, true },
+            new object[] { Symbols.XAGUSD, true },
+            new object[] { Symbols.BTCUSD, true },
+
+            // CFD, but ticker doesn't end with quote currency, so no way to extract base currency
+            new object[] { Symbol.Create("AU200AUD", SecurityType.Cfd, Market.FXCM), false },
+
+            // Obviously not decomposable
+            new object[] { null, false },
+            new object[] { Symbol.Empty, false },
+
+            // Other security types, also not decomposable
+            new object[] { Symbols.SPY, false },
+            new object[] { Symbols.SPY_C_192_Feb19_2016, false },
+            new object[] { Symbols.Fut_SPY_Feb19_2016, false }
+        };
     }
 }
