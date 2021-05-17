@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -166,7 +166,7 @@ namespace QuantConnect.Brokerages.Oanda
         public override bool PlaceOrder(Order order)
         {
             var orderFee = OrderFee.Zero;
-            var marketOrderFillQuantity = 0;
+            var marketOrderFillQuantity = 0m;
             var marketOrderFillPrice = 0m;
             var marketOrderRemainingQuantity = 0;
             var marketOrderStatus = OrderStatus.Filled;
@@ -187,17 +187,17 @@ namespace QuantConnect.Brokerages.Oanda
 
                     if (fill.TradeOpened != null && fill.TradeOpened.TradeID.Length > 0)
                     {
-                        marketOrderFillQuantity = fill.TradeOpened.Units.ConvertInvariant<int>();
+                        marketOrderFillQuantity = fill.TradeOpened.Units.ConvertInvariant<decimal>();
                     }
 
                     if (fill.TradeReduced != null && fill.TradeReduced.TradeID.Length > 0)
                     {
-                        marketOrderFillQuantity = fill.TradeReduced.Units.ConvertInvariant<int>();
+                        marketOrderFillQuantity = fill.TradeReduced.Units.ConvertInvariant<decimal>();
                     }
 
                     if (fill.TradesClosed != null && fill.TradesClosed.Count > 0)
                     {
-                        marketOrderFillQuantity += fill.TradesClosed.Sum(trade => trade.Units.ConvertInvariant<int>());
+                        marketOrderFillQuantity += fill.TradesClosed.Sum(trade => trade.Units.ConvertInvariant<decimal>());
                     }
 
                     marketOrderRemainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - Math.Abs(marketOrderFillQuantity));
