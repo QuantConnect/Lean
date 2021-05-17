@@ -33,7 +33,10 @@ namespace QuantConnect.Securities.Future
         private MarginRequirementsEntry[] _marginRequirementsHistory;
         private int _marginCurrentIndex;
 
-        private readonly Security _security;
+        /// <summary>
+        /// The target security for this model
+        /// </summary>
+        protected virtual Security Security { get; }
 
         /// <summary>
         /// True will enable usage of intraday margins.
@@ -45,22 +48,22 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// Initial Overnight margin requirement for the contract effective from the date of change
         /// </summary>
-        public decimal InitialOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialOvernight ?? 0m;
+        public virtual decimal InitialOvernightMarginRequirement => GetCurrentMarginRequirements(Security)?.InitialOvernight ?? 0m;
 
         /// <summary>
         /// Maintenance Overnight margin requirement for the contract effective from the date of change
         /// </summary>
-        public decimal MaintenanceOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceOvernight ?? 0m;
+        public virtual decimal MaintenanceOvernightMarginRequirement => GetCurrentMarginRequirements(Security)?.MaintenanceOvernight ?? 0m;
 
         /// <summary>
         /// Initial Intraday margin for the contract effective from the date of change
         /// </summary>
-        public decimal InitialIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialIntraday ?? 0m;
+        public virtual decimal InitialIntradayMarginRequirement => GetCurrentMarginRequirements(Security)?.InitialIntraday ?? 0m;
 
         /// <summary>
         /// Maintenance Intraday margin requirement for the contract effective from the date of change
         /// </summary>
-        public decimal MaintenanceIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceIntraday ?? 0m;
+        public virtual decimal MaintenanceIntradayMarginRequirement => GetCurrentMarginRequirements(Security)?.MaintenanceIntraday ?? 0m;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FutureMarginModel"/>
@@ -70,7 +73,7 @@ namespace QuantConnect.Securities.Future
         public FutureMarginModel(decimal requiredFreeBuyingPowerPercent = 0, Security security = null)
         {
             RequiredFreeBuyingPowerPercent = requiredFreeBuyingPowerPercent;
-            _security = security;
+            Security = security;
         }
 
         /// <summary>

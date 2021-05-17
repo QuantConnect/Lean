@@ -26,13 +26,41 @@ namespace QuantConnect.Securities.Option
     {
         public const decimal FixedMarginMultiplier = 1.5m;
 
+        private readonly Option _futureOption;
+
+        /// <summary>
+        /// The target security for this model
+        /// </summary>
+        protected override Security Security => _futureOption?.Underlying;
+
+        /// <summary>
+        /// Initial Overnight margin requirement for the contract effective from the date of change
+        /// </summary>
+        public override decimal InitialOvernightMarginRequirement => base.InitialOvernightMarginRequirement * FixedMarginMultiplier;
+
+        /// <summary>
+        /// Maintenance Overnight margin requirement for the contract effective from the date of change
+        /// </summary>
+        public override decimal MaintenanceOvernightMarginRequirement => base.MaintenanceOvernightMarginRequirement * FixedMarginMultiplier;
+
+        /// <summary>
+        /// Initial Intraday margin for the contract effective from the date of change
+        /// </summary>
+        public override decimal InitialIntradayMarginRequirement => base.InitialIntradayMarginRequirement * FixedMarginMultiplier;
+
+        /// <summary>
+        /// Maintenance Intraday margin requirement for the contract effective from the date of change
+        /// </summary>
+        public override decimal MaintenanceIntradayMarginRequirement => base.MaintenanceIntradayMarginRequirement * FixedMarginMultiplier;
+
         /// <summary>
         /// Creates an instance of FutureOptionMarginModel
         /// </summary>
         /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
         /// <param name="futureOption">Option Security containing a Future security as the underlying</param>
-        public FuturesOptionsMarginModel(decimal requiredFreeBuyingPowerPercent = 0, Option futureOption = null) : base(requiredFreeBuyingPowerPercent, futureOption?.Underlying)
+        public FuturesOptionsMarginModel(decimal requiredFreeBuyingPowerPercent = 0, Option futureOption = null) : base(requiredFreeBuyingPowerPercent)
         {
+            _futureOption = futureOption;
         }
 
         /// <summary>
