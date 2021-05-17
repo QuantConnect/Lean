@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNotNull(enumerator.Current as Delisting);
             Assert.AreEqual(MarketDataType.Auxiliary, enumerator.Current.DataType);
             Assert.AreEqual(DelistingType.Warning, (enumerator.Current as Delisting).Type);
-            Assert.AreEqual(DateTime.UtcNow.Date, (enumerator.Current as Delisting).Time.Date);
+            Assert.AreEqual(_config.Symbol.ID.Date, (enumerator.Current as Delisting).Time.Date);
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
             Assert.IsTrue(enumerator.MoveNext());
