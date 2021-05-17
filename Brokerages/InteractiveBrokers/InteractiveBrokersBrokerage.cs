@@ -274,6 +274,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _ibAutomater.OutputDataReceived += OnIbAutomaterOutputDataReceived;
             _ibAutomater.ErrorDataReceived += OnIbAutomaterErrorDataReceived;
             _ibAutomater.Exited += OnIbAutomaterExited;
+            _ibAutomater.Restarted += OnIbAutomaterRestarted;
 
             CheckIbAutomaterError(_ibAutomater.Start(false));
 
@@ -3298,18 +3299,57 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Exit code: {e.ExitCode}");
 
+            _stateManager.Reset();
+
             // check if IBGateway was closed because of an IBAutomater error
             var result = _ibAutomater.GetLastStartResult();
             CheckIbAutomaterError(result, false);
 
             if (!result.HasError && !_isDisposeCalled)
             {
-                // IBGateway was closed by the v978+ automatic logoff or it was closed manually (less likely)
+                // IBGateway was closed by IBAutomater because the auto-restart token expired or it was closed manually (less likely)
                 Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
 
-                Disconnect();
-                CheckIbAutomaterError(_ibAutomater.Start(false));
-                Connect();
+                try
+                {
+                    Disconnect();
+
+                    CheckIbAutomaterError(_ibAutomater.Start(false));
+
+                    Connect();
+                }
+                catch (Exception exception)
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterRestartError", exception.ToString()));
+                }
+            }
+        }
+
+        private void OnIbAutomaterRestarted(object sender, EventArgs e)
+        {
+            Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterRestarted()");
+
+            _stateManager.Reset();
+
+            // check if IBGateway was closed because of an IBAutomater error
+            var result = _ibAutomater.GetLastStartResult();
+            CheckIbAutomaterError(result, false);
+
+            if (!result.HasError && !_isDisposeCalled)
+            {
+                // IBGateway was restarted automatically
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterRestarted(): IBGateway restart detected, reconnecting...");
+
+                try
+                {
+                    Disconnect();
+
+                    Connect();
+                }
+                catch (Exception exception)
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterAutoRestartError", exception.ToString()));
+                }
             }
         }
 

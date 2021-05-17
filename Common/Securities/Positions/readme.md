@@ -361,4 +361,3 @@ Once a `CompositePositionGroupResolver` is implemented, should probably start wi
 ### Other Touch Points
 
 `SecurityHolding.QuantityChanged` event was added and the `PositionManager` listens to this. Every time quantities change (fill) we need to know so that we can re-run the resolvers. `PositionManager.ResolveGroups()` is _also_ invoked via `SecurityPortfolioManager.ProcessFill` when it's a partial/completed fill event (qnantity changed). In order for all the margin maths to be correct, we must resolve groups immediately. Consider multiple market orders set to synchronous in the same `OnData` -- if we don't run the resolvers then the buying power models won't even know those orders executed because the buying power models' view of the world is through the lense of position groups, so it's incredibly important that **EVERY** time security holdings change we run the position group resolves to ensure consistent state.
-
