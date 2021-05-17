@@ -45,7 +45,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 new OptionSymbolProperties(string.Empty, "USD", 1m, 0.01m, 1m),
                 new CashBook(),
                 new RegisteredSecurityDataTypesProvider(),
-                new SecurityCache());
+                new SecurityCache(),
+                null);
 
             Assert.IsTrue(futureOptionSecurity.BuyingPowerModel is FuturesOptionsMarginModel);
         }
@@ -68,7 +69,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 new OptionSymbolProperties(string.Empty, "USD", 100m, 0.0001m, 1m),
                 new CashBook(),
                 new RegisteredSecurityDataTypesProvider(),
-                new SecurityCache());
+                new SecurityCache(),
+                null);
 
             Assert.IsTrue(equityOptionSecurity.BuyingPowerModel is OptionMarginModel);
         }

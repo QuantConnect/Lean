@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -303,21 +303,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     continue;
                 }
 
-                // create the new security, the algorithm thread will add this at the appropriate time
-                Security security;
-                if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
+                Security underlying = null;
+                if (symbol.HasUnderlying)
                 {
-                    // For now this is required for retro compatibility with usages of security.Subscriptions
-                    var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
-                        universe.UniverseSettings.Resolution,
-                        universe.UniverseSettings.FillForward,
-                        universe.UniverseSettings.ExtendedMarketHours,
-                        dataNormalizationMode: universe.UniverseSettings.DataNormalizationMode);
-
-                    security = _securityService.CreateSecurity(symbol, configs, universe.UniverseSettings.Leverage, symbol.ID.SecurityType.IsOption());
-
-                    pendingAdditions.Add(symbol, security);
+                    underlying = GetOrCreateSecurity(pendingAdditions, symbol.Underlying, universe.UniverseSettings);
                 }
+                // create the new security, the algorithm thread will add this at the appropriate time
+                var security = GetOrCreateSecurity(pendingAdditions, symbol, universe.UniverseSettings, underlying);
 
                 var addedSubscription = false;
                 var dataFeedAdded = false;
@@ -494,6 +486,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
             }
+        }
+
+        private Security GetOrCreateSecurity(Dictionary<Symbol, Security> pendingAdditions, Symbol symbol, UniverseSettings universeSettings, Security underlying = null)
+        {
+            // create the new security, the algorithm thread will add this at the appropriate time
+            Security security;
+            if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
+            {
+                // For now this is required for retro compatibility with usages of security.Subscriptions
+                var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
+                    universeSettings.Resolution,
+                    universeSettings.FillForward,
+                    universeSettings.ExtendedMarketHours,
+                    dataNormalizationMode: universeSettings.DataNormalizationMode);
+
+                security = _securityService.CreateSecurity(symbol, configs, universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
+
+                pendingAdditions.Add(symbol, security);
+            }
+
+            return security;
         }
     }
 }

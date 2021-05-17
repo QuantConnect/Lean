@@ -26,13 +26,6 @@ namespace QuantConnect.Securities.Option
     {
         public const decimal FixedMarginMultiplier = 1.5m;
 
-        private readonly Option _futureOption;
-
-        /// <summary>
-        /// The target security for this model
-        /// </summary>
-        protected override Security Security => _futureOption?.Underlying;
-
         /// <summary>
         /// Initial Overnight margin requirement for the contract effective from the date of change
         /// </summary>
@@ -58,9 +51,8 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
         /// <param name="futureOption">Option Security containing a Future security as the underlying</param>
-        public FuturesOptionsMarginModel(decimal requiredFreeBuyingPowerPercent = 0, Option futureOption = null) : base(requiredFreeBuyingPowerPercent)
+        public FuturesOptionsMarginModel(decimal requiredFreeBuyingPowerPercent = 0, Option futureOption = null) : base(requiredFreeBuyingPowerPercent, futureOption?.Underlying)
         {
-            _futureOption = futureOption;
         }
 
         /// <summary>

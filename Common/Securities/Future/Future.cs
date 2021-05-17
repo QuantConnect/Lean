@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -92,13 +92,15 @@ namespace QuantConnect.Securities.Future
         ///     instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache to store security information</param>
+        /// <param name="underlying">Future underlying security</param>
         public Future(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache
+            SecurityCache securityCache,
+            Security underlying = null
             )
             : base(symbol,
                 quoteCurrency,
@@ -123,6 +125,7 @@ namespace QuantConnect.Securities.Future
             Holdings = new FutureHolding(this, currencyConverter);
             _symbolProperties = symbolProperties;
             SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
+            Underlying = underlying;
         }
 
         // save off a strongly typed version of symbol properties

@@ -206,16 +206,7 @@ namespace QuantConnect.Tests.Common.Securities
             var symbol = Symbol.CreateOption(future, Market.CME, OptionStyle.American, OptionRight.Call, 2550m,
                 new DateTime(2021, 3, 19));
 
-            var optionSecurity = new QuantConnect.Securities.FutureOption.FutureOption(symbol,
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            var futureMarginModel = new FuturesOptionsMarginModel(futureOption: optionSecurity);
-            optionSecurity.Underlying = new Future(
+            var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), future, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
@@ -223,6 +214,17 @@ namespace QuantConnect.Tests.Common.Securities
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
+            var optionSecurity = new QuantConnect.Securities.FutureOption.FutureOption(symbol,
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache(),
+                futureSecurity
+            );
+
+            var futureMarginModel = new FuturesOptionsMarginModel(futureOption: optionSecurity);
             optionSecurity.Underlying.SetMarketPrice(new Tick { Value = 150, Time = new DateTime(2001, 01, 07) });
 
             var initialIntradayMarginRequirement = futureMarginModel.InitialIntradayMarginRequirement;
