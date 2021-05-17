@@ -13,10 +13,9 @@
  * limitations under the License.
 */
 
-using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -82,14 +81,7 @@ namespace QuantConnect.Securities.Positions
             Key = key;
             _positions = positions;
             var firstPosition = positions.First();
-            var quantity = firstPosition.Value.Quantity / firstPosition.Value.UnitQuantity;
-#if DEBUG
-            if (quantity != Math.Truncate(quantity))
-            {
-                throw new InvalidOperationException("PositionGroup.Quantity must be a whole number.");
-            }
-#endif
-            Quantity = quantity;
+            Quantity = firstPosition.Value.Quantity / firstPosition.Value.UnitQuantity;
         }
 
         /// <summary>
