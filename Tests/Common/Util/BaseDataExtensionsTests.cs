@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -56,7 +56,8 @@ namespace QuantConnect.Tests.Common.Util
                 Open = 100,
                 High = 200,
                 Low = 300,
-                Close = 400
+                Close = 400,
+                Volume = 10000
             };
 
             var adjustedTb = tb.Clone(tb.IsFillForward).Adjust(_factor);
@@ -65,6 +66,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(tb.High * _factor, (adjustedTb as TradeBar).High);
             Assert.AreEqual(tb.Low * _factor, (adjustedTb as TradeBar).Low);
             Assert.AreEqual(tb.Close * _factor, (adjustedTb as TradeBar).Close);
+            Assert.AreEqual(tb.Volume / _factor, (adjustedTb as TradeBar).Volume);
         }
 
         [Test]
@@ -74,12 +76,36 @@ namespace QuantConnect.Tests.Common.Util
             {
                 Time = new DateTime(2020, 5, 21, 8, 9, 0),
                 Symbol = Symbols.SPY,
-                Value = 100
+                Value = 100,
+                Quantity = 10
             };
 
             var adjustedTick = tick.Clone(tick.IsFillForward).Adjust(_factor);
 
             Assert.AreEqual(tick.Value * _factor, (adjustedTick as Tick).Value);
+            Assert.AreEqual(tick.Quantity / _factor, (adjustedTick as Tick).Quantity);
+        }
+
+        [Test]
+        public void AdjustQuoteTick()
+        {
+            var tick = new Tick
+            {
+                Time = new DateTime(2020, 5, 21, 8, 9, 0),
+                Symbol = Symbols.SPY,
+                TickType = TickType.Quote,
+                AskPrice = 100,
+                BidPrice = 99,
+                AskSize = 100,
+                BidSize = 10
+            };
+
+            var adjustedTick = tick.Clone(tick.IsFillForward).Adjust(_factor);
+
+            Assert.AreEqual(tick.AskPrice * _factor, (adjustedTick as Tick).AskPrice);
+            Assert.AreEqual(tick.BidPrice * _factor, (adjustedTick as Tick).BidPrice);
+            Assert.AreEqual(tick.AskSize / _factor, (adjustedTick as Tick).AskSize);
+            Assert.AreEqual(tick.BidSize / _factor, (adjustedTick as Tick).BidSize);
         }
 
         [Test]
@@ -102,11 +128,13 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(qb.Bid.Close * _factor, (adjustedQb as QuoteBar).Bid.Close);
             Assert.AreEqual(qb.Bid.High * _factor, (adjustedQb as QuoteBar).Bid.High);
             Assert.AreEqual(qb.Bid.Low * _factor, (adjustedQb as QuoteBar).Bid.Low);
+            Assert.AreEqual(qb.LastBidSize / _factor, (adjustedQb as QuoteBar).LastBidSize);
             // ask
             Assert.AreEqual(qb.Ask.Open * _factor, (adjustedQb as QuoteBar).Ask.Open);
             Assert.AreEqual(qb.Ask.Close * _factor, (adjustedQb as QuoteBar).Ask.Close);
             Assert.AreEqual(qb.Ask.High * _factor, (adjustedQb as QuoteBar).Ask.High);
             Assert.AreEqual(qb.Ask.Low * _factor, (adjustedQb as QuoteBar).Ask.Low);
+            Assert.AreEqual(qb.LastAskSize / _factor, (adjustedQb as QuoteBar).LastAskSize);
         }
 
         [Test]
@@ -120,7 +148,8 @@ namespace QuantConnect.Tests.Common.Util
                 Open = 100,
                 High = 200,
                 Low = 300,
-                Close = 400
+                Close = 400,
+                Volume = 1000
             };
 
             var adjustedTb = tb.Clone(tb.IsFillForward).Normalize(_config);
@@ -129,6 +158,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(tb.High * _factor, (adjustedTb as TradeBar).High);
             Assert.AreEqual(tb.Low * _factor, (adjustedTb as TradeBar).Low);
             Assert.AreEqual(tb.Close * _factor, (adjustedTb as TradeBar).Close);
+            Assert.AreEqual(tb.Volume / _factor, (adjustedTb as TradeBar).Volume);
         }
 
         [Test]
@@ -138,12 +168,36 @@ namespace QuantConnect.Tests.Common.Util
             {
                 Time = new DateTime(2020, 5, 21, 8, 9, 0),
                 Symbol = Symbols.SPY,
-                Value = 100
+                Value = 100,
+                Quantity = 10
             };
 
             var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_config);
 
             Assert.AreEqual(tick.Value * _factor, (adjustedTick as Tick).Value);
+            Assert.AreEqual(tick.Quantity / _factor, (adjustedTick as Tick).Quantity);
+        }
+
+        [Test]
+        public void AdjustQuoteTickUsingConfig()
+        {
+            var tick = new Tick
+            {
+                Time = new DateTime(2020, 5, 21, 8, 9, 0),
+                Symbol = Symbols.SPY,
+                TickType = TickType.Quote,
+                AskPrice = 100,
+                BidPrice = 99,
+                AskSize = 100,
+                BidSize = 10
+            };
+
+            var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_config);
+
+            Assert.AreEqual(tick.AskPrice * _factor, (adjustedTick as Tick).AskPrice);
+            Assert.AreEqual(tick.BidPrice * _factor, (adjustedTick as Tick).BidPrice);
+            Assert.AreEqual(tick.AskSize / _factor, (adjustedTick as Tick).AskSize);
+            Assert.AreEqual(tick.BidSize / _factor, (adjustedTick as Tick).BidSize);
         }
 
         [Test]
@@ -166,11 +220,13 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(qb.Bid.Close * _factor, (adjustedQb as QuoteBar).Bid.Close);
             Assert.AreEqual(qb.Bid.High * _factor, (adjustedQb as QuoteBar).Bid.High);
             Assert.AreEqual(qb.Bid.Low * _factor, (adjustedQb as QuoteBar).Bid.Low);
+            Assert.AreEqual(qb.LastBidSize / _factor, (adjustedQb as QuoteBar).LastBidSize);
             // ask
             Assert.AreEqual(qb.Ask.Open * _factor, (adjustedQb as QuoteBar).Ask.Open);
             Assert.AreEqual(qb.Ask.Close * _factor, (adjustedQb as QuoteBar).Ask.Close);
             Assert.AreEqual(qb.Ask.High * _factor, (adjustedQb as QuoteBar).Ask.High);
             Assert.AreEqual(qb.Ask.Low * _factor, (adjustedQb as QuoteBar).Ask.Low);
+            Assert.AreEqual(qb.LastAskSize / _factor, (adjustedQb as QuoteBar).LastAskSize);
         }
     }
 }
