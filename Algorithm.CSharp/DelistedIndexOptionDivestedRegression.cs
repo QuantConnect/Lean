@@ -17,61 +17,82 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class DelistedIndexOptionDivestedRegression : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol spx;
-        private Symbol optionSymbol;
-        private DateTime optionExpiry = DateTime.MaxValue;
-        private string ticker;
-        private bool addOption = true;
+        private Symbol _spx;
+        private Symbol _optionSymbol;
+        private DateTime _optionExpiry = DateTime.MaxValue;
+        private string _ticker;
+        private bool _addOption = true;
+        private bool _receivedWarning;
 
         public override void Initialize()
         {
             SetStartDate(2021, 1, 3);  //Set Start Date
             SetEndDate(2021, 1, 20);    //Set End Date
 
-            ticker = "SPX";
-            var spxSecurity = AddIndex(ticker, Resolution.Minute);
+            _ticker = "SPX";
+            var spxSecurity = AddIndex(_ticker, Resolution.Minute);
             spxSecurity.SetDataNormalizationMode(DataNormalizationMode.Raw);
-            spx = spxSecurity.Symbol;
+            _spx = spxSecurity.Symbol;
         }
 
         public override void OnData(Slice slice)
         {
-            if (!slice.ContainsKey(spx))
+            if (!slice.ContainsKey(_spx))
             {
                 return;
             }
 
-            if (addOption)
+            if (_addOption)
             {
-                var contracts = OptionChainProvider.GetOptionContractList(spx, Time);
+                var contracts = OptionChainProvider.GetOptionContractList(_spx, Time);
                 contracts = contracts.Where(x =>
                     x.ID.OptionRight == OptionRight.Put &&
                     x.ID.Date.Date == new DateTime(2021, 1, 15));
 
                 var option = AddIndexOptionContract(contracts.First(), Resolution.Minute);
-                optionExpiry = option.Expiry;
-                optionSymbol = option.Symbol;
+                _optionExpiry = option.Expiry;
+                _optionSymbol = option.Symbol;
 
 
-                addOption = false;
+                _addOption = false;
             }
 
-            if (slice.ContainsKey(optionSymbol))
+            if (slice.ContainsKey(_optionSymbol))
             {
                 if (!Portfolio.Invested)
                 {
-                    SetHoldings(optionSymbol, 0.25);
+                    SetHoldings(_optionSymbol, 0.25);
                 }
 
-                if (optionExpiry < Time.Date)
+                // Verify the order of delisting; warning then delisting
+                Delisting delisting;
+                if (slice.Delistings.TryGetValue(_optionSymbol, out delisting))
                 {
-                    throw new Exception($"Received expired contract {optionSymbol} expired: {optionExpiry} current time: {Time}");
+                    switch (delisting.Type)
+                    {
+                        case DelistingType.Warning:
+                            _receivedWarning = true;
+                            break;
+                        case DelistingType.Delisted:
+                            if (!_receivedWarning)
+                            {
+                                throw new Exception("Did not receive warning before delisting");
+                            }
+                            break;
+                    }
+                }
+
+                // Verify we aren't receiving expired option data.
+                if (_optionExpiry < Time.Date)
+                {
+                    throw new Exception($"Received expired contract {_optionSymbol} expired: {_optionExpiry} current time: {Time}");
                 }
             }
 
@@ -82,9 +103,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Log($"Holding {holding.Symbol.Value}; Invested: {holding.Invested}; Quantity: {holding.Quantity}");
 
-                if (holding.Symbol == optionSymbol && holding.Invested)
+                if (holding.Symbol == _optionSymbol && holding.Invested)
                 {
-                    throw new Exception($"Index option {optionSymbol.Value} is still invested after delisting");
+                    throw new Exception($"Index option {_optionSymbol.Value} is still invested after delisting");
                 }
             }
         }
