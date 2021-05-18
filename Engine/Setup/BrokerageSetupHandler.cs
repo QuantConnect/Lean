@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class BrokerageSetupHandler : ISetupHandler
     {
-        private bool _notifiedDefaultResolutionUsed;
+        private bool _notifiedUniverseSettingsUsed;
 
         /// <summary>
         /// Max allocation limit configuration variable name
@@ -465,11 +465,12 @@ namespace QuantConnect.Lean.Engine.Setup
                 var leverage = algorithm.UniverseSettings.Leverage;
                 var extendedHours = algorithm.UniverseSettings.ExtendedMarketHours;
 
-                if (!_notifiedDefaultResolutionUsed)
+                if (!_notifiedUniverseSettingsUsed)
                 {
                     // let's just send the message once
-                    _notifiedDefaultResolutionUsed = true;
-                    algorithm.Debug($"Will use UniverseSettings.Resolution value '{resolution}' for automatically added securities for open orders and holdings.");
+                    _notifiedUniverseSettingsUsed = true;
+                    algorithm.Debug($"Will use UniverseSettings for automatically added securities for open orders and holdings. UniverseSettings:" +
+                        $" Resolution = {resolution}; Leverage = {leverage}; FillForward = {fillForward}; ExtendedHours = {extendedHours}");
                 }
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + symbol.Value);
