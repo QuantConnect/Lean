@@ -21,6 +21,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -123,9 +124,33 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (!optionInvested && data.ContainsKey(option))
                     {
+                        var optionContract = Securities[option];
+                        var marginModel = optionContract.BuyingPowerModel as FuturesOptionsMarginModel;
+                        if (marginModel.InitialIntradayMarginRequirement == 0
+                            || marginModel.InitialOvernightMarginRequirement == 0
+                            || marginModel.MaintenanceIntradayMarginRequirement == 0
+                            || marginModel.MaintenanceOvernightMarginRequirement == 0)
+                        {
+                            throw new Exception("Unexpected margin requirements");
+                        }
+
+                        if (marginModel.GetInitialMarginRequirement(optionContract, 1) == 0)
+                        {
+                            throw new Exception("Unexpected Initial Margin requirement");
+                        }
+                        if (marginModel.GetMaintenanceMargin(optionContract) != 0)
+                        {
+                            throw new Exception("Unexpected Maintenance Margin requirement");
+                        }
+
                         MarketOrder(option, 1);
                         _invested = true;
                         optionInvested = true;
+
+                        if (marginModel.GetMaintenanceMargin(optionContract) == 0)
+                        {
+                            throw new Exception("Unexpected Maintenance Margin requirement");
+                        }
                     }
                     if (!futureInvested && data.ContainsKey(future))
                     {

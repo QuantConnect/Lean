@@ -1734,10 +1734,8 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Option"/> security</returns>
         public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
         {
-            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, dataNormalizationMode:DataNormalizationMode.Raw);
-            var option = (Option)Securities.CreateSecurity(symbol, configs, leverage);
             // add underlying if not present
-            var underlying = option.Symbol.Underlying;
+            var underlying = symbol.Underlying;
             Security underlyingSecurity;
             List<SubscriptionDataConfig> underlyingConfigs;
             if (!Securities.TryGetValue(underlying, out underlyingSecurity))
@@ -1763,11 +1761,13 @@ namespace QuantConnect.Algorithm
                 }
             }
 
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, dataNormalizationMode: DataNormalizationMode.Raw);
+            var option = (Option)Securities.CreateSecurity(symbol, configs, leverage, underlying: underlyingSecurity);
+
             underlyingConfigs.SetDataNormalizationMode(DataNormalizationMode.Raw);
             // For backward compatibility we need to refresh the security DataNormalizationMode Property
             underlyingSecurity.RefreshDataNormalizationModeProperty();
 
-            option.Underlying = underlyingSecurity;
             Securities.Add(option);
 
             // get or create the universe

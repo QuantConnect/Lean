@@ -45,22 +45,22 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// Initial Overnight margin requirement for the contract effective from the date of change
         /// </summary>
-        public decimal InitialOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialOvernight ?? 0m;
+        public virtual decimal InitialOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialOvernight ?? 0m;
 
         /// <summary>
         /// Maintenance Overnight margin requirement for the contract effective from the date of change
         /// </summary>
-        public decimal MaintenanceOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceOvernight ?? 0m;
+        public virtual decimal MaintenanceOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceOvernight ?? 0m;
 
         /// <summary>
         /// Initial Intraday margin for the contract effective from the date of change
         /// </summary>
-        public decimal InitialIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialIntraday ?? 0m;
+        public virtual decimal InitialIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialIntraday ?? 0m;
 
         /// <summary>
         /// Maintenance Intraday margin requirement for the contract effective from the date of change
         /// </summary>
-        public decimal MaintenanceIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceIntraday ?? 0m;
+        public virtual decimal MaintenanceIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceIntraday ?? 0m;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FutureMarginModel"/>

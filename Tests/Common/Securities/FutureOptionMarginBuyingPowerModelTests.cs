@@ -193,5 +193,50 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(OrderStatus.Filled, ticket.Status);
         }
+
+        [Test]
+        public void MarginRequirementsAreSetCorrectly()
+        {
+            var expDate = new DateTime(2021, 3, 19);
+            var tz = TimeZones.NewYork;
+
+            // For this symbol we dont have any history, but only one date and margins line
+            var ticker = QuantConnect.Securities.Futures.Indices.SP500EMini;
+            var future = Symbol.CreateFuture(ticker, Market.CME, expDate);
+            var symbol = Symbol.CreateOption(future, Market.CME, OptionStyle.American, OptionRight.Call, 2550m,
+                new DateTime(2021, 3, 19));
+
+            var futureSecurity = new Future(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), future, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            var optionSecurity = new QuantConnect.Securities.FutureOption.FutureOption(symbol,
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache(),
+                futureSecurity
+            );
+
+            var futureMarginModel = new FuturesOptionsMarginModel(futureOption: optionSecurity);
+            optionSecurity.Underlying.SetMarketPrice(new Tick { Value = 150, Time = new DateTime(2001, 01, 07) });
+
+            var initialIntradayMarginRequirement = futureMarginModel.InitialIntradayMarginRequirement;
+            var maintenanceIntradayMarginRequirement = futureMarginModel.MaintenanceIntradayMarginRequirement;
+
+            var initialOvernightMarginRequirement = futureMarginModel.MaintenanceOvernightMarginRequirement;
+            var maintenanceOvernightMarginRequirement = futureMarginModel.InitialOvernightMarginRequirement;
+
+            Assert.AreNotEqual(0, initialIntradayMarginRequirement);
+            Assert.AreNotEqual(0, maintenanceIntradayMarginRequirement);
+            Assert.AreNotEqual(0, initialOvernightMarginRequirement);
+            Assert.AreNotEqual(0, maintenanceOvernightMarginRequirement);
+        }
     }
 }

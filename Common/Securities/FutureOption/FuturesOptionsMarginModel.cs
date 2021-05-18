@@ -27,6 +27,26 @@ namespace QuantConnect.Securities.Option
         public const decimal FixedMarginMultiplier = 1.5m;
 
         /// <summary>
+        /// Initial Overnight margin requirement for the contract effective from the date of change
+        /// </summary>
+        public override decimal InitialOvernightMarginRequirement => base.InitialOvernightMarginRequirement * FixedMarginMultiplier;
+
+        /// <summary>
+        /// Maintenance Overnight margin requirement for the contract effective from the date of change
+        /// </summary>
+        public override decimal MaintenanceOvernightMarginRequirement => base.MaintenanceOvernightMarginRequirement * FixedMarginMultiplier;
+
+        /// <summary>
+        /// Initial Intraday margin for the contract effective from the date of change
+        /// </summary>
+        public override decimal InitialIntradayMarginRequirement => base.InitialIntradayMarginRequirement * FixedMarginMultiplier;
+
+        /// <summary>
+        /// Maintenance Intraday margin requirement for the contract effective from the date of change
+        /// </summary>
+        public override decimal MaintenanceIntradayMarginRequirement => base.MaintenanceIntradayMarginRequirement * FixedMarginMultiplier;
+
+        /// <summary>
         /// Creates an instance of FutureOptionMarginModel
         /// </summary>
         /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
