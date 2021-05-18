@@ -35,7 +35,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         // SEC imposes rate limits of 10 requests per second. Set to 5 req / 1.1 sec just to be safe.
         private readonly RateGate _indexGate = new RateGate(1, TimeSpan.FromMilliseconds(220));
         private readonly HashSet<string> _downloadedIndexFiles = new HashSet<string>();
-        private readonly HttpClient _client = new HttpClient();
         private readonly Dictionary<string, SECReportIndexFile> _archiveIndexFileCache = new Dictionary<string, SECReportIndexFile>();
 
         /// <summary>
@@ -53,11 +52,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// </summary>
         public SECDataDownloader()
         {
-            // We will be rate limited from the SEC website if we don't identify ourselves via User-Agent.
-            // Also we use a global HttpClient instance to enable HTTP keep-alive, which will improve performance
-            // and also reduce the chances of being rate-limited (plus, this is recommended practice).
-            var userAgent = new ProductInfoHeaderValue("User-Agent", $"QC-SEC-{Guid.NewGuid()}");
-            _client.DefaultRequestHeaders.UserAgent.Add(userAgent);
+
         }
 
         /// <summary>
@@ -68,8 +63,15 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <param name="end">Ending date</param>
         public void Download(string rawDestination, DateTime start, DateTime end)
         {
-            try
+            // We will be rate limited from the SEC website if we don't identify ourselves via User-Agent.
+            // Also we use a global HttpClient instance to enable HTTP keep-alive, which will improve performance
+            // and also reduce the chances of being rate-limited (plus, this is recommended practice).
+
+            using (var client = new HttpClient())
             {
+                var userAgent = new ProductInfoHeaderValue("User-Agent", $"QC-SEC-{Guid.NewGuid()}");
+                client.DefaultRequestHeaders.UserAgent.Add(userAgent);
+                
                 Directory.CreateDirectory(Path.Combine(rawDestination, "indexes"));
 
                 for (var currentDate = start; currentDate <= end; currentDate = currentDate.AddDays(1))
@@ -100,7 +102,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     SECReportIndexFile indexFile;
                     if (!_archiveIndexFileCache.TryGetValue(cacheKey, out indexFile))
                     {
-                        indexFile = GetArchiveIndexFile(currentDate.Year, quarter);
+                        indexFile = GetArchiveIndexFile(client, currentDate.Year, quarter);
                         _archiveIndexFileCache[cacheKey] = indexFile;
                     }
 
@@ -146,7 +148,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             _indexGate.WaitToProceed();
 
                             Log.Trace($"SECDataDownloader.Download(): Downloading temp filing archive to: {tmpFile}");
-                            var tempFilingArchiveBytes = _client.GetByteArrayAsync(
+                            var tempFilingArchiveBytes = client.GetByteArrayAsync(
                                     $"{BaseUrl}/Feed/{currentDate.Year}/{quarter}/{currentDate:yyyyMMdd}.nc.tar.gz")
                                 .SynchronouslyAwaitTaskResult();
 
@@ -194,7 +196,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                             Log.Trace(
                                 $"SECDataDownloader.Download(): Downloading temp index manifest to: {dailyIndexTmp.FullName}");
-                            var indexBytes = _client
+                            var indexBytes = client
                                 .GetByteArrayAsync(
                                     $"{BaseUrl}/daily-index/{currentDate.Year}/{quarter}/master.{currentDate:yyyyMMdd}.idx")
                                 .SynchronouslyAwaitTaskResult();
@@ -283,7 +285,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             continue;
                         }
 
-                        DownloadIndexFile(cik, rawDestination).SynchronouslyAwaitTask();
+                        DownloadIndexFile(client, cik, rawDestination).SynchronouslyAwaitTask();
                         _downloadedIndexFiles.Add(cik);
                         previousCik = cik;
                     }
@@ -310,7 +312,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             _indexGate.WaitToProceed();
 
                             Log.Trace("SECDataDownloader.Download(): Downloading ticker-CIK mappings list");
-                            var tickerCikMappingsBytes = _client
+                            var tickerCikMappingsBytes = client
                                 .GetByteArrayAsync("https://www.sec.gov/include/ticker.txt")
                                 .SynchronouslyAwaitTaskResult();
 
@@ -325,7 +327,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                             Log.Trace(
                                 "SECDataDownloader.Download(): Downloading ticker-CIK mappings list from rankandfile");
-                            var tickerCikMappingsBytes = _client
+                            var tickerCikMappingsBytes = client
                                 .GetByteArrayAsync("http://rankandfiled.com/static/export/cik_ticker.csv")
                                 .SynchronouslyAwaitTaskResult();
 
@@ -339,7 +341,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             _indexGate.WaitToProceed();
 
                             Log.Trace("SECDataDownloader.Download(): Downloading CIK lookup data");
-                            var cikLookupBytes = _client.GetByteArrayAsync($"{BaseUrl}/cik-lookup-data.txt")
+                            var cikLookupBytes = client.GetByteArrayAsync($"{BaseUrl}/cik-lookup-data.txt")
                                 .SynchronouslyAwaitTaskResult();
 
                             File.WriteAllBytes(cikLookupTempPath, cikLookupBytes);
@@ -359,10 +361,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
                 }
             }
-            finally
-            {
-                _client.DisposeSafely();
-            }
         }
 
         /// <summary>
@@ -372,7 +370,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <param name="cik">CIK of the equity</param>
         /// <param name="rawDestination">Destination where we will write to</param>
         /// <exception cref="Exception">We were unable to download the index file</exception>
-        private async Task DownloadIndexFile(string cik, string rawDestination)
+        private async Task DownloadIndexFile(HttpClient client, string cik, string rawDestination)
         {
             for (var i = 0; i < MaxRetries; i++)
             {
@@ -380,7 +378,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 {
                     _indexGate.WaitToProceed();
                     
-                    var indexFileBytes = await _client.GetByteArrayAsync($"{BaseUrl}/data/{cik}/index.json");
+                    var indexFileBytes = await client.GetByteArrayAsync($"{BaseUrl}/data/{cik}/index.json");
                     var indexPathTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json"));
                     var indexPath = new FileInfo(Path.Combine(rawDestination, "indexes", $"{cik}.json"));
 
@@ -427,7 +425,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <param name="year">Year to download index file for</param>
         /// <param name="quarter">Quarter to download index file for</param>
         /// <returns>SEC index directory</returns>
-        private SECReportIndexFile GetArchiveIndexFile(int year, string quarter)
+        private SECReportIndexFile GetArchiveIndexFile(HttpClient client, int year, string quarter)
         {
             for (var retries = 0; retries < MaxRetries; retries++)
             {
@@ -438,7 +436,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     _indexGate.WaitToProceed();
                     
                     Log.Trace($"SECDataDownloader.GetFileSize(): Downloading archive index file for file size verification");
-                    var contents = _client.GetStringAsync($"{BaseUrl}/Feed/{year}/{quarter}/index.json").SynchronouslyAwaitTaskResult();
+                    var contents = client.GetStringAsync($"{BaseUrl}/Feed/{year}/{quarter}/index.json").SynchronouslyAwaitTaskResult();
 
                     var indexFile = JsonConvert.DeserializeObject<SECReportIndexFile>(contents);
                     Log.Trace($"SECDataDownloader.GetFileSize(): Successfully downloaded {BaseUrl}/Feed/{year}/{quarter}/index.json");
