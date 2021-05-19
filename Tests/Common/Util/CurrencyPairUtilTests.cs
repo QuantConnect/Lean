@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -90,8 +90,8 @@ namespace QuantConnect.Tests.Common.Util
         {
             var currencyPair = Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Bitfinex);
 
-            Assert.Throws<ArgumentException>(() => currencyPair.CurrencyPairDual("ZRX"));
-            Assert.Throws<ArgumentException>(() => CurrencyPairUtil.CurrencyPairDual("ETH", "BTC", "ZRX"));
+            Assert.AreEqual(null, currencyPair.CurrencyPairDual("ZRX"));
+            Assert.AreEqual(null, CurrencyPairUtil.CurrencyPairDual("ETH", "BTC", "ZRX"));
         }
 
         [Test]
@@ -103,22 +103,6 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, ethusd.ComparePair("ETH", "USD"));
             Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, eurusd.ComparePair("USD", "EUR"));
             Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, ethusd.ComparePair("BTC", "USD"));
-        }
-
-        [TestCase("ETH", true)]
-        [TestCase("USD", true)]
-        [TestCase("Eth", true)]
-        [TestCase("Usd", true)]
-        [TestCase("ZRX", false)]
-        [TestCase("BTC", false)]
-        [TestCase("Zrx", false)]
-        [TestCase("Btc", false)]
-        public void PairContainsCurrencyWorksCorrectly(string currency, bool result)
-        {
-            var ethusd = Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
-
-            Assert.AreEqual(result, ethusd.PairContainsCurrency(currency));
-            Assert.AreEqual(result, CurrencyPairUtil.PairContainsCurrency("ETH", "USD", currency));
         }
 
         /// <summary>

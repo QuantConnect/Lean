@@ -163,14 +163,12 @@ namespace QuantConnect.Securities.CurrencyConversion
             // Search for 1 leg conversions
             foreach (var potentialConversionRateSymbol in allSymbols)
             {
-                bool inverted;
-                if (!SymbolConvertsCurrencies(potentialConversionRateSymbol,
-                    sourceCurrency,
-                    destinationCurrency,
-                    out inverted))
+                var leg1Match = potentialConversionRateSymbol.ComparePair(sourceCurrency, destinationCurrency);
+                if (leg1Match == CurrencyPairUtil.Match.NoMatch)
                 {
                     continue;
                 }
+                var inverted = leg1Match == CurrencyPairUtil.Match.InverseMatch;
 
                 return new SecurityCurrencyConversion(sourceCurrency, destinationCurrency, new List<Step>(1)
                 {
@@ -181,23 +179,16 @@ namespace QuantConnect.Securities.CurrencyConversion
             // Search for 2 leg conversions
             foreach (var potentialConversionRateSymbol1 in allSymbols)
             {
-                if (!potentialConversionRateSymbol1.PairContainsCurrency(sourceCurrency))
-                {
-                    continue;
-                }
-
                 var middleCurrency = potentialConversionRateSymbol1.CurrencyPairDual(sourceCurrency);
 
                 foreach (var potentialConversionRateSymbol2 in allSymbols)
                 {
-                    bool secondStepInverted;
-                    if (!SymbolConvertsCurrencies(potentialConversionRateSymbol2,
-                        middleCurrency,
-                        destinationCurrency,
-                        out secondStepInverted))
+                    var leg2Match = potentialConversionRateSymbol2.ComparePair(middleCurrency, destinationCurrency);
+                    if (leg2Match == CurrencyPairUtil.Match.NoMatch)
                     {
                         continue;
                     }
+                    var secondStepInverted = leg2Match == CurrencyPairUtil.Match.InverseMatch;
 
                     var steps = new List<Step>(2);
 
@@ -227,41 +218,6 @@ namespace QuantConnect.Securities.CurrencyConversion
 
             throw new ArgumentException(
                 $"No conversion path found between source currency {sourceCurrency} and destination currency {destinationCurrency}");
-        }
-
-        /// <summary>
-        /// Checks whether a symbol converts between two currencies, and whether it does so in inverse or not
-        /// </summary>
-        /// <param name="symbol">The symbol to check for</param>
-        /// <param name="sourceCurrency">The currency to convert from</param>
-        /// <param name="destinationCurrency">The currency to convert to</param>
-        /// <param name="inverted">The parameter that contains whether the conversion is inverted, or False if the conversion is not possible with the given symbol</param>
-        /// <returns></returns>
-        private static bool SymbolConvertsCurrencies(
-            Symbol symbol,
-            string sourceCurrency,
-            string destinationCurrency,
-            out bool inverted)
-        {
-            inverted = false;
-
-            string baseCurrency;
-            string quoteCurrency;
-
-            CurrencyPairUtil.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency);
-
-            if (!CurrencyPairUtil.PairContainsCurrency(baseCurrency, quoteCurrency, sourceCurrency))
-            {
-                return false;
-            }
-
-            if (CurrencyPairUtil.CurrencyPairDual(baseCurrency, quoteCurrency, sourceCurrency) != destinationCurrency)
-            {
-                return false;
-            }
-
-            inverted = symbol.ComparePair(sourceCurrency, destinationCurrency) == CurrencyPairUtil.Match.InverseMatch;
-            return true;
         }
 
         /// <summary>

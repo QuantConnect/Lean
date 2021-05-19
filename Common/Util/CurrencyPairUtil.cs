@@ -139,8 +139,7 @@ namespace QuantConnect.Util
                 return baseCurrency;
             }
 
-            throw new ArgumentException(
-                $"The known symbol {knownSymbol} isn't contained in currency pair {baseCurrency}{quoteCurrency}.");
+            return null;
         }
 
         /// <summary>
@@ -184,35 +183,6 @@ namespace QuantConnect.Util
             }
 
             return Match.NoMatch;
-        }
-
-        /// <summary>
-        /// Returns whether a currency pair contains a certain currency as base or as quote
-        /// </summary>
-        /// <param name="pair">The currency pair to check the sides of</param>
-        /// <param name="currency">The currency to look for</param>
-        /// <returns>True if currency is the base or quote currency of pair, false if not</returns>
-        public static bool PairContainsCurrency(this Symbol pair, string currency)
-        {
-            string baseCurrency;
-            string quoteCurrency;
-
-            DecomposeCurrencyPair(pair, out baseCurrency, out quoteCurrency);
-
-            return PairContainsCurrency(baseCurrency, quoteCurrency, currency);
-        }
-
-        /// <summary>
-        /// Returns whether a currency pair contains a certain currency as base or as quote
-        /// </summary>
-        /// <param name="baseCurrency">The base currency of the currency pair</param>
-        /// <param name="quoteCurrency">The quote currency of the currency pair</param>
-        /// <param name="currency">The currency to look for</param>
-        /// <returns>True if currency is the base or quote currency of pair, false if not</returns>
-        public static bool PairContainsCurrency(string baseCurrency, string quoteCurrency, string currency)
-        {
-            return baseCurrency.Equals(currency, StringComparison.InvariantCultureIgnoreCase) ||
-                quoteCurrency.Equals(currency, StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }
