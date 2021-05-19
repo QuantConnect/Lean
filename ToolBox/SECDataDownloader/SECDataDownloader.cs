@@ -148,11 +148,17 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             _indexGate.WaitToProceed();
 
                             Log.Trace($"SECDataDownloader.Download(): Downloading temp filing archive to: {tmpFile}");
-                            var tempFilingArchiveBytes = client.GetByteArrayAsync(
-                                    $"{BaseUrl}/Feed/{currentDate.Year}/{quarter}/{currentDate:yyyyMMdd}.nc.tar.gz")
-                                .SynchronouslyAwaitTaskResult();
-
-                            File.WriteAllBytes(tmpFile, tempFilingArchiveBytes);
+                            // *.nc.tar.gz files are massive, potentially causing integer overflow when trying to get
+                            // a byte array back from the HttpClient. Use stream instead to prevent that from happening.
+                            // (Example case: 2021-05-17)
+                            using (var tempFilingArchiveBytes = client.GetStreamAsync($"{BaseUrl}/Feed/{currentDate.Year}/{quarter}/{currentDate:yyyyMMdd}.nc.tar.gz")
+                                .SynchronouslyAwaitTaskResult())
+                            {
+                                using (var tmpFileStream = File.OpenWrite(tmpFile))
+                                {
+                                    tempFilingArchiveBytes.CopyTo(tmpFileStream);
+                                }
+                            }
 
                             var tmpFileStat = new FileInfo(tmpFile);
                             var tmpFileSizeInKB = tmpFileStat.Length / 1024;
