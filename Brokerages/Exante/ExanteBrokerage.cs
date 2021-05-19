@@ -23,6 +23,7 @@ using CryptoExchange.Net.Objects;
 using Exante.Net;
 using Exante.Net.Enums;
 using Exante.Net.Objects;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
@@ -265,6 +266,13 @@ namespace QuantConnect.Brokerages.Exante
             foreach (var o in orderPlacement.Data)
             {
                 _orderMap[o.OrderId] = order;
+            }
+
+            if (!orderPlacement.Success)
+            {
+                var errorsJson = JArray.Parse(orderPlacement.Error?.Message ?? throw new InvalidOperationException());
+                var errorMsg = string.Join(",", errorsJson.Select(x => x["message"]));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, errorMsg));
             }
 
             return orderPlacement.Success;
