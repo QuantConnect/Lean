@@ -543,7 +543,7 @@ namespace QuantConnect.ToolBox.Polygon
                         }
                         catch (WebException ex)
                         {
-                            Log.Error($"GetEquityTradeTicks(): No data for {currentDate:yyyy-MM-dd}. Server Response: " + ex.Message);
+                            Log.Trace($"GetEquityTradeTicks(): No data for {currentDate:yyyy-MM-dd}. Server Response: " + ex.Message);
 
                             // If server returned an error most likely on this day there is no data we are going to the next cycle
                             break;
@@ -636,7 +636,7 @@ namespace QuantConnect.ToolBox.Polygon
                         }
                         catch (WebException ex)
                         {
-                            Log.Error($"GetEquityTradeTicks(): No data for {currentDate:yyyy-MM-dd}. Server Response: " + ex.Message);
+                            Log.Trace($"GetEquityTradeTicks(): No data for {currentDate:yyyy-MM-dd}. Server Response: " + ex.Message);
 
                             // If server returned an error most likely on this day there is no data we are going to the next cycle
                             break;
