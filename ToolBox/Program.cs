@@ -26,6 +26,7 @@ using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
+using QuantConnect.ToolBox.ExanteDownloader;
 using QuantConnect.ToolBox.GDAXDownloader;
 using QuantConnect.ToolBox.IBDownloader;
 using QuantConnect.ToolBox.IEX;
@@ -141,6 +142,12 @@ namespace QuantConnect.ToolBox
                             fromDate, 
                             toDate);
                         break;
+                    
+                    case "exntdl":
+                    case "exantedownloader":
+                        ExanteDownloaderProgram.ExanteDownloader(tickers, resolution, fromDate, toDate);
+                        break;
+                            
 
                     case "avdl":
                     case "alphavantagedownloader":
