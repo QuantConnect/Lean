@@ -162,7 +162,15 @@ namespace QuantConnect.Tests.Engine.Setup
         public void ExistingHoldingsAndOrdersUniverseSettings(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
         {
             // Set our universe settings
-            var algorithm = new TestAlgorithm { UniverseSettings = { Resolution = Resolution.Daily, Leverage = 20, FillForward = false, ExtendedMarketHours = true} };
+            var hasCrypto = false;
+            try
+            {
+                hasCrypto = getHoldings().Any(x => x.Symbol.Value == "BTCUSD");
+            }
+            catch
+            {
+            }
+            var algorithm = new TestAlgorithm { UniverseSettings = { Resolution = Resolution.Daily, Leverage = (hasCrypto ? 1 : 20), FillForward = false, ExtendedMarketHours = true} };
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
             var job = GetJob();
             var resultHandler = new Mock<IResultHandler>();
@@ -187,15 +195,6 @@ namespace QuantConnect.Tests.Engine.Setup
 
             if (result != expected)
             {
-                // Special case for this test, Crypto case cannot set leverage because CashBuyingPowerModel
-                // so this will break test, but we want to use same test set as others in this class so we will force a pass
-                var holdings = getHoldings();
-                if (holdings.Any(x => x.Symbol.Value == "BTCUSD"))
-                {
-                    return;
-                }
-
-                // If this didn't match our "special" case this is a fail
                 Assert.Fail("SetupHandler result did not match expected value");
             }
 
