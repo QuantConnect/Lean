@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -155,6 +155,69 @@ namespace QuantConnect.Tests.Engine.Setup
             {
                 var configs = algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol);
                 Assert.AreEqual(algorithm.UniverseSettings.Resolution, configs.First().Resolution);
+            }
+        }
+
+        [Test, TestCaseSource(nameof(GetExistingHoldingsAndOrdersTestCaseData))]
+        public void ExistingHoldingsAndOrdersUniverseSettings(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
+        {
+            // Set our universe settings
+            var hasCrypto = false;
+            try
+            {
+                hasCrypto = getHoldings().Any(x => x.Symbol.Value == "BTCUSD");
+            }
+            catch
+            {
+            }
+            var algorithm = new TestAlgorithm { UniverseSettings = { Resolution = Resolution.Daily, Leverage = (hasCrypto ? 1 : 20), FillForward = false, ExtendedMarketHours = true} };
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var objectStore = new Mock<IObjectStore>();
+            var brokerage = new Mock<IBrokerage>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(getHoldings);
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(getOrders);
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object));
+
+            if (result != expected)
+            {
+                Assert.Fail("SetupHandler result did not match expected value");
+            }
+
+            foreach (var symbol in algorithm.Securities.Keys)
+            {
+                var config = algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).First();
+                
+                // Assert Resolution and FillForward settings persisted
+                Assert.AreEqual(algorithm.UniverseSettings.Resolution, config.Resolution);
+                Assert.AreEqual(algorithm.UniverseSettings.FillForward, config.FillDataForward);
+
+                // Assert ExtendedHours setting persisted for equities
+                if (config.SecurityType == SecurityType.Equity)
+                {
+                    Assert.AreEqual(algorithm.UniverseSettings.ExtendedMarketHours, config.ExtendedMarketHours);
+                }
+
+                // Assert Leverage setting persisted for non options or futures (Blocked from setting leverage in Security.SetLeverage())
+                if (!symbol.SecurityType.IsOption() && symbol.SecurityType != SecurityType.Future)
+                {
+                    var security = algorithm.Securities[symbol];
+                    Assert.AreEqual(algorithm.UniverseSettings.Leverage, security.Leverage);
+                }
             }
         }
 
