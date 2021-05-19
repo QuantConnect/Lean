@@ -122,8 +122,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     $" Attempting to request daily resolution history to resolve conversion rate");
 
                 var unassignedCashSymbols = unassignedCash
-                    .SelectMany(x => x.CurrencyConversion.GetConversionRateSecurities())
-                    .Select(x => x.Symbol)
+                    .SelectMany(x => x.SecuritySymbols)
                     .ToHashSet();
 
                 var replacementHistoryRequests = new List<HistoryRequest>();
