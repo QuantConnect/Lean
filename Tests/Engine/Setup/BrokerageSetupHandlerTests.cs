@@ -185,16 +185,19 @@ namespace QuantConnect.Tests.Engine.Setup
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, objectStore.Object));
 
-            // Special case for this test, Crypto case cannot set leverage because CashBuyingPowerModel
-            // so this will break test, but want to use same test set as others in this class so we will force a pass
             if (result != expected)
             {
+                // Special case for this test, Crypto case cannot set leverage because CashBuyingPowerModel
+                // so this will break test, but we want to use same test set as others in this class so we will force a pass
                 var holdings = getHoldings();
-                Assert.IsTrue(holdings.Any(x => x.Symbol.Value == "BTCUSD"));
-                return;
-            }
+                if (holdings.Any(x => x.Symbol.Value == "BTCUSD"))
+                {
+                    return;
+                }
 
-            Assert.AreEqual(expected, result);
+                // If this didn't match our "special" case this is a fail
+                Assert.Fail("SetupHandler result did not match expected value");
+            }
 
             foreach (var symbol in algorithm.Securities.Keys)
             {
