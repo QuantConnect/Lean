@@ -109,7 +109,7 @@ namespace QuantConnect.Util
         /// </summary>
         /// <param name="currencyPair">Currency pair AB</param>
         /// <param name="knownSymbol">Known part of the currencyPair (either A or B)</param>
-        /// <returns>The other part of currencyPair (either B or A)</returns>
+        /// <returns>The other part of currencyPair (either B or A), or null if known symbol is not part of currencyPair</returns>
         public static string CurrencyPairDual(this Symbol currencyPair, string knownSymbol)
         {
             string baseCurrency;
@@ -126,7 +126,7 @@ namespace QuantConnect.Util
         /// <param name="baseCurrency">The base currency of the currency pair</param>
         /// <param name="quoteCurrency">The quote currency of the currency pair</param>
         /// <param name="knownSymbol">Known part of the currencyPair (either A or B)</param>
-        /// <returns>The other part of currencyPair (either B or A)</returns>
+        /// <returns>The other part of currencyPair (either B or A), or null if known symbol is not part of the currency pair</returns>
         public static string CurrencyPairDual(string baseCurrency, string quoteCurrency, string knownSymbol)
         {
             if (baseCurrency == knownSymbol)

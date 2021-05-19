@@ -180,6 +180,10 @@ namespace QuantConnect.Securities.CurrencyConversion
             foreach (var potentialConversionRateSymbol1 in allSymbols)
             {
                 var middleCurrency = potentialConversionRateSymbol1.CurrencyPairDual(sourceCurrency);
+                if (middleCurrency == null)
+                {
+                    continue;
+                }
 
                 foreach (var potentialConversionRateSymbol2 in allSymbols)
                 {

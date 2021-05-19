@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        public void CurrencyPairDualThrowsOnWrongKnownSymbol()
+        public void CurrencyPairDualReturnsNullOnWrongKnownSymbol()
         {
             var currencyPair = Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Bitfinex);
 
