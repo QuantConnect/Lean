@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _aapl;
         private const string Ticker = "AAPL";
-        private readonly FactorFile _factorFile = FactorFile.Read(Ticker, "USA");
+        private readonly FactorFile _factorFile = FactorFile.Read(Ticker, Market.USA);
         private readonly IEnumerator<decimal> _expectedAdjustedVolume = new List<decimal> { 1541213, 761013, 920088, 867077, 542487, 663132, 
             374927, 379554, 413805, 377622 }.GetEnumerator();
         private readonly IEnumerator<decimal> _expectedAdjustedAskSize = new List<decimal> { 53900, 1400, 6300, 2100, 1400, 1400, 700, 
