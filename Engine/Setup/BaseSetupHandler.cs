@@ -111,11 +111,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 Log.Error($"Failed to assign conversion rates for the following cash: {string.Join(",", unassignedCash.Select(x => x.Value))}." +
                     $" Attempting to request daily resolution history to resolve conversion rate");
 
-                var originalRequests = historyRequests.Where(x =>
-                    unassignedCash.Contains(x.Symbol));
-
                 var replacementHistoryRequests = new List<HistoryRequest>();
-                foreach (var request in originalRequests.Where(x => x.Resolution < Resolution.Daily))
+                foreach (var request in historyRequests.Where(x => unassignedCash.Contains(x.Symbol) && x.Resolution < Resolution.Daily))
                 {
                     var newRequest = new HistoryRequest(request.EndTimeUtc.AddDays(-10), request.EndTimeUtc, request.DataType,
                         request.Symbol, Resolution.Daily, request.ExchangeHours, request.DataTimeZone, request.FillForwardResolution,
