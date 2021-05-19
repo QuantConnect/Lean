@@ -59,6 +59,8 @@ namespace QuantConnect.Tests.Common.Util
 
             Assert.AreEqual("USD", currencyPair.CurrencyPairDual("EUR"));
             Assert.AreEqual("EUR", currencyPair.CurrencyPairDual("USD"));
+            Assert.AreEqual("USD", CurrencyPairUtil.CurrencyPairDual("EUR", "USD", "EUR"));
+            Assert.AreEqual("EUR", CurrencyPairUtil.CurrencyPairDual("EUR", "USD", "USD"));
         }
 
         [Test]
@@ -68,6 +70,8 @@ namespace QuantConnect.Tests.Common.Util
 
             Assert.AreEqual("XAG", currencyPair.CurrencyPairDual("USD"));
             Assert.AreEqual("USD", currencyPair.CurrencyPairDual("XAG"));
+            Assert.AreEqual("XAG", CurrencyPairUtil.CurrencyPairDual("XAG", "USD", "USD"));
+            Assert.AreEqual("USD", CurrencyPairUtil.CurrencyPairDual("XAG", "USD", "XAG"));
         }
 
         [Test]
@@ -77,6 +81,8 @@ namespace QuantConnect.Tests.Common.Util
 
             Assert.AreEqual("BTC", currencyPair.CurrencyPairDual("ETH"));
             Assert.AreEqual("ETH", currencyPair.CurrencyPairDual("BTC"));
+            Assert.AreEqual("BTC", CurrencyPairUtil.CurrencyPairDual("ETH", "BTC", "ETH"));
+            Assert.AreEqual("ETH", CurrencyPairUtil.CurrencyPairDual("ETH", "BTC", "BTC"));
         }
 
         [Test]
@@ -85,6 +91,7 @@ namespace QuantConnect.Tests.Common.Util
             var currencyPair = Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Bitfinex);
 
             Assert.Throws<ArgumentException>(() => currencyPair.CurrencyPairDual("ZRX"));
+            Assert.Throws<ArgumentException>(() => CurrencyPairUtil.CurrencyPairDual("ETH", "BTC", "ZRX"));
         }
 
         [Test]
@@ -111,6 +118,7 @@ namespace QuantConnect.Tests.Common.Util
             var ethusd = Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
 
             Assert.AreEqual(result, ethusd.PairContainsCurrency(currency));
+            Assert.AreEqual(result, CurrencyPairUtil.PairContainsCurrency("ETH", "USD", currency));
         }
 
         /// <summary>

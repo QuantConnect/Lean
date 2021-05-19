@@ -112,23 +112,35 @@ namespace QuantConnect.Util
         /// <returns>The other part of currencyPair (either B or A)</returns>
         public static string CurrencyPairDual(this Symbol currencyPair, string knownSymbol)
         {
-            string currencyA;
-            string currencyB;
+            string baseCurrency;
+            string quoteCurrency;
 
-            DecomposeCurrencyPair(currencyPair, out currencyA, out currencyB);
+            DecomposeCurrencyPair(currencyPair, out baseCurrency, out quoteCurrency);
 
-            if (currencyA == knownSymbol)
+            return CurrencyPairDual(baseCurrency, quoteCurrency, knownSymbol);
+        }
+
+        /// <summary>
+        /// You have currencyPair AB and one known symbol (A or B). This function returns the other symbol (B or A).
+        /// </summary>
+        /// <param name="baseCurrency">The base currency of the currency pair</param>
+        /// <param name="quoteCurrency">The quote currency of the currency pair</param>
+        /// <param name="knownSymbol">Known part of the currencyPair (either A or B)</param>
+        /// <returns>The other part of currencyPair (either B or A)</returns>
+        public static string CurrencyPairDual(string baseCurrency, string quoteCurrency, string knownSymbol)
+        {
+            if (baseCurrency == knownSymbol)
             {
-                return currencyB;
+                return quoteCurrency;
             }
 
-            if (currencyB == knownSymbol)
+            if (quoteCurrency == knownSymbol)
             {
-                return currencyA;
+                return baseCurrency;
             }
 
             throw new ArgumentException(
-                $"The known symbol {knownSymbol} isn't contained in currency pair {currencyPair}.");
+                $"The known symbol {knownSymbol} isn't contained in currency pair {baseCurrency}{quoteCurrency}.");
         }
 
         /// <summary>
@@ -166,11 +178,6 @@ namespace QuantConnect.Util
                 return Match.ExactMatch;
             }
 
-            string baseCurrencyA;
-            string quoteCurrencyA;
-
-            DecomposeCurrencyPair(pairA, out baseCurrencyA, out quoteCurrencyA);
-
             if (pairA.Value == quoteCurrencyB + baseCurrencyB)
             {
                 return Match.InverseMatch;
@@ -192,6 +199,18 @@ namespace QuantConnect.Util
 
             DecomposeCurrencyPair(pair, out baseCurrency, out quoteCurrency);
 
+            return PairContainsCurrency(baseCurrency, quoteCurrency, currency);
+        }
+
+        /// <summary>
+        /// Returns whether a currency pair contains a certain currency as base or as quote
+        /// </summary>
+        /// <param name="baseCurrency">The base currency of the currency pair</param>
+        /// <param name="quoteCurrency">The quote currency of the currency pair</param>
+        /// <param name="currency">The currency to look for</param>
+        /// <returns>True if currency is the base or quote currency of pair, false if not</returns>
+        public static bool PairContainsCurrency(string baseCurrency, string quoteCurrency, string currency)
+        {
             return baseCurrency.Equals(currency, StringComparison.InvariantCultureIgnoreCase) ||
                 quoteCurrency.Equals(currency, StringComparison.InvariantCultureIgnoreCase);
         }

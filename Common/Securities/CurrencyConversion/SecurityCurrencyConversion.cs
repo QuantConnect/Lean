@@ -146,7 +146,8 @@ namespace QuantConnect.Securities.CurrencyConversion
             Func<Symbol, Security> makeNewSecurity)
         {
             var allSymbols = existingSecurities.Select(sec => sec.Symbol).Concat(potentialSymbols)
-                .Where(CurrencyPairUtil.IsDecomposable);
+                .Where(CurrencyPairUtil.IsDecomposable)
+                .ToList();
 
             var securitiesBySymbol = existingSecurities.Aggregate(new Dictionary<Symbol, Security>(),
                 (mapping, security) =>
@@ -244,12 +245,17 @@ namespace QuantConnect.Securities.CurrencyConversion
         {
             inverted = false;
 
-            if (!symbol.PairContainsCurrency(sourceCurrency))
+            string baseCurrency;
+            string quoteCurrency;
+
+            CurrencyPairUtil.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency);
+
+            if (!CurrencyPairUtil.PairContainsCurrency(baseCurrency, quoteCurrency, sourceCurrency))
             {
                 return false;
             }
 
-            if (symbol.CurrencyPairDual(sourceCurrency) != destinationCurrency)
+            if (CurrencyPairUtil.CurrencyPairDual(baseCurrency, quoteCurrency, sourceCurrency) != destinationCurrency)
             {
                 return false;
             }
