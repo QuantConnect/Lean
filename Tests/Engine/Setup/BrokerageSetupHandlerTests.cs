@@ -643,7 +643,7 @@ namespace QuantConnect.Tests.Engine.Setup
             };
         }
 
-        private class TestAlgorithm : QCAlgorithm
+        internal class TestAlgorithm : QCAlgorithm
         {
             private readonly Action _beforePostInitializeAction;
 
@@ -665,7 +665,7 @@ namespace QuantConnect.Tests.Engine.Setup
             }
         }
 
-        private LiveNodePacket GetJob()
+        internal static LiveNodePacket GetJob()
         {
             var job = new LiveNodePacket
             {

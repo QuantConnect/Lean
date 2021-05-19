@@ -93,6 +93,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     resolution));
             }
 
+            // Attempt to get history for these requests and update cash
             var slices = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
             slices.PushThrough(data =>
             {
@@ -102,6 +103,34 @@ namespace QuantConnect.Lean.Engine.Setup
                     cash.Update(data);
                 }
             });
+
+            // Any remaining unassigned cash will attempt to fall back to a daily resolution history request to resolve
+            var unassignedCash = cashToUpdate.Where(x => x.ConversionRate == 0).Select(x => x.SecuritySymbol).ToList();
+            if (unassignedCash.Any())
+            {
+                Log.Error($"Failed to assign conversion rates for the following cash: {string.Join(",", unassignedCash.Select(x => x.Value))}." +
+                    $" Attempting to request daily resolution history to resolve conversion rate");
+
+                var replacementHistoryRequests = new List<HistoryRequest>();
+                foreach (var request in historyRequests.Where(x => unassignedCash.Contains(x.Symbol) && x.Resolution < Resolution.Daily))
+                {
+                    var newRequest = new HistoryRequest(request.EndTimeUtc.AddDays(-10), request.EndTimeUtc, request.DataType,
+                        request.Symbol, Resolution.Daily, request.ExchangeHours, request.DataTimeZone, request.FillForwardResolution,
+                        request.IncludeExtendedMarketHours, request.IsCustomData, request.DataNormalizationMode, request.TickType);
+
+                    replacementHistoryRequests.Add(newRequest);
+                }
+
+                slices = algorithm.HistoryProvider.GetHistory(replacementHistoryRequests, algorithm.TimeZone);
+                slices.PushThrough(data =>
+                {
+                    foreach (var cash in cashToUpdate
+                        .Where(x => x.ConversionRateSecurity.Symbol == data.Symbol))
+                    {
+                        cash.Update(data);
+                    }
+                });
+            }
 
             Log.Trace("BaseSetupHandler.SetupCurrencyConversions():" +
                 $"{Environment.NewLine}{algorithm.Portfolio.CashBook}");
