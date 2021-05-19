@@ -1742,7 +1742,7 @@ namespace QuantConnect.Algorithm
             List<SubscriptionDataConfig> underlyingConfigs;
             if (!Securities.TryGetValue(underlying, out underlyingSecurity))
             {
-                underlyingSecurity = AddSecurity(underlying, resolution, fillDataForward, leverage);
+                underlyingSecurity = AddSecurity(underlying, resolution, fillDataForward, leverage, UniverseSettings.ExtendedMarketHours);
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(underlying);
             }
