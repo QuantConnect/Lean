@@ -2,7 +2,7 @@
   "profiles": {
     "QuantConnect.ToolBox": {
       "commandName": "Project",
-      "commandLineArgs": "--app=pdl --from-date=20200101-12:00:00 --resolution=Minute --security-type=Equity --market=usa --tickers=AAPL"
+      "commandLineArgs": "--app=pdl --from-date=20210515-12:00:00 --resolution=Tick --security-type=Equity --market=usa --tickers=AAPL"
     }
   }
 }

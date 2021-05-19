@@ -553,10 +553,10 @@ namespace QuantConnect.ToolBox.Polygon
                         var obj = JObject.Parse(response)["results"]?.ToString();
                         var quoteTicksList = JsonConvert.DeserializeObject<EquityQuoteTickResponse[]>(obj).ToList();
 
-                        // The first results of the next page will coincide with last results of previous page
-                        // We distinguish these results by exchange timestamp, lets clear from repeating values
-                        var lastTickExchangeTimeStamp = lastTick?.ExchangeTimestamp ?? 0;
-                        quoteTicksList = quoteTicksList.Where(x => x.ExchangeTimestamp != lastTickExchangeTimeStamp).ToList();
+                        // The first results of the next page will coincide with last of the previous page
+                        // We distinguish the results by the timestamp, lets clear from repeating values
+                        var lastTickSipTimeStamp = lastTick?.SipTimestamp ?? 0;
+                        quoteTicksList = quoteTicksList.Where(x => x.SipTimestamp != lastTickSipTimeStamp).ToList();
 
                         // API will send at the end only such repeating ticks that coincide with last results of previous page
                         // If there are no other ticks other than these then we break
@@ -566,12 +566,12 @@ namespace QuantConnect.ToolBox.Polygon
                         }
 
                         Log.Trace($"GetEquityQuoteTicks(): Page # {counter}; " +
-                                  $"first: {Time.UnixNanosecondTimeStampToDateTime(quoteTicksList.First().ExchangeTimestamp)}; " +
-                                  $"last: {Time.UnixNanosecondTimeStampToDateTime(quoteTicksList.Last().ExchangeTimestamp)}");
+                                  $"first: {Time.UnixNanosecondTimeStampToDateTime(quoteTicksList.First().SipTimestamp)}; " +
+                                  $"last: {Time.UnixNanosecondTimeStampToDateTime(quoteTicksList.Last().SipTimestamp)}");
 
                         foreach (var row in quoteTicksList)
                         {
-                            var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
+                            var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.SipTimestamp);
 
                             if (utcTime < start)
                             {
@@ -588,7 +588,7 @@ namespace QuantConnect.ToolBox.Polygon
                             yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.BidSize, row.BidPrice, row.AskSize, row.AskPrice);
 
                             // Save the values before to jump to the next iteration
-                            offset = row.ExchangeTimestamp;
+                            offset = row.SipTimestamp;
                             lastTick = row;
                         }
 
@@ -646,10 +646,10 @@ namespace QuantConnect.ToolBox.Polygon
                         var obj = JObject.Parse(response)["results"]?.ToString();
                         var tradeTicksList = JsonConvert.DeserializeObject<EquityTradeTickResponse[]>(obj).ToList();
 
-                        // The first results of the next page will coincide with last results of previous page
-                        // We distinguish these results by exchange timestamp, lets clear from repeating values
-                        var lastTickExchangeTimeStamp = lastTick?.ExchangeTimestamp ?? 0;
-                        tradeTicksList = tradeTicksList.Where(x => x.ExchangeTimestamp != lastTickExchangeTimeStamp).ToList();
+                        // The first results of the next page will coincide with last of the previous page
+                        // We distinguish the results by the timestamp, lets clear from repeating values
+                        var lastTickSipTimeStamp = lastTick?.SipTimestamp ?? 0;
+                        tradeTicksList = tradeTicksList.Where(x => x.SipTimestamp != lastTickSipTimeStamp).ToList();
 
                         // API will send at the end only such repeating ticks that coincide with last results of previous page
                         // If there are no other ticks other than these then we break
@@ -659,13 +659,13 @@ namespace QuantConnect.ToolBox.Polygon
                         }
 
                         Log.Trace($"GetEquityTradeTicks(): Page # {counter}; " +
-                                  $"first: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.First().ExchangeTimestamp)}; " +
-                                  $"last: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.Last().ExchangeTimestamp)}");
+                                  $"first: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.First().SipTimestamp)}; " +
+                                  $"last: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.Last().SipTimestamp)}");
 
                         foreach (var row in tradeTicksList)
                         {
-                            var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
-
+                            var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.SipTimestamp);
+                            
                             if (utcTime < start)
                             {
                                 continue;
@@ -680,7 +680,7 @@ namespace QuantConnect.ToolBox.Polygon
                             yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
 
                             // Save the values before to jump to the next iteration
-                            offset = row.ExchangeTimestamp;
+                            offset = row.SipTimestamp;
                             lastTick = row;
                         }
 
