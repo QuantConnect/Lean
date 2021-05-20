@@ -30367,35 +30367,35 @@
       "sunday": [],
       "monday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "tuesday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "wednesday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "thursday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "friday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
@@ -30776,16 +30776,21 @@
         },
         {
           "start": "13:00:00",
-          "end": "16:15:00",
+          "end": "16:30:00",
           "state": "market"
         },
         {
-          "start": "17:00:00",
-          "end": "23:45:00",
+          "start": "17:15:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
       "tuesday": [
+		{
+          "start": "00:00:00",
+          "end": "03:00:00",
+          "state": "market"
+        },
         {
           "start": "09:15:00",
           "end": "12:00:00",
@@ -30793,16 +30798,21 @@
         },
         {
           "start": "13:00:00",
-          "end": "16:15:00",
+          "end": "16:30:00",
           "state": "market"
         },
         {
-          "start": "17:00:00",
-          "end": "23:45:00",
+          "start": "17:15:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
       "wednesday": [
+		{
+          "start": "00:00:00",
+          "end": "03:00:00",
+          "state": "market"
+        },
         {
           "start": "09:15:00",
           "end": "12:00:00",
@@ -30810,16 +30820,21 @@
         },
         {
           "start": "13:00:00",
-          "end": "16:15:00",
+          "end": "16:30:00",
           "state": "market"
         },
         {
-          "start": "17:00:00",
-          "end": "23:45:00",
+          "start": "17:15:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
       "thursday": [
+		{
+          "start": "00:00:00",
+          "end": "03:00:00",
+          "state": "market"
+        },
         {
           "start": "09:15:00",
           "end": "12:00:00",
@@ -30827,16 +30842,21 @@
         },
         {
           "start": "13:00:00",
-          "end": "16:15:00",
+          "end": "16:30:00",
           "state": "market"
         },
         {
-          "start": "17:00:00",
-          "end": "23:45:00",
+          "start": "17:15:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
       "friday": [
+		{
+          "start": "00:00:00",
+          "end": "03:00:00",
+          "state": "market"
+        },
         {
           "start": "09:15:00",
           "end": "12:00:00",
@@ -30844,16 +30864,22 @@
         },
         {
           "start": "13:00:00",
-          "end": "16:15:00",
+          "end": "16:30:00",
           "state": "market"
         },
         {
-          "start": "17:00:00",
-          "end": "23:45:00",
+          "start": "17:15:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [
+		{
+          "start": "00:00:00",
+          "end": "03:00:00",
+          "state": "market"
+        }
+		],
       "holidays": [
         "1/1/2004",
         "1/1/2007",
@@ -32087,79 +32113,94 @@
     "Cfd-oanda-SG30SGD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Asia/Singapore",
-      "sunday": [
-        {
-          "start": "00:30:00",
-          "end": "09:10:00",
-          "state": "market"
-        },
-        {
-          "start": "10:15:00",
-          "end": "18:00:00",
-          "state": "market"
-        }
-      ],
+      "sunday": [],
       "monday": [
         {
-          "start": "00:30:00",
-          "end": "09:10:00",
+          "start": "08:30:00",
+          "end": "17:20:00",
           "state": "market"
         },
         {
-          "start": "10:15:00",
-          "end": "18:00:00",
+          "start": "17:50:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
       "tuesday": [
         {
-          "start": "00:30:00",
-          "end": "09:10:00",
+          "start": "00:00:00",
+          "end": "04:45:00",
           "state": "market"
         },
         {
-          "start": "10:15:00",
-          "end": "18:00:00",
+          "start": "08:30:00",
+          "end": "17:20:00",
+          "state": "market"
+        },
+        {
+          "start": "17:50:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
       "wednesday": [
         {
-          "start": "00:30:00",
-          "end": "09:10:00",
+          "start": "00:00:00",
+          "end": "04:45:00",
           "state": "market"
         },
         {
-          "start": "10:15:00",
-          "end": "18:00:00",
+          "start": "08:30:00",
+          "end": "17:20:00",
+          "state": "market"
+        },
+        {
+          "start": "17:50:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
       "thursday": [
         {
-          "start": "00:30:00",
-          "end": "09:10:00",
+          "start": "00:00:00",
+          "end": "04:45:00",
           "state": "market"
         },
         {
-          "start": "10:15:00",
-          "end": "18:00:00",
+          "start": "08:30:00",
+          "end": "17:20:00",
+          "state": "market"
+        },
+        {
+          "start": "17:50:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
       "friday": [
         {
-          "start": "00:30:00",
-          "end": "09:10:00",
+          "start": "00:00:00",
+          "end": "04:45:00",
           "state": "market"
         },
         {
-          "start": "10:15:00",
-          "end": "18:00:00",
+          "start": "08:30:00",
+          "end": "17:20:00",
+          "state": "market"
+        },
+        {
+          "start": "17:50:00",
+          "end": "24:00:00",
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [
+		{
+          "start": "00:00:00",
+          "end": "04:45:00",
+          "state": "market"
+        }
+	  ],
       "holidays": [
         "2/15/2010",
         "2/13/2011",
