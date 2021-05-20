@@ -44,26 +44,6 @@ namespace QuantConnect.Securities
         public event EventHandler Updated;
 
         /// <summary>
-        /// Gets the symbol of the first security required to provide conversion rates.
-        /// If this cash represents the account currency, then <see cref="QuantConnect.Symbol.Empty"/>
-        /// is returned
-        /// </summary>
-        [JsonIgnore]
-        [Obsolete("This property has been made obsolete, use SecuritySymbols instead.\n" +
-            "This property only returns the symbol of the first security used to calculate conversion rates, there may be more.")]
-        public Symbol SecuritySymbol =>
-            CurrencyConversion?.ConversionRateSecurities.First().Symbol ?? QuantConnect.Symbol.Empty;
-
-        /// <summary>
-        /// Gets the first security used to apply conversion rates.
-        /// If this cash represents the account currency, then null is returned.
-        /// </summary>
-        [JsonIgnore]
-        [Obsolete("This property has been made obsolete, use CurrencyConversion.ConversionRateSecurities instead.\n" +
-            "This property only returns the first security used to calculate conversion rates, there may be more.")]
-        public Security ConversionRateSecurity => CurrencyConversion?.ConversionRateSecurities.First();
-
-        /// <summary>
         /// Gets the symbols of the securities required to provide conversion rates.
         /// If this cash represents the account currency, then an empty enumerable is returned.
         /// </summary>
