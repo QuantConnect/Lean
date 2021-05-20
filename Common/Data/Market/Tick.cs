@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -186,7 +186,9 @@ namespace QuantConnect.Data.Market
             Value = original.Value;
             BidPrice = original.BidPrice;
             AskPrice = original.AskPrice;
-            Exchange = original.Exchange;
+            // directly set privates so we don't parse the exchange
+            _exchange = original._exchange;
+            _exchangeCode = original._exchangeCode;
             SaleCondition = original.SaleCondition;
             Quantity = original.Quantity;
             Suspicious = original.Suspicious;

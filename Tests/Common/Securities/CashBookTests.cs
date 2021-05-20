@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,8 +15,10 @@
 
 using System;
 using System.Linq;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -24,6 +26,27 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class CashBookTests
     {
+        [Test]
+        public void JsonRoundTrip()
+        {
+            var cashBook = new CashBook { AccountCurrency = Currencies.EUR };
+            cashBook.Add(Currencies.USD, 10, 1.2m);
+            cashBook.Add(Currencies.EUR, 10, 1m);
+
+            var expected = new LiveResult { CashBook = cashBook };
+
+            var serialized = JsonConvert.SerializeObject(expected);
+            var result = JsonConvert.DeserializeObject<LiveResult>(serialized);
+
+            Assert.AreEqual(expected.AccountCurrency, result.AccountCurrency);
+            Assert.AreEqual(expected.AccountCurrencySymbol, result.AccountCurrencySymbol);
+            Assert.AreEqual(expected.Cash.Count, result.Cash.Count);
+            Assert.AreEqual(expected.Cash[Currencies.USD].Amount, result.Cash[Currencies.USD].Amount);
+            Assert.AreEqual(expected.Cash[Currencies.USD].ConversionRate, result.Cash[Currencies.USD].ConversionRate);
+            Assert.AreEqual(expected.Cash[Currencies.EUR].Amount, result.Cash[Currencies.EUR].Amount);
+            Assert.AreEqual(expected.Cash[Currencies.EUR].ConversionRate, result.Cash[Currencies.EUR].ConversionRate);
+        }
+
         [Test]
         public void InitializesWithAccountCurrencyAdded()
         {

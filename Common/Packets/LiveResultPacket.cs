@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,11 +15,12 @@
 */
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Packets
 {
@@ -147,6 +148,8 @@ namespace QuantConnect.Packets
     /// </summary>
     public class LiveResult : Result
     {
+        private CashBook _cashBook;
+
         /// <summary>
         /// Holdings dictionary of algorithm holdings information
         /// </summary>
@@ -156,8 +159,40 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Cashbook for the algorithm's live results.
         /// </summary>
+        [JsonIgnore]
+        public CashBook CashBook
+        {
+            get
+            {
+                return _cashBook;
+            }
+            set
+            {
+                _cashBook = value;
+
+                Cash = _cashBook?.ToDictionary(pair => pair.Key, pair => pair.Value);
+                AccountCurrency = CashBook?.AccountCurrency;
+                AccountCurrencySymbol = AccountCurrency != null ? Currencies.GetCurrencySymbol(AccountCurrency) : null;
+            }
+        }
+
+        /// <summary>
+        /// Cash for the algorithm's live results.
+        /// </summary>
         [JsonProperty(PropertyName = "Cash", NullValueHandling = NullValueHandling.Ignore)]
-        public CashBook Cash;
+        public Dictionary<string, Cash> Cash;
+
+        /// <summary>
+        /// The algorithm's account currency
+        /// </summary>
+        [JsonProperty(PropertyName = "AccountCurrency", NullValueHandling = NullValueHandling.Ignore)]
+        public string AccountCurrency;
+
+        /// <summary>
+        /// The algorithm's account currency
+        /// </summary>
+        [JsonProperty(PropertyName = "AccountCurrencySymbol", NullValueHandling = NullValueHandling.Ignore)]
+        public string AccountCurrencySymbol;
 
         /// <summary>
         /// Default Constructor
@@ -175,7 +210,7 @@ namespace QuantConnect.Packets
             ProfitLoss = parameters.ProfitLoss;
             Statistics = parameters.Statistics;
             Holdings = parameters.Holdings;
-            Cash = parameters.CashBook;
+            CashBook = parameters.CashBook;
             RuntimeStatistics = parameters.RuntimeStatistics;
             OrderEvents = parameters.OrderEvents;
             ServerStatistics = parameters.ServerStatistics;
