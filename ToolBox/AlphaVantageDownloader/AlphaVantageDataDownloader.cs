@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.AlphaVantageDownloader
 {
@@ -32,6 +33,7 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
     /// </summary>
     public class AlphaVantageDataDownloader : IDataDownloader, IDisposable
     {
+        private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly IRestClient _avClient;
         private readonly RateGate _rateGate;
         private bool _disposed;
@@ -52,6 +54,7 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         public AlphaVantageDataDownloader(IRestClient restClient, string apiKey)
         {
             _avClient = restClient;
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _avClient.BaseUrl = new Uri("https://www.alphavantage.co/");
             _avClient.Authenticator = new AlphaVantageAuthenticator(apiKey);
 
@@ -80,7 +83,7 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
                     data = GetIntradayData(request, startUtc, endUtc, resolution);
                     break;
                 case Resolution.Daily:
-                    data = GetDailyData(request, startUtc, endUtc);
+                    data = GetDailyData(request, startUtc, endUtc, symbol);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(resolution), $"{resolution} resolution not supported by API.");
@@ -96,13 +99,14 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         /// <param name="request">Base request</param>
         /// <param name="startUtc">Start time</param>
         /// <param name="endUtc">End time</param>
+        /// <param name="symbol">Symbol to download</param>
         /// <returns></returns>
-        private IEnumerable<TimeSeries> GetDailyData(RestRequest request, DateTime startUtc, DateTime endUtc)
+        private IEnumerable<TimeSeries> GetDailyData(RestRequest request, DateTime startUtc, DateTime endUtc, Symbol symbol)
         {
             request.AddParameter("function", "TIME_SERIES_DAILY");
 
             // The default output only includes 100 trading days of data. If we want need more, specify full output
-            if (GetBusinessDays(startUtc, endUtc) > 100)
+            if (GetBusinessDays(startUtc, endUtc, symbol) > 100)
             {
                 request.AddParameter("outputsize", "full");
             }
@@ -207,16 +211,22 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         /// <summary>
         /// From https://stackoverflow.com/questions/1617049/calculate-the-number-of-business-days-between-two-dates
         /// </summary>
-        public static double GetBusinessDays(DateTime start, DateTime end)
+        private int GetBusinessDays(DateTime start, DateTime end, Symbol symbol)
         {
-            var days = ((end - start).TotalDays * 5 - (start.DayOfWeek - end.DayOfWeek) * 2) / 7;
+            var exchangeHours = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
-            if (end.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday)
+            var current = start.Date;
+            var days = 0;
+            while (current < end)
             {
-                days--;
+                if (exchangeHours.IsDateOpen(current))
+                {
+                    days++;
+                }
+                current = current.AddDays(1);
             }
 
-            return Math.Round(days);
+            return days;
         }
 
         protected virtual void Dispose(bool disposing)

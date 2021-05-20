@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,12 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Configuration;
-using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using System.Collections.Generic;
 
 namespace QuantConnect.ToolBox.AlphaVantageDownloader
 {
@@ -46,9 +43,6 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
                 // fix end date
                 endDate = new DateTime(Math.Min(endDate.Ticks, DateTime.Now.AddDays(-1).Ticks));
 
-                // Load settings from config.json
-                var dataDirectory = Config.Get("data-folder", "../../../Data");
-
                 using (var downloader = new AlphaVantageDataDownloader(apiKey))
                 {
                     foreach (var ticker in tickers)
@@ -58,7 +52,7 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
                         var data = downloader.Get(symbol, castResolution, startDate, endDate);
 
                         // Save the data
-                        var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
+                        var writer = new LeanDataWriter(castResolution, symbol, Globals.DataFolder);
                         writer.Write(data);
                     }
                 }

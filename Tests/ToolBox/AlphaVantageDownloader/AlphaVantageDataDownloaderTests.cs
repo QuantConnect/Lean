@@ -1,4 +1,19 @@
-﻿using Moq;
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using Moq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.ToolBox.AlphaVantageDownloader;
@@ -7,15 +22,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
 {
     [TestFixture]
-#pragma warning disable CA1001 // Types that own disposable fields should be disposable
     public class AlphaVantageDataDownloaderTests
-#pragma warning restore CA1001 // Types that own disposable fields should be disposable
     {
         private const string API_KEY = "TESTKEY";
         private const string BASE_URL = "https://www.alphavantage.co/";
@@ -129,15 +140,15 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
         {
             var ticker = "IBM";
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
-            var start = DateTime.UtcNow.AddMonths(-2);
-            var end = DateTime.UtcNow;
+            var start = new DateTime(2021, 04, 05);
+            var end = new DateTime(2021, 05, 06);
 
             var expectedBars = new[]
             {
-                new TradeBar(DateTime.Parse("2021-04-05 09:30"), symbol, 133.71m, 133.72m, 133.62m, 133.62m, 1977),
-                new TradeBar(DateTime.Parse("2021-04-05 10:30"), symbol, 134.30m, 134.56m, 134.245m, 134.34m, 154723),
-                new TradeBar(DateTime.Parse("2021-04-06 09:30"), symbol, 135.54m, 135.56m, 135.26m, 135.28m, 2315),
-                new TradeBar(DateTime.Parse("2021-04-06 10:30"), symbol, 134.905m,134.949m, 134.65m, 134.65m, 101997),
+                new TradeBar(start.AddHours(9.5), symbol, 133.71m, 133.72m, 133.62m, 133.62m, 1977),
+                new TradeBar(start.AddHours(10.5), symbol, 134.30m, 134.56m, 134.245m, 134.34m, 154723),
+                new TradeBar(end.AddHours(9.5), symbol, 135.54m, 135.56m, 135.26m, 135.28m, 2315),
+                new TradeBar(end.AddHours(10.5), symbol, 134.905m,134.949m, 134.65m, 134.65m, 101997),
             };
 
             var responses = new[]
@@ -146,8 +157,8 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 "2021-04-05 10:30:00,134.3,134.56,134.245,134.34,154723\n" +
                 "2021-04-05 09:30:00,133.71,133.72,133.62,133.62,1977\n",
                 "time,open,high,low,close,volume\n" +
-                "2021-04-06 10:30:00,134.905,134.949,134.65,134.65,101997\n" +
-                "2021-04-06 09:30:00,135.54,135.56,135.26,135.28,2315\n",
+                "2021-05-06 10:30:00,134.905,134.949,134.65,134.65,101997\n" +
+                "2021-05-06 09:30:00,135.54,135.56,135.26,135.28,2315\n",
             };
 
             var requestCount = 0;
