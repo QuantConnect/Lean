@@ -50,14 +50,19 @@ The most important plugins are:
 
 These are all configurable from the config.json file in the Launcher Project.
 
+## Developing with Lean CLI ##
+
+QuantConnect recommends using [Lean CLI](https://github.com/QuantConnect/lean-cli) for local algorithm development. This is because it is a great tool for working with your algorithms locally while still being able to deploy to the cloud and have access to Lean data. It is also able to run algorithms on your local machine with your data through our official docker images.
+
+Reference QuantConnects documentation on Lean CLI [here](https://www.quantconnect.com/docs/v2/lean-cli/getting-started/lean-cli)
+
 ## Installation Instructions ##
 
-*We recommend using the docker images.* These are perfectly configured to run out of the box without interfering with your development environment. You can pull these images with `docker pull quantconnect/lean` and `docker pull quantconnect/research`.
+This section will cover how to install lean locally for you to use in your own environment.
 
-Refer to the following readme files for a detailed guide regarding using our docker image with your local IDE:
+Refer to the following readme files for a detailed guide regarding using your local IDE with Lean:
 * [VS Code](.vscode/readme.md)
 * [VS](.vs/readme.md)
-* [Pycharm](.idea/readme.md)
   
 
 To install locally, download the zip file with the [latest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location. Alternatively, install [Git](https://git-scm.com/downloads) and clone the repo:
