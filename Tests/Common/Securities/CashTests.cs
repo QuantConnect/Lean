@@ -140,11 +140,11 @@ namespace QuantConnect.Tests.Common.Securities
             );
             var usdjpy = new Security(Symbols.USDJPY, SecurityExchangeHours, new Cash("JPY", 0, 0), SymbolProperties.GetDefault("JPY"), ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null, new SecurityCache());
             var changes = new SecurityChanges(new[] { usdjpy }, Enumerable.Empty<Security>());
-            var addedSecurity = cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, changes, dataManager.SecurityService, cashBook.AccountCurrency);
+            var addedSecurities = cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, changes, dataManager.SecurityService, cashBook.AccountCurrency);
 
             // the security exists in SecurityChanges so it is NOT added to the security manager or subscriptions
             // this security will be added by the algorithm manager
-            Assert.IsNull(addedSecurity);
+            Assert.True(addedSecurities == null || addedSecurities.Count == 0);
         }
 
         [Test]
@@ -297,23 +297,30 @@ namespace QuantConnect.Tests.Common.Securities
                     )
                 }
             };
-            var symbol1 = quoteCash.EnsureCurrencyDataFeed(securities,
-                subscriptions,
-                MarketMap,
-                SecurityChanges.None,
-                dataManager.SecurityService,
-                accountCurrency);
-            Assert.IsNotNull(symbol1);
-            Assert.AreEqual(quoteCurrencySymbol, symbol1.Symbol.Value);
 
-            var symbol2 = baseCash.EnsureCurrencyDataFeed(securities,
+            var configs1 = quoteCash.EnsureCurrencyDataFeed(securities,
                 subscriptions,
                 MarketMap,
                 SecurityChanges.None,
                 dataManager.SecurityService,
                 accountCurrency);
-            Assert.IsNotNull(symbol2);
-            Assert.AreEqual(baseCurrencySymbol, symbol2.Symbol.Value);
+            Assert.AreEqual(1, configs1.Count);
+
+            var config1 = configs1[0];
+            Assert.IsNotNull(config1);
+            Assert.AreEqual(quoteCurrencySymbol, config1.Symbol.Value);
+
+            var configs2 = baseCash.EnsureCurrencyDataFeed(securities,
+                subscriptions,
+                MarketMap,
+                SecurityChanges.None,
+                dataManager.SecurityService,
+                accountCurrency);
+            Assert.AreEqual(1, configs2.Count);
+
+            var config2 = configs2[0];
+            Assert.IsNotNull(config2);
+            Assert.AreEqual(baseCurrencySymbol, config2.Symbol.Value);
         }
 
         public void EnsureInternalCurrencyDataFeedsForNonUsdQuoteCurrencyGetAdded()
@@ -457,24 +464,23 @@ namespace QuantConnect.Tests.Common.Securities
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
-            securities.Add(
-                Symbols.USDJPY,
-                new Security(
-                    SecurityExchangeHours,
-                    subscriptions.Add(Symbols.USDJPY, Resolution.Minute, TimeZone, TimeZone),
-                    new Cash(cashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(cashBook.AccountCurrency),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                )
+            var security = new Security(
+                SecurityExchangeHours,
+                subscriptions.Add(Symbols.USDJPY, Resolution.Minute, TimeZone, TimeZone),
+                new Cash(cashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(cashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
+            securities.Add(Symbols.USDJPY, security);
 
             // we need to get subscription index
             cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
 
             var last = 120m;
-            cash.Update(new Tick(DateTime.Now, Symbols.USDJPY, last, 119.95m, 120.05m));
+            security.SetMarketPrice(new Tick(DateTime.Now, Symbols.USDJPY, last, 119.95m, 120.05m));
+            cash.Update();
 
             // jpy is inverted, so compare on the inverse
             Assert.AreEqual(1 / last, cash.ConversionRate);
@@ -493,24 +499,23 @@ namespace QuantConnect.Tests.Common.Securities
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
-            securities.Add(
-                Symbols.GBPUSD,
-                new Security(
-                    SecurityExchangeHours,
-                    subscriptions.Add(Symbols.GBPUSD, Resolution.Minute, TimeZone, TimeZone),
-                    new Cash(cashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(cashBook.AccountCurrency),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                )
+            var security = new Security(
+                SecurityExchangeHours,
+                subscriptions.Add(Symbols.GBPUSD, Resolution.Minute, TimeZone, TimeZone),
+                new Cash(cashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(cashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
+            securities.Add(Symbols.GBPUSD, security);
 
             // we need to get subscription index
             cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
 
             var last = 1.5m;
-            cash.Update(new Tick(DateTime.Now, Symbols.GBPUSD, last, last * 1.009m, last * 0.009m));
+            security.SetMarketPrice(new Tick(DateTime.Now, Symbols.GBPUSD, last, last * 1.009m, last * 0.009m));
+            cash.Update();
 
             // jpy is inverted, so compare on the inverse
             Assert.AreEqual(last, cash.ConversionRate);
@@ -527,7 +532,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void UpdateEventCalledForUpdateMethod()
+        public void UpdateEventCalledWhenAccessingConversionRateAfterCallingUpdateMethod()
         {
             var called = false;
             var cash = new Cash(Currencies.USD, 1, 1);
@@ -535,7 +540,8 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 called = true;
             };
-            cash.Update(new Tick { Value = 10 } );
+            cash.Update();
+            var conversionRate = cash.ConversionRate;
             Assert.IsTrue(called);
         }
 
@@ -601,7 +607,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [TestCaseSource(nameof(cryptoBrokerageStableCoinCases))]
-        public void CryptoStableCoinMappingIsCorrect(IBrokerageModel brokerageModel, string accountCurrency, string stableCoin, bool shouldThrow, Symbol expectedConversionSymbol)
+        public void CryptoStableCoinMappingIsCorrect(IBrokerageModel brokerageModel, string accountCurrency, string stableCoin, bool shouldThrow, Symbol[] expectedConversionSymbols)
         {
             var cashBook = new CashBook() {AccountCurrency = accountCurrency};
             var cash = new Cash(stableCoin, 10m, 1m);
@@ -629,13 +635,20 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             // Verify the conversion symbol is correct
-            if (expectedConversionSymbol == null)
+            if (expectedConversionSymbols == null)
             {
-                Assert.IsNull(cash.ConversionRateSecurity);
+                Assert.IsNull(cash.CurrencyConversion);
             }
             else
             {
-                Assert.AreEqual(expectedConversionSymbol, cash.ConversionRateSecurity.Symbol);
+                Assert.IsNotNull(cash.CurrencyConversion);
+
+                var actualConversionSymbols = cash.CurrencyConversion
+                    .ConversionRateSecurities
+                    .Select(x => x.Symbol)
+                    .ToArray();
+
+                Assert.AreEqual(expectedConversionSymbols, actualConversionSymbols);
             }
         }
 
@@ -646,45 +659,45 @@ namespace QuantConnect.Tests.Common.Securities
 
         // Crypto brokerage model stable coin and account currency cases
         // The last var is expectedConversionSymbol, and is null when we expect there
-        // not to be a conversion security for our tests output
+        // not to be an (indirect) conversion for our tests output
         private static object[] cryptoBrokerageStableCoinCases =
         {
             // *** Bitfinex ***
             // Trades USDC, EURS, and USDT
             // USDC Cases
-            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDC", false, Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex) },
-            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDC", true, null }, // No USDCEUR, does throw!
-            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDC", true, null }, // No USDCGBP, does throw!
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDC", false, new[] { Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex) } },
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda) } }, // No USDCEUR, but indirect conversion exists
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda) } }, // No USDCGBP, but indirect conversion exists
 
             // EURS Cases
-            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "EURS", false, Symbol.Create("EURSUSD", SecurityType.Crypto, Market.Bitfinex) },
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "EURS", false, new[] { Symbol.Create("EURSUSD", SecurityType.Crypto, Market.Bitfinex) } },
             new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "EURS", false, null }, // No EURSEUR, but does not throw! Conversion 1-1
-            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "EURS", true, null }, // No EURSGBP, does throw!
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "EURS", false, new[] { Symbol.Create("EURSUSD", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda) } }, // No EURSGBP, but indirect conversion exists
 
             // USDT (Tether) Cases
-            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDT", false, Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Bitfinex) },
-            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDT", true, null }, // No USDTEUR, does throw!
-            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDT", true, null }, // No USDTGBP, does throw!
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDT", false, new[] { Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Bitfinex) } },
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDT", false, new[] { Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Bitfinex) } }, // No USDTEUR, but indirect conversion exists
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDT", false, new[] { Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("BTCGBP", SecurityType.Crypto, Market.Bitfinex) } }, // No USDTGBP, but indirect conversion exists
 
             // *** GDAX ***
             // Trades USDC and USDT* (*Not yet trading live, but expected soon)
             // USDC Cases
             new object[] { new GDAXBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
-            new object[] { new GDAXBrokerageModel(), Currencies.EUR, "USDC", false, Symbol.Create("USDCEUR", SecurityType.Crypto, Market.GDAX) },
-            new object[] { new GDAXBrokerageModel(), Currencies.GBP, "USDC", false, Symbol.Create("USDCGBP", SecurityType.Crypto, Market.GDAX) }, 
+            new object[] { new GDAXBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("USDCEUR", SecurityType.Crypto, Market.GDAX) } },
+            new object[] { new GDAXBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("USDCGBP", SecurityType.Crypto, Market.GDAX) } },
 
             // *** Binance ***
             // USDC Cases
             new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
-            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", true, null }, // No USDCEUR, does throw!
-            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", true, null }, // No USDCGBP, does throw!
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("BNBUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBEUR", SecurityType.Crypto, Market.Binance) } }, // No USDCEUR, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("BNBUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBGBP", SecurityType.Crypto, Market.Binance) } }, // No USDCGBP, but indirect conversion exists
 
             // BGBP Cases
-            new object[] { new BinanceBrokerageModel(), Currencies.USD, "BGBP", true, null }, // No BGBPUSD, does throw!
-            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "BGBP", true, null }, // No BGBPEUR, does throw!
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "BGBP", true, null }, // No BGBPUSD and no indirect conversion, does throw!
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "BGBP", true, null }, // No BGBPEUR and no indirect conversion, does throw!
             new object[] { new BinanceBrokerageModel(), Currencies.GBP, "BGBP", false, null }, // No BGBPGBP, but does not throw! Conversion 1-1
 
-            new object[] { new OandaBrokerageModel(), Currencies.EUR, "INR", true, null }, // No INREUR, does throw!
+            new object[] { new OandaBrokerageModel(), Currencies.EUR, "INR", false, new[] { Symbol.Create("USDINR", SecurityType.Forex, Market.Oanda), Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda) } }, // No INREUR, but indirect conversion exists
         };
     }
 }

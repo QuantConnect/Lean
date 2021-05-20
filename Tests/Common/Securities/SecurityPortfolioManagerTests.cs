@@ -242,11 +242,6 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.AreEqual((double)mchJwb, (double)(mchUsd*usdJwb), 1e-10);
                 //Console.WriteLine("Step: " + i + " -- MCHJWB: " + mchJwb);
 
-
-                jwbCash.Update(new IndicatorDataPoint(MCHJWB, time, mchJwb));
-                usdCash.Update(new IndicatorDataPoint(MCHUSD, time, mchUsd));
-                mchCash.Update(new IndicatorDataPoint(JWBUSD, time, usdJwb));
-
                 var updateData = new Dictionary<Security, BaseData>
                 {
                     {mchJwbSecurity, new IndicatorDataPoint(MCHJWB, time, mchJwb)},
@@ -258,6 +253,10 @@ namespace QuantConnect.Tests.Common.Securities
                 {
                     kvp.Key.SetMarketPrice(kvp.Value);
                 }
+
+                jwbCash.Update();
+                usdCash.Update();
+                mchCash.Update();
 
                 portfolio.ProcessFill(fill);
                 //Console.WriteLine("-----------------------");
