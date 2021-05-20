@@ -264,7 +264,7 @@ namespace QuantConnect
             {
                 // Fake a tradebar for quote data using market depth as a proxy for volume
                 var volume = (quote.LastBidSize + quote.LastAskSize) / 2;
-                volume = _symbol.SecurityType == SecurityType.Forex
+                volume = (_symbol.SecurityType == SecurityType.Forex || _symbol.SecurityType == SecurityType.Cfd)
                     ? _forexMinuteVolume
                     : volume;
 
