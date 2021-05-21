@@ -53,6 +53,10 @@ namespace QuantConnect.Brokerages
             { "LTCGBP", 0.01m },
             { "LTCBTC", 0.01m },
 
+            { "XRPUSD", 1m },
+            { "XRPEUR", 1m },
+            { "XRPBTC", 1m },
+
             { "EOSUSD", 0.1m },
             { "EOSEUR", 0.1m },
             { "EOSBTC", 0.1m },
