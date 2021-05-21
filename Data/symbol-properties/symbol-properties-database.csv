@@ -28,27 +28,27 @@ fxcm,XAUUSD,cfd,Gold,USD,1,0.001,1
 fxcm,XPDUSD,cfd,Palladium,USD,1,0.01,1
 fxcm,XPTUSD,cfd,Platinum,USD,1,0.01,1
 
-oanda,AU200AUD,cfd,Australia 200,AUD,1,0.1,1
+oanda,AU200AUD,cfd,Australia 200,AUD,1,0.1,0.1
 oanda,BCOUSD,cfd,Brent Crude Oil,USD,1,0.001,1
 oanda,CH20CHF,cfd,Swiss 20,CHF,1,0.1,1
 oanda,CORNUSD,cfd,Corn,USD,1,0.001,1
 oanda,DE10YBEUR,cfd,Bund,EUR,1,0.001,1
-oanda,DE30EUR,cfd,Germany 30,EUR,1,0.1,1
-oanda,EU50EUR,cfd,Europe 50,EUR,1,0.1,1
-oanda,FR40EUR,cfd,France 40,EUR,1,0.1,1
-oanda,HK33HKD,cfd,Hong Kong 33,HKD,1,0.1,1
-oanda,JP225USD,cfd,Japan 225,USD,1,0.1,1
-oanda,NAS100USD,cfd,US Nas 100,USD,1,0.1,1
+oanda,DE30EUR,cfd,Germany 30,EUR,1,0.1,0.1
+oanda,EU50EUR,cfd,Europe 50,EUR,1,0.1,0.1
+oanda,FR40EUR,cfd,France 40,EUR,1,0.1,0.1
+oanda,HK33HKD,cfd,Hong Kong 33,HKD,1,0.1,0.1
+oanda,JP225USD,cfd,Japan 225,USD,1,0.1,0.1
+oanda,NAS100USD,cfd,US Nas 100,USD,1,0.1,0.1
 oanda,NATGASUSD,cfd,Natural Gas,USD,1,0.001,1
-oanda,NL25EUR,cfd,Netherlands 25,EUR,1,0.001,1
-oanda,SG30SGD,cfd,Singapore 30,SGD,1,0.01,1
+oanda,NL25EUR,cfd,Netherlands 25,EUR,1,0.001,0.1
+oanda,SG30SGD,cfd,Singapore 30,SGD,1,0.01,0.1
 oanda,SOYBNUSD,cfd,Soybeans,USD,1,0.001,1
-oanda,SPX500USD,cfd,US SPX 500,USD,1,0.1,1
+oanda,SPX500USD,cfd,US SPX 500,USD,1,0.1,0.1
 oanda,SUGARUSD,cfd,Sugar,USD,1,0.00001,1
-oanda,UK100GBP,cfd,UK 100,GBP,1,0.1,1
+oanda,UK100GBP,cfd,UK 100,GBP,1,0.1,0.1
 oanda,UK10YBGBP,cfd,UK 10Y Gilt,GBP,1,0.001,1
-oanda,US2000USD,cfd,US Russ 2000,USD,1,0.001,1
-oanda,US30USD,cfd,US Wall St 30,USD,1,0.1,1
+oanda,US2000USD,cfd,US Russ 2000,USD,1,0.001,0.1
+oanda,US30USD,cfd,US Wall St 30,USD,1,0.1,0.1
 oanda,USB02YUSD,cfd,US 2Y T-Note,USD,1,0.001,1
 oanda,USB05YUSD,cfd,US 5Y T-Note,USD,1,0.001,1
 oanda,USB10YUSD,cfd,US 10Y T-Note,USD,1,0.001,1
