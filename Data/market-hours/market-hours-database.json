@@ -29557,6 +29557,23 @@
         "4/14/2017"
       ]
     },
+    /*
+    Oanda CFDs
+    Trading hours source:
+    - https://www.oanda.com/uk-en/trading/hours-of-operation/
+    - https://www.oanda.com/eu-en/trading/hours-of-operation/
+
+    Remarks:
+    - Opted to use UK times format for rounding up 4 & 9's to 5 & 10 respectively. Seems like
+    and inconsistency in their write up and has never been a issue before.
+    - When reading values from the schedule such as *Sun - Fri 19:00 - 07:45; 08:30 - 13:20* I interpreted them to have hard
+    the limits around the days given. EX: Sundays first time is 19:00 and Fridays last time is 13:20
+    - Certain markets end and open times are affected by DST, in these cases I opted to include the most inclusive
+    values for the markets. The specific instruments that are affected by this are as follows:
+      AU200AUD -> Last session end time is 7AM; DST 8AM
+      DE10YBEUR -> Open time is 1:15AM; DST 2:15AM
+      DE30EUR -> Open time is 1:15AM; DST 2:15AM 
+    */
     "Cfd-oanda-[*]": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
@@ -29611,19 +29628,8 @@
     "Cfd-oanda-AU200AUD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Australia/Sydney",
-      "sunday": [
-        {
-          "start": "17:10:00",
-          "end": "1.00:00:00",
-          "state": "market"
-        }
-      ],
+      "sunday": [],
       "monday": [
-        {
-          "start": "00:00:00",
-          "end": "08:00:00",
-          "state": "market"
-        },
         {
           "start": "09:50:00",
           "end": "16:30:00",
@@ -29924,7 +29930,7 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "17:00:00",
+          "end": "18:00:00",
           "state": "market"
         }
       ],
@@ -30189,35 +30195,35 @@
       "sunday": [],
       "monday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "tuesday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "wednesday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "thursday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
       ],
       "friday": [
         {
-          "start": "08:00:00",
+          "start": "01:15:00",
           "end": "22:00:00",
           "state": "market"
         }
@@ -30866,20 +30872,9 @@
           "start": "13:00:00",
           "end": "16:30:00",
           "state": "market"
-        },
-        {
-          "start": "17:15:00",
-          "end": "24:00:00",
-          "state": "market"
         }
       ],
-      "saturday": [
-		{
-          "start": "00:00:00",
-          "end": "03:00:00",
-          "state": "market"
-        }
-		],
+      "saturday": [],
       "holidays": [
         "1/1/2004",
         "1/1/2007",
@@ -31295,11 +31290,6 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "15:15:00",
-          "state": "market"
-        },
-        {
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         },
@@ -31312,11 +31302,6 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "15:15:00",
-          "state": "market"
-        },
-        {
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         },
@@ -31329,11 +31314,6 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "15:15:00",
-          "state": "market"
-        },
-        {
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         },
@@ -31346,11 +31326,6 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "15:15:00",
-          "state": "market"
-        },
-        {
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         },
@@ -31363,11 +31338,6 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "15:15:00",
-          "state": "market"
-        },
-        {
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         }
@@ -32187,20 +32157,9 @@
           "start": "08:30:00",
           "end": "17:20:00",
           "state": "market"
-        },
-        {
-          "start": "17:50:00",
-          "end": "24:00:00",
-          "state": "market"
         }
       ],
-      "saturday": [
-		{
-          "start": "00:00:00",
-          "end": "04:45:00",
-          "state": "market"
-        }
-	  ],
+      "saturday": [],
       "holidays": [
         "2/15/2010",
         "2/13/2011",
@@ -32999,11 +32958,16 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "18:00:00",
+          "end": "16:15:00",
           "state": "market"
         },
         {
-          "start": "20:00:00",
+          "start": "16:30:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -33011,11 +32975,16 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "18:00:00",
+          "end": "16:15:00",
           "state": "market"
         },
         {
-          "start": "20:00:00",
+          "start": "16:30:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -33023,11 +32992,16 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "18:00:00",
+          "end": "16:15:00",
           "state": "market"
         },
         {
-          "start": "20:00:00",
+          "start": "16:30:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -33035,11 +33009,16 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "18:00:00",
+          "end": "16:15:00",
           "state": "market"
         },
         {
-          "start": "20:00:00",
+          "start": "16:30:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -33047,7 +33026,12 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "18:00:00",
+          "end": "16:15:00",
+          "state": "market"
+        },
+        {
+          "start": "16:30:00",
+          "end": "17:00:00",
           "state": "market"
         }
       ],
@@ -34702,10 +34686,10 @@
     },
     "Cfd-oanda-XAGUSD": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "UTC",
+      "exchangeTimeZone": "America/New_York",
       "sunday": [
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -34713,11 +34697,11 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -34725,11 +34709,11 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -34737,11 +34721,11 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -34749,11 +34733,11 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -34761,7 +34745,7 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "22:00:00",
+          "end": "17:00:00",
           "state": "market"
         }
       ],
@@ -35402,10 +35386,10 @@
     },
     "Cfd-oanda-XAUUSD": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "UTC",
+      "exchangeTimeZone": "America/New_York",
       "sunday": [
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35413,11 +35397,11 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35425,11 +35409,11 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35437,11 +35421,11 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35449,11 +35433,11 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35461,7 +35445,7 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "22:00:00",
+          "end": "17:00:00",
           "state": "market"
         }
       ],
@@ -35612,10 +35596,10 @@
     },
     "Cfd-oanda-XPDUSD": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "UTC",
+      "exchangeTimeZone": "America/New_York",
       "sunday": [
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35623,11 +35607,11 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35635,11 +35619,11 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35647,11 +35631,11 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35659,11 +35643,11 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35671,7 +35655,7 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "22:00:00",
+          "end": "17:00:00",
           "state": "market"
         }
       ],
@@ -35682,10 +35666,10 @@
     },
     "Cfd-oanda-XPTUSD": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "UTC",
+      "exchangeTimeZone": "America/New_York",
       "sunday": [
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35693,11 +35677,11 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35705,11 +35689,11 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35717,11 +35701,11 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35729,11 +35713,11 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "22:15:00",
+          "end": "17:00:00",
           "state": "market"
         },
         {
-          "start": "23:00:00",
+          "start": "18:00:00",
           "end": "1.00:00:00",
           "state": "market"
         }
@@ -35741,7 +35725,7 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "22:00:00",
+          "end": "17:00:00",
           "state": "market"
         }
       ],
