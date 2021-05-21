@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -47,6 +49,70 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(pivotPoints.Length, highPivotPoints.Length + lowPivotPoints.Length);
 
             Assert.That(pivotPoints, Is.Ordered.Descending.By("Time"));
+        }
+
+        [TestCase(PivotPointType.Low)]
+        [TestCase(PivotPointType.High)]
+        [TestCase(PivotPointType.Both)]
+        [TestCase(PivotPointType.None)]
+        public void PivotPointPerType(PivotPointType pointType)
+        {
+            var pointsHighLow = new PivotPointsHighLow(10, 20);
+
+            for (var i = 0; i < pointsHighLow.WarmUpPeriod; i++)
+            {
+                Assert.IsFalse(pointsHighLow.IsReady);
+
+                var low = 1;
+                var high = 1;
+                if (i == 10)
+                {
+                    if (pointType == PivotPointType.Low || pointType == PivotPointType.Both)
+                    {
+                        low = 0;
+                    }
+                    if (pointType == PivotPointType.High || pointType == PivotPointType.Both)
+                    {
+                        high = 2;
+                    }
+                }
+
+                var bar = new TradeBar(DateTime.UtcNow.AddSeconds(i), Symbols.AAPL, i, high, low, i, i);
+                pointsHighLow.Update(bar);
+            }
+
+            Assert.IsTrue(pointsHighLow.IsReady);
+
+            var bothPivotPoint = pointsHighLow.GetAllPivotPointsArray();
+            var lowPivotPoint = pointsHighLow.GetLowPivotPointsArray();
+            var highPivotPoint = pointsHighLow.GetHighPivotPointsArray();
+
+            if (pointType == PivotPointType.None)
+            {
+                Assert.AreEqual(0, bothPivotPoint.Length);
+            }
+            if (pointType == PivotPointType.Both)
+            {
+                Assert.AreEqual(2, bothPivotPoint.Length);
+                Assert.AreEqual(1, lowPivotPoint.Length);
+                Assert.AreEqual(1, highPivotPoint.Length);
+                Assert.IsTrue(lowPivotPoint.Any(point => point.Value == 0));
+                Assert.IsTrue(highPivotPoint.Any(point => point.Value == 2));
+            }
+            if (pointType == PivotPointType.High)
+            {
+                Assert.AreEqual(1, bothPivotPoint.Length);
+                Assert.AreEqual(0, lowPivotPoint.Length);
+                Assert.AreEqual(1, highPivotPoint.Length);
+                Assert.IsTrue(highPivotPoint.Any(point => point.Value == 2));
+            }
+            if (pointType == PivotPointType.Low)
+            {
+                Assert.AreEqual(1, bothPivotPoint.Length);
+                Assert.AreEqual(1, lowPivotPoint.Length);
+                Assert.AreEqual(0, highPivotPoint.Length);
+                Assert.IsTrue(lowPivotPoint.Any(point => point.Value == 0));
+            }
         }
     }
 }

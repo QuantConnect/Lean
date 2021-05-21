@@ -1292,7 +1292,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The PivotPointsHighLow indicator for the requested symbol.</returns>
         public PivotPointsHighLow PPHL(Symbol symbol, int lengthHigh, int lengthLow, int lastStoredValues = 100, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"PPO({lengthHigh},{lengthLow})", resolution);
+            var name = CreateIndicatorName(symbol, $"PPHL({lengthHigh},{lengthLow})", resolution);
             var pivotPointsHighLow = new PivotPointsHighLow(name, lengthHigh, lengthLow, lastStoredValues);
             RegisterIndicator(symbol, pivotPointsHighLow, resolution, selector);
 

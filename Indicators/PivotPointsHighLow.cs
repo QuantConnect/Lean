@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     /// Pivot Points (High/Low), also known as Bar Count Reversals, indicator.
     /// https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/pivot-points-high-low
     /// </summary>
-    public class PivotPointsHighLow : IndicatorBase<IBaseDataBar>
+    public class PivotPointsHighLow : IndicatorBase<IBaseDataBar>, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _lengthHigh;
         private readonly int _lengthLow;
@@ -41,7 +41,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _windowHighs.IsReady || _windowLows.IsReady;
+        public override bool IsReady => _windowHighs.IsReady && _windowLows.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator with an equal high and low length
@@ -76,6 +81,7 @@ namespace QuantConnect.Indicators
             _windowHighs = new RollingWindow<IBaseDataBar>(2 * lengthHigh + 1);
             _windowLows = new RollingWindow<IBaseDataBar>(2 * _lengthLow + 1);
             _windowPivotPoints = new RollingWindow<PivotPoint>(lastStoredValues);
+            WarmUpPeriod = Math.Max(_windowHighs.Size, _windowLows.Size);
         }
 
         /// <summary>
@@ -88,72 +94,69 @@ namespace QuantConnect.Indicators
             _windowHighs.Add(input);
             _windowLows.Add(input);
 
-            IBaseDataBar middlePoint1 = null, middlePoint2 = null;
-            var isHigh = false;
-            var isLow = false;
+            PivotPoint high = null, low = null;
 
             if (_windowHighs.IsReady)
             {
-                middlePoint1 = _windowHighs[_lengthHigh];
-                for (var k = 0; k < (2 * _lengthHigh + 1); k++)
+                var isHigh = true;
+                var middlePoint = _windowHighs[_lengthHigh];
+                for (var k = 0; k < _windowHighs.Size && isHigh; k++)
                 {
                     // Skip the middle point
-                    if (k == _lengthHigh) continue;
+                    if (k == _lengthHigh)
+                    {
+                        continue;
+                    }
 
                     // Check if current high is below middle point high
-                    isHigh = _windowHighs[k].High < middlePoint1.High;
+                    isHigh = _windowHighs[k].High < middlePoint.High;
+                }
 
-                    // If any high is not below middle point high -> this is not a pivot point
-                    if (!isHigh) break;
+                if (isHigh)
+                {
+                    high = new PivotPoint(PivotPointType.High, middlePoint.High, middlePoint.EndTime);
                 }
             }
 
             if (_windowLows.IsReady)
             {
-                middlePoint2 = _windowLows[_lengthLow];
-                for (var k = 0; k < (2 * _lengthLow + 1); k++)
+                var isLow = true;
+                var middlePoint = _windowLows[_lengthLow];
+                for (var k = 0; k < _windowLows.Size && isLow; k++)
                 {
-                    if (k == _lengthLow) continue;
+                    if (k == _lengthLow)
+                    {
+                        continue;
+                    }
 
-                    isLow = _windowLows[k].Low > middlePoint2.Low;
+                    isLow = _windowLows[k].Low > middlePoint.Low;
+                }
 
-                    if (!isLow) break;
+                if (isLow)
+                {
+                    low = new PivotPoint(PivotPointType.Low, middlePoint.Low, middlePoint.EndTime);
                 }
             }
 
-            // Can be the bar forms both high and low pivot points at the same time
-            if (isHigh && isLow)
+            if (high != null)
             {
-                var pointHigh = new PivotPoint(PivotPointType.High, middlePoint1.High, middlePoint1.EndTime);
-                _windowPivotPoints.Add(pointHigh);
-                OnNewPivotPointFormed(new PivotPointsEventArgs(pointHigh));
-
-                var pointLow = new PivotPoint(PivotPointType.Low, middlePoint2.Low, middlePoint2.EndTime);
-                _windowPivotPoints.Add(pointLow);
-                OnNewPivotPointFormed(new PivotPointsEventArgs(pointLow));
-
-                return (decimal) PivotPointType.Both;
+                OnNewPivotPointFormed(high);
+                if (low != null)
+                {
+                    // Can be the bar forms both high and low pivot points at the same time
+                    OnNewPivotPointFormed(low);
+                    return (decimal)PivotPointType.Both;
+                }
+                return (decimal)PivotPointType.High;
             }
 
-            if (isHigh)
+            if (low != null)
             {
-                var point = new PivotPoint(PivotPointType.High, middlePoint1.High, middlePoint1.EndTime);
-                _windowPivotPoints.Add(point);
-                OnNewPivotPointFormed(new PivotPointsEventArgs(point));
-
-                return (decimal) PivotPointType.High;
+                OnNewPivotPointFormed(low);
+                return (decimal)PivotPointType.Low;
             }
 
-            if (isLow)
-            {
-                var point = new PivotPoint(PivotPointType.Low, middlePoint2.Low, middlePoint2.EndTime);
-                _windowPivotPoints.Add(point);
-                OnNewPivotPointFormed(new PivotPointsEventArgs(point));
-
-                return (decimal) PivotPointType.Low;
-            }
-
-            return (decimal) PivotPointType.None;
+            return (decimal)PivotPointType.None;
         }
 
         /// <summary>
@@ -174,7 +177,7 @@ namespace QuantConnect.Indicators
         /// <remarks>Returned array can be empty if no points have been registered yet/</remarks>
         public PivotPoint[] GetHighPivotPointsArray()
         {
-            return _windowPivotPoints?.Where(p => p.PivotPointType == PivotPointType.High).ToArray();
+            return _windowPivotPoints.Where(p => p.PivotPointType == PivotPointType.High).ToArray();
         }
 
         /// <summary>
@@ -184,7 +187,7 @@ namespace QuantConnect.Indicators
         /// <remarks>Returned array can be empty if no points have been registered yet/</remarks>
         public PivotPoint[] GetLowPivotPointsArray()
         {
-            return _windowPivotPoints?.Where(p => p.PivotPointType == PivotPointType.Low).ToArray();
+            return _windowPivotPoints.Where(p => p.PivotPointType == PivotPointType.Low).ToArray();
         }
 
         /// <summary>
@@ -195,16 +198,16 @@ namespace QuantConnect.Indicators
         public PivotPoint[] GetAllPivotPointsArray()
         {
             // Get all pivot points within rolling wind. collection as an array
-            return _windowPivotPoints?.Take(_windowPivotPoints.Count).ToArray();
+            return _windowPivotPoints.ToArray();
         }
 
         /// <summary>
         /// Invokes NewPivotPointFormed event
         /// </summary>
-        /// <param name="pivotPointsEventArgs"></param>
-        protected virtual void OnNewPivotPointFormed(PivotPointsEventArgs pivotPointsEventArgs)
+        protected virtual void OnNewPivotPointFormed(PivotPoint pivotPoint)
         {
-            NewPivotPointFormed?.Invoke(this, pivotPointsEventArgs);
+            _windowPivotPoints.Add(pivotPoint);
+            NewPivotPointFormed?.Invoke(this, new PivotPointsEventArgs(pivotPoint));
         }
     }
 
