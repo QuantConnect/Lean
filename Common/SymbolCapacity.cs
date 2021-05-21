@@ -40,6 +40,14 @@ namespace QuantConnect
         /// Any mentions of "dollar volume" are in account currency. They are not always in dollars.
         /// </remarks>
         private const decimal _forexMinuteVolume = 25000000m;
+
+        /// <summary>
+        /// An estimate of how much volume the CFD market trades per minute
+        /// </summary>
+        /// <remarks>
+        /// This is pure estimation since we don't have CFD volume data. Based on 300k per day.
+        /// </remarks>
+        private const decimal _cfdMinuteVolume = 200m;
         private const decimal _fastTradingVolumeScalingFactor = 2m;
 
         private readonly IAlgorithm _algorithm;
@@ -264,9 +272,18 @@ namespace QuantConnect
             {
                 // Fake a tradebar for quote data using market depth as a proxy for volume
                 var volume = (quote.LastBidSize + quote.LastAskSize) / 2;
-                volume = _symbol.SecurityType == SecurityType.Forex
-                    ? _forexMinuteVolume
-                    : volume;
+
+                // Handle volume estimation for security types that don't have volume values
+                switch (_symbol.SecurityType)
+                {
+                    case SecurityType.Forex:
+                        volume = _forexMinuteVolume;
+                        break;
+                    case SecurityType.Cfd:
+                        volume = _cfdMinuteVolume;
+                        break;
+                }
+                
 
                 return new TradeBar(
                     quote.Time,
