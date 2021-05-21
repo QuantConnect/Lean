@@ -364,6 +364,7 @@ oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1
 oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1
 oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1
 
+# Source : https://pro.coinbase.com/markets
 gdax,ALGOEUR,crypto,Algorand-Euro,EUR,1,0.0001,1,ALGO-EUR
 gdax,ALGOGBP,crypto,Algorand-British Pound,GBP,1,0.0001,1,ALGO-GBP
 gdax,ALGOUSD,crypto,Algorand-United States Dollar,USD,1,0.0001,1,ALGO-USD
