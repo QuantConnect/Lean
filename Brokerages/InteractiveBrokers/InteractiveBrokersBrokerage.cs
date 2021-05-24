@@ -3308,7 +3308,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (!result.HasError && !_isDisposeCalled)
             {
                 // IBGateway was closed by IBAutomater because the auto-restart token expired or it was closed manually (less likely)
-                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater in 10 seconds...");
+
+                Thread.Sleep(TimeSpan.FromSeconds(10));
+
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): restarting...");
 
                 try
                 {
@@ -3426,5 +3430,4 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158
         };
     }
-
 }
