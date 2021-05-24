@@ -421,7 +421,7 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         [Test]
-        public void GetCashBalanceContainsSomething()
+        public virtual void GetCashBalanceContainsSomething()
         {
             Log.Trace("");
             Log.Trace("GET CASH BALANCE");
