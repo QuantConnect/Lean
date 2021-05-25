@@ -3093,5 +3093,15 @@ namespace QuantConnect
                 return hashCode;
             }
         }
+
+        /// <summary>
+        /// Get the number of decimal places for the given decimal
+        /// </summary>
+        /// <param name="number">Number to determine number of decimal places for</param>
+        /// <returns>Number of decimal places</returns>
+        public static int GetDecimalPlaces(this decimal number)
+        {
+            return BitConverter.GetBytes(decimal.GetBits(number)[3])[2];
+        }
     }
 }
