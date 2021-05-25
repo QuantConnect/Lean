@@ -119,15 +119,15 @@ namespace QuantConnect.Util
                             var tick = data as Tick;
                             if (tick == null)
                             {
-                                throw new ArgumentException("Cryto tick could not be created", nameof(data));
+                                throw new ArgumentException("Crypto tick could not be created", nameof(data));
                             }
                             if (tick.TickType == TickType.Trade)
                             {
-                                return ToCsv(milliseconds, tick.LastPrice, tick.Quantity);
+                                return ToCsv(milliseconds, tick.LastPrice, tick.Quantity, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
-                                return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize);
+                                return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Suspicious ? "1" : "0");
                             }
                             throw new ArgumentException("Cryto tick could not be created");
                         case Resolution.Second:

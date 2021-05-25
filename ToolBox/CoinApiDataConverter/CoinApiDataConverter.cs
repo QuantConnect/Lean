@@ -158,7 +158,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
 
             foreach (var tick in ticks)
             {
-                if (tick.Value == -1 || tick.BidPrice == -1 || tick.AskPrice == -1)
+                if (tick.Suspicious)
                 {
                     // When CoinAPI loses connectivity to the exchange, they indicate
                     // it in the data by providing a value of `-1` for bid/ask price.

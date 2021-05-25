@@ -131,7 +131,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     Time = time,
                     Value = price,
                     Quantity = quantity,
-                    TickType = TickType.Trade
+                    TickType = TickType.Trade,
+                    Suspicious = price == -1
                 };
             }
         }
@@ -182,7 +183,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     AskSize = askSize,
                     BidPrice = bidPrice,
                     BidSize = bidSize,
-                    TickType = TickType.Quote
+                    TickType = TickType.Quote,
+                    Suspicious = bidPrice == -1m || askPrice == -1m
                 };
             }
         }
