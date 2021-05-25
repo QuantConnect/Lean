@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,23 +13,25 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides an implementation of <see cref="FeeModel"/> that models Bitfinex order fees
+    /// Provides an implementation of <see cref="FeeModel"/> that models Bitfinex order fees.
+    /// Currently we do not model 30-day volume, so we use the first tier fee model by default.
     /// </summary>
     public class BitfinexFeeModel : FeeModel
     {
         /// <summary>
-        /// Tier 1 maker fees
+        /// Tier 1 maker fees: 0.1%
         /// Maker fees are paid when you add liquidity to our order book by placing a limit order under the ticker price for buy and above the ticker price for sell.
         /// https://www.bitfinex.com/fees
         /// </summary>
         public const decimal MakerFee = 0.001m;
         /// <summary>
-        /// Tier 1 taker fees
+        /// Tier 1 taker fees: 0.2%
         /// Taker fees are paid when you remove liquidity from our order book by placing any order that is executed against an order of the order book.
         /// Note: If you place a hidden order, you will always pay the taker fee. If you place a limit order that hits a hidden order, you will always pay the maker fee.
         /// https://www.bitfinex.com/fees
@@ -46,7 +48,7 @@ namespace QuantConnect.Orders.Fees
         {
             var order = parameters.Order;
             var security = parameters.Security;
-            decimal fee = TakerFee;
+            decimal feePercentage = TakerFee;
             var props = order.Properties as BitfinexOrderProperties;
 
             if (order.Type == OrderType.Limit &&
@@ -54,7 +56,7 @@ namespace QuantConnect.Orders.Fees
                 (props?.PostOnly == true || !order.IsMarketable))
             {
                 // limit order posted to the order book
-                fee = MakerFee;
+                feePercentage = MakerFee;
             }
 
             // get order value in quote currency
@@ -67,9 +69,11 @@ namespace QuantConnect.Orders.Fees
 
             unitPrice *= security.SymbolProperties.ContractMultiplier;
 
-            // apply fee factor, currently we do not model 30-day volume, so we use the first tier
+            // Determine fee and round to lot size decimal places
+            var decimalPlaces = security.SymbolProperties.LotSize.GetDecimalPlaces();
+            var fee = Math.Round(unitPrice * order.AbsoluteQuantity * feePercentage, decimalPlaces);
             return new OrderFee(new CashAmount(
-                unitPrice * order.AbsoluteQuantity * fee,
+                fee,
                 security.QuoteCurrency.Symbol));
         }
     }
