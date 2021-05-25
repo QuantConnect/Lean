@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                         false
                     ),
                     new Cash(Currencies.USD, 0, 1m),
-                    SymbolProperties.GetDefault(Currencies.USD),
+                    new SymbolProperties("Ethereum - US Dollar", "USD", 1, 0.00001m, 0.00000001m, "tETHUSD"),
                     ErrorCurrencyConverter.Instance,
                     RegisteredSecurityDataTypesProvider.Null,
                     new SecurityCache()
@@ -78,6 +78,17 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BitfinexOrderProperties() { PostOnly = true, Hidden = true }))
         };
 
+        private static TestCaseData[] RoundingTestCases => new[]
+        {
+            // Maker Fee 0.1%
+            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice), 0.00028888m, 0.00000029m),    
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice), 0.00021111m, 0.00000021m),                  
+            
+            // Taker Fees 0.2%
+            new TestCaseData(new MarketOrderTestParameters(Symbol), 0.00024444m, 0.00000049m),
+            new TestCaseData(new MarketOrderTestParameters(Symbol), 0.00021111m, 0.00000042m)
+        };
+
         [Test]
         public void GetFeeModelTest()
         {
@@ -95,8 +106,9 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                BitfinexFeeModel.MakerFee * price * Math.Abs(Quantity), fee.Value.Amount);
+            var expectedFee = Math.Round(BitfinexFeeModel.MakerFee * price * Math.Abs(Quantity), Security.SymbolProperties.LotSize.GetDecimalPlaces());
+            Assert.AreEqual(expectedFee
+                , fee.Value.Amount);
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
@@ -111,8 +123,9 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             var fee =
                 feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
+            var expectedFee = Math.Round(BitfinexFeeModel.TakerFee * price * Math.Abs(Quantity), Security.SymbolProperties.LotSize.GetDecimalPlaces());
             Assert.AreEqual(
-                BitfinexFeeModel.TakerFee * price * Math.Abs(Quantity), fee.Value.Amount);
+                expectedFee, fee.Value.Amount);
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
@@ -127,8 +140,9 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             var fee =
                 feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
+            var expectedFee = Math.Round(BitfinexFeeModel.MakerFee * price * Math.Abs(Quantity), Security.SymbolProperties.LotSize.GetDecimalPlaces());
             Assert.AreEqual(
-                BitfinexFeeModel.MakerFee * price * Math.Abs(Quantity), fee.Value.Amount);
+                expectedFee, fee.Value.Amount);
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
@@ -143,9 +157,32 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             var fee =
                 feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
+            var expectedFee = Math.Round(BitfinexFeeModel.TakerFee * price * Math.Abs(Quantity), Security.SymbolProperties.LotSize.GetDecimalPlaces());
             Assert.AreEqual(
-                BitfinexFeeModel.TakerFee * price * Math.Abs(Quantity), fee.Value.Amount);
+                expectedFee, fee.Value.Amount);
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(RoundingTestCases))]
+        public void CorrectRounding(OrderTestParameters parameters, decimal quantity, decimal expectedFee)
+        {
+            IFeeModel feeModel = new BitfinexFeeModel();
+
+            Order order = parameters.CreateShortOrder(quantity);
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
+
+            // get order value in quote currency
+            var unitPrice = order.Direction == OrderDirection.Buy ? Security.AskPrice : Security.BidPrice;
+            if (order.Type == OrderType.Limit)
+            {
+                // limit order posted to the order book
+                unitPrice = ((LimitOrder)order).LimitPrice;
+            }
+
+            // Determine the fee in Eth
+            var feeETH = Math.Round(fee.Value.Amount / unitPrice, Security.SymbolProperties.LotSize.GetDecimalPlaces());
+            Assert.AreEqual(expectedFee, feeETH);
         }
     }
 }
