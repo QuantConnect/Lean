@@ -402,7 +402,8 @@ namespace QuantConnect.Data.Market
                                 Time = date.Date.AddMilliseconds((double)reader.GetDecimal())
                                     .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                                 Value = reader.GetDecimal();
-                                Quantity = reader.GetDecimal();
+                                Quantity = reader.GetDecimal(out var endOfLine);
+                                Suspicious = !endOfLine && reader.GetInt32() == 1;
                             }
 
                             if (TickType == TickType.Quote)
@@ -412,7 +413,8 @@ namespace QuantConnect.Data.Market
                                 BidPrice = reader.GetDecimal();
                                 BidSize = reader.GetDecimal();
                                 AskPrice = reader.GetDecimal();
-                                AskSize = reader.GetDecimal();
+                                AskSize = reader.GetDecimal(out var endOfLine);
+                                Suspicious = !endOfLine && reader.GetInt32() == 1;
 
                                 SetValue();
                             }
@@ -547,6 +549,7 @@ namespace QuantConnect.Data.Market
                                 .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                             Value = csv[1].ToDecimal();
                             Quantity = csv[2].ToDecimal();
+                            Suspicious = csv.Count >= 4 && csv[3] == "1";
                         }
 
                         if (TickType == TickType.Quote)
@@ -558,6 +561,7 @@ namespace QuantConnect.Data.Market
                             BidSize = csv[2].ToDecimal();
                             AskPrice = csv[3].ToDecimal();
                             AskSize = csv[4].ToDecimal();
+                            Suspicious = csv.Count >= 6 && csv[5] == "1";
 
                             SetValue();
                         }
