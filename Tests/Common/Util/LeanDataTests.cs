@@ -601,6 +601,8 @@ namespace QuantConnect.Tests.Common.Util
                     "34200000,1,2,3,4,0"),
                 new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = "gdax", Suspicious = false}, SecurityType.Crypto, Resolution.Tick,
                     "34200000,1,2,0"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = "gdax", Suspicious = true}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,1,2,1"),
                 new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, BidPrice = 1m, AskPrice = 3m, Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "gdax", Suspicious = true}, SecurityType.Crypto, Resolution.Tick,
                     "34200000,1,2,3,4,1"),
                 new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, BidPrice = 1.25m, AskPrice = 1.50m, Value = 1.375m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "gdax", Suspicious = true}, SecurityType.Crypto, Resolution.Tick,
