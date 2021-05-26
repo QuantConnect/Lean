@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -142,7 +142,7 @@ namespace QuantConnect.Algorithm.CSharp
                     try
                     {
                         coin = JsonConvert.DeserializeObject<Bitcoin>(line);
-                        coin.EndTime = DateTime.UtcNow.ConvertFromUtc(config.ExchangeTimeZone);
+                        coin.Time = DateTime.Now.AddHours(-4);
                         coin.Value = coin.Close;
                     }
                     catch { /* Do nothing, possible error in json decoding */ }
