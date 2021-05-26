@@ -69,9 +69,9 @@ namespace QuantConnect.Orders.Fees
 
             unitPrice *= security.SymbolProperties.ContractMultiplier;
 
-            // Determine fee and round to lot size decimal places
-            var decimalPlaces = security.SymbolProperties.LotSize.GetDecimalPlaces();
-            var fee = Math.Round(unitPrice * order.AbsoluteQuantity * feePercentage, decimalPlaces);
+            // Determine fee and round decimal places to lotsize
+            var fee = unitPrice * order.AbsoluteQuantity * feePercentage;
+            fee -= fee % security.SymbolProperties.LotSize;
             return new OrderFee(new CashAmount(
                 fee,
                 security.QuoteCurrency.Symbol));

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -397,7 +397,10 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var fillQuantity = update.ExecAmount;
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
                 var updTime = Time.UnixMillisecondTimeStampToDateTime(update.MtsCreate);
-                var orderFee = new OrderFee(new CashAmount(Math.Abs(update.Fee), GetLeanCurrency(update.FeeCurrency)));
+
+                // Round our fee by the lot size on this security
+                var properties = _symbolPropertiesDatabase.GetSymbolProperties(Market.Bitfinex, symbol, SecurityType.Crypto, order.PriceCurrency);
+                var orderFee = new OrderFee(new CashAmount(Math.Abs(update.Fee % properties.LotSize), GetLeanCurrency(update.FeeCurrency)));
 
                 var status = OrderStatus.Filled;
                 if (fillQuantity != order.Quantity)
