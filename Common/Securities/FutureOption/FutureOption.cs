@@ -55,7 +55,7 @@ namespace QuantConnect.Securities.FutureOption
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new FuturesOptionsMarginModel(),
+                null,
                 new OptionDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
@@ -63,6 +63,7 @@ namespace QuantConnect.Securities.FutureOption
                 underlying
         )
         {
+            BuyingPowerModel = new FuturesOptionsMarginModel(0, this);
         }
     }
 }

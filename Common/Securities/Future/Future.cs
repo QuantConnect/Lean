@@ -67,13 +67,14 @@ namespace QuantConnect.Securities.Future
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new FutureMarginModel(),
+                null,
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
                 registeredTypes
                 )
         {
+            BuyingPowerModel = new FutureMarginModel(0, this);
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
@@ -113,13 +114,14 @@ namespace QuantConnect.Securities.Future
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new FutureMarginModel(),
+                null,
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
                 registeredTypes
                 )
         {
+            BuyingPowerModel = new FutureMarginModel(0, this);
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
