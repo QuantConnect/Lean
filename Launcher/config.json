@@ -119,6 +119,11 @@
   "atreyu-sub-port": "",
   "atreyu-username": "",
   "atreyu-password": "",
+  "atreyu-client-id": "",
+  "atreyu-cash-balance": "",
+  "atreyu-holdings": "[]",
+  "atreyu-broker-mpid": "",
+  "atreyu-locate-rqd": "",
 
   // Trading Technologies configuration
   "tt-user-name": "",

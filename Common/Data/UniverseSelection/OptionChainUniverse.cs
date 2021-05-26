@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,7 +20,6 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -253,7 +252,6 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 // set the underlying security and pricing model from the canonical security
                 var option = (Option)security;
-                option.Underlying = Option.Underlying;
                 option.PriceModel = Option.PriceModel;
             }
 

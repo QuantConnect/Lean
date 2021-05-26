@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -581,6 +581,77 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(openRenko.High, 8.0);
             Assert.AreEqual(openRenko.Low, 7.9);
             Assert.AreEqual(openRenko.Close, 7.9);
+        }
+
+        [Test]
+        public void ConsistentRenkos()
+        {
+            // Reproduce issue #5479
+            // Test Renko bar consistency amongst three consolidators starting at different times
+
+            var time = new DateTime(2016, 1, 1);
+            var testValues = new List<decimal>
+            {
+                1.38687m, 1.38688m, 1.38687m, 1.38686m, 1.38685m, 1.38683m, 
+                1.38682m, 1.38682m, 1.38684m, 1.38682m, 1.38682m, 1.38680m, 
+                1.38681m, 1.38686m, 1.38688m, 1.38688m, 1.38690m, 1.38690m,
+                1.38691m, 1.38692m, 1.38694m, 1.38695m, 1.38697m, 1.38697m,
+                1.38700m, 1.38699m, 1.38699m, 1.38699m, 1.38698m, 1.38699m, 
+                1.38697m, 1.38698m, 1.38698m, 1.38697m, 1.38698m, 1.38698m,
+                1.38697m, 1.38697m, 1.38700m, 1.38702m, 1.38701m, 1.38699m,
+                1.38697m, 1.38698m, 1.38696m, 1.38698m, 1.38697m, 1.38695m,
+                1.38695m, 1.38696m, 1.38693m, 1.38692m, 1.38693m, 1.38693m,
+                1.38692m, 1.38693m, 1.38692m, 1.38690m, 1.38686m, 1.38685m,
+                1.38687m, 1.38686m, 1.38686m, 1.38686m, 1.38686m, 1.38685m,
+                1.38684m, 1.38678m, 1.38679m, 1.38680m, 1.38680m, 1.38681m,
+                1.38685m, 1.38685m, 1.38683m, 1.38682m, 1.38682m, 1.38683m,
+                1.38682m, 1.38683m, 1.38682m, 1.38681m, 1.38680m, 1.38681m,
+                1.38681m, 1.38681m, 1.38682m, 1.38680m, 1.38679m, 1.38678m,
+                1.38675m, 1.38678m, 1.38678m, 1.38678m, 1.38682m, 1.38681m,
+                1.38682m, 1.38680m, 1.38682m, 1.38683m, 1.38685m, 1.38683m,
+                1.38683m, 1.38684m, 1.38683m, 1.38683m, 1.38684m, 1.38685m,
+                1.38684m, 1.38683m, 1.38686m, 1.38685m, 1.38685m, 1.38684m,
+                1.38685m, 1.38682m, 1.38684m, 1.38683m, 1.38682m, 1.38683m,
+                1.38685m, 1.38685m, 1.38685m, 1.38683m, 1.38685m, 1.38684m,
+                1.38686m, 1.38693m, 1.38695m, 1.38693m, 1.38694m, 1.38693m,
+                1.38692m, 1.38693m, 1.38695m, 1.38697m, 1.38698m, 1.38695m,
+                1.38696m
+            };
+
+
+            var consolidator1 = new WickedRenkoConsolidator(0.0001m);
+            var consolidator2 = new WickedRenkoConsolidator(0.0001m);
+            var consolidator3 = new WickedRenkoConsolidator(0.0001m);
+
+            // Update each of our consolidators starting at different indexes of test values
+            for (int i = 0; i < testValues.Count; i++)
+            {
+                var data = new IndicatorDataPoint(time.AddSeconds(i), testValues[i]);
+                consolidator1.Update(data);
+
+                if (i > 10)
+                {
+                    consolidator2.Update(data);
+                }
+
+                if (i > 20)
+                {
+                    consolidator3.Update(data);
+                }
+            }
+
+            // Assert that consolidator 2 and 3 price is the same as 1. Even though they started at different
+            // indexes they should be the same
+            var bar1 = consolidator1.Consolidated as RenkoBar;
+            var bar2 = consolidator2.Consolidated as RenkoBar;
+            var bar3 = consolidator3.Consolidated as RenkoBar;
+
+            Assert.AreEqual(bar1.Close, bar2.Close);
+            Assert.AreEqual(bar1.Close, bar3.Close);
+
+            consolidator1.Dispose();
+            consolidator2.Dispose();
+            consolidator3.Dispose();
         }
 
         private class TestWickedRenkoConsolidator : WickedRenkoConsolidator

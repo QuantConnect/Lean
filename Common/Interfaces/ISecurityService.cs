@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,7 +33,8 @@ namespace QuantConnect.Interfaces
         Security CreateSecurity(Symbol symbol,
             List<SubscriptionDataConfig> subscriptionDataConfigList,
             decimal leverage = 0,
-            bool addToSymbolCache = true);
+            bool addToSymbolCache = true,
+            Security underlying = null);
 
         /// <summary>
         /// Creates a new security
@@ -43,6 +44,7 @@ namespace QuantConnect.Interfaces
         Security CreateSecurity(Symbol symbol,
             SubscriptionDataConfig subscriptionDataConfig,
             decimal leverage = 0,
-            bool addToSymbolCache = true);
+            bool addToSymbolCache = true,
+            Security underlying = null);
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -98,14 +98,16 @@ namespace QuantConnect.Securities.Option
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache to store security information</param>
+        /// <param name="underlying">Future underlying security</param>
         public Option(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             OptionSymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache)
-           : base(symbol,
+            SecurityCache securityCache,
+            Security underlying)
+           : this(symbol,
                quoteCurrency,
                symbolProperties,
                new OptionExchange(exchangeHours),
@@ -120,16 +122,9 @@ namespace QuantConnect.Securities.Option
                new OptionDataFilter(),
                new SecurityPriceVariationModel(),
                currencyConverter,
-               registeredTypes
-               )
+               registeredTypes,
+               underlying)
         {
-            ExerciseSettlement = SettlementType.PhysicalDelivery;
-            SetDataNormalizationMode(DataNormalizationMode.Raw);
-            OptionExerciseModel = new DefaultExerciseModel();
-            PriceModel = new CurrentPriceOptionPriceModel();
-            Holdings = new OptionHolding(this, currencyConverter);
-            _symbolProperties = symbolProperties;
-            SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
         }
 
         /// <summary>
@@ -154,7 +149,8 @@ namespace QuantConnect.Securities.Option
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypesProvider
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider,
+            Security underlying
         ) : base(
             symbol,
             quoteCurrency,
@@ -181,6 +177,7 @@ namespace QuantConnect.Securities.Option
             Holdings = new OptionHolding(this, currencyConverter);
             _symbolProperties = (OptionSymbolProperties)symbolProperties;
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
+            Underlying = underlying;
         }
 
         // save off a strongly typed version of symbol properties

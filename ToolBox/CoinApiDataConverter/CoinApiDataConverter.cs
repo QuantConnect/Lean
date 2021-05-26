@@ -158,6 +158,14 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
 
             foreach (var tick in ticks)
             {
+                if (tick.Suspicious)
+                {
+                    // When CoinAPI loses connectivity to the exchange, they indicate
+                    // it in the data by providing a value of `-1` for bid/ask price.
+                    // We will keep it in tick data, but will remove it from consolidated data.
+                    continue;
+                }
+                
                 foreach (var consolidator in consolidators)
                 {
                     consolidator.Update(tick);

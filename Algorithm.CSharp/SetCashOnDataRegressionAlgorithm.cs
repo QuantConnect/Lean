@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 var cash = Portfolio.CashBook["EUR"];
-                if (cash.ConversionRateSecurity == null
+                if (cash.CurrencyConversion == null
                     || cash.ConversionRate == 0)
                 {
                     throw new Exception("Expected 'EUR' Cash to be fully set");

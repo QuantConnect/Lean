@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -63,7 +63,8 @@ namespace QuantConnect.Securities
         public Security CreateSecurity(Symbol symbol,
             List<SubscriptionDataConfig> subscriptionDataConfigList,
             decimal leverage = 0,
-            bool addToSymbolCache = true)
+            bool addToSymbolCache = true,
+            Security underlying = null)
         {
             var configList = new SubscriptionDataConfigList(symbol);
             configList.AddRange(subscriptionDataConfigList);
@@ -141,12 +142,12 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
+                    security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache, underlying);
                     break;
 
                 case SecurityType.IndexOption:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    security = new IndexOption.IndexOption(symbol, exchangeHours, quoteCash, new IndexOption.IndexOptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
+                    security = new IndexOption.IndexOption(symbol, exchangeHours, quoteCash, new IndexOption.IndexOptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache, underlying);
                     break;
 
                 case SecurityType.FutureOption:
@@ -157,11 +158,11 @@ namespace QuantConnect.Securities
                     // 100x seen in equities.
                     optionSymbolProperties.SetContractUnitOfTrade(1);
 
-                    security = new FutureOption.FutureOption(symbol, exchangeHours, quoteCash, optionSymbolProperties, _cashBook, _registeredTypes, cache);
+                    security = new FutureOption.FutureOption(symbol, exchangeHours, quoteCash, optionSymbolProperties, _cashBook, _registeredTypes, cache, underlying);
                     break;
 
                 case SecurityType.Future:
-                    security = new Future.Future(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
+                    security = new Future.Future(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache, underlying);
                     break;
 
                 case SecurityType.Forex:
@@ -221,9 +222,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Following the obsoletion of Security.Subscriptions,
         /// both overloads will be merged removing <see cref="SubscriptionDataConfig"/> arguments</remarks>
-        public Security CreateSecurity(Symbol symbol, SubscriptionDataConfig subscriptionDataConfig, decimal leverage = 0, bool addToSymbolCache = true)
+        public Security CreateSecurity(Symbol symbol, SubscriptionDataConfig subscriptionDataConfig, decimal leverage = 0, bool addToSymbolCache = true, Security underlying = null)
         {
-            return CreateSecurity(symbol, new List<SubscriptionDataConfig> { subscriptionDataConfig }, leverage, addToSymbolCache);
+            return CreateSecurity(symbol, new List<SubscriptionDataConfig> { subscriptionDataConfig }, leverage, addToSymbolCache, underlying);
         }
 
         /// <summary>

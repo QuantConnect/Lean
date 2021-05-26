@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Brokerages
             return brokerage;
         }
 
-        internal static Security CreateSecurity(Symbol symbol)
+        public static Security CreateSecurity(Symbol symbol)
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -421,7 +421,7 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         [Test]
-        public void GetCashBalanceContainsSomething()
+        public virtual void GetCashBalanceContainsSomething()
         {
             Log.Trace("");
             Log.Trace("GET CASH BALANCE");

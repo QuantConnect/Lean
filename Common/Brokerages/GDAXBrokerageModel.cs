@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,26 +32,26 @@ namespace QuantConnect.Brokerages
     {
         private readonly BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
 
-        // https://support.gdax.com/customer/portal/articles/2725970-trading-rules
+        // https://pro.coinbase.com/markets
         private static readonly Dictionary<string, decimal> MinimumOrderSizes = new Dictionary<string, decimal>
         {
-            { "BTCUSD", 0.001m },
-            { "BTCEUR", 0.001m },
-            { "BTCGBP", 0.001m },
+            { "BTCUSD", 0.0001m },
+            { "BTCEUR", 0.0001m },
+            { "BTCGBP", 0.0001m },
 
             { "BCHUSD", 0.01m },
             { "BCHEUR", 0.01m },
             { "BCHBTC", 0.01m },
 
-            { "ETHUSD", 0.01m },
-            { "ETHEUR", 0.01m },
-            { "ETHGBP", 0.01m },
-            { "ETHBTC", 0.01m },
+            { "ETHUSD", 0.001m },
+            { "ETHEUR", 0.001m },
+            { "ETHGBP", 0.001m },
+            { "ETHBTC", 0.001m },
 
-            { "LTCUSD", 0.1m },
-            { "LTCEUR", 0.1m },
-            { "LTCGBP", 0.1m },
-            { "LTCBTC", 0.1m },
+            { "LTCUSD", 0.01m },
+            { "LTCEUR", 0.01m },
+            { "LTCGBP", 0.01m },
+            { "LTCBTC", 0.01m },
 
             { "XRPUSD", 1m },
             { "XRPEUR", 1m },

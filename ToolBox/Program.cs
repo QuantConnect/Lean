@@ -48,6 +48,7 @@ using QuantConnect.Util;
 using QuantConnect.ToolBox.SmartInsider;
 using QuantConnect.ToolBox.TiingoNewsConverter;
 using QuantConnect.ToolBox.ZerodhaDownloader;
+using QuantConnect.ToolBox.AlphaVantageDownloader;
 
 namespace QuantConnect.ToolBox
 {
@@ -184,6 +185,17 @@ namespace QuantConnect.ToolBox
                             resolution, 
                             fromDate, 
                             toDate);
+                        break;
+
+                    case "avdl":
+                    case "alphavantagedownloader":
+                        AlphaVantageDownloaderProgram.AlphaVantageDownloader(
+                            tickers,
+                            resolution,
+                            fromDate,
+                            toDate,
+                            GetParameterOrExit(optionsObject, "api-key")
+                        );
                         break;
 
                     default:

@@ -36,6 +36,7 @@ namespace QuantConnect.Securities.IndexOption
         /// <param name="currencyConverter">Currency converter</param>
         /// <param name="registeredTypes">Provides all data types registered to the algorithm</param>
         /// <param name="securityCache">Cache of security objects</param>
+        /// <param name="underlying">Future underlying security</param>
         /// <param name="settlementType">Settlement type for the index option. Most index options are cash-settled.</param>
         public IndexOption(Symbol symbol,
             SecurityExchangeHours exchangeHours,
@@ -44,6 +45,7 @@ namespace QuantConnect.Securities.IndexOption
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCache securityCache,
+            Security underlying,
             SettlementType settlementType = SettlementType.Cash)
             : base(symbol,
                 quoteCurrency,
@@ -60,7 +62,8 @@ namespace QuantConnect.Securities.IndexOption
                 new OptionDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                underlying
             )
         {
             ExerciseSettlement = settlementType;

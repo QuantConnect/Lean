@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
 using QLNet;
+using QuantConnect.Logging;
 
 namespace QuantConnect
 {
@@ -125,7 +126,15 @@ namespace QuantConnect
             var options = symbols.Where(x => x.ID.SecurityType.IsOption()).ToList();
             var futures = symbols.Where(x => x.ID.SecurityType == SecurityType.Future).ToList();
 
-            foreach (var dayIdx in Enumerable.Range(0, (int)(end.Date.AddDays(1.0) - start.Date).TotalDays))
+            var totalDays = (int)(end.Date.AddDays(1.0) - start.Date).TotalDays;
+            if (totalDays < 0)
+            {
+                throw new ArgumentException(
+                    $"TradingCalendar.PopulateTradingDays(): Total days is negative ({totalDays}), indicating reverse start and end times." +
+                    $" Check your usage of TradingCalendar to ensure proper arrangement of variables");
+            }
+
+            foreach (var dayIdx in Enumerable.Range(0, totalDays))
             {
                 var currentDate = start.Date.AddDays(dayIdx);
 
