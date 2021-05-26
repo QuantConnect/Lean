@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -407,7 +407,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 var value = ((IBaseData) baseData).Value;
                 AddToSeries("value", endTime, value);
 
-                foreach (var kvp in storage)
+                foreach (var kvp in storage.Where(x => x.Key != "value"))
                 {
                     AddToSeries(kvp.Key, endTime, kvp.Value);
                 }
