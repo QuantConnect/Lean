@@ -17,6 +17,7 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Tests.Engine;
@@ -325,6 +326,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionSecurity.Underlying.SetMarketPrice(new Tick { Value = 60, Time = new DateTime(2001, 01, 07) });
             var marginRequirement = FuturesOptionsMarginModel.GetMarginRequirement(optionSecurity, underlyingRequirement, positionSide);
 
+            Log.Debug($"Side {positionSide}. Right {optionRight}. Strike {strike}. Margin: {marginRequirement}");
             Assert.AreEqual(expected, marginRequirement, (double)underlyingRequirement * 0.30d);
         }
 
@@ -368,6 +370,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionSecurity.Underlying.SetMarketPrice(new Tick { Value = 1887, Time = new DateTime(2001, 01, 07) });
             var marginRequirement = FuturesOptionsMarginModel.GetMarginRequirement(optionSecurity, underlyingRequirement, positionSide);
 
+            Log.Debug($"Side {positionSide}. Right {optionRight}. Strike {strike}. Margin: {marginRequirement}");
             Assert.AreEqual(expected, marginRequirement, (double)underlyingRequirement * 0.30d);
         }
 
@@ -379,6 +382,15 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(4190, 7128, OptionRight.Call, PositionSide.Long, 15632)]
         [TestCase(4370, 4089, OptionRight.Call, PositionSide.Long, 15632)]
         [TestCase(4900, 233, OptionRight.Call, PositionSide.Long, 15632)]
+
+        // Short Call initial
+        [TestCase(2200, 17069, OptionRight.Call, PositionSide.Short, 15632)]
+        [TestCase(3200, 16716, OptionRight.Call, PositionSide.Short, 15632)]
+        [TestCase(3500, 16409, OptionRight.Call, PositionSide.Short, 15632)]
+        [TestCase(3570, 16222, OptionRight.Call, PositionSide.Short, 15632)]
+        [TestCase(4190, 14429, OptionRight.Call, PositionSide.Short, 15632)]
+        [TestCase(4370, 13003, OptionRight.Call, PositionSide.Short, 15632)]
+        [TestCase(4900, 6528, OptionRight.Call, PositionSide.Short, 15632)]
         public void MarginRequirementEs(decimal strike, double expected, OptionRight optionRight, PositionSide positionSide, decimal underlyingRequirement)
         {
             var tz = TimeZones.NewYork;
@@ -409,6 +421,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionSecurity.Underlying.SetMarketPrice(new Tick { Value = 4172, Time = new DateTime(2001, 01, 07) });
             var marginRequirement = FuturesOptionsMarginModel.GetMarginRequirement(optionSecurity, underlyingRequirement, positionSide);
 
+            Log.Debug($"Side {positionSide}. Right {optionRight}. Strike {strike}. Margin: {marginRequirement}");
             Assert.AreEqual(expected, marginRequirement, (double)underlyingRequirement * 0.30d);
         }
     }

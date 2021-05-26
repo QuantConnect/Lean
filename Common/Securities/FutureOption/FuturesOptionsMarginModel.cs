@@ -112,7 +112,7 @@ namespace QuantConnect.Securities.Option
                 if (option.Right == OptionRight.Call)
                 {
                     // going short the curve growth rate is slower
-                    curveGrowthRate = -4.8m;
+                    curveGrowthRate = -4m;
                     // curve shifted to the right -> causes a margin requirement increase
                     underlyingPrice *= 1.5m;
                 }
@@ -138,6 +138,9 @@ namespace QuantConnect.Securities.Option
                     maximumValue *= 1.20m;
                 }
             }
+
+            // we normalize the curve growth rate by dividing by the underlyings price
+            // this way, contracts with different order of magnitude price and strike (like CL & ES) share this logic
             var denominator = Math.Pow(Math.E, (double) (-curveGrowthRate * (option.StrikePrice - underlyingPrice) / underlyingPrice));
 
             if (double.IsInfinity(denominator))
