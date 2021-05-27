@@ -142,7 +142,7 @@ namespace QuantConnect.Algorithm.CSharp
                     try
                     {
                         coin = JsonConvert.DeserializeObject<Bitcoin>(line);
-                        coin.Time = DateTime.Now.AddHours(-4);
+                        coin.EndTime = DateTime.UtcNow.ConvertFromUtc(config.ExchangeTimeZone);
                         coin.Value = coin.Close;
                     }
                     catch { /* Do nothing, possible error in json decoding */ }

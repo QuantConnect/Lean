@@ -86,7 +86,7 @@ class Bitcoin(PythonData):
                 value = liveBTC["last"]
                 if value == 0: return None
 
-                coin.Time = datetime.now() - timedelta(hours=4)
+                coin.EndTime =  datetime.utcnow().astimezone(timezone(str(config.ExchangeTimeZone))).replace(tzinfo=None)
                 coin.Value = value
                 coin["Open"] = float(liveBTC["open"])
                 coin["High"] = float(liveBTC["high"])
