@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -86,7 +86,7 @@ class Bitcoin(PythonData):
                 value = liveBTC["last"]
                 if value == 0: return None
 
-                coin.Time = datetime.now()
+                coin.EndTime =  datetime.utcnow().astimezone(timezone(str(config.ExchangeTimeZone))).replace(tzinfo=None)
                 coin.Value = value
                 coin["Open"] = float(liveBTC["open"])
                 coin["High"] = float(liveBTC["high"])
