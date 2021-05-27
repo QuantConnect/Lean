@@ -20,7 +20,7 @@ To use Lean CLI follow the instructions for installation and tutorial for usage 
 
 1. Install [.Net 5](https://dotnet.microsoft.com/download) for the project
 
-2. (Optional) Get Get [Python 3.6.8](https://www.python.org/downloads/release/python-368/) for running Python algorithms
+2. (Optional) Get [Python 3.6.8](https://www.python.org/downloads/release/python-368/) for running Python algorithms
     - Follow Python instructions [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#installing-python-36) for your platform
 
 3. Get [Visual Studio Code](https://code.visualstudio.com/download)
@@ -125,3 +125,6 @@ Here we will cover some common issues with setting this up. This section will ex
 
 - Autocomplete and reference finding with omnisharp can sometimes bug, if this occurs use the command palette to restart omnisharp. (Ctrl+Shift+P "OmniSharp: Restart OmniSharp")
 - Any error messages about building in VSCode that point to comments in JSON. Either select **ignore** or follow steps described [here](https://stackoverflow.com/questions/47834825/in-vs-code-disable-error-comments-are-not-permitted-in-json) to remove the errors entirely.
+- Python Algorithms will only attach and debug correctly when the algorithm lives in ./Algorithm.Python, this is due to an issue where Lean runs the py files from the build dir at
+runtime; so we have mapped the ./Algorithm.Python directory to the build dir for the debugger. The mapped directory can be changed in .vscode/launch.json under "Attach To Python"
+option "LocalRoot". If you adjust this to your Py algorithm directory you will be able to launch and debug in the same way.
