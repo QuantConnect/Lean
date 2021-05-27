@@ -749,6 +749,12 @@ namespace QuantConnect.Api
         /// <returns><see cref="Link"/> to the downloadable data.</returns>
         public Link ReadDataLink(string filePath)
         {
+            // Remove data root directory from path for request
+            if (filePath.Contains(_dataFolder))
+            {
+                filePath = filePath.Substring(_dataFolder.Length);
+            }
+
             var request = new RestRequest("data/read", Method.POST)
             {
                 RequestFormat = DataFormat.Json

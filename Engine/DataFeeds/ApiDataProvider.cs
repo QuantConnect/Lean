@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (!File.Exists(filePath) || IsOutOfDate(resolution, filePath))
                 {
-                    return DownloadData(filePath, symbol, date, resolution);
+                    return DownloadData(filePath);
                 }
 
                 // Use the file already on the disk
@@ -89,25 +89,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Attempt to download data using the Api for and return a FileStream of that data.
         /// </summary>
         /// <param name="filePath">The path to store the file</param>
-        /// <param name="symbol">The symbol we are downloading</param>
-        /// <param name="date">The date of the data</param>
-        /// <param name="resolution">The resolution of the data</param>
         /// <returns>A FileStream of the data</returns>
-        private FileStream DownloadData(string filePath, Symbol symbol, DateTime date, Resolution resolution)
+        private FileStream DownloadData(string filePath)
         {
-            Log.Trace("ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
-                symbol.Value,
-                resolution,
-                date.Date.ToShortDateString());
+            Log.Trace($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
 
             var downloadSuccessful = _api.DownloadData(filePath);
 
             if (downloadSuccessful)
             {
-                Log.Trace("ApiDataProvider.Fetch(): Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
-                    symbol.Value,
-                    resolution,
-                    date.Date.ToShortDateString());
+                Log.Trace($"ApiDataProvider.Fetch(): Successfully retrieved data for {filePath}.");
 
                 return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
