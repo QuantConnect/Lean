@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var brokerage = new PaperBrokerage(algorithm, job);
 
             // initialize results and transactions
-            results.Initialize(job, new EventMessagingHandler(), new Api.Api(), transactions);
+            results.Initialize(job, new EventMessagingHandler(), new QuantConnect.Api.Api(), transactions);
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Algorithm
         public void Download_Without_Parameters_Successfully()
         {
             var algo = new QCAlgorithm();
-            algo.SetApi(new Api.Api());
+            algo.SetApi(new QuantConnect.Api.Api());
             var content = string.Empty;
             Assert.DoesNotThrow(() => content = algo.Download("https://www.quantconnect.com/"));
             Assert.IsNotEmpty(content);
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Algorithm
         public void Download_With_CSharp_Parameter_Successfully()
         {
             var algo = new QCAlgorithm();
-            algo.SetApi(new Api.Api());
+            algo.SetApi(new QuantConnect.Api.Api());
 
             var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
             var headers = new List<KeyValuePair<string, string>>
@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Algorithm
         public void Download_With_Python_Parameter_Successfully()
         {
             var algo = new QCAlgorithm();
-            algo.SetApi(new Api.Api());
+            algo.SetApi(new QuantConnect.Api.Api());
 
             var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
             var value = $"Basic ({Convert.ToBase64String(byteKey)})";

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             remoteReader.DisposeSafely();
         }
 
-        private class TestDownloadProvider : Api.Api
+        private class TestDownloadProvider : QuantConnect.Api.Api
         {
             public static int DownloadCount { get; set; }
             static TestDownloadProvider()
