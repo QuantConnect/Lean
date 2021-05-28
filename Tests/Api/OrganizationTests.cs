@@ -16,7 +16,7 @@
 using System;
 using NUnit.Framework;
 
-namespace QuantConnect.Tests.Api
+namespace QuantConnect.Tests.API
 {
     /// <summary>
     /// Tests API account and organizations endpoints

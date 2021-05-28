@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Engine
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            results.Initialize(job, new QuantConnect.Messaging.Messaging(), new QuantConnect.Api.Api(), transactions);
+            results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), transactions);
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, new BacktestingBrokerage(algorithm), results);
             feed.Initialize(algorithm, job, results, null, null, null, dataManager, null, null);

@@ -21,7 +21,7 @@ using System.Web;
 using NUnit.Framework;
 using QuantConnect.Api;
 
-namespace QuantConnect.Tests.Api
+namespace QuantConnect.Tests.API
 {
     /// <summary>
     /// API Project endpoints, includes some Backtest endpoints testing as well 

@@ -22,7 +22,7 @@ using QuantConnect.Api;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 
-namespace QuantConnect.Tests.Api
+namespace QuantConnect.Tests.API
 {
     /// <summary>
     /// API Live endpoint tests

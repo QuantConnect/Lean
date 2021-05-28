@@ -16,7 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.Api;
 
-namespace QuantConnect.Tests.Api
+namespace QuantConnect.Tests.API
 {
     /// <summary>
     /// API Object tests
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Api
         [Test]
         public void ApiWillAuthenticate_ValidCredentials_Successfully()
         {
-            var api = new QuantConnect.Api.Api();
+            var api = new Api.Api();
             api.Initialize(TestAccount, TestToken, DataFolder);
             Assert.IsTrue(api.Connected);
         }
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Api
         [Test]
         public void ApiWillAuthenticate_InvalidCredentials_Unsuccessfully()
         {
-            var api = new QuantConnect.Api.Api();
+            var api = new Api.Api();
             api.Initialize(TestAccount, "", DataFolder);
             Assert.IsFalse(api.Connected);
         }

@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         public void QuandlDownloadDoesNotThrow()
         {
             Quandl.SetAuthCode("WyAazVXnq7ATy_fefTqm");
-            RemoteFileSubscriptionStreamReader.SetDownloadProvider(new QuantConnect.Api.Api());
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(new Api.Api());
             var data = new HistoryAlgorithm.QuandlFuture();
 
             const string ticker = "CHRIS/CME_SP1";

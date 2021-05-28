@@ -3,7 +3,7 @@ using System.IO;
 using NUnit.Framework;
 using QuantConnect.Util;
 
-namespace QuantConnect.Tests.Api
+namespace QuantConnect.Tests.API
 {
     /// <summary>
     /// API Data endpoint tests

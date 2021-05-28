@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 
-namespace QuantConnect.Tests.Api
+namespace QuantConnect.Tests.API
 {
     /// <summary>
     /// Base test class for Api tests, provides the setup needed for all api tests
@@ -17,7 +17,7 @@ namespace QuantConnect.Tests.Api
         internal string TestToken;
         internal string TestOrganization;
         internal string DataFolder;
-        internal QuantConnect.Api.Api ApiClient;
+        internal Api.Api ApiClient;
 
         /// <summary>
         /// Run once before any RestApiTests
@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Api
             TestOrganization = Config.Get("job-organization-id", "EnterOrgHere");
             DataFolder = Config.Get("data-folder");
 
-            ApiClient = new QuantConnect.Api.Api();
+            ApiClient = new Api.Api();
             ApiClient.Initialize(TestAccount, TestToken, DataFolder);
         }
     }

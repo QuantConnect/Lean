@@ -18,7 +18,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Api;
 
-namespace QuantConnect.Tests.Api
+namespace QuantConnect.Tests.API
 {
     /// <summary>
     /// Test class for all nodes/ endpoints:

@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Engine.Results
             };
             resultHandler.Initialize(new LiveNodePacket(),
                 new QuantConnect.Messaging.Messaging(),
-                new QuantConnect.Api.Api(), 
+                new Api.Api(), 
                 new BacktestingTransactionHandler());
 
             var algo = new AlgorithmStub(createDataManager:false);
