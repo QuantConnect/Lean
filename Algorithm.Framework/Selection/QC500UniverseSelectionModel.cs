@@ -47,9 +47,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Initializes a new instance of the <see cref="QC500UniverseSelectionModel"/>
         /// </summary>
         /// <param name="universeSettings">Universe settings defines what subscription properties will be applied to selected securities</param>
-        /// <param name="securityInitializer">Security initializer initializes newly selected securities</param>
-        public QC500UniverseSelectionModel(UniverseSettings universeSettings, ISecurityInitializer securityInitializer)
-            : base(true, universeSettings, securityInitializer)
+        public QC500UniverseSelectionModel(UniverseSettings universeSettings)
+            : base(true, universeSettings)
         {
         }
 

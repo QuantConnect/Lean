@@ -364,7 +364,7 @@ namespace QuantConnect.Algorithm
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market, baseDataType: typeof(T));
             var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
-            return AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, d => selector(d.OfType<T>())));
+            return AddUniverse(new FuncUniverse(config, universeSettings, d => selector(d.OfType<T>())));
         }
 
         /// <summary>
@@ -384,7 +384,7 @@ namespace QuantConnect.Algorithm
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market, baseDataType: typeof(T));
             var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
-            return AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer,
+            return AddUniverse(new FuncUniverse(config, universeSettings,
                 d => selector(d.OfType<T>()).Select(x => QuantConnect.Symbol.Create(x, securityType, market, baseDataType: typeof(T))))
             );
         }
@@ -396,7 +396,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Defines an initial coarse selection</param>
         public Universe AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
-            return AddUniverse(new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, selector));
+            return AddUniverse(new CoarseFundamentalUniverse(UniverseSettings, selector));
         }
 
         /// <summary>
@@ -407,7 +407,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
         public Universe AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
         {
-            var coarse = new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, coarseSelector);
+            var coarse = new CoarseFundamentalUniverse(UniverseSettings, coarseSelector);
 
             return AddUniverse(new FineFundamentalFilteredUniverse(coarse, fineSelector));
         }

@@ -98,16 +98,6 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the instance responsible for initializing newly added securities
-        /// </summary>
-        /// <obsolete>The SecurityInitializer won't be used</obsolete>
-        [Obsolete("SecurityInitializer is obsolete and will not be used.")]
-        public ISecurityInitializer SecurityInitializer
-        {
-            get; private set;
-        }
-
-        /// <summary>
         /// Gets the current listing of members in this universe. Modifications
         /// to this dictionary do not change universe membership.
         /// </summary>
@@ -126,19 +116,6 @@ namespace QuantConnect.Data.UniverseSelection
             Securities = new ConcurrentDictionary<Symbol, Member>();
 
             Configuration = config;
-            SecurityInitializer = QuantConnect.Securities.SecurityInitializer.Null;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Universe"/> class
-        /// </summary>
-        /// <param name="config">The configuration used to source data for this universe</param>
-        /// <param name="securityInitializer">Initializes securities when they're added to the universe</param>
-        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        protected Universe(SubscriptionDataConfig config, ISecurityInitializer securityInitializer)
-            : this(config)
-        {
-            SecurityInitializer = securityInitializer;
         }
 
         /// <summary>
@@ -332,16 +309,6 @@ namespace QuantConnect.Data.UniverseSelection
                 return Securities.TryRemove(security.Symbol, out member);
             }
             return false;
-        }
-
-        /// <summary>
-        /// Sets the security initializer, used to initialize/configure securities after creation
-        /// </summary>
-        /// <param name="securityInitializer">The security initializer</param>
-        [Obsolete("SecurityInitializer is obsolete and will not be used.")]
-        public virtual void SetSecurityInitializer(ISecurityInitializer securityInitializer)
-        {
-            SecurityInitializer = securityInitializer;
         }
 
         /// <summary>

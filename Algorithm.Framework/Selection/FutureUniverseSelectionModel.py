@@ -29,20 +29,17 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
     def __init__(self,
                  refreshInterval,
                  futureChainSymbolSelector,
-                 universeSettings = None,
-                 securityInitializer = None):
+                 universeSettings = None):
         '''Creates a new instance of FutureUniverseSelectionModel
         Args:
             refreshInterval: Time interval between universe refreshes</param>
             futureChainSymbolSelector: Selects symbols from the provided future chain
-            universeSettings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
-            securityInitializer: [Obsolete, will not be used] Performs extra initialization (such as setting models) after we create a new security object'''
+            universeSettings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed'''
         self.nextRefreshTimeUtc = datetime.min
 
         self.refreshInterval = refreshInterval
         self.futureChainSymbolSelector = futureChainSymbolSelector
         self.universeSettings = universeSettings
-        self.securityInitializer = securityInitializer
 
     def GetNextRefreshTimeUtc(self):
         '''Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.'''
@@ -83,11 +80,10 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
 
         # resolve defaults if not specified
         settings = self.universeSettings if self.universeSettings is not None else algorithm.UniverseSettings
-        initializer = self.securityInitializer if self.securityInitializer is not None else algorithm.SecurityInitializer
         # create canonical security object, but don't duplicate if it already exists
         securities = [s for s in algorithm.Securities if s.Key == symbol]
         if len(securities) == 0:
-            futureChain = self.CreateFutureChainSecurity(algorithm, symbol, settings, initializer)
+            futureChain = self.CreateFutureChainSecurity(algorithm, symbol, settings)
         else:
             futureChain = securities[0]
 
@@ -97,15 +93,14 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
         # force future chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
         futureChain.IsTradable = False
 
-        return FuturesChainUniverse(futureChain, settings, algorithm.SubscriptionManager, initializer)
+        return FuturesChainUniverse(futureChain, settings)
 
-    def CreateFutureChainSecurity(self, algorithm, symbol, settings, initializer):
+    def CreateFutureChainSecurity(self, algorithm, symbol, settings):
         '''Creates the canonical Future chain security for a given symbol
         Args:
             algorithm: The algorithm instance to create universes for
             symbol: Symbol of the future
             settings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
-            initializer: [Obsolete, will not be used] Performs extra initialization (such as setting models) after we create a new security object
         Returns
             Future for the given symbol'''
         config = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(typeof(ZipEntryName),

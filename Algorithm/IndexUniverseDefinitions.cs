@@ -56,7 +56,6 @@ namespace QuantConnect.Algorithm
                 var coarseUniverse = new CoarseFundamentalUniverse(
                     symbol,
                     _algorithm.UniverseSettings,
-                    _algorithm.SecurityInitializer,
                     coarse =>
                     {
                         if (_algorithm.Time.Month == lastMonth)

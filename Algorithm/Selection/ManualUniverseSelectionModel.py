@@ -28,11 +28,10 @@ from itertools import groupby
 class ManualUniverseSelectionModel(UniverseSelectionModel):
     '''Provides an implementation of IUniverseSelectionModel that simply subscribes to the specified set of symbols'''
 
-    def __init__(self, symbols = list(), universeSettings = None, securityInitializer = None):
+    def __init__(self, symbols = list(), universeSettings = None):
         self.MarketHours = MarketHoursDatabase.FromDataFolder()
         self.symbols = symbols
         self.universeSettings = universeSettings
-        self.securityInitializer = securityInitializer
 
         for symbol in symbols:
             SymbolCache.Set(symbol.Value, symbol)
@@ -45,9 +44,6 @@ class ManualUniverseSelectionModel(UniverseSelectionModel):
             The universes to be used by the algorithm'''
         universeSettings = self.universeSettings \
             if self.universeSettings is not None else algorithm.UniverseSettings
-
-        securityInitializer = self.securityInitializer \
-            if self.securityInitializer is not None else algorithm.SecurityInitializer
 
         resolution = universeSettings.Resolution
         type = typeof(Tick) if resolution == Resolution.Tick else typeof(TradeBar);

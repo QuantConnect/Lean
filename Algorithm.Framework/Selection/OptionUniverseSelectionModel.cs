@@ -53,24 +53,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="refreshInterval">Time interval between universe refreshes</param>
         /// <param name="optionChainSymbolSelector">Selects symbols from the provided option chain</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
-        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        public OptionUniverseSelectionModel(
-            TimeSpan refreshInterval,
-            Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector,
-            UniverseSettings universeSettings,
-            ISecurityInitializer securityInitializer
-            )
-            :this (refreshInterval,optionChainSymbolSelector,universeSettings)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="OptionUniverseSelectionModel"/>
-        /// </summary>
-        /// <param name="refreshInterval">Time interval between universe refreshes</param>
-        /// <param name="optionChainSymbolSelector">Selects symbols from the provided option chain</param>
-        /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         public OptionUniverseSelectionModel(
             TimeSpan refreshInterval,
             Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector,
