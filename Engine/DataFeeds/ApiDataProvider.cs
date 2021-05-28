@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,9 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using QuantConnect.Api;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -30,7 +33,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
+        private readonly string _organizationId = Config.Get("job-organization-id", null);
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
+        private DataPricesList _dataPrices;
+
+        /// <summary>
+        /// Account Balance in QCC
+        /// </summary>
+        private decimal _balance = 0;
+
+        /// <summary>
+        /// Data Purchase limit measured in QCC (QuantConnect Credits)
+        /// </summary>
+        private decimal _purchaseLimit = Config.GetValue("data-purchase-limit", decimal.MaxValue);
+
+        /// <summary>
+        /// Period to re-download 
+        /// </summary>
         private static readonly int DownloadPeriod = Config.GetInt("api-data-update-period", 5);
         private readonly Api.Api _api;
 
@@ -40,8 +59,52 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public ApiDataProvider()
         {
             _api = new Api.Api();
-
             _api.Initialize(_uid, _token, _dataPath);
+
+            // Read in our prices
+            _dataPrices = _api.ReadDataPrices();
+
+            // If we have no value for organization get account preferred
+            if (_organizationId == null)
+            {
+                var account = _api.ReadAccount();
+                _organizationId = account.OrganizationId;
+            }
+
+            // Get our organization
+            var organization = _api.ReadOrganization(_organizationId);
+
+            // Verify they are subscribe to map and factor files
+            //TODO: Not specific enough, data product contains items underneath with one specific for this subscription
+            if (organization.Products.All(x => x.Name != "data"))
+            {
+                throw new Exception(
+                    "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
+                    "to download data from QuantConect.");
+            }
+
+            // Verify user has agreed to data provider agreements
+            if (organization.DataAgreement.Signed)
+            {
+                //Log Agreement Highlights
+                Log.Trace($"ApiDataProvider(): Data Terms of Use has been signed and verified on {organization.DataAgreement.SignedTime}. " +
+                    $"Find agreement at: {_dataPrices.AgreementUrl}");
+                Thread.Sleep(TimeSpan.FromSeconds(3));
+            }
+            else
+            {
+                // Log URL to go accept terms
+                throw new Exception($"Must agree to terms at {_dataPrices.AgreementUrl}, before using the ApiDataProvider");
+            }
+
+            // Verify we have the balance to maintain our purchase limit
+            _balance = organization.Credit.BalanceQCC;
+            if (_balance < _purchaseLimit)
+            {
+                Log.Trace("ApiDataProvider(): Purchase limit is greater than balance." +
+                    $" Setting purchase limit to balance : {_balance}");
+                _purchaseLimit = _balance;
+            }
         }
 
         /// <summary>
@@ -61,6 +124,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (!File.Exists(filePath) || IsOutOfDate(resolution, filePath))
                 {
+                    //Verify price
+                    var price = 10; // TODO Use data prices -> _dataPrices.Prices.
+                    if (_purchaseLimit < price)
+                    {
+                        throw new Exception($"Cost for {symbol}:{date} data exceeds remaining purchase limit: {_purchaseLimit}");
+                    }
+
+                    // Update our purchase limit and balance.
+                    _purchaseLimit -= price;
+                    _balance -= price;
+
                     return DownloadData(filePath);
                 }
 
@@ -94,7 +168,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             Log.Trace($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
 
-            var downloadSuccessful = _api.DownloadData(filePath);
+            var downloadSuccessful = _api.DownloadData(filePath, _organizationId);
 
             if (downloadSuccessful)
             {
