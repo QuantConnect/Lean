@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -47,7 +47,8 @@ namespace QuantConnect.ToolBox.Polygon
     public class PolygonDataQueueHandler : SynchronizingHistoryProvider, IDataQueueHandler
     {
         private const string HistoryBaseUrl = "https://api.polygon.io";
-        private const int BaseAggregateBarsLimit = 50000;
+        private const int ResponseSizeLimitEquities = 50000;
+        private const int ResponseSizeLimitCurrencies = 10000;
         private readonly string _apiKey = Config.Get("polygon-api-key");
 
         private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
@@ -392,52 +393,86 @@ namespace QuantConnect.ToolBox.Polygon
 
             var start = request.StartTimeUtc;
             var end = request.EndTimeUtc;
+            var currentDate = start.Date;
 
-            while (start <= end)
+            while (currentDate <= end.Date)
             {
-                using (var client = new WebClient())
+                Log.Trace($"GetForexQuoteTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
+
+                // If this is a very first iteration set offset exactly as request's start time.
+                // Otherwise use date start as an offset. (!) Make sure to cast to Int64.
+                var offset = currentDate == start.Date ? (long)Time.DateTimeToUnixTimeStampMilliseconds(start)
+                    : (long)Time.DateTimeToUnixTimeStampMilliseconds(currentDate);
+
+                var counter = 0;
+                ForexQuoteTickResponse lastTick = null;
+
+                while (true)
                 {
-                    string baseCurrency;
-                    string quoteCurrency;
-                    Forex.DecomposeCurrencyPair(request.Symbol.Value, out baseCurrency, out quoteCurrency);
+                    counter++;
 
-                    var offset = Convert.ToInt64(Time.DateTimeToUnixTimeStampMilliseconds(start));
-                    var url = $"{HistoryBaseUrl}/v1/historic/forex/{baseCurrency}/{quoteCurrency}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&offset={offset}";
-
-                    var response = client.DownloadString(url);
-
-                    var obj = JObject.Parse(response);
-                    var objTicks = obj["ticks"];
-                    if (objTicks.Type == JTokenType.Null)
+                    using (var client = new WebClient())
                     {
-                        // current date finished, move to next day
-                        start = start.Date.AddDays(1);
-                        continue;
-                    }
+                        string baseCurrency;
+                        string quoteCurrency;
+                        Forex.DecomposeCurrencyPair(request.Symbol.Value, out baseCurrency, out quoteCurrency);
 
-                    foreach (var objTick in objTicks)
-                    {
-                        var row = objTick.ToObject<ForexQuoteTickResponse>();
+                        var url = $"{HistoryBaseUrl}/v1/historic/forex/{baseCurrency}/{quoteCurrency}/{currentDate.Date:yyyy-MM-dd}?" +
+                                  $"limit={ResponseSizeLimitCurrencies}&apiKey={_apiKey}&offset={offset}";
 
-                        var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
+                        var response = client.DownloadString(url);
 
-                        if (utcTime < start)
+                        // Get ticks
+                        var obj = JObject.Parse(response)["ticks"]?.ToString();
+                        List<ForexQuoteTickResponse> quoteTicksList;
+                        if (!string.IsNullOrEmpty(obj))
                         {
-                            continue;
+                            quoteTicksList = JsonConvert.DeserializeObject<ForexQuoteTickResponse[]>(obj).ToList();
+                        }
+                        else
+                        {
+                            // If ticks is null then most probably there were no data for the current date -> break;
+                            Log.Trace($"GetForexQuoteTicks(): Server did not return data on the last request from  {currentDate:yyyy-MM-dd}");
+                            break;
                         }
 
-                        start = utcTime.AddMilliseconds(1);
+                        // The first results of the next page will coincide with last of the previous page
+                        // We distinguish the results by the timestamp, lets clear from repeating values
+                        var lastTickSipTimeStamp = lastTick?.Timestamp ?? 0;
+                        quoteTicksList = quoteTicksList.Where(x => x.Timestamp != lastTickSipTimeStamp).ToList();
 
-                        if (utcTime > end)
+                        Log.Trace($"GetForexQuoteTicks(): Page # {counter}; " +
+                                  $"first: {Time.UnixMillisecondTimeStampToDateTime(quoteTicksList.First().Timestamp)}; " +
+                                  $"last: {Time.UnixMillisecondTimeStampToDateTime(quoteTicksList.Last().Timestamp)}");
+
+                        foreach (var row in quoteTicksList)
                         {
-                            yield break;
+                            var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
+
+                            if (utcTime < start)
+                            {
+                                continue;
+                            }
+
+                            if (utcTime > end)
+                            {
+                                yield break;
+                            }
+
+                            var time = GetTickTime(request.Symbol, utcTime);
+                            yield return new Tick(time, request.Symbol, row.Bid, row.Ask);
+
+                            // Save the values before to jump to the next iteration
+                            offset = row.Timestamp;
+                            lastTick = row;
                         }
 
-                        var time = GetTickTime(request.Symbol, utcTime);
-
-                        yield return new Tick(time, request.Symbol, row.Bid, row.Ask);
+                        _dataPointCount += quoteTicksList.Count;
                     }
                 }
+
+                // Jump to the next iteration
+                currentDate = currentDate.AddDays(1);
             }
         }
 
@@ -534,7 +569,7 @@ namespace QuantConnect.ToolBox.Polygon
                     using (var client = new WebClient())
                     {
                         var url = $"{HistoryBaseUrl}/v2/ticks/stocks/nbbo/{request.Symbol.Value}/{currentDate.Date:yyyy-MM-dd}?" +
-                                  $"apiKey={_apiKey}&timestamp={offset}&limit={BaseAggregateBarsLimit}";
+                                  $"apiKey={_apiKey}&timestamp={offset}&limit={ResponseSizeLimitEquities}";
 
                         string response;
                         try
@@ -584,7 +619,6 @@ namespace QuantConnect.ToolBox.Polygon
                             }
 
                             var time = GetTickTime(request.Symbol, utcTime);
-
                             yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.BidSize, row.BidPrice, row.AskSize, row.AskPrice);
 
                             // Save the values before to jump to the next iteration
@@ -627,7 +661,7 @@ namespace QuantConnect.ToolBox.Polygon
                     using (var client = new WebClient())
                     {
                         var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.ID.Symbol}/{currentDate:yyyy-MM-dd}?" +
-                                  $"apiKey={_apiKey}&timestamp={offset}&limit={BaseAggregateBarsLimit}";
+                                  $"apiKey={_apiKey}&timestamp={offset}&limit={ResponseSizeLimitEquities}";
 
                         string response;
                         try
@@ -723,9 +757,9 @@ namespace QuantConnect.ToolBox.Polygon
             var dataRequestedCount = (end - start).Ticks
                                      / resolutionTimeSpan.Ticks / aggregatesCountPerResolution;
 
-            if (dataRequestedCount > BaseAggregateBarsLimit)
+            if (dataRequestedCount > ResponseSizeLimitEquities)
             {
-                end = start + TimeSpan.FromTicks(resolutionTimeSpan.Ticks * BaseAggregateBarsLimit / aggregatesCountPerResolution);
+                end = start + TimeSpan.FromTicks(resolutionTimeSpan.Ticks * ResponseSizeLimitEquities / aggregatesCountPerResolution);
                 end = end.Date;
             }
 
@@ -734,7 +768,7 @@ namespace QuantConnect.ToolBox.Polygon
                 using (var client = new WebClient())
                 {
                     var url = $"{HistoryBaseUrl}/v2/aggs/ticker/{tickerPrefix}{request.Symbol.Value}/range/1/{historyTimespan}/{start.Date:yyyy-MM-dd}/{end.Date:yyyy-MM-dd}" +
-                              $"?apiKey={_apiKey}&limit={BaseAggregateBarsLimit}";
+                              $"?apiKey={_apiKey}&limit={ResponseSizeLimitEquities}";
 
                     var response = client.DownloadString(url);
                     var aggregatesResponse = JsonConvert.DeserializeObject<AggregatesResponse>(response);
@@ -764,7 +798,7 @@ namespace QuantConnect.ToolBox.Polygon
                 }
 
                 start = end.AddDays(1);
-                end += TimeSpan.FromTicks(resolutionTimeSpan.Ticks * BaseAggregateBarsLimit / aggregatesCountPerResolution);
+                end += TimeSpan.FromTicks(resolutionTimeSpan.Ticks * ResponseSizeLimitEquities / aggregatesCountPerResolution);
 
                 if (end > lastRequestedBarStartTime)
                 {

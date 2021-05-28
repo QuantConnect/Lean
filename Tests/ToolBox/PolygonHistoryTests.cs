@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -198,6 +198,7 @@ namespace QuantConnect.Tests.ToolBox
         {
             new TestCaseData(Symbols.AAPL, Resolution.Tick, TickType.Trade, TimeSpan.FromDays(7), true),
             new TestCaseData(Symbols.AAPL, Resolution.Tick, TickType.Quote, TimeSpan.FromDays(7), true),
+            new TestCaseData(Symbols.EURUSD, Resolution.Tick, TickType.Quote, TimeSpan.FromDays(7), true),
         };
 
         [TestCaseSource(nameof(HistoricalTicksTestCaseDatas))]
@@ -207,6 +208,9 @@ namespace QuantConnect.Tests.ToolBox
             var historicalData = _historyProvider.GetHistory(request).ToList();
 
             Log.Trace("Data points retrieved: " + _historyProvider.DataPointCount);
+
+            // Data goes in chronological order 
+            Assert.That(historicalData, Is.Ordered.By("Time"));
 
             if (isNonEmptyResult)
             {
@@ -218,7 +222,6 @@ namespace QuantConnect.Tests.ToolBox
         }
 
         #endregion
-
 
         private static HistoryRequest CreateHistoryRequest(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period)
         {
