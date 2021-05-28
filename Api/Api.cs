@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -1097,7 +1097,7 @@ namespace QuantConnect.Api
         /// <param name="organizationId">The target organization id, if null will return default organization</param>
         public Account ReadAccount(string organizationId = null)
         {
-            var request = new RestRequest("account/read/", Method.POST)
+            var request = new RestRequest("account/read", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
@@ -1110,6 +1110,44 @@ namespace QuantConnect.Api
             Account account;
             ApiConnection.TryRequest(request, out account);
             return account;
+        }
+
+        /// <summary>
+        /// Get a list of organizations tied to this account
+        /// </summary>
+        /// <returns></returns>
+        public List<Organization> ListOrganizations()
+        {
+            var request = new RestRequest("organizations/list", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            OrganizationList organizations;
+            ApiConnection.TryRequest(request, out organizations);
+            return organizations.List;
+        }
+
+        /// <summary>
+        /// Fetch organization data from web API
+        /// </summary>
+        /// <param name="organizationId"></param>
+        /// <returns></returns>
+        public Organization ReadOrganization(string organizationId = null)
+        {
+            var request = new RestRequest("organizations/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            if (organizationId != null)
+            {
+                request.AddParameter("application/json", JsonConvert.SerializeObject(new { organizationId }), ParameterType.RequestBody);
+            }
+
+            Organization organization;
+            ApiConnection.TryRequest(request, out organization);
+            return organization;
         }
     }
 }
