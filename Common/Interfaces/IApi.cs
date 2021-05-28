@@ -182,15 +182,16 @@ namespace QuantConnect.Interfaces
         /// Gets the link to the downloadable data.
         /// </summary>
         /// <param name="filePath">File path representing the data requested</param>
+        /// <param name="organizationId">Organization to purchase this data with</param>
         /// <returns>Link to the downloadable data.</returns>
-        Link ReadDataLink(string filePath);
+        DataLink ReadDataLink(string filePath, string organizationId);
 
         /// <summary>
         /// Method to download and save the data purchased through QuantConnect
         /// </summary>
         /// <param name="filePath">File path representing the data requested</param>
         /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
-        bool DownloadData(string filePath);
+        bool DownloadData(string filePath, string organizationId);
 
         /// <summary>
         /// Create a new live algorithm for a logged in user.
@@ -233,8 +234,6 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project for the live algo we want to delete</param>
         /// <returns></returns>
         RestResponse StopLiveAlgorithm(int projectId);
-
-
 
         //Status StatusRead(int projectId, string algorithmId);
         //RestResponse StatusUpdate(int projectId, string algorithmId, AlgorithmStatus status, string message = "");

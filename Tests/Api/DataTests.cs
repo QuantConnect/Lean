@@ -18,6 +18,7 @@ namespace QuantConnect.Tests.API
         [Test]
         public void BacktestingData_CanBeDownloadedAndSaved_Successfully()
         {
+            //TODO NOT WORKING EMPTY RESPONSE
             var minutePath = Path.Combine(DataFolder, "forex/oanda/minute/eurusd/20131011_quote.zip");
             var dailyPath = Path.Combine(DataFolder, "forex/oanda/daily/eurusd.zip");
 
@@ -27,8 +28,8 @@ namespace QuantConnect.Tests.API
             if (File.Exists(minutePath))
                 File.Delete(minutePath);
 
-            var downloadedMinuteData = ApiClient.DownloadData(minutePath);
-            var downloadedDailyData = ApiClient.DownloadData(dailyPath);
+            var downloadedMinuteData = ApiClient.DownloadData(minutePath, TestOrganization);
+            var downloadedDailyData = ApiClient.DownloadData(dailyPath, TestOrganization);
 
             Assert.IsTrue(downloadedMinuteData);
             Assert.IsTrue(downloadedDailyData);
@@ -44,7 +45,7 @@ namespace QuantConnect.Tests.API
         public void NonExistantData_WillBeDownloaded_Unsuccessfully()
         {
             var fakePath = Path.Combine(DataFolder, "forex/oanda/minute/eurusd/19891011_quote.zip");
-            var nonExistentData = ApiClient.DownloadData(fakePath);
+            var nonExistentData = ApiClient.DownloadData(fakePath, TestOrganization);
 
             Assert.IsFalse(nonExistentData);
             Assert.IsFalse(Directory.Exists(fakePath));
@@ -53,20 +54,20 @@ namespace QuantConnect.Tests.API
         /// <summary>
         /// Test getting links to forex data for FXCM
         /// </summary>
-        [Test, Ignore("Requires configured FXCM account")]
+        [Test]
         public void FXCMDataLinks_CanBeRetrieved_Successfully()
         {
             var minutePath = LeanData.GenerateRelativeZipFilePath(
                 new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
                 new DateTime(2013, 10, 07),
                 Resolution.Minute, TickType.Quote);
-            var minuteDataLink = ApiClient.ReadDataLink(minutePath);
+            var minuteDataLink = ApiClient.ReadDataLink(minutePath, TestOrganization);
 
             var dailyPath = LeanData.GenerateRelativeZipFilePath(
                 new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
                 new DateTime(2013, 10, 07),
                 Resolution.Daily, TickType.Quote);
-            var dailyDataLink = ApiClient.ReadDataLink(dailyPath);
+            var dailyDataLink = ApiClient.ReadDataLink(dailyPath, TestOrganization);
 
             Assert.IsTrue(minuteDataLink.Success);
             Assert.IsTrue(dailyDataLink.Success);
@@ -75,23 +76,41 @@ namespace QuantConnect.Tests.API
         /// <summary>
         /// Test getting links to forex data for Oanda
         /// </summary>
-        [Test, Ignore("Requires configured Oanda account")]
+        [Test]
         public void OandaDataLinks_CanBeRetrieved_Successfully()
         {
             var minutePath = LeanData.GenerateRelativeZipFilePath(
                 new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
                 new DateTime(2013, 10, 07),
                 Resolution.Minute, TickType.Quote);
-            var minuteDataLink = ApiClient.ReadDataLink(minutePath);
+            var minuteDataLink = ApiClient.ReadDataLink(minutePath, TestOrganization);
 
             var dailyPath = LeanData.GenerateRelativeZipFilePath(
                 new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
                 new DateTime(2013, 10, 07),
                 Resolution.Daily, TickType.Quote);
-            var dailyDataLink = ApiClient.ReadDataLink(dailyPath);
+            var dailyDataLink = ApiClient.ReadDataLink(dailyPath, TestOrganization);
 
             Assert.IsTrue(minuteDataLink.Success);
             Assert.IsTrue(dailyDataLink.Success);
+        }
+
+        [Test]
+        public void GetPricesList()
+        {
+            //TODO NOT WORKING EMPTY RESPONSE
+            var prices = ApiClient.ReadDataPrices();
+
+            Console.WriteLine("DONE");
+        }
+
+        [Test]
+        public void GetDataListings()
+        {
+            //TODO NOT WORKING EMPTY RESPONSE
+            var DataList = ApiClient.ReadDataDirectory("forex/oanda/minute/");
+
+            Console.WriteLine("DONE");
         }
     }
 }
