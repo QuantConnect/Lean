@@ -1,27 +1,55 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using QLNet;
+using QuantConnect.Api.Serialization;
 
+// Collection of response objects for QuantConnect Organization/ endpoints
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Response wrapper for organizations/list
+    /// Response wrapper for Organizations/List
     /// TODO: The response objects in the array do not contain all Organization Properties; do we need another wrapper object? 
     /// </summary>
-    public class OrganizationList : RestResponse
+    public class OrganizationResponseList : RestResponse
     {
+        /// <summary>
+        /// List of organizations in the response
+        /// </summary>
         [JsonProperty(PropertyName = "organizations")]
-        public List<Organization> List;
+        public List<Organization> List { get; set; }
     }
 
     /// <summary>
-    /// Object representation of Api Organization
+    /// Response wrapper for Organizations/Read
     /// </summary>
-    public class Organization : RestResponse
+    public class OrganizationResponse : RestResponse
+    {
+        /// <summary>
+        /// Organization read from the response
+        /// </summary>
+        [JsonProperty(PropertyName = "organization")]
+        public Organization Organization { get; set; }
+    }
+
+    /// <summary>
+    /// Object representation of Organization from QuantConnect Api
+    /// </summary>
+    public class Organization
     {
         /// <summary>
         /// Organization ID; Used for API Calls
@@ -30,13 +58,13 @@ namespace QuantConnect.Api
         public string Id { get; set; }
 
         /// <summary>
-        /// Organization ID; Used for API Calls
+        /// Seats in Organization
         /// </summary>
         [JsonProperty(PropertyName = "seats")]
         public int Seats { get; set; }
 
         /// <summary>
-        /// Organization ID; Used for API Calls
+        /// Data Agreement information
         /// </summary>
         [JsonProperty(PropertyName = "data")]
         public DataAgreement DataAgreement { get; set; }
@@ -44,11 +72,13 @@ namespace QuantConnect.Api
         /// <summary>
         /// Organization Product Subscriptions
         /// </summary>
+        [JsonProperty(PropertyName = "products")]
         public List<Product> Products { get; set; }
 
         /// <summary>
-        /// Organization Product Subscriptions
+        /// Organization Credit Balance and Transactions
         /// </summary>
+        [JsonProperty(PropertyName = "credit")]
         public Credit Credit { get; set; }
     }
 
@@ -58,10 +88,10 @@ namespace QuantConnect.Api
     public class DataAgreement
     {
         /// <summary>
-        /// Time the Data Agreement was Signed
+        /// Epoch time the Data Agreement was Signed
         /// </summary>
         [JsonProperty(PropertyName = "signedTime")]
-        public string SignedTime { get; set; }
+        public string EpochSignedTime { get; set; }
 
         /// <summary>
         /// True/False if it is currently signed
@@ -77,7 +107,6 @@ namespace QuantConnect.Api
     {
         /// <summary>
         /// Represents a change in organization credit
-        /// TODO Rename to Transaction?
         /// </summary>
         public class Movement
         {
@@ -88,7 +117,7 @@ namespace QuantConnect.Api
             public DateTime Date { get; set; }
 
             /// <summary>
-            /// Credit decription
+            /// Credit description
             /// </summary>
             [JsonProperty(PropertyName = "description")]
             public string Description { get; set; }
@@ -97,13 +126,13 @@ namespace QuantConnect.Api
             /// Amount of change
             /// </summary>
             [JsonProperty(PropertyName = "amount")]
-            public int Amount { get; set; }
+            public decimal Amount { get; set; }
 
             /// <summary>
             /// Ending Balance in QCC after Movement
             /// </summary>
             [JsonProperty(PropertyName = "balance")]
-            public int Balance { get; set; }
+            public decimal Balance { get; set; }
 
             //TODO
             // Type and subtype of movement?? Maybe not needed
@@ -127,17 +156,89 @@ namespace QuantConnect.Api
         public List<Movement> Movements { get; set; }
     }
 
+    /// <summary>
+    /// QuantConnect Products
+    /// </summary>
+    [JsonConverter(typeof(ProductJsonConverter))]
     public class Product
     {
         /// <summary>
-        /// Product Name
+        /// Product Type
+        /// </summary>
+        public ProductType Type { get; set; }
+
+        /// <summary>
+        /// Collection of item subscriptions
+        /// Nodes/Data/Seats/etc
+        /// </summary>
+        public List<ProductItem> Items { get; set; }
+    }
+
+    /// <summary>
+    /// QuantConnect ProductItem 
+    /// </summary>
+    public class ProductItem
+    {
+        /// <summary>
+        /// Product Type
         /// </summary>
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
 
-        //TODO: Items type varies so Object for now; likely need a unique json converter for products
-        // Nodes/Data/Seats/etc
-        [JsonProperty(PropertyName = "items")]
-        public List<object> Items { get; set; }
+        /// <summary>
+        /// Collection of item subscriptions
+        /// Nodes/Data/Seats/etc
+        /// </summary>
+        [JsonProperty(PropertyName = "quantity")]
+        public int Quantity { get; set; }
+
+        /// <summary>
+        /// Unit price for this item
+        /// </summary>
+        [JsonProperty(PropertyName = "unitPrice")]
+        public int UnitPrice { get; set; }
+
+        /// <summary>
+        /// Total price for this product
+        /// </summary>
+        [JsonProperty(PropertyName = "total")]
+        public int TotalPrice { get; set; }
+    }
+
+    /// <summary>
+    /// Product types offered by QuantConnect
+    /// Used by Product class
+    /// </summary>
+    public enum ProductType
+    {
+        /// <summary>
+        /// TODO Idk what this is
+        /// </summary>
+        ProfessionalSeats,
+
+        /// <summary>
+        /// Backtest Nodes Subscriptions
+        /// </summary>
+        BacktestNode,
+
+        /// <summary>
+        /// Research Nodes Subscriptions
+        /// </summary>
+        ResearchNode,
+
+        /// <summary>
+        /// Live Trading Nodes Subscriptions
+        /// </summary>
+        LiveNode,
+
+        /// <summary>
+        /// Support Subscriptions
+        /// </summary>
+        Support,
+
+        /// <summary>
+        /// Data Subscriptions
+        /// </summary>
+        Data
     }
 }

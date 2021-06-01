@@ -74,21 +74,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Get our organization
             var organization = _api.ReadOrganization(_organizationId);
 
-            // Verify they are subscribe to map and factor files
-            //TODO: Not specific enough, data product contains items underneath with one specific for this subscription
-            if (organization.Products.All(x => x.Name != "data"))
+            // Verify they are subscribed to map and factor files
+            if (organization.Products.Where(x => x.Type == ProductType.Data).Any(x => x.Items.Any(x => x.Name.Contains("Factor"))))
             {
                 throw new Exception(
                     "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
-                    "to download data from QuantConect.");
+                    "to download data from QuantConnect.");
             }
 
             // Verify user has agreed to data provider agreements
             if (organization.DataAgreement.Signed)
             {
                 //Log Agreement Highlights
-                Log.Trace($"ApiDataProvider(): Data Terms of Use has been signed and verified on {organization.DataAgreement.SignedTime}. " +
-                    $"Find agreement at: {_dataPrices.AgreementUrl}");
+                Log.Trace($"ApiDataProvider(): Data Terms of Use has been signed. " +
+                    $" Find agreement at: {_dataPrices.AgreementUrl}");
                 Thread.Sleep(TimeSpan.FromSeconds(3));
             }
             else

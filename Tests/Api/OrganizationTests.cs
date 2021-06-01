@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.API
         public void ReadOrganization()
         {
             var organization = ApiClient.ReadOrganization(TestOrganization);
-            Assert.IsTrue(organization.Success);
+            Assert.IsNotNull(organization.Credit);
         }
     }
 }

@@ -1154,8 +1154,8 @@ namespace QuantConnect.Api
                 RequestFormat = DataFormat.Json
             };
 
-            ApiConnection.TryRequest(request, out OrganizationList organizations);
-            return organizations.List;
+            ApiConnection.TryRequest(request, out OrganizationResponseList response);
+            return response.List;
         }
 
         /// <summary>
@@ -1175,8 +1175,8 @@ namespace QuantConnect.Api
                 request.AddParameter("application/json", JsonConvert.SerializeObject(new { organizationId }), ParameterType.RequestBody);
             }
 
-            ApiConnection.TryRequest(request, out Organization organization);
-            return organization;
+            ApiConnection.TryRequest(request, out OrganizationResponse response);
+            return response.Organization;
         }
     }
 }
