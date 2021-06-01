@@ -87,11 +87,16 @@ namespace QuantConnect.Api.Serialization
         /// <returns>Order Object</returns>
         public Product CreateProductFromJObject(JObject jObject)
         {
-            var product = new Product();
-            product.Type = _productTypeMap[jObject["name"].Value<string>()];
-            product.Items = jObject["items"].ToObject<List<ProductItem>>();
+            if (jObject == null)
+            {
+                return null;
+            }
 
-            return product;
+            return new Product
+            {
+                Type = _productTypeMap[jObject["name"].Value<string>()],
+                Items = jObject["items"].ToObject<List<ProductItem>>()
+            };
         }
     }
 }
