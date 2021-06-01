@@ -35,6 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _organizationId = Config.Get("job-organization-id", null);
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
+        private readonly bool _subscribedToEquityMapAndFactorFiles;
         private DataPricesList _dataPrices;
 
         /// <summary>
@@ -74,12 +75,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Get our organization
             var organization = _api.ReadOrganization(_organizationId);
 
-            // Verify they are subscribed to map and factor files
+            // Determine if the user is subscribed to map and factor files
             if (organization.Products.Where(x => x.Type == ProductType.Data).Any(x => x.Items.Any(x => x.Name.Contains("Factor"))))
             {
-                throw new Exception(
-                    "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
-                    "to download data from QuantConnect.");
+                _subscribedToEquityMapAndFactorFiles = true;
             }
 
             // Verify user has agreed to data provider agreements
@@ -88,6 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 //Log Agreement Highlights
                 Log.Trace($"ApiDataProvider(): Data Terms of Use has been signed. " +
                     $" Find agreement at: {_dataPrices.AgreementUrl}");
+                // TODO: PRINT AGREEMENT BOX
                 Thread.Sleep(TimeSpan.FromSeconds(3));
             }
             else
@@ -97,6 +97,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // Verify we have the balance to maintain our purchase limit
+            // TODO Maybe should throw instead? 
             _balance = organization.Credit.BalanceQCC;
             if (_balance < _purchaseLimit)
             {
@@ -123,8 +124,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (!File.Exists(filePath) || IsOutOfDate(resolution, filePath))
                 {
+                    // Stop if equity request and not subscribed to map and factor files
+                    if (symbol.SecurityType == SecurityType.Equity && !_subscribedToEquityMapAndFactorFiles)
+                    {
+                        throw new Exception(
+                            "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
+                            "to download Equity data from QuantConnect.");
+                    }
+
+                    // TODO Use data prices -> _dataPrices.Prices.
                     //Verify price
-                    var price = 10; // TODO Use data prices -> _dataPrices.Prices.
+                    var price = 10; 
                     if (_purchaseLimit < price)
                     {
                         throw new Exception($"Cost for {symbol}:{date} data exceeds remaining purchase limit: {_purchaseLimit}");
