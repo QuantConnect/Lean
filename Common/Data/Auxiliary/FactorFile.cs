@@ -99,7 +99,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public static FactorFile Read(string permtick, Stream file)
         {
-            return new FactorFile(permtick, FactorFileRow.Read(file, out DateTime? factorFileMinimumDate));
+            return new FactorFile(permtick, FactorFileRow.Read(file, out DateTime? factorFileMinimumDate), factorFileMinimumDate);
         }
 
         /// <summary>
