@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // Stop if equity request and not subscribed to map and factor files
                     if (symbol.SecurityType == SecurityType.Equity && !_subscribedToEquityMapAndFactorFiles)
                     {
-                        throw new Exception(
+                        throw new ArgumentException(
                             "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
                             "to download Equity data from QuantConnect.");
                     }
