@@ -797,12 +797,17 @@ namespace QuantConnect.Api
         /// <summary>
         /// Gets data prices from data/prices
         /// </summary>
-        public DataPricesList ReadDataPrices()
+        public DataPricesList ReadDataPrices(string organizationId)
         {
-            var request = new RestRequest("data/prices", Method.GET)
+            var request = new RestRequest("data/prices", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                organizationId
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out DataPricesList result);
             return result;

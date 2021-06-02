@@ -14,6 +14,8 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 // Collection of response objects for Quantconnect Data/ endpoints
@@ -76,25 +78,43 @@ namespace QuantConnect.Api
         /// Collection of prices objects
         /// </summary>
         [JsonProperty(PropertyName = "prices")]
-        public List<Prices> Prices { get; set; }
+        public List<PriceEntry> Prices { get; set; }
 
         /// <summary>
-        /// Collection of prices objects
+        /// The Agreement URL for this Organization
         /// </summary>
         [JsonProperty(PropertyName = "agreement")]
         public string AgreementUrl { get; set; }
+
+        /// <summary>
+        /// Get the price for a given data file
+        /// </summary>
+        /// <param name="path">Lean data path of the file</param>
+        /// <returns>Price</returns>
+        public int GetPrice(string path)
+        {
+            //TODO Handling no match case, try catch
+            //TODO Regex deserialization is including the escape chars?? UGLY
+            return Prices.First(x => Regex.IsMatch(path, Regex.Unescape(x.RegEx))).Price;
+        }
     }
 
     /// <summary>
     /// Prices entry for Data/Prices response
     /// </summary>
-    public class Prices
+    public class PriceEntry
     {
         /// <summary>
-        /// The requested symbol ID
+        /// Vendor for this price
         /// </summary>
         [JsonProperty(PropertyName = "vendorName")]
         public string Vendor { get; set; }
+
+        /// <summary>
+        /// The requested symbol ID
+        /// </summary>
+        [JsonProperty(PropertyName = "regex")]
+        public string RegEx { get; set; }
 
         /// <summary>
         /// The requested price

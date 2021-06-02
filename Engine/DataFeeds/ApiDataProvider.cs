@@ -62,15 +62,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _api = new Api.Api();
             _api.Initialize(_uid, _token, _dataPath);
 
-            // Read in our prices
-            _dataPrices = _api.ReadDataPrices();
-
             // If we have no value for organization get account preferred
             if (_organizationId == null)
             {
                 var account = _api.ReadAccount();
                 _organizationId = account.OrganizationId;
             }
+
+            // Read in our prices
+            _dataPrices = _api.ReadDataPrices(_organizationId);
 
             // Get our organization
             var organization = _api.ReadOrganization(_organizationId);
@@ -132,9 +132,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             "to download Equity data from QuantConnect.");
                     }
 
-                    // TODO Use data prices -> _dataPrices.Prices.
-                    //Verify price
-                    var price = 10; 
+                    // Verify we have enough credit to handle this
+                    var price = _dataPrices.GetPrice(filePath);
                     if (_purchaseLimit < price)
                     {
                         throw new Exception($"Cost for {symbol}:{date} data exceeds remaining purchase limit: {_purchaseLimit}");

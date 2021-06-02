@@ -111,12 +111,14 @@ namespace QuantConnect.Tests.API
         }
 
         [Test]
-        public void GetPricesList()
+        [TestCase("forex/oanda/minute/eurusd/19891011_quote.zip")]
+        public void GetPrices(string filePath)
         {
-            //TODO NOT WORKING EMPTY RESPONSE
-            var prices = ApiClient.ReadDataPrices();
+            //TODO Broken, Regex issues
+            var prices = ApiClient.ReadDataPrices(TestOrganization);
+            int price = prices.GetPrice(filePath);
 
-            Console.WriteLine("DONE");
+            Assert.IsNotNull(price);
         }
 
         [Test]
