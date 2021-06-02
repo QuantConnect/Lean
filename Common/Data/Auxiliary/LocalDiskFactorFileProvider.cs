@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Auxiliary
 
         /// <summary>
         /// Initializes a new instance of <see cref="LocalDiskFactorFileProvider"/> that uses configuration
-        /// to resolve an instance of <see cref="IMapFileProvider"/> from the <see cref="Composer.Instance"/>
+        /// to resolve an instance of <see cref="IMapFileProvider"/> & <see cref="IDataProvider"/> from the <see cref="Composer.Instance"/>
         /// </summary>
         public LocalDiskFactorFileProvider()
             : this(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")),
@@ -43,7 +43,7 @@ namespace QuantConnect.Data.Auxiliary
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalDiskFactorFileProvider"/> using the specified
-        /// map file provider
+        /// map file and data providers
         /// </summary>
         /// <param name="mapFileProvider">The map file provider used to resolve permticks of securities</param>
         /// <param name="dataProvider">The data provider to use to fetch the files</param>
