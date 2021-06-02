@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,8 +17,10 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -29,7 +31,37 @@ namespace QuantConnect.Data.Auxiliary
     public class LocalDiskMapFileProvider : IMapFileProvider
     {
         private static int _wroteTraceStatement;
-        private readonly ConcurrentDictionary<string, MapFileResolver> _cache = new ConcurrentDictionary<string, MapFileResolver>();
+        private readonly ConcurrentDictionary<string, MapFileResolver> _cache;
+        private IDataProvider _dataProvider;
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="LocalDiskMapFileProvider"/> that uses configuration
+        /// to resolve an instance of <see cref="IDataProvider"/> from the <see cref="Composer.Instance"/>
+        /// </summary>
+        public LocalDiskMapFileProvider()
+            : this(Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider")))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LocalDiskFactorFileProvider"/> using the specified
+        /// data provider
+        /// </summary>
+        /// <param name="dataProvider">The data provider to use to fetch the files</param>
+        public LocalDiskMapFileProvider(IDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+            _cache = new ConcurrentDictionary<string, MapFileResolver>();
+        }
+
+        /// <summary>
+        /// Initializes our MapFileProvider by supplying our dataProvider
+        /// </summary>
+        /// <param name="dataProvider">DataProvider to use</param>
+        public void Initialize(IDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+        }
 
         /// <summary>
         /// Gets a <see cref="MapFileResolver"/> representing all the map
@@ -39,6 +71,9 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>A <see cref="MapFileRow"/> containing all map files for the specified market</returns>
         public MapFileResolver Get(string market)
         {
+            // TODO: Consider using DataProvider to load in the files from disk to unify data fetching behavior
+            // Reference LocalDiskFactorFile, LocalZipFactorFile, and LocalZipMapFile providers for examples.
+
             market = market.ToLowerInvariant();
             return _cache.GetOrAdd(market, GetMapFileResolver);
         }

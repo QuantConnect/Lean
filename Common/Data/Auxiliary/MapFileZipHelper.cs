@@ -37,21 +37,20 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads the zip bytes as text and parses as MapFileRows to create MapFiles
         /// </summary>
-        public static IEnumerable<MapFile> ReadMapFileZip(byte[] file)
+        public static IEnumerable<MapFile> ReadMapFileZip(Stream file)
         {
             if (file == null || file.Length == 0)
             {
                 return Enumerable.Empty<MapFile>();
             }
 
-            var stream = new MemoryStream(file);
-            var result = from kvp in Compression.Unzip(stream)
+            var result = from kvp in Compression.Unzip(file)
                    let filename = kvp.Key
                    where filename.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase)
                    let lines = kvp.Value.Where(line => !string.IsNullOrEmpty(line))
                    let mapFile = SafeRead(filename, lines)
                    select mapFile;
-            stream.DisposeSafely();
+            file.DisposeSafely();
             return result;
         }
 

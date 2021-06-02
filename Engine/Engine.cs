@@ -133,8 +133,9 @@ namespace QuantConnect.Lean.Engine
                     // notify the user of any errors w/ object store persistence
                     AlgorithmHandlers.ObjectStore.ErrorRaised += (sender, args) => algorithm.Debug($"ObjectStore Persistence Error: {args.Error.Message}");
 
-                    // Initialize our factor provider
+                    // Initialize our factorfile and mapfile providers
                     AlgorithmHandlers.FactorFileProvider.Initialize(AlgorithmHandlers.MapFileProvider, AlgorithmHandlers.DataProvider);
+                    AlgorithmHandlers.MapFileProvider.Initialize(AlgorithmHandlers.DataProvider);
 
                     // Initialize the brokerage
                     IBrokerageFactory factory;

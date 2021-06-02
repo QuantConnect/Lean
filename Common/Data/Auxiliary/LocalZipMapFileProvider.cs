@@ -18,6 +18,8 @@ using System.IO;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -26,7 +28,37 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class LocalZipMapFileProvider : IMapFileProvider
     {
-        private readonly Dictionary<string, MapFileResolver> _cache = new Dictionary<string, MapFileResolver>();
+        private readonly Dictionary<string, MapFileResolver> _cache;
+        private IDataProvider _dataProvider;
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="LocalDiskMapFileProvider"/> that uses configuration
+        /// to resolve an instance of <see cref="IDataProvider"/> from the <see cref="Composer.Instance"/>
+        /// </summary>s
+        public LocalZipMapFileProvider()
+            : this(Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider")))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LocalDiskFactorFileProvider"/> using the specified
+        /// data provider
+        /// </summary>
+        /// <param name="dataProvider">The data provider to use to fetch the files</param>
+        public LocalZipMapFileProvider(IDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+            _cache = new Dictionary<string, MapFileResolver>();
+        }
+
+        /// <summary>
+        /// Initializes our MapFileProvider by supplying our dataProvider
+        /// </summary>
+        /// <param name="dataProvider">DataProvider to use</param>
+        public void Initialize(IDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+        }
 
         /// <summary>
         /// Gets a <see cref="MapFileResolver"/> representing all the map files for the specified market
@@ -49,7 +81,7 @@ namespace QuantConnect.Data.Auxiliary
             return result;
         }
 
-        private static MapFileResolver GetMapFileResolver(string market)
+        private MapFileResolver GetMapFileResolver(string market)
         {
             var timestamp = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
             var todayNewYork = timestamp.Date;
@@ -61,11 +93,15 @@ namespace QuantConnect.Data.Auxiliary
             do
             {
                 var zipFileName = Path.Combine(Globals.DataFolder, MapFileZipHelper.GetMapFileZipFileName(market, date));
-                if (File.Exists(zipFileName))
+
+                // Fetch a stream for our zip from our data provider
+                var stream = _dataProvider.Fetch(zipFileName);
+
+                // If we found a file we can read it 
+                if (stream != null)
                 {
-                    var zipBytes = File.ReadAllBytes(zipFileName);
                     Log.Trace("LocalZipMapFileProvider.Get({0}): Fetched map files for: {1} NY", market, date.ToShortDateString());
-                    return new MapFileResolver(MapFileZipHelper.ReadMapFileZip(zipBytes));
+                    return new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream));
                 }
 
                 // prevent infinite recursion if something is wrong
