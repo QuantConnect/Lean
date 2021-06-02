@@ -29,16 +29,15 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads the zip bytes as text and parses as FactorFileRows to create FactorFiles
         /// </summary>
-        public static Dictionary<Symbol, FactorFile> ReadFactorFileZip(byte[] file, MapFileResolver mapFileResolver, string market)
+        public static Dictionary<Symbol, FactorFile> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market)
         {
             if (file == null || file.Length == 0)
             {
                 return new Dictionary<Symbol, FactorFile>();
             }
 
-            var stream = new MemoryStream(file);
             var dict = (
-                    from kvp in Compression.Unzip(stream)
+                    from kvp in Compression.Unzip(file)
                     let filename = kvp.Key
                     let lines = kvp.Value
                     let factorFile = SafeRead(filename, lines)
@@ -50,7 +49,7 @@ namespace QuantConnect.Data.Auxiliary
                 )
                 .DistinctBy(x => x.Symbol)
                 .ToDictionary(x => x.Symbol, x => x.FactorFile);
-            stream.DisposeSafely();
+            file.DisposeSafely();
 
             return dict;
         }

@@ -89,7 +89,7 @@ namespace QuantConnect.Data.Auxiliary
         /// Hydrate the <see cref="_factorFiles"/> from the latest zipped factor file on disk
         private void HydrateFactorFileFromLatestZip()
         {
-            //TODO: USE DATAPROVIDER!!! 
+            // Todo: can use Symbol.Market here for fetching, requires refactor of Get()
             // assume for only USA market for now
             var market = QuantConnect.Market.USA;
 
@@ -104,18 +104,21 @@ namespace QuantConnect.Data.Auxiliary
                 var zipFileName = $"equity/{market}/factor_files/factor_files_{date:yyyyMMdd}.zip";
                 var factorFilePath = Path.Combine(Globals.DataFolder, zipFileName);
 
-                if (File.Exists(factorFilePath))
+                // Fetch a stream for our zip from our data provider
+                var stream = _dataProvider.Fetch(factorFilePath);
+
+                // If the file was found we can read the file
+                if (stream != null)
                 {
-                    var zipBytes = File.ReadAllBytes(factorFilePath);
                     var mapFileResolver = _mapFileProvider.Get(market);
-                    _factorFiles = FactorFileZipHelper.ReadFactorFileZip(zipBytes, mapFileResolver, market);
+                    _factorFiles = FactorFileZipHelper.ReadFactorFileZip(stream, mapFileResolver, market);
 
                     Log.Trace($"LocalZipFactorFileProvider.Get({market}): Fetched factor files for: {date.ToShortDateString()} NY");
 
-                    // If a factor file was found, return from the method
                     return;
                 }
 
+                // Otherwise we will search back another day
                 Log.Error($"LocalZipFactorFileProvider.Get(): No factor file found for date {date.ToShortDateString()}");
 
                 // prevent infinite recursion if something is wrong
