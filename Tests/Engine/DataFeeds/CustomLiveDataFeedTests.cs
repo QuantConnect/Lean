@@ -314,8 +314,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _synchronizer.Initialize(algorithm, dataManager);
 
             var mapFileProvider = new LocalDiskMapFileProvider();
+            var dataProvider = new DefaultDataProvider();
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(), dataManager, _synchronizer, new DataChannelProvider());
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider, dataProvider), dataProvider, dataManager, _synchronizer, new DataChannelProvider());
 
             foreach (var symbol in symbols)
             {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -40,9 +40,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var job = new BacktestNodePacket();
             var resultHandler = new BacktestingResultHandler();
             var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
             var dataProvider = new DefaultDataProvider();
-
+            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider, dataProvider);
+            
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             var feed = new FileSystemDataFeed();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
@@ -100,7 +100,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataProvider = new DefaultDataProvider();
             var resultHandler = new BacktestingResultHandler();
             var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
+            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider, dataProvider);
             var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
@@ -148,7 +148,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataProvider = new DefaultDataProvider();
             var resultHandler = new TestResultHandler();
             var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
+            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider, dataProvider);
             var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;

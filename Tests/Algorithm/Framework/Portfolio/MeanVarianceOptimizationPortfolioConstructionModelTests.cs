@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new DefaultDataProvider(),
                 new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                 new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(new LocalDiskMapFileProvider()),
+                new LocalDiskFactorFileProvider(),
                 i => { },
                 true,
                 new DataPermissionManager()));

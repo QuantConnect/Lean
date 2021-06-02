@@ -19,13 +19,12 @@ AddReference("QuantConnect.Algorithm")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Data.Auxiliary import FactorFile
+from QuantConnect.Data.Auxiliary import *
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Orders import OrderStatus
 from QuantConnect.Orders.Fees import ConstantFeeModel
 
 _ticker = "GOOGL";
-_factorFile = FactorFile.Read(_ticker, Market.USA);
 _expectedRawPrices = [ 1158.1100, 1158.7200,
 1131.7800, 1114.2800, 1119.6100, 1114.5500, 1135.3200, 567.59000, 571.4900, 545.3000, 540.6400 ]
 
@@ -45,6 +44,9 @@ class RawDataRegressionAlgorithm(QCAlgorithm):
             # Set our DataNormalizationMode to raw
             self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
             self._googl = self.AddEquity(_ticker, Resolution.Daily).Symbol;
+
+            # Get our factor file for this regression
+            self._factorFile = LocalDiskFactorFileProvider().Get(self._googl);
         
 
         def OnData(self, data):
@@ -57,7 +59,7 @@ class RawDataRegressionAlgorithm(QCAlgorithm):
                 # Assert our volume matches what we expected
                 if _expectedRawPrices.pop(0) != googlData.Close:
                     # Our values don't match lets try and give a reason why
-                    dayFactor = _factorFile.GetPriceScaleFactor(googlData.Time);
+                    dayFactor = self._factorFile.GetPriceScaleFactor(googlData.Time);
                     probableRawPrice = googlData.Close / dayFactor; # Undo adjustment
 
                     if _expectedRawPrices.Current == probableRawPrice:

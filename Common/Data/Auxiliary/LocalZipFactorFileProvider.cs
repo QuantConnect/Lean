@@ -28,18 +28,32 @@ namespace QuantConnect.Data.Auxiliary
     {
         private readonly object _lock;
         private bool _seededFactorFile;
-        private readonly IMapFileProvider _mapFileProvider;
+        private IMapFileProvider _mapFileProvider;
+        private IDataProvider _dataProvider;
         private Dictionary<Symbol, FactorFile> _factorFiles;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalZipFactorFileProvider"/> class.
         /// </summary>
         /// <param name="mapFileProvider">The map file provider.</param>
-        public LocalZipFactorFileProvider(IMapFileProvider mapFileProvider)
+        public LocalZipFactorFileProvider(IMapFileProvider mapFileProvider, IDataProvider dataProvider)
         {
             _factorFiles = new Dictionary<Symbol, FactorFile>();
             _mapFileProvider = mapFileProvider;
+            _dataProvider = dataProvider;
             _lock = new object();
+        }
+
+        /// <summary>
+        /// Initializes our FactorFileProvider by supplying our mapFileProvider
+        /// and dataProvider
+        /// </summary>
+        /// <param name="mapFileProvider">MapFileProvider to use</param>
+        /// <param name="dataProvider">DataProvider to use</param>
+        public void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider)
+        {
+            _mapFileProvider = mapFileProvider;
+            _dataProvider = dataProvider;
         }
 
         /// <summary>
@@ -75,6 +89,7 @@ namespace QuantConnect.Data.Auxiliary
         /// Hydrate the <see cref="_factorFiles"/> from the latest zipped factor file on disk
         private void HydrateFactorFileFromLatestZip()
         {
+            //TODO: USE DATAPROVIDER!!! 
             // assume for only USA market for now
             var market = QuantConnect.Market.USA;
 

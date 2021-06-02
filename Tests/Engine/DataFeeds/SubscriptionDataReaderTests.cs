@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 start,
                 end,
                 mapFileResolver,
-                new LocalDiskFactorFileProvider(mapFileProvider),
+                new LocalDiskFactorFileProvider(mapFileProvider, new DefaultDataProvider()),
                 LinqExtensions.Range(start, end, time => time + TimeSpan.FromDays(1)),
                 false,
                 new TestDataCacheProvider

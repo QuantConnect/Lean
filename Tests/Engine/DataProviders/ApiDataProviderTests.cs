@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,14 +24,6 @@ namespace QuantConnect.Tests.Engine.DataProviders
     [TestFixture]
     public class ApiDataProviderTests
     {
-        private ApiDataProvider _apiDataProvider;
-
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            _apiDataProvider = new ApiDataProvider();
-        }
-
         [TestCase(Resolution.Daily, 6, true)]
         [TestCase(Resolution.Daily, 3, false)]
         [TestCase(Resolution.Hour, 6, true)]

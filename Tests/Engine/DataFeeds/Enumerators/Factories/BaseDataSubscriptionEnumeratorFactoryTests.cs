@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -47,9 +47,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             );
 
             var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var mapFileResolver = mapFileProvider.Get(security.Symbol.ID.Market);
             var fileProvider = new DefaultDataProvider();
+            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider, fileProvider);
+            var mapFileResolver = mapFileProvider.Get(security.Symbol.ID.Market);
 
             var factory = new BaseDataSubscriptionEnumeratorFactory(false, mapFileResolver, factorFileProvider);
 

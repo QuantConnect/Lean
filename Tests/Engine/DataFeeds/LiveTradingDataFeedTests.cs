@@ -1006,7 +1006,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 job,
                 resultHandler,
                 mapFileProvider,
-                new LocalDiskFactorFileProvider(mapFileProvider),
+                new LocalDiskFactorFileProvider(mapFileProvider, new DefaultDataProvider()),
                 fileProvider,
                 dataManager,
                 _synchronizer,
@@ -1299,7 +1299,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _synchronizer.Initialize(_algorithm, _dataManager);
 
             _feed.Initialize(_algorithm, job, resultHandler, mapFileProvider,
-                new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
+                new LocalDiskFactorFileProvider(mapFileProvider, fileProvider), fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
 
             _algorithm.PostInitialize();
             Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
@@ -1668,7 +1668,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var mapFileProvider = new LocalDiskMapFileProvider();
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider,
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider, fileProvider), fileProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
             if (!dataQueueStarted.WaitOne(TimeSpan.FromMilliseconds(5000)))
@@ -2166,7 +2166,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var mapFileProvider = new LocalDiskMapFileProvider();
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), dataProvider,
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider, dataProvider), dataProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
             var cancellationTokenSource = new CancellationTokenSource();

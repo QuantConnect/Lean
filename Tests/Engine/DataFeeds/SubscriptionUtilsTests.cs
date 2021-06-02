@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -63,8 +63,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPoints = 10;
             var enumerator = new TestDataEnumerator { MoveNextTrueCount = dataPoints };
-            var factorFileProfider = new Mock<IFactorFileProvider>();
-            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, _config.Market));
+            var factorFileProvider = new LocalDiskFactorFileProvider();
 
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -76,7 +75,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProfider.Object,
+                factorFileProvider,
                 false);
 
             var count = 0;
@@ -97,8 +96,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void ThrowingEnumeratorStackDisposesOfSubscription()
         {
             var enumerator = new TestDataEnumerator { MoveNextTrueCount = 10, ThrowException = true};
-            var factorFileProfider = new Mock<IFactorFileProvider>();
-            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, _config.Market));
+            var factorFileProvider = new LocalDiskFactorFileProvider();
 
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -110,7 +108,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProfider.Object,
+                factorFileProvider,
                 false);
 
             var count = 0;
@@ -147,8 +145,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var dataPoints = 10;
 
                 var enumerator = new TestDataEnumerator {MoveNextTrueCount = dataPoints};
-                var factorFileProfider = new Mock<IFactorFileProvider>();
-                factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, _config.Market));
+                var factorFileProfider = new LocalDiskFactorFileProvider();
 
                 var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                     new SubscriptionRequest(
@@ -160,7 +157,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Time.EndOfTime
                     ),
                     enumerator,
-                    factorFileProfider.Object,
+                    factorFileProfider,
                     false);
 
                 for (var j = 0; j < dataPoints; j++)
@@ -272,9 +269,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(typeof(QuoteBar), false)]
         public void SubscriptionEmitsAuxData(Type typeOfConfig, bool shouldReceiveAuxData)
         {
-            var factorFileProvider = new Mock<IFactorFileProvider>();
+            var factorFileProvider = new LocalDiskFactorFileProvider();
             var config = new SubscriptionDataConfig(typeOfConfig, _security.Symbol, Resolution.Hour, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
-            factorFileProvider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, config.Market));
 
             var totalPoints = 8;
             var time = new DateTime(2010, 1, 1);
@@ -289,7 +285,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProvider.Object,
+                factorFileProvider,
                 false);
 
             // Test our subscription stream to see if it emits the aux data it should be filtered
