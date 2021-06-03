@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -46,7 +48,15 @@ namespace QuantConnect.Algorithm.CSharp
             _googl = AddEquity(Ticker, Resolution.Daily).Symbol;
 
             // Get our factor file for this regression
-            _factorFile = new LocalDiskFactorFileProvider().Get(_googl);
+            var dataProvider =
+                Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
+                    "DefaultDataProvider"));
+
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            mapFileProvider.Initialize(dataProvider);
+            var factorFileProvider = new LocalDiskFactorFileProvider();
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
+            _factorFile = factorFileProvider.Get(_googl);
 
             // Prime our expected values
             _expectedRawPrices.MoveNext();

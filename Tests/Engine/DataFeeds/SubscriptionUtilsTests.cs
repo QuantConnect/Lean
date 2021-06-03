@@ -37,6 +37,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     {
         private Security _security;
         private SubscriptionDataConfig _config;
+        private IFactorFileProvider _factorFileProvider;
 
         [SetUp]
         public void SetUp()
@@ -56,6 +57,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true, true, false);
+
+            _factorFileProvider = TestGlobals.FactorFileProvider;
         }
 
         [Test]
@@ -63,7 +66,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPoints = 10;
             var enumerator = new TestDataEnumerator { MoveNextTrueCount = dataPoints };
-            var factorFileProvider = new LocalDiskFactorFileProvider();
 
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -75,7 +77,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProvider,
+                _factorFileProvider,
                 false);
 
             var count = 0;
@@ -96,7 +98,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void ThrowingEnumeratorStackDisposesOfSubscription()
         {
             var enumerator = new TestDataEnumerator { MoveNextTrueCount = 10, ThrowException = true};
-            var factorFileProvider = new LocalDiskFactorFileProvider();
 
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -108,7 +109,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProvider,
+                _factorFileProvider,
                 false);
 
             var count = 0;
@@ -145,7 +146,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var dataPoints = 10;
 
                 var enumerator = new TestDataEnumerator {MoveNextTrueCount = dataPoints};
-                var factorFileProfider = new LocalDiskFactorFileProvider();
 
                 var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                     new SubscriptionRequest(
@@ -157,7 +157,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Time.EndOfTime
                     ),
                     enumerator,
-                    factorFileProfider,
+                    _factorFileProvider,
                     false);
 
                 for (var j = 0; j < dataPoints; j++)
@@ -269,7 +269,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(typeof(QuoteBar), false)]
         public void SubscriptionEmitsAuxData(Type typeOfConfig, bool shouldReceiveAuxData)
         {
-            var factorFileProvider = new LocalDiskFactorFileProvider();
             var config = new SubscriptionDataConfig(typeOfConfig, _security.Symbol, Resolution.Hour, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
 
             var totalPoints = 8;
@@ -285,7 +284,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProvider,
+                _factorFileProvider,
                 false);
 
             // Test our subscription stream to see if it emits the aux data it should be filtered

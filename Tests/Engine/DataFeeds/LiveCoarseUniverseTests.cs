@@ -70,10 +70,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var synchronizer = new TestableLiveSynchronizer(timeProvider);
             synchronizer.Initialize(algorithm, algorithm.DataManager);
 
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            var dataProvider = new DefaultDataProvider();
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider, dataProvider), dataProvider, algorithm.DataManager, synchronizer, new DataChannelProvider());
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, new DataChannelProvider());
 
             var symbolIndex = 0;
             var coarseUniverseSelectionCount = 0;

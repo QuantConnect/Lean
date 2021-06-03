@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -44,7 +46,17 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.SplitAdjusted;
             _aapl = AddEquity(Ticker, Resolution.Minute).Symbol;
 
-            _factorFile = new LocalDiskFactorFileProvider().Get(_aapl);
+            var dataProvider =
+                Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
+                    "DefaultDataProvider"));
+
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            mapFileProvider.Initialize(dataProvider);
+            var factorFileProvider = new LocalDiskFactorFileProvider();
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
+
+
+            _factorFile = factorFileProvider.Get(_aapl);
         }
 
         /// <summary>

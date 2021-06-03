@@ -33,14 +33,11 @@ namespace QuantConnect.Data.Auxiliary
         private Dictionary<Symbol, FactorFile> _factorFiles;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LocalZipFactorFileProvider"/> class.
+        /// Creates a new instance of the <see cref="LocalZipFactorFileProvider"/> class.
         /// </summary>
-        /// <param name="mapFileProvider">The map file provider.</param>
-        public LocalZipFactorFileProvider(IMapFileProvider mapFileProvider, IDataProvider dataProvider)
+        public LocalZipFactorFileProvider()
         {
             _factorFiles = new Dictionary<Symbol, FactorFile>();
-            _mapFileProvider = mapFileProvider;
-            _dataProvider = dataProvider;
             _lock = new object();
         }
 

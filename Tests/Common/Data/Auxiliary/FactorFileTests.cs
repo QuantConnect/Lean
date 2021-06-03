@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -37,12 +38,10 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var PermTick = "AAPL";
             var Market = "usa";
             var _symbol = new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick);
-            var factorFileProvider = new LocalDiskFactorFileProvider();
-            var factorFile = factorFileProvider.Get(_symbol);
+
+            var factorFile = TestGlobals.FactorFileProvider.Get(_symbol);
 
             Assert.AreEqual(29, factorFile.SortedFactorFileData.Count);
-
-            // TODO FactorFileMinimumDate is not being set, debug
             Assert.AreEqual(new DateTime(1998, 01, 01), factorFile.FactorFileMinimumDate.Value);
         }
 
@@ -417,8 +416,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
         private static FactorFile GetFactorFile(string permtick)
         {
-            var factorFileProvider = new LocalDiskFactorFileProvider();
-            return factorFileProvider.Get(permtick);
+            return TestGlobals.FactorFileProvider.Get(permtick);
         }
 
         private static FactorFile GetFactorFile_LODE20191127()

@@ -46,9 +46,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new SecurityCache()
             );
 
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            var fileProvider = new DefaultDataProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider, fileProvider);
+            var mapFileProvider = TestGlobals.MapFileProvider;
+            var fileProvider = TestGlobals.DataProvider;
+            var factorFileProvider = TestGlobals.FactorFileProvider;
             var mapFileResolver = mapFileProvider.Get(security.Symbol.ID.Market);
 
             var factory = new BaseDataSubscriptionEnumeratorFactory(false, mapFileResolver, factorFileProvider);

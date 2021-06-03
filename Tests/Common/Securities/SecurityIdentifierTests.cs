@@ -360,7 +360,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void GenerateEquityWithTickerUsingMapFile()
         {
             var expectedFirstDate = new DateTime(1998, 1, 2);
-            var sid = SecurityIdentifier.GenerateEquity("TWX", Market.USA, mapSymbol: true, mapFileProvider: new LocalDiskMapFileProvider());
+            var sid = SecurityIdentifier.GenerateEquity("TWX", Market.USA, mapSymbol: true, mapFileProvider: TestGlobals.MapFileProvider);
 
             Assert.AreEqual(sid.Date, expectedFirstDate);
             Assert.AreEqual(sid.Symbol, "AOL");

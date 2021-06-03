@@ -19,6 +19,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.ToolBox;
 using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
@@ -78,7 +79,7 @@ namespace QuantConnect.Tests.Common.Util
                 throw new ArgumentException("This test requires an already calculated factor file." +
                                             "Try using one of the pre-existing factor files ");
 
-            var originalFactorFileInstance = new LocalDiskFactorFileProvider().Get(_symbol);
+            var originalFactorFileInstance = TestGlobals.FactorFileProvider.Get(_symbol);
 
             // we limit events to the penultimate time in our factor file (last one is 2050)
             var lastValidRow = originalFactorFileInstance.SortedFactorFileData.Reverse().Skip(1).First();

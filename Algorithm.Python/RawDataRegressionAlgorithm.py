@@ -15,6 +15,8 @@ from clr import AddReference
 AddReference("System.Core")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Configuration")
+AddReference("QuantConnect.Lean.Engine")
 
 from System import *
 from QuantConnect import *
@@ -23,6 +25,10 @@ from QuantConnect.Data.Auxiliary import *
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Orders import OrderStatus
 from QuantConnect.Orders.Fees import ConstantFeeModel
+from QuantConnect.Configuration import Config
+from QuantConnect.Util import Composer
+from QuantConnect.Interfaces import IDataProvider
+from QuantConnect.Lean.Engine.DataFeeds import DefaultDataProvider
 
 _ticker = "GOOGL";
 _expectedRawPrices = [ 1158.1100, 1158.7200,
@@ -46,7 +52,14 @@ class RawDataRegressionAlgorithm(QCAlgorithm):
             self._googl = self.AddEquity(_ticker, Resolution.Daily).Symbol;
 
             # Get our factor file for this regression
-            self._factorFile = LocalDiskFactorFileProvider().Get(self._googl);
+            dataProvider = DefaultDataProvider();
+            mapFileProvider = LocalDiskMapFileProvider();
+            mapFileProvider.Initialize(dataProvider);
+            factorFileProvider = LocalDiskFactorFileProvider();
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
+
+            # Get our factor file for this regression
+            self._factorFile = factorFileProvider.Get(self._googl);
         
 
         def OnData(self, data):

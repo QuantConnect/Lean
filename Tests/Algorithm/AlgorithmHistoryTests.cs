@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,8 +20,8 @@ using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -35,6 +35,9 @@ namespace QuantConnect.Tests.Algorithm
     {
         private QCAlgorithm _algorithm;
         private TestHistoryProvider _testHistoryProvider;
+        private IDataProvider _dataProvider;
+        private IMapFileProvider _mapFileProvider;
+        private IFactorFileProvider _factorFileProvider;
 
         [SetUp]
         public void Setup()
@@ -42,6 +45,10 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.HistoryProvider = _testHistoryProvider = new TestHistoryProvider();
+
+            _dataProvider = TestGlobals.DataProvider;
+            _mapFileProvider = TestGlobals.MapFileProvider;
+            _factorFileProvider = TestGlobals.FactorFileProvider;
         }
 
         [Test]
@@ -50,15 +57,14 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            var dataProvider = new DefaultDataProvider();
-            var zipCacheProvider = new ZipDataCacheProvider(dataProvider);
+            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
             _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
-                dataProvider,
+                _dataProvider,
                 zipCacheProvider,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
+                _mapFileProvider,
+                _factorFileProvider,
                 null,
                 false,
                 new DataPermissionManager()));
@@ -173,14 +179,15 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            var cacheProvider = new ZipDataCacheProvider(new DefaultDataProvider());
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+
             algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
-                new DefaultDataProvider(),
+                _dataProvider,
                 cacheProvider,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
+                _mapFileProvider,
+                _factorFileProvider,
                 null,
                 false,
                 new DataPermissionManager()));
@@ -227,15 +234,14 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            var dataProvider = new DefaultDataProvider();
-            var zipCacheProvider = new ZipDataCacheProvider(dataProvider);
+            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
             _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
-                dataProvider,
+                _dataProvider,
                 zipCacheProvider,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
+                _mapFileProvider,
+                _factorFileProvider,
                 null,
                 false,
                 new DataPermissionManager()));
@@ -263,15 +269,14 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            var dataProvider = new DefaultDataProvider();
-            var zipCacheProvider = new ZipDataCacheProvider(dataProvider);
+            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
             _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
-                dataProvider,
+                _dataProvider,
                 zipCacheProvider,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
+                _mapFileProvider,
+                _factorFileProvider,
                 null,
                 false,
                 new DataPermissionManager()));
@@ -297,15 +302,14 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            var dataProvider = new DefaultDataProvider();
-            var zipCacheProvider = new ZipDataCacheProvider(dataProvider);
+            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
             _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
-                dataProvider,
+                _dataProvider,
                 zipCacheProvider,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
+                _mapFileProvider,
+                _factorFileProvider,
                 null,
                 false,
                 new DataPermissionManager()));

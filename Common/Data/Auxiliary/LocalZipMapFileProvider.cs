@@ -18,8 +18,6 @@ using System.IO;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Configuration;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -32,22 +30,10 @@ namespace QuantConnect.Data.Auxiliary
         private IDataProvider _dataProvider;
 
         /// <summary>
-        /// Initializes a new instance of <see cref="LocalDiskMapFileProvider"/> that uses configuration
-        /// to resolve an instance of <see cref="IDataProvider"/> from the <see cref="Composer.Instance"/>
-        /// </summary>s
-        public LocalZipMapFileProvider()
-            : this(Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider")))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LocalDiskFactorFileProvider"/> using the specified
-        /// data provider
+        /// Creates a new instance of the <see cref="LocalDiskFactorFileProvider"/>
         /// </summary>
-        /// <param name="dataProvider">The data provider to use to fetch the files</param>
-        public LocalZipMapFileProvider(IDataProvider dataProvider)
+        public LocalZipMapFileProvider()
         {
-            _dataProvider = dataProvider;
             _cache = new Dictionary<string, MapFileResolver>();
         }
 

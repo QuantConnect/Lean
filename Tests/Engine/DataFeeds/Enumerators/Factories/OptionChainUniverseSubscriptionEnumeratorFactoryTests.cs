@@ -70,8 +70,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 null
             );
 
-            var dataProvider = new DefaultDataProvider();
-            var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(false, MapFileResolver.Create(Globals.DataFolder, Market.USA), new LocalDiskFactorFileProvider(new LocalDiskMapFileProvider(), dataProvider));
+            var dataProvider = TestGlobals.DataProvider;
+            var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(false, MapFileResolver.Create(Globals.DataFolder, Market.USA), TestGlobals.FactorFileProvider);
             var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());
             Func<SubscriptionRequest, IEnumerator<BaseData>> underlyingEnumeratorFunc = (req) =>
                 {

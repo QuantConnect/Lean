@@ -29,7 +29,7 @@ namespace QuantConnect.Interfaces
         /// Initializes our MapFileProvider by supplying our dataProvider
         /// </summary>
         /// <param name="dataProvider">DataProvider to use</param>
-        public void Initialize(IDataProvider dataProvider);
+        void Initialize(IDataProvider dataProvider);
 
         /// <summary>
         /// Gets a <see cref="MapFileResolver"/> representing all the map
