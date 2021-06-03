@@ -895,6 +895,17 @@ namespace QuantConnect
             }
         }
 
+        public static IEnumerable<string> GetZipEntryFileNames(Stream zipFileStream)
+        {
+            using (var zip = ZipFile.Read(zipFileStream))
+            {
+                foreach (var entry in zip)
+                {
+                    yield return entry.FileName;
+                }
+            }
+        }
+
         /// <summary>
         /// Extracts a 7-zip archive to disk, using the 7-zip CLI utility
         /// </summary>

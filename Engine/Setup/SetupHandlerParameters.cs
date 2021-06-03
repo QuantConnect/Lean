@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -69,6 +69,11 @@ namespace QuantConnect.Lean.Engine.Setup
         public IObjectStore ObjectStore { get; }
 
         /// <summary>
+        /// Gets the DataProvider
+        /// </summary>
+        public IDataProvider DataProvider { get; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="universeSelection">The universe selection instance</param>
@@ -79,6 +84,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="transactionHandler">The configured transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
         /// <param name="objectStore">The configured object store</param>
+        /// <param name="dataProvider">The configured data provider</param>
         public SetupHandlerParameters(UniverseSelection universeSelection,
             IAlgorithm algorithm,
             IBrokerage brokerage,
@@ -86,7 +92,8 @@ namespace QuantConnect.Lean.Engine.Setup
             IResultHandler resultHandler,
             ITransactionHandler transactionHandler,
             IRealTimeHandler realTimeHandler,
-            IObjectStore objectStore
+            IObjectStore objectStore,
+            IDataProvider dataProvider
             )
         {
             UniverseSelection = universeSelection;
@@ -97,6 +104,7 @@ namespace QuantConnect.Lean.Engine.Setup
             TransactionHandler = transactionHandler;
             RealTimeHandler = realTimeHandler;
             ObjectStore = objectStore;
+            DataProvider = dataProvider;
         }
     }
 }

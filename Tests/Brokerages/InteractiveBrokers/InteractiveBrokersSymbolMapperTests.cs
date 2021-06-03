@@ -179,8 +179,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [TestCase(2021, 3, 25)]
         public void FuturesOptionsWithUnderlyingContractMonthMappedByRuleResolvesUnderlyingGetLeanSymbol(int year, int month, int day)
         {
-            var futuresChainProvider = new BacktestingFutureChainProvider();
-            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
+            var futuresChainProvider = new BacktestingFutureChainProvider(TestGlobals.DataProvider);
+            var mapper = new InteractiveBrokersSymbolMapper(TestGlobals.MapFileProvider);
 
             var expectedUnderlyingSymbol = Symbol.CreateFuture("GC", Market.COMEX, new DateTime(2021, 4, 28));
             var futureOption = mapper.GetLeanSymbol("OG", SecurityType.FutureOption, Market.COMEX, new DateTime(year, month, day));
