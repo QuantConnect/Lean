@@ -96,7 +96,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 .Concat(quotesFolder.EnumerateFiles("*.gz"))
                 .Where(f => f.Name.Contains("SPOT"))
                 .Where(f => f.Name.Split('_').Length == 4)
-                .DistinctBy(x => x.Directory.Parent.Name + string.Join("-", x.Name.Split('-').Take(2)));
+                .DistinctBy(x => x.Directory.Parent.Name + string.Join("-", x.Name.Split('-').Take(2)))
+                .DistinctBy(x => new CoinApiDataReader(symbolMapper).GetCoinApiEntryData(x, _processingDate).Symbol);
 
             Parallel.ForEach(fileToProcess,(file, loopState) =>
                 {
