@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -27,10 +28,10 @@ namespace QuantConnect.Api
     public class DataLink : RestResponse
     {
         /// <summary>
-        /// Link to the data requested
+        /// Url to the data requested
         /// </summary>
         [JsonProperty(PropertyName = "link")]
-        public string Link { get; set; }
+        public string Url { get; set; }
 
         /// <summary>
         /// Remaining QCC balance on account
@@ -54,19 +55,7 @@ namespace QuantConnect.Api
         /// List of all available data from this request
         /// </summary>
         [JsonProperty(PropertyName = "objects")]
-        public List<DataEntry> AvailableData { get; set; }
-    }
-
-    /// <summary>
-    /// Data entry for Data/List response
-    /// </summary>
-    public class DataEntry
-    {
-        /// <summary>
-        /// Data Directory
-        /// </summary>
-        /// TODO: NEEDS JSON PROP NAME
-        public string Data { get; set; }
+        public List<string> AvailableData { get; set; }
     }
 
     /// <summary>
@@ -90,12 +79,18 @@ namespace QuantConnect.Api
         /// Get the price for a given data file
         /// </summary>
         /// <param name="path">Lean data path of the file</param>
-        /// <returns>Price</returns>
+        /// <returns>Price for data, -1 if no entry found</returns>
         public int GetPrice(string path)
         {
-            //TODO Handling no match case, try catch
-            //TODO Regex deserialization is including the escape chars?? UGLY
-            return Prices.First(x => Regex.IsMatch(path, Regex.Unescape(x.RegEx))).Price;
+            if (path == null)
+            {
+                return -1;
+            }
+
+            // Convert windows paths into linux form
+            path = path.Replace("\\", "/", StringComparison.InvariantCulture);
+            var entry = Prices.FirstOrDefault(x => Regex.IsMatch(path, x.RegEx));
+            return entry == null ? -1 : entry.Price;
         }
     }
 
@@ -111,10 +106,21 @@ namespace QuantConnect.Api
         public string Vendor { get; set; }
 
         /// <summary>
-        /// The requested symbol ID
+        /// Regex for this data price entry
+        /// Trims regex open, close, and multiline flag
+        /// because it won't match otherwise
+        /// </summary>
+        public string RegEx
+        {
+            get => RawRegEx.TrimStart('/').TrimEnd('m').TrimEnd('/');
+            set => RawRegEx = value;
+        }
+
+        /// <summary>
+        /// RegEx directly form response
         /// </summary>
         [JsonProperty(PropertyName = "regex")]
-        public string RegEx { get; set; }
+        public string RawRegEx { get; set; }
 
         /// <summary>
         /// The requested price

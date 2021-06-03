@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using QuantConnect.Api;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.API
@@ -26,108 +28,113 @@ namespace QuantConnect.Tests.API
     [TestFixture]
     class DataTests : ApiTestBase
     {
-        /// <summary>
-        /// Test downloading data that does not come with the repo (Oanda)
-        /// Requires that your account has this data; its free at quantconnect.com/data
-        /// </summary>
-        [Test]
-        public void BacktestingData_CanBeDownloadedAndSaved_Successfully()
+        private DataPricesList _pricesCache;
+        private static object[] validForexDataTestCases =
         {
-            //TODO NOT WORKING EMPTY RESPONSE
-            var minutePath = Path.Combine(DataFolder, "forex/oanda/minute/eurusd/20131011_quote.zip");
-            var dailyPath = Path.Combine(DataFolder, "forex/oanda/daily/eurusd.zip");
+            new object[] { "EURUSD", Market.Oanda, new DateTime(2013,10,07), Resolution.Daily, TickType.Quote },
+            new object[] { "EURUSD", Market.Oanda, new DateTime(2013,10,07), Resolution.Minute, TickType.Quote }
+        };
 
-            if (File.Exists(dailyPath))
-                File.Delete(dailyPath);
+        /// <summary>
+        /// Test downloading data
+        /// </summary>
+        [TestCase("forex/oanda/minute/eurusd/20131011_quote.zip")]
+        [TestCase("forex/oanda/daily/eurusd.zip")]
+        public void DataDownloadedAndSaved(string fileToDownload)
+        {
+            var path = Path.Combine(DataFolder, fileToDownload);
 
-            if (File.Exists(minutePath))
-                File.Delete(minutePath);
+            if (File.Exists(path))
+                File.Delete(path);
 
-            var downloadedMinuteData = ApiClient.DownloadData(minutePath, TestOrganization);
-            var downloadedDailyData = ApiClient.DownloadData(dailyPath, TestOrganization);
+            var downloadedData = ApiClient.DownloadData(path, TestOrganization);
 
-            Assert.IsTrue(downloadedMinuteData);
-            Assert.IsTrue(downloadedDailyData);
-
-            Assert.IsTrue(File.Exists(dailyPath));
-            Assert.IsTrue(File.Exists(minutePath));
+            Assert.IsTrue(downloadedData);
+            Assert.IsTrue(File.Exists(path));
         }
 
         /// <summary>
-        /// Test downloading non existent data
+        /// Test attempting to fetch invalid data links
         /// </summary>
         [Test]
-        public void NonExistantData_WillBeDownloaded_Unsuccessfully()
+        public void InvalidDataLinks()
         {
             var fakePath = Path.Combine(DataFolder, "forex/oanda/minute/eurusd/19891011_quote.zip");
             var nonExistentData = ApiClient.DownloadData(fakePath, TestOrganization);
 
             Assert.IsFalse(nonExistentData);
-            Assert.IsFalse(Directory.Exists(fakePath));
-        }
-
-        /// <summary>
-        /// Test getting links to forex data for FXCM
-        /// </summary>
-        [Test]
-        public void FXCMDataLinks_CanBeRetrieved_Successfully()
-        {
-            var minutePath = LeanData.GenerateRelativeZipFilePath(
-                new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
-                new DateTime(2013, 10, 07),
-                Resolution.Minute, TickType.Quote);
-            var minuteDataLink = ApiClient.ReadDataLink(minutePath, TestOrganization);
-
-            var dailyPath = LeanData.GenerateRelativeZipFilePath(
-                new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
-                new DateTime(2013, 10, 07),
-                Resolution.Daily, TickType.Quote);
-            var dailyDataLink = ApiClient.ReadDataLink(dailyPath, TestOrganization);
-
-            Assert.IsTrue(minuteDataLink.Success);
-            Assert.IsTrue(dailyDataLink.Success);
+            Assert.IsFalse(File.Exists(fakePath));
         }
 
         /// <summary>
         /// Test getting links to forex data for Oanda
         /// </summary>
-        [Test]
-        public void OandaDataLinks_CanBeRetrieved_Successfully()
+        [TestCaseSource(nameof(validForexDataTestCases))]
+        public void ValidForexDataLinks(string ticker, string market, DateTime date, Resolution resolution, TickType tickType)
         {
-            var minutePath = LeanData.GenerateRelativeZipFilePath(
-                new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                new DateTime(2013, 10, 07),
-                Resolution.Minute, TickType.Quote);
-            var minuteDataLink = ApiClient.ReadDataLink(minutePath, TestOrganization);
+            var path = LeanData.GenerateRelativeZipFilePath(
+                new Symbol(SecurityIdentifier.GenerateForex(ticker, market), ticker),
+                date, resolution, tickType);
+            var dataLink = ApiClient.ReadDataLink(path, TestOrganization);
 
-            var dailyPath = LeanData.GenerateRelativeZipFilePath(
-                new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                new DateTime(2013, 10, 07),
-                Resolution.Daily, TickType.Quote);
-            var dailyDataLink = ApiClient.ReadDataLink(dailyPath, TestOrganization);
-
-            Assert.IsTrue(minuteDataLink.Success);
-            Assert.IsTrue(dailyDataLink.Success);
+            Assert.IsTrue(dataLink.Success);
+            Assert.IsFalse(dataLink.Url.IsNullOrEmpty());
         }
 
-        [Test]
-        [TestCase("forex/oanda/minute/eurusd/19891011_quote.zip")]
+        /// <summary>
+        /// Test getting price for file
+        /// </summary>
+        /// <param name="filePath"></param>
+        [TestCase("forex/oanda/daily/eurusd.zip")]
+        [TestCase("crypto/gdax/daily/btcusd_quote.zip")]
+        [TestCase("\\index\\usa\\minute\\spx")]
         public void GetPrices(string filePath)
         {
-            //TODO Broken, Regex issues
-            var prices = ApiClient.ReadDataPrices(TestOrganization);
-            int price = prices.GetPrice(filePath);
+            if (_pricesCache == null)
+            {
+                _pricesCache = ApiClient.ReadDataPrices(TestOrganization);
+            }
 
-            Assert.IsNotNull(price);
+            // Make sure we actually have these prices for the test to work
+            Assert.IsTrue(_pricesCache.Success);
+
+            // Get the price
+            int price = _pricesCache.GetPrice(filePath);
+            Assert.IsTrue(price != 0);
         }
 
-        [Test]
-        public void GetDataListings()
+        /// <summary>
+        /// Test regex implementation for DataPriceList price matching
+        /// </summary>
+        /// <param name="dataFile"></param>
+        /// <param name="matchingRegex"></param>
+        [TestCase("forex/oanda/daily/eurusd.zip", "/^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$/m")]
+        [TestCase("forex/oanda/daily/eurusd.zip", "/^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$")]
+        [TestCase("forex/oanda/daily/eurusd.zip", "^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$/")]
+        [TestCase("forex/oanda/daily/eurusd.zip", "^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$")]
+        public void DataPriceRegex(string dataFile, string matchingRegex)
         {
-            //TODO NOT WORKING EMPTY RESPONSE
-            var DataList = ApiClient.ReadDataDirectory("forex/oanda/minute/");
+            var setPrice = 10;
+            var dataList = new DataPricesList
+            {
+                Prices = new List<PriceEntry>() { new PriceEntry() { Price = setPrice, RegEx = matchingRegex } }
+            };
 
-            Console.WriteLine("DONE");
+            int price = dataList.GetPrice(dataFile);
+            Assert.AreEqual(setPrice, price);
+        }
+
+        /// <summary>
+        /// Test getting available data listings for directories
+        /// </summary>
+        /// <param name="directory"></param>
+        [TestCase("forex/oanda/minute/eurusd/")]
+        [TestCase("forex\\oanda\\minute\\eurusd\\")]
+        public void GetDataListings(string directory)
+        {
+            var dataList = ApiClient.ReadDataDirectory(directory);
+            Assert.IsTrue(dataList.Success);
+            Assert.IsTrue(dataList.AvailableData.Count > 0);
         }
     }
 }

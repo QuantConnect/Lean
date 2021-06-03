@@ -66,20 +66,35 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="name">Project name</param>
         /// <param name="language">Programming language to use</param>
+        /// <param name="organizationId">Optional param for specifying organization to create project under.
+        /// If none provided web defaults to preferred.</param>
         /// <returns>Project object from the API.</returns>
 
-        public ProjectResponse CreateProject(string name, Language language)
+        public ProjectResponse CreateProject(string name, Language language, string organizationId = null)
         {
             var request = new RestRequest("projects/create", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
 
-            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            // Only include organization Id if its not null or empty
+            if (string.IsNullOrEmpty(organizationId))
             {
-                name, 
-                language
-            }), ParameterType.RequestBody);
+                request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    name,
+                    language
+                }), ParameterType.RequestBody);
+            }
+            else
+            {
+                request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    name,
+                    language,
+                    organizationId
+                }), ParameterType.RequestBody);
+            }
 
             ApiConnection.TryRequest(request, out ProjectResponse result);
             return result;
@@ -727,8 +742,8 @@ namespace QuantConnect.Api
                 throw new ArgumentException("Api.ReadDataLink(): Filepath must not be null");
             }
 
-            // Normalize filepath, for windows paths
-            filePath = filePath.Replace("\\\\", "/", StringComparison.InvariantCulture);
+            // Normalize windows paths to linux format
+            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
 
             // Remove data root directory from path for request if included
             if (filePath.StartsWith(_dataFolder, StringComparison.InvariantCulture))
@@ -764,7 +779,7 @@ namespace QuantConnect.Api
             }
 
             // Normalize filepath, for windows paths
-            filePath = filePath.Replace("\\\\", "/", StringComparison.InvariantCulture);
+            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
 
             // Remove data root directory from path for request if included
             if (filePath.StartsWith(_dataFolder, StringComparison.InvariantCulture))
@@ -846,10 +861,10 @@ namespace QuantConnect.Api
         public bool DownloadData(string filePath, string organizationId)
         {
             // Get a link to the data
-            var link = ReadDataLink(filePath, organizationId);
+            var dataLink = ReadDataLink(filePath, organizationId);
 
             // Make sure the link was successfully retrieved
-            if (!link.Success)
+            if (!dataLink.Success)
                 return false;
 
             // Make sure the directory exist before writing
@@ -859,34 +874,17 @@ namespace QuantConnect.Api
                 Directory.CreateDirectory(directory);
             }
 
-            // Download and save the data
-            var uri     = new Uri(link.Link);
-            var client  = new RestClient(uri.Scheme + "://" + uri.Host);
-            var request = new RestRequest(uri.PathAndQuery, Method.GET);
-
-            // Make a request for the data at the link
-            var response = client.Execute(request);
-
-            // If the response is JSON it doesn't contain any data, try and extract the message and write it
-            if (response.ContentType.ToLowerInvariant() == "application/json")
+            try
             {
-                try
-                {
-                    var contentObj = JObject.Parse(response.Content);
-                    var message = contentObj["message"].Value<string>();
-                    Log.Error($"Api.DownloadData(): Failed to download zip for path {filePath}, Api response: {message}");
-                }
-                catch
-                {
-                    Log.Error($"Api.DownloadData(): Failed to download zip for path ({filePath})");
-                }
-
-                return false;
+                using var client = new WebClient();
+                client.DownloadFile(dataLink.Url, filePath);
             }
-            
-            // Any other case save the content to given path
-            response.RawBytes.SaveAs(filePath);
-            return true;
+            catch
+            {
+                Log.Error($"Api.DownloadData(): Failed to download zip for path ({filePath})");
+            }
+
+            return File.Exists(filePath);
         }
 
         /// <summary>

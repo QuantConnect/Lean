@@ -326,7 +326,7 @@ namespace QuantConnect.Tests.API
         private void RunLiveAlgorithm(BaseLiveAlgorithmSettings settings, ProjectFile file)
         {
             // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
 
             // Add Project Files
             var addProjectFile = ApiClient.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);

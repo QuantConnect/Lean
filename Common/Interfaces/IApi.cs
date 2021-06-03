@@ -37,8 +37,9 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="name">Project name</param>
         /// <param name="language">Programming language to use</param>
+        /// <param name="organizationId">Organization to create this project under</param>
         /// <returns><see cref="ProjectResponse"/> that includes information about the newly created project</returns>
-        ProjectResponse CreateProject(string name, Language language);
+        ProjectResponse CreateProject(string name, Language language, string organizationId = null);
 
         /// <summary>
         /// Read in a project from the QuantConnect.com API.

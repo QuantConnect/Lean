@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.API
             var name = "Test Project " + DateTime.Now.ToStringInvariant();
 
             //Test create a new project successfully
-            var project = ApiClient.CreateProject(name, Language.CSharp);
+            var project = ApiClient.CreateProject(name, Language.CSharp, TestOrganization);
             Assert.IsTrue(project.Success);
             Assert.IsTrue(project.Projects.First().ProjectId > 0);
             Assert.IsTrue(project.Projects.First().Name == name);
@@ -71,12 +71,12 @@ namespace QuantConnect.Tests.API
 
             var secondRealFile = new ProjectFile()
             {
-                Name = "lol.cs",
+                Name = "algorithm.cs",
                 Code = HttpUtility.HtmlEncode(File.ReadAllText("../../../Algorithm.CSharp/BubbleAlgorithm.cs"))
             };
 
-            // Create a new project and make sure there are no files
-            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
+            // Create a new project
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
             Assert.IsTrue(project.Success);
             Assert.IsTrue(project.Projects.First().ProjectId > 0);
 
@@ -108,7 +108,7 @@ namespace QuantConnect.Tests.API
             // Read multiple files
             var readFiles = ApiClient.ReadProjectFiles(project.Projects.First().ProjectId);
             Assert.IsTrue(readFiles.Success);
-            Assert.IsTrue(readFiles.Files.Count == 2);
+            Assert.IsTrue(readFiles.Files.Count == 4); // 2 Added + 2 Automatic (Research.ipynb & Main.cs)
 
             // Delete the second file
             var deleteFile = ApiClient.DeleteProjectFile(project.Projects.First().ProjectId, secondRealFile.Name);
@@ -117,9 +117,8 @@ namespace QuantConnect.Tests.API
             // Read files
             var readFilesAgain = ApiClient.ReadProjectFiles(project.Projects.First().ProjectId);
             Assert.IsTrue(readFilesAgain.Success);
-            Assert.IsTrue(readFilesAgain.Files.Count == 1);
-            Assert.IsTrue(readFilesAgain.Files.First().Name == realFile.Name);
-
+            Assert.IsTrue(readFilesAgain.Files.Count == 3);
+            Assert.IsTrue(readFilesAgain.Files.Any(x => x.Name == realFile.Name));
 
             // Delete the project
             var deleteProject = ApiClient.DeleteProject(project.Projects.First().ProjectId);
@@ -158,7 +157,7 @@ namespace QuantConnect.Tests.API
         private void Perform_CreateCompileBackTest_Tests(string projectName, Language language, string algorithmName, string code)
         {
             //Test create a new project successfully
-            var project = ApiClient.CreateProject(projectName, language);
+            var project = ApiClient.CreateProject(projectName, language, TestOrganization);
             Assert.IsTrue(project.Success);
             Assert.IsTrue(project.Projects.First().ProjectId > 0);
             Assert.IsTrue(project.Projects.First().Name == projectName);
