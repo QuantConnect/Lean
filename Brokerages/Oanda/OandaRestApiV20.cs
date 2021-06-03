@@ -700,7 +700,6 @@ namespace QuantConnect.Brokerages.Oanda
             return new Holding
             {
                 Symbol = symbol,
-                Type = securityType,
                 AveragePrice = averagePrice,
                 CurrencySymbol = "$",
                 Quantity = quantity
