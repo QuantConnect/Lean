@@ -199,6 +199,7 @@ namespace QuantConnect.Tests.ToolBox
             new TestCaseData(Symbols.AAPL, Resolution.Tick, TickType.Trade, TimeSpan.FromDays(7), true),
             new TestCaseData(Symbols.AAPL, Resolution.Tick, TickType.Quote, TimeSpan.FromDays(7), true),
             new TestCaseData(Symbols.EURUSD, Resolution.Tick, TickType.Quote, TimeSpan.FromDays(7), true),
+            new TestCaseData(Symbols.BTCUSD, Resolution.Tick, TickType.Trade, TimeSpan.FromDays(7), true)
         };
 
         [TestCaseSource(nameof(HistoricalTicksTestCaseDatas))]

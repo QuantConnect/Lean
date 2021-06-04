@@ -417,7 +417,7 @@ namespace QuantConnect.ToolBox.Polygon
                         string quoteCurrency;
                         Forex.DecomposeCurrencyPair(request.Symbol.Value, out baseCurrency, out quoteCurrency);
 
-                        var url = $"{HistoryBaseUrl}/v1/historic/forex/{baseCurrency}/{quoteCurrency}/{currentDate.Date:yyyy-MM-dd}?" +
+                        var url = $"{HistoryBaseUrl}/v1/historic/forex/{baseCurrency}/{quoteCurrency}/{currentDate:yyyy-MM-dd}?" +
                                   $"limit={ResponseSizeLimitCurrencies}&apiKey={_apiKey}&offset={offset}";
 
                         var response = client.DownloadString(url);
@@ -432,14 +432,13 @@ namespace QuantConnect.ToolBox.Polygon
                         else
                         {
                             // If ticks is null then most probably there were no data for the current date -> break;
-                            Log.Trace($"GetForexQuoteTicks(): Server did not return data on the last request from  {currentDate:yyyy-MM-dd}");
+                            Log.Trace($"GetForexQuoteTicks(): No more data for  {currentDate:yyyy-MM-dd}");
                             break;
                         }
 
-                        // The first results of the next page will coincide with last of the previous page
-                        // We distinguish the results by the timestamp, lets clear from repeating values
-                        var lastTickSipTimeStamp = lastTick?.Timestamp ?? 0;
-                        quoteTicksList = quoteTicksList.Where(x => x.Timestamp != lastTickSipTimeStamp).ToList();
+                        // The first results of the next page will coincide with last of the previous page, lets clear from repeating values
+                        var tickSipTimeStamp = lastTick?.Timestamp ?? 0;
+                        quoteTicksList = quoteTicksList.Where(x => x.Timestamp != tickSipTimeStamp).ToList();
 
                         Log.Trace($"GetForexQuoteTicks(): Page # {counter}; " +
                                   $"first: {Time.UnixMillisecondTimeStampToDateTime(quoteTicksList.First().Timestamp)}; " +
@@ -482,64 +481,101 @@ namespace QuantConnect.ToolBox.Polygon
 
             var start = request.StartTimeUtc;
             var end = request.EndTimeUtc;
+            var currentDate = start.Date;
 
-            while (start <= end)
+            while (currentDate <= end.Date)
             {
-                using (var client = new WebClient())
+                Log.Trace(
+                    $"GetCryptoTradeTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
+
+                var offset = currentDate == start.Date ? (long)Time.DateTimeToUnixTimeStampMilliseconds(start)
+                    : (long)Time.DateTimeToUnixTimeStampMilliseconds(currentDate);
+
+                var counter = 0;
+                long lastTickTimestamp = 0;
+                while (true)
                 {
-                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
-                        request.Symbol.ID.Market,
-                        request.Symbol,
-                        request.Symbol.SecurityType,
-                        Currencies.USD);
+                    counter++;
 
-                    string baseCurrency;
-                    string quoteCurrency;
-                    Crypto.DecomposeCurrencyPair(request.Symbol, symbolProperties, out baseCurrency, out quoteCurrency);
-
-                    var offset = Convert.ToInt64(Time.DateTimeToUnixTimeStampMilliseconds(start));
-                    var url = $"{HistoryBaseUrl}/v1/historic/crypto/{baseCurrency}/{quoteCurrency}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&offset={offset}";
-
-                    var response = client.DownloadString(url);
-
-                    var obj = JObject.Parse(response);
-                    var objTicks = obj["ticks"];
-                    if (objTicks.Type == JTokenType.Null)
+                    using (var client = new WebClient())
                     {
-                        // current date finished, move to next day
-                        start = start.Date.AddDays(1);
-                        continue;
-                    }
+                        var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                            request.Symbol.ID.Market,
+                            request.Symbol,
+                            request.Symbol.SecurityType,
+                            Currencies.USD);
 
-                    foreach (var objTick in objTicks)
-                    {
-                        var row = objTick.ToObject<CryptoTradeTickResponse>();
+                        string baseCurrency;
+                        string quoteCurrency;
+                        Crypto.DecomposeCurrencyPair(request.Symbol, symbolProperties, out baseCurrency, out quoteCurrency);
+                        
+                        var url = $"{HistoryBaseUrl}/v1/historic/crypto/{baseCurrency}/{quoteCurrency}/{currentDate:yyyy-MM-dd}?" +
+                                  $"limit={ResponseSizeLimitCurrencies}&apiKey={_apiKey}&offset={offset}";
+                        
+                        var response = client.DownloadString(url);
 
-                        var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
-
-                        if (utcTime < start)
+                        // Get ticks
+                        var obj = JObject.Parse(response)["ticks"]?.ToString();
+                        List<CryptoTradeTickResponse> tradeTicksList;
+                        if (!string.IsNullOrEmpty(obj))
                         {
-                            continue;
+                            tradeTicksList = JsonConvert.DeserializeObject<CryptoTradeTickResponse[]>(obj).ToList();
+                        }
+                        else
+                        {
+                            // If ticks is null then most probably there were no data for the current date -> break;
+                            Log.Trace($"GetCryptoTradeTicks(): No more data for  {currentDate:yyyy-MM-dd}");
+                            break;
                         }
 
-                        start = utcTime.AddMilliseconds(1);
+                        // The first results of the next page will coincide with last of the previous page, lets clear from repeating values
+                        tradeTicksList = tradeTicksList.Where(x => x.Timestamp != lastTickTimestamp).ToList();
 
-                        if (utcTime > end)
+                        // If there are no ticks other than the ones before then we break
+                        if (!tradeTicksList.Any())
                         {
-                            yield break;
+                            break;
                         }
 
-                        var market = GetMarketFromCryptoExchangeId(row.Exchange);
-                        if (market != request.Symbol.ID.Market)
+                        Log.Trace($"GetCryptoTradeTicks(): Page # {counter}; " +
+                                  $"first: {Time.UnixMillisecondTimeStampToDateTime(tradeTicksList.First().Timestamp)}; " +
+                                  $"last: {Time.UnixMillisecondTimeStampToDateTime(tradeTicksList.Last().Timestamp)}");
+
+                        foreach (var row in tradeTicksList)
                         {
-                            continue;
+                            var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
+
+                            if (utcTime < start)
+                            {
+                                continue;
+                            }
+
+                            if (utcTime > end)
+                            {
+                                yield break;
+                            }
+
+                            // Another oddity of coin api. The final tick of the dat may be a tick from another exchange
+                            // If we are geting such a tick, we need to store the last tick value in due course.
+                            var market = GetMarketFromCryptoExchangeId(row.Exchange);
+                            if (market != request.Symbol.ID.Market)
+                            {
+                                lastTickTimestamp = row.Timestamp;
+                                continue;
+                            }
+
+                            var time = GetTickTime(request.Symbol, utcTime);
+                            yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
+
+                            lastTickTimestamp = row.Timestamp;
                         }
 
-                        var time = GetTickTime(request.Symbol, utcTime);
-
-                        yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
+                        offset = lastTickTimestamp;
+                        _dataPointCount += tradeTicksList.Count;
                     }
                 }
+                // Jump to the next iteration
+                currentDate = currentDate.AddDays(1);
             }
         }
 
