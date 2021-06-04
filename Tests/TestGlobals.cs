@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Auxiliary;
+using QuantConnect.Util;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests
 {
@@ -24,9 +24,12 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class TestGlobals
     {
-        public static IDataProvider DataProvider = new DefaultDataProvider();
-        public static IMapFileProvider MapFileProvider = new LocalDiskMapFileProvider();
-        public static IFactorFileProvider FactorFileProvider = new LocalDiskFactorFileProvider();
+        public static IDataProvider DataProvider
+            = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider"));
+        public static IMapFileProvider MapFileProvider
+            = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+        public static IFactorFileProvider FactorFileProvider
+            = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
 
         /// <summary>
         /// Initialize our providers, called by AssemblyInitialize.cs so all tests

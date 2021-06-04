@@ -93,6 +93,11 @@ namespace QuantConnect.Data.Auxiliary
 
         private MapFileResolver GetMapFileResolver(string market)
         {
+            if (market != QuantConnect.Market.USA.ToLowerInvariant())
+            {
+                // don't explode for other markets which request map files and we don't have
+                return MapFileResolver.Empty;
+            }
             var timestamp = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
             var todayNewYork = timestamp.Date;
             var yesterdayNewYork = todayNewYork.AddDays(-1);

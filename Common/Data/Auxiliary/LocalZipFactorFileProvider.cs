@@ -107,6 +107,11 @@ namespace QuantConnect.Data.Auxiliary
         /// Hydrate the <see cref="_factorFiles"/> from the latest zipped factor file on disk
         private void HydrateFactorFileFromLatestZip(string market)
         {
+            if (market != QuantConnect.Market.USA.ToLowerInvariant())
+            {
+                // don't explode for other markets which request factor files and we don't have
+                return;
+            }
             // start the search with yesterday, today's file will be available tomorrow
             var todayNewYork = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).Date;
             var date = todayNewYork.AddDays(-1);
