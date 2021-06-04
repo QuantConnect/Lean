@@ -49,7 +49,6 @@ namespace QuantConnect.Data.Auxiliary
                 )
                 .DistinctBy(x => x.Symbol)
                 .ToDictionary(x => x.Symbol, x => x.FactorFile);
-            file.DisposeSafely();
 
             return dict;
         }

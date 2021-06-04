@@ -18,9 +18,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using NUnit.Framework;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Data.Auxiliary
 {
@@ -30,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         internal IFactorFileProvider FactorFileProvider;
 
         [OneTimeSetUp]
-        public void Setup()
+        public virtual void Setup()
         {
             FactorFileProvider = TestGlobals.FactorFileProvider;
         }

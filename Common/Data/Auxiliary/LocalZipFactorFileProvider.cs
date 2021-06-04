@@ -16,8 +16,10 @@
 using System;
 using System.IO;
 using QuantConnect.Logging;
+using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -27,16 +29,23 @@ namespace QuantConnect.Data.Auxiliary
     public class LocalZipFactorFileProvider : IFactorFileProvider
     {
         private readonly object _lock;
-        private bool _seededFactorFile;
-        private IMapFileProvider _mapFileProvider;
         private IDataProvider _dataProvider;
+        private IMapFileProvider _mapFileProvider;
+        private Dictionary<string, bool> _seededMarket;
         private Dictionary<Symbol, FactorFile> _factorFiles;
+
+        /// <summary>
+        /// The cached refresh period for the factor files
+        /// </summary>
+        /// <remarks>Exposed for testing</remarks>
+        protected virtual TimeSpan CacheRefreshPeriod => TimeSpan.FromDays(1);
 
         /// <summary>
         /// Creates a new instance of the <see cref="LocalZipFactorFileProvider"/> class.
         /// </summary>
         public LocalZipFactorFileProvider()
         {
+            _seededMarket = new Dictionary<string, bool>();
             _factorFiles = new Dictionary<Symbol, FactorFile>();
             _lock = new object();
         }
@@ -51,6 +60,7 @@ namespace QuantConnect.Data.Auxiliary
         {
             _mapFileProvider = mapFileProvider;
             _dataProvider = dataProvider;
+            StartExpirationTask();
         }
 
         /// <summary>
@@ -60,15 +70,13 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>The resolved factor file, or null if not found</returns>
         public FactorFile Get(Symbol symbol)
         {
-            if (!_seededFactorFile)
+            var market = symbol.ID.Market.ToLowerInvariant();
+            lock (_lock)
             {
-                lock (_lock)
+                if (!_seededMarket.ContainsKey(market))
                 {
-                    if (!_seededFactorFile)
-                    {
-                        HydrateFactorFileFromLatestZip();
-                        _seededFactorFile = true;
-                    }
+                    HydrateFactorFileFromLatestZip(market);
+                    _seededMarket[market] = true;
                 }
             }
 
@@ -83,12 +91,22 @@ namespace QuantConnect.Data.Auxiliary
             return null;
         }
 
-        /// Hydrate the <see cref="_factorFiles"/> from the latest zipped factor file on disk
-        private void HydrateFactorFileFromLatestZip()
+        /// <summary>
+        /// Helper method that will clear any cached factor files in a daily basis, this is useful for live trading
+        /// </summary>
+        protected virtual void StartExpirationTask()
         {
-            // Todo: assume for only USA market for now
-            var market = QuantConnect.Market.USA;
+            lock (_lock)
+            {
+                // we clear the seeded markets so they are reloaded
+                _seededMarket = new Dictionary<string, bool>();
+            }
+            _ = Task.Delay(CacheRefreshPeriod).ContinueWith(_ => StartExpirationTask());
+        }
 
+        /// Hydrate the <see cref="_factorFiles"/> from the latest zipped factor file on disk
+        private void HydrateFactorFileFromLatestZip(string market)
+        {
             // start the search with yesterday, today's file will be available tomorrow
             var todayNewYork = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).Date;
             var date = todayNewYork.AddDays(-1);
@@ -108,7 +126,7 @@ namespace QuantConnect.Data.Auxiliary
                 {
                     var mapFileResolver = _mapFileProvider.Get(market);
                     _factorFiles = FactorFileZipHelper.ReadFactorFileZip(stream, mapFileResolver, market);
-
+                    stream.DisposeSafely();
                     Log.Trace($"LocalZipFactorFileProvider.Get({market}): Fetched factor files for: {date.ToShortDateString()} NY");
 
                     return;
@@ -120,7 +138,7 @@ namespace QuantConnect.Data.Auxiliary
                 // prevent infinite recursion if something is wrong
                 if (count++ > 7)
                 {
-                    throw new InvalidOperationException($"LocalZipFactorFileProvider.Get(): Could not find any map files going all the way back to {date}");
+                    throw new InvalidOperationException($"LocalZipFactorFileProvider.Get(): Could not find any factor files going all the way back to {date}");
                 }
 
                 date = date.AddDays(-1);
