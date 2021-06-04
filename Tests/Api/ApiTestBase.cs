@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.API
         public void Setup()
         {
             TestAccount = Config.GetInt("job-user-id", 1);
-            TestToken = Config.Get("api-access-token", "ec87b337ac970da4cbea648f24f1c851");
+            TestToken = Config.Get("api-access-token", "EnterTokenHere");
             TestOrganization = Config.Get("job-organization-id", "EnterOrgHere");
             DataFolder = Config.Get("data-folder");
 
