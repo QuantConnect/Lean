@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
@@ -47,6 +46,7 @@ namespace QuantConnect.ToolBox.Polygon
     public class PolygonDataQueueHandler : SynchronizingHistoryProvider, IDataQueueHandler
     {
         private const string HistoryBaseUrl = "https://api.polygon.io";
+        private const int ResponseSizeLimitAggregateData = 50000;
         private const int ResponseSizeLimitEquities = 50000;
         private const int ResponseSizeLimitCurrencies = 10000;
         private readonly string _apiKey = Config.Get("polygon-api-key");
@@ -757,9 +757,9 @@ namespace QuantConnect.ToolBox.Polygon
             var dataRequestedCount = (end - start).Ticks
                                      / resolutionTimeSpan.Ticks / aggregatesCountPerResolution;
 
-            if (dataRequestedCount > ResponseSizeLimitEquities)
+            if (dataRequestedCount > ResponseSizeLimitAggregateData)
             {
-                end = start + TimeSpan.FromTicks(resolutionTimeSpan.Ticks * ResponseSizeLimitEquities / aggregatesCountPerResolution);
+                end = start + TimeSpan.FromTicks(resolutionTimeSpan.Ticks * ResponseSizeLimitAggregateData / aggregatesCountPerResolution);
                 end = end.Date;
             }
 
@@ -768,7 +768,7 @@ namespace QuantConnect.ToolBox.Polygon
                 using (var client = new WebClient())
                 {
                     var url = $"{HistoryBaseUrl}/v2/aggs/ticker/{tickerPrefix}{request.Symbol.Value}/range/1/{historyTimespan}/{start.Date:yyyy-MM-dd}/{end.Date:yyyy-MM-dd}" +
-                              $"?apiKey={_apiKey}&limit={ResponseSizeLimitEquities}";
+                              $"?apiKey={_apiKey}&limit={ResponseSizeLimitAggregateData}";
 
                     var response = client.DownloadString(url);
                     var aggregatesResponse = JsonConvert.DeserializeObject<AggregatesResponse>(response);
@@ -798,7 +798,7 @@ namespace QuantConnect.ToolBox.Polygon
                 }
 
                 start = end.AddDays(1);
-                end += TimeSpan.FromTicks(resolutionTimeSpan.Ticks * ResponseSizeLimitEquities / aggregatesCountPerResolution);
+                end += TimeSpan.FromTicks(resolutionTimeSpan.Ticks * ResponseSizeLimitAggregateData / aggregatesCountPerResolution);
 
                 if (end > lastRequestedBarStartTime)
                 {
