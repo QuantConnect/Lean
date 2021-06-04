@@ -888,21 +888,20 @@ namespace QuantConnect
         {
             using (var zip = ZipFile.Read(zipFileName))
             {
-                foreach (var entry in zip)
-                {
-                    yield return entry.FileName;
-                }
+                return zip.EntryFileNames;
             }
         }
 
+        /// <summary>
+        /// Return the entry file names contained in a zip file
+        /// </summary>
+        /// <param name="zipFileStream">Stream to the file</param>
+        /// <returns>IEnumerable of entry file names</returns>
         public static IEnumerable<string> GetZipEntryFileNames(Stream zipFileStream)
         {
             using (var zip = ZipFile.Read(zipFileStream))
             {
-                foreach (var entry in zip)
-                {
-                    yield return entry.FileName;
-                }
+                return zip.EntryFileNames;
             }
         }
 
