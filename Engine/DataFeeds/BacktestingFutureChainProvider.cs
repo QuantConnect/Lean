@@ -28,6 +28,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private IDataProvider _dataProvider;
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="dataProvider">The data provider instance to use</param>
         public BacktestingFutureChainProvider(IDataProvider dataProvider)
         {
             _dataProvider = dataProvider;

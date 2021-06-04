@@ -29,6 +29,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private IDataProvider _dataProvider;
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="dataProvider">The data provider instance to use</param>
         public BacktestingOptionChainProvider(IDataProvider dataProvider)
         {
             _dataProvider = dataProvider;
@@ -89,6 +93,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 yield return LeanData.ReadSymbolFromZipEntry(canonicalSymbol, Resolution.Minute, zipEntryName);
             }
+
+            stream.DisposeSafely();
         }
     }
 }

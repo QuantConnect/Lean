@@ -46,7 +46,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var start = new DateTime(2019, 12, 9);
             var end = new DateTime(2019, 12, 12);
 
-            var dataProvider = new DefaultDataProvider();
             var mapFileProvider = TestGlobals.MapFileProvider;
             var mapFileResolver = new MapFileResolver(mapFileProvider.Get(Market.USA));
 

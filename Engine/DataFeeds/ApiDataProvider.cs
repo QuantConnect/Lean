@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// An instance of the <see cref="IDataProvider"/> that will download and update data files as needed via QC's Api.
     /// </summary>
-    public class ApiDataProvider : IDataProvider
+    public class ApiDataProvider : DefaultDataProvider
     {
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
@@ -141,14 +141,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return DownloadData(filePath);
             }
 
-            // Use the file already on the disk
-            if (File.Exists(filePath))
-            {
-                return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            }
-
-            Log.Error($"ApiDataProvider.Fetch(): failed to fetch data at {filePath}");
-            return null;
+            return base.Fetch(filePath);
         }
 
         private bool NeedToDownload(string filePath)

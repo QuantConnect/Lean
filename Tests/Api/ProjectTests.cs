@@ -26,12 +26,13 @@ namespace QuantConnect.Tests.API
     /// <summary>
     /// API Project endpoints, includes some Backtest endpoints testing as well 
     /// </summary>
-    class ProjectTests : ApiTestBase
+    [TestFixture, Explicit("Requires configured api access and available backtest node to run on")]
+    public class ProjectTests : ApiTestBase
     {
         /// <summary>
         /// Test creating and deleting projects with the Api
         /// </summary>
-        [Test, Explicit("Requires configured api access and available backtest node to run on")]
+        [Test]
         public void Projects_CanBeCreatedAndDeleted_Successfully()
         {
             var name = "Test Project " + DateTime.Now.ToStringInvariant();
