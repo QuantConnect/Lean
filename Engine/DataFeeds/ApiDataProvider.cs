@@ -210,9 +210,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool CanParsePath(string filepath)
         {
             // Only not true for these cases
-            var equitiesAuxData = filepath.Contains("map_files")
-                || filepath.Contains("factor_files")
-                || filepath.Contains("fundamental");
+            var equitiesAuxData = filepath.Contains("map_files", StringComparison.InvariantCulture)
+                || filepath.Contains("factor_files", StringComparison.InvariantCulture)
+                || filepath.Contains("fundamental", StringComparison.InvariantCulture);
 
             if (equitiesAuxData)
             {
