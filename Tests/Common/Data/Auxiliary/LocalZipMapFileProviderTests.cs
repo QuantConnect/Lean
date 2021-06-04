@@ -53,11 +53,25 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         }
 
         [Test]
+        public void Retrieves()
+        {
+            var fileProviderTest = new LocalZipMapFileProviderTest();
+            var dataProviderTest = new DefaultDataProviderTest();
+            fileProviderTest.Initialize(dataProviderTest);
+
+            var mapFileResolver = fileProviderTest.Get(QuantConnect.Market.USA);
+
+            fileProviderTest.Enabled = false;
+            dataProviderTest.DisposeSafely();
+
+            Assert.IsNotEmpty(mapFileResolver);
+        }
+
+        [Test]
         public void CacheIsCleared()
         {
             var fileProviderTest = new LocalZipMapFileProviderTest();
             var dataProviderTest = new DefaultDataProviderTest();
-
             fileProviderTest.Initialize(dataProviderTest);
 
             fileProviderTest.Get(QuantConnect.Market.USA);

@@ -16,7 +16,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using QuantConnect.Util;
 using System.Collections.Generic;
 
 namespace QuantConnect.Data.Auxiliary
@@ -29,14 +28,14 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads the zip bytes as text and parses as FactorFileRows to create FactorFiles
         /// </summary>
-        public static Dictionary<Symbol, FactorFile> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market)
+        public static IEnumerable<KeyValuePair<SecurityIdentifier, FactorFile>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market)
         {
             if (file == null || file.Length == 0)
             {
-                return new Dictionary<Symbol, FactorFile>();
+                return new Dictionary<SecurityIdentifier, FactorFile>();
             }
 
-            var dict = (
+            var keyValuePairs = (
                     from kvp in Compression.Unzip(file)
                     let filename = kvp.Key
                     let lines = kvp.Value
@@ -44,13 +43,10 @@ namespace QuantConnect.Data.Auxiliary
                     let mapFile = mapFileResolver.GetByPermtick(factorFile.Permtick)
                     where mapFile != null
                     let sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, market)
-                    let symbol = new Symbol(sid, mapFile.Permtick)
-                    select new { Symbol = symbol, FactorFile = factorFile }
-                )
-                .DistinctBy(x => x.Symbol)
-                .ToDictionary(x => x.Symbol, x => x.FactorFile);
+                    select new KeyValuePair<SecurityIdentifier, FactorFile>(sid, factorFile)
+                );
 
-            return dict;
+            return keyValuePairs;
         }
 
         /// <summary>

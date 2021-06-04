@@ -15,11 +15,11 @@
 
 using System;
 using System.IO;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {

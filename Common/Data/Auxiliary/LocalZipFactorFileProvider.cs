@@ -15,11 +15,11 @@
 
 using System;
 using System.IO;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Auxiliary
         private IDataProvider _dataProvider;
         private IMapFileProvider _mapFileProvider;
         private Dictionary<string, bool> _seededMarket;
-        private Dictionary<Symbol, FactorFile> _factorFiles;
+        private readonly Dictionary<SecurityIdentifier, FactorFile> _factorFiles;
 
         /// <summary>
         /// The cached refresh period for the factor files
@@ -45,8 +45,8 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public LocalZipFactorFileProvider()
         {
+            _factorFiles = new Dictionary<SecurityIdentifier, FactorFile>();
             _seededMarket = new Dictionary<string, bool>();
-            _factorFiles = new Dictionary<Symbol, FactorFile>();
             _lock = new object();
         }
 
@@ -78,12 +78,12 @@ namespace QuantConnect.Data.Auxiliary
                     HydrateFactorFileFromLatestZip(market);
                     _seededMarket[market] = true;
                 }
-            }
 
-            FactorFile factorFile;
-            if (_factorFiles.TryGetValue(symbol, out factorFile))
-            {
-                return factorFile;
+                FactorFile factorFile;
+                if (_factorFiles.TryGetValue(symbol.ID, out factorFile))
+                {
+                    return factorFile;
+                }
             }
 
             // Could not find factor file for symbol
@@ -125,7 +125,11 @@ namespace QuantConnect.Data.Auxiliary
                 if (stream != null)
                 {
                     var mapFileResolver = _mapFileProvider.Get(market);
-                    _factorFiles = FactorFileZipHelper.ReadFactorFileZip(stream, mapFileResolver, market);
+                    foreach (var keyValuePair in FactorFileZipHelper.ReadFactorFileZip(stream, mapFileResolver, market))
+                    {
+                        // we merge with existing, this will allow to hold multiple markets
+                        _factorFiles[keyValuePair.Key] = keyValuePair.Value;
+                    }
                     stream.DisposeSafely();
                     Log.Trace($"LocalZipFactorFileProvider.Get({market}): Fetched factor files for: {date.ToShortDateString()} NY");
 

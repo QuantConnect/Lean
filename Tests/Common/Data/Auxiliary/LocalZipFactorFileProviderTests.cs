@@ -15,13 +15,13 @@
 */
 
 
+using System;
 using System.IO;
 using NUnit.Framework;
-using System;
 using System.Threading;
+using QuantConnect.Util;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Data.Auxiliary
 {
