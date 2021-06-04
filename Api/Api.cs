@@ -872,10 +872,9 @@ namespace QuantConnect.Api
 
                 using var client = new HttpClient();
                 using var dataStream = client.GetStreamAsync(uri);
-                dataStream.SynchronouslyAwaitTask();
 
-                using var fs = new FileStream(filePath, FileMode.Create);
-                dataStream.Result.CopyTo(fs);
+                using var fileStream = new FileStream(filePath, FileMode.Create);
+                dataStream.Result.CopyTo(fileStream);
             }
             catch
             {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -55,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
 
                 case FileFormat.ZipEntryName:
-                    reader = new ZipEntryNameSubscriptionDataSourceReader(config, date, isLiveMode);
+                    reader = new ZipEntryNameSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
                     break;
 
                 case FileFormat.Index:
