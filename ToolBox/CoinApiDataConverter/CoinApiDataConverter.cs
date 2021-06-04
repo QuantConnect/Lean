@@ -89,18 +89,22 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     "quotes",
                     _processingDate.ToStringInvariant(DateFormat.EightCharacter)));
 
+            // Distinct by tick type and first two parts of the raw file name, separated by '-'.
+            // This prevents us from double processing the same ticker twice, in case we're given
+            // two raw data files for the same symbol. Related: https://github.com/QuantConnect/Lean/pull/3262
+            var apiDataReader = new CoinApiDataReader(symbolMapper);
             var fileToProcess = tradesFolder.EnumerateFiles("*.gz")
                 .Concat(quotesFolder.EnumerateFiles("*.gz"))
                 .Where(f => f.Name.Contains("SPOT"))
                 .Where(f => f.Name.Split('_').Length == 4)
-                .DistinctBy(x => x.Directory.Parent.Name + x.Name.Split('-')[0]);
+                .DistinctBy(x => x.Directory.Parent.Name + apiDataReader.GetCoinApiEntryData(x, _processingDate).Symbol.ID);
 
             Parallel.ForEach(fileToProcess,(file, loopState) =>
                 {
                     Log.Trace($"CoinApiDataConverter(): Starting data conversion from source file: {file.Name}...");
                     try
                     {
-                        ProcessEntry(new CoinApiDataReader(symbolMapper), file);
+                        ProcessEntry(apiDataReader, file);
                     }
                     catch (Exception e)
                     {
