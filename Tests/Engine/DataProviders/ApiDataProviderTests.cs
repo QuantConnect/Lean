@@ -51,8 +51,11 @@ namespace QuantConnect.Tests.Engine.DataProviders
         {
             var dataProvider = new ApiDataProvider();
             var path = Path.Combine(Globals.DataFolder, file);
-            dataProvider.Fetch(path);
+            var stream = dataProvider.Fetch(path);
 
+            Assert.IsNotNull(stream);
+            stream.Dispose();
+            
             Assert.IsTrue(File.Exists(path));
         }
     }
