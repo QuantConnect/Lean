@@ -88,9 +88,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 Log.Trace(
                     "==========================================================================\r\n" +
-                    $"ApiDataProvider Agreement Summary: On {organization.DataAgreement.SignedTime:d} You Agreed:\r\n" +
-                    " - Display or distribution of data obtained through API Access is not permitted.  \r\n" +
-                    " - Data and Third Party Data obtained via API Access can only be used for individual or internal employee's use.\r\n" +
+                    $"CLI API Access Agreement: On {organization.DataAgreement.SignedTime:d} You Agreed:\r\n" +
+                    " - Display or distribution of data obtained through CLI API Access is not permitted.  \r\n" +
+                    " - Data and Third Party Data obtained via CLI API Access can only be used for individual or internal employee's use.\r\n" +
                     " - Data is provided in LEAN format can not be manipulated for transmission or use in other applications. \r\n" +
                     " - QuantConnect is not liable for the quality of data received and is not responsible for trading losses. \r\n" +
                     "==========================================================================");
