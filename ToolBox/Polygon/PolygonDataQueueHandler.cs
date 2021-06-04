@@ -405,7 +405,7 @@ namespace QuantConnect.ToolBox.Polygon
                     : (long)Time.DateTimeToUnixTimeStampMilliseconds(currentDate);
 
                 var counter = 0;
-                ForexQuoteTickResponse lastTick = null;
+                long lastTickTimestamp = 0;
 
                 while (true)
                 {
@@ -437,8 +437,7 @@ namespace QuantConnect.ToolBox.Polygon
                         }
 
                         // The first results of the next page will coincide with last of the previous page, lets clear from repeating values
-                        var tickSipTimeStamp = lastTick?.Timestamp ?? 0;
-                        quoteTicksList = quoteTicksList.Where(x => x.Timestamp != tickSipTimeStamp).ToList();
+                        quoteTicksList = quoteTicksList.Where(x => x.Timestamp != lastTickTimestamp).ToList();
 
                         Log.Trace($"GetForexQuoteTicks(): Page # {counter}; " +
                                   $"first: {Time.UnixMillisecondTimeStampToDateTime(quoteTicksList.First().Timestamp)}; " +
@@ -461,11 +460,10 @@ namespace QuantConnect.ToolBox.Polygon
                             var time = GetTickTime(request.Symbol, utcTime);
                             yield return new Tick(time, request.Symbol, row.Bid, row.Ask);
 
-                            // Save the values before to jump to the next iteration
-                            offset = row.Timestamp;
-                            lastTick = row;
+                            lastTickTimestamp = row.Timestamp;
                         }
 
+                        offset = lastTickTimestamp;
                         _dataPointCount += quoteTicksList.Count;
                     }
                 }
@@ -597,7 +595,8 @@ namespace QuantConnect.ToolBox.Polygon
                     : Time.DateTimeToUnixTimeStampNanoseconds(currentDate);
 
                 var counter = 0;
-                EquityQuoteTickResponse lastTick = null;
+                long lastTickSipTimeStamp = 0;
+
                 while (true)
                 {
                     counter++;
@@ -626,7 +625,6 @@ namespace QuantConnect.ToolBox.Polygon
 
                         // The first results of the next page will coincide with last of the previous page
                         // We distinguish the results by the timestamp, lets clear from repeating values
-                        var lastTickSipTimeStamp = lastTick?.SipTimestamp ?? 0;
                         quoteTicksList = quoteTicksList.Where(x => x.SipTimestamp != lastTickSipTimeStamp).ToList();
 
                         // API will send at the end only such repeating ticks that coincide with last results of previous page
@@ -658,10 +656,10 @@ namespace QuantConnect.ToolBox.Polygon
                             yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.BidSize, row.BidPrice, row.AskSize, row.AskPrice);
 
                             // Save the values before to jump to the next iteration
-                            offset = row.SipTimestamp;
-                            lastTick = row;
+                            lastTickSipTimeStamp = row.SipTimestamp;
                         }
 
+                        offset = lastTickSipTimeStamp;
                         _dataPointCount += quoteTicksList.Count;
                     }
                 }
@@ -689,7 +687,8 @@ namespace QuantConnect.ToolBox.Polygon
                     : Time.DateTimeToUnixTimeStampNanoseconds(currentDate);
 
                 var counter = 0;
-                EquityTradeTickResponse lastTick = null;
+                long lastTickSipTimeStamp = 0;
+
                 while (true)
                 {
                     counter++;
@@ -718,7 +717,6 @@ namespace QuantConnect.ToolBox.Polygon
 
                         // The first results of the next page will coincide with last of the previous page
                         // We distinguish the results by the timestamp, lets clear from repeating values
-                        var lastTickSipTimeStamp = lastTick?.SipTimestamp ?? 0;
                         tradeTicksList = tradeTicksList.Where(x => x.SipTimestamp != lastTickSipTimeStamp).ToList();
 
                         // API will send at the end only such repeating ticks that coincide with last results of previous page
@@ -750,10 +748,10 @@ namespace QuantConnect.ToolBox.Polygon
                             yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
 
                             // Save the values before to jump to the next iteration
-                            offset = row.SipTimestamp;
-                            lastTick = row;
+                            lastTickSipTimeStamp = row.SipTimestamp;
                         }
 
+                        offset = lastTickSipTimeStamp;
                         _dataPointCount += tradeTicksList.Count;
                     }
                 }
