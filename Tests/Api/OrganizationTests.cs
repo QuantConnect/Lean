@@ -21,7 +21,7 @@ namespace QuantConnect.Tests.API
     /// <summary>
     /// Tests API account and organizations endpoints
     /// </summary>
-    [TestFixture]
+    [TestFixture, Explicit("Requires configured api access")]
     public class OrganizationTests : ApiTestBase
     {
         [Test]

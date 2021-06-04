@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.API
     /// Test class for all nodes/ endpoints:
     /// create, read, update, delete, stop
     /// </summary>
-    [TestFixture]
+    [TestFixture, Explicit("Requires configured api access, account with credit, and node creation permission")]
     public class NodeTests : ApiTestBase
     {
         /// <summary>

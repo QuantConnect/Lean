@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.API
         /// <summary>
         /// Test creating and deleting projects with the Api
         /// </summary>
-        [Test]
+        [Test, Explicit("Requires configured api access and available backtest node to run on")]
         public void Projects_CanBeCreatedAndDeleted_Successfully()
         {
             var name = "Test Project " + DateTime.Now.ToStringInvariant();

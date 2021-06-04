@@ -21,7 +21,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.DataProviders
 {
-    [TestFixture] //TODO IGNORE REQUIRES CONFIG TO CONTAIN USERID AND TOKEN
+    [TestFixture, Explicit("Requires configured api access, and also makes calls to data endpoints which are charging transactions")]
     public class ApiDataProviderTests
     {
         [TestCase(Resolution.Daily, 6, true)]
@@ -47,12 +47,26 @@ namespace QuantConnect.Tests.Engine.DataProviders
         [TestCase("forex/oanda/minute/eurusd/20131011_quote.zip")]
         [TestCase("equity/usa/factor_files/tsla.csv")]
         [TestCase("equity/usa/factor_files/factor_files_20210601.zip")]
+        [TestCase("equity/usa/map_files/googl.csv")]
+        [TestCase("equity/usa/map_files/map_files_20210601.zip")]
+        [TestCase("crypto/gdax/daily/btcusd_quote.zip")]
+        [TestCase("crypto/bitfinex/hour/ethusd_quote.zip")]
+        [TestCase("option/usa/minute/aapl/20210601_openinterest_american.zip")]
+        [TestCase("future/sgx/margins/IN.csv")]
         public void DownloadFiles(string file)
         {
             var dataProvider = new ApiDataProvider();
             var path = Path.Combine(Globals.DataFolder, file);
-            var stream = dataProvider.Fetch(path);
 
+            // Delete it if we already have it
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                Assert.IsFalse(File.Exists(path));
+            }
+
+            // Go get the file
+            var stream = dataProvider.Fetch(path);
             Assert.IsNotNull(stream);
             stream.Dispose();
             

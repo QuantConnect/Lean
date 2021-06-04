@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.API
     /// <summary>
     /// API Live endpoint tests
     /// </summary>
-    [TestFixture]
+    [TestFixture, Explicit("Requires configured api access, a live node to run on, and brokerage configurations.")]
     public class LiveTradingTests : ApiTestBase
     {
         private const bool StopLiveAlgos = true;
