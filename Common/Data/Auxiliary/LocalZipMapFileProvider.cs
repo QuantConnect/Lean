@@ -16,8 +16,10 @@
 using System;
 using System.IO;
 using QuantConnect.Logging;
+using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -26,14 +28,22 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class LocalZipMapFileProvider : IMapFileProvider
     {
-        private readonly Dictionary<string, MapFileResolver> _cache;
+        private Dictionary<string, MapFileResolver> _cache;
         private IDataProvider _dataProvider;
+        private object _lock;
+
+        /// <summary>
+        /// The cached refresh period for the map files
+        /// </summary>
+        /// <remarks>Exposed for testing</remarks>
+        protected virtual TimeSpan CacheRefreshPeriod => TimeSpan.FromDays(1);
 
         /// <summary>
         /// Creates a new instance of the <see cref="LocalDiskFactorFileProvider"/>
         /// </summary>
         public LocalZipMapFileProvider()
         {
+            _lock = new object();
             _cache = new Dictionary<string, MapFileResolver>();
         }
 
@@ -44,6 +54,7 @@ namespace QuantConnect.Data.Auxiliary
         public void Initialize(IDataProvider dataProvider)
         {
             _dataProvider = dataProvider;
+            StartExpirationTask();
         }
 
         /// <summary>
@@ -57,7 +68,7 @@ namespace QuantConnect.Data.Auxiliary
             MapFileResolver result;
             // we use a lock so that only 1 thread loads the map file resolver while the rest wait
             // else we could have multiple threads loading the map file resolver at the same time!
-            lock (_cache)
+            lock (_lock)
             {
                 if (!_cache.TryGetValue(market, out result))
                 {
@@ -65,6 +76,19 @@ namespace QuantConnect.Data.Auxiliary
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// Helper method that will clear any cached factor files in a daily basis, this is useful for live trading
+        /// </summary>
+        protected virtual void StartExpirationTask()
+        {
+            lock (_lock)
+            {
+                // we clear the seeded markets so they are reloaded
+                _cache = new Dictionary<string, MapFileResolver>();
+            }
+            _ = Task.Delay(CacheRefreshPeriod).ContinueWith(_ => StartExpirationTask());
         }
 
         private MapFileResolver GetMapFileResolver(string market)
@@ -87,7 +111,9 @@ namespace QuantConnect.Data.Auxiliary
                 if (stream != null)
                 {
                     Log.Trace("LocalZipMapFileProvider.Get({0}): Fetched map files for: {1} NY", market, date.ToShortDateString());
-                    return new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream));
+                    var result =  new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream));
+                    stream.DisposeSafely();
+                    return result;
                 }
 
                 // prevent infinite recursion if something is wrong

@@ -16,7 +16,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using QuantConnect.Util;
 using System.Collections.Generic;
 
 namespace QuantConnect.Data.Auxiliary
@@ -50,7 +49,6 @@ namespace QuantConnect.Data.Auxiliary
                    let lines = kvp.Value.Where(line => !string.IsNullOrEmpty(line))
                    let mapFile = SafeRead(filename, lines)
                    select mapFile;
-            file.DisposeSafely();
             return result;
         }
 
