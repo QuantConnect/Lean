@@ -171,9 +171,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // Failed to download
-            Log.Error("ApiDataProvider.Fetch(): Unable to remotely retrieve data for path {0}. " +
-                "Please make sure you have the necessary data in your online QuantConnect data library.",
-                filePath);
+            Log.Error($"ApiDataProvider.Fetch(): Unable to remotely retrieve data for path {filePath}.");
             return null;
         }
 
@@ -191,12 +189,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var shouldDownload = !fileExists || IsOutOfDate(resolution, filePath);
 
                 // If we need to download this, symbol is an equity, and user is not subscribed to map and factor files throw an error
-                if (shouldDownload && symbol.SecurityType == SecurityType.Equity &&
-                    !_subscribedToEquityMapAndFactorFiles)
+                if (shouldDownload && symbol.ID.SecurityType == SecurityType.Equity)
                 {
-                    throw new ArgumentException(
-                        "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
-                        "to download Equity data from QuantConnect.");
+                    CheckMapFactorFileSubscription();
                 }
 
                 return shouldDownload;
@@ -212,11 +207,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="filepath">Filepath to check</param>
         /// <returns>True if can be parsed</returns>
-        private static bool CanParsePath(string filepath)
+        private bool CanParsePath(string filepath)
         {
             // Only not true for these cases
-            return !(filepath.Contains("map_files") || filepath.Contains("factor_files") ||
-                filepath.Contains("fundamental"));
+            var equitiesAuxData = filepath.Contains("map_files")
+                || filepath.Contains("factor_files")
+                || filepath.Contains("fundamental");
+
+            if (equitiesAuxData)
+            {
+                CheckMapFactorFileSubscription();
+            }
+
+            return !equitiesAuxData;
+        }
+
+        private void CheckMapFactorFileSubscription()
+        {
+            if(!_subscribedToEquityMapAndFactorFiles)
+            {
+                throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
+                    "to download Equity data from QuantConnect.");
+            }
         }
     }
 }
