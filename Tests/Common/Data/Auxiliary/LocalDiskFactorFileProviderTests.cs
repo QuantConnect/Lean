@@ -27,33 +27,33 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
     [TestFixture]
     public class LocalDiskFactorFileProviderTests
     {
-        private IFactorFileProvider _factorFileProvider;
+        internal IFactorFileProvider FactorFileProvider;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _factorFileProvider = TestGlobals.FactorFileProvider;
+            FactorFileProvider = TestGlobals.FactorFileProvider;
         }
 
         [Test]
         public void RetrievesFromDisk()
         {
-            var factorFile = _factorFileProvider.Get(Symbols.SPY);
+            var factorFile = FactorFileProvider.Get(Symbols.SPY);
             Assert.IsNotNull(factorFile);
         }
 
         [Test]
         public void CachesValueAndReturnsSameReference()
         {
-            var factorFile1 = _factorFileProvider.Get(Symbols.SPY);
-            var factorFile2 = _factorFileProvider.Get(Symbols.SPY);
+            var factorFile1 = FactorFileProvider.Get(Symbols.SPY);
+            var factorFile2 = FactorFileProvider.Get(Symbols.SPY);
             Assert.IsTrue(ReferenceEquals(factorFile1, factorFile2));
         }
 
         [Test]
         public void ReturnsNullForNotFound()
         {
-            var factorFile = _factorFileProvider.Get(Symbol.Create("not-a-ticker", SecurityType.Equity, QuantConnect.Market.USA));
+            var factorFile = FactorFileProvider.Get(Symbol.Create("not-a-ticker", SecurityType.Equity, QuantConnect.Market.USA));
             Assert.IsNull(factorFile);
         }
 
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
                 try
                 {
-                    _factorFileProvider.Get(symbol);
+                    FactorFileProvider.Get(symbol);
                 }
                 catch (Exception exception)
                 {

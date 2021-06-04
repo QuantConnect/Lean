@@ -86,8 +86,7 @@ namespace QuantConnect.Data.Auxiliary
         /// Hydrate the <see cref="_factorFiles"/> from the latest zipped factor file on disk
         private void HydrateFactorFileFromLatestZip()
         {
-            // Todo: can use Symbol.Market here for fetching, requires refactor of Get()
-            // assume for only USA market for now
+            // Todo: assume for only USA market for now
             var market = QuantConnect.Market.USA;
 
             // start the search with yesterday, today's file will be available tomorrow
