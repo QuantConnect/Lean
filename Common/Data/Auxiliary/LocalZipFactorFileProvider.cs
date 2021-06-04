@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Auxiliary
         private IDataProvider _dataProvider;
         private IMapFileProvider _mapFileProvider;
         private Dictionary<string, bool> _seededMarket;
-        private readonly Dictionary<SecurityIdentifier, FactorFile> _factorFiles;
+        private readonly Dictionary<Symbol, FactorFile> _factorFiles;
 
         /// <summary>
         /// The cached refresh period for the factor files
@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public LocalZipFactorFileProvider()
         {
-            _factorFiles = new Dictionary<SecurityIdentifier, FactorFile>();
+            _factorFiles = new Dictionary<Symbol, FactorFile>();
             _seededMarket = new Dictionary<string, bool>();
             _lock = new object();
         }
@@ -80,7 +80,7 @@ namespace QuantConnect.Data.Auxiliary
                 }
 
                 FactorFile factorFile;
-                if (_factorFiles.TryGetValue(symbol.ID, out factorFile))
+                if (_factorFiles.TryGetValue(symbol, out factorFile))
                 {
                     return factorFile;
                 }

@@ -28,11 +28,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads the zip bytes as text and parses as FactorFileRows to create FactorFiles
         /// </summary>
-        public static IEnumerable<KeyValuePair<SecurityIdentifier, FactorFile>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market)
+        public static IEnumerable<KeyValuePair<Symbol, FactorFile>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market)
         {
             if (file == null || file.Length == 0)
             {
-                return new Dictionary<SecurityIdentifier, FactorFile>();
+                return new Dictionary<Symbol, FactorFile>();
             }
 
             var keyValuePairs = (
@@ -43,7 +43,8 @@ namespace QuantConnect.Data.Auxiliary
                     let mapFile = mapFileResolver.GetByPermtick(factorFile.Permtick)
                     where mapFile != null
                     let sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, market)
-                    select new KeyValuePair<SecurityIdentifier, FactorFile>(sid, factorFile)
+                    let symbol = new Symbol(sid, mapFile.Permtick)
+                    select new KeyValuePair<Symbol, FactorFile>(symbol, factorFile)
                 );
 
             return keyValuePairs;
