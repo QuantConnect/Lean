@@ -34,16 +34,26 @@ namespace QuantConnect.Api
         public string Url { get; set; }
 
         /// <summary>
-        /// Remaining QCC balance on account
+        /// Remaining USD balance on account after this transaction
         /// </summary>
         [JsonProperty(PropertyName = "balance")]
-        public double Balance { get; set; }
+        public double BalanceUSD { get; set; }
 
         /// <summary>
-        /// QCC Cost of the transaction for this link
+        /// Remaining QCC balance on account after this transaction
+        /// </summary>
+        public double BalanceQCC => BalanceUSD * 100;
+
+        /// <summary>
+        /// USD Cost or this data link
         /// </summary>
         [JsonProperty(PropertyName = "cost")]
-        public double Cost { get; set; }
+        public double CostUSD { get; set; }
+
+        /// <summary>
+        /// QCC Cost for this data link
+        /// </summary>
+        public double CostQCC => CostUSD * 100;
     }
 
     /// <summary>

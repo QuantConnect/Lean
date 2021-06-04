@@ -23,7 +23,7 @@ namespace QuantConnect.Api
 {
     /// <summary>
     /// Response wrapper for Organizations/List
-    /// TODO: The response objects in the array do not contain all Organization Properties; do we need another wrapper object? 
+    /// TODO: The response objects in the array do not contain all Organization Properties; do we need another wrapper object?
     /// </summary>
     public class OrganizationResponseList : RestResponse
     {
@@ -133,9 +133,6 @@ namespace QuantConnect.Api
             /// </summary>
             [JsonProperty(PropertyName = "balance")]
             public decimal Balance { get; set; }
-
-            //TODO
-            // Type and subtype of movement?? Maybe not needed
         }
 
         /// <summary>
