@@ -18,13 +18,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using RestSharp;
-using RestSharp.Extensions;
 using QuantConnect.Util;
 
 namespace QuantConnect.Api
@@ -78,23 +78,26 @@ namespace QuantConnect.Api
             };
 
             // Only include organization Id if its not null or empty
+            string jsonParams;
             if (string.IsNullOrEmpty(organizationId))
             {
-                request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                jsonParams = JsonConvert.SerializeObject(new
                 {
                     name,
                     language
-                }), ParameterType.RequestBody);
+                });
             }
             else
             {
-                request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                jsonParams = JsonConvert.SerializeObject(new
                 {
                     name,
                     language,
                     organizationId
-                }), ParameterType.RequestBody);
+                });
             }
+
+            request.AddParameter("application/json", jsonParams, ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out ProjectResponse result);
             return result;
@@ -742,14 +745,8 @@ namespace QuantConnect.Api
                 throw new ArgumentException("Api.ReadDataLink(): Filepath must not be null");
             }
 
-            // Normalize windows paths to linux format
-            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
-
-            // Remove data root directory from path for request if included
-            if (filePath.StartsWith(_dataFolder, StringComparison.InvariantCulture))
-            {
-                filePath = filePath.Substring(_dataFolder.Length);
-            }
+            // Prepare filePath for request
+            filePath = FormatPathForDataRequest(filePath);
 
             var request = new RestRequest("data/read", Method.POST)
             {
@@ -778,14 +775,8 @@ namespace QuantConnect.Api
                 throw new ArgumentException("Api.ReadDataDirectory(): Filepath must not be null");
             }
 
-            // Normalize filepath, for windows paths
-            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
-
-            // Remove data root directory from path for request if included
-            if (filePath.StartsWith(_dataFolder, StringComparison.InvariantCulture))
-            {
-                filePath = filePath.Substring(_dataFolder.Length);
-            }
+            // Prepare filePath for request
+            filePath = FormatPathForDataRequest(filePath);
 
             // Verify the filePath for this request is at least three directory deep
             // (requirement of endpoint)
@@ -876,15 +867,23 @@ namespace QuantConnect.Api
 
             try
             {
-                using var client = new WebClient();
-                client.DownloadFile(dataLink.Url, filePath);
+                // Download the file
+                var uri = new Uri(dataLink.Url);
+
+                using var client = new HttpClient();
+                using var dataStream = client.GetStreamAsync(uri);
+                dataStream.SynchronouslyAwaitTask();
+
+                using var fs = new FileStream(filePath, FileMode.Create);
+                dataStream.Result.CopyTo(fs);
             }
             catch
             {
                 Log.Error($"Api.DownloadData(): Failed to download zip for path ({filePath})");
+                return false;
             }
 
-            return File.Exists(filePath);
+            return true;
         }
 
         /// <summary>
@@ -1180,6 +1179,25 @@ namespace QuantConnect.Api
 
             ApiConnection.TryRequest(request, out OrganizationResponse response);
             return response.Organization;
+        }
+
+        /// <summary>
+        /// Helper method to normalize path for api data requests
+        /// </summary>
+        /// <param name="filePath">Filepath to format</param>
+        /// <returns>Normalized path</returns>
+        private string FormatPathForDataRequest(string filePath)
+        {
+            // Normalize windows paths to linux format
+            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
+
+            // Remove data root directory from path for request if included
+            if (filePath.StartsWith(_dataFolder, StringComparison.InvariantCulture))
+            {
+                filePath = filePath.Substring(_dataFolder.Length);
+            }
+
+            return filePath;
         }
     }
 }
