@@ -69,10 +69,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _organizationId = account.OrganizationId;
             }
 
-            // Read in our prices
+            // Read in data prices and organization details
             _dataPrices = _api.ReadDataPrices(_organizationId);
-
-            // Get our organization
             var organization = _api.ReadOrganization(_organizationId);
 
             // Determine if the user is subscribed to map and factor files
@@ -96,8 +94,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new Exception($"Must agree to terms at {_dataPrices.AgreementUrl}, before using the ApiDataProvider");
             }
 
-            // Verify we have the balance to maintain our purchase limit
-            // TODO Maybe should throw instead? 
+            // Verify we have the balance to maintain our purchase limit, if not adjust it to meet our balance
             _balance = organization.Credit.BalanceQCC;
             if (_balance < _purchaseLimit)
             {
@@ -115,43 +112,60 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A <see cref="Stream"/> of the data requested</returns>
         public Stream Fetch(string filePath)
         {
-            Symbol symbol;
-            DateTime date;
-            Resolution resolution;
-
-            // Fetch the details of this data request
-            if (LeanData.TryParsePath(filePath, out symbol, out date, out resolution))
+            // If we don't already have this file or its out of date, download it
+            if (NeedToDownload(filePath))
             {
-                if (!File.Exists(filePath) || IsOutOfDate(resolution, filePath))
+                // TODO Factor files and map files do not have a price, so they come back as -1. This works for now but do we want to try and handle that case uniquely?
+                // Verify we have enough credit to handle this
+                var price = _dataPrices.GetPrice(filePath);
+                if (price > 0)
                 {
-                    // Stop if equity request and not subscribed to map and factor files
-                    if (symbol.SecurityType == SecurityType.Equity && !_subscribedToEquityMapAndFactorFiles)
-                    {
-                        throw new ArgumentException(
-                            "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
-                            "to download Equity data from QuantConnect.");
-                    }
-
-                    // Verify we have enough credit to handle this
-                    var price = _dataPrices.GetPrice(filePath);
                     if (_purchaseLimit < price)
                     {
-                        throw new Exception($"Cost for {symbol}:{date} data exceeds remaining purchase limit: {_purchaseLimit}");
+                        throw new Exception($"Cost {price} for {filePath} data exceeds remaining purchase limit: {_purchaseLimit}");
                     }
 
                     // Update our purchase limit and balance.
                     _purchaseLimit -= price;
                     _balance -= price;
-
-                    return DownloadData(filePath);
                 }
 
-                // Use the file already on the disk
+                return DownloadData(filePath);
+            }
+
+            // Use the file already on the disk
+            if (File.Exists(filePath))
+            {
                 return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
 
-            Log.Error("ApiDataProvider.Fetch(): failed to parse file path key {0}", filePath);
+            Log.Error($"ApiDataProvider.Fetch(): failed to fetch data at {filePath}");
             return null;
+        }
+
+        private bool NeedToDownload(string filePath)
+        {
+            // Todo: TryParsePath logs error, should we do something to mute this?
+            // For files that TryParsePath can extract symbol, date, resolution (not factor files, map files, etc)
+            if (LeanData.TryParsePath(filePath, out Symbol symbol, out DateTime date, out Resolution resolution))
+            {
+                var shouldDownload = !File.Exists(filePath) || IsOutOfDate(resolution, filePath);
+
+                // If we need to download this, symbol is an equity, and user is not subscribed to map and factor files throw an error
+                if (shouldDownload && symbol.SecurityType == SecurityType.Equity &&
+                    !_subscribedToEquityMapAndFactorFiles)
+                {
+                    throw new ArgumentException(
+                        "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
+                        "to download Equity data from QuantConnect.");
+                }
+
+                return shouldDownload;
+            }
+
+            // For all other files
+            return !File.Exists(filePath) || (DateTime.Now - TimeSpan.FromDays(DownloadPeriod)) > File.GetLastWriteTime(filePath);
+            
         }
 
         /// <summary>

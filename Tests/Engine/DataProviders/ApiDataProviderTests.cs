@@ -21,7 +21,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.DataProviders
 {
-    [TestFixture]
+    [TestFixture] //TODO IGNORE REQUIRES CONFIG TO CONTAIN USERID AND TOKEN
     public class ApiDataProviderTests
     {
         [TestCase(Resolution.Daily, 6, true)]
@@ -42,6 +42,18 @@ namespace QuantConnect.Tests.Engine.DataProviders
 
             Assert.AreEqual(expected, test);
             File.Delete(path);
+        }
+
+        [TestCase("forex/oanda/minute/eurusd/20131011_quote.zip")]
+        [TestCase("equity/usa/factor_files/tsla.csv")]
+        [TestCase("equity/usa/factor_files/factor_files_20210601.zip")]
+        public void DownloadFiles(string file)
+        {
+            var dataProvider = new ApiDataProvider();
+            var path = Path.Combine(Globals.DataFolder, file);
+            dataProvider.Fetch(path);
+
+            Assert.IsTrue(File.Exists(path));
         }
     }
 }
