@@ -84,21 +84,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 //Log Agreement Highlights
                 Log.Trace($"ApiDataProvider(): Data Terms of Use has been signed. " +
-                    $" Find agreement at: {_dataPrices.AgreementUrl}");
-                // TODO: PRINT AGREEMENT BOX
+                    $" Find full agreement at: {_dataPrices.AgreementUrl}");
+
+                Log.Trace(
+                    "==========================================================================\r\n" +
+                    $"ApiDataProvider Agreement Summary: On {organization.DataAgreement.SignedTime:d} You Agreed:\r\n" +
+                    " - Display or distribution of data obtained through API Access is not permitted.  \r\n" +
+                    " - Data and Third Party Data obtained via API Access can only be used for individual or internal employee's use.\r\n" +
+                    " - Data is provided in LEAN format can not be manipulated for transmission or use in other applications. \r\n" +
+                    " - QuantConnect is not liable for the quality of data received and is not responsible for trading losses. \r\n" +
+                    "==========================================================================");
                 Thread.Sleep(TimeSpan.FromSeconds(3));
             }
             else
             {
                 // Log URL to go accept terms
-                throw new Exception($"Must agree to terms at {_dataPrices.AgreementUrl}, before using the ApiDataProvider");
+                throw new Exception($"ApiDataProvider(): Must agree to terms at {_dataPrices.AgreementUrl}, before using the ApiDataProvider");
             }
 
             // Verify we have the balance to maintain our purchase limit, if not adjust it to meet our balance
             _balance = organization.Credit.BalanceQCC;
             if (_balance < _purchaseLimit)
             {
-                Log.Trace("ApiDataProvider(): Purchase limit is greater than balance." +
+                Log.Error("ApiDataProvider(): Purchase limit is greater than balance." +
                     $" Setting purchase limit to balance : {_balance}");
                 _purchaseLimit = _balance;
             }

@@ -91,7 +91,13 @@ namespace QuantConnect.Api
         /// Epoch time the Data Agreement was Signed
         /// </summary>
         [JsonProperty(PropertyName = "signedTime")]
-        public string EpochSignedTime { get; set; }
+        public long EpochSignedTime { get; set; }
+
+        /// <summary>
+        /// DateTime the agreement was signed.
+        /// Uses EpochSignedTime converted to a standard datetime.
+        /// </summary>
+        public DateTime SignedTime => DateTimeOffset.FromUnixTimeSeconds(EpochSignedTime).DateTime;
 
         /// <summary>
         /// True/False if it is currently signed
