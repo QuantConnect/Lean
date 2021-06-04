@@ -34,26 +34,16 @@ namespace QuantConnect.Api
         public string Url { get; set; }
 
         /// <summary>
-        /// Remaining USD balance on account after this transaction
-        /// </summary>
-        [JsonProperty(PropertyName = "balance")]
-        public double BalanceUSD { get; set; }
-
-        /// <summary>
         /// Remaining QCC balance on account after this transaction
         /// </summary>
-        public double BalanceQCC => BalanceUSD * 100;
-
-        /// <summary>
-        /// USD Cost or this data link
-        /// </summary>
-        [JsonProperty(PropertyName = "cost")]
-        public double CostUSD { get; set; }
+        [JsonProperty(PropertyName = "balance")]
+        public double Balance { get; set; }
 
         /// <summary>
         /// QCC Cost for this data link
         /// </summary>
-        public double CostQCC => CostUSD * 100;
+        [JsonProperty(PropertyName = "cost")]
+        public double Cost { get; set; }
     }
 
     /// <summary>
@@ -86,10 +76,10 @@ namespace QuantConnect.Api
         public string AgreementUrl { get; set; }
 
         /// <summary>
-        /// Get the price for a given data file
+        /// Get the price in QCC for a given data file
         /// </summary>
         /// <param name="path">Lean data path of the file</param>
-        /// <returns>Price for data, -1 if no entry found</returns>
+        /// <returns>QCC price for data, -1 if no entry found</returns>
         public int GetPrice(string path)
         {
             if (path == null)
@@ -127,13 +117,13 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// RegEx directly form response
+        /// RegEx directly from response
         /// </summary>
         [JsonProperty(PropertyName = "regex")]
         public string RawRegEx { get; set; }
 
         /// <summary>
-        /// The requested price
+        /// The price for this entry in QCC
         /// </summary>
         [JsonProperty(PropertyName = "price")]
         public int Price { get; set; }

@@ -142,15 +142,10 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Current Balance USD
+        /// QCC Current Balance
         /// </summary>
         [JsonProperty(PropertyName = "balance")]
-        public decimal BalanceUSD { get; set; }
-
-        /// <summary>
-        /// Current Balance QCC
-        /// </summary>
-        public decimal BalanceQCC => BalanceUSD * 100;
+        public decimal Balance { get; set; }
 
         /// <summary>
         /// List of changes to Credit
@@ -196,13 +191,13 @@ namespace QuantConnect.Api
         public int Quantity { get; set; }
 
         /// <summary>
-        /// Unit price for this item
+        /// USD Unit price for this item
         /// </summary>
         [JsonProperty(PropertyName = "unitPrice")]
         public int UnitPrice { get; set; }
 
         /// <summary>
-        /// Total price for this product
+        /// USD Total price for this product
         /// </summary>
         [JsonProperty(PropertyName = "total")]
         public int TotalPrice { get; set; }
@@ -215,7 +210,7 @@ namespace QuantConnect.Api
     public enum ProductType
     {
         /// <summary>
-        /// TODO Idk what this is
+        /// Professional Seats Subscriptions
         /// </summary>
         ProfessionalSeats,
 

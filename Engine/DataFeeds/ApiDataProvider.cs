@@ -27,7 +27,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// An instance of the <see cref="IDataProvider"/> that will attempt to retrieve files not present on the filesystem from the API
+    /// An instance of the <see cref="IDataProvider"/> that will download and update data files as needed via QC's Api.
     /// </summary>
     public class ApiDataProvider : IDataProvider
     {
@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly string _organizationId = Config.Get("job-organization-id", null);
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
         private readonly bool _subscribedToEquityMapAndFactorFiles;
-        private DataPricesList _dataPrices;
+        private readonly DataPricesList _dataPrices;
 
         /// <summary>
         /// Account Balance in QCC
@@ -103,7 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // Verify we have the balance to maintain our purchase limit, if not adjust it to meet our balance
-            _balance = organization.Credit.BalanceQCC;
+            _balance = organization.Credit.Balance;
             if (_balance < _purchaseLimit)
             {
                 Log.Error("ApiDataProvider(): Purchase limit is greater than balance." +
