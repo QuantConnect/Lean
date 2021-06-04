@@ -1186,7 +1186,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="filePath">Filepath to format</param>
         /// <returns>Normalized path</returns>
-        private string FormatPathForDataRequest(string filePath)
+        public string FormatPathForDataRequest(string filePath)
         {
             // Normalize windows paths to linux format
             filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);

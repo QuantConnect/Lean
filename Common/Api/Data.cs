@@ -87,8 +87,6 @@ namespace QuantConnect.Api
                 return -1;
             }
 
-            // Convert windows paths into linux form
-            path = path.Replace("\\", "/", StringComparison.InvariantCulture);
             var entry = Prices.FirstOrDefault(x => Regex.IsMatch(path, x.RegEx));
             return entry == null ? -1 : entry.Price;
         }
