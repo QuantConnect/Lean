@@ -94,6 +94,7 @@ namespace QuantConnect.Data.Auxiliary
             if (factorFileStream != null)
             {
                 factorFile = FactorFile.Read(permtick, factorFileStream);
+                factorFileStream.DisposeSafely();
                 _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
             }
             else
