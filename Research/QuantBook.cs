@@ -118,6 +118,11 @@ namespace QuantConnect.Research
                 var composer = new Composer();
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
+
+                // Initialize our factorfile and mapfile providers, before creating the algorithm which could require these
+                algorithmHandlers.FactorFileProvider.Initialize(algorithmHandlers.MapFileProvider, algorithmHandlers.DataProvider);
+                algorithmHandlers.MapFileProvider.Initialize(algorithmHandlers.DataProvider);
+
                 // init the API
                 systemHandlers.Initialize();
                 systemHandlers.LeanManager.Initialize(systemHandlers,
