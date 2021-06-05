@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,20 +15,19 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using QuantConnect.Configuration;
+using System.Collections;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
+using System.Globalization;
+using QuantConnect.Logging;
+using QuantConnect.Interfaces;
 using QuantConnect.Data.Custom;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.Fred;
 using QuantConnect.Data.Custom.Tiingo;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Logging;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -38,6 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <remarks>The class accepts any subscription configuration and automatically makes it available to enumerate</remarks>
     public class SubscriptionDataReader : IEnumerator<BaseData>, ITradableDatesNotifier, IDataProviderEvents
     {
+        private IDataProvider _dataProvider;
         private bool _initialized;
 
         // Source string to create memory stream:
@@ -138,6 +138,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataCacheProvider">Used for caching files</param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's data time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
+        /// <param name="dataProvider">The data provider to use</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
             DateTime periodStart,
             DateTime periodFinish,
@@ -145,7 +146,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IFactorFileProvider factorFileProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
-            IDataCacheProvider dataCacheProvider)
+            IDataCacheProvider dataCacheProvider,
+            IDataProvider dataProvider)
         {
             //Save configuration of data-subscription:
             _config = config;
@@ -160,6 +162,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save access to securities
             _isLiveMode = isLiveMode;
             _tradeableDates = tradeableDates.GetEnumerator();
+            _dataProvider = dataProvider;
         }
 
         /// <summary>
@@ -460,7 +463,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // save off for comparison next time
                     _source = newSource;
-                    var subscriptionFactory = CreateSubscriptionFactory(newSource, _dataFactory);
+                    var subscriptionFactory = CreateSubscriptionFactory(newSource, _dataFactory, _dataProvider);
                     _subscriptionFactoryEnumerator = subscriptionFactory.Read(newSource).GetEnumerator();
                     return true;
                 }
@@ -479,9 +482,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (true);
         }
 
-        private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source, BaseData baseDataInstance)
+        private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source, BaseData baseDataInstance, IDataProvider dataProvider)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode, baseDataInstance);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode, baseDataInstance, dataProvider);
             AttachEventHandlers(factory, source);
             return factory;
         }

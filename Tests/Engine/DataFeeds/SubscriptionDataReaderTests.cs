@@ -65,7 +65,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 LinqExtensions.Range(start, end, time => time + TimeSpan.FromDays(1)),
                 false,
                 new TestDataCacheProvider
-                { Data = data }
+                { Data = data },
+                TestGlobals.DataProvider
                 );
 
             Assert.IsTrue(dataReader.MoveNext());

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = new EstimizeRelease();
             var date = new DateTime(2019, 6, 10);
             var source = data.GetSource(config, date, false);
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data, TestGlobals.DataProvider);
 
             var rows = factory.Read(source).ToList();
 
@@ -234,7 +234,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = new EstimizeEstimate();
             var date = new DateTime(2019, 6, 10);
             var source = data.GetSource(config, date, false);
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data, TestGlobals.DataProvider);
 
             var rows = factory.Read(source).ToList();
 
@@ -261,7 +261,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = new EstimizeConsensus();
             var date = new DateTime(2019, 6, 10);
             var source = data.GetSource(config, date, false);
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data, TestGlobals.DataProvider);
 
             var rows = factory.Read(source).ToList();
 

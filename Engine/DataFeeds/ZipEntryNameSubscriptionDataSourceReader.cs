@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Ionic.Zip;
+using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ZipEntryNameSubscriptionDataSourceReader : ISubscriptionDataSourceReader
     {
-        private readonly IDataCacheProvider _dataCacheProvider;
+        private readonly IDataProvider _dataProvider;
         private readonly SubscriptionDataConfig _config;
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
@@ -43,16 +43,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
-        /// <param name="dataCacheProvider">Used to cache data</param>
+        /// <param name="dataProvider">Used to fetch data</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(IDataProvider dataProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _config = config;
             _date = date;
+            _config = config;
             _isLiveMode = isLiveMode;
-            _dataCacheProvider = dataCacheProvider;
+            _dataProvider = dataProvider;
             _factory = _factory = config.GetBaseDataInstance();
         }
 
@@ -66,7 +66,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             List<string> entryNames;
             try
             {
-                var stream = _dataCacheProvider.Fetch(source.Source);
+                var stream = _dataProvider.Fetch(source.Source);
                 entryNames = Compression.GetZipEntryFileNames(stream).ToList();
                 stream.DisposeSafely();
             }

@@ -99,8 +99,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var balance = organization.Credit.Balance;
             if (balance < _purchaseLimit)
             {
-                Log.Error("ApiDataProvider(): Purchase limit is greater than balance." +
-                    $" Setting purchase limit to balance : {balance}");
+                if (_purchaseLimit != decimal.MaxValue)
+                {
+                    Log.Error("ApiDataProvider(): Purchase limit is greater than balance." +
+                        $" Setting purchase limit to balance : {balance}");
+                }
                 _purchaseLimit = balance;
             }
         }

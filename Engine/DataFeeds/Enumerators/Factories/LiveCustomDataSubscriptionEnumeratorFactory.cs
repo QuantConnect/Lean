@@ -138,7 +138,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
             {
                 var newLocalFrontier = localFrontier.Value;
-                var dataSourceReader = GetSubscriptionDataSourceReader(source, dataCacheProvider, config, localDate, baseDataInstance);
+                var dataSourceReader = GetSubscriptionDataSourceReader(source, dataCacheProvider, config, localDate, baseDataInstance, dataProvider);
                 foreach (var datum in dataSourceReader.Read(source))
                 {
                     // always skip past all times emitted on the previous invocation of this enumerator
@@ -184,10 +184,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             IDataCacheProvider dataCacheProvider,
             SubscriptionDataConfig config,
             DateTime date,
-            BaseData baseDataInstance
+            BaseData baseDataInstance,
+            IDataProvider dataProvider
             )
         {
-            return SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, true, baseDataInstance);
+            return SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, true, baseDataInstance, dataProvider);
         }
 
         private bool SourceRequiresFastForward(SubscriptionDataSource source)

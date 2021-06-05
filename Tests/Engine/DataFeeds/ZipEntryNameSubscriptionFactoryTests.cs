@@ -20,7 +20,6 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -34,8 +33,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var source = Path.Combine("TestData", "20151224_quote_american.zip");
             var config = new SubscriptionDataConfig(typeof (ZipEntryName), Symbol.Create("XLRE", SecurityType.Option, Market.USA), Resolution.Tick,
                 TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-            var cacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
-            var factory = new ZipEntryNameSubscriptionDataSourceReader(cacheProvider, config, time, false);
+            var factory = new ZipEntryNameSubscriptionDataSourceReader(TestGlobals.DataProvider, config, time, false);
             var expected = new[]
             {
                 Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19)),
@@ -48,8 +46,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // we only really care about the symbols
             CollectionAssert.AreEqual(expected, actual.Select(x => x.Symbol));
             Assert.IsTrue(actual.All(x => x is ZipEntryName));
-
-            cacheProvider.DisposeSafely();
         }
     }
 }
