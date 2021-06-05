@@ -241,6 +241,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(87, 3700, OptionRight.Call, PositionSide.Long, 59375)]
         [TestCase(108.5, 1000, OptionRight.Call, PositionSide.Long, 59375)]
         [TestCase(125, 570, OptionRight.Call, PositionSide.Long, 59375)]
+        [TestCase(1000, 0, OptionRight.Call, PositionSide.Long, 59375)]
 
         // Long Call maintenance
         [TestCase(10, 56000, OptionRight.Call, PositionSide.Long, 47500)]
@@ -252,6 +253,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(87, 3600, OptionRight.Call, PositionSide.Long, 47500)]
         [TestCase(108.5, 1000, OptionRight.Call, PositionSide.Long, 47500)]
         [TestCase(125, 540, OptionRight.Call, PositionSide.Long, 47500)]
+        [TestCase(1000, 0, OptionRight.Call, PositionSide.Long, 47500)]
 
         // Short Call initial
         [TestCase(10, 59400, OptionRight.Call, PositionSide.Short, 59375)]
@@ -263,6 +265,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(87, 28960, OptionRight.Call, PositionSide.Short, 59375)]
         [TestCase(108.5, 11373, OptionRight.Call, PositionSide.Short, 59375)]
         [TestCase(125, 3900, OptionRight.Call, PositionSide.Short, 59375)]
+        [TestCase(1000, 0, OptionRight.Call, PositionSide.Short, 59375)]
 
         // Long Put initial
         [TestCase(10, 45, OptionRight.Put, PositionSide.Long, 59375)]
