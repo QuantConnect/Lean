@@ -24,6 +24,9 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Regression algorithm reproducing issue #5610
+    /// </summary>
     public class OptionExerciseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _equity, _option;
@@ -105,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
