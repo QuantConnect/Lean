@@ -273,7 +273,7 @@ namespace QuantConnect.Statistics
         /// Initializes a new instance of the <see cref="TradeStatistics"/> class
         /// </summary>
         /// <param name="trades">The list of closed trades</param>
-        public TradeStatistics(IEnumerable<Trade> trades)
+        public TradeStatistics(List<Trade> trades)
         {
             var maxConsecutiveWinners = 0;
             var maxConsecutiveLosers = 0;

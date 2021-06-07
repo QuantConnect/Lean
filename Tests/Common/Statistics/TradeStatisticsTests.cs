@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(6, statistics.TotalFees);
         }
 
-        private IEnumerable<Trade> CreateThreeWinners()
+        private List<Trade> CreateThreeWinners()
         {
             var time = _startTime;
 
@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(6, statistics.TotalFees);
         }
 
-        private IEnumerable<Trade> CreateThreeLosers()
+        private List<Trade> CreateThreeLosers()
         {
             var time = _startTime;
 
@@ -308,7 +308,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(6, statistics.TotalFees);
         }
 
-        private IEnumerable<Trade> CreateTwoLosersOneWinner()
+        private List<Trade> CreateTwoLosersOneWinner()
         {
             var time = _startTime;
 
@@ -404,7 +404,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(6, statistics.TotalFees);
         }
 
-        private IEnumerable<Trade> CreateOneWinnerTwoLosers()
+        private List<Trade> CreateOneWinnerTwoLosers()
         {
             var time = _startTime;
 
@@ -500,7 +500,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(6, statistics.TotalFees);
         }
 
-        private IEnumerable<Trade> CreateOneLoserTwoWinners()
+        private List<Trade> CreateOneLoserTwoWinners()
         {
             var time = _startTime;
 
