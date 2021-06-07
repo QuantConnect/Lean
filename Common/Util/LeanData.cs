@@ -958,6 +958,47 @@ namespace QuantConnect.Util
         /// Parses file name into a <see cref="Security"/> and DateTime
         /// </summary>
         /// <param name="fileName">File name to be parsed</param>
+        /// <param name="securityType">The symbol as parsed from the fileName</param>
+        /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
+        public static bool TryParsePath(string fileName, out SecurityType securityType, out Resolution resolution)
+        {
+            securityType = SecurityType.Base;
+            resolution = Resolution.Daily;
+
+            try
+            {
+                var info = SplitDataPath(fileName);
+
+                // find where the useful part of the path starts - i.e. the securityType
+                var startIndex = info.FindIndex(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
+
+                securityType = ParseDataSecurityType(info[startIndex]);
+
+                if (securityType == SecurityType.Base)
+                {
+                    if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
+                    {
+                        resolution = Resolution.Daily;
+                    }
+                }
+                else
+                {
+                    resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"LeanData.TryParsePath(): Error encountered while parsing the path {fileName}. Error: {e.GetBaseException()}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Parses file name into a <see cref="Security"/> and DateTime
+        /// </summary>
+        /// <param name="fileName">File name to be parsed</param>
         /// <param name="symbol">The symbol as parsed from the fileName</param>
         /// <param name="date">Date of data in the file path. Only returned if the resolution is lower than Hourly</param>
         /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
@@ -967,21 +1008,9 @@ namespace QuantConnect.Util
             resolution = Resolution.Daily;
             date = default(DateTime);
 
-            var pathSeparators = new[] { '/', '\\' };
-
             try
             {
-                // Removes file extension
-                fileName = fileName.Replace(fileName.GetExtension(), "");
-
-                // remove any relative file path
-                while (fileName.First() == '.' || pathSeparators.Any(x => x == fileName.First()))
-                {
-                    fileName = fileName.Remove(0, 1);
-                }
-
-                // split path into components
-                var info = fileName.Split(pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToList();
+                var info = SplitDataPath(fileName);
 
                 // find where the useful part of the path starts - i.e. the securityType
                 var startIndex = info.FindIndex(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
@@ -1044,6 +1073,23 @@ namespace QuantConnect.Util
             }
 
             return true;
+        }
+
+        private static List<string> SplitDataPath(string fileName)
+        {
+            var pathSeparators = new[] { '/', '\\' };
+
+            // Removes file extension
+            fileName = fileName.Replace(fileName.GetExtension(), string.Empty);
+
+            // remove any relative file path
+            while (fileName.First() == '.' || pathSeparators.Any(x => x == fileName.First()))
+            {
+                fileName = fileName.Remove(0, 1);
+            }
+
+            // split path into components
+            return fileName.Split(pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
     }
 }
