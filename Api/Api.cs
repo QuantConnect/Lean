@@ -856,7 +856,11 @@ namespace QuantConnect.Api
 
             // Make sure the link was successfully retrieved
             if (!dataLink.Success)
+            {
+                Log.Error($"Api.DownloadData(): Failed to get link for {filePath}. " +
+                    $"Errors: {string.Join(',', dataLink.Errors)}");
                 return false;
+            }
 
             // Make sure the directory exist before writing
             var directory = Path.GetDirectoryName(filePath);
@@ -1187,15 +1191,21 @@ namespace QuantConnect.Api
         /// <returns>Normalized path</returns>
         public string FormatPathForDataRequest(string filePath)
         {
-            // Normalize windows paths to linux format
-            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
+            if (filePath == null)
+            {
+                Log.Error("Api.FormatPathForDataRequest(): Cannot format null string");
+                return null;
+            }
 
-            // Remove data root directory from path for request if included
+            // First remove data root directory from path for request if included
             if (filePath.StartsWith(_dataFolder, StringComparison.InvariantCulture))
             {
                 filePath = filePath.Substring(_dataFolder.Length);
             }
 
+            // Normalize windows paths to linux format
+            // Also trim '/' from start, this can cause issues for _dataFolders without final directory separator in the config
+            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture).TrimStart('/');
             return filePath;
         }
     }

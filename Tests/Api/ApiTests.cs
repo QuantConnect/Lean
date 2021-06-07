@@ -15,6 +15,7 @@
 
 using NUnit.Framework;
 using QuantConnect.Api;
+using System.IO;
 
 namespace QuantConnect.Tests.API
 {
@@ -65,6 +66,22 @@ namespace QuantConnect.Tests.API
             var api = new Api.Api();
             api.Initialize(TestAccount, "", DataFolder);
             Assert.IsFalse(api.Connected);
+        }
+
+        [TestCase("C:\\Data")]
+        [TestCase("C:\\Data\\")]
+        [TestCase("C:/Data/")]
+        [TestCase("C:/Data")]
+        public void FormattingPathForDataRequestsAreCorrect(string dataFolder)
+        {
+            var api = new Api.Api();
+            api.Initialize(TestAccount, TestToken, dataFolder);
+
+            var dataToDownload = "forex/oanda/daily/eurusd.zip";
+            var path = Path.Combine(dataFolder, dataToDownload);
+
+            var result = api.FormatPathForDataRequest(path);
+            Assert.AreEqual(dataToDownload, result);
         }
     }
 }
