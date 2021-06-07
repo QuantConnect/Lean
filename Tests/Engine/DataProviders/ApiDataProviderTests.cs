@@ -17,6 +17,10 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using System.Threading;
+using QuantConnect.Util;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.DataProviders
@@ -71,6 +75,36 @@ namespace QuantConnect.Tests.Engine.DataProviders
             stream.Dispose();
             
             Assert.IsTrue(File.Exists(path));
+        }
+
+        [Test]
+        public void DownloadsFileOnceConcurrently()
+        {
+            var dataProvider = new ApiDataProviderTest();
+
+            var tasks = new List<Task>();
+            for (var i = 0; i < 10; i++)
+            {
+                tasks.Add(Task.Factory.StartNew(() =>
+                    dataProvider.Fetch(Path.Combine(Globals.DataFolder, "equity", Market.USA, "hour", "f.zip"))));
+            }
+
+            tasks.ForEach(task => task.Wait());
+            dataProvider.DisposeSafely();
+            Assert.AreEqual(1, dataProvider.DownLoadCount);
+        }
+
+        private class ApiDataProviderTest : ApiDataProvider
+        {
+            public int DownLoadCount;
+
+            protected override FileStream DownloadData(string filePath)
+            {
+                Interlocked.Increment(ref DownLoadCount);
+                // simulate download delay
+                Thread.Sleep(100);
+                return null;
+            }
         }
     }
 }

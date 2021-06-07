@@ -19,10 +19,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Api;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -35,7 +37,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _organizationId = Config.Get("job-organization-id");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
+        private readonly ConcurrentDictionary<string, string> _currentDownloads;
+        private readonly HashSet<SecurityType> _unsupportedSecurityType;
         private readonly bool _subscribedToEquityMapAndFactorFiles;
+        private volatile bool _invalidSecurityTypeLog;
         private readonly DataPricesList _dataPrices;
 
         /// <summary>
@@ -55,13 +60,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public ApiDataProvider()
         {
             _api = new Api.Api();
+            _unsupportedSecurityType = new HashSet<SecurityType> { SecurityType.Future, SecurityType.FutureOption, SecurityType.Index, SecurityType.IndexOption };
+            _currentDownloads = new ConcurrentDictionary<string, string>();
             _api.Initialize(_uid, _token, _dataPath);
 
             // If we have no value for organization get account preferred
             if (string.IsNullOrEmpty(_organizationId))
             {
                 var account = _api.ReadAccount();
-                _organizationId = account.OrganizationId;
+                _organizationId = account?.OrganizationId;
                 Log.Trace($"ApiDataProvider(): Will use organization Id '{_organizationId}'.");
             }
 
@@ -113,34 +120,57 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Retrieves data to be used in an algorithm.
         /// If file does not exist, an attempt is made to download them from the api
         /// </summary>
-        /// <param name="filePath">File path representing where the data requested</param>
+        /// <param name="key">File path representing where the data requested</param>
         /// <returns>A <see cref="Stream"/> of the data requested</returns>
-        public override Stream Fetch(string filePath)
+        public override Stream Fetch(string key)
         {
             // If we don't already have this file or its out of date, download it
-            if (NeedToDownload(filePath))
+            if (NeedToDownload(key))
             {
-                // Verify we have enough credit to handle this
-                var pricePath = _api.FormatPathForDataRequest(filePath);
-                var price = _dataPrices.GetPrice(pricePath);
-
-                // No price found
-                if (price == -1)
+                lock (key)
                 {
-                    throw new ArgumentException($"ApiDataProvider.Fetch(): No price found for {pricePath}");
-                }
-                
-                if (_purchaseLimit < price)
-                {
-                    throw new ArgumentException($"ApiDataProvider.Fetch(): Cost {price} for {pricePath} data exceeds remaining purchase limit: {_purchaseLimit}");
-                }
+                    // only one thread can add a path at the same time
+                    // - The thread that adds the path, downloads the file and removes the path from the collection after it finishes.
+                    // - Threads that don't add the path, will get the value in the collection and try taking a lock on it, since the downloading
+                    // thread takes the lock on it first, they will wait till he finishes.
+                    // This will allow different threads to download different paths at the same time.
+                    if (_currentDownloads.TryAdd(key, key))
+                    {
+                        // Verify we have enough credit to handle this
+                        var pricePath = _api.FormatPathForDataRequest(key);
+                        var price = _dataPrices.GetPrice(pricePath);
 
-                // Update our purchase limit and balance.
-                _purchaseLimit -= price;
-                return DownloadData(filePath);
+                        // No price found
+                        if (price == -1)
+                        {
+                            throw new ArgumentException($"ApiDataProvider.Fetch(): No price found for {pricePath}");
+                        }
+
+                        if (_purchaseLimit < price)
+                        {
+                            throw new ArgumentException($"ApiDataProvider.Fetch(): Cost {price} for {pricePath} data exceeds remaining purchase limit: {_purchaseLimit}");
+                        }
+
+                        var result = DownloadData(key);
+                        if (result != null)
+                        {
+                            // Update our purchase limit.
+                            _purchaseLimit -= price;
+                        }
+                        _currentDownloads.TryRemove(key, out _);
+                        return result;
+                    }
+
+                    // this is rare
+                    _currentDownloads.TryGetValue(key, out var existingKey);
+                    lock (existingKey ?? new object())
+                    {
+                        return base.Fetch(key);
+                    }
+                }
             }
 
-            return base.Fetch(filePath);
+            return base.Fetch(key);
         }
 
         /// <summary>
@@ -161,7 +191,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="filePath">The path to store the file</param>
         /// <returns>A FileStream of the data</returns>
-        private FileStream DownloadData(string filePath)
+        protected virtual FileStream DownloadData(string filePath)
         {
             Log.Debug($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
 
@@ -188,12 +218,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var fileExists = File.Exists(filePath);
 
-            if (CanParsePath(filePath) && LeanData.TryParsePath(filePath, out Symbol symbol, out DateTime date, out Resolution resolution))
+            if (CanParsePath(filePath) && LeanData.TryParsePath(filePath, out SecurityType securityType, out Resolution resolution))
             {
                 var shouldDownload = !fileExists || IsOutOfDate(resolution, filePath);
 
+                if (_unsupportedSecurityType.Contains(securityType))
+                {
+                    if (!_invalidSecurityTypeLog)
+                    {
+                        // let's log this once. Will still use any existing data on disk
+                        _invalidSecurityTypeLog = true;
+                        Log.Error($"ApiDataProvider(): does not support security types: {string.Join(", ", _unsupportedSecurityType)}");
+                    }
+                    return false;
+                }
+
                 // If we need to download this, symbol is an equity, and user is not subscribed to map and factor files throw an error
-                if (shouldDownload && symbol.ID.SecurityType == SecurityType.Equity)
+                if (shouldDownload && (securityType == SecurityType.Equity || securityType == SecurityType.Option))
                 {
                     CheckMapFactorFileSubscription();
                 }

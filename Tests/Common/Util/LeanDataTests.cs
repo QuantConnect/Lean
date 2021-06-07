@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -191,6 +191,25 @@ namespace QuantConnect.Tests.Common.Util
         {
             Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Cfd), TickType.Quote);
             Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Forex), TickType.Quote);
+        }
+
+        [TestCase("forex/fxcm/eurusd/20160101_quote.zip", false, SecurityType.Forex, Resolution.Daily)]
+        [TestCase("Data/f/fxcm/eurusd/20160101_quote.zip", false, SecurityType.Base, Resolution.Daily)]
+        [TestCase("ooooooooooooooooooooooooooooooooooooooooooooooooooooooo", false, SecurityType.Base, Resolution.Daily)]
+        [TestCase("", false, SecurityType.Base, Resolution.Daily)]
+        [TestCase(null, false, SecurityType.Base, Resolution.Daily)]
+
+        [TestCase("Data/option/u sa/minute/aapl/20140606_trade_american.zip", true, SecurityType.Option, Resolution.Minute)]
+        [TestCase("../Data/equity/usa/daily/aapl.zip", true, SecurityType.Equity, Resolution.Daily)]
+        [TestCase("Data/cfd/oanda/minute/bcousd/20160101_trade.zip", true, SecurityType.Cfd, Resolution.Minute)]
+        [TestCase("Data\\alternative\\estimize\\consensus\\aapl.csv", true, SecurityType.Base, Resolution.Daily)]
+        [TestCase("../../../Data/option/usa/minute/spy/20200922_quote_american.zip", true, SecurityType.Option, Resolution.Minute)]
+        [TestCase("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", true, SecurityType.FutureOption, Resolution.Minute)]
+        public void TryParsePathResolutionSecurityType(string path, bool result, SecurityType expectedSecurityType, Resolution expectedResolution)
+        {
+            Assert.AreEqual(result, LeanData.TryParsePath(path, out var securityType, out var resolution));
+            Assert.AreEqual(expectedResolution, resolution);
+            Assert.AreEqual(expectedSecurityType, securityType);
         }
 
         [Test]

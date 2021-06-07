@@ -115,10 +115,6 @@ namespace QuantConnect.Lean.Engine
 
                     AlgorithmHandlers.Setup.WorkerThread = workerThread;
 
-                    // Initialize our factorfile and mapfile providers, before creating the algorithm which could require these
-                    AlgorithmHandlers.FactorFileProvider.Initialize(AlgorithmHandlers.MapFileProvider, AlgorithmHandlers.DataProvider);
-                    AlgorithmHandlers.MapFileProvider.Initialize(AlgorithmHandlers.DataProvider);
-
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = AlgorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
 
