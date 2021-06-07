@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,6 +27,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class BacktestingOptionChainProvider : IOptionChainProvider
     {
+        private IDataProvider _dataProvider;
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="dataProvider">The data provider instance to use</param>
+        public BacktestingOptionChainProvider(IDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+        }
+
         /// <summary>
         /// Gets the list of option contracts for a given underlying symbol
         /// </summary>
@@ -51,8 +62,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 0,
                 SecurityIdentifier.DefaultDate);
 
-            var fileExists = false;
             var zipFileName = string.Empty;
+            Stream stream = null;
 
             // In order of trust-worthiness of containing the complete option chain, OpenInterest is guaranteed
             // to have the complete option chain. Quotes come after open-interest
@@ -60,27 +71,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // missing portions of the option chain, so we resort to it last.
             foreach (var tickType in new[] { TickType.OpenInterest, TickType.Quote, TickType.Trade })
             {
-                // build the zip file name for open interest data
+                // build the zip file name and fetch it with our provider
                 zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, canonicalSymbol, date, Resolution.Minute, tickType);
-                if (File.Exists(zipFileName))
+                stream = _dataProvider.Fetch(zipFileName);
+
+                if (stream != null)
                 {
-                    fileExists = true;
                     break;
                 }
             }
 
-            if (!fileExists)
+            if (stream == null)
             {
                 Log.Trace($"BacktestingOptionChainProvider.GetOptionContractList(): File not found: {zipFileName}");
                 yield break;
             }
 
             // generate and return the contract symbol for each zip entry
-            var zipEntryNames = Compression.GetZipEntryFileNames(zipFileName);
+            var zipEntryNames = Compression.GetZipEntryFileNames(stream);
             foreach (var zipEntryName in zipEntryNames)
             {
                 yield return LeanData.ReadSymbolFromZipEntry(canonicalSymbol, Resolution.Minute, zipEntryName);
             }
+
+            stream.DisposeSafely();
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,17 +21,9 @@ using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.DataProviders
 {
-    [TestFixture]
+    [TestFixture, Explicit("Requires configured api access, and also makes calls to data endpoints which are charging transactions")]
     public class ApiDataProviderTests
     {
-        private ApiDataProvider _apiDataProvider;
-
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            _apiDataProvider = new ApiDataProvider();
-        }
-
         [TestCase(Resolution.Daily, 6, true)]
         [TestCase(Resolution.Daily, 3, false)]
         [TestCase(Resolution.Hour, 6, true)]
@@ -50,6 +42,35 @@ namespace QuantConnect.Tests.Engine.DataProviders
 
             Assert.AreEqual(expected, test);
             File.Delete(path);
+        }
+
+        [TestCase("forex/oanda/minute/eurusd/20131011_quote.zip")]
+        [TestCase("equity/usa/factor_files/tsla.csv")]
+        [TestCase("equity/usa/factor_files/factor_files_20210601.zip")]
+        [TestCase("equity/usa/map_files/googl.csv")]
+        [TestCase("equity/usa/map_files/map_files_20210601.zip")]
+        [TestCase("crypto/gdax/daily/btcusd_quote.zip")]
+        [TestCase("crypto/bitfinex/hour/ethusd_quote.zip")]
+        [TestCase("option/usa/minute/aapl/20210601_openinterest_american.zip")]
+        [TestCase("future/sgx/margins/IN.csv")]
+        public void DownloadFiles(string file)
+        {
+            var dataProvider = new ApiDataProvider();
+            var path = Path.Combine(Globals.DataFolder, file);
+
+            // Delete it if we already have it
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                Assert.IsFalse(File.Exists(path));
+            }
+
+            // Go get the file
+            var stream = dataProvider.Fetch(path);
+            Assert.IsNotNull(stream);
+            stream.Dispose();
+            
+            Assert.IsTrue(File.Exists(path));
         }
     }
 }

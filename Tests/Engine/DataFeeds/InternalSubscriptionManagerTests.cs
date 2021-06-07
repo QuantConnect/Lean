@@ -327,6 +327,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataFeed = new TestableLiveTradingDataFeed(dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? new AggregationManager()));
             _algorithm = new AlgorithmStub(createDataManager: false);
             _synchronizer = synchronizer ?? new LiveSynchronizer();
+
+
             var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook,
                 MarketHoursDatabase.FromDataFolder(),
@@ -338,7 +340,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _algorithm,
                 securityService,
                 new DataPermissionManager(),
-                new DefaultDataProvider(),
+                TestGlobals.DataProvider,
                 Resolution.Second);
             _dataManager = new DataManager(_dataFeed, universeSelection, _algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork),
                 MarketHoursDatabase.FromDataFolder(),
@@ -350,9 +352,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataFeed.Initialize(_algorithm,
                 new LiveNodePacket(),
                 _resultHandler,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
-                new DefaultDataProvider(),
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.DataProvider,
                 _dataManager,
                 _synchronizer,
                 new DataChannelProvider());

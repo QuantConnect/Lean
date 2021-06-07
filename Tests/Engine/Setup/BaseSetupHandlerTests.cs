@@ -37,13 +37,14 @@ namespace QuantConnect.Tests.Engine.Setup
             // Setup history provider and algorithm
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             var zipCache = new ZipDataCacheProvider(new DefaultDataProvider());
+
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
-                new DefaultDataProvider(),
+                TestGlobals.DataProvider,
                 zipCache,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
                 null,
                 false,
                 new DataPermissionManager()));

@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _aapl;
         private const string Ticker = "AAPL";
-        private readonly FactorFile _factorFile = FactorFile.Read(Ticker, Market.USA);
+        private FactorFile _factorFile;
         private readonly IEnumerator<decimal> _expectedAdjustedVolume = new List<decimal> { 1541213, 761013, 920088, 867077, 542487, 663132, 
             374927, 379554, 413805, 377622 }.GetEnumerator();
         private readonly IEnumerator<decimal> _expectedAdjustedAskSize = new List<decimal> { 53900, 1400, 6300, 2100, 1400, 1400, 700, 
@@ -43,6 +45,18 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.SplitAdjusted;
             _aapl = AddEquity(Ticker, Resolution.Minute).Symbol;
+
+            var dataProvider =
+                Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
+                    "DefaultDataProvider"));
+
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            mapFileProvider.Initialize(dataProvider);
+            var factorFileProvider = new LocalDiskFactorFileProvider();
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
+
+
+            _factorFile = factorFileProvider.Get(_aapl);
         }
 
         /// <summary>

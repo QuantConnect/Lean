@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,9 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using QuantConnect.Api;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -24,14 +27,26 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// An instance of the <see cref="IDataProvider"/> that will attempt to retrieve files not present on the filesystem from the API
+    /// An instance of the <see cref="IDataProvider"/> that will download and update data files as needed via QC's Api.
     /// </summary>
-    public class ApiDataProvider : IDataProvider
+    public class ApiDataProvider : DefaultDataProvider
     {
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
+        private readonly string _organizationId = Config.Get("job-organization-id");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
-        private static readonly int DownloadPeriod = Config.GetInt("api-data-update-period", 5);
+        private readonly bool _subscribedToEquityMapAndFactorFiles;
+        private readonly DataPricesList _dataPrices;
+
+        /// <summary>
+        /// Data Purchase limit measured in QCC (QuantConnect Credits)
+        /// </summary>
+        private decimal _purchaseLimit = Config.GetValue("data-purchase-limit", decimal.MaxValue);
+
+        /// <summary>
+        /// Period to re-download 
+        /// </summary>
+        private static readonly int DownloadPeriod = Config.GetInt("api-data-update-period", 1);
         private readonly Api.Api _api;
 
         /// <summary>
@@ -40,36 +55,92 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public ApiDataProvider()
         {
             _api = new Api.Api();
-
             _api.Initialize(_uid, _token, _dataPath);
+
+            // If we have no value for organization get account preferred
+            if (string.IsNullOrEmpty(_organizationId))
+            {
+                var account = _api.ReadAccount();
+                _organizationId = account.OrganizationId;
+                Log.Trace($"ApiDataProvider(): Will use organization Id '{_organizationId}'.");
+            }
+
+            // Read in data prices and organization details
+            _dataPrices = _api.ReadDataPrices(_organizationId);
+            var organization = _api.ReadOrganization(_organizationId);
+
+            // Determine if the user is subscribed to map and factor files
+            if (organization.Products.Where(x => x.Type == ProductType.Data).Any(x => x.Items.Any(x => x.Name.Contains("Factor", StringComparison.InvariantCultureIgnoreCase))))
+            {
+                _subscribedToEquityMapAndFactorFiles = true;
+            }
+
+            // Verify user has agreed to data provider agreements
+            if (organization.DataAgreement.Signed)
+            {
+                //Log Agreement Highlights
+                Log.Trace("ApiDataProvider(): Data Terms of Use has been signed. \r\n" +
+                    $" Find full agreement at: {_dataPrices.AgreementUrl} \r\n" +
+                    "==========================================================================\r\n" +
+                    $"CLI API Access Agreement: On {organization.DataAgreement.SignedTime:d} You Agreed:\r\n" +
+                    " - Display or distribution of data obtained through CLI API Access is not permitted.  \r\n" +
+                    " - Data and Third Party Data obtained via CLI API Access can only be used for individual or internal employee's use.\r\n" +
+                    " - Data is provided in LEAN format can not be manipulated for transmission or use in other applications. \r\n" +
+                    " - QuantConnect is not liable for the quality of data received and is not responsible for trading losses. \r\n" +
+                    "==========================================================================");
+                Thread.Sleep(TimeSpan.FromSeconds(3));
+            }
+            else
+            {
+                // Log URL to go accept terms
+                throw new InvalidOperationException($"ApiDataProvider(): Must agree to terms at {_dataPrices.AgreementUrl}, before using the ApiDataProvider");
+            }
+
+            // Verify we have the balance to maintain our purchase limit, if not adjust it to meet our balance
+            var balance = organization.Credit.Balance;
+            if (balance < _purchaseLimit)
+            {
+                if (_purchaseLimit != decimal.MaxValue)
+                {
+                    Log.Error("ApiDataProvider(): Purchase limit is greater than balance." +
+                        $" Setting purchase limit to balance : {balance}");
+                }
+                _purchaseLimit = balance;
+            }
         }
 
         /// <summary>
         /// Retrieves data to be used in an algorithm.
         /// If file does not exist, an attempt is made to download them from the api
         /// </summary>
-        /// <param name="key">A string representing where the data is stored</param>
+        /// <param name="filePath">File path representing where the data requested</param>
         /// <returns>A <see cref="Stream"/> of the data requested</returns>
-        public Stream Fetch(string key)
+        public override Stream Fetch(string filePath)
         {
-            Symbol symbol;
-            DateTime date;
-            Resolution resolution;
-
-            // Fetch the details of this data request
-            if (LeanData.TryParsePath(key, out symbol, out date, out resolution))
+            // If we don't already have this file or its out of date, download it
+            if (NeedToDownload(filePath))
             {
-                if (!File.Exists(key) || IsOutOfDate(resolution, key))
+                // Verify we have enough credit to handle this
+                var pricePath = _api.FormatPathForDataRequest(filePath);
+                var price = _dataPrices.GetPrice(pricePath);
+
+                // No price found
+                if (price == -1)
                 {
-                    return DownloadData(key, symbol, date, resolution);
+                    throw new ArgumentException($"ApiDataProvider.Fetch(): No price found for {pricePath}");
+                }
+                
+                if (_purchaseLimit < price)
+                {
+                    throw new ArgumentException($"ApiDataProvider.Fetch(): Cost {price} for {pricePath} data exceeds remaining purchase limit: {_purchaseLimit}");
                 }
 
-                // Use the file already on the disk
-                return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
+                // Update our purchase limit and balance.
+                _purchaseLimit -= price;
+                return DownloadData(filePath);
             }
 
-            Log.Error("ApiDataProvider.Fetch(): failed to parse key {0}", key);
-            return null;
+            return base.Fetch(filePath);
         }
 
         /// <summary>
@@ -88,35 +159,80 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Attempt to download data using the Api for and return a FileStream of that data.
         /// </summary>
-        /// <param name="filepath">Filepath to save too</param>
-        /// <param name="symbol"></param>
-        /// <param name="date"></param>
-        /// <param name="resolution"></param>
+        /// <param name="filePath">The path to store the file</param>
         /// <returns>A FileStream of the data</returns>
-        private FileStream DownloadData(string filepath, Symbol symbol, DateTime date, Resolution resolution)
+        private FileStream DownloadData(string filePath)
         {
-            Log.Trace("ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
-                symbol.Value,
-                resolution,
-                date.Date.ToShortDateString());
+            Log.Debug($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
 
-            var downloadSuccessful = _api.DownloadData(symbol, resolution, date);
+            var downloadSuccessful = _api.DownloadData(filePath, _organizationId);
 
             if (downloadSuccessful)
             {
-                Log.Trace("ApiDataProvider.Fetch(): Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
-                    symbol.Value,
-                    resolution,
-                    date.Date.ToShortDateString());
+                Log.Trace($"ApiDataProvider.Fetch(): Successfully retrieved data for {filePath}.");
 
-                return new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
 
             // Failed to download
-            Log.Error("ApiDataProvider.Fetch(): Unable to remotely retrieve data for path {0}. " +
-                "Please make sure you have the necessary data in your online QuantConnect data library.",
-                filepath);
+            Log.Error($"ApiDataProvider.Fetch(): Unable to remotely retrieve data for path {filePath}.");
             return null;
+        }
+
+        /// <summary>
+        /// Helper method to determine if this file needs to be downloaded
+        /// </summary>
+        /// <param name="filePath">File we are looking at</param>
+        /// <returns>True if should download</returns>
+        private bool NeedToDownload(string filePath)
+        {
+            var fileExists = File.Exists(filePath);
+
+            if (CanParsePath(filePath) && LeanData.TryParsePath(filePath, out Symbol symbol, out DateTime date, out Resolution resolution))
+            {
+                var shouldDownload = !fileExists || IsOutOfDate(resolution, filePath);
+
+                // If we need to download this, symbol is an equity, and user is not subscribed to map and factor files throw an error
+                if (shouldDownload && symbol.ID.SecurityType == SecurityType.Equity)
+                {
+                    CheckMapFactorFileSubscription();
+                }
+
+                return shouldDownload;
+            }
+
+            // For files that can't be parsed or fail to be
+            return !fileExists || (DateTime.Now - TimeSpan.FromDays(DownloadPeriod)) > File.GetLastWriteTime(filePath);
+        }
+
+        /// <summary>
+        /// Helper method to determine if we can parse this path with TryParsePath()
+        /// Used to limit error throwing by calling TryParsePath()
+        /// </summary>
+        /// <param name="filepath">Filepath to check</param>
+        /// <returns>True if can be parsed</returns>
+        private bool CanParsePath(string filepath)
+        {
+            // Only not true for these cases
+            var equitiesAuxData = filepath.Contains("map_files", StringComparison.InvariantCulture)
+                || filepath.Contains("factor_files", StringComparison.InvariantCulture)
+                || filepath.Contains("fundamental", StringComparison.InvariantCulture);
+
+            if (equitiesAuxData)
+            {
+                CheckMapFactorFileSubscription();
+            }
+
+            return !equitiesAuxData;
+        }
+
+        private void CheckMapFactorFileSubscription()
+        {
+            if(!_subscribedToEquityMapAndFactorFiles)
+            {
+                throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
+                    "to download Equity data from QuantConnect.");
+            }
         }
     }
 }

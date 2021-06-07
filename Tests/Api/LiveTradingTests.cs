@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,7 +17,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Web;
 using NUnit.Framework;
 using QuantConnect.Api;
 using QuantConnect.Brokerages;
@@ -25,31 +24,13 @@ using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture, Ignore("These tests require configured and active accounts to Interactive Brokers, FXCM, Oanda, and Tradier " +
-         "as well as your Organization ID and available live nodes")]
-    public class ApiLiveTradingTests
+    /// <summary>
+    /// API Live endpoint tests
+    /// </summary>
+    [TestFixture, Explicit("Requires configured api access, a live node to run on, and brokerage configurations.")]
+    public class LiveTradingTests : ApiTestBase
     {
-        private int _testAccount;
-        private string _testToken;
-        private string _testOrganization;
-        private string _dataFolder;
-        private Api.Api _api;
-        private const bool stopLiveAlgos = true;
-
-        /// <summary>
-        /// Run before test
-        /// </summary>
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            _testAccount = Config.GetInt("job-user-id");
-            _testToken = Config.Get("api-access-token");
-            _testOrganization = Config.Get("job-organization-id", "EnterOrgHere"); //This org must be your preferred org
-            _dataFolder = Config.Get("data-folder");
-
-            _api = new Api.Api();
-            _api.Initialize(_testAccount, _testToken, _dataFolder);
-        }
+        private const bool StopLiveAlgos = true;
 
         /// <summary>
         /// Live paper trading via Interactive Brokers
@@ -319,11 +300,11 @@ namespace QuantConnect.Tests.API
         ///   - Get logs for the first algorithm returned
         /// Will there always be a live algorithm for the test user?
         /// </summary>
-        [Test, Ignore("Requires a live algorithm to be running")]
+        [Test]
         public void LiveAlgorithmsAndLiveLogs_CanBeRead_Successfully()
         {
             // Read all currently running algorithms
-            var liveAlgorithms = _api.ListLiveAlgorithms(AlgorithmStatus.Running);
+            var liveAlgorithms = ApiClient.ListLiveAlgorithms(AlgorithmStatus.Running);
 
             Assert.IsTrue(liveAlgorithms.Success);
             // There has to be at least one running algorithm
@@ -331,7 +312,7 @@ namespace QuantConnect.Tests.API
 
             // Read the logs of the first live algorithm
             var firstLiveAlgo = liveAlgorithms.Algorithms[0];
-            var liveLogs = _api.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId);
+            var liveLogs = ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId);
 
             Assert.IsTrue(liveLogs.Success);
             Assert.IsTrue(liveLogs.Logs.Any());
@@ -345,14 +326,14 @@ namespace QuantConnect.Tests.API
         private void RunLiveAlgorithm(BaseLiveAlgorithmSettings settings, ProjectFile file)
         {
             // Create a new project
-            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
 
             // Add Project Files
-            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
+            var addProjectFile = ApiClient.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
             Assert.IsTrue(addProjectFile.Success);
 
             // Create compile
-            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
+            var compile = ApiClient.CreateCompile(project.Projects.First().ProjectId);
             Assert.IsTrue(compile.Success);
 
             // Wait at max 30 seconds for project to compile
@@ -361,23 +342,23 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
             // Get a live node to launch the algorithm on
-            var nodes = _api.ReadNodes(_testOrganization);
+            var nodes = ApiClient.ReadNodes(TestOrganization);
             Assert.IsTrue(nodes.Success);
             var freeNode = nodes.LiveNodes.Where(x => x.Busy == false);
             Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
 
             // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings);
+            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
-            if (stopLiveAlgos)
+            if (StopLiveAlgos)
             {
                 // Liquidate live algorithm; will also stop algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
+                var liquidateLive = ApiClient.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(liquidateLive.Success);
 
                 // Delete the project
-                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
+                var deleteProject = ApiClient.DeleteProject(project.Projects.First().ProjectId);
                 Assert.IsTrue(deleteProject.Success);
             }
         }
@@ -396,7 +377,7 @@ namespace QuantConnect.Tests.API
             while (DateTime.Now < finish)
             {
                 Thread.Sleep(1000);
-                compile = _api.ReadCompile(projectId, compileId);
+                compile = ApiClient.ReadCompile(projectId, compileId);
                 if (compile.State == CompileState.BuildSuccess) break;
             }
             return compile;

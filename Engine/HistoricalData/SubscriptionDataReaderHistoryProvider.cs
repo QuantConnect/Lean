@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,6 +38,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// </summary>
     public class SubscriptionDataReaderHistoryProvider : SynchronizingHistoryProvider
     {
+        private IDataProvider _dataProvider;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataCacheProvider _dataCacheProvider;
@@ -57,6 +58,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 throw new InvalidOperationException("SubscriptionDataReaderHistoryProvider can only be initialized once");
             }
             _initialized = true;
+            _dataProvider = parameters.DataProvider;
             _mapFileProvider = parameters.MapFileProvider;
             _dataCacheProvider = parameters.DataCacheProvider;
             _factorFileProvider = parameters.FactorFileProvider;
@@ -136,7 +138,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _factorFileProvider,
                 tradableDates,
                 false,
-                _dataCacheProvider
+                _dataCacheProvider,
+                _dataProvider
                 );
 
             dataReader.InvalidConfigurationDetected += (sender, args) => { OnInvalidConfigurationDetected(args); };

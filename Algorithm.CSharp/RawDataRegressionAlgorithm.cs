@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class RawDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string Ticker = "GOOGL";
-        private readonly FactorFile _factorFile = FactorFile.Read(Ticker, Market.USA);
+        private FactorFile _factorFile;
         private readonly IEnumerator<decimal> _expectedRawPrices = new List<decimal> { 1158.1100m, 1158.7200m,
             1131.7800m, 1114.2800m, 1119.6100m, 1114.5500m, 1135.3200m, 567.59000m, 571.4900m, 545.3000m, 540.6400m }.GetEnumerator();
         private Symbol _googl;
@@ -44,6 +46,17 @@ namespace QuantConnect.Algorithm.CSharp
             // Set our DataNormalizationMode to raw
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
             _googl = AddEquity(Ticker, Resolution.Daily).Symbol;
+
+            // Get our factor file for this regression
+            var dataProvider =
+                Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
+                    "DefaultDataProvider"));
+
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            mapFileProvider.Initialize(dataProvider);
+            var factorFileProvider = new LocalDiskFactorFileProvider();
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
+            _factorFile = factorFileProvider.Get(_googl);
 
             // Prime our expected values
             _expectedRawPrices.MoveNext();

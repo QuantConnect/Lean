@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -37,6 +37,18 @@ namespace QuantConnect
     /// <remarks>QuantConnect's data library is stored in zip format locally on the hard drive.</remarks>
     public static class Compression
     {
+        /// <summary>
+        /// Global Flag :: Operating System
+        /// </summary>
+        private static bool IsLinux
+        {
+            get
+            {
+                var p = (int)Environment.OSVersion.Platform;
+                return (p == 4) || (p == 6) || (p == 128);
+            }
+        }
+
         /// <summary>
         /// Create a zip file of the supplied file names and string data source
         /// </summary>
@@ -214,7 +226,8 @@ namespace QuantConnect
                                 zipStream.Read(buffer, 0, (int)entry.Size);
 
                                 //Save into array:
-                                data.Add(entry.Name, buffer.GetString(encoding));
+                                var str = (encoding ?? Encoding.ASCII).GetString(buffer);
+                                data.Add(entry.Name, str);
                             }
                             else
                             {
@@ -426,7 +439,7 @@ namespace QuantConnect
                             // skip directories
                             if (file.Name == "") continue;
                             var filepath = Path.Combine(directory, file.FullName);
-                            if (OS.IsLinux) filepath = filepath.Replace(@"\", "/");
+                            if (IsLinux) filepath = filepath.Replace(@"\", "/");
                             var outputFile = new FileInfo(filepath);
                             if (!outputFile.Directory.Exists)
                             {
@@ -875,10 +888,20 @@ namespace QuantConnect
         {
             using (var zip = ZipFile.Read(zipFileName))
             {
-                foreach (var entry in zip)
-                {
-                    yield return entry.FileName;
-                }
+                return zip.EntryFileNames;
+            }
+        }
+
+        /// <summary>
+        /// Return the entry file names contained in a zip file
+        /// </summary>
+        /// <param name="zipFileStream">Stream to the file</param>
+        /// <returns>IEnumerable of entry file names</returns>
+        public static IEnumerable<string> GetZipEntryFileNames(Stream zipFileStream)
+        {
+            using (var zip = ZipFile.Read(zipFileStream))
+            {
+                return zip.EntryFileNames;
             }
         }
 
@@ -891,7 +914,7 @@ namespace QuantConnect
         /// <exception cref="Exception">The extraction failed because of a timeout or the exit code was not 0</exception>
         public static void Extract7ZipArchive(string inputFile, string outputDirectory, int execTimeout = 60000)
         {
-            var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
+            var zipper = IsLinux ? "7z" : "C:/Program Files/7-Zip/7z.exe";
             var psi = new ProcessStartInfo(zipper, " e " + inputFile + " -o" + outputDirectory)
             {
                 CreateNoWindow = true,

@@ -1000,13 +1000,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToStringInvariant()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToStringInvariant()) }).ToList();
             _feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction, new RealTimeProvider());
-            var mapFileProvider = new LocalDiskMapFileProvider();
+
             _feed.Initialize(
                 algorithm,
                 job,
                 resultHandler,
-                mapFileProvider,
-                new LocalDiskFactorFileProvider(mapFileProvider),
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
                 fileProvider,
                 dataManager,
                 _synchronizer,
@@ -1278,7 +1278,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction, lookupSymbolsFunction, canPerformSelection, _manualTimeProvider);
 
             _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
-            var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
@@ -1298,8 +1297,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider, 500);
             _synchronizer.Initialize(_algorithm, _dataManager);
 
-            _feed.Initialize(_algorithm, job, resultHandler, mapFileProvider,
-                new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
+            _feed.Initialize(_algorithm, job, resultHandler, TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider, fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
 
             _algorithm.PostInitialize();
             Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
@@ -1666,9 +1665,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     break;
             }
 
-            var mapFileProvider = new LocalDiskMapFileProvider();
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider,
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, fileProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
             if (!dataQueueStarted.WaitOne(TimeSpan.FromMilliseconds(5000)))
@@ -2164,9 +2162,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 throw new NotSupportedException($"Unsupported security type: {securityType}");
             }
 
-            var mapFileProvider = new LocalDiskMapFileProvider();
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), dataProvider,
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, dataProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
             var cancellationTokenSource = new CancellationTokenSource();
