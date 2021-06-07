@@ -268,7 +268,7 @@ namespace QuantConnect.Securities
                         Time = parameters.Order.Time,
                         LimitPrice = option.StrikePrice,
                         Symbol = underlying.Symbol,
-                        Quantity = option.Symbol.ID.OptionRight == OptionRight.Call ? quantity : -quantity
+                        Quantity = quantity
                     };
 
                     // we continue with this call for underlying
