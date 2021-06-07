@@ -67,7 +67,7 @@ class SpreadExecutionModel(ExecutionModel):
         '''Determines if the spread is in desirable range.'''
         # Price has to be larger than zero to avoid zero division error, or negative price causing the spread percentage < 0 by error
         # Has to be in opening hours of exchange to avoid extreme spread in OTC period
-        if algorithm.Securities[symbol].Price > 0 and algorithm.Securities[symbol].Exchange.ExchangeOpen and abs(algorithm.Securities[symbol].AskPrice - algorithm.Securities[symbol].BidPrice)/algorithm.Securities[symbol].Price <= self.acceptingSpreadPercent:
+        if algorithm.Securities[symbol].Price > 0 and algorithm.Securities[symbol].Exchange.ExchangeOpen and algorithm.Securities[symbol].AskPrice is not None and algorithm.Securities[symbol].BidPrice is not None and abs(algorithm.Securities[symbol].AskPrice - algorithm.Securities[symbol].BidPrice)/algorithm.Securities[symbol].Price <= self.acceptingSpreadPercent:
             return True
             
         return False
