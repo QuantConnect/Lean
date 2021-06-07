@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
-        private readonly string _organizationId = Config.Get("job-organization-id", null);
+        private readonly string _organizationId = Config.Get("job-organization-id");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
         private readonly bool _subscribedToEquityMapAndFactorFiles;
         private readonly DataPricesList _dataPrices;
@@ -58,10 +58,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _api.Initialize(_uid, _token, _dataPath);
 
             // If we have no value for organization get account preferred
-            if (_organizationId == null)
+            if (string.IsNullOrEmpty(_organizationId))
             {
                 var account = _api.ReadAccount();
                 _organizationId = account.OrganizationId;
+                Log.Trace($"ApiDataProvider(): Will use organization Id '{_organizationId}'.");
             }
 
             // Read in data prices and organization details
@@ -69,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var organization = _api.ReadOrganization(_organizationId);
 
             // Determine if the user is subscribed to map and factor files
-            if (organization.Products.Where(x => x.Type == ProductType.Data).Any(x => x.Items.Any(x => x.Name.Contains("Factor"))))
+            if (organization.Products.Where(x => x.Type == ProductType.Data).Any(x => x.Items.Any(x => x.Name.Contains("Factor", StringComparison.InvariantCultureIgnoreCase))))
             {
                 _subscribedToEquityMapAndFactorFiles = true;
             }
@@ -78,7 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (organization.DataAgreement.Signed)
             {
                 //Log Agreement Highlights
-                Log.Trace($"ApiDataProvider(): Data Terms of Use has been signed. \r\n" +
+                Log.Trace("ApiDataProvider(): Data Terms of Use has been signed. \r\n" +
                     $" Find full agreement at: {_dataPrices.AgreementUrl} \r\n" +
                     "==========================================================================\r\n" +
                     $"CLI API Access Agreement: On {organization.DataAgreement.SignedTime:d} You Agreed:\r\n" +
@@ -92,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // Log URL to go accept terms
-                throw new Exception($"ApiDataProvider(): Must agree to terms at {_dataPrices.AgreementUrl}, before using the ApiDataProvider");
+                throw new InvalidOperationException($"ApiDataProvider(): Must agree to terms at {_dataPrices.AgreementUrl}, before using the ApiDataProvider");
             }
 
             // Verify we have the balance to maintain our purchase limit, if not adjust it to meet our balance
@@ -162,7 +163,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A FileStream of the data</returns>
         private FileStream DownloadData(string filePath)
         {
-            Log.Trace($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
+            Log.Debug($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
 
             var downloadSuccessful = _api.DownloadData(filePath, _organizationId);
 

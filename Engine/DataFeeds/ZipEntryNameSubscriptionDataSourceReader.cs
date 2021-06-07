@@ -67,6 +67,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 var stream = _dataProvider.Fetch(source.Source);
+                if (stream == null)
+                {
+                    OnInvalidSource(source, new ArgumentException($"Failed to create source stream {source.Source}"));
+                    yield break;
+                }
                 entryNames = Compression.GetZipEntryFileNames(stream).ToList();
                 stream.DisposeSafely();
             }
