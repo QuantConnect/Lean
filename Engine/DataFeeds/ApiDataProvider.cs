@@ -195,17 +195,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             Log.Debug($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
 
-            var downloadSuccessful = _api.DownloadData(filePath, _organizationId);
-
-            if (downloadSuccessful)
+            if (_api.DownloadData(filePath, _organizationId))
             {
                 Log.Trace($"ApiDataProvider.Fetch(): Successfully retrieved data for {filePath}.");
-
                 return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
 
-            // Failed to download
-            Log.Error($"ApiDataProvider.Fetch(): Unable to remotely retrieve data for path {filePath}.");
+            // Failed to download; _api.DownloadData() will post error
             return null;
         }
 
