@@ -108,6 +108,7 @@ namespace QuantConnect
         public Symbol Symbol = Symbol.Empty;
 
         /// Type of the security
+        [JsonIgnore]
         public SecurityType Type => Symbol.SecurityType;
 
         /// The currency symbol of the holding, such as $
