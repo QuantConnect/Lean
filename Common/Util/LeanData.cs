@@ -988,7 +988,7 @@ namespace QuantConnect.Util
             }
             catch (Exception e)
             {
-                Log.Error($"LeanData.TryParsePath(): Error encountered while parsing the path {fileName}. Error: {e.GetBaseException()}");
+                Log.Debug($"LeanData.TryParsePath(): Error encountered while parsing the path {fileName}. Error: {e.GetBaseException()}");
                 return false;
             }
 
