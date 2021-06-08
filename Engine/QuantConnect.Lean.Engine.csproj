@@ -27,6 +27,7 @@
     <Description>QuantConnect LEAN Engine: Engine Project - Core engine and datafeed implementation</Description>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
   </PropertyGroup>
@@ -53,7 +54,7 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.2" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.3" />
     <PackageReference Include="DotNetZip" Version="1.13.3" />
     <PackageReference Include="fasterflect" Version="3.0.0" />
     <PackageReference Include="FSharp.Core" Version="4.5.2" />
