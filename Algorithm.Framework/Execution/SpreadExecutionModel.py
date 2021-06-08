@@ -56,18 +56,23 @@ class SpreadExecutionModel(ExecutionModel):
                 
                 # calculate remaining quantity to be ordered
                 unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
-
+                
+                # get pricing information
+                lastPrice = algorithm.Securities[symbol].Price
+                bidPrice = algorithm.Securities[symbol].BidPrice 
+                askPrice = algorithm.Securities[symbol].AskPrice
+                
                 # check order entry conditions
-                if unorderedQuantity != 0 and self.SpreadIsFavorable(algorithm, symbol):
+                # Has to be in opening hours of exchange to avoid extreme spread in OTC period
+                if unorderedQuantity != 0 and algorithm.Securities[symbol].Exchange.ExchangeOpen and self.SpreadIsFavorable(lastPrice, bidPrice, askPrice, symbol):
                     algorithm.MarketOrder(symbol, unorderedQuantity)
 
             self.targetsCollection.ClearFulfilled(algorithm)
             
-    def SpreadIsFavorable(self, algorithm, symbol):
+    def SpreadIsFavorable(self, lastPrice, bidPrice, askPrice, symbol):
         '''Determines if the spread is in desirable range.'''
         # Price has to be larger than zero to avoid zero division error, or negative price causing the spread percentage < 0 by error
-        # Has to be in opening hours of exchange to avoid extreme spread in OTC period
-        if algorithm.Securities[symbol].Price > 0 and algorithm.Securities[symbol].Exchange.ExchangeOpen and abs(algorithm.Securities[symbol].AskPrice - algorithm.Securities[symbol].BidPrice)/algorithm.Securities[symbol].Price <= self.acceptingSpreadPercent:
+        if lastPrice > 0 and (askPrice - bidPrice) / lastPrice <= self.acceptingSpreadPercent:
             return True
             
         return False
