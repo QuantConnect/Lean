@@ -57,45 +57,41 @@ namespace QuantConnect.Data.Shortable
                 return allSymbols;
             }
 
-            FileInfo shortableListFile = null;
             // Check backwards up to one week to see if we can source a previous file.
             // If not, then we return a list of all Symbols with quantity set to zero.
             var i = 0;
-            var shortableListFileExists = false;
             while (i <= 7)
             {
-                shortableListFile = new FileInfo(Path.Combine(_shortableDataDirectory.FullName, "dates", $"{localTime.AddDays(-i):yyyyMMdd}.csv"));
-                if (shortableListFile.Exists)
+                var shortableListFile = Path.Combine(_shortableDataDirectory.FullName, "dates", $"{localTime.AddDays(-i):yyyyMMdd}.csv");
+                var stream = _dataProvider.Fetch(shortableListFile);
+
+                if (stream != null)
                 {
-                    shortableListFileExists = true;
-                    break;
+                    using (var streamReader = new StreamReader(stream))
+                    {
+                        foreach (var line in streamReader.ReadAllLines())
+                        {
+                            var csv = line.Split(',');
+                            var ticker = csv[0];
+
+                            var symbol =
+                                new Symbol(
+                                    SecurityIdentifier.GenerateEquity(ticker, QuantConnect.Market.USA,
+                                        mappingResolveDate: localTime), ticker);
+                            var quantity = Parse.Long(csv[1]);
+
+                            allSymbols[symbol] = quantity;
+                        }
+                    }
+
+                    stream.Dispose();
+                    return allSymbols;
                 }
 
                 i++;
             }
 
-            if (!shortableListFileExists)
-            {
-                // Empty case, we'll know to consider all quantities zero.
-                return allSymbols;
-            }
-
-            using (var fileStream = shortableListFile.OpenRead())
-            using (var streamReader = new StreamReader(fileStream))
-            {
-                string line;
-                while ((line = streamReader.ReadLine()) != null)
-                {
-                    var csv = line.Split(',');
-                    var ticker = csv[0];
-
-                    var symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, QuantConnect.Market.USA, mappingResolveDate: localTime), ticker);
-                    var quantity = Parse.Long(csv[1]);
-
-                    allSymbols[symbol] = quantity;
-                }
-            }
-
+            // Return our empty dictionary if we did not find a file to extract
             return allSymbols;
         }
 
@@ -130,10 +126,10 @@ namespace QuantConnect.Data.Shortable
                     {
                         var csv = line.Split(',');
                         var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
-                        var quantity = Parse.Long(csv[1]);
-
+                        
                         if (localDate == date)
                         {
+                            var quantity = Parse.Long(csv[1]);
                             return quantity;
                         }
                     }
