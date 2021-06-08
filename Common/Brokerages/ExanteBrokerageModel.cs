@@ -1,5 +1,6 @@
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
 
@@ -38,6 +39,11 @@ namespace QuantConnect.Brokerages
             }
 
             return true;
+        }
+
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new ExanteFeeModel();
         }
     }
 }
