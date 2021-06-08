@@ -16,7 +16,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Shortable
 {
@@ -26,6 +28,9 @@ namespace QuantConnect.Data.Shortable
     public class LocalDiskShortableProvider : IShortableProvider
     {
         private readonly DirectoryInfo _shortableDataDirectory;
+        private IDataProvider _dataProvider =
+            Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
+                "DefaultDataProvider"));
 
         /// <summary>
         /// Creates an instance of the class. Establishes the directory to read from.
@@ -108,28 +113,29 @@ namespace QuantConnect.Data.Shortable
             }
 
             // Implicitly trusts that Symbol.Value has been mapped and updated to the latest ticker
-            var shortableSymbolFile = new FileInfo(Path.Combine(_shortableDataDirectory.FullName, "symbols", $"{symbol.Value.ToLowerInvariant()}.csv"));
-            if (!shortableSymbolFile.Exists)
-            {
-                // Don't allow shorting if data is missing for the provided Symbol.
-                return 0;
-            }
+            var shortableSymbolFile = Path.Combine(_shortableDataDirectory.FullName, "symbols", $"{symbol.Value.ToLowerInvariant()}.csv");
 
-            var localDate = localTime.Date;
-
-            using (var fileStream = shortableSymbolFile.OpenRead())
-            using (var streamReader = new StreamReader(fileStream))
+            using (var stream = _dataProvider.Fetch(shortableSymbolFile))
             {
-                string line;
-                while ((line = streamReader.ReadLine()) != null)
+                if (stream == null)
                 {
-                    var csv = line.Split(',');
-                    var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
-                    var quantity = Parse.Long(csv[1]);
+                    // Don't allow shorting if data is missing for the provided Symbol.
+                    return 0;
+                }
 
-                    if (localDate == date)
+                var localDate = localTime.Date;
+                using (var streamReader = new StreamReader(stream))
+                {
+                    foreach (var line in streamReader.ReadAllLines())
                     {
-                        return quantity;
+                        var csv = line.Split(',');
+                        var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
+                        var quantity = Parse.Long(csv[1]);
+
+                        if (localDate == date)
+                        {
+                            return quantity;
+                        }
                     }
                 }
             }
