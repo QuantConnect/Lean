@@ -28,7 +28,7 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
-
+import numpy as np
 
 class SpreadExecutionModel(ExecutionModel):
     '''Execution model that submits orders while the current pread is tight.'''
