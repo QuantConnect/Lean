@@ -65,10 +65,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
         [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, 5000, 1, 10)]
         [TestCase(Language.Python, new[] { 270d, 260d, 250d }, 5000, 1, 10)]
-        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, 500, 1, 5)]
-        [TestCase(Language.Python, new[] { 270d, 260d, 250d }, 500, 1, 5)]
-        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, 50, 0, 0)]
-        [TestCase(Language.Python, new[] { 270d, 260d, 250d }, 50, 0, 0)]
+        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, 500, 1, 10)]
+        [TestCase(Language.Python, new[] { 270d, 260d, 250d }, 500, 1, 10)]
         [TestCase(Language.CSharp, new[] { 230d, 240d, 250d }, 50000, 0, 0)]
         [TestCase(Language.Python, new[] { 230d, 240d, 250d }, 50000, 0, 0)]
         public void OrdersAreSubmittedWhenRequiredForTargetsToExecute(
