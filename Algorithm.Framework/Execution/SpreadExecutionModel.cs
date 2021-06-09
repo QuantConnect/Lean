@@ -66,15 +66,12 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     // calculate remaining quantity to be ordered
                     var unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target);
 
-                    // get security object and pricing
+                    // get security object
                     var security = algorithm.Securities[symbol];
-                    var lastPrice = security.Price;
-                    var bidPrice = security.BidPrice;
-                    var askPrice = security.AskPrice;
 
                     // check order entry conditions
                     // Has to be in opening hours of exchange to avoid extreme spread in OTC period
-                    if (PriceIsFavorable(lastPrice, bidPrice, askPrice) && (unorderedQuantity != 0) && security.Exchange.ExchangeOpen)
+                    if (PriceIsFavorable(security) && (unorderedQuantity != 0))
                         {
                             algorithm.MarketOrder(symbol, unorderedQuantity);
                         }
@@ -87,10 +84,10 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <summary>
         /// Determines if the current spread is equal or tighter than preset level
         /// </summary>
-        protected virtual bool PriceIsFavorable(decimal lastPrice, decimal bidPrice, decimal askPrice)
+        protected virtual bool PriceIsFavorable(Security security)
         {   
             // Price has to be larger than zero to avoid zero division error, or negative price causing the spread percentage lower than preset value by accident
-            if ((security.Price > 0) && ((security.AskPrice - security.BidPrice)/security.Price <= _acceptingSpreadPercent))
+            if (security.Exchange.ExchangeOpen && (security.Price > 0) && ((security.AskPrice - security.BidPrice)/security.Price <= _acceptingSpreadPercent))
             {
                 return true;
             }
