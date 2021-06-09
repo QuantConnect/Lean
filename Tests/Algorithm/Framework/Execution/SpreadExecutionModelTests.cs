@@ -139,20 +139,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
         private static IExecutionModel GetExecutionModel(Language language)
         {
-            const int period = 2;
-            const decimal deviations = 1.5m;
+            const decimal acceptingSpreadPercent = 0.005m;
 
             if (language == Language.Python)
             {
                 using (Py.GIL())
                 {
-                    const string name = nameof(StandardDeviationExecutionModel);
+                    const string name = nameof(SpreadExecutionModel);
                     var instance = Py.Import(name).GetAttr(name).Invoke(period.ToPython(), deviations.ToPython());
                     return new ExecutionModelPythonWrapper(instance);
                 }
             }
 
-            return new StandardDeviationExecutionModel(period, deviations);
+            return new SpreadExecutionModel(period, deviations);
         }
     }
 }
