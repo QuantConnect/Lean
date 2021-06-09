@@ -304,7 +304,8 @@ namespace QuantConnect.Lean.Engine.Results
                         }
                         StoreStatusFile(
                             runtimeStatistics,
-                            holdings,
+                            // only store holdings we are invested in
+                            holdings.Where(pair => pair.Value.Quantity != 0).ToDictionary(pair => pair.Key, pair => pair.Value),
                             chartComplete,
                             new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord),
                             serverStatistics);
@@ -382,9 +383,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         private void SetNextStatusUpdate()
         {
-            // Update the status json file each day at 1am UTC
-            // after the daily performance has been sampled
-            _nextStatusUpdate = DateTime.UtcNow.Date.AddDays(1).AddHours(1);
+            // Update the status json file every hour
+            _nextStatusUpdate = DateTime.UtcNow.AddHours(1);
         }
 
         /// <summary>
