@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {   
             // Has to be in opening hours of exchange to avoid extreme spread in OTC period
             // Price has to be larger than zero to avoid zero division error, or negative price causing the spread percentage lower than preset value by accident
-            if (security.Exchange.ExchangeOpen && (security.Price > 0) && ((security.AskPrice - security.BidPrice)/security.Price <= _acceptingSpreadPercent))
+            if (security.Exchange.ExchangeOpen && (security.Price > 0) && (security.AskPrice > 0) && (security.BidPrice > 0) && ((security.AskPrice - security.BidPrice)/security.Price <= _acceptingSpreadPercent))
             {
                 return true;
             }
