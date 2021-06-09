@@ -658,6 +658,14 @@ namespace QuantConnect.Interfaces
         void SetHistoryProvider(IHistoryProvider historyProvider);
 
         /// <summary>
+        /// Get the last known price using the history provider.
+        /// Useful for seeding securities with the correct price
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
+        BaseData GetLastKnownPrice(Security security);
+
+        /// <summary>
         /// Set the runtime error
         /// </summary>
         /// <param name="exception">Represents error that occur during execution</param>

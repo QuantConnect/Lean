@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 using Fasterflect;
 using Newtonsoft.Json;
+using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.InteractiveBrokers;
@@ -433,17 +434,27 @@ namespace QuantConnect.Lean.Engine.Setup
                     var exchangeTime = utcNow.ConvertFromUtc(security.Exchange.TimeZone);
 
                     security.Holdings.SetHoldings(holding.AveragePrice, holding.Quantity);
-                    security.SetMarketPrice(new TradeBar
+
+                    if (holding.MarketPrice == 0)
                     {
-                        Time = exchangeTime,
-                        Open = holding.MarketPrice,
-                        High = holding.MarketPrice,
-                        Low = holding.MarketPrice,
-                        Close = holding.MarketPrice,
-                        Volume = 0,
-                        Symbol = holding.Symbol,
-                        DataType = MarketDataType.TradeBar
-                    });
+                        // try warming current market price
+                        holding.MarketPrice = algorithm.GetLastKnownPrice(security)?.Price ?? 0;
+                    }
+
+                    if (holding.MarketPrice != 0)
+                    {
+                        security.SetMarketPrice(new TradeBar
+                        {
+                            Time = exchangeTime,
+                            Open = holding.MarketPrice,
+                            High = holding.MarketPrice,
+                            Low = holding.MarketPrice,
+                            Close = holding.MarketPrice,
+                            Volume = 0,
+                            Symbol = holding.Symbol,
+                            DataType = MarketDataType.TradeBar
+                        });
+                    }
                 }
             }
             catch (Exception err)
