@@ -151,7 +151,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 }
             }
 
-            return new SpreadExecutionModel(period, deviations);
+            return new SpreadExecutionModel(acceptingSpreadPercent);
         }
     }
 }
