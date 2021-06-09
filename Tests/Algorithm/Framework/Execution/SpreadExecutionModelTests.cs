@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Moq;
-using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
@@ -26,7 +25,6 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -63,46 +61,36 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             Assert.AreEqual(0, actualOrdersSubmitted.Count);
         }
 
-        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, 240, 1, 10)]
-        [TestCase(Language.CSharp, new[] { 250d, 250d, 250d }, 250, 0, 0)]
-        [TestCase(Language.Python, new[] { 270d, 260d, 250d }, 240, 1, 10)]
-        [TestCase(Language.Python, new[] { 250d, 250d, 250d }, 250, 0, 0)]
+        [TestCase(Language.CSharp, 240, 1, 10)]
+        [TestCase(Language.CSharp, 250, 0, 0)]
+        [TestCase(Language.Python, 240, 1, 10)]
+        [TestCase(Language.Python, 250, 0, 0)]
         public void OrdersAreSubmittedWhenRequiredForTargetsToExecute(
             Language language,
-            double[] historicalPrices,
             decimal currentPrice,
             int expectedOrdersSubmitted,
             decimal expectedTotalQuantity)
         {
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
-            var time = new DateTime(2018, 8, 2, 16, 0, 0);
-            var historyProvider = new Mock<IHistoryProvider>();
-            historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns(historicalPrices.Select((x,i) =>
-                    new Slice(time.AddMinutes(i),
-                        new List<BaseData>
-                        {
-                            new TradeBar
-                            {
-                                Time = time.AddMinutes(i),
-                                Symbol = Symbols.AAPL,
-                                Open = Convert.ToDecimal(x),
-                                High = Convert.ToDecimal(x),
-                                Low = Convert.ToDecimal(x),
-                                Close = Convert.ToDecimal(x),
-                                Volume = 100m
-                            }
-                        })));
+            var time = new DateTime(2018, 8, 2, 14, 0, 0);
 
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
-            algorithm.SetHistoryProvider(historyProvider.Object);
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetDateTime(time.AddMinutes(5));
 
             var security = algorithm.AddEquity(Symbols.AAPL.Value);
-            security.SetMarketPrice(new TradeBar { Value = currentPrice });
+            security.SetMarketPrice(new TradeBar { Value = 250 });
+            // pushing the ask higher will cause the spread the widen and no trade to happen
+            var ask = expectedOrdersSubmitted == 0 ? currentPrice * 1.1m : currentPrice;
+            security.SetMarketPrice(new QuoteBar
+            {
+                Time = time,
+                Symbol = Symbols.AAPL,
+                Ask = new Bar(ask, ask, ask, ask),
+                Bid = new Bar(currentPrice, currentPrice, currentPrice, currentPrice)
+            });
 
             algorithm.SetFinishedWarmingUp();
 
@@ -134,13 +122,64 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
         }
 
-        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, MarketDataType.TradeBar)]
-        [TestCase(Language.Python, new[] { 250d, 250d, 250d }, MarketDataType.TradeBar)]
-        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, MarketDataType.QuoteBar)]
-        [TestCase(Language.Python, new[] { 250d, 250d, 250d }, MarketDataType.QuoteBar)]
+        [TestCase(Language.CSharp, 1, 10, true)]
+        [TestCase(Language.Python, 1, 10, true)]
+        [TestCase(Language.CSharp, 0, 0, false)]
+        [TestCase(Language.Python, 0, 0, false)]
+        public void FillsOnTradesOnlyRespectingExchangeOpen(Language language, int expectedOrdersSubmitted, decimal expectedTotalQuantity, bool exchangeOpen)
+        {
+            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
+
+            var time = new DateTime(2018, 8, 2, 0, 0, 0);
+            if (exchangeOpen)
+            {
+                time = time.AddHours(14);
+            }
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SetPandasConverter();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetDateTime(time.AddMinutes(5));
+
+            var security = algorithm.AddEquity(Symbols.AAPL.Value);
+            security.SetMarketPrice(new TradeBar { Value = 250 });
+
+            algorithm.SetFinishedWarmingUp();
+
+            var orderProcessor = new Mock<IOrderProcessor>();
+            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
+                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+                .Returns(new List<Order>());
+            algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
+
+            var model = GetExecutionModel(language);
+            algorithm.SetExecution(model);
+
+            var changes = new SecurityChanges(new[] { security }, Enumerable.Empty<Security>());
+            model.OnSecuritiesChanged(algorithm, changes);
+
+            var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
+            model.Execute(algorithm, targets);
+
+            Assert.AreEqual(expectedOrdersSubmitted, actualOrdersSubmitted.Count);
+            Assert.AreEqual(expectedTotalQuantity, actualOrdersSubmitted.Sum(x => x.Quantity));
+
+            if (actualOrdersSubmitted.Count == 1)
+            {
+                var request = actualOrdersSubmitted[0];
+                Assert.AreEqual(expectedTotalQuantity, request.Quantity);
+                Assert.AreEqual(algorithm.UtcTime, request.Time);
+            }
+        }
+
+        [TestCase(Language.CSharp, MarketDataType.TradeBar)]
+        [TestCase(Language.Python, MarketDataType.TradeBar)]
+        [TestCase(Language.CSharp, MarketDataType.QuoteBar)]
+        [TestCase(Language.Python, MarketDataType.QuoteBar)]
         public void OnSecuritiesChangeDoesNotThrow(
             Language language,
-            double[] historicalPrices,
             MarketDataType marketDataType)
         {
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
@@ -160,13 +199,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 }
             };
 
-            var historyProvider = new Mock<IHistoryProvider>();
-            historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns(historicalPrices.Select((x, i) => new Slice(time.AddMinutes(i), new List<BaseData> { func(x, i) })));
-
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
-            algorithm.SetHistoryProvider(historyProvider.Object);
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetDateTime(time.AddMinutes(5));
 

@@ -14,21 +14,16 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Indicators import *
-from QuantConnect.Data import *
-from QuantConnect.Data.Market import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
-import numpy as np
 
 class SpreadExecutionModel(ExecutionModel):
     '''Execution model that submits orders while the current pread is tight.'''
@@ -57,12 +52,12 @@ class SpreadExecutionModel(ExecutionModel):
                 # calculate remaining quantity to be ordered
                 unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
                 
-                # get security information
-                security = algorithm.Securities[symbol]
-                
                 # check order entry conditions
-                if unorderedQuantity != 0 and self.SpreadIsFavorable(security):
-                    algorithm.MarketOrder(symbol, unorderedQuantity)
+                if unorderedQuantity != 0:
+                    # get security information
+                    security = algorithm.Securities[symbol]
+                    if self.SpreadIsFavorable(security):
+                        algorithm.MarketOrder(symbol, unorderedQuantity)
 
             self.targetsCollection.ClearFulfilled(algorithm)
             
@@ -70,8 +65,6 @@ class SpreadExecutionModel(ExecutionModel):
         '''Determines if the spread is in desirable range.'''
         # Price has to be larger than zero to avoid zero division error, or negative price causing the spread percentage < 0 by error
         # Has to be in opening hours of exchange to avoid extreme spread in OTC period
-        if security.Exchange.ExchangeOpen and security.Price > 0 and security.AskPrice > 0 and security.BidPrice > 0 and (security.AskPrice - security.BidPrice) / security.Price <= self.acceptingSpreadPercent:
-            return True
-            
-        return False
-        
+        return security.Exchange.ExchangeOpen \
+            and security.Price > 0 and security.AskPrice > 0 and security.BidPrice > 0 \
+            and (security.AskPrice - security.BidPrice) / security.Price <= self.acceptingSpreadPercent

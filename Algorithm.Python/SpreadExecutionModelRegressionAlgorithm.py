@@ -14,6 +14,7 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from System import *
@@ -25,7 +26,6 @@ from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.RsiAlphaModel import RsiAlphaModel
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Execution.SpreadExecutionModel import SpreadExecutionModel
-from datetime import timedelta
 
 ### <summary>
 ### Regression algorithm for the SpreadExecutionModel.
@@ -41,12 +41,8 @@ class SpreadExecutionModelRegressionAlgorithm(QCAlgorithm):
     submit orders only when the price is on desirably tight spread.'''
 
     def Initialize(self):
-
-        self.UniverseSettings.Resolution = Resolution.Minute
-
         self.SetStartDate(2013,10,7)
         self.SetEndDate(2013,10,11)
-        self.SetCash(1000000)
 
         self.SetUniverseSelection(ManualUniverseSelectionModel([
             Symbol.Create('AIG', SecurityType.Equity, Market.USA),
