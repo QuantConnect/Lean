@@ -39,12 +39,6 @@ namespace QuantConnect.Data.Custom.Fred
                 "fred",
                 $"{config.Symbol.Value.ToLowerInvariant()}.csv");
 
-            if (isLiveMode && !File.Exists(localFilePath))
-            {
-                return new SubscriptionDataSource($"http://cache.quantconnect.com/alternative/fred/{config.Symbol.Value.ToLowerInvariant()}.csv",
-                    SubscriptionTransportMedium.RemoteFile);
-            }
-
             return new SubscriptionDataSource(localFilePath, SubscriptionTransportMedium.LocalFile);
         }
 

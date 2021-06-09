@@ -51,11 +51,6 @@ namespace QuantConnect.Data.Custom.CBOE
                 "cboe",
                 $"{config.Symbol.Value.ToLowerInvariant()}.csv");
 
-            if (isLiveMode && !File.Exists(localFilePath))
-            {
-                return new SubscriptionDataSource($"http://cache.quantconnect.com/alternative/cboe/{config.Symbol.Value.ToLowerInvariant()}.csv", SubscriptionTransportMedium.RemoteFile);
-            }
-
             return new SubscriptionDataSource(localFilePath, SubscriptionTransportMedium.LocalFile);
         }
 

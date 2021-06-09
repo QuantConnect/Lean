@@ -144,11 +144,6 @@ namespace QuantConnect.Data.Custom.VIXCentral
                 "vixcentral",
                 $"{config.Symbol.Value.ToLowerInvariant()}_contango.csv");
 
-            if (isLiveMode && !File.Exists(localFilePath))
-            {
-                return new SubscriptionDataSource($"http://cache.quantconnect.com/alternative/vixcentral/{config.Symbol.Value.ToLowerInvariant()}_contango.csv", SubscriptionTransportMedium.RemoteFile);
-            }
-
             return new SubscriptionDataSource(localFilePath, SubscriptionTransportMedium.LocalFile);
         }
 
