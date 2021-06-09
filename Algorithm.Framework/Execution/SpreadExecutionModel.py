@@ -26,14 +26,16 @@ from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 
 class SpreadExecutionModel(ExecutionModel):
-    '''Execution model that submits orders while the current pread is tight.'''
+    '''Execution model that submits orders while the current pread is tight.
+       Note this execution model will not work using Resolution.Daily since Exchange.ExchangeOpen will be false, suggested resolution is Minute
+    '''
 
     def __init__(self, acceptingSpreadPercent=0.005):
         '''Initializes a new instance of the SpreadExecutionModel class'''
         self.targetsCollection = PortfolioTargetCollection()
         
         # Gets or sets the maximum spread compare to current price in percentage.
-        self.acceptingSpreadPercent = acceptingSpreadPercent
+        self.acceptingSpreadPercent = Math.Abs(acceptingSpreadPercent)
 
     def Execute(self, algorithm, targets):
         '''Executes market orders if the spread percentage to price is in desirable range.

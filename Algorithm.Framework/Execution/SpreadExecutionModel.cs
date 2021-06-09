@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -22,6 +23,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// <summary>
     /// Execution model that submits orders while the current spread is in desirably tight extent.
     /// </summary>
+    /// <remarks>Note this execution model will not work using <see cref="Resolution.Daily"/>
+    /// since Exchange.ExchangeOpen will be false, suggested resolution is <see cref="Resolution.Minute"/></remarks>
     public class SpreadExecutionModel : ExecutionModel
     {
         private readonly decimal _acceptingSpreadPercent;
@@ -33,7 +36,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="acceptingSpreadPercent">Maximum spread accepted comparing to current price in percentage.</param>
         public SpreadExecutionModel(decimal acceptingSpreadPercent = 0.005m)
         {
-            _acceptingSpreadPercent = acceptingSpreadPercent;
+            _acceptingSpreadPercent = Math.Abs(acceptingSpreadPercent);
             _targetsCollection = new PortfolioTargetCollection();
         }
 
