@@ -70,7 +70,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     var security = algorithm.Securities[symbol];
 
                     // check order entry conditions
-                    // Has to be in opening hours of exchange to avoid extreme spread in OTC period
                     if (PriceIsFavorable(security) && (unorderedQuantity != 0))
                         {
                             algorithm.MarketOrder(symbol, unorderedQuantity);
@@ -86,6 +85,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         protected virtual bool PriceIsFavorable(Security security)
         {   
+            // Has to be in opening hours of exchange to avoid extreme spread in OTC period
             // Price has to be larger than zero to avoid zero division error, or negative price causing the spread percentage lower than preset value by accident
             if (security.Exchange.ExchangeOpen && (security.Price > 0) && ((security.AskPrice - security.BidPrice)/security.Price <= _acceptingSpreadPercent))
             {
