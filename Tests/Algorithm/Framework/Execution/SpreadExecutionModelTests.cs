@@ -120,9 +120,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var changes = new SecurityChanges(new[] { security }, Enumerable.Empty<Security>());
             model.OnSecuritiesChanged(algorithm, changes);
             
-            algorithm.History(new List<Symbol> { security.Symbol }, historicalPrices.Length, Resolution.Minute)
-                .PushThroughConsolidators(symbol => algorithm.Securities[symbol].Subscriptions.Single(s=>s.TickType==LeanData.GetCommonTickType(SecurityType.Equity)).Consolidators.First());
-
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
             model.Execute(algorithm, targets);
 
@@ -146,7 +143,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 using (Py.GIL())
                 {
                     const string name = nameof(SpreadExecutionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke(period.ToPython(), deviations.ToPython());
+                    var instance = Py.Import(name).GetAttr(name).Invoke(acceptingSpreadPercent.ToPython());
                     return new ExecutionModelPythonWrapper(instance);
                 }
             }
