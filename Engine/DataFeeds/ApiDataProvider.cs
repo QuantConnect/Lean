@@ -34,26 +34,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ApiDataProvider : DefaultDataProvider
     {
+        private static readonly int DataUpdatePeriod = Config.GetInt("api-data-update-period", 1);
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _organizationId = Config.Get("job-organization-id");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
+        private decimal _purchaseLimit = Config.GetValue("data-purchase-limit", decimal.MaxValue); //QCC
+
         private readonly ConcurrentDictionary<string, string> _currentDownloads;
         private readonly HashSet<SecurityType> _unsupportedSecurityType;
+        private readonly DataPricesList _dataPrices;
+        private readonly Api.Api _api;
         private readonly bool _subscribedToEquityMapAndFactorFiles;
         private volatile bool _invalidSecurityTypeLog;
-        private readonly DataPricesList _dataPrices;
-
-        /// <summary>
-        /// Data Purchase limit measured in QCC (QuantConnect Credits)
-        /// </summary>
-        private decimal _purchaseLimit = Config.GetValue("data-purchase-limit", decimal.MaxValue);
-
-        /// <summary>
-        /// Period to re-download 
-        /// </summary>
-        private static readonly int DownloadPeriod = Config.GetInt("api-data-update-period", 1);
-        private readonly Api.Api _api;
 
         /// <summary>
         /// Initialize a new instance of the <see cref="ApiDataProvider"/>
@@ -243,7 +236,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the file is out of date</returns>
         private static bool IsOutOfDate(string filepath)
         {
-            return !IsDateBased(filepath) && DateTime.Now - TimeSpan.FromDays(DownloadPeriod) > File.GetLastWriteTime(filepath);
+            return !IsDateBased(filepath) && DateTime.Now - TimeSpan.FromDays(DataUpdatePeriod) > File.GetLastWriteTime(filepath);
         }
 
         /// <summary>
