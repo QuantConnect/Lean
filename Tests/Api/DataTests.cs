@@ -130,6 +130,7 @@ namespace QuantConnect.Tests.API
         /// <param name="directory"></param>
         [TestCase("forex/oanda/minute/eurusd/")]
         [TestCase("forex\\oanda\\minute\\eurusd\\")]
+        [TestCase("equity/usa/shortable/")]
         public void GetDataListings(string directory)
         {
             var dataList = ApiClient.ReadDataDirectory(directory);

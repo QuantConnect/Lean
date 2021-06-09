@@ -78,12 +78,12 @@ namespace QuantConnect.Tests.Engine.DataProviders
         [TestCase("forex/oanda/minute/eurusd/20140501_quote.zip", 10, false)]       // Date based Forex minute data
         [TestCase("forex/oanda/second/eurusd/20140501_quote.zip", 10, false)]       // Date based Forex second data
         [TestCase("forex/oanda/tick/eurusd/20140501_quote.zip", 10, false)]         // Date based Forex tick data
-        // Future Cases
+        // Future Cases ** All False because Unsupported
         [TestCase("future/cboe/margins/VX.csv", 0, false)]                           // Fresh Margins data
-        [TestCase("future/cboe/margins/VX.csv", 10, true)]                          // Stale Margins data
+        [TestCase("future/cboe/margins/VX.csv", 10, false)]                          // Stale Margins data
         [TestCase("future/comex/minute/gc/20131007_openinterest.zip", 10, false)]   // Date based minute data
         [TestCase("future/comex/tick/gc/20131007_openinterest.zip", 10, false)]     // Date based tick data
-        // Future Option Cases
+        // Future Option Cases ** All False because Unsupported
         [TestCase("futureoption/cme/minute/es/20200320/20200105_quote_american.zip", 10, false)]   // Date based minute data
         // Index Cases / Index Option Cases *Not included because not allow to download
         // Option Cases
@@ -119,8 +119,8 @@ namespace QuantConnect.Tests.Engine.DataProviders
         [TestCase("equity/usa/map_files/map_files_20210601.zip")]
         [TestCase("crypto/gdax/daily/btcusd_quote.zip")]
         [TestCase("crypto/bitfinex/hour/ethusd_quote.zip")]
-        [TestCase("option/usa/minute/aapl/20210601_openinterest_american.zip", false)] // Unable to distribute
-        [TestCase("future/sgx/margins/IN.csv")]
+        [TestCase("option/usa/minute/aapl/20210601_openinterest_american.zip")]
+        [TestCase("future/sgx/margins/IN.csv", false)] // Futures not supported 
         public void DownloadFiles(string file, bool expectedToExist = true)
         {
             var path = Path.Combine(Globals.DataFolder, file);

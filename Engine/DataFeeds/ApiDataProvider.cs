@@ -188,18 +188,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // Some security types can't be downloaded, lets attempt to extract that information
-            if (LeanData.TryParsePath(filePath, out SecurityType securityType, out _))
+            if (LeanData.TryParseSecurityType(filePath, out SecurityType securityType) && _unsupportedSecurityType.Contains(securityType))
             {
-                if (_unsupportedSecurityType.Contains(securityType))
+                if (!_invalidSecurityTypeLog)
                 {
-                    if (!_invalidSecurityTypeLog)
-                    {
-                        // let's log this once. Will still use any existing data on disk
-                        _invalidSecurityTypeLog = true;
-                        Log.Error($"ApiDataProvider(): does not support security types: {string.Join(", ", _unsupportedSecurityType)}");
-                    }
-                    return false;
+                    // let's log this once. Will still use any existing data on disk
+                    _invalidSecurityTypeLog = true;
+                    Log.Error($"ApiDataProvider(): does not support security types: {string.Join(", ", _unsupportedSecurityType)}");
                 }
+                return false;
             }
 
             // Only download if it doesn't exist or is out of date.
@@ -256,11 +253,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if this file is EquitiesAux</returns>
         private static bool IsEquitiesAux(string filepath)
         {
-            if (filepath == null)
-            {
-                return false;
-            }
-
             return filepath.Contains("map_files", StringComparison.InvariantCulture)
                 || filepath.Contains("factor_files", StringComparison.InvariantCulture)
                 || filepath.Contains("fundamental", StringComparison.InvariantCulture)
