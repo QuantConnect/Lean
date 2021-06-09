@@ -67,10 +67,10 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     var unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target);
 
                     // get security object and pricing
-                    var security = algorithm.Securities[symbol]
-                    var lastPrice = security.Price
-                    var bidPrice = security.BidPrice
-                    var askPrice = security.AskPrice
+                    var security = algorithm.Securities[symbol];
+                    var lastPrice = security.Price;
+                    var bidPrice = security.BidPrice;
+                    var askPrice = security.AskPrice;
 
                     // check order entry conditions
                     // Has to be in opening hours of exchange to avoid extreme spread in OTC period
