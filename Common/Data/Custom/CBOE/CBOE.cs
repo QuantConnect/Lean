@@ -45,20 +45,18 @@ namespace QuantConnect.Data.Custom.CBOE
         /// <returns></returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            if (isLiveMode)
+            var localFilePath = Path.Combine(
+                Globals.DataFolder,
+                "alternative",
+                "cboe",
+                $"{config.Symbol.Value.ToLowerInvariant()}.csv");
+
+            if (isLiveMode && !File.Exists(localFilePath))
             {
                 return new SubscriptionDataSource($"http://cache.quantconnect.com/alternative/cboe/{config.Symbol.Value.ToLowerInvariant()}.csv", SubscriptionTransportMedium.RemoteFile);
             }
 
-            return new SubscriptionDataSource(
-                Path.Combine(
-                    Globals.DataFolder,
-                    "alternative",
-                    "cboe",
-                    $"{config.Symbol.Value.ToLowerInvariant()}.csv"
-                ),
-                SubscriptionTransportMedium.LocalFile
-            );
+            return new SubscriptionDataSource(localFilePath, SubscriptionTransportMedium.LocalFile);
         }
 
         /// <summary>
