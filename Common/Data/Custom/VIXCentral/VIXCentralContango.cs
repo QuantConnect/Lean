@@ -142,7 +142,7 @@ namespace QuantConnect.Data.Custom.VIXCentral
                 Globals.DataFolder,
                 "alternative",
                 "vixcentral",
-                $"{config.Symbol.Value.ToLowerInvariant()}_contango.csv");
+                "vix_contango.csv");
 
             return new SubscriptionDataSource(localFilePath, SubscriptionTransportMedium.LocalFile);
         }
