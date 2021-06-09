@@ -41,7 +41,7 @@ namespace QuantConnect.Data.Shortable
         public LocalDiskShortableProvider(SecurityType securityType, string brokerage, string market)
         {
             var shortableDataDirectory = Path.Combine(Globals.DataFolder, securityType.SecurityTypeToLower(), market, "shortable", brokerage.ToLowerInvariant());
-            _shortableDataDirectory = Directory.Exists(shortableDataDirectory) ? new DirectoryInfo(shortableDataDirectory) : null;
+            _shortableDataDirectory = Directory.CreateDirectory(shortableDataDirectory);
         }
 
         /// <summary>
@@ -52,10 +52,6 @@ namespace QuantConnect.Data.Shortable
         public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
         {
             var allSymbols = new Dictionary<Symbol, long>();
-            if (_shortableDataDirectory == null)
-            {
-                return allSymbols;
-            }
 
             // Check backwards up to one week to see if we can source a previous file.
             // If not, then we return a list of all Symbols with quantity set to zero.
