@@ -62,12 +62,12 @@ class SpreadExecutionModel(ExecutionModel):
                 
                 # check order entry conditions
                 # Has to be in opening hours of exchange to avoid extreme spread in OTC period
-                if unorderedQuantity != 0 and self.SpreadIsFavorable(security, symbol):
+                if unorderedQuantity != 0 and self.SpreadIsFavorable(security):
                     algorithm.MarketOrder(symbol, unorderedQuantity)
 
             self.targetsCollection.ClearFulfilled(algorithm)
             
-    def SpreadIsFavorable(self, security, symbol):
+    def SpreadIsFavorable(self, security):
         '''Determines if the spread is in desirable range.'''
         # Price has to be larger than zero to avoid zero division error, or negative price causing the spread percentage < 0 by error
         if security.Exchange.ExchangeOpen and security.Price > 0 and (security.AskPrice - security.BidPrice) / security.Price <= self.acceptingSpreadPercent:
