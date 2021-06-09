@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.IsFalse(result.Any());
         }
 
-        [Test]
+        [Test, Ignore("Failing due to timeout, track issue at #5645")]
         public void LiveOptionChainProviderReturnsFutureOptionData()
         {
             var now = DateTime.Now;
@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             }
         }
 
-        [Test]
+        [Test, Ignore("Failing due to timeout, track issue at #5645")]
         public void LiveOptionChainProviderReturnsNoDataForOldFuture()
         {
             var now = DateTime.Now;
