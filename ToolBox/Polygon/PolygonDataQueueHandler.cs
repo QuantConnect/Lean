@@ -98,7 +98,7 @@ namespace QuantConnect.ToolBox.Polygon
         {
             if (streamingEnabled)
             {
-                foreach (var securityType in new[] { SecurityType.Equity /*, SecurityType.Forex, SecurityType.Crypto */})
+                foreach (var securityType in new[] { SecurityType.Equity, SecurityType.Forex, SecurityType.Crypto })
                 {
                     var client = new PolygonWebSocketClientWrapper(_apiKey, _symbolMapper, securityType, OnMessage);
                     _webSocketClientWrappers.Add(securityType, client);
