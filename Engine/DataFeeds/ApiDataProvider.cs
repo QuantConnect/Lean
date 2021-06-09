@@ -25,6 +25,7 @@ using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -33,26 +34,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ApiDataProvider : DefaultDataProvider
     {
+        private static readonly int DataUpdatePeriod = Config.GetInt("api-data-update-period", 1);
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _organizationId = Config.Get("job-organization-id");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
+        private decimal _purchaseLimit = Config.GetValue("data-purchase-limit", decimal.MaxValue); //QCC
+
         private readonly ConcurrentDictionary<string, string> _currentDownloads;
         private readonly HashSet<SecurityType> _unsupportedSecurityType;
+        private readonly DataPricesList _dataPrices;
+        private readonly Api.Api _api;
         private readonly bool _subscribedToEquityMapAndFactorFiles;
         private volatile bool _invalidSecurityTypeLog;
-        private readonly DataPricesList _dataPrices;
-
-        /// <summary>
-        /// Data Purchase limit measured in QCC (QuantConnect Credits)
-        /// </summary>
-        private decimal _purchaseLimit = Config.GetValue("data-purchase-limit", decimal.MaxValue);
-
-        /// <summary>
-        /// Period to re-download 
-        /// </summary>
-        private static readonly int DownloadPeriod = Config.GetInt("api-data-update-period", 1);
-        private readonly Api.Api _api;
 
         /// <summary>
         /// Initialize a new instance of the <see cref="ApiDataProvider"/>
@@ -174,16 +168,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Determine if the file is out of date based on configuration and needs to be updated
+        /// Main filter to determine if this file needs to be downloaded
         /// </summary>
-        /// <param name="resolution">Data resolution</param>
-        /// <param name="filepath">Path to the file</param>
-        /// <returns>True if the file is out of date</returns>
-        /// <remarks>Files are only "out of date" for Hourly/Daily data because this data is stored all in one file</remarks>
-        public static bool IsOutOfDate(Resolution resolution, string filepath)
+        /// <param name="filePath">File we are looking at</param>
+        /// <returns>True if should download</returns>
+        public bool NeedToDownload(string filePath)
         {
-            return resolution >= Resolution.Hour &&
-                (DateTime.Now - TimeSpan.FromDays(DownloadPeriod)) > File.GetLastWriteTime(filepath);
+            // Ignore null and fine fundamental data requests
+            if (filePath == null || filePath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }).Any(x => x == "fine"))
+            {
+                return false;
+            }
+
+            // Some security types can't be downloaded, lets attempt to extract that information
+            if (LeanData.TryParseSecurityType(filePath, out SecurityType securityType) && _unsupportedSecurityType.Contains(securityType))
+            {
+                if (!_invalidSecurityTypeLog)
+                {
+                    // let's log this once. Will still use any existing data on disk
+                    _invalidSecurityTypeLog = true;
+                    Log.Error($"ApiDataProvider(): does not support security types: {string.Join(", ", _unsupportedSecurityType)}");
+                }
+                return false;
+            }
+
+            // Only download if it doesn't exist or is out of date.
+            // Files are only "out of date" for non date based files (hour, daily, margins, etc.) because this data is stored all in one file
+            var shouldDownload = !File.Exists(filePath) || IsOutOfDate(filePath);
+
+            // Final check; If we want to download and the request requires equity data we need to be sure they are subscribed to map and factor files
+            if (shouldDownload && (securityType == SecurityType.Equity || securityType == SecurityType.Option || IsEquitiesAux(filePath)))
+            {
+                CheckMapFactorFileSubscription();
+            }
+
+            return shouldDownload;
         }
 
         /// <summary>
@@ -206,63 +225,44 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Helper method to determine if this file needs to be downloaded
+        /// Determine if the file is out of date according to our download period.
+        /// Date based files are never out of date (Files with YYYYMMDD)
         /// </summary>
-        /// <param name="filePath">File we are looking at</param>
-        /// <returns>True if should download</returns>
-        private bool NeedToDownload(string filePath)
+        /// <param name="filepath">Path to the file</param>
+        /// <returns>True if the file is out of date</returns>
+        private static bool IsOutOfDate(string filepath)
         {
-            var fileExists = File.Exists(filePath);
-
-            if (CanParsePath(filePath) && LeanData.TryParsePath(filePath, out SecurityType securityType, out Resolution resolution))
-            {
-                var shouldDownload = !fileExists || IsOutOfDate(resolution, filePath);
-
-                if (_unsupportedSecurityType.Contains(securityType))
-                {
-                    if (!_invalidSecurityTypeLog)
-                    {
-                        // let's log this once. Will still use any existing data on disk
-                        _invalidSecurityTypeLog = true;
-                        Log.Error($"ApiDataProvider(): does not support security types: {string.Join(", ", _unsupportedSecurityType)}");
-                    }
-                    return false;
-                }
-
-                // If we need to download this, symbol is an equity, and user is not subscribed to map and factor files throw an error
-                if (shouldDownload && (securityType == SecurityType.Equity || securityType == SecurityType.Option))
-                {
-                    CheckMapFactorFileSubscription();
-                }
-
-                return shouldDownload;
-            }
-
-            // For files that can't be parsed or fail to be
-            return !fileExists || (DateTime.Now - TimeSpan.FromDays(DownloadPeriod)) > File.GetLastWriteTime(filePath);
+            return !IsDateBased(filepath) && DateTime.Now - TimeSpan.FromDays(DataUpdatePeriod) > File.GetLastWriteTime(filepath);
         }
 
         /// <summary>
-        /// Helper method to determine if we can parse this path with TryParsePath()
-        /// Used to limit error throwing by calling TryParsePath()
+        /// Helper method to determine if this filepath is Equity Aux data
         /// </summary>
-        /// <param name="filepath">Filepath to check</param>
-        /// <returns>True if can be parsed</returns>
-        private bool CanParsePath(string filepath)
+        /// <param name="filepath"></param>
+        /// <returns>True if this file is EquitiesAux</returns>
+        private static bool IsEquitiesAux(string filepath)
         {
-            // Only not true for these cases
-            var equitiesAuxData = filepath.Contains("map_files", StringComparison.InvariantCulture)
+            return filepath.Contains("map_files", StringComparison.InvariantCulture)
                 || filepath.Contains("factor_files", StringComparison.InvariantCulture)
-                || filepath.Contains("fundamental", StringComparison.InvariantCulture);
-
-            if (equitiesAuxData)
-            {
-                CheckMapFactorFileSubscription();
-            }
-
-            return !equitiesAuxData;
+                || filepath.Contains("fundamental", StringComparison.InvariantCulture)
+                || filepath.Contains("shortable", StringComparison.InvariantCulture);
         }
 
+        /// <summary>
+        /// Helper to determine if file is date based using regex
+        /// Matches a 8 digit value because we expect YYYYMMDD
+        /// </summary>
+        /// <param name="filepath">File to attempt to match against</param>
+        /// <returns>True if matches pattern</returns>
+        private static bool IsDateBased(string filepath)
+        {
+            var fileName = Path.GetFileName(filepath);
+            return Regex.IsMatch(fileName, @"\d{8}");
+        }
+
+        /// <summary>
+        /// Helper to check map and factor file subscription, throws if not subscribed.
+        /// </summary>
         private void CheckMapFactorFileSubscription()
         {
             if(!_subscribedToEquityMapAndFactorFiles)

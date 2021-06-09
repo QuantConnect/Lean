@@ -128,8 +128,17 @@ namespace QuantConnect.Tests.API
         /// Test getting available data listings for directories
         /// </summary>
         /// <param name="directory"></param>
+        [TestCase("alternative/sec/aapl/")]
+        [TestCase("cfd/oanda/daily/")]
+        [TestCase("crypto/gdax/minute/btcusd/")]
+        [TestCase("equity/usa/shortable/")]
         [TestCase("forex/oanda/minute/eurusd/")]
-        [TestCase("forex\\oanda\\minute\\eurusd\\")]
+        [TestCase("forex\\oanda\\minute\\eurusd\\")] //Windows path case
+        [TestCase("future/cbot/minute/zs")]
+        [TestCase("futureoption/comex/minute/og")]
+        [TestCase("index/usa/minute/spx")]
+        [TestCase("indexoption/usa/minute/spx")]
+        [TestCase("option/usa/minute/aapl")]
         public void GetDataListings(string directory)
         {
             var dataList = ApiClient.ReadDataDirectory(directory);

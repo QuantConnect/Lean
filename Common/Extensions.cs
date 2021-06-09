@@ -3093,5 +3093,19 @@ namespace QuantConnect
                 return hashCode;
             }
         }
+
+        /// <summary>
+        /// Read all lines from a stream reader
+        /// </summary>
+        /// <param name="reader">Stream reader to read from</param>
+        /// <returns>Enumerable of lines in stream</returns>
+        public static IEnumerable<string> ReadAllLines(this StreamReader reader)
+        {
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                yield return line;
+            }
+        }
     }
 }

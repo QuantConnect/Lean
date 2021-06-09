@@ -17,8 +17,11 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Future
 {
@@ -34,6 +37,10 @@ namespace QuantConnect.Securities.Future
         private int _marginCurrentIndex;
 
         private readonly Security _security;
+
+        private IDataProvider _dataProvider =
+            Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
+                "DefaultDataProvider"));
 
         /// <summary>
         /// True will enable usage of intraday margins.
@@ -232,7 +239,8 @@ namespace QuantConnect.Securities.Future
         {
             lock (DataFolderSymbolLock)
             {
-                if (!File.Exists(file))
+                var stream = _dataProvider.Fetch(file);
+                if (stream == null)
                 {
                     Log.Trace($"Unable to locate future margin requirements file. Defaulting to zero margin for this symbol. File: {file}");
 
@@ -244,14 +252,20 @@ namespace QuantConnect.Securities.Future
                             };
                 }
 
-                // skip the first header line, also skip #'s as these are comment lines
-
-                return File.ReadLines(file)
-                    .Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x))
-                    .Skip(1)
-                    .Select(FromCsvLine)
-                    .OrderBy(x => x.Date)
-                    .ToArray();
+                MarginRequirementsEntry[] marginRequirementsEntries;
+                using (var streamReader = new StreamReader(stream))
+                {
+                    // skip the first header line, also skip #'s as these are comment lines
+                    marginRequirementsEntries = streamReader.ReadAllLines()
+                        .Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x))
+                        .Skip(1)
+                        .Select(FromCsvLine)
+                        .OrderBy(x => x.Date)
+                        .ToArray();
+                }
+                
+                stream.Dispose();
+                return marginRequirementsEntries;
             }
         }
 

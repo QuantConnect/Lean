@@ -958,33 +958,18 @@ namespace QuantConnect.Util
         /// Parses file name into a <see cref="Security"/> and DateTime
         /// </summary>
         /// <param name="fileName">File name to be parsed</param>
-        /// <param name="securityType">The symbol as parsed from the fileName</param>
-        /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
-        public static bool TryParsePath(string fileName, out SecurityType securityType, out Resolution resolution)
+        /// <param name="securityType">The securityType as parsed from the fileName</param>
+        public static bool TryParseSecurityType(string fileName, out SecurityType securityType)
         {
             securityType = SecurityType.Base;
-            resolution = Resolution.Daily;
 
             try
             {
                 var info = SplitDataPath(fileName);
 
-                // find where the useful part of the path starts - i.e. the securityType
-                var startIndex = info.FindIndex(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
-
-                securityType = ParseDataSecurityType(info[startIndex]);
-
-                if (securityType == SecurityType.Base)
-                {
-                    if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
-                    {
-                        resolution = Resolution.Daily;
-                    }
-                }
-                else
-                {
-                    resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
-                }
+                // find the securityType and parse it
+                var typeString = info.Find(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
+                securityType = ParseDataSecurityType(typeString);
             }
             catch (Exception e)
             {
