@@ -70,6 +70,8 @@ namespace QuantConnect.Tests.Engine.DataProviders
         [TestCase("equity/usa/shortable/testbrokerage/dates/20140325.csv", 3, false)] // Date based shortable files
         [TestCase("equity/usa/shortable/testbrokerage/symbols/aapl.csv", 10, true)] // Symbol based shortable files
         [TestCase("equity/usa/universes/daily/qctest/20131007.csv", 10, false)]     // Date based universe file
+        // Equity Option Cases
+        [TestCase("option/usa/minute/aapl/20140606_openinterest_american.zip", 10, false)]   // Date based minute data
         // Forex Cases
         [TestCase("forex/oanda/daily/eurgbp.zip", 0, false)]                        // Daily fresh Forex data
         [TestCase("forex/oanda/daily/eurgbp.zip", 10, true)]                        // Daily stale Forex data
@@ -85,10 +87,7 @@ namespace QuantConnect.Tests.Engine.DataProviders
         [TestCase("future/comex/tick/gc/20131007_openinterest.zip", 10, false)]     // Date based tick data
         // Future Option Cases ** All False because Unsupported
         [TestCase("futureoption/cme/minute/es/20200320/20200105_quote_american.zip", 10, false)]   // Date based minute data
-        // Index Cases / Index Option Cases *Not included because not allow to download
-        // Option Cases
-        [TestCase("option/usa/minute/aapl/20140606_openinterest_american.zip", 10, false)]   // Date based minute data
-
+        // Index Cases / Index Option Cases *Not included because not allowed to download
         public void ShouldDownloadTest(string file, int days, bool expected)
         {
             // First create our test file and set its time
@@ -112,15 +111,31 @@ namespace QuantConnect.Tests.Engine.DataProviders
             File.Delete(path);
         }
 
-        [TestCase("forex/oanda/minute/eurusd/20131011_quote.zip")]
+        // Alternative
+        [TestCase("alternative/sec/aapl/19980108_8K.zip")]
+        // CFD
+        [TestCase("cfd/oanda/daily/ch20hkd.zip")]
+        // Crypto
+        [TestCase("crypto/gdax/minute/btcusd/20150114_trade.zip")]
+        // Equities
+        [TestCase("equity/usa/shortable/atreyu/dates/20180117.csv")]
         [TestCase("equity/usa/factor_files/tsla.csv")]
         [TestCase("equity/usa/factor_files/factor_files_20210601.zip")]
         [TestCase("equity/usa/map_files/googl.csv")]
         [TestCase("equity/usa/map_files/map_files_20210601.zip")]
-        [TestCase("crypto/gdax/daily/btcusd_quote.zip")]
-        [TestCase("crypto/bitfinex/hour/ethusd_quote.zip")]
-        [TestCase("option/usa/minute/aapl/20210601_openinterest_american.zip")]
-        [TestCase("future/sgx/margins/IN.csv", false)] // Futures not supported 
+        // Equity Options
+        [TestCase("option/usa/minute/aapl/20100603_quote_american.zip")]
+        // Forex
+        [TestCase("forex/oanda/minute/eurusd/20020516_quote.zip")]
+        // Futures          * False because unsupported
+        [TestCase("future/cbot/minute/zs/20090501_trade.zip", false)]
+        [TestCase("future/sgx/margins/IN.csv", false)]
+        // Future Options   * False because unsupported
+        [TestCase("futureoption/comex/minute/og/20120227/20120105_quote_american.zip", false)]
+        // Index            * False because unsupported
+        [TestCase("index/usa/minute/spx/19980217_trade.zip", false)]
+        // Index Options    * False because unsupported
+        [TestCase("indexoption/usa/minute/spx/20100603_quote_european.zip", false)]
         public void DownloadFiles(string file, bool expectedToExist = true)
         {
             var path = Path.Combine(Globals.DataFolder, file);
