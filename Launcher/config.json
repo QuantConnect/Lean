@@ -65,6 +65,10 @@
   "live-data-url": "ws://www.quantconnect.com/api/v2/live/data/",
   "live-data-port": 8020,
 
+  // live portfolio state
+  "live-cash-balance": "",
+  "live-holdings": "[]",
+
   // interactive brokers configuration
   "ib-account": "",
   "ib-user-name": "",
@@ -121,8 +125,6 @@
   "atreyu-username": "",
   "atreyu-password": "",
   "atreyu-client-id": "",
-  "atreyu-cash-balance": "",
-  "atreyu-holdings": "[]",
   "atreyu-broker-mpid": "",
   "atreyu-locate-rqd": "",
 
