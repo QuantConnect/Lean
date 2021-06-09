@@ -19,8 +19,6 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Fasterflect;
-using Newtonsoft.Json;
-using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.InteractiveBrokers;
