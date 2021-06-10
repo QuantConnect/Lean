@@ -31,12 +31,12 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _aapl;
         private const string Ticker = "AAPL";
         private FactorFile _factorFile;
-        private readonly IEnumerator<decimal> _expectedAdjustedVolume = new List<decimal> { 1541213, 761013, 920088, 867077, 542487, 663132, 
-            374927, 379554, 413805, 377622 }.GetEnumerator();
-        private readonly IEnumerator<decimal> _expectedAdjustedAskSize = new List<decimal> { 53900, 1400, 6300, 2100, 1400, 1400, 700, 
-            2100, 3500, 700 }.GetEnumerator();
-        private readonly IEnumerator<decimal> _expectedAdjustedBidSize = new List<decimal> { 700, 2800, 700, 700, 700, 1400, 2800,
-            2100, 7700, 700 }.GetEnumerator();
+        private readonly IEnumerator<decimal> _expectedAdjustedVolume = new List<decimal> { 6164842, 3044047, 3680347, 3468303, 2169943, 2652523,
+            1499707, 1518215, 1655219, 1510487 }.GetEnumerator();
+        private readonly IEnumerator<decimal> _expectedAdjustedAskSize = new List<decimal> { 215600, 5600, 25200, 8400, 5600, 5600, 2800,
+            8400, 14000, 2800 }.GetEnumerator();
+        private readonly IEnumerator<decimal> _expectedAdjustedBidSize = new List<decimal> { 2800, 11200, 2800, 2800, 2800, 5600, 11200,
+            8400, 30800, 2800 }.GetEnumerator();
 
         public override void Initialize()
         {
@@ -177,7 +177,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$5.40"},
+            {"Total Fees", "$21.60"},
             {"Estimated Strategy Capacity", "$42000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
             {"Fitness Score", "0"},
@@ -199,7 +199,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "43a72d9759cdbd442d5b53a44370e579"}
+            {"OrderListHash", "18e41dded4f8cee548ee02b03ffb0814"}
         };
     }
 }
