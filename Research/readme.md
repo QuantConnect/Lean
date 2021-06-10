@@ -1,16 +1,33 @@
 ﻿QuantConnect Research Project
 =============
-Currently we have two ways to use QuantConnect research notebooks, you can either install and run locally or just use our docker image (Recommended).
+Currently we have a few ways to use QuantConnect research notebooks:
+- Lean CLI (Recommended)
+- Use our docker container directly with launch script.
+- Install everything locally and run directly on your OS.
 
-The up to date docker image is available at [quantconnect/research](https://hub.docker.com/repository/docker/quantconnect/research). You can pull this image with `docker pull quantconnect/research`.
+This document will cover the setup, getting started, and known issues.
 
+<br>
 
+# Setup
+Below we cover how to get setup with our three option listed above. 
 
+<br>
 
-# Using the Docker Image
+## Research with Lean CLI (Recommended)
 
-## Starting the Container
-The docker image we created can be started using the included .bat/.sh file in this directory (Lean/Research). These scripts take care of all the work required to get the notebook container setup and started for use. Including launching a browser to the notebook lab environment for you.
+Our research docker image has been integrated with Lean CLI to streamline the process and allow user to use their cloud and local projects in the research environment. Please refer to Lean CLI documentation [here](https://www.quantconnect.com/docs/v2/lean-cli/getting-started/lean-cli) on how to get started.
+
+Lean CLI research specific documentation is found [here](https://www.quantconnect.com/docs/v2/lean-cli/tutorials/research).
+
+We highly recommend using Lean CLI with docker for research but below in [Running Jupter Locally](#running-jupyter-locally) we cover how to install and prepare the environment on your personal desktop. 
+
+<br>
+
+## Using the Docker Image Directly
+The Research image we created can be started using the included .bat/.sh file in this directory (Lean/Research). These scripts take care of all the work required to get the notebook container setup and started for use. Including launching a browser to the notebook lab environment for you.
+
+The included launch script offers automatic download of the latest docker image but the up to date docker image is always available at [quantconnect/research](https://hub.docker.com/repository/docker/quantconnect/research). You can pull this image with `docker pull quantconnect/research`.
 
 From a terminal launch the run_docker_notebook.bat/.sh script; there are a few options on how to launch this:
  1. Launch with no parameters and answer the questions regarding configuration (Press enter for defaults) ex: `./run_docker_notebook.bat`
@@ -32,54 +49,11 @@ Once the docker image starts, the script will attempt to open your browser to th
 
 <br>
 
-## C# Notebook
-When using C# for research notebooks it requires that you load our setup script CSX file `QuantConnect.csx` into your notebook. This will load our QuantConnect libraries into your C# Kernel. In this setup, the file is one directory above the notebooks dir. Be sure to use the following line in your first cell to load in this csx file:
-
-`load "../QuantConnect.csx"`
-
-After this the environment is ready to use; take a look at our reference notebook `KitchenSinkCSharpQuantBookTemplate.ipynb` for an example of how to use our `QuantBook` interface!
-
-<br>
-
-## Python Notebook
-With Python we have a setup script that will automatically load QuantBooks libraries into the Python kernel so there is no need to import them. 
-
-You notebook is ready to use; take a look at our reference notebook `KitchenSinkQuantBookTemplate.ipynb` for an example of how to use our `QuantBook` interface!
-
-<br>
-
-## Using the Web Api from Notebook
-Both of our setup scripts for Python & C# include a instantiated `Api` object under the variable name `api`. Before you can use this api object to interact with the cloud you must edit your config in the **root** of your Notebook directory. Once this has been done once, it does not need to be done again.
-
-In `config.json` add the following entries with your respective values
-```
-job-user-id: 12345, // Your id here
-api-access-token: "token13432", // Your api token here
-```
-
-Once this has been done, you may restart your kernel and begin to use the `api` variable. 
-Reference our examples mentioned above for practical uses of this object.
-
-<br>
-
-## Shutting Down the Notebook Lab
-When you are done with the research environment be sure to stop the container with either **Docker's dashboard** or through the **Docker CLI** with `docker kill LeanResearch`.
-
-<br>
-
-
-## Build a new image
-For most users this will not be necessary, simply use `docker pull quantconnect/research` to get the latest image.
-
-`docker build -t quantconnect/research - < DockerfileJupyter` will build a new docker image using the latest version of lean. To build from particular tag of lean a build arg can be provided, for example `--build-arg LEAN_TAG=8631`.
-
-<br>
-
-# Running Jupyter Locally 
+## Running Jupyter Locally 
 Note: we recommend using the above approach with our Docker container, where the setup and evironment is tested and stable.
 
 Before we enable Jupyter support, follow [Lean installation](https://github.com/QuantConnect/Lean#installation-instructions)
-and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) to get LEAN running Python algorithms in your machine. 
+and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) to get LEAN running Python algorithms on your machine. Then be sure to build Lean at least once before the following. 
 
 **1. Installation:**
    1. Install [JupyterLab](https://pypi.org/project/jupyterlab/):
@@ -104,3 +78,56 @@ and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algor
     cd Lean/Launcher/bin/Debug
     jupyter lab
 ```
+<br>
+
+# Getting Started with Research
+
+## C# Notebook
+When using C# for research notebooks it requires that you load our setup script CSX file `Initialize.csx` into your notebook. This will load our QuantConnect libraries into your C# Kernel. In both docker setups, the file is one directory above the notebooks dir. Be sure to use the following line in your first cell to load in this csx file:
+
+`#load "../Initialize.csx"`
+
+After this the environment is ready to use; take a look at our reference notebook `KitchenSinkCSharpQuantBookTemplate.ipynb` for an example of how to use our `QuantBook` interface!
+
+Note: All Lean namespaces you want to use in your notebook need to be directly added via `using` statements.
+
+<br>
+
+## Python Notebook
+With Python we have a setup script that will automatically load QuantBooks libraries into the Python kernel so there is no need to import them. In our docker image the script should run automatically, but locally you will need to call `%run "start.py"` in the first cell.
+
+You notebook is ready to use; take a look at our reference notebook `KitchenSinkQuantBookTemplate.ipynb` for an example of how to use our `QuantBook` interface!
+
+<br>
+
+## Using the Web Api from Notebook
+Both of our setup scripts for Python & C# include a instantiated `Api` object under the variable name `api`. Before you can use this api object to interact with the cloud you must edit your config in the **root** of your Notebook directory. Once this has been done once, it does not need to be done again.
+
+In `config.json` add the following entries with your respective values
+```
+job-user-id: 12345, // Your id here
+api-access-token: "token13432", // Your api token here
+```
+
+Once this has been done, you may restart your kernel and begin to use the `api` variable. 
+Reference our examples mentioned above for practical uses of this object.
+
+<br>
+
+## Shutting Down the Notebook Lab
+When you are done with the research environment be sure to stop the container with **Docker Dashboard** or via **Docker CLI**.
+
+<br>
+
+
+## Build a new image
+For most users this will not be necessary, simply use `docker pull quantconnect/research` to get the latest image.
+
+`docker build -t quantconnect/research - < DockerfileJupyter` will build a new docker image using the latest version of lean. To build from particular tag of lean a build arg can be provided, for example `--build-arg LEAN_TAG=8631`.
+
+<br>
+
+
+# Known Issues
+- Python research is extremely dependent on the `start.py` script as it is responsible for assigning core clr as the runtime for PythonNet and clr-loader to use for C# library. For local use where the script is not launched automatically by Jupyter, one must call `%run "start.py"` in their first notebook cell for research to work properly. Note that the location of `start.py` is in the launcher bin directory so you may have to use `../start.py` or specify the full path.
+- C# research latest kernel no longer supports using statements outside of the notebook context, meaning that `#load ./QuantConnect.csx` no longer applies QC namespaces to the notebook out of the box. Therefore one must specify the namespace directly in a cell. Our default notebooks include these statements as examples.
