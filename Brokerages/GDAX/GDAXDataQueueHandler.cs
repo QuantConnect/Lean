@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,8 +33,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
         public GDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
-            IPriceProvider priceProvider, IDataAggregator aggregator)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
+            IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job)
         {
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             subscriptionManager.SubscribeImpl += (s,t) =>

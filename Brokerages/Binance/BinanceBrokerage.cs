@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -46,6 +46,7 @@ namespace QuantConnect.Brokerages.Binance
         private readonly RateGate _webSocketRateLimiter = new RateGate(1, TimeSpan.FromMilliseconds(250));
         private long _lastRequestId;
 
+        private LiveNodePacket _job;
         private readonly Timer _keepAliveTimer;
         private readonly Timer _reconnectTimer;
         private readonly BinanceRestApiClient _apiClient;
@@ -57,9 +58,11 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
-        public BinanceBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator)
+        /// <param name="job">The live job packet</param>
+        public BinanceBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
             : base(WebSocketBaseUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, "Binance")
         {
+            _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;
 
@@ -152,6 +155,10 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
+            if (_algorithm.BrokerageModel.AccountType == AccountType.Cash)
+            {
+                return base.GetAccountHoldings(_job?.BrokerageData, _algorithm.Securities.Values);
+            }
             return _apiClient.GetAccountHoldings();
         }
 

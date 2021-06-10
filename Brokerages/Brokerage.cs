@@ -212,7 +212,7 @@ namespace QuantConnect.Brokerages
                 Log.Debug("Brokerage.GetAccountHoldings(): starting...");
             }
 
-            if (brokerageData.Remove("live-holdings", out var value) && !string.IsNullOrEmpty(value))
+            if (brokerageData != null && brokerageData.Remove("live-holdings", out var value) && !string.IsNullOrEmpty(value))
             {
                 // remove the key, we really only want to return the cached value on the first request
                 var result = JsonConvert.DeserializeObject<List<Holding>>(value);
@@ -238,7 +238,7 @@ namespace QuantConnect.Brokerages
                 Log.Debug("Brokerage.GetCashBalance(): starting...");
             }
 
-            if (brokerageData.Remove("live-cash-balance", out var value) && !string.IsNullOrEmpty(value))
+            if (brokerageData != null && brokerageData.Remove("live-cash-balance", out var value) && !string.IsNullOrEmpty(value))
             {
                 // remove the key, we really only want to return the cached value on the first request
                 var result = JsonConvert.DeserializeObject<List<CashAmount>>(value);

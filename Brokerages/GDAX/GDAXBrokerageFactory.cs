@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -48,10 +48,16 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
+            // Sandbox environment for paper trading available using 'wss://ws-feed-public.sandbox.pro.coinbase.com'
             { "gdax-url" , Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com")},
+            // Sandbox environment for paper trading available using 'https://api-public.sandbox.pro.coinbase.com'
+            { "gdax-rest-api", Config.Get("gdax-rest-api", "https://api.pro.coinbase.com")},
             { "gdax-api-secret", Config.Get("gdax-api-secret")},
             { "gdax-api-key", Config.Get("gdax-api-key")},
-            { "gdax-passphrase", Config.Get("gdax-passphrase")}
+            { "gdax-passphrase", Config.Get("gdax-passphrase")},
+
+            // load holdings if available
+            { "live-holdings", Config.Get("live-holdings")},
         };
 
         /// <summary>
@@ -76,7 +82,13 @@ namespace QuantConnect.Brokerages.GDAX
                     throw new Exception($"GDAXBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
             }
 
-            var restClient = new RestClient("https://api.pro.coinbase.com");
+            var restApi = BrokerageData["gdax-rest-api"];
+            if (job.BrokerageData.ContainsKey("gdax-rest-api"))
+            {
+                restApi = job.BrokerageData["gdax-rest-api"];
+            }
+
+            var restClient = new RestClient(restApi);
             var webSocketClient = new WebSocketClientWrapper();
             var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
             var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
@@ -86,7 +98,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 var dataQueueHandler = new GDAXDataQueueHandler(job.BrokerageData["gdax-url"], webSocketClient,
                     restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
-                    job.BrokerageData["gdax-passphrase"], algorithm, priceProvider, aggregator);
+                    job.BrokerageData["gdax-passphrase"], algorithm, priceProvider, aggregator, job);
 
                 Composer.Instance.AddPart<IDataQueueHandler>(dataQueueHandler);
 
@@ -96,7 +108,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 brokerage = new GDAXBrokerage(job.BrokerageData["gdax-url"], webSocketClient,
                     restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
-                    job.BrokerageData["gdax-passphrase"], algorithm, priceProvider, aggregator);
+                    job.BrokerageData["gdax-passphrase"], algorithm, priceProvider, aggregator, job);
             }
 
             return brokerage;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -48,7 +48,10 @@ namespace QuantConnect.Brokerages.Binance
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
             { "binance-api-key", Config.Get("binance-api-key")},
-            { "binance-api-secret", Config.Get("binance-api-secret")}
+            { "binance-api-secret", Config.Get("binance-api-secret")},
+
+            // load holdings if available
+            { "live-holdings", Config.Get("live-holdings")},
         };
 
         /// <summary>
@@ -79,7 +82,8 @@ namespace QuantConnect.Brokerages.Binance
                 job.BrokerageData["binance-api-key"],
                 job.BrokerageData["binance-api-secret"],
                 algorithm,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                job);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;
