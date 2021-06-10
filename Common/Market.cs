@@ -55,12 +55,14 @@ namespace QuantConnect
             Tuple.Create(HitBTC, 19),
             Tuple.Create(OkCoin, 20),
             Tuple.Create(Bitstamp, 21),
-            
+
             Tuple.Create(COMEX, 22),
             Tuple.Create(CME, 23),
             Tuple.Create(SGX, 24),
             Tuple.Create(HKFE, 25),
 
+            Tuple.Create(Ftx, 26),
+            Tuple.Create(GateIo, 27),
         };
 
         static Market()
@@ -130,12 +132,12 @@ namespace QuantConnect
         /// </summary>
         public const string India = "india";
 
-        
+
         /// <summary>
         /// Comex
         /// </summary>
         public const string COMEX = "comex";
-        
+
         /// <summary>
         /// CME
         /// </summary>
@@ -200,6 +202,16 @@ namespace QuantConnect
         /// Bittrex
         /// </summary>
         public const string Bittrex = "bittrex";
+
+        /// <summary>
+        /// FTX
+        /// </summary>
+        public const string Ftx = "ftx";
+
+        /// <summary>
+        /// Gate.io
+        /// </summary>
+        public const string GateIo = "gateio";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.

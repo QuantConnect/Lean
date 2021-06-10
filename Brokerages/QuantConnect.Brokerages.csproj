@@ -81,4 +81,9 @@
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Ccxt\CcxtPythonBridge.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

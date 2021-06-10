@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -173,5 +173,32 @@ namespace QuantConnect.Brokerages
 
             return _symbolMap.ContainsKey(brokerageSymbol);
         }
+
+        /// <summary>
+        /// Returns the symbol properties for a LEAN symbol
+        /// </summary>
+        /// <param name="symbol">The LEAN symbol</param>
+        /// <returns>The symbols properties </returns>
+        public SymbolProperties GetSymbolProperties(Symbol symbol)
+        {
+            if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
+            {
+                throw new ArgumentException($"Invalid symbol: {(symbol == null ? "null" : symbol.Value)}");
+            }
+
+            if (symbol.ID.Market != _market)
+            {
+                throw new ArgumentException($"Invalid market: {symbol.ID.Market}");
+            }
+
+            SymbolProperties symbolProperties;
+            if (!_symbolPropertiesMap.TryGetValue(symbol, out symbolProperties))
+            {
+                throw new ArgumentException($"Unknown symbol: {symbol.Value}/{symbol.SecurityType}/{symbol.ID.Market}");
+            }
+
+            return symbolProperties;
+        }
+
     }
 }
