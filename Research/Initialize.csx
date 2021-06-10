@@ -11,6 +11,7 @@ var parentDirectory = Directory.GetParent(currentDirectory).FullName;
 var directoryToLoad = Directory.GetFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
 
 // Load in all dll's from this directory
+Console.WriteLine($"Initialize.csx: Loading assemblies from {directoryToLoad}");
 foreach (var file in Directory.GetFiles(directoryToLoad, "*.dll"))
 {
     try

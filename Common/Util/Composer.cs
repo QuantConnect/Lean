@@ -58,7 +58,7 @@ namespace QuantConnect.Util
         /// </summary>
         public Composer()
         {
-            // grab assemblies from current executing directory if not defined by 'composer-dll-directory' configuration key
+            // Determine what directory to grab our assemblies from if not defined by 'composer-dll-directory' configuration key
             string primaryDllLookupDirectory;
             var dllDirectoryString = Config.Get("composer-dll-directory", null);
             if (dllDirectoryString == null)
@@ -71,15 +71,22 @@ namespace QuantConnect.Util
                 }
                 else
                 {
-                    // Otherwise use our current working directory.
-                    // helpful for research because kernel appdomain defaults to kernel location
-                    primaryDllLookupDirectory = new DirectoryInfo(Directory.GetCurrentDirectory()).FullName;
+                    // Otherwise check out our parent and current working directory
+                    // this is helpful for research because kernel appdomain defaults to kernel location
+                    var currentDirectory = Directory.GetCurrentDirectory();
+                    var parentDirectory = Directory.GetParent(currentDirectory).FullName;
+
+                    // If our parent directory contains QC Dlls use it, otherwise default to current working directory
+                    // In cloud and CLI research cases we expect the parent directory to contain the Dlls; but locally it's likely current directory
+                    primaryDllLookupDirectory = Directory.GetFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
                 }
             }
             else
             {
                 primaryDllLookupDirectory = new DirectoryInfo(dllDirectoryString).FullName;
             }
+
+            Log.Trace($"Composer(): Loading Assemblies from {primaryDllLookupDirectory}");
 
             var loadFromPluginDir = !string.IsNullOrWhiteSpace(PluginDirectory)
                 && Directory.Exists(PluginDirectory) &&
