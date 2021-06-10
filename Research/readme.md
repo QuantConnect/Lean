@@ -2,8 +2,7 @@
 =============
 Currently we have a few ways to use QuantConnect research notebooks:
 - Lean CLI (Recommended)
-- Use our docker container directly with launch script.
-- Install everything locally and run directly on your OS.
+- Install locally and run directly on your OS.
 
 This document will cover the setup, getting started, and known issues.
 
@@ -21,31 +20,6 @@ Our research docker image has been integrated with Lean CLI to streamline the pr
 Lean CLI research specific documentation is found [here](https://www.quantconnect.com/docs/v2/lean-cli/tutorials/research).
 
 We highly recommend using Lean CLI with docker for research but below in [Running Jupter Locally](#running-jupyter-locally) we cover how to install and prepare the environment on your personal desktop. 
-
-<br>
-
-## Using the Docker Image Directly
-The Research image we created can be started using the included .bat/.sh file in this directory (Lean/Research). These scripts take care of all the work required to get the notebook container setup and started for use. Including launching a browser to the notebook lab environment for you.
-
-The included launch script offers automatic download of the latest docker image but the up to date docker image is always available at [quantconnect/research](https://hub.docker.com/repository/docker/quantconnect/research). You can pull this image with `docker pull quantconnect/research`.
-
-From a terminal launch the run_docker_notebook.bat/.sh script; there are a few options on how to launch this:
- 1. Launch with no parameters and answer the questions regarding configuration (Press enter for defaults) ex: `./run_docker_notebook.bat`
-   
-        *   Enter docker image [default: quantconnect/research:latest]:
-        *   Enter absolute path to Data folder [default: ~yourpathtolean~\Lean\Data\]:
-        *   Enter absolute path to store notebooks [default: ~yourpathtolean~\Lean\Research\Notebooks]:
-
- 2. Using the **docker.cfg** to store args for repeated use; any blank entries will resort to default values! ex: `./run_docker_notebook.bat docker.cfg`
-  
-         IMAGE=quantconnect/research:latest
-         DATA_DIR=
-         NOTEBOOK_DIR=
-
- 3. Inline arguments; anything you don't enter will use the default args! ex: `./run_docker.bat IMAGE=quantconnect/research:latest`
-      *    Accepted args for inline include all listed in the file **docker.cfg**
-
-Once the docker image starts, the script will attempt to open your browser to the Jupyter notebook web app, if this fails open your browser and go to `localhost:8888`
 
 <br>
 
