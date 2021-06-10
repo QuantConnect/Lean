@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -327,6 +327,54 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "lifetime")]
         public string Lifetime { get; private set; }
     }
+
+#pragma warning disable CA1056, CA1054 // URI-like properties should not be strings
+    /// <summary>
+    /// Live algorithm settings for trading with TD Ameritrade
+    /// </summary>
+    public class TDAmeritradeLiveAlgorithmSettings : BaseLiveAlgorithmSettings
+    {
+        /// <summary>
+        /// Contructor for live trading with TD Ameritrade.
+        /// </summary>
+        /// <param name="clientID">Value made in My Apps(https://developer.tdameritrade.com/user/me/apps)</param>
+        /// <param name="redirectUri">Value made in My Apps(https://developer.tdameritrade.com/user/me/apps)</param>
+        /// <param name="authorizationCode">Specific for live trading with TD. </param>
+        /// <param name="account">(Optional) Account id for brokerage. Will use primary account if empty</param>
+        public TDAmeritradeLiveAlgorithmSettings(string clientID,
+                                            string redirectUri,
+                                            string authorizationCode,
+                                            string account)
+            : base(account)
+        {
+            Environment = BrokerageEnvironment.Live;
+            ClientID = clientID;
+            RedirectUri = redirectUri;
+            AuthorizationCode = authorizationCode;
+            Id = BrokerageName.TDAmeritrade.ToString();
+        }
+
+        /// <summary>
+        /// Access token for td ameritrade brokerage
+        /// </summary>
+        [JsonProperty(PropertyName = "clientID")]
+        public string ClientID { get; private set; }
+
+        /// <summary>
+        /// Access token Expiration Date Time for td ameritrade brokerage
+        /// </summary>
+        [JsonProperty(PropertyName = "redirectUri")]
+
+        public string RedirectUri { get; private set; }
+
+        /// <summary>
+        /// Property specific to td ameritrade account.  See td ameritrade account for more details.
+        /// </summary>
+        [JsonProperty(PropertyName = "authorizationCode")]
+        public string AuthorizationCode { get; private set; }
+
+    }
+#pragma warning restore CA1056, CA1054 // URI-like properties should not be strings
 
     /// <summary>
     /// Live algorithm settings for trading with Bitfinex

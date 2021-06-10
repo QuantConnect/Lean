@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace QuantConnect.Configuration
@@ -95,6 +95,12 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("tradier-issued-at", CommandOptionType.SingleValue),
                 new CommandLineOption("tradier-lifespan", CommandOptionType.SingleValue),
                 new CommandLineOption("tradier-refresh-session", CommandOptionType.NoValue),
+
+                // td configuration
+                new CommandLineOption("td-account-id", CommandOptionType.SingleValue),
+                new CommandLineOption("td-client-id", CommandOptionType.SingleValue),
+                new CommandLineOption("td-redirect-uri", CommandOptionType.SingleValue),
+                new CommandLineOption("td-authorization-code", CommandOptionType.SingleValue),
 
                 // oanda configuration
                 new CommandLineOption("oanda-environment", CommandOptionType.SingleValue),

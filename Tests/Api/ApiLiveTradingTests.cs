@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -152,6 +152,28 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
+        /// Live paper trading via Tradier
+        /// </summary>
+        [Test]
+        public void LiveTDAmeritradeTest()
+        {
+            var account = Config.Get("td-account-id");
+            var clientID = Config.Get("td-client-id");
+            var redirectUri = Config.Get("td-redirect-uri");
+            var authorizationCode = Config.Get("td-authorization-code");
+
+            var settings = new TDAmeritradeLiveAlgorithmSettings(clientID, redirectUri, authorizationCode, account);
+
+            var file = new ProjectFile
+            {
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+            };
+
+            RunLiveAlgorithm(settings, file);
+        }
+
+        /// <summary>
         /// Live trading via Bitfinex
         /// </summary>
         [Test]
@@ -214,6 +236,11 @@ namespace QuantConnect.Tests.API
             string dateIssued = "";
             string refreshToken = "";
 
+            // TD Ameritrade Custom Variables
+            string clientID = "";
+            string redirectUri = "";
+            string authorizationCode = "";
+
             // Create and test settings for each brokerage
             foreach (BrokerageName brokerageName in Enum.GetValues(typeof(BrokerageName)))
             {
@@ -256,6 +283,14 @@ namespace QuantConnect.Tests.API
                         account = Config.Get("tradier-account-id");
 
                         settings = new TradierLiveAlgorithmSettings(refreshToken, dateIssued, refreshToken, account);
+                        break;
+                    case BrokerageName.TDAmeritrade:
+                        account = Config.Get("td-account-id");
+                        clientID = Config.Get("td-client-id");
+                        redirectUri = Config.Get("td-redirect-uri");
+                        authorizationCode = Config.Get("td-authorization-code");
+
+                        settings = new TDAmeritradeLiveAlgorithmSettings(clientID, redirectUri, authorizationCode, account);
                         break;
                     case BrokerageName.Bitfinex:
                         key = Config.Get("bitfinex-api-key");
