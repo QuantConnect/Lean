@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -59,7 +59,28 @@ namespace QuantConnect.Util
         public Composer()
         {
             // grab assemblies from current executing directory if not defined by 'composer-dll-directory' configuration key
-            var primaryDllLookupDirectory = new DirectoryInfo(Config.Get("composer-dll-directory", AppDomain.CurrentDomain.BaseDirectory)).FullName;
+            string primaryDllLookupDirectory;
+            var dllDirectoryString = Config.Get("composer-dll-directory", null);
+            if (dllDirectoryString == null)
+            {
+                // Check our appdomain directory for QC Dll's, most cases this is true
+                var appDomainDirectory = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+                if (appDomainDirectory.GetFiles("QuantConnect.*.dll").Any())
+                {
+                    primaryDllLookupDirectory = appDomainDirectory.FullName;
+                }
+                else
+                {
+                    // Otherwise use our current working directory.
+                    // helpful for research because kernel appdomain defaults to kernel location
+                    primaryDllLookupDirectory = new DirectoryInfo(Directory.GetCurrentDirectory()).FullName;
+                }
+            }
+            else
+            {
+                primaryDllLookupDirectory = new DirectoryInfo(dllDirectoryString).FullName;
+            }
+
             var loadFromPluginDir = !string.IsNullOrWhiteSpace(PluginDirectory)
                 && Directory.Exists(PluginDirectory) &&
                 new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;
