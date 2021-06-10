@@ -427,7 +427,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             public GDAXFakeDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
                 IPriceProvider priceProvider, IDataAggregator aggregator)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, null)
             {
             }
         }
