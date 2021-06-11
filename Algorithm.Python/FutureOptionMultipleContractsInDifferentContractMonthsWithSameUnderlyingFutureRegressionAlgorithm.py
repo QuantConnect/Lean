@@ -11,19 +11,7 @@
 ### See the License for the specific language governing permissions and
 ### limitations under the License.
 
-from datetime import datetime
-
-from System import *
-from System.Reflection import *
-import QuantConnect
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data import *
-from QuantConnect.Data.Market import *
-from QuantConnect.Orders import *
-from QuantConnect.Securities import *
-from QuantConnect.Securities.Future import *
-from QuantConnect import Market
+from AlgorithmImports import *
 
 ### <summary>
 ### This regression test tests for the loading of futures options contracts with a contract month of 2020-03 can live
@@ -41,7 +29,7 @@ class FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFu
         self.SetStartDate(2020, 1, 5)
         self.SetEndDate(2020, 1, 6)
 
-        goldFutures = self.AddFuture("GC", Resolution.Minute, QuantConnect.Market.COMEX)
+        goldFutures = self.AddFuture("GC", Resolution.Minute, Market.COMEX)
         goldFutures.SetFilter(0, 365)
 
         self.AddFutureOption(goldFutures.Symbol)
@@ -65,9 +53,9 @@ class FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFu
 
 
     def _createOption(self, expiry: datetime, optionRight: OptionRight, strikePrice: float) -> Symbol:
-        return QuantConnect.Symbol.CreateOption(
-            QuantConnect.Symbol.CreateFuture("GC", QuantConnect.Market.COMEX, datetime(2020, 4, 28)),
-            QuantConnect.Market.COMEX,
+        return Symbol.CreateOption(
+            Symbol.CreateFuture("GC", Market.COMEX, datetime(2020, 4, 28)),
+            Market.COMEX,
             OptionStyle.American,
             optionRight,
             strikePrice,

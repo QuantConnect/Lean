@@ -11,16 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
-import pandas as pd
-import numpy as np
+from AlgorithmImports import *
 import talib
 
 class CalibratedResistanceAtmosphericScrubbers(QCAlgorithm):

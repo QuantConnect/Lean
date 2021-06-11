@@ -11,14 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
+from AlgorithmImports import *
 from QuantConnect.Data.Custom.USEnergy import USEnergyAPI
 from QuantConnect.Data.Custom.Tiingo import *
 
