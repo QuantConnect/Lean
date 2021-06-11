@@ -34,6 +34,9 @@
     </PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="AlgorithmImports.py" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -52,6 +55,9 @@
     <Content Include="AddOptionContractFromUniverseRegressionAlgorithm.py" />
     <Content Include="AddRiskManagementAlgorithm.py" />
     <Content Include="AddUniverseSelectionModelAlgorithm.py" />
+    <Content Include="AlgorithmImports.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Alphas\ContingentClaimsAnalysisDefaultPredictionAlpha.py" />
     <Content Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.py" />
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />

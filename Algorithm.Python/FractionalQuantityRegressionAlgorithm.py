@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,23 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
+from AlgorithmImports import *
+
 AddReference("NodaTime")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Common")
-
-from System import *
 from NodaTime import DateTimeZone
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Brokerages import *
-from QuantConnect.Securities import *
-from QuantConnect.Data.Market import *
-from QuantConnect.Data.Consolidators import *
 
-from datetime import timedelta
 from math import floor
 
 ### <summary>

@@ -11,9 +11,7 @@
 ### See the License for the specific language governing permissions and
 ### limitations under the License.
 
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-
+from AlgorithmImports import *
 
 ### <summary>
 ### Regression algorithm which tests that a two leg currency conversion happens correctly

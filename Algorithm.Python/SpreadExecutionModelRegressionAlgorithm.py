@@ -11,18 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Selection import *
+from AlgorithmImports import *
 from Alphas.RsiAlphaModel import RsiAlphaModel
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Execution.SpreadExecutionModel import SpreadExecutionModel

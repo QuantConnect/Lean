@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System.Core")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Orders import OrderStatus
-from QuantConnect.Orders.Fees import ConstantFeeModel
+from AlgorithmImports import *
 
 ### <summary>
 ### In this algorithm we demonstrate how to use the coarse fundamental data to define a universe as the top dollar volume and set the algorithm to use raw prices
