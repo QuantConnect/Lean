@@ -344,12 +344,27 @@ namespace QuantConnect.Report
                 }
 
                 var tick = new Tick { Quantity = order.Quantity, AskPrice = order.Price, BidPrice = order.Price, Value = order.Price, EndTime = lastFillTime };
+                var tradeBar = new TradeBar
+                {
+                    Open = order.Price,
+                    High = order.Price,
+                    Low = order.Price,
+                    Close = order.Price,
+                    Volume = order.Quantity,
 
-                // Set the market price of the security
+                    DataType = MarketDataType.TradeBar,
+                    Period = TimeSpan.Zero,
+                    Symbol = order.Symbol,
+                    Time = lastFillTime,
+                };
+
+                // Required for crypto so that the Cache Price is updated accordingly,
+                // since its `Security.Price` implementation explicitly requests TradeBars.
+                // For most asset types this might be enough as well, but there is the
+                // possibility that some trades might get filtered, so we cover that
+                // case by setting the market price via Tick as well.
+                orderSecurity.SetMarketPrice(tradeBar);
                 orderSecurity.SetMarketPrice(tick);
-
-                // security price got updated
-                Algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
                 // Check if we have a base currency (i.e. forex or crypto that requires currency conversion)
                 // to ensure the proper conversion rate is set for them
@@ -368,17 +383,21 @@ namespace QuantConnect.Report
                         foreach (var quoteBar in updateSlice.QuoteBars.Values)
                         {
                             Algorithm.Securities[quoteBar.Symbol].SetMarketPrice(quoteBar);
-
-                            foreach (var cash in Algorithm.Portfolio.CashBook.Values)
-                            {
-                                cash.Update();
-                            }
                         }
-
-                        // Needed to ensure that TotalPortfolioValue gets updated on the next call
-                        Algorithm.Portfolio.InvalidateTotalPortfolioValue();
                     }
                 }
+
+                // Update our cash holdings before we invalidate the portfolio value
+                // to calculate the proper cash value of other assets the algo owns
+                foreach (var cash in Algorithm.Portfolio.CashBook.Values.Where(x => x.CurrencyConversion != null))
+                {
+                    cash.Update();
+                }
+
+                // Securities prices might have been updated, so we need to recalculate how much
+                // money we have in our portfolio, otherwise we risk being out of date and
+                // calculate on stale data.
+                Algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
                 var orderEvent = new OrderEvent(order, order.Time, Orders.Fees.OrderFee.Zero) { FillPrice = order.Price, FillQuantity = order.Quantity };
 
