@@ -64,7 +64,12 @@ namespace QuantConnect.Brokerages.Ccxt
         /// Gets a new instance of the <see cref="DefaultBrokerageModel"/>
         /// </summary>
         /// <param name="orderProvider">The order provider</param>
-        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new DefaultBrokerageModel();
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider)
+        {
+            var exchangeName = Config.Get("ccxt-exchange-name");
+
+            return new CcxtBrokerageModel(exchangeName);
+        }
 
         /// <summary>
         /// Creates a new IBrokerage instance and set ups the environment for the brokerage
