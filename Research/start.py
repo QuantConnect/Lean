@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,28 +25,62 @@ from pythonnet import set_runtime
 # symlink and the directory start.py is stored in is not necessarily the
 # current working directory. We therefore construct the absolute path to the
 # start.py file, and find the runtimeconfig.json relative to that.
-set_runtime(clr_loader.get_coreclr(os.path.join(os.path.dirname(os.path.realpath(__file__)), "QuantConnect.Lean.Launcher.runtimeconfig.json")))
+path = os.path.dirname(os.path.realpath(__file__))
+set_runtime(clr_loader.get_coreclr(os.path.join(path, "QuantConnect.Lean.Launcher.runtimeconfig.json")))
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Api")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Configuration")
-AddReference("QuantConnect.Research")
-AddReference("QuantConnect.Indicators")
+
+#Load assemblies
+for file in os.listdir(path):
+    if file.endswith(".dll") and file.startswith("QuantConnect."):
+        AddReference(file.replace(".dll", ""))
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Api import *
-from QuantConnect.Configuration import *
+from QuantConnect.Util import *
 from QuantConnect.Data import *
+from QuantConnect.Orders import *
+from QuantConnect.Python import *
 from QuantConnect.Research import *
+from QuantConnect.Algorithm import *
+from QuantConnect.Parameters import *
+from QuantConnect.Benchmarks import *
+from QuantConnect.Brokerages import *
+from QuantConnect.Securities import *
 from QuantConnect.Indicators import *
+from QuantConnect.Interfaces import *
+from QuantConnect.Scheduling import *
+from QuantConnect.Orders.Fees import *
+from QuantConnect.Data.Custom import *
+from QuantConnect.Data.Market import *
+from QuantConnect.Orders.Fills import *
+from QuantConnect.Configuration import *
+from QuantConnect.Notifications import *
+from QuantConnect.Orders.Slippage import *
+from QuantConnect.Securities.Forex import *
+from QuantConnect.Data.Fundamental import *
+from QuantConnect.Securities.Equity import *
+from QuantConnect.Data.Consolidators import *
+from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Securities.Interfaces import *
+from QuantConnect.Data.UniverseSelection import *
+from QuantConnect.Algorithm.Framework.Risk import *
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Algorithm.Framework.Selection import *
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import date, datetime, timedelta
 
 # Start an instance of an API class
 api = Api()
 api.Initialize(Config.GetInt("job-user-id", 1), 
     Config.Get("api-access-token", "default"),
     Config.Get("data-folder"))
+
+get_ipython().run_line_magic('matplotlib', 'inline')
