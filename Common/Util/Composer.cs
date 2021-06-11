@@ -60,7 +60,7 @@ namespace QuantConnect.Util
         {
             // Determine what directory to grab our assemblies from if not defined by 'composer-dll-directory' configuration key
             var dllDirectoryString = Config.Get("composer-dll-directory");
-            if (string.IsNullOrEmpty(dllDirectoryString))
+            if (string.IsNullOrWhiteSpace(dllDirectoryString))
             {
                 // Check our appdomain directory for QC Dll's, for most cases this will be true and fine to use
                 if (!string.IsNullOrEmpty(AppDomain.CurrentDomain.BaseDirectory) && Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "QuantConnect.*.dll").Any())
