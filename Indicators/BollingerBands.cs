@@ -139,10 +139,10 @@ namespace QuantConnect.Indicators
             // Update our Indicators
             var value = ComputeNextValue(input);
 
-            // In the case STD = 0, we know that the our PercentB indicator will fail to update.
-            // This is because the denominator will be 0, when this is the case we do not want
-            // the BollingerBands to emit an update because its PercentB property will be stale.
-            return StandardDeviation.Current.Value == 0
+            // If we are ready and STD = 0, we know that the our PercentB indicator will fail to update.
+            // This is because the denominator will be 0. When this is the case we do not want the
+            // BollingerBands to emit an update because its PercentB property will be stale.
+            return IsReady && StandardDeviation.Current.Value == 0
                 ? new IndicatorResult(value, IndicatorStatus.MathError)
                 : new IndicatorResult(value);
         }
