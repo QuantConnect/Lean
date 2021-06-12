@@ -13,7 +13,6 @@
 
 from AlgorithmImports import *
 from System.Globalization import *
-import json
 
 ### <summary>
 ### Live Trading Functionality Demonstration algorithm including SMS, Email and Web hook notifications.

@@ -13,7 +13,6 @@
 
 from AlgorithmImports import *
 
-import json
 from io import StringIO
 from keras.models import Sequential
 from keras.layers import Dense, Activation

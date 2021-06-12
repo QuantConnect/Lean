@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-import json
 
 ### <summary>
 ### Regression test to demonstrate importing and trading on custom data.

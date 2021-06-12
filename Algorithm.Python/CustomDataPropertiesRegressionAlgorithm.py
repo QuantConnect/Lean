@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-import json
 
 ### <summary>
 ### Regression test to demonstrate setting custom Symbol Properties and Market Hours for a custom data import

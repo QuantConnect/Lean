@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from QuantConnect.Data.Auxiliary import *
 from QuantConnect.Lean.Engine.DataFeeds import DefaultDataProvider
 
 _ticker = "GOOGL";

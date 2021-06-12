@@ -13,8 +13,6 @@
 
 from AlgorithmImports import *
 from System.Collections.Generic import List
-import math
-import json
 
 ### <summary>
 ### In this algortihm we show how you can easily use the universe selection feature to fetch symbols

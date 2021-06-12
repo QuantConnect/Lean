@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-import json
 
 ### <summary>
 ### Demonstration of using an external custom datasource. LEAN Engine is incredibly flexible and allows you to define your own data source.
