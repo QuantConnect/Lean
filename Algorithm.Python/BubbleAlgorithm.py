@@ -12,8 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-import math
-import json
 
 ### <summary>
 ### Strategy example algorithm using CAPE - a bubble indicator dataset saved in dropbox. CAPE is based on a macroeconomic indicator(CAPE Ratio),

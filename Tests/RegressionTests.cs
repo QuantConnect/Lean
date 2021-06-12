@@ -24,7 +24,7 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests
 {
-    [TestFixture, Category("TravisExclude")]
+    [TestFixture, Category("TravisExclude"), Category("RegressionTests")]
     public class RegressionTests
     {
         [Test, TestCaseSource(nameof(GetRegressionTestParameters))]

@@ -12,8 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-import math
-import json
 
 ### <summary>
 ### This demonstration imports indian NSE index "NIFTY" as a tradable security in addition to the USDINR currency pair. We move into the

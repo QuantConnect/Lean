@@ -63,5 +63,10 @@ from QuantConnect.Algorithm.Framework.Selection import *
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except:
+    pass
 from datetime import date, time, datetime, timedelta
+import math
+import json

@@ -14,22 +14,22 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Regression algorithm which tests a fine fundamental filtered universe, related to GH issue 4127
+### Regression algorithm which tests a fine fundamental filtered universe,
+### related to GH issue 4127
 ### </summary>
 class FineFundamentalFilteredUniverseRegressionAlgorithm(QCAlgorithm):
-
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         self.SetStartDate(2014,10, 7)
         self.SetEndDate(2014,10,11)
 
-        self.UniverseSettings.Resolution = Resolution.Daily;
+        self.UniverseSettings.Resolution = Resolution.Daily
 
         self.AddUniverse(ConstituentsUniverse(Symbol.Create("constituents-universe-qctest", SecurityType.Equity, Market.USA), self.UniverseSettings), self.FineSelectionFunction)
 
     def FineSelectionFunction(self, fine):
-        return [ x.Symbol for x in fine if x.CompanyProfile.HeadquarterCity == "Cupertino" ]
+        return [ x.Symbol for x in fine if x.CompanyProfile != None and x.CompanyProfile.HeadquarterCity != None and x.CompanyProfile.HeadquarterCity.lower() == "cupertino" ]
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
