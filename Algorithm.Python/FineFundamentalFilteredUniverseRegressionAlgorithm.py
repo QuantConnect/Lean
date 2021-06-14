@@ -26,7 +26,8 @@ class FineFundamentalFilteredUniverseRegressionAlgorithm(QCAlgorithm):
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.AddUniverse(ConstituentsUniverse(Symbol.Create("constituents-universe-qctest", SecurityType.Equity, Market.USA), self.UniverseSettings), self.FineSelectionFunction)
+        symbol = Symbol(SecurityIdentifier.GenerateConstituentIdentifier("constituents-universe-qctest", SecurityType.Equity, Market.USA), "constituents-universe-qctest")
+        self.AddUniverse(ConstituentsUniverse(symbol, self.UniverseSettings), self.FineSelectionFunction)
 
     def FineSelectionFunction(self, fine):
         return [ x.Symbol for x in fine if x.CompanyProfile != None and x.CompanyProfile.HeadquarterCity != None and x.CompanyProfile.HeadquarterCity.lower() == "cupertino" ]
