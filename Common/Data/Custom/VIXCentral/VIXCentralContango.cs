@@ -74,7 +74,7 @@ namespace QuantConnect.Data.Custom.VIXCentral
         /// <summary>
         /// Contract 8 months away from the front month contract
         /// </summary>
-        public decimal F9 { get; set; }
+        public decimal? F9 { get; set; }
 
         /// <summary>
         /// Contract 9 months away from the front month contract
@@ -192,7 +192,7 @@ namespace QuantConnect.Data.Custom.VIXCentral
                     F6 = contangoValues[6].Value,
                     F7 = contangoValues[7].Value,
                     F8 = contangoValues[8].Value,
-                    F9 = contangoValues[9].Value,
+                    F9 = contangoValues[9],
                     F10 = contangoValues[10],
                     F11 = contangoValues[11],
                     F12 = contangoValues[12],
