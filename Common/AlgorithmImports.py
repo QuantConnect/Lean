@@ -13,10 +13,18 @@
 
 import os
 import sys
+
+# The runtimeconfig.json is stored alongside start.py, but start.py may be a
+# symlink and the directory start.py is stored in is not necessarily the
+# current working directory. We therefore construct the absolute path to the
+# start.py file, and find the runtimeconfig.json relative to that.
+path = os.path.dirname(os.path.realpath(__file__))
+
 from clr import AddReference
 AddReference("System")
 
-for file in os.listdir(os.getcwd()):
+#Load assemblies
+for file in os.listdir(path):
     if file.endswith(".dll") and file.startswith("QuantConnect."):
         AddReference(file.replace(".dll", ""))
 
@@ -27,6 +35,7 @@ from QuantConnect.Util import *
 from QuantConnect.Data import *
 from QuantConnect.Orders import *
 from QuantConnect.Python import *
+from QuantConnect.Storage import *
 from QuantConnect.Research import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Parameters import *
@@ -61,12 +70,16 @@ from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Selection import *
 
-import numpy as np
-import pandas as pd
 try:
+    import numpy as np
+    import pandas as pd
     import matplotlib.pyplot as plt
 except:
     pass
+
 from datetime import date, time, datetime, timedelta
 import math
 import json
+
+QCAlgorithmFramework = QCAlgorithm
+QCAlgorithmFrameworkBridge = QCAlgorithm
