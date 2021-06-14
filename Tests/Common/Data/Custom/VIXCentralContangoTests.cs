@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.VIXCentral;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
@@ -73,6 +75,35 @@ namespace QuantConnect.Tests.Common.Data.Custom
         }
 
         [Test]
+        public void ReadsMissingF9Data()
+        {
+            var line = "2016-07-20,8.0,15.475,17.225,18.475,18.825,18.925,19.875,20.125,20.225,,,,,0.1131,0.06910000000000001,0.023";
+            var instance = (VIXCentralContango)_factory.Reader(_config, line, default(DateTime), false);
+
+            Assert.AreEqual(new DateTime(2016, 7, 20), instance.Time);
+            Assert.AreEqual(new DateTime(2016, 7, 21), instance.EndTime);
+            Assert.AreEqual(_config.Symbol, instance.Symbol);
+
+            Assert.AreEqual(8, instance.FrontMonth);
+            Assert.AreEqual(15.475m, instance.F1);
+            Assert.AreEqual(17.225m, instance.F2);
+            Assert.AreEqual(18.475m, instance.F3);
+            Assert.AreEqual(18.825m, instance.F4);
+            Assert.AreEqual(18.925m, instance.F5);
+            Assert.AreEqual(19.875m, instance.F6);
+            Assert.AreEqual(20.125m, instance.F7);
+            Assert.AreEqual(20.225m, instance.F8);
+            Assert.AreEqual(null, instance.F9);   // F9 is missing in some occasions
+            Assert.AreEqual(null, instance.F10);
+            Assert.AreEqual(null, instance.F11);
+            Assert.AreEqual(null, instance.F12);
+            Assert.AreEqual(0.1131m, instance.Contango_F2_Minus_F1);
+            Assert.AreEqual(0.06910000000000001m, instance.Contango_F7_Minus_F4);
+            Assert.AreEqual(0.0230m, instance.Contango_F7_Minus_F4_Div_3);
+        }
+
+
+        [Test]
         public void ReadsCompleteData()
         {
             var line = "2019-12-16,12.0,12.225,14.825,16.425,16.775,17.325,17.425,17.625,17.975,18.075,18.55,19.075,18.675,0.2127,0.0507,0.0169";
@@ -98,6 +129,19 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(0.2127m, instance.Contango_F2_Minus_F1);
             Assert.AreEqual(0.0507m, instance.Contango_F7_Minus_F4);
             Assert.AreEqual(0.0169m, instance.Contango_F7_Minus_F4_Div_3);
+        }
+
+        [Test]
+        public void ReadsSampleFile()
+        {
+            VIXCentralContango instance = null;
+
+            var lines = File.ReadLines(Path.Combine("TestData", "vix_contango.csv")).Skip(1);
+            foreach (var line in lines)
+            {
+                Assert.DoesNotThrow(() => instance = (VIXCentralContango)_factory.Reader(_config, line, default(DateTime), false));
+                Assert.NotNull(instance);
+            }
         }
     }
 }
