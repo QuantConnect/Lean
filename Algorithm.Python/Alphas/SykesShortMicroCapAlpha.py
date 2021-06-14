@@ -11,20 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
+from AlgorithmImports import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
-
 
 class SykesShortMicroCapAlpha(QCAlgorithm):
     ''' Alpha Streams: Benchmark Alpha: Identify "pumped" penny stocks and predict that the price of a "pumped" penny stock reverts to mean

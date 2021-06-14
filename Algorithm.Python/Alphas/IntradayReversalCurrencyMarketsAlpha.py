@@ -11,23 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Indicators")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from QuantConnect.Data.Consolidators import *
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
-from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
-from datetime import datetime, timedelta, time
+from AlgorithmImports import *
 
 #
 # Reversal strategy that goes long when price crosses below SMA and Short when price crosses above SMA.

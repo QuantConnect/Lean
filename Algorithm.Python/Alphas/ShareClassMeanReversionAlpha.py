@@ -11,27 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Indicators")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data.Market import TradeBar
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Risk import *
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Selection import *
-from QuantConnect.Indicators import RollingWindow, SimpleMovingAverage
-
-from datetime import timedelta, datetime
-import numpy as np
+from AlgorithmImports import *
 
 #
 # A number of companies publicly trade two different classes of shares
@@ -48,7 +28,7 @@ import numpy as np
 # sourced so the community and client funds can see an example of an alpha.
 #
 
-class ShareClassMeanReversionAlgorithm(QCAlgorithm):
+class ShareClassMeanReversionAlpha(QCAlgorithm):
 
     def Initialize(self):
 
