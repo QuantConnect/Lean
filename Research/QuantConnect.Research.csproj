@@ -69,8 +69,5 @@
       <PackagePath></PackagePath>
     </None>
     <None Include="readme.md" />
-    <Content Include="start.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 </Project>
