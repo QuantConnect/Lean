@@ -151,18 +151,18 @@ namespace QuantConnect.Tests.Indicators
             // Push in identical value points for the entire period.
             for (int i = 0; i < period; i++)
             {
-                bb.Update(DateTime.Now, 1);
+                bb.Update(DateTime.UtcNow, 1);
             }
 
             // Push in another identical value point, this should not update!
-            var time = DateTime.Now;
+            var time = DateTime.UtcNow;
             bb.Update(time, 1);
 
             // Assert this was not updated
             Assert.AreNotEqual(time, lastUpdateTime);
 
             // Push in a new value
-            time = DateTime.Now;
+            time = DateTime.UtcNow;
             bb.Update(time, 2);
 
             // Assert this did update
