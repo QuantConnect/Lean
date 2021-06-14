@@ -113,8 +113,11 @@ namespace QuantConnect.Research
                 // Sets PandasConverter
                 SetPandasConverter();
 
-                // Initialize History Provider
-                var composer = new Composer();
+                // Reset our composer; needed for re-creation of QuantBook
+                Composer.Instance.Reset();
+                var composer = Composer.Instance;
+
+                // Create our handlers with our composer instance
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
 
