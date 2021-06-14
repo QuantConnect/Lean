@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@ AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Indicators import ExponentialMovingAverage
+from QuantConnect.Indicators import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
 class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):

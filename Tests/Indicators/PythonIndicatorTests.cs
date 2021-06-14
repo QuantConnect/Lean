@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -37,15 +37,8 @@ namespace QuantConnect.Tests.Indicators
                 var module = PythonEngine.ModuleFromString(
                     Guid.NewGuid().ToString(),
                     @"
-from clr import AddReference
-AddReference('QuantConnect.Common')
-AddReference('QuantConnect.Indicators')
-
-from QuantConnect import *
-from QuantConnect.Indicators import *
+from AlgorithmImports import *
 from collections import deque
-from datetime import datetime, timedelta
-from numpy import sum
 
 class CustomSimpleMovingAverage(PythonIndicator):
     def __init__(self, name, period):
@@ -57,7 +50,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
     def Update(self, input):
         self.queue.appendleft(input.Value)
         count = len(self.queue)
-        self.Value = sum(self.queue) / count
+        self.Value = np.sum(self.queue) / count
         return count == self.queue.maxlen
 "
                 );
@@ -181,12 +174,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
                 var module = PythonEngine.ModuleFromString(
                     Guid.NewGuid().ToString(),
                     @"
-from clr import AddReference
-AddReference('QuantConnect.Common')
-AddReference('QuantConnect.Indicators')
-
-from QuantConnect import *
-from QuantConnect.Indicators import *
+from AlgorithmImports import *
 class GoodCustomIndicator(PythonIndicator):
     def __init__(self):
         self.Value = 0
@@ -228,15 +216,7 @@ class BadCustomIndicator(PythonIndicator):
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "AddReference(\"QuantConnect.Indicators\")\n" +
-                    "from QuantConnect import *\n" +
-                    "from QuantConnect.Data.Market import *\n" +
-                    "from QuantConnect.Data.Consolidators import *\n" +
-                    "from QuantConnect.Indicators import *\n" +
-                    "from QuantConnect.Python import *\n" +
-                    "from datetime import *\n" +
+                    "from AlgorithmImports import *\n" +
                     "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n" +
                     "timeDelta = timedelta(days=2)\n" +
                     "class CustomIndicator(PythonIndicator):\n" +
