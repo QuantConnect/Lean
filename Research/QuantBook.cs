@@ -181,10 +181,6 @@ namespace QuantConnect.Research
                     )
                 );
 
-                // Initialize our map and factorfile providers
-                mapFileProvider.Initialize(_dataProvider);
-                algorithmHandlers.FactorFileProvider.Initialize(mapFileProvider, _dataProvider);
-
                 SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider(_dataProvider)));
                 SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(_dataProvider)));
             }
