@@ -43,7 +43,9 @@ namespace QuantConnect.Brokerages
 
         public override IFeeModel GetFeeModel(Security security)
         {
-            return new ExanteFeeModel();
+            return new ExanteFeeModel(
+                forexCommissionRate: 0.25m
+            );
         }
     }
 }
