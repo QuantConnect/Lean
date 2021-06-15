@@ -11,18 +11,7 @@
 ### See the License for the specific language governing permissions and
 ### limitations under the License.
 
-from datetime import date
-
-import QuantConnect 
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Brokerages import *
-from QuantConnect.Data import *
-from QuantConnect.Data.Shortable import *
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Interfaces import *
-from QuantConnect import *
-
+from AlgorithmImports import *
 
 class AllShortableSymbolsRegressionAlgorithmBrokerageModel(DefaultBrokerageModel):
     def __init__(self):
@@ -39,12 +28,12 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         self._20140328 = date(2014, 3, 28);
         self._20140329 = date(2014, 3, 29);
 
-        self.aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-        self.bac = QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA);
-        self.gme = QuantConnect.Symbol.Create("GME", SecurityType.Equity, Market.USA);
-        self.goog = QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, Market.USA);
-        self.qqq = QuantConnect.Symbol.Create("QQQ", SecurityType.Equity, Market.USA);
-        self.spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        self.aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+        self.bac = Symbol.Create("BAC", SecurityType.Equity, Market.USA);
+        self.gme = Symbol.Create("GME", SecurityType.Equity, Market.USA);
+        self.goog = Symbol.Create("GOOG", SecurityType.Equity, Market.USA);
+        self.qqq = Symbol.Create("QQQ", SecurityType.Equity, Market.USA);
+        self.spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
         self.lastTradeDate = date(1, 1, 1);
 
         self.coarseSelected = {
@@ -67,7 +56,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         self.SetCash(10000000);
 
         self.AddUniverse(self.CoarseSelectionFunc);
-        self.UniverseSettings.Resolution = QuantConnect.Resolution.Daily;
+        self.UniverseSettings.Resolution = Resolution.Daily;
 
         self.SetBrokerageModel(AllShortableSymbolsRegressionAlgorithmBrokerageModel());
 
@@ -91,7 +80,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
 
         expectedMissing = 0;
         if self.Time.date() == self._20140327:
-            gme = QuantConnect.Symbol.Create("GME", SecurityType.Equity, Market.USA);
+            gme = Symbol.Create("GME", SecurityType.Equity, Market.USA);
             if gme not in shortableSymbols:
                 raise Exception("Expected unmapped GME in shortable symbols list on 2014-03-27");
             if len([x.Symbol.Value for x in coarse if x.Symbol.Value == "GME"]) == 0:

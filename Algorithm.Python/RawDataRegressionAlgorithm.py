@@ -11,23 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System.Core")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Configuration")
-AddReference("QuantConnect.Lean.Engine")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
+from AlgorithmImports import *
 from QuantConnect.Data.Auxiliary import *
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Orders import OrderStatus
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Configuration import Config
-from QuantConnect.Util import Composer
-from QuantConnect.Interfaces import IDataProvider
 from QuantConnect.Lean.Engine.DataFeeds import DefaultDataProvider
 
 _ticker = "GOOGL";

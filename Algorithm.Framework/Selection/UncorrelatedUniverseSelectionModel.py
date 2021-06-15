@@ -18,10 +18,9 @@ AddReference("QuantConnect.Common")
 
 from QuantConnect import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
-from QuantConnect.Indicators import RollingWindow, IndicatorDataPoint
-
 import pandas as pd
 
 class UncorrelatedUniverseSelectionModel(FundamentalUniverseSelectionModel):

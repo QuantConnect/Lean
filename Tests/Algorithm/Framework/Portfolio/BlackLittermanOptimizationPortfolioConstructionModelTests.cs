@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -367,17 +367,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         private string GetPythonBLOPCM()
         {
-            return @"import os, sys
-sys.path.append(os.getcwd())
-
-from clr import AddReference
-AddReference('QuantConnect.Common')
-from QuantConnect import *
+            return @"
+from AlgorithmImports import *
 
 from Portfolio.BlackLittermanOptimizationPortfolioConstructionModel import BlackLittermanOptimizationPortfolioConstructionModel
 from Portfolio.UnconstrainedMeanVariancePortfolioOptimizer import UnconstrainedMeanVariancePortfolioOptimizer
-import numpy as np
-import pandas as pd
 
 def GetSymbol(ticker):
     return str(Symbol.Create(ticker, SecurityType.Equity, Market.USA))

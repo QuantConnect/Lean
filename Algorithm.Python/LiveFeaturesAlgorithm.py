@@ -11,24 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System.Core")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-
-from System import *
+from AlgorithmImports import *
 from System.Globalization import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data import *
-from QuantConnect.Data.Market import *
-from QuantConnect.Python import PythonData
-
-import numpy as np
-from datetime import datetime
-import json
-
 
 ### <summary>
 ### Live Trading Functionality Demonstration algorithm including SMS, Email and Web hook notifications.

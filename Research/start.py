@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,26 +27,12 @@ from pythonnet import set_runtime
 # start.py file, and find the runtimeconfig.json relative to that.
 set_runtime(clr_loader.get_coreclr(os.path.join(os.path.dirname(os.path.realpath(__file__)), "QuantConnect.Lean.Launcher.runtimeconfig.json")))
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Api")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Configuration")
-AddReference("QuantConnect.Research")
-AddReference("QuantConnect.Indicators")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Api import *
-from QuantConnect.Configuration import *
-from QuantConnect.Data import *
-from QuantConnect.Research import *
-from QuantConnect.Indicators import *
+from AlgorithmImports import *
 
 # Start an instance of an API class
 api = Api()
-api.Initialize(Config.GetInt("job-user-id", 1), 
+api.Initialize(Config.GetInt("job-user-id", 1),
     Config.Get("api-access-token", "default"),
     Config.Get("data-folder"))
+
+get_ipython().run_line_magic('matplotlib', 'inline')

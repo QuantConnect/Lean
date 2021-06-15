@@ -11,13 +11,7 @@
 ### See the License for the specific language governing permissions and
 ### limitations under the License.
 
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Brokerages import *
-from QuantConnect.Data import *
-from QuantConnect.Data.Shortable import *
-from QuantConnect.Interfaces import *
-from QuantConnect.Orders import *
+from AlgorithmImports import *
 
 class RegressionTestShortableBrokerageModel(DefaultBrokerageModel):
     def __init__(self):
