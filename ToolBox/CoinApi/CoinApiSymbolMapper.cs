@@ -40,7 +40,8 @@ namespace QuantConnect.ToolBox.CoinApi
         private static readonly Dictionary<string, string> MapMarketsToExchangeIds = new Dictionary<string, string>
         {
             { Market.GDAX, "COINBASE" },
-            { Market.Bitfinex, "BITFINEX" }
+            { Market.Bitfinex, "BITFINEX" },
+            { Market.Binance, "BINANCE" }
         };
         private static readonly Dictionary<string, string> MapExchangeIdsToMarkets =
             MapMarketsToExchangeIds.ToDictionary(x => x.Value, x => x.Key);
@@ -204,7 +205,9 @@ namespace QuantConnect.ToolBox.CoinApi
                 .Where(x => x.SymbolType == "SPOT" &&
                     x.SymbolId.Split('_').Length == 4 &&
                     // exclude Bitfinex BCH pre-2018-fork as for now we don't have historical mapping data
-                    (x.ExchangeId != "BITFINEX" || x.AssetIdBase != "BCH" && x.AssetIdQuote != "BCH"))
+                    (x.ExchangeId != "BITFINEX" || x.AssetIdBase != "BCH" && x.AssetIdQuote != "BCH")
+                    // solves the cases where we request 'binance' and get 'binanceus'
+                    && MapExchangeIdsToMarkets.ContainsKey(x.ExchangeId))
                 .ToDictionary(
                     x =>
                     {
