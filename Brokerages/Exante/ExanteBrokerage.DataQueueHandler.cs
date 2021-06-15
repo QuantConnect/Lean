@@ -38,6 +38,7 @@ namespace QuantConnect.Brokerages.Exante
             _subscribedTickersStreamSubscriptions =
                 new ConcurrentDictionary<string, (ExanteStreamSubscription, ExanteStreamSubscription)>();
 
+        /// <inheritdoc />
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             if (!CanSubscribe(dataConfig.Symbol))
@@ -51,6 +52,11 @@ namespace QuantConnect.Brokerages.Exante
             return enumerator;
         }
 
+        /// <summary>
+        /// Returns true if this data provide can handle the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to be handled</param>
+        /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
         private bool CanSubscribe(Symbol symbol)
         {
             var supportedSecurityTypes = new HashSet<SecurityType>
@@ -74,21 +80,29 @@ namespace QuantConnect.Brokerages.Exante
             return !symbol.Value.Contains("-UNIVERSE-");
         }
 
+        /// <inheritdoc />
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             _subscriptionManager.Unsubscribe(dataConfig);
             Aggregator.Remove(dataConfig);
         }
 
+        /// <inheritdoc />
         public void SetJob(LiveNodePacket job)
         {
         }
 
+        /// <inheritdoc />
         public override void Dispose()
         {
             Aggregator.DisposeSafely();
         }
 
+        /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
+        /// <param name="tickType">Type of tick data</param>
         private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
             foreach (var symbol in symbols)
@@ -144,6 +158,11 @@ namespace QuantConnect.Brokerages.Exante
             return true;
         }
 
+        /// <summary>
+        /// Create a tick from the Exante feed stream data
+        /// </summary>
+        /// <param name="et">Exante feed stream data object</param>
+        /// <returns>LEAN Tick object</returns>
         private Tick CreateTick(ExanteFeedTrade et)
         {
             var symbolId = et.SymbolId;
@@ -169,6 +188,11 @@ namespace QuantConnect.Brokerages.Exante
             return new Tick(time, symbol, "", instrument.Data.Exchange, size, price);
         }
 
+        /// <summary>
+        /// Create a tick from the Exante tick shorts stream data
+        /// </summary>
+        /// <param name="ets">Exante tick short stream data object</param>
+        /// <returns>LEAN Tick object</returns>
         private Tick CreateTick(ExanteTickShort ets)
         {
             if (!_subscribedTickers.TryGetValue(ets.SymbolId, out var symbol))
@@ -192,6 +216,11 @@ namespace QuantConnect.Brokerages.Exante
                 asks.IsNullOrEmpty() ? decimal.Zero : asks[0].Price);
         }
 
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
+        /// <param name="tickType">Type of tick data</param>
         private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
             foreach (var symbol in symbols)
