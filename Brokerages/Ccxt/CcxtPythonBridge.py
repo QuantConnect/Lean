@@ -2,6 +2,7 @@ import asyncio
 import ccxtpro
 import ccxt
 import json
+import logging
 import sys
 from threading import Thread
 
@@ -12,10 +13,14 @@ class AsyncLoopThread(Thread):
 
     def run(self):
         asyncio.set_event_loop(self.loop)
+        #self.loop.set_debug(True)
         self.loop.run_forever()
         return self.loop
 
 class CcxtPythonBridge:
+    #def __init__(self):
+    #    logging.basicConfig(level=logging.DEBUG)
+
     def Initialize(self, exchange_name, config_json, order_event_handler, trade_data_handler, quote_data_handler):
         self.loop_handler = AsyncLoopThread()
         self.loop_handler.start()
@@ -26,13 +31,15 @@ class CcxtPythonBridge:
         self.exchange_name = exchange_name
         self.exchange = getattr(sys.modules['ccxtpro'], exchange_name)(config)
 
+        self.log(f'Loaded exchange: ' + exchange_name)
+
         self.exchange.options['warnOnFetchOpenOrdersWithoutSymbol'] = False
         #self.exchange.verbose = True  # for debugging
 
         if 'watchOrders' in self.exchange.has and self.exchange.has['watchOrders']:
             self.run_async(self.watch_orders(order_event_handler))
         else:
-            raise Exception(f'Exchange "{exchange_name}" does not support method "watchOrders"')
+            raise Exception(f'Exchange "{exchange_name}" does not support method "watchOrders "')
 
         self.subscriptions = {}
         self.trade_data_handler = trade_data_handler
@@ -46,10 +53,9 @@ class CcxtPythonBridge:
         # https://github.com/kroitor/ccxt.pro/blob/master/python/ccxtpro/base/exchange.py#L166
         # self.run_sync(self.exchange.close())
 
-        for task in asyncio.Task.all_tasks(self.loop_handler.loop):
-            task.cancel()
-
         self.loop_handler.loop.stop()
+
+        self.log(f'Terminated exchange: ' + self.exchange_name)
 
     def GetBalances(self):
         return self.run_sync(self.exchange.fetch_balance())
@@ -81,7 +87,7 @@ class CcxtPythonBridge:
         if self.exchange_name == 'kraken':
             return self.run_sync(self.exchange.createOrder(symbol, 'stop-loss', side, amount, None, { 'stopPrice': stop_price }))
 
-        raise Exception(f'PlaceStopMarketOrder(): stop market orders are not supported for exchange: {self.exchange_name}')
+        raise Exception(f'PlaceStopMarketOrder(): stop market orders are not supported for exchange: {self.exchange_name }')
 
     def PlaceStopLimitOrder(self, symbol, side, amount, stop_price, limit_price):
         # stop limit orders in ccxt are not unified yet
@@ -109,11 +115,18 @@ class CcxtPythonBridge:
 
     def Subscribe(self, symbol):
         self.subscriptions[symbol] = True
-        self.run_async(self.watch_trades(symbol))
-        self.run_async(self.watch_order_book(symbol))
+
+        self.log(f"Subscribing trades: {symbol}")
+        futureTrades = self.run_async(self.watch_trades(symbol))
+
+        self.log(f"Subscribing book: {symbol}")
+        futureOrderBook = self.run_async(self.watch_order_book(symbol))
 
     def Unsubscribe(self, symbol):
         self.subscriptions[symbol] = False
+
+    def log(self, text):
+        print(text)
 
     def run_async(self, coroutine):
         return asyncio.run_coroutine_threadsafe(coroutine, self.loop_handler.loop)
@@ -127,12 +140,19 @@ class CcxtPythonBridge:
             order_event_handler(json.dumps(result))
 
     async def watch_trades(self, symbol):
-        while self.subscriptions[symbol]:
-            result = await self.exchange.watch_trades(symbol)
-            self.trade_data_handler(result)
+        try:
+            print('start watch_trades')
+            #raise Exception('test watch_trades exception')
+            while self.subscriptions[symbol]:
+                result = await self.exchange.watch_trades(symbol)
+                #self.log(result)
+                self.trade_data_handler(result)
+        except e:
+            self.log(e)
 
     async def watch_order_book(self, symbol):
         while self.subscriptions[symbol]:
-            result = await self.exchange.watch_order_book(symbol, limit=1)
+            result = await self.exchange.watch_order_book(symbol)
+            #self.log(result)
             self.quote_data_handler(symbol, result)
 

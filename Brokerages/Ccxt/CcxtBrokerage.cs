@@ -222,6 +222,17 @@ namespace QuantConnect.Brokerages.Ccxt
         }
 
         /// <summary>
+        /// Dispose of the brokerage instance
+        /// </summary>
+        public override void Dispose()
+        {
+            if (IsConnected)
+            {
+                Disconnect();
+            }
+        }
+
+        /// <summary>
         /// Gets all open orders on the account
         /// </summary>
         /// <returns>The open orders returned from the brokerage</returns>
@@ -515,15 +526,14 @@ namespace QuantConnect.Brokerages.Ccxt
         {
             try
             {
-                Tick tick;
-                var symbol = _symbolMapper.GetLeanSymbol(ticker);
-
                 using (Py.GIL())
                 {
+                    var symbol = _symbolMapper.GetLeanSymbol(ticker);
+
                     var bestBid = data["bids"][0];
                     var bestAsk = data["asks"][0];
 
-                    tick = new Tick
+                    var tick = new Tick
                     {
                         Symbol = symbol,
                         Time = DateTime.UtcNow,
@@ -534,9 +544,9 @@ namespace QuantConnect.Brokerages.Ccxt
                         AskSize = bestAsk[1]
                     };
                     tick.SetValue();
-                }
 
-                _aggregator.Update(tick);
+                    _aggregator.Update(tick);
+                }
             }
             catch (Exception e)
             {

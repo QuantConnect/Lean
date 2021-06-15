@@ -41,6 +41,9 @@ namespace QuantConnect.Tests.Brokerages.Ccxt
             Log.LogHandler = new NUnitLogHandler();
 
             PythonInitializer.Initialize();
+
+            // redirect python output
+            PySysIo.ToTextWriter(TestContext.Progress);
         }
 
         [TestCase("binance")]
@@ -285,27 +288,29 @@ namespace QuantConnect.Tests.Brokerages.Ccxt
             //Assert.IsTrue(orderSubmittedResetEvent.WaitOne(5000));
         }
 
-        [TestCase("binance", TickType.Trade)]
-        [TestCase("binance", TickType.Quote)]
-        [TestCase("bittrex", TickType.Trade)]
-        [TestCase("bittrex", TickType.Quote)]
-        [TestCase("coinbasepro", TickType.Trade)]
-        [TestCase("coinbasepro", TickType.Quote)]
-        [TestCase("ftx", TickType.Trade)]
-        [TestCase("ftx", TickType.Quote)]
-        [TestCase("gateio", TickType.Trade)]
-        [TestCase("gateio", TickType.Quote)]
-        [TestCase("kraken", TickType.Trade)]
-        [TestCase("kraken", TickType.Quote)]
-        public void ReceivesMarketData(string exchangeName, TickType tickType)
+        [TestCase("binance", "BTCUSDT", TickType.Trade)]
+        [TestCase("binance", "BTCUSDT", TickType.Quote)]
+        [TestCase("bittrex", "BTCUSD", TickType.Trade)]     // TODO: failing
+        [TestCase("bittrex", "BTCUSD", TickType.Quote)]     // TODO: failing
+        [TestCase("coinbasepro", "BTCUSD", TickType.Trade)]
+        [TestCase("coinbasepro", "BTCUSD", TickType.Quote)]
+        [TestCase("ftx", "BTCUSD", TickType.Trade)]
+        [TestCase("ftx", "BTCUSD", TickType.Quote)]
+        [TestCase("gateio", "ETHBTC", TickType.Trade)]
+        [TestCase("gateio", "ETHBTC", TickType.Quote)]
+        [TestCase("kraken", "BTCUSD", TickType.Trade)]
+        [TestCase("kraken", "BTCUSD", TickType.Quote)]
+        public void ReceivesMarketData(string exchangeName, string ticker, TickType tickType)
         {
+            Log.Trace("Starting test ReceivesMarketData");
+
             using var brokerage = CreateBrokerage(exchangeName);
 
             brokerage.Connect();
             Assert.IsTrue(brokerage.IsConnected);
 
             var market = new CcxtSymbolMapper(exchangeName).GetLeanMarket();
-            var symbol = Symbol.Create("ETHBTC", SecurityType.Crypto, market);
+            var symbol = Symbol.Create(ticker, SecurityType.Crypto, market);
 
             var config = new SubscriptionDataConfig(
                 typeof(Tick),
