@@ -30,6 +30,9 @@ using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Brokerages.Exante
 {
+    /// <summary>
+    /// The Exante brokerage
+    /// </summary>
     public partial class ExanteBrokerage : Brokerage
     {
         private bool _isConnected;
@@ -39,17 +42,32 @@ namespace QuantConnect.Brokerages.Exante
         private readonly ExanteSymbolMapper _symbolMapper = new ExanteSymbolMapper();
         private readonly ConcurrentDictionary<Guid, Order> _orderMap = new ConcurrentDictionary<Guid, Order>();
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
+
+        /// <inheritdoc />
         public override string AccountBaseCurrency => Currencies.USD;
 
+        /// <summary>
+        /// Provides the mapping between Lean symbols and Exante symbols.
+        /// </summary>
         public ExanteSymbolMapper SymbolMapper => _symbolMapper;
+
+        /// <summary>
+        /// Instance of the wrapper class for a Exante REST API client
+        /// </summary>
         public ExanteClientWrapper Client => _client;
-        
+
         private static readonly HashSet<string> SupportedCryptoCurrencies = new HashSet<string>()
         {
             "ETC", "MKR", "BNB", "NEO", "IOTA", "QTUM", "XMR", "EOS", "ETH", "XRP", "DCR",
             "XLM", "ZRX", "BTC", "XAI", "ZEC", "BAT", "BCH", "VEO", "DEFIX", "OMG", "LTC", "DASH"
         };
 
+        /// <summary>
+        /// Creates a new ExanteBrokerage
+        /// </summary>
+        /// <param name="client">Exante client options to create REST API client instance</param>
+        /// <param name="accountId">Exante account id</param>
+        /// <param name="aggregator">consolidate ticks</param>
         public ExanteBrokerage(
             ExanteClientOptions client,
             string accountId,
@@ -77,8 +95,10 @@ namespace QuantConnect.Brokerages.Exante
             });
         }
 
+        /// <inheritdoc cref="Brokerage.IsConnected" />
         public override bool IsConnected => _isConnected;
 
+        /// <inheritdoc />
         public override List<Order> GetOpenOrders()
         {
             var orders = _client.GetActiveOrders().Data;
@@ -144,7 +164,7 @@ namespace QuantConnect.Brokerages.Exante
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-                
+
                 order.BrokerId = new List<string> {item.OrderId.ToString()};
                 order.Symbol = ConvertSymbol(symbol);
                 order.Time = item.Date;
@@ -156,6 +176,7 @@ namespace QuantConnect.Brokerages.Exante
             return list;
         }
 
+        /// <inheritdoc />
         public override List<Holding> GetAccountHoldings()
         {
             var accountSummary = _client.GetAccountSummary(_accountId, AccountBaseCurrency);
@@ -166,6 +187,7 @@ namespace QuantConnect.Brokerages.Exante
             return positions;
         }
 
+        /// <inheritdoc />
         public override List<CashAmount> GetCashBalance()
         {
             var accountSummary = _client.GetAccountSummary(_accountId, AccountBaseCurrency);
@@ -175,6 +197,7 @@ namespace QuantConnect.Brokerages.Exante
             return cashAmounts.ToList();
         }
 
+        /// <inheritdoc />
         public override bool PlaceOrder(Order order)
         {
             var orderSide = ConvertOrderDirection(order.Direction);
@@ -278,6 +301,7 @@ namespace QuantConnect.Brokerages.Exante
             return orderPlacement.Success;
         }
 
+        /// <inheritdoc />
         public override bool UpdateOrder(Order order)
         {
             var updateResult = true;
@@ -336,6 +360,7 @@ namespace QuantConnect.Brokerages.Exante
             return updateResult;
         }
 
+        /// <inheritdoc />
         public override bool CancelOrder(Order order)
         {
             var cancelResult = true;
@@ -350,11 +375,13 @@ namespace QuantConnect.Brokerages.Exante
             return cancelResult;
         }
 
+        /// <inheritdoc />
         public override void Connect()
         {
             _isConnected = true;
         }
 
+        /// <inheritdoc />
         public override void Disconnect()
         {
             _isConnected = false;
