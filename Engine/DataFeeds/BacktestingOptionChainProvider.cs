@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -28,6 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class BacktestingOptionChainProvider : IOptionChainProvider
     {
         private IDataProvider _dataProvider;
+        private IMapFileProvider _mapFileProvider;
 
         /// <summary>
         /// Creates a new instance
@@ -36,6 +38,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public BacktestingOptionChainProvider(IDataProvider dataProvider)
         {
             _dataProvider = dataProvider;
+            _mapFileProvider =
+                Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider",
+                    "LocalDiskMapFileProvider"));
         }
 
         /// <summary>
@@ -51,13 +56,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new NotSupportedException($"BacktestingOptionChainProvider.GetOptionContractList(): SecurityType.Equity, SecurityType.Future, or SecurityType.Index is expected but was {underlyingSymbol.SecurityType}");
             }
 
+            // Resolve any mapping before requesting option contract list
+            var mapFileResolver = _mapFileProvider.Get(underlyingSymbol.ID.Market);
+            var mapFile = mapFileResolver.ResolveMapFile(underlyingSymbol.Value, date);
+            var ticker = mapFile.GetMappedSymbol(date, underlyingSymbol.Value);
+            var mappedSymbol = underlyingSymbol.UpdateMappedSymbol(ticker);
+
             // build the option contract list from the open interest zip file entry names
 
             // create a canonical option symbol for the given underlying
             var canonicalSymbol = Symbol.CreateOption(
-                underlyingSymbol,
-                underlyingSymbol.ID.Market,
-                underlyingSymbol.SecurityType.DefaultOptionStyle(),
+                mappedSymbol,
+                mappedSymbol.ID.Market,
+                mappedSymbol.SecurityType.DefaultOptionStyle(),
                 default(OptionRight),
                 0,
                 SecurityIdentifier.DefaultDate);
