@@ -194,29 +194,6 @@ namespace QuantConnect.Brokerages.Zerodha
             WebSocket.Send(requestFullMode);
         }
 
-        /// <summary>
-        /// Get symbol exchange
-        /// </summary>
-        /// <param name="symbol">symbols to get market</param>
-        /// <returns>string</returns>
-        private string GetSymbolExchange(Symbol symbol)
-        {   
-            var exchange = _symbolMapper.GetZerodhaDefaultExchange(symbol.ID.Symbol);
-
-            if(symbol.SecurityType == SecurityType.Equity && exchange.ToLowerInvariant() == "nfo")
-            {
-                return "nse";
-            }
-            else if (symbol.SecurityType == SecurityType.Option && exchange.ToLowerInvariant() == "nfo" && symbol.HasUnderlying)
-            {   
-                var underlying_exchange = _symbolMapper.GetZerodhaDefaultExchange(symbol.Underlying.ID.Symbol);
-                if(symbol.Underlying.SecurityType == SecurityType.Equity && underlying_exchange == "nfo")
-                {
-                    return "nse";
-                }
-            }
-            return exchange;
-        }
 
         /// <summary>
         /// Get list of subscribed symbol
@@ -480,6 +457,11 @@ namespace QuantConnect.Brokerages.Zerodha
             catch (Exception ex)
             {
 
+                if (ex is NullReferenceException)
+                {
+                    throw new NullReferenceException($"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}");   
+                }
+
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}";
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
@@ -655,6 +637,11 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             catch (Exception ex)
             {
+                if (ex is NullReferenceException)
+                {
+                    throw new NullReferenceException($"Execution failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}");   
+                }
+
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}"));
 

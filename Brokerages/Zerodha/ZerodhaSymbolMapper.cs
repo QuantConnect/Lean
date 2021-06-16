@@ -166,25 +166,25 @@ namespace QuantConnect.Brokerages.Zerodha
                 switch (tp.Exchange)
                 {
                     case "NSE":
-                        market = Market.NSE;
+                        market = "nse";
                         break;
                     case "NFO":
-                        market = Market.NFO;
+                        market = "nfo";
                         break;
                     case "CDS":
-                        market = Market.CDS;
+                        market = "cds";
                         break;
                     case "BSE":
-                        market = Market.BSE;
+                        market = "bse";
                         break;
                     case "BCD":
-                        market = Market.BSE;
+                        market = "bcd";
                         break;
                     case "MCX":
-                        market = Market.MCX;
+                        market = "mcx";
                         break;
                     default:
-                        market = Market.NSE;
+                        market = "nse";
                         break;
                 }
 

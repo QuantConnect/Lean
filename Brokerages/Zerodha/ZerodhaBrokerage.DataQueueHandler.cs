@@ -74,20 +74,13 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
         private static bool CanSubscribe(Symbol symbol)
         {
-            var market = symbol.ID.Market;
+            var market = symbol.ID.Market; 
             var securityType = symbol.ID.SecurityType;
             if (symbol.Value.IndexOfInvariant("universe", true) != -1) return false;
             // Include future options as a special case with no matching market, otherwise
             // our subscriptions are removed without any sort of notice.
             return
-                 (securityType == SecurityType.Equity) &&
-                    (market == Market.MCX ||
-                    market == Market.NSE ||
-                    market == Market.NFO ||
-                    market == Market.CDS ||
-                    market == Market.BCD ||
-                    market == Market.BSE ||
-                    market == Market.NCDEX);
+                (securityType == SecurityType.Equity) && (market == Market.India);
         }
         #endregion
     }
