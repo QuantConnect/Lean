@@ -40,16 +40,12 @@ namespace QuantConnect.Brokerages.Exante
         {
         }
 
-        /// <summary>
-        /// Not required
-        /// </summary>
+        /// <inheritdoc />
         public override void Dispose()
         {
         }
 
-        /// <summary>
-        /// provides brokerage connection data
-        /// </summary>
+        /// <inheritdoc />
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
             {"exante-client-id", Config.Get("exante-client-id")},
@@ -59,20 +55,28 @@ namespace QuantConnect.Brokerages.Exante
             {"exante-platform-type", Config.Get("exante-platform-type")},
         };
 
+        /// <inheritdoc />
         public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider)
         {
             return new ExanteBrokerageModel();
         }
 
-        public static ExanteClientOptions createExanteClientOptions(
+        /// <summary>
+        /// Creates ExanteClientOptions from configuration values
+        /// </summary>
+        /// <param name="clientId">Exante client ID</param>
+        /// <param name="applicationId">Exante application ID</param>
+        /// <param name="sharedKey">Exante shared key</param>
+        /// <param name="platformTypeStr">Exante platform type (demo or live)</param>
+        /// <returns>Exante client options instance</returns>
+        public static ExanteClientOptions CreateExanteClientOptions(
             string clientId,
             string applicationId,
             string sharedKey,
             string platformTypeStr
             )
         {
-            ExantePlatformType platformType;
-            var platformTypeParsed = Enum.TryParse(platformTypeStr, true, out platformType);
+            var platformTypeParsed = Enum.TryParse(platformTypeStr, true, out ExantePlatformType platformType);
             if (!platformTypeParsed)
             {
                 throw new Exception($"ExantePlatformType parse error: {platformTypeStr}");
@@ -90,6 +94,7 @@ namespace QuantConnect.Brokerages.Exante
             return exanteClientOptions;
         }
 
+        /// <inheritdoc />
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
             var errors = new List<string>();
@@ -107,7 +112,7 @@ namespace QuantConnect.Brokerages.Exante
                 throw new Exception(string.Join(System.Environment.NewLine, errors));
             }
 
-            var clientOptions = createExanteClientOptions(clientId, applicationId, sharedKey, platformTypeStr);
+            var clientOptions = CreateExanteClientOptions(clientId, applicationId, sharedKey, platformTypeStr);
 
             var brokerage = new ExanteBrokerage(
                 clientOptions,
