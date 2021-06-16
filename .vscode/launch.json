@@ -39,8 +39,8 @@
             "request": "attach",
             "port": 5678,
             "pathMappings":[{ 
-                "localRoot": "${workspaceFolder}/Algorithm.Python", 
-                "remoteRoot": "${workspaceFolder}/Launcher/bin/Debug/"
+                "localRoot": "${workspaceFolder}", 
+                "remoteRoot": "${workspaceFolder}"
             }]
         }
     ]
