@@ -56,11 +56,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new NotSupportedException($"BacktestingOptionChainProvider.GetOptionContractList(): SecurityType.Equity, SecurityType.Future, or SecurityType.Index is expected but was {underlyingSymbol.SecurityType}");
             }
 
-            // Resolve any mapping before requesting option contract list
-            var mapFileResolver = _mapFileProvider.Get(underlyingSymbol.ID.Market);
-            var mapFile = mapFileResolver.ResolveMapFile(underlyingSymbol.Value, date);
-            var ticker = mapFile.GetMappedSymbol(date, underlyingSymbol.Value);
-            var mappedSymbol = underlyingSymbol.UpdateMappedSymbol(ticker);
+            // Resolve any mapping before requesting option contract list for equities
+            Symbol mappedSymbol;
+            if (underlyingSymbol.SecurityType.RequiresMapping())
+            {
+                var mapFileResolver = _mapFileProvider.Get(underlyingSymbol.ID.Market);
+                var mapFile = mapFileResolver.ResolveMapFile(underlyingSymbol.Value, date);
+                var ticker = mapFile.GetMappedSymbol(date, underlyingSymbol.Value);
+                mappedSymbol = underlyingSymbol.UpdateMappedSymbol(ticker);
+            }
+            else
+            {
+                mappedSymbol = underlyingSymbol;
+            }
+
 
             // build the option contract list from the open interest zip file entry names
 
