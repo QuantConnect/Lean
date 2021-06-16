@@ -70,8 +70,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataPrices = _api.ReadDataPrices(_organizationId);
             var organization = _api.ReadOrganization(_organizationId);
 
-            // Determine if the user is subscribed to map and factor files
-            if (organization.Products.Where(x => x.Type == ProductType.Data).Any(x => x.Items.Any(x => x.Name.Contains("Factor", StringComparison.InvariantCultureIgnoreCase))))
+            // Determine if the user is subscribed to map and factor files (Data product Id 37)
+            if (organization.Products.Where(x => x.Type == ProductType.Data).Any(x => x.Items.Any(x => x.Id == 37)))
             {
                 _subscribedToEquityMapAndFactorFiles = true;
             }
