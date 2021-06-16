@@ -19,4 +19,4 @@ jobs:
         run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
 
       - name: Run Tests
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter TestCategory=RegressionTests
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter TestCategory=RegressionTests -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\) TestRunParameters.Parameter\(name=\"reduced-disk-size\", value=\"true\"\)
