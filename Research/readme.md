@@ -100,4 +100,9 @@ For most users this will not be necessary, simply use `docker pull quantconnect/
 
 # Known Issues
 - Python research is extremely dependent on the `start.py` script as it is responsible for assigning core clr as the runtime for PythonNet and clr-loader to use for C# library. For local use where the script is not launched automatically by Jupyter, one must call `%run "start.py"` in their first notebook cell for research to work properly. Note that the location of `start.py` is in the launcher bin directory so you may have to use `../start.py` or specify the full path.
+
 - C# research latest kernel no longer supports using statements outside of the notebook context, meaning that `#load ./QuantConnect.csx` no longer applies QC namespaces to the notebook out of the box. Therefore one must specify the namespace directly in a cell. Our default notebooks include these statements as examples.
+
+- Python can sometimes have issues when paired with our quantconnect stubs package on Windows. This issue can cause modules not to be found because `site-packages` directory is not present in the python path. If you have the required modules installed and are seeing errors about them not being found, please try the following steps:
+    - remove stubs -> pip uninstall quantconnect-stubs
+    - reinstall stubs -> pip install quantconnect-stubs
