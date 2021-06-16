@@ -189,11 +189,7 @@ namespace QuantConnect.ToolBox.CoinApi
             }
             else
             {
-                using (var wc = new WebClient())
-                {
-                    var url = $"{RestUrl}/v1/symbols?filter_symbol_id={list}&apiKey={_apiKey}";
-                    json = wc.DownloadString(url);
-                }
+                json = $"{RestUrl}/v1/symbols?filter_symbol_id={list}&apiKey={_apiKey}".DownloadData();
             }
 
             var result = JsonConvert.DeserializeObject<List<CoinApiSymbol>>(json);

@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -419,7 +418,7 @@ namespace QuantConnect.ToolBox.Polygon
                     var url = $"{HistoryBaseUrl}/v1/historic/forex/{baseCurrency}/{quoteCurrency}/{currentDate:yyyy-MM-dd}?" +
                               $"limit={ResponseSizeLimitCurrencies}&apiKey={_apiKey}&offset={offset}";
 
-                    var response = DownloadData(typeof(ForexQuoteTickResponse[]), url, currentDate, "ticks") as ForexQuoteTickResponse[];
+                    var response = DownloadAndParseData(typeof(ForexQuoteTickResponse[]), url, "ticks") as ForexQuoteTickResponse[];
 
                     // The first results of the next page will coincide with last of the previous page, lets clear from repeating values
                     var quoteTicksList = response?.Where(x => x.Timestamp != lastTickTimestamp).ToList();
@@ -496,7 +495,7 @@ namespace QuantConnect.ToolBox.Polygon
                     var url = $"{HistoryBaseUrl}/v1/historic/crypto/{baseCurrency}/{quoteCurrency}/{currentDate:yyyy-MM-dd}?" +
                               $"limit={ResponseSizeLimitCurrencies}&apiKey={_apiKey}&offset={offset}";
 
-                    var response = DownloadData(typeof(CryptoTradeTickResponse[]), url, currentDate, "ticks") as CryptoTradeTickResponse[];
+                    var response = DownloadAndParseData(typeof(CryptoTradeTickResponse[]), url, "ticks") as CryptoTradeTickResponse[];
 
                     // The first results of the next page will coincide with last of the previous page, lets clear from repeating values
                     var tradeTicksList = response?.Where(x => x.Timestamp != lastTickTimestamp).ToList();
@@ -572,7 +571,7 @@ namespace QuantConnect.ToolBox.Polygon
 
                     var url = $"{HistoryBaseUrl}/v2/ticks/stocks/nbbo/{request.Symbol.Value}/{currentDate.Date:yyyy-MM-dd}?" +
                               $"apiKey={_apiKey}&timestamp={offset}&limit={ResponseSizeLimitEquities}";
-                    var response = DownloadData(typeof(EquityQuoteTickResponse[]), url, currentDate, "results") as EquityQuoteTickResponse[];
+                    var response = DownloadAndParseData(typeof(EquityQuoteTickResponse[]), url, "results") as EquityQuoteTickResponse[];
 
                     // The first results of the next page will coincide with last of the previous page
                     // We distinguish the results by the timestamp, lets clear from repeating values
@@ -645,7 +644,7 @@ namespace QuantConnect.ToolBox.Polygon
                     var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.ID.Symbol}/{currentDate:yyyy-MM-dd}?" +
                               $"apiKey={_apiKey}&timestamp={offset}&limit={ResponseSizeLimitEquities}";
 
-                    var response = DownloadData(typeof(EquityTradeTickResponse[]), url, currentDate, "results") as EquityTradeTickResponse[];
+                    var response = DownloadAndParseData(typeof(EquityTradeTickResponse[]), url, "results") as EquityTradeTickResponse[];
 
                     // The first results of the next page will coincide with last of the previous page
                     // We distinguish the results by the timestamp, lets clear from repeating values
@@ -732,7 +731,7 @@ namespace QuantConnect.ToolBox.Polygon
                 var url = $"{HistoryBaseUrl}/v2/aggs/ticker/{tickerPrefix}{request.Symbol.Value}/range/1/{historyTimespan}/{start.Date:yyyy-MM-dd}/{end.Date:yyyy-MM-dd}" +
                           $"?apiKey={_apiKey}&limit={ResponseSizeLimitAggregateData}";
 
-                var aggregatesResponse = DownloadData(typeof(AggregatesResponse), url, start) as AggregatesResponse;
+                var aggregatesResponse = DownloadAndParseData(typeof(AggregatesResponse), url) as AggregatesResponse;
                 var rows = aggregatesResponse?.Results;
 
                 if (rows != null)
@@ -1032,35 +1031,20 @@ namespace QuantConnect.ToolBox.Polygon
             }
         }
 
-        private static object DownloadData(Type type, string url, DateTime currentDate, string jsonPropertyName = null)
+        private static object DownloadAndParseData(Type type, string url, string jsonPropertyName = null)
         {
-            using (var client = new HttpClient())
+            var result = url.DownloadData();
+            if (result == null)
             {
-                string result;
-                try
-                {
-                    using (var response = client.GetAsync(url).Result)
-                    {
-                        using (var content = response.Content)
-                        {
-                            result = content.ReadAsStringAsync().Result;
-                        }
-                    }
-                }
-                catch (WebException ex)
-                {
-                    Log.Trace($"DownloadData(): No data for {currentDate:yyyy-MM-dd}. Server Response: " + ex.Message);
-                    // If server returned an error most likely on this day there is no data we are going to the next cycle
-                    return null;
-                }
-
-                if (jsonPropertyName != null)
-                {
-                    result = JObject.Parse(result)[jsonPropertyName]?.ToString();
-                }
-
-                return result == null ? null : JsonConvert.DeserializeObject(result, type);
+                return null;
             }
+
+            if (jsonPropertyName != null)
+            {
+                result = JObject.Parse(result)[jsonPropertyName]?.ToString();
+            }
+
+            return result == null ? null : JsonConvert.DeserializeObject(result, type);
         }
     }
 }
