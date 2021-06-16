@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Securities;
+
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
@@ -20,6 +22,18 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class AtreyuFeeModel: IFeeModel
     {
+        private readonly decimal _feesPerShare;
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="feesPerShare">The fees per share to apply</param>
+        /// <remarks>Default value is $0.0015 per share</remarks>
+        public AtreyuFeeModel(decimal? feesPerShare = null)
+        {
+            _feesPerShare = feesPerShare ?? 0.0015m;
+        }
+
         /// <summary>
         /// Get the fee for this order in quote currency
         /// </summary>
@@ -28,7 +42,7 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in quote currency</returns>
         public OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            return OrderFee.Zero;
+            return new OrderFee(new CashAmount(_feesPerShare * parameters.Order.AbsoluteQuantity, Currencies.USD));
         }
     }
 }
