@@ -59,6 +59,31 @@ namespace QuantConnect.Tests.Common.Securities.Options
         }
 
         [Test]
+        public void BacktestingOptionChainProviderResolvesSymbolMapping()
+        {
+            var ticker = "GOOCV"; // Old ticker, should resolve and fetch GOOG
+            var provider = new BacktestingOptionChainProvider(TestGlobals.DataProvider);
+
+            var underlyingSymbol = QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            var alias = "?" + underlyingSymbol.Value;
+            var optionSymbol = Symbol.CreateOption(
+                underlyingSymbol,
+                underlyingSymbol.ID.Market,
+                Symbol.GetOptionTypeFromUnderlying(underlyingSymbol).DefaultOptionStyle(),
+                default(OptionRight),
+                0,
+                SecurityIdentifier.DefaultDate,
+                alias);
+
+            var googOptionChain = provider.GetOptionContractList(optionSymbol.Underlying, new DateTime(2015, 12, 23))
+                .ToList();
+
+            Assert.AreEqual(118, googOptionChain.Count);
+            Assert.AreEqual(600m, googOptionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
+            Assert.AreEqual(800m, googOptionChain.OrderBy(s => s.ID.StrikePrice).Last().ID.StrikePrice);
+        }
+
+        [Test]
         public void CachingProviderCachesSymbolsByDate()
         {
             var provider = new CachingOptionChainProvider(new DelayedOptionChainProvider(1000));
