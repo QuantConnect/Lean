@@ -21,6 +21,8 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
@@ -86,6 +88,33 @@ namespace QuantConnect
         /// like future options the market close would match the delisted event time and would cancel all orders and mark the security
         /// as non tradable and delisted.</remarks>
         public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } = TimeSpan.FromMinutes(-15);
+
+        /// <summary>
+        /// Helper method to download a provided url as a string
+        /// </summary>
+        /// <param name="url">The url to download data from</param>
+        public static string DownloadData(this string url)
+        {
+            using (var client = new HttpClient())
+            {
+                try
+                {
+                    using (var response = client.GetAsync(url).Result)
+                    {
+                        using (var content = response.Content)
+                        {
+                            return content.ReadAsStringAsync().Result;
+                        }
+                    }
+                }
+                catch (WebException ex)
+                {
+                    Log.Error(ex, $"DownloadData(): failed for: '{url}'");
+                    // If server returned an error most likely on this day there is no data we are going to the next cycle
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Helper method to create an order request to liquidate a delisted asset
