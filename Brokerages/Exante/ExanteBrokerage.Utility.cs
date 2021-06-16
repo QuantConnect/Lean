@@ -22,6 +22,11 @@ namespace QuantConnect.Brokerages.Exante
 {
     public partial class ExanteBrokerage
     {
+        /// <summary>
+        /// Converts order status from Exante to LEAN
+        /// </summary>
+        /// <param name="status">Exante order status</param>
+        /// <returns>LEAN order status</returns>
         private static OrderStatus ConvertOrderStatus(ExanteOrderStatus status)
         {
             switch (status)
@@ -47,6 +52,11 @@ namespace QuantConnect.Brokerages.Exante
             }
         }
 
+        /// <summary>
+        /// Converts holding position from Exante to LEAN
+        /// </summary>
+        /// <param name="position">Exante position</param>
+        /// <returns>LEAN holding</returns>
         private Holding ConvertHolding(ExantePosition position)
         {
             var exanteSymbol = _client.GetSymbol(position.SymbolId).Data;
@@ -77,6 +87,11 @@ namespace QuantConnect.Brokerages.Exante
             return holding;
         }
 
+        /// <summary>
+        /// Converts order direction from LEAN to Exante
+        /// </summary>
+        /// <param name="orderDirection">LEAN order direction</param>
+        /// <returns>Exante order side</returns>
         private ExanteOrderSide ConvertOrderDirection(OrderDirection orderDirection)
         {
             var orderSide = default(ExanteOrderSide);
@@ -96,6 +111,11 @@ namespace QuantConnect.Brokerages.Exante
             return orderSide;
         }
 
+        /// <summary>
+        /// Converts order direction from Exante to LEAN
+        /// </summary>
+        /// <param name="orderSide">Exante order side</param>
+        /// <returns>LEAN order direction</returns>
         private OrderDirection ConvertOrderSide(ExanteOrderSide orderSide)
         {
             var orderDirection = default(OrderDirection);
@@ -115,6 +135,11 @@ namespace QuantConnect.Brokerages.Exante
             return orderDirection;
         }
 
+        /// <summary>
+        /// Get symbol market from Exante symbol
+        /// </summary>
+        /// <param name="symbol">Exante symbol</param>
+        /// <returns>Symbol market</returns>
         private static string GetSymbolMarket(ExanteSymbol symbol)
         {
             switch (symbol.SymbolType)
@@ -262,6 +287,11 @@ namespace QuantConnect.Brokerages.Exante
             }
         }
 
+        /// <summary>
+        /// Gets symbol security type from Exante symbol
+        /// </summary>
+        /// <param name="symbol">Exante symbol</param>
+        /// <returns>Symbol security type</returns>
         private static SecurityType GetSymbolSecurityType(ExanteSymbol symbol)
         {
             switch (symbol.SymbolType)
@@ -299,6 +329,11 @@ namespace QuantConnect.Brokerages.Exante
             }
         }
 
+        /// <summary>
+        /// Converts option right from Exante to LEAN
+        /// </summary>
+        /// <param name="optionRight">Exante option right</param>
+        /// <returns>LEAN option right</returns>
         private OptionRight ConvertOptionRight(string optionRight)
         {
             switch (optionRight)
@@ -312,6 +347,11 @@ namespace QuantConnect.Brokerages.Exante
             }
         }
 
+        /// <summary>
+        /// Converts symbol from Exante to LEAN
+        /// </summary>
+        /// <param name="symbol">Exante symbol</param>
+        /// <returns>LEAN symbol</returns>
         private Symbol ConvertSymbol(ExanteSymbol symbol)
         {
             var market = GetSymbolMarket(symbol);
