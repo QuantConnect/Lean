@@ -24,18 +24,26 @@ using Exante.Net.Objects;
 
 namespace QuantConnect.Brokerages.Exante
 {
+    /// <summary>
+    /// Wrapper class for a Exante REST API client
+    /// </summary>
     public class ExanteClientWrapper
     {
         private readonly ExanteClient _client;
+        
+        /// <summary>Get Exante client for stream data</summary>
         public ExanteStreamClient StreamClient { get; private set; }
 
+        /// <summary>
+        /// Creates instance of wrapper class for a Exante REST API client
+        /// </summary>
         public ExanteClientWrapper(ExanteClientOptions clientOptions)
         {
             _client = new ExanteClient(clientOptions);
             StreamClient = new ExanteStreamClient(clientOptions);
         }
 
-        private void checkIfResponseOk<T>(WebCallResult<T> response, HttpStatusCode statusCode = HttpStatusCode.OK)
+        private static void CheckIfResponseOk<T>(WebCallResult<T> response, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             if (!(response.ResponseStatusCode == statusCode && response.Success))
             {
@@ -44,14 +52,36 @@ namespace QuantConnect.Brokerages.Exante
             }
         }
 
+        /// <summary>Get account summary</summary>
+        /// <returns>Summary for the specified account</returns>
         public ExanteAccountSummary GetAccountSummary(string accountId, string reportCurrency)
         {
             var response =
                 _client.GetAccountSummaryAsync(accountId, reportCurrency).SynchronouslyAwaitTaskResult();
-            checkIfResponseOk(response);
+            CheckIfResponseOk(response);
             return response.Data;
         }
 
+        /// <summary>Place order</summary>
+        /// <param name="accountId">User account to place order</param>
+        /// <param name="symbolId">Order instrument</param>
+        /// <param name="type">Order type</param>
+        /// <param name="side">Order side</param>
+        /// <param name="quantity">Order quantity</param>
+        /// <param name="duration">Order duration</param>
+        /// <param name="limitPrice">Order limit price if applicable</param>
+        /// <param name="stopPrice">Order stop price if applicable</param>
+        /// <param name="stopLoss">Optional price of stop loss order</param>
+        /// <param name="takeProfit">Optional price of take profit order</param>
+        /// <param name="placeInterval">Order place interval, twap orders only</param>
+        /// <param name="clientTag">Optional client tag to identify or group orders</param>
+        /// <param name="parentId">ID of an order on which this order depends</param>
+        /// <param name="ocoGroupId">One-Cancels-the-Other group ID if set</param>
+        /// <param name="gttExpiration">Order expiration if applicable</param>
+        /// <param name="priceDistance">Order price distance, trailing stop orders only</param>
+        /// <param name="partQuantity">Order partial quantity, twap and Iceberg orders only</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns>New trading order</returns>
         public WebCallResult<IEnumerable<ExanteOrder>> PlaceOrder(
             string accountId,
             string symbolId,
@@ -92,17 +122,21 @@ namespace QuantConnect.Brokerages.Exante
                 priceDistance,
                 partQuantity,
                 ct).SynchronouslyAwaitTaskResult();
-            checkIfResponseOk(response, HttpStatusCode.Created);
+            CheckIfResponseOk(response, HttpStatusCode.Created);
             return response;
         }
 
+        /// <summary>Get active orders</summary>
+        /// <returns>List of active trading orders</returns>
         public WebCallResult<IEnumerable<ExanteOrder>> GetActiveOrders()
         {
             var response = _client.GetActiveOrdersAsync().SynchronouslyAwaitTaskResult();
-            checkIfResponseOk(response);
+            CheckIfResponseOk(response);
             return response;
         }
 
+        /// <summary>Get ticks</summary>
+        /// <returns>List of ticks for the specified financial instrument</returns>
         public WebCallResult<IEnumerable<ExanteTick>> GetTicks(
             string symbolId,
             DateTime? from = null,
@@ -120,10 +154,12 @@ namespace QuantConnect.Brokerages.Exante
                 tickType,
                 ct
             ).SynchronouslyAwaitTaskResult();
-            checkIfResponseOk(response);
+            CheckIfResponseOk(response);
             return response;
         }
 
+        /// <summary>Get instrument</summary>
+        /// <returns>Instrument available for authorized user</returns>
         public WebCallResult<ExanteSymbol> GetSymbol(
             string symbolId,
             CancellationToken ct = default(CancellationToken)
@@ -131,10 +167,12 @@ namespace QuantConnect.Brokerages.Exante
         {
             var response =
                 _client.GetSymbolAsync(symbolId, ct).SynchronouslyAwaitTaskResult();
-            checkIfResponseOk(response);
+            CheckIfResponseOk(response);
             return response;
         }
 
+        /// <summary>Get order</summary>
+        /// <returns>Order with specified identifier</returns>
         public WebCallResult<ExanteOrder> GetOrder(
             Guid orderId,
             CancellationToken ct = default
@@ -142,10 +180,19 @@ namespace QuantConnect.Brokerages.Exante
         {
             var response =
                 _client.GetOrderAsync(orderId, ct).SynchronouslyAwaitTaskResult();
-            checkIfResponseOk(response);
+            CheckIfResponseOk(response);
             return response;
         }
 
+        /// <summary>Modify order</summary>
+        /// <param name="orderId">Order identifier</param>
+        /// <param name="action">Order modification action</param>
+        /// <param name="quantity">New order quantity to replace</param>
+        /// <param name="stopPrice">New order stop price if applicable</param>
+        /// <param name="priceDistance">New order price distance if applicable</param>
+        /// <param name="limitPrice">New order limit price if applicable</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
         public WebCallResult<ExanteOrder> ModifyOrder(
             Guid orderId,
             ExanteOrderAction action,
@@ -164,10 +211,12 @@ namespace QuantConnect.Brokerages.Exante
                 priceDistance,
                 limitPrice,
                 ct).SynchronouslyAwaitTaskResult();
-            checkIfResponseOk(response);
+            CheckIfResponseOk(response);
             return response;
         }
 
+        /// <summary>Get live feed last quote</summary>
+        /// <returns>Last quote for the specified financial instrument</returns>
         public WebCallResult<IEnumerable<ExanteTickShort>> GetFeedLastQuote(
             IEnumerable<string> symbolIds,
             ExanteQuoteLevel level = ExanteQuoteLevel.BestPrice,
@@ -176,7 +225,7 @@ namespace QuantConnect.Brokerages.Exante
         {
             var response =
                 _client.GetFeedLastQuoteAsync(symbolIds, level, ct).SynchronouslyAwaitTaskResult();
-            checkIfResponseOk(response);
+            CheckIfResponseOk(response);
             return response;
         }
     }
