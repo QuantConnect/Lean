@@ -57,11 +57,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // Resolve any mapping before requesting option contract list for equities
+            // Needs to be done in order for the data file key to be accurate
             Symbol mappedSymbol;
             if (underlyingSymbol.SecurityType.RequiresMapping())
             {
                 var mapFileResolver = _mapFileProvider.Get(underlyingSymbol.ID.Market);
-                var mapFile = mapFileResolver.ResolveMapFile(underlyingSymbol.Value, date);
+                var mapFile = mapFileResolver.ResolveMapFile(underlyingSymbol.ID.Symbol, date);
                 var ticker = mapFile.GetMappedSymbol(date, underlyingSymbol.Value);
                 mappedSymbol = underlyingSymbol.UpdateMappedSymbol(ticker);
             }
