@@ -103,6 +103,6 @@ For most users this will not be necessary, simply use `docker pull quantconnect/
 
 - C# research latest kernel no longer supports using statements outside of the notebook context, meaning that `#load ./QuantConnect.csx` no longer applies QC namespaces to the notebook out of the box. Therefore one must specify the namespace directly in a cell. Our default notebooks include these statements as examples.
 
-- Python can sometimes have issues when paired with our quantconnect stubs package on windows. If this occurs for you, please try the following steps:
+- Python can sometimes have issues when paired with our quantconnect stubs package on Windows. This issue can cause modules not to be found because `site-packages` directory is not present in the python path. If you have the required modules installed and are seeing errors about them not being found, please try the following steps:
     - remove stubs -> pip uninstall quantconnect-stubs
     - reinstall stubs -> pip install quantconnect-stubs
