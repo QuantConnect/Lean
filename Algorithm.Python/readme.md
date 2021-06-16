@@ -170,3 +170,7 @@ QCAlgorithmFramework = QCAlgorithm
 QCAlgorithmFrameworkBridge = QCAlgorithm
 ```
 
+# Known Issues
+- Python can sometimes have issues when paired with our quantconnect stubs package on Windows. If this occurs for you, please try the following steps:
+    - remove stubs -> pip uninstall quantconnect-stubs
+    - reinstall stubs -> pip install quantconnect-stubs
