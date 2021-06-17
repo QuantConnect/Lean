@@ -173,16 +173,14 @@ namespace QuantConnect.Lean.Engine.Results
                 var serverStatistics = GetServerStatistics(utcNow);
                 var performanceCharts = new Dictionary<string, Chart>();
 
-                // Filter out charts that aren't needed and update
-                Dictionary<string, Chart> charts;
+                // Process our charts updates
                 lock (ChartLock)
                 {
-                    charts = GetFilteredCharts();
-                    foreach (var kvp in charts)
+                    foreach (var kvp in Charts)
                     {
                         var chart = kvp.Value;
 
-                        // Get a chart with updates only since last request
+                        // Get a copy of this chart with updates only since last request
                         var updates = chart.GetUpdates();
                         if (!updates.IsEmpty())
                         {
@@ -222,7 +220,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var orderCount = TransactionHandler.Orders.Count;
 
                     var completeResult = new BacktestResult(new BacktestResultParameters(
-                        charts,
+                        Charts,
                         orderCount > maxOrders ? TransactionHandler.Orders.Skip(orderCount - maxOrders).ToDictionary() : TransactionHandler.Orders.ToDictionary(),
                         Algorithm.Transactions.TransactionRecord,
                         new Dictionary<string, string>(),
@@ -349,7 +347,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (Algorithm != null)
                 {
                     //Convert local dictionary:
-                    var charts = GetFilteredCharts();
+                    var charts = new Dictionary<string, Chart>(Charts);
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
                     var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate);
