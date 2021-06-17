@@ -172,23 +172,24 @@ namespace QuantConnect.Lean.Engine.Results
                 var deltaCharts = new Dictionary<string, Chart>();
                 var serverStatistics = GetServerStatistics(utcNow);
                 var performanceCharts = new Dictionary<string, Chart>();
-                Dictionary<string, Chart> validCharts;
+
+                // Filter out charts that aren't needed and update
+                Dictionary<string, Chart> charts;
                 lock (ChartLock)
                 {
-                    validCharts = Charts.Where(x =>
-                        x.Value.Series.Any(series =>
-                            !series.Value.IsEmpty() && series.Value.Values.Any(point => point.y != 0))).ToDictionary();
-                    //Get the updates since the last chart
-                    foreach (var kvp in validCharts)
+                    charts = GetFilteredCharts();
+                    foreach (var kvp in charts)
                     {
                         var chart = kvp.Value;
 
+                        // Get a chart with updates only since last request
                         var updates = chart.GetUpdates();
                         if (!updates.IsEmpty())
                         {
                             deltaCharts.Add(chart.Name, updates);
                         }
 
+                        // Update our algorithm performance charts 
                         if (AlgorithmPerformanceCharts.Contains(kvp.Key))
                         {
                             performanceCharts[kvp.Key] = chart.Clone();
@@ -221,7 +222,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var orderCount = TransactionHandler.Orders.Count;
 
                     var completeResult = new BacktestResult(new BacktestResultParameters(
-                        validCharts,
+                        charts,
                         orderCount > maxOrders ? TransactionHandler.Orders.Skip(orderCount - maxOrders).ToDictionary() : TransactionHandler.Orders.ToDictionary(),
                         Algorithm.Transactions.TransactionRecord,
                         new Dictionary<string, string>(),
@@ -348,9 +349,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (Algorithm != null)
                 {
                     //Convert local dictionary:
-                    var charts = new Dictionary<string, Chart>(Charts.Where(x =>
-                        x.Value.Series.Any(series =>
-                            !series.Value.IsEmpty() && series.Value.Values.Any(point => point.y != 0))));
+                    var charts = GetFilteredCharts();
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
                     var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate);
@@ -392,6 +391,27 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Helper method to filter out charts that don't contain any useful data to update
+        /// </summary>
+        /// <returns></returns>
+        private Dictionary<string, Chart> GetFilteredCharts()
+        {
+            // Create a copy of our charts
+            var charts = new Dictionary<string, Chart>(Charts);
+
+            // Remove the Alpha charts if we don't have any insights
+            // Charts added by 'ChartingInsightManagerExtension'
+            if (charts.ContainsKey("Alpha") && AlphaRuntimeStatistics.LongCount == 0 && AlphaRuntimeStatistics.ShortCount == 0)
+            {
+                charts.Remove("Alpha");
+                charts.Remove("Alpha Assets");
+                charts.Remove("Insight Count");
+            }
+
+            return charts;
         }
 
         /// <summary>
