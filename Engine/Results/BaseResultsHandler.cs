@@ -530,7 +530,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var underwaterDrawdown = Statistics.Statistics.DrawdownUnderwater(currentPortfolioValue, StartingPortfolioValue,
                     CumulativeMaxPortfolioValue);
 
-                Sample("Drawdown", "Equity Underwater Drawdown", 0, SeriesType.Bar, time, underwaterDrawdown, "%");
+                Sample("Drawdown", "Equity Drawdown", 0, SeriesType.Bar, time, underwaterDrawdown, "%");
             }
         }
 
