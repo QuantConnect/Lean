@@ -68,7 +68,7 @@ namespace QuantConnect.ToolBox.CoinApi
         private readonly TimeSpan _minimumTimeBetweenHelloMessages = TimeSpan.FromSeconds(5);
         private DateTime _nextHelloMessageUtcTime = DateTime.MinValue;
 
-        private readonly Dictionary<Symbol, Tick> _previousQuotes = new Dictionary<Symbol, Tick>();
+        private readonly ConcurrentDictionary<string, Tick> _previousQuotes = new ConcurrentDictionary<string, Tick>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoinApiDataQueueHandler"/> class
@@ -310,16 +310,9 @@ namespace QuantConnect.ToolBox.CoinApi
                     return;
                 }
 
-                var tick = new Tick
-                {
-                    Symbol = symbol,
-                    Time = trade.time_exchange,
-                    Value = trade.price,
-                    Quantity = trade.size,
-                    TickType = TickType.Trade
-                };
+                var tick = new Tick(trade.time_exchange, symbol, string.Empty, string.Empty, quantity: trade.size, price: trade.price);
 
-                lock (_locker)
+                lock (symbol)
                 {
                     _dataAggregator.Update(tick);
                 }
@@ -334,32 +327,25 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             try
             {
-                var symbol = GetSymbolUsingCache(quote.symbol_id);
-                if (symbol == null)
+                // only emit quote ticks if bid price or ask price changed
+                Tick previousQuote;
+                if (!_previousQuotes.TryGetValue(quote.symbol_id, out previousQuote)
+                    || quote.ask_price != previousQuote.AskPrice
+                    || quote.bid_price != previousQuote.BidPrice)
                 {
-                    return;
-                }
-
-                var tick = new Tick
-                {
-                    Symbol = symbol,
-                    Time = quote.time_exchange,
-                    AskPrice = quote.ask_price,
-                    AskSize = quote.ask_size,
-                    BidPrice = quote.bid_price,
-                    BidSize = quote.bid_size,
-                    TickType = TickType.Quote
-                };
-
-                lock (_locker)
-                {
-                    // only emit quote ticks if bid price or ask price changed
-                    Tick previousQuote;
-                    if (!_previousQuotes.TryGetValue(tick.Symbol, out previousQuote) ||
-                        tick.AskPrice != previousQuote.AskPrice ||
-                        tick.BidPrice != previousQuote.BidPrice)
+                    var symbol = GetSymbolUsingCache(quote.symbol_id);
+                    if (symbol == null)
                     {
-                        _previousQuotes[tick.Symbol] = tick;
+                        return;
+                    }
+
+                    var tick = new Tick(quote.time_exchange, symbol, string.Empty, string.Empty,
+                        bidSize: quote.bid_size, bidPrice: quote.bid_price,
+                        askSize: quote.ask_size, askPrice: quote.ask_price);
+
+                    _previousQuotes[quote.symbol_id] = tick;
+                    lock (symbol)
+                    {
                         _dataAggregator.Update(tick);
                     }
                 }
