@@ -403,6 +403,7 @@ namespace QuantConnect.Lean.Engine.Results
             StartingPortfolioValue = startingPortfolioValue;
             PreviousUtcSampleTime = Algorithm.UtcTime;
             DailyPortfolioValue = StartingPortfolioValue;
+            CumulativeMaxPortfolioValue = StartingPortfolioValue;
             _capacityEstimate = new CapacityEstimate(Algorithm);
 
             //Get the resample period:

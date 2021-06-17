@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -620,6 +620,25 @@ namespace QuantConnect.Statistics
             // we don't annualize it
             return standardDeviation.IsNaNOrZero() ? 0 : performanceAverage / standardDeviation;
         }
+
+        /// <summary>
+        /// Calculate the Underwater Drawdown
+        /// </summary>
+        /// <param name="currentValue">Current value</param>
+        /// <param name="firstValue">First value</param>
+        /// <param name="cumulativeMax">Latest maximum</param>
+        /// <returns></returns>
+        public static decimal DrawdownUnderwater(decimal currentValue, decimal firstValue, decimal cumulativeMax)
+        {
+            if (firstValue == 0 || cumulativeMax == 0)
+            {
+                throw new ArgumentException("First value and max cumulative value must not be 0");
+            }
+
+            var returns = currentValue / firstValue;
+            return (1 - (returns / cumulativeMax)) * -1;
+        }
+
     } // End of Statistics
 
 } // End of Namespace

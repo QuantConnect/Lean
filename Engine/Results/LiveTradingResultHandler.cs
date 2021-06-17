@@ -712,6 +712,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Algorithm = algorithm;
             _portfolioValue = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
+            CumulativeMaxPortfolioValue = StartingPortfolioValue;
 
             var types = new List<SecurityType>();
             foreach (var kvp in Algorithm.Securities)

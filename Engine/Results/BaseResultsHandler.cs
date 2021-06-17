@@ -173,6 +173,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected decimal DailyPortfolioValue;
 
         /// <summary>
+        /// Cumulative max portfolio value. Used to calculate drawdown underwater.
+        /// </summary>
+        protected decimal CumulativeMaxPortfolioValue;
+
+        /// <summary>
         /// Last time the <see cref="IResultHandler.Sample(DateTime, bool)"/> method was called in UTC
         /// </summary>
         protected DateTime PreviousUtcSampleTime;
@@ -459,6 +464,7 @@ namespace QuantConnect.Lean.Engine.Results
                 SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
                 SampleBenchmark(PreviousUtcSampleTime, GetBenchmarkValue());
                 SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
+                SampleDrawdown(PreviousUtcSampleTime, currentPortfolioValue);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
                 // with skewed statistics if a processing event was forced.
@@ -507,6 +513,25 @@ namespace QuantConnect.Lean.Engine.Results
         protected virtual void SampleBenchmark(DateTime time, decimal value)
         {
             Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
+        }
+
+        /// <summary>
+        /// Sample drawdown of equity of the strategy
+        /// </summary>
+        /// <param name="time"></param>
+        /// <param name="currentPortfolioValue"></param>
+        protected virtual void SampleDrawdown(DateTime time, decimal currentPortfolioValue)
+        {
+            // This will throw otherwise, in this case just don't sample
+            if (StartingPortfolioValue != 0 && currentPortfolioValue != 0)
+            {
+                // Check for update on cumulative max, and then calculate our draw down
+                CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
+                var underwaterDrawdown = Statistics.Statistics.DrawdownUnderwater(currentPortfolioValue, StartingPortfolioValue,
+                    CumulativeMaxPortfolioValue);
+
+                Sample("Drawdown", "Equity Underwater Drawdown", 0, SeriesType.Bar, time, underwaterDrawdown, "%");
+            }
         }
 
         /// <summary>
