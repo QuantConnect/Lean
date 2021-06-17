@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var dividend in slice.Dividends.Values)
             {
-                if (dividend.ReferencePrice != 32.59m || dividend.Distribution != 3.82m)
+                if (dividend.ReferencePrice != 32.6m || dividend.Distribution != 3.82m)
                 {
                     throw new Exception($"{Time} - Invalid dividend {dividend}");
                 }
@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-0.006%"},
-            {"Sharpe Ratio", "-3.943"},
+            {"Sharpe Ratio", "-3.94"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
@@ -159,7 +159,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-3.943"},
+            {"Information Ratio", "-3.94"},
             {"Tracking Error", "0.002"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$4.00"},
@@ -169,7 +169,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-2.808"},
+            {"Return Over Maximum Drawdown", "-2.801"},
             {"Portfolio Turnover", "0.001"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -184,7 +184,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "bc96f0b98a0865ad88b6b995a26bfd9b"}
+            {"OrderListHash", "9f441a1cf21e08f48d430a4a4e44ca4b"}
         };
     }
 }
