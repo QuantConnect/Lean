@@ -172,11 +172,14 @@ namespace QuantConnect.Lean.Engine.Results
                 var deltaCharts = new Dictionary<string, Chart>();
                 var serverStatistics = GetServerStatistics(utcNow);
                 var performanceCharts = new Dictionary<string, Chart>();
+                Dictionary<string, Chart> validCharts;
                 lock (ChartLock)
                 {
+                    validCharts = Charts.Where(x =>
+                        x.Value.Series.Any(series =>
+                            !series.Value.IsEmpty() && series.Value.Values.Any(point => point.y != 0))).ToDictionary();
                     //Get the updates since the last chart
-                    foreach (var kvp in Charts.Where(x => 
-                        x.Value.Series.Any(series => !series.Value.IsEmpty() && series.Value.Values.Any(point => point.y != 0))))
+                    foreach (var kvp in validCharts)
                     {
                         var chart = kvp.Value;
 
@@ -218,7 +221,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var orderCount = TransactionHandler.Orders.Count;
 
                     var completeResult = new BacktestResult(new BacktestResultParameters(
-                        Charts,
+                        validCharts,
                         orderCount > maxOrders ? TransactionHandler.Orders.Skip(orderCount - maxOrders).ToDictionary() : TransactionHandler.Orders.ToDictionary(),
                         Algorithm.Transactions.TransactionRecord,
                         new Dictionary<string, string>(),
