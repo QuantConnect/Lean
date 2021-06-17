@@ -520,13 +520,13 @@ namespace QuantConnect.Securities.Future
             },
 
             // Nifty 50 Index Futures: https://www1.nseindia.com/products/content/derivatives/equities/contract_specifitns.htm
-            {Symbol.Create(Futures.Indices.Nifty50, SecurityType.Future, "india"), (time =>
+            {Symbol.Create(Futures.Indices.Nifty50, SecurityType.Future, Market.India), (time =>
                 {
                     // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
                     // The expiring contract shall close on its last trading day at 3.30 pm.
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("india", Futures.Indices.Nifty50, SecurityType.Future)
+                        .GetEntry(Market.India, Futures.Indices.Nifty50, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -541,13 +541,13 @@ namespace QuantConnect.Securities.Future
             },
 
             // BankNifty Index Futures: https://www1.nseindia.com/products/content/derivatives/equities/bank_nifty_new.htm
-            {Symbol.Create(Futures.Indices.BankNifty, SecurityType.Future, "india"), (time =>
+            {Symbol.Create(Futures.Indices.BankNifty, SecurityType.Future, Market.India), (time =>
                 {
                     // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
                     // The expiring contract shall close on its last trading day at 3.30 pm.
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("india", Futures.Indices.BankNifty, SecurityType.Future)
+                        .GetEntry(Market.India, Futures.Indices.BankNifty, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -563,12 +563,12 @@ namespace QuantConnect.Securities.Future
 
 
             // BSE S&P Sensex Index Futures: https://www.bseindia.com/static/markets/Derivatives/DeriReports/market_information.html#!#ach6
-            {Symbol.Create(Futures.Indices.BseSensex, SecurityType.Future, "india"), (time =>
+            {Symbol.Create(Futures.Indices.BseSensex, SecurityType.Future, Market.India), (time =>
                 {
                     // Last Thursday of the expiring contract month. If this falls on an BSE non-business day, the last trading day shall be the preceding business day.
                     // The expiring contract shall close on its last trading day at 3.30 pm.
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("india", Futures.Indices.BseSensex, SecurityType.Future)
+                        .GetEntry(Market.India, Futures.Indices.BseSensex, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 

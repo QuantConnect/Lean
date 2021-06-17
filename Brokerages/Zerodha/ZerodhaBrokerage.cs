@@ -455,6 +455,10 @@ namespace QuantConnect.Brokerages.Zerodha
                 return false;
             }
 
+            if (orderProperties.Exchange == null)
+            {
+                throw new NullReferenceException("Error! Please set required exchange for Placing an Order");   
+            }
 
             try
             {
@@ -463,11 +467,6 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             catch (Exception ex)
             {
-
-                if (ex is NullReferenceException)
-                {
-                    throw new NullReferenceException($"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}");   
-                }
 
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}";
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
@@ -617,7 +616,10 @@ namespace QuantConnect.Brokerages.Zerodha
                 UnlockStream();
                 return false;
             }
-
+            if (orderProperties.Exchange == null)
+            {
+                throw new NullReferenceException("Error! Please set required exchange for Placing an Order");   
+            }
 
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
             JObject orderResponse;
@@ -644,10 +646,6 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             catch (Exception ex)
             {
-                if (ex is NullReferenceException)
-                {
-                    throw new NullReferenceException($"Execution failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}");   
-                }
 
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}"));

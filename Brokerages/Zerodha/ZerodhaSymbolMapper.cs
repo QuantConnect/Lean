@@ -134,7 +134,7 @@ namespace QuantConnect.Brokerages.Zerodha
             foreach (var tp in tradableInstruments)
             {
                 var securityType = SecurityType.Equity;
-                var market = "india";
+                var market = Market.India;
                 OptionRight optionRight = 0;
 
                 switch (tp.InstrumentType)
@@ -161,33 +161,6 @@ namespace QuantConnect.Brokerages.Zerodha
                         securityType = SecurityType.Base;
                         break;
                 }
-
-
-                switch (tp.Exchange)
-                {
-                    case "NSE":
-                        market = "india";
-                        break;
-                    case "NFO":
-                        market = "india";
-                        break;
-                    case "CDS":
-                        market = "india";
-                        break;
-                    case "BSE":
-                        market = "india";
-                        break;
-                    case "BCD":
-                        market = "india";
-                        break;
-                    case "MCX":
-                        market = "india";
-                        break;
-                    default:
-                        market = "india";
-                        break;
-                }
-
 
                 if (securityType == SecurityType.Option)
                 {
