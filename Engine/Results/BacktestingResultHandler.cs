@@ -394,27 +394,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Helper method to filter out charts that don't contain any useful data to update
-        /// </summary>
-        /// <returns></returns>
-        private Dictionary<string, Chart> GetFilteredCharts()
-        {
-            // Create a copy of our charts
-            var charts = new Dictionary<string, Chart>(Charts);
-
-            // Remove the Alpha charts if we don't have any insights
-            // Charts added by 'ChartingInsightManagerExtension'
-            if (charts.ContainsKey("Alpha") && AlphaRuntimeStatistics.LongCount == 0 && AlphaRuntimeStatistics.ShortCount == 0)
-            {
-                charts.Remove("Alpha");
-                charts.Remove("Alpha Assets");
-                charts.Remove("Insight Count");
-            }
-
-            return charts;
-        }
-
-        /// <summary>
         /// Set the Algorithm instance for ths result.
         /// </summary>
         /// <param name="algorithm">Algorithm we're working on.</param>

@@ -178,7 +178,7 @@ namespace QuantConnect.Lean.Engine.Results
                     lock (ChartLock)
                     {
                         //Get the updates since the last chart
-                        foreach (var chart in Charts)
+                        foreach (var chart in GetFilteredCharts())
                         {
                             var chartUpdates = chart.Value.GetUpdates();
                             // we only want to stream charts that have new updates
@@ -234,7 +234,7 @@ namespace QuantConnect.Lean.Engine.Results
                         var chartComplete = new Dictionary<string, Chart>();
                         lock (ChartLock)
                         {
-                            foreach (var chart in Charts)
+                            foreach (var chart in GetFilteredCharts())
                             {
                                 // remove directory pathing characters from chart names
                                 var safeName = chart.Value.Name.Replace('/', '-');
@@ -296,7 +296,7 @@ namespace QuantConnect.Lean.Engine.Results
                         var chartComplete = new Dictionary<string, Chart>();
                         lock (ChartLock)
                         {
-                            foreach (var chart in Charts)
+                            foreach (var chart in GetFilteredCharts())
                             {
                                 // remove directory pathing characters from chart names
                                 var safeName = chart.Value.Name.Replace('/', '-');
@@ -327,7 +327,7 @@ namespace QuantConnect.Lean.Engine.Results
                         var timeLimitUtc = Time.DateTimeToUnixTimeStamp(utcNow.AddDays(-2));
                         lock (ChartLock)
                         {
-                            foreach (var chart in Charts)
+                            foreach (var chart in GetFilteredCharts())
                             {
                                 foreach (var series in chart.Value.Series)
                                 {
@@ -780,7 +780,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var charts = new Dictionary<string, Chart>();
                     lock (ChartLock)
                     {
-                        foreach (var kvp in Charts)
+                        foreach (var kvp in GetFilteredCharts())
                         {
                             charts.Add(kvp.Key, kvp.Value.Clone());
                         }
