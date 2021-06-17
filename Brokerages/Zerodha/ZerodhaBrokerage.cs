@@ -174,17 +174,20 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             foreach (var symbol in symbols)
             {
-                var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol);
-                if (instrumentToken == 0)
+                var instrumentTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.ID.Symbol);
+                if (instrumentTokenList.Count == 0)
                 {
                     Log.Error("ZerodhaBrokerage.Subscribe(): Invalid Zerodha Instrument token");
                     continue;
                 }
-                if (!subscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
+                foreach (var instrumentToken in instrumentTokenList)
                 {
-                    subscribeInstrumentTokens.Add(instrumentToken.ToStringInvariant());
-                    unSubscribeInstrumentTokens.Remove(instrumentToken.ToStringInvariant());
-                    _subscriptionsById[instrumentToken.ToStringInvariant()] = symbol;
+                    if (!subscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
+                    {
+                        subscribeInstrumentTokens.Add(instrumentToken.ToStringInvariant());
+                        unSubscribeInstrumentTokens.Remove(instrumentToken.ToStringInvariant());
+                        _subscriptionsById[instrumentToken.ToStringInvariant()] = symbol;
+                    }
                 }
             }
             //Websocket Data subscription modes. Full mode gives depth of asks and bids along with basic data.
@@ -213,18 +216,21 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 foreach (var symbol in symbols)
                 {
-                    var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol);
-                    if (instrumentToken == 0)
+                    var instrumentTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.ID.Symbol);
+                    if (instrumentTokenList.Count == 0)
                     {
                         Log.Error("ZerodhaBrokerage.Unsubscribe(): Invalid Zerodha Instrument token");
                         continue;
                     }
-                    if (!unSubscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
+                    foreach (var instrumentToken in instrumentTokenList)
                     {
-                        unSubscribeInstrumentTokens.Add(instrumentToken.ToStringInvariant());
-                        subscribeInstrumentTokens.Remove(instrumentToken.ToStringInvariant());
-                        Symbol unSubscribeSymbol;
-                        _subscriptionsById.TryRemove(instrumentToken.ToStringInvariant(), out unSubscribeSymbol);
+                        if (!unSubscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
+                        {
+                            unSubscribeInstrumentTokens.Add(instrumentToken.ToStringInvariant());
+                            subscribeInstrumentTokens.Remove(instrumentToken.ToStringInvariant());
+                            Symbol unSubscribeSymbol;
+                            _subscriptionsById.TryRemove(instrumentToken.ToStringInvariant(), out unSubscribeSymbol);
+                        }
                     }
                 }
                 var request = "{\"a\":\"unsubscribe\",\"v\":[" + String.Join(",", unSubscribeInstrumentTokens.ToArray()) + "]}";
@@ -242,7 +248,8 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns> Quote</returns>
         public Quote GetQuote(Symbol symbol)
         {
-            var instrument = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol);
+            var instrumentTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.ID.Symbol);
+            var instrument = instrumentTokenList[0];
             var instrumentIds = new string[] { instrument.ToStringInvariant() };
             var quotes = _kite.GetQuote(instrumentIds);
             return quotes[instrument.ToStringInvariant()];
@@ -994,7 +1001,7 @@ namespace QuantConnect.Brokerages.Zerodha
         private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution, string zerodhaResolution)
         {
             Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
-            var scripSymbol = _symbolMapper.GetZerodhaInstrumentToken(symbol.Value);
+            var scripSymbol = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.Value)[0];
             var candles = _kite.GetHistoricalData(scripSymbol.ToStringInvariant(), start, end, zerodhaResolution);
 
             if (!candles.Any())

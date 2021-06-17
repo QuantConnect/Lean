@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -57,9 +57,9 @@ namespace QuantConnect.Brokerages.Zerodha
             /// <summary>
             /// Initalize values to the class attributes
             /// </summary>
-            public SymbolData(uint token, string exchange_name)
+            public SymbolData(uint token, string exchangeName)
             {
-                exchange = exchange_name;
+                exchange = exchangeName;
                 instrumentToken = token;
             }
 
@@ -134,7 +134,7 @@ namespace QuantConnect.Brokerages.Zerodha
             foreach (var tp in tradableInstruments)
             {
                 var securityType = SecurityType.Equity;
-                var market = Market.NSE;
+                var market = "india";
                 OptionRight optionRight = 0;
 
                 switch (tp.InstrumentType)
@@ -166,25 +166,25 @@ namespace QuantConnect.Brokerages.Zerodha
                 switch (tp.Exchange)
                 {
                     case "NSE":
-                        market = "nse";
+                        market = "india";
                         break;
                     case "NFO":
-                        market = "nfo";
+                        market = "india";
                         break;
                     case "CDS":
-                        market = "cds";
+                        market = "india";
                         break;
                     case "BSE":
-                        market = "bse";
+                        market = "india";
                         break;
                     case "BCD":
-                        market = "bcd";
+                        market = "india";
                         break;
                     case "MCX":
-                        market = "mcx";
+                        market = "india";
                         break;
                     default:
-                        market = "nse";
+                        market = "india";
                         break;
                 }
 
@@ -332,14 +332,15 @@ namespace QuantConnect.Brokerages.Zerodha
 
 
             var symbol = KnownSymbols.FirstOrDefault(s => s.Value == brokerageSymbol);
-            return GetLeanSymbol(brokerageSymbol, symbol.SecurityType, symbol.ID.Market);
+            var exchange = GetZerodhaDefaultExchange(brokerageSymbol);
+            return GetLeanSymbol(brokerageSymbol, symbol.SecurityType, exchange);
         }
 
         /// <summary>
         /// Fetches the default Exchage value for the given symbol
         /// </summary>
         /// <param name="brokerageSymbol">The Zerodha symbol</param>
-        /// <returns>A new Lean Symbol instance</returns>
+        /// <returns>A default exchange value for the given ticker</returns>
         public string GetZerodhaDefaultExchange(string brokerageSymbol)
         {   
             List<SymbolData> tempSymbolDataList;
@@ -347,27 +348,29 @@ namespace QuantConnect.Brokerages.Zerodha
             {   
                 return tempSymbolDataList[0].exchange;
             }
-            return tempSymbolDataList[0].exchange;
+            return string.Empty;
         }
 
         /// <summary>
         /// Converts an Zerodha symbol to a Zerodha Instrument Token instance
         /// </summary>
         /// <param name="brokerageSymbol">The Zerodha symbol</param>
-        /// <param name="exchange">The trading market</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public uint GetZerodhaInstrumentToken(string brokerageSymbol, string exchange = "")
+        public List<uint> GetZerodhaInstrumentTokenList(string brokerageSymbol)
         {
-            string Exchange = GetZerodhaDefaultExchange(brokerageSymbol);
-            var symbol = KnownSymbols.Where(s => s.Value == brokerageSymbol.Replace(" ", "").Trim() && Exchange.ToUpperInvariant()==exchange.ToUpperInvariant()).FirstOrDefault();
-            uint token = 0;
+            var symbol = KnownSymbols.Where(s => s.Value == brokerageSymbol.Replace(" ", "").Trim()).FirstOrDefault();
+            List<uint> tokenList = new List<uint>();
             List<SymbolData> tempSymbolDataList;
             if (symbol != null && ZerodhaInstrumentsList.TryGetValue(symbol.ID.Symbol, out tempSymbolDataList))
             {
-                token = tempSymbolDataList[0].instrumentToken;
-                return token;
+                foreach (var sd in tempSymbolDataList)
+                {
+                    tokenList.Add(sd.instrumentToken);
+                }
+                               
+                return tokenList;
             }
-            return 0;
+            return tokenList;
         }
 
         /// <summary>
@@ -404,10 +407,20 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         public Symbol ConvertZerodhaSymbolToLeanSymbol(uint ZerodhaSymbol)
         {
-            var _symbol = ZerodhaInstrumentsList.FirstOrDefault(x => x.Value.Count != 0 && x.Value[0].instrumentToken == ZerodhaSymbol).Key.Replace(" ","").Split("^".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-
+            var _symbol = "";
+            foreach (var item in ZerodhaInstrumentsList)
+            {
+                foreach( var sd in item.Value) 
+                { 
+                    if (sd.instrumentToken == ZerodhaSymbol) 
+                    {
+                        _symbol = item.Key;
+                        break;
+                    }
+                }
+            }
             // return as it is due to Zerodha has similar Symbol format
-            return KnownSymbolsList.Where(s => s.Value == _symbol[0] && s.ID.Market == _symbol[1]).FirstOrDefault();
+            return KnownSymbolsList.Where(s => s.Value == _symbol).FirstOrDefault();
         }
 
         /// <summary>

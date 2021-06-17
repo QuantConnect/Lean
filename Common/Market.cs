@@ -128,7 +128,7 @@ namespace QuantConnect
         /// <summary>
         /// NSE - National Stock Exchange
         /// </summary>
-        public const string India = "ind";
+        public const string India = "india";
 
         
         /// <summary>

@@ -1,370 +1,370 @@
 market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker
-
-#
-# Use # signs for comments
-#
-
-fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,0.1,1
-fxcm,DE10YBEUR,cfd,Euro-Bund,EUR,10,0.001,1
-fxcm,XCUUSD,cfd,Copper,USD,100,0.0001,1
-fxcm,ES35EUR,cfd,IBEX 35 index of Spanish listed shares,EUR,0.1,0.1,1
-fxcm,EU50EUR,cfd,Euro Stoxx 50 index of European listed shares,EUR,0.1,0.1,1
-fxcm,FR40EUR,cfd,CAC 40 index of French listed shares,EUR,0.1,0.1,1
-fxcm,DE30EUR,cfd,DAX index of German listed shares,EUR,0.1,0.1,1
-fxcm,HK33HKD,cfd,Hang Seng index of Hong Kong listed shares,HKD,1,0.1,1
-fxcm,IT40EUR,cfd,FTSE MIB index of Italian listed shares,EUR,0.1,0.1,1
-fxcm,JP225JPY,cfd,Nikkei 225 index of Japanese listed shares,JPY,1,0.1,10
-fxcm,NAS100USD,cfd,TECH 100 index of US listed shares,USD,0.1,0.1,1
-fxcm,NATGASUSD,cfd,Natural Gas (Henry Hub),USD,100,0.0001,1
-fxcm,SPX500USD,cfd,S&P 500 index of US listed shares,USD,1,0.01,1
-fxcm,CH20CHF,cfd,Swiss Market Index of Swiss listed shares,CHF,0.1,0.1,1
-fxcm,UK100GBP,cfd,FTSE 100 index of UK listed shares,GBP,0.1,0.1,1
-fxcm,BCOUSD,cfd,Crude Oil (Brent),USD,10,0.001,1
-fxcm,US30USD,cfd,Index of top 30 shares on Wall Street,USD,0.1,0.1,1
-fxcm,DXYUSD,cfd,Dow Jones FXCM Dollar Index Basket,USD,1,0.1,1
-fxcm,WTICOUSD,cfd,Crude Oil (WTI),USD,10,0.001,1
-fxcm,XAGUSD,cfd,Silver,USD,1,0.001,50
-fxcm,XAUUSD,cfd,Gold,USD,1,0.001,1
-fxcm,XPDUSD,cfd,Palladium,USD,1,0.01,1
-fxcm,XPTUSD,cfd,Platinum,USD,1,0.01,1
-
-oanda,AU200AUD,cfd,Australia 200,AUD,1,0.1,0.1
-oanda,BCOUSD,cfd,Brent Crude Oil,USD,1,0.001,1
-oanda,CH20CHF,cfd,Swiss 20,CHF,1,0.1,1
-oanda,CORNUSD,cfd,Corn,USD,1,0.001,1
-oanda,DE10YBEUR,cfd,Bund,EUR,1,0.001,1
-oanda,DE30EUR,cfd,Germany 30,EUR,1,0.1,0.1
-oanda,EU50EUR,cfd,Europe 50,EUR,1,0.1,0.1
-oanda,FR40EUR,cfd,France 40,EUR,1,0.1,0.1
-oanda,HK33HKD,cfd,Hong Kong 33,HKD,1,0.1,0.1
-oanda,JP225USD,cfd,Japan 225,USD,1,0.1,0.1
-oanda,NAS100USD,cfd,US Nas 100,USD,1,0.1,0.1
-oanda,NATGASUSD,cfd,Natural Gas,USD,1,0.001,1
-oanda,NL25EUR,cfd,Netherlands 25,EUR,1,0.001,0.1
-oanda,SG30SGD,cfd,Singapore 30,SGD,1,0.01,0.1
-oanda,SOYBNUSD,cfd,Soybeans,USD,1,0.001,1
-oanda,SPX500USD,cfd,US SPX 500,USD,1,0.1,0.1
-oanda,SUGARUSD,cfd,Sugar,USD,1,0.00001,1
-oanda,UK100GBP,cfd,UK 100,GBP,1,0.1,0.1
-oanda,UK10YBGBP,cfd,UK 10Y Gilt,GBP,1,0.001,1
-oanda,US2000USD,cfd,US Russ 2000,USD,1,0.001,0.1
-oanda,US30USD,cfd,US Wall St 30,USD,1,0.1,0.1
-oanda,USB02YUSD,cfd,US 2Y T-Note,USD,1,0.001,1
-oanda,USB05YUSD,cfd,US 5Y T-Note,USD,1,0.001,1
-oanda,USB10YUSD,cfd,US 10Y T-Note,USD,1,0.001,1
-oanda,USB30YUSD,cfd,US T-Bond,USD,1,0.001,1
-oanda,WHEATUSD,cfd,Wheat,USD,1,0.001,1
-oanda,WTICOUSD,cfd,West Texas Oil,USD,1,0.001,1
-oanda,XAGAUD,cfd,Silver/AUD,AUD,1,0.00001,1
-oanda,XAGCAD,cfd,Silver/CAD,CAD,1,0.00001,1
-oanda,XAGCHF,cfd,Silver/CHF,CHF,1,0.00001,1
-oanda,XAGEUR,cfd,Silver/EUR,EUR,1,0.00001,1
-oanda,XAGGBP,cfd,Silver/GBP,GBP,1,0.00001,1
-oanda,XAGHKD,cfd,Silver/HKD,HKD,1,0.00001,1
-oanda,XAGJPY,cfd,Silver/JPY,JPY,1,0.1,1
-oanda,XAGNZD,cfd,Silver/NZD,NZD,1,0.00001,1
-oanda,XAGSGD,cfd,Silver/SGD,SGD,1,0.00001,1
-oanda,XAGUSD,cfd,Silver,USD,1,0.00001,1
-oanda,XAUAUD,cfd,Gold/AUD,AUD,1,0.001,1
-oanda,XAUCAD,cfd,Gold/CAD,CAD,1,0.001,1
-oanda,XAUCHF,cfd,Gold/CHF,CHF,1,0.001,1
-oanda,XAUEUR,cfd,Gold/EUR,EUR,1,0.001,1
-oanda,XAUGBP,cfd,Gold/GBP,GBP,1,0.001,1
-oanda,XAUHKD,cfd,Gold/HKD,HKD,1,0.001,1
-oanda,XAUJPY,cfd,Gold/JPY,JPY,1,1,1
-oanda,XAUNZD,cfd,Gold/NZD,NZD,1,0.001,1
-oanda,XAUSGD,cfd,Gold/SGD,SGD,1,0.001,1
-oanda,XAUUSD,cfd,Gold,USD,1,0.001,1
-oanda,XAUXAG,cfd,Gold/Silver,XAG,1,0.001,1
-oanda,XCUUSD,cfd,Copper,USD,1,0.00001,1
-oanda,XPDUSD,cfd,Palladium,USD,1,0.001,1
-oanda,XPTUSD,cfd,Platinum,USD,1,0.001,1
-
-usa,[*],option,,USD,100,0.01,1
-
-usa,[*],equity,,USD,1,0.01,1
-
-usa,[*],index,,USD,1,0.01,1
-usa,[*],indexoption,,USD,100,0.05,1
-
-# for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
-cboe,VX,future,VIX futures ,USD,1000.0,0.05,1.0
-cbot,AW,future,Bloomberg Commodity Index Futures,USD,100.0,0.1,1.0
-cbot,BCF,future,Black Sea Corn Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
-cbot,BWF,future,Black Sea Wheat Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
-cbot,EH,future,Ethanol Futures,USD,29000.0,0.001,1.0
-cbot,F1U,future,5-Year USD MAC Swap Futures,USD,1000.0,0.0078125,1.0
-cbot,KE,future,KC HRW Wheat Futures,USD,50.0,0.0025,1.0
-cbot,TN,future,Ultra 10-Year U.S. Treasury Note Futures,USD,1000.0,0.015625,1.0
-cbot,UB,future,Ultra U.S. Treasury Bond Futures,USD,1000.0,0.03125,1.0
-cbot,YM,future,E-mini Dow ($5) Futures,USD,5.0,1.0,1.0
-cbot,ZB,future,U.S. Treasury Bond Futures,USD,1000.0,0.03125,1.0
-cbot,ZC,future,Corn Futures,USD,5000.0,0.0025,1.0
-cbot,ZF,future,5-Year T-Note Futures,USD,1000.0,0.0078125,1.0
-cbot,ZL,future,Soybean Oil Futures,USD,600.0,0.01,1.0
-cbot,ZM,future,Soybean Meal Futures,USD,100.0,0.1,1.0
-cbot,ZN,future,10-Year T-Note Futures,USD,1000.0,0.015625,1.0
-cbot,ZO,future,Oats Futures,USD,50.0,0.25,1.0
-cbot,ZS,future,Soybean Futures,USD,5000.0,0.0025,1.0
-cbot,ZT,future,2-Year T-Note Futures,USD,2000.0,0.00390625,1.0
-cbot,ZW,future,Chicago SRW Wheat Futures,USD,5000.0,0.0025,1.0
-cme,6A,future,Australian Dollar Futures,USD,100000.0,0.0001,1.0
-cme,6B,future,British Pound Futures,USD,62500.0,0.0001,1.0
-cme,6C,future,Canadian Dollar Futures,USD,100000.0,5e-05,1.0
-cme,6E,future,Euro FX Futures,USD,125000.0,5e-05,1.0
-cme,6J,future,Japanese Yen Futures,USD,12500000.0,5e-07,1.0
-cme,6L,future,Brazilian Real Futures,USD,100000.0,5e-05,1.0
-cme,6M,future,Mexican Peso Futures,USD,500000.0,1e-05,1.0
-cme,6N,future,New Zealand Dollar Futures,USD,100000.0,0.0001,1.0
-cme,6R,future,Russian Ruble Futures,USD,2500000.0,5e-06,1.0
-cme,6S,future,Swiss Franc Futures,USD,125000.0,0.0001,1.0
-cme,6Z,future,South African Rand Futures,USD,500000.0,2.5e-05,1.0
-cme,ACD,future,Australian Dollar/Canadian Dollar Futures,CAD,200000.0,0.0001,1.0
-cme,AJY,future,Australian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
-cme,ANE,future,Australian Dollar/New Zealand Dollar Futures,NZD,200000.0,0.0001,1.0
-cme,BIO,future,E-mini Nasdaq-100 Biotechnology Index Futures,USD,50.0,0.1,1.0
-cme,BTC,future,Bitcoin Futures,USD,5.0,5.0,1.0
-cme,CB,future,Cash-settled Butter Futures,USD,20000.0,0.00025,1.0
-cme,CJY,future,Canadian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
-cme,CNH,future,Standard-Size USD/Offshore RMB (CNH) Futures,CNY,100000.0,0.0001,1.0
-cme,CSC,future,Cash-Settled Cheese Futures,USD,20000.0,0.001,1.0
-cme,DC,future,Class III Milk Futures,USD,2000.0,0.01,1.0
-cme,DY,future,Dry Whey Futures,USD,44000.0,0.00025,1.0
-cme,E7,future,E-mini Euro FX Futures,USD,62500.0,0.0001,1.0
-cme,EAD,future,Euro/Australian Dollar Futures,AUD,125000.0,0.0001,1.0
-cme,ECD,future,Euro/Canadian Dollar Futures,CAD,125000.0,0.0001,1.0
-cme,EI,future,E-mini FTSE Emerging Index Futures,USD,100.0,0.1,1.0
-cme,EMD,future,E-mini S&P MidCap 400 Futures,USD,100.0,0.1,1.0
-cme,ES,future,E-mini S&P 500 Futures,USD,50.0,0.25,1.0
-cme,ESK,future,Euro/Swedish Krona Futures,SEK,125000.0,0.0005,1.0
-cme,GD,future,S&P-GSCI Commodity Index Futures,USD,250.0,0.05,1.0
-cme,GDK,future,Class IV Milk Futures,USD,2000.0,0.01,1.0
-cme,GE,future,Eurodollar Futures,USD,2500.0,0.0025,1.0
-cme,GF,future,Feeder Cattle Futures,USD,500.0,0.025,1.0
-cme,GNF,future,Nonfat Dry Milk Futures,USD,44000.0,0.00025,1.0
-cme,HE,future,Lean Hog Futures,USD,400.0,0.025,1.0
-cme,IBV,future,USD-Denominated Ibovespa Index Futures,USD,1.0,5.0,1.0
-cme,J7,future,E-mini Japanese Yen Futures,USD,6250000.0,1e-06,1.0
-cme,LBS,future,Random Length Lumber Futures,USD,110.0,0.1,1.0
-cme,LE,future,Live Cattle Futures,USD,400.0,0.025,1.0
-cme,NKD,future,Nikkei/USD Futures,USD,5.0,5.0,1.0
-cme,NQ,future,E-mini Nasdaq-100 Futures,USD,20.0,0.25,1.0
-cme,RTY,future,E-mini  Russell 2000 Index Futures,USD,50.0,0.1,1.0
-comex,AUP,future,Aluminum MW U.S. Transaction Premium Platts (25MT) Futures,USD,55116.0,1e-05,1.0
-comex,EDP,future,Aluminium European Premium Duty-Paid (Metal Bulletin) Futures,USD,25.0,0.01,1.0
-comex,GC,future,Gold Futures,USD,100.0,0.1,1.0
-comex,HG,future,Copper Futures,USD,25000.0,0.0005,1.0
-comex,SI,future,Silver Futures,USD,5000.0,0.005,1.0
-ice,B,future,Brent Crude Futures,USD,1000.0,0.01,1.0
-ice,CC,future,Cocoa Futures,USD,10.0,1.0,1.0
-ice,CT,future,Cotton No. 2 Futures,USD,50000.0,0.0001,1.0
-ice,DX,future,US Dollar Index Futures,USD,1000.0,0.005,1.0
-ice,G,future,Low Sulfur Gasoil,USD,100.0,0.25,1.0
-ice,KC,future,Coffee C Arabica Futures,USD,37500.0,0.0005,1.0
-ice,OJ,future,Frozen Concentrated Orange Juice,USD,15000.0,0.0005,1.0
-ice,SB,future,Sugar No. 11 Futures,USD,112000,0.0001,1
-nymex,1S,future,Propane Non-LDH Mont Belvieu (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0
-nymex,22,future,Argus Propane Far East Index BALMO Futures,USD,1000.0,0.001,1.0
-nymex,A0D,future,Mini European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,100.0,0.001,1.0
-nymex,A0F,future,Mini Singapore Fuel Oil 180 cst (Platts) Futures,USD,100.0,0.001,1.0
-nymex,A1L,future,Gulf Coast ULSD (Platts) Up-Down BALMO Futures,USD,42000.0,0.0001,1.0
-nymex,A1M,future,Gulf Coast Jet (Platts) Up-Down BALMO Futures,USD,42000.0,0.0001,1.0
-nymex,A1R,future,Propane Non-LDH Mont Belvieu (OPIS) Futures,USD,42000.0,1e-05,1.0
-nymex,A32,future,European Propane CIF ARA (Argus) BALMO Futures,USD,1000.0,0.01,1.0
-nymex,A3G,future,Premium Unleaded Gasoline 10 ppm FOB MED (Platts) Futures,USD,1000.0,0.001,1.0
-nymex,A7E,future,Argus Propane Far East Index Futures,USD,1000.0,0.001,1.0
-nymex,A7I,future,Gasoline Euro-bob Oxy NWE Barges (Argus) Crack Spread BALMO Futures,USD,1000.0,0.001,1.0
-nymex,A7Q,future,Mont Belvieu Natural Gasoline (OPIS) Futures,USD,42000.0,1e-05,1.0
-nymex,A8J,future,Mont Belvieu Normal Butane (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0
-nymex,A8K,future,Conway Propane (OPIS) Futures,USD,42000.0,1e-05,1.0
-nymex,A8O,future,Mont Belvieu LDH Propane (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0
-nymex,A91,future,Argus Propane Far East Index vs. European Propane CIF ARA (Argus) Futures,USD,1000.0,0.001,1.0
-nymex,A9N,future,Argus Propane (Saudi Aramco) Futures,USD,1000.0,0.001,1.0
-nymex,AA6,future,Group Three ULSD (Platts) vs. NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0
-nymex,AA8,future,Group Three Sub-octane Gasoline (Platts) vs. RBOB Futures,USD,42000.0,0.0001,1.0
-nymex,ABS,future,Singapore Fuel Oil 180 cst (Platts) BALMO Futures,USD,1000.0,0.001,1.0
-nymex,ABT,future,Singapore Fuel Oil 380 cst (Platts) BALMO Futures,USD,1000.0,0.001,1.0
-nymex,AC0,future,Mont Belvieu Ethane (OPIS) Futures,USD,42000.0,1e-05,1.0
-nymex,AD0,future,Mont Belvieu Normal Butane (OPIS) Futures,USD,42000.0,1e-05,1.0
-nymex,ADB,future,Brent Crude Oil vs. Dubai Crude Oil (Platts) Futures,USD,1000.0,0.001,1.0
-nymex,AE5,future,Argus LLS vs. WTI (Argus) Trade Month Futures,USD,1000.0,0.01,1.0
-nymex,AGA,future,Singapore Gasoil (Platts) vs. Low Sulphur Gasoil Futures,USD,1000.0,0.001,1.0
-nymex,AJL,future,Los Angeles CARBOB Gasoline (OPIS) vs. RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
-nymex,AJS,future,Los Angeles Jet (OPIS) vs. NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0
-nymex,AKL,future,Los Angeles CARB Diesel (OPIS) vs. NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0
-nymex,AKZ,future,European Naphtha (Platts) BALMO Futures,USD,1000.0,0.001,1.0
-nymex,APS,future,European Propane CIF ARA (Argus) Futures,USD,1000.0,0.01,1.0
-nymex,AR0,future,Mont Belvieu Natural Gasoline (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0
-nymex,ARE,future,RBOB Gasoline Crack Spread Futures,USD,1000.0,0.01,1.0
-nymex,AVZ,future,Gulf Coast HSFO (Platts) BALMO Futures,USD,1000.0,0.001,1.0
-nymex,AYV,future,Mars (Argus) vs. WTI Trade Month Futures,USD,1000.0,0.01,1.0
-nymex,AYX,future,Mars (Argus) vs. WTI Financial Futures,USD,1000.0,0.01,1.0
-nymex,AZ1,future,Ethanol T2 FOB Rdam Including Duty (Platts) Futures,EUR,100.0,0.001,1.0
-nymex,B0,future,Mont Belvieu LDH Propane (OPIS) Futures,USD,42000.0,1e-05,1.0
-nymex,B7H,future,Gasoline Euro-bob Oxy NWE Barges (Argus) Futures,USD,1000.0,0.001,1.0
-nymex,BK,future,WTI-Brent Financial Futures,USD,1000.0,0.01,1.0
-nymex,BOO,future,3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread (1000mt) Futures,USD,6350.0,0.001,1.0
-nymex,BR7,future,Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO Futures,USD,1000.0,0.001,1.0
-nymex,BZ,future,Brent Last Day Financial Futures,USD,1000.0,0.01,1.0
-nymex,CL,future,Crude Oil Futures,USD,1000.0,0.01,1.0
-nymex,CRB,future,Gulf Coast CBOB Gasoline A2 (Platts) vs. RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
-nymex,CSW,future,Clearbrook Bakken Sweet (NE2) Monthly Index Futures,USD,1000.0,0.001,1.0
-nymex,CSX,future,WTI Financial Futures,USD,1000.0,0.01,1.0
-nymex,CU,future,Chicago Ethanol (Platts) Futures,USD,42000.0,0.0001,1.0
-nymex,D1N,future,Singapore Mogas 92 Unleaded (Platts) Brent Crack Spread Futures,USD,1000.0,0.001,1.0
-nymex,DCB,future,Dubai Crude Oil (Platts) Financial Futures,USD,1000.0,0.001,1.0
-nymex,E6,future,Japan C&F Naphtha (Platts) BALMO Futures,USD,1000.0,0.001,1.0
-nymex,EN,future,European Naphtha (Platts) Crack Spread Futures,USD,1000.0,0.001,1.0
-nymex,EPN,future,European Propane CIF ARA (Argus) vs. Naphtha Cargoes CIF NWE (Platts) Futures,USD,1000.0,0.001,1.0
-nymex,EVC,future,Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0
-nymex,EWG,future,East-West Gasoline Spread (Platts-Argus) Futures,USD,1000.0,0.001,1.0
-nymex,EWN,future,East-West Naphtha: Japan C&F vs. Cargoes CIF NWE Spread (Platts) Futures,USD,1000.0,0.001,1.0
-nymex,EXR,future,RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350000 gallons) Futures,USD,350000.0,0.0001,1.0
-nymex,FO,future,3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures,USD,1000.0,0.001,1.0
-nymex,FRC,future,Freight Route TC14 (Baltic) Futures,USD,1000.0,0.0001,1.0
-nymex,FSS,future,1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0
-nymex,GCU,future,Gulf Coast HSFO (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0
-nymex,HCL,future,WTI Houston Crude Oil Futures,USD,1000.0,0.01,1.0
-nymex,HH,future,Natural Gas (Henry Hub) Last-day Financial Futures,USD,10000.0,0.001,1.0
-nymex,HO,future,NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0
-nymex,HP,future,Natural Gas (Henry Hub) Penultimate Financial Futures,USD,10000.0,0.001,1.0
-nymex,HRC,future,U.S. Midwest Domestic Hot-Rolled Coil Steel (CRU) Index Futures,USD,20.0,1.0,1.0
-nymex,HTT,future,WTI Houston (Argus) vs. WTI Trade Month Futures,USD,1000.0,0.01,1.0
-nymex,NG,future,Henry Hub Natural Gas Futures,USD,10000.0,0.001,1.0
-nymex,PA,future,Palladium Futures,USD,100.0,0.05,1.0
-nymex,PL,future,Platinum Futures,USD,50.0,0.1,1.0
-nymex,RB,future,RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
-nymex,YO,future,No. 11 Sugar Futures,USD,112000.0,0.0001,1.0
-sgx,NK,future,SGX Nikkei 225 Index Futures,JPY,500,5,5.0
-sgx,TW,future,MSCI Taiwan Index Futures,USD,100,0.1,50.0
-sgx,IN,future,Nifty Indices Futures,USD,2,0.5,50.0
-nfo,NIFTY,future,Nifty50 Index,INR,0.05,75,1
-nfo,BANKNIFTY,future,BankNifty Index,INR,0.05,25,1.0
-bse,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1.0
-hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0
-
-# Futures options -- will default to Futures contract specs in case no entry exists
-cbot,OZB,futureoption,U.S. Treasury Bond American Futures Options,USD,1000.0,0.015625,1.0
-cbot,OZC,futureoption,Corn American Futures Options,USD,5000.0,0.00125,1.0
-cbot,OZS,futureoption,Soybean American Futures Options,USD,5000.0,0.00125,1.0
-cbot,OZT,futureoption,2-Year T-Note American Futures Options,USD,2000.0,0.0078125,1.0
-cbot,OZW,futureoption,Chicago SRW Wheat American Futures Options,USD,5000.0,0.00125,1.0
-comex,SO,futureoption,Silver American Futures Options,USD,5000.0,0.001,1.0
-
-
-fxcm,AUDCAD,forex,,CAD,1,0.00001,1000
-fxcm,AUDCHF,forex,,CHF,1,0.00001,1000
-fxcm,AUDJPY,forex,,JPY,1,0.001,1000
-fxcm,AUDNZD,forex,,NZD,1,0.00001,1000
-fxcm,AUDUSD,forex,,USD,1,0.00001,1000
-fxcm,CADCHF,forex,,CHF,1,0.00001,1000
-fxcm,CADJPY,forex,,JPY,1,0.001,1000
-fxcm,CHFJPY,forex,,JPY,1,0.001,1000
-fxcm,EURAUD,forex,,AUD,1,0.00001,1000
-fxcm,EURCAD,forex,,CAD,1,0.00001,1000
-fxcm,EURCHF,forex,,CHF,1,0.00001,1000
-fxcm,EURGBP,forex,,GBP,1,0.00001,1000
-fxcm,EURJPY,forex,,JPY,1,0.001,1000
-fxcm,EURNOK,forex,,NOK,1,0.00001,1000
-fxcm,EURNZD,forex,,NZD,1,0.00001,1000
-fxcm,EURSEK,forex,,SEK,1,0.00001,1000
-fxcm,EURTRY,forex,,TRY,1,0.00001,1000
-fxcm,EURUSD,forex,,USD,1,0.00001,1000
-fxcm,GBPAUD,forex,,AUD,1,0.00001,1000
-fxcm,GBPCAD,forex,,CAD,1,0.00001,1000
-fxcm,GBPCHF,forex,,CHF,1,0.00001,1000
-fxcm,GBPJPY,forex,,JPY,1,0.001,1000
-fxcm,GBPNZD,forex,,NZD,1,0.00001,1000
-fxcm,GBPUSD,forex,,USD,1,0.00001,1000
-fxcm,NZDCAD,forex,,CAD,1,0.00001,1000
-fxcm,NZDCHF,forex,,CHF,1,0.00001,1000
-fxcm,NZDJPY,forex,,JPY,1,0.001,1000
-fxcm,NZDUSD,forex,,USD,1,0.00001,1000
-fxcm,TRYJPY,forex,,JPY,1,0.001,1000
-fxcm,USDCAD,forex,,CAD,1,0.00001,1000
-fxcm,USDCHF,forex,,CHF,1,0.00001,1000
-fxcm,USDCNH,forex,,CNH,1,0.00001,1000
-fxcm,USDJPY,forex,,JPY,1,0.001,1000
-fxcm,USDMXN,forex,,MXN,1,0.00001,1000
-fxcm,USDNOK,forex,,NOK,1,0.00001,1000
-fxcm,USDSEK,forex,,SEK,1,0.00001,1000
-fxcm,USDTRY,forex,,TRY,1,0.00001,1000
-fxcm,USDZAR,forex,,ZAR,1,0.00001,1000
-fxcm,ZARJPY,forex,,JPY,1,0.001,1000
-
-oanda,AUDCAD,forex,AUD/CAD,CAD,1,0.00001,1
-oanda,AUDCHF,forex,AUD/CHF,CHF,1,0.00001,1
-oanda,AUDHKD,forex,AUD/HKD,HKD,1,0.00001,1
-oanda,AUDJPY,forex,AUD/JPY,JPY,1,0.001,1
-oanda,AUDNZD,forex,AUD/NZD,NZD,1,0.00001,1
-oanda,AUDSGD,forex,AUD/SGD,SGD,1,0.00001,1
-oanda,AUDUSD,forex,AUD/USD,USD,1,0.00001,1
-oanda,CADCHF,forex,CAD/CHF,CHF,1,0.00001,1
-oanda,CADHKD,forex,CAD/HKD,HKD,1,0.00001,1
-oanda,CADJPY,forex,CAD/JPY,JPY,1,0.001,1
-oanda,CADSGD,forex,CAD/SGD,SGD,1,0.00001,1
-oanda,CHFHKD,forex,CHF/HKD,HKD,1,0.00001,1
-oanda,CHFJPY,forex,CHF/JPY,JPY,1,0.001,1
-oanda,CHFZAR,forex,CHF/ZAR,ZAR,1,0.00001,1
-oanda,EURAUD,forex,EUR/AUD,AUD,1,0.00001,1
-oanda,EURCAD,forex,EUR/CAD,CAD,1,0.00001,1
-oanda,EURCHF,forex,EUR/CHF,CHF,1,0.00001,1
-oanda,EURCZK,forex,EUR/CZK,CZK,1,0.00001,1
-oanda,EURDKK,forex,EUR/DKK,DKK,1,0.00001,1
-oanda,EURGBP,forex,EUR/GBP,GBP,1,0.00001,1
-oanda,EURHKD,forex,EUR/HKD,HKD,1,0.00001,1
-oanda,EURHUF,forex,EUR/HUF,HUF,1,0.001,1
-oanda,EURJPY,forex,EUR/JPY,JPY,1,0.001,1
-oanda,EURNOK,forex,EUR/NOK,NOK,1,0.00001,1
-oanda,EURNZD,forex,EUR/NZD,NZD,1,0.00001,1
-oanda,EURPLN,forex,EUR/PLN,PLN,1,0.00001,1
-oanda,EURSEK,forex,EUR/SEK,SEK,1,0.00001,1
-oanda,EURSGD,forex,EUR/SGD,SGD,1,0.00001,1
-oanda,EURTRY,forex,EUR/TRY,TRY,1,0.00001,1
-oanda,EURUSD,forex,EUR/USD,USD,1,0.00001,1
-oanda,EURZAR,forex,EUR/ZAR,ZAR,1,0.00001,1
-oanda,GBPAUD,forex,GBP/AUD,AUD,1,0.00001,1
-oanda,GBPCAD,forex,GBP/CAD,CAD,1,0.00001,1
-oanda,GBPCHF,forex,GBP/CHF,CHF,1,0.00001,1
-oanda,GBPHKD,forex,GBP/HKD,HKD,1,0.00001,1
-oanda,GBPJPY,forex,GBP/JPY,JPY,1,0.001,1
-oanda,GBPNZD,forex,GBP/NZD,NZD,1,0.00001,1
-oanda,GBPPLN,forex,GBP/PLN,PLN,1,0.00001,1
-oanda,GBPSGD,forex,GBP/SGD,SGD,1,0.00001,1
-oanda,GBPUSD,forex,GBP/USD,USD,1,0.00001,1
-oanda,GBPZAR,forex,GBP/ZAR,ZAR,1,0.00001,1
-oanda,HKDJPY,forex,HKD/JPY,JPY,1,0.00001,1
-oanda,NZDCAD,forex,NZD/CAD,CAD,1,0.00001,1
-oanda,NZDCHF,forex,NZD/CHF,CHF,1,0.00001,1
-oanda,NZDHKD,forex,NZD/HKD,HKD,1,0.00001,1
-oanda,NZDJPY,forex,NZD/JPY,JPY,1,0.001,1
-oanda,NZDSGD,forex,NZD/SGD,SGD,1,0.00001,1
-oanda,NZDUSD,forex,NZD/USD,USD,1,0.00001,1
-oanda,SGDCHF,forex,SGD/CHF,CHF,1,0.00001,1
-oanda,SGDHKD,forex,SGD/HKD,HKD,1,0.00001,1
-oanda,SGDJPY,forex,SGD/JPY,JPY,1,0.001,1
-oanda,TRYJPY,forex,TRY/JPY,JPY,1,0.001,1
-oanda,USDCAD,forex,USD/CAD,CAD,1,0.00001,1
-oanda,USDCHF,forex,USD/CHF,CHF,1,0.00001,1
-oanda,USDCNH,forex,USD/CNH,CNH,1,0.00001,1
-oanda,USDCZK,forex,USD/CZK,CZK,1,0.00001,1
-oanda,USDDKK,forex,USD/DKK,DKK,1,0.00001,1
-oanda,USDHKD,forex,USD/HKD,HKD,1,0.00001,1
-oanda,USDHUF,forex,USD/HUF,HUF,1,0.001,1
-oanda,USDINR,forex,USD/INR,INR,1,0.001,1
-oanda,USDJPY,forex,USD/JPY,JPY,1,0.001,1
-oanda,USDMXN,forex,USD/MXN,MXN,1,0.00001,1
-oanda,USDNOK,forex,USD/NOK,NOK,1,0.00001,1
-oanda,USDPLN,forex,USD/PLN,PLN,1,0.00001,1
-oanda,USDSAR,forex,USD/SAR,SAR,1,0.00001,1
-oanda,USDSEK,forex,USD/SEK,SEK,1,0.00001,1
-oanda,USDSGD,forex,USD/SGD,SGD,1,0.00001,1
-oanda,USDTHB,forex,USD/THB,THB,1,0.001,1
-oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1
-oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1
-oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1
-
-# Source : https://pro.coinbase.com/markets
+,,,,,,,,
+#,,,,,,,,
+# Use # signs for comments,,,,,,,,
+#,,,,,,,,
+,,,,,,,,
+fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,0.1,1,
+fxcm,DE10YBEUR,cfd,Euro-Bund,EUR,10,0.001,1,
+fxcm,XCUUSD,cfd,Copper,USD,100,0.0001,1,
+fxcm,ES35EUR,cfd,IBEX 35 index of Spanish listed shares,EUR,0.1,0.1,1,
+fxcm,EU50EUR,cfd,Euro Stoxx 50 index of European listed shares,EUR,0.1,0.1,1,
+fxcm,FR40EUR,cfd,CAC 40 index of French listed shares,EUR,0.1,0.1,1,
+fxcm,DE30EUR,cfd,DAX index of German listed shares,EUR,0.1,0.1,1,
+fxcm,HK33HKD,cfd,Hang Seng index of Hong Kong listed shares,HKD,1,0.1,1,
+fxcm,IT40EUR,cfd,FTSE MIB index of Italian listed shares,EUR,0.1,0.1,1,
+fxcm,JP225JPY,cfd,Nikkei 225 index of Japanese listed shares,JPY,1,0.1,10,
+fxcm,NAS100USD,cfd,TECH 100 index of US listed shares,USD,0.1,0.1,1,
+fxcm,NATGASUSD,cfd,Natural Gas (Henry Hub),USD,100,0.0001,1,
+fxcm,SPX500USD,cfd,S&P 500 index of US listed shares,USD,1,0.01,1,
+fxcm,CH20CHF,cfd,Swiss Market Index of Swiss listed shares,CHF,0.1,0.1,1,
+fxcm,UK100GBP,cfd,FTSE 100 index of UK listed shares,GBP,0.1,0.1,1,
+fxcm,BCOUSD,cfd,Crude Oil (Brent),USD,10,0.001,1,
+fxcm,US30USD,cfd,Index of top 30 shares on Wall Street,USD,0.1,0.1,1,
+fxcm,DXYUSD,cfd,Dow Jones FXCM Dollar Index Basket,USD,1,0.1,1,
+fxcm,WTICOUSD,cfd,Crude Oil (WTI),USD,10,0.001,1,
+fxcm,XAGUSD,cfd,Silver,USD,1,0.001,50,
+fxcm,XAUUSD,cfd,Gold,USD,1,0.001,1,
+fxcm,XPDUSD,cfd,Palladium,USD,1,0.01,1,
+fxcm,XPTUSD,cfd,Platinum,USD,1,0.01,1,
+,,,,,,,,
+oanda,AU200AUD,cfd,Australia 200,AUD,1,0.1,0.1,
+oanda,BCOUSD,cfd,Brent Crude Oil,USD,1,0.001,1,
+oanda,CH20CHF,cfd,Swiss 20,CHF,1,0.1,1,
+oanda,CORNUSD,cfd,Corn,USD,1,0.001,1,
+oanda,DE10YBEUR,cfd,Bund,EUR,1,0.001,1,
+oanda,DE30EUR,cfd,Germany 30,EUR,1,0.1,0.1,
+oanda,EU50EUR,cfd,Europe 50,EUR,1,0.1,0.1,
+oanda,FR40EUR,cfd,France 40,EUR,1,0.1,0.1,
+oanda,HK33HKD,cfd,Hong Kong 33,HKD,1,0.1,0.1,
+oanda,JP225USD,cfd,Japan 225,USD,1,0.1,0.1,
+oanda,NAS100USD,cfd,US Nas 100,USD,1,0.1,0.1,
+oanda,NATGASUSD,cfd,Natural Gas,USD,1,0.001,1,
+oanda,NL25EUR,cfd,Netherlands 25,EUR,1,0.001,0.1,
+oanda,SG30SGD,cfd,Singapore 30,SGD,1,0.01,0.1,
+oanda,SOYBNUSD,cfd,Soybeans,USD,1,0.001,1,
+oanda,SPX500USD,cfd,US SPX 500,USD,1,0.1,0.1,
+oanda,SUGARUSD,cfd,Sugar,USD,1,0.00001,1,
+oanda,UK100GBP,cfd,UK 100,GBP,1,0.1,0.1,
+oanda,UK10YBGBP,cfd,UK 10Y Gilt,GBP,1,0.001,1,
+oanda,US2000USD,cfd,US Russ 2000,USD,1,0.001,0.1,
+oanda,US30USD,cfd,US Wall St 30,USD,1,0.1,0.1,
+oanda,USB02YUSD,cfd,US 2Y T-Note,USD,1,0.001,1,
+oanda,USB05YUSD,cfd,US 5Y T-Note,USD,1,0.001,1,
+oanda,USB10YUSD,cfd,US 10Y T-Note,USD,1,0.001,1,
+oanda,USB30YUSD,cfd,US T-Bond,USD,1,0.001,1,
+oanda,WHEATUSD,cfd,Wheat,USD,1,0.001,1,
+oanda,WTICOUSD,cfd,West Texas Oil,USD,1,0.001,1,
+oanda,XAGAUD,cfd,Silver/AUD,AUD,1,0.00001,1,
+oanda,XAGCAD,cfd,Silver/CAD,CAD,1,0.00001,1,
+oanda,XAGCHF,cfd,Silver/CHF,CHF,1,0.00001,1,
+oanda,XAGEUR,cfd,Silver/EUR,EUR,1,0.00001,1,
+oanda,XAGGBP,cfd,Silver/GBP,GBP,1,0.00001,1,
+oanda,XAGHKD,cfd,Silver/HKD,HKD,1,0.00001,1,
+oanda,XAGJPY,cfd,Silver/JPY,JPY,1,0.1,1,
+oanda,XAGNZD,cfd,Silver/NZD,NZD,1,0.00001,1,
+oanda,XAGSGD,cfd,Silver/SGD,SGD,1,0.00001,1,
+oanda,XAGUSD,cfd,Silver,USD,1,0.00001,1,
+oanda,XAUAUD,cfd,Gold/AUD,AUD,1,0.001,1,
+oanda,XAUCAD,cfd,Gold/CAD,CAD,1,0.001,1,
+oanda,XAUCHF,cfd,Gold/CHF,CHF,1,0.001,1,
+oanda,XAUEUR,cfd,Gold/EUR,EUR,1,0.001,1,
+oanda,XAUGBP,cfd,Gold/GBP,GBP,1,0.001,1,
+oanda,XAUHKD,cfd,Gold/HKD,HKD,1,0.001,1,
+oanda,XAUJPY,cfd,Gold/JPY,JPY,1,1,1,
+oanda,XAUNZD,cfd,Gold/NZD,NZD,1,0.001,1,
+oanda,XAUSGD,cfd,Gold/SGD,SGD,1,0.001,1,
+oanda,XAUUSD,cfd,Gold,USD,1,0.001,1,
+oanda,XAUXAG,cfd,Gold/Silver,XAG,1,0.001,1,
+oanda,XCUUSD,cfd,Copper,USD,1,0.00001,1,
+oanda,XPDUSD,cfd,Palladium,USD,1,0.001,1,
+oanda,XPTUSD,cfd,Platinum,USD,1,0.001,1,
+,,,,,,,,
+usa,[*],option,,USD,100,0.01,1,
+,,,,,,,,
+usa,[*],equity,,USD,1,0.01,1,
+,,,,,,,,
+usa,[*],index,,USD,1,0.01,1,
+usa,[*],indexoption,,USD,100,0.05,1,
+,,,,,,,,
+# for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first,,,,,,
+cboe,VX,future,VIX futures ,USD,1000,0.05,1,
+cbot,AW,future,Bloomberg Commodity Index Futures,USD,100,0.1,1,
+cbot,BCF,future,Black Sea Corn Financially Settled (Platts) Futures,USD,50,0.25,1,
+cbot,BWF,future,Black Sea Wheat Financially Settled (Platts) Futures,USD,50,0.25,1,
+cbot,EH,future,Ethanol Futures,USD,29000,0.001,1,
+cbot,F1U,future,5-Year USD MAC Swap Futures,USD,1000,0.0078125,1,
+cbot,KE,future,KC HRW Wheat Futures,USD,50,0.0025,1,
+cbot,TN,future,Ultra 10-Year U.S. Treasury Note Futures,USD,1000,0.015625,1,
+cbot,UB,future,Ultra U.S. Treasury Bond Futures,USD,1000,0.03125,1,
+cbot,YM,future,E-mini Dow ($5) Futures,USD,5,1,1,
+cbot,ZB,future,U.S. Treasury Bond Futures,USD,1000,0.03125,1,
+cbot,ZC,future,Corn Futures,USD,5000,0.0025,1,
+cbot,ZF,future,5-Year T-Note Futures,USD,1000,0.0078125,1,
+cbot,ZL,future,Soybean Oil Futures,USD,600,0.01,1,
+cbot,ZM,future,Soybean Meal Futures,USD,100,0.1,1,
+cbot,ZN,future,10-Year T-Note Futures,USD,1000,0.015625,1,
+cbot,ZO,future,Oats Futures,USD,50,0.25,1,
+cbot,ZS,future,Soybean Futures,USD,5000,0.0025,1,
+cbot,ZT,future,2-Year T-Note Futures,USD,2000,0.00390625,1,
+cbot,ZW,future,Chicago SRW Wheat Futures,USD,5000,0.0025,1,
+cme,6A,future,Australian Dollar Futures,USD,100000,0.0001,1,
+cme,6B,future,British Pound Futures,USD,62500,0.0001,1,
+cme,6C,future,Canadian Dollar Futures,USD,100000,5.00E-05,1,
+cme,6E,future,Euro FX Futures,USD,125000,5.00E-05,1,
+cme,6J,future,Japanese Yen Futures,USD,12500000,5.00E-07,1,
+cme,6L,future,Brazilian Real Futures,USD,100000,5.00E-05,1,
+cme,6M,future,Mexican Peso Futures,USD,500000,1.00E-05,1,
+cme,6N,future,New Zealand Dollar Futures,USD,100000,0.0001,1,
+cme,6R,future,Russian Ruble Futures,USD,2500000,5.00E-06,1,
+cme,6S,future,Swiss Franc Futures,USD,125000,0.0001,1,
+cme,6Z,future,South African Rand Futures,USD,500000,2.50E-05,1,
+cme,ACD,future,Australian Dollar/Canadian Dollar Futures,CAD,200000,0.0001,1,
+cme,AJY,future,Australian Dollar/Japanese Yen Futures,JPY,200000,0.01,1,
+cme,ANE,future,Australian Dollar/New Zealand Dollar Futures,NZD,200000,0.0001,1,
+cme,BIO,future,E-mini Nasdaq-100 Biotechnology Index Futures,USD,50,0.1,1,
+cme,BTC,future,Bitcoin Futures,USD,5,5,1,
+cme,CB,future,Cash-settled Butter Futures,USD,20000,0.00025,1,
+cme,CJY,future,Canadian Dollar/Japanese Yen Futures,JPY,200000,0.01,1,
+cme,CNH,future,Standard-Size USD/Offshore RMB (CNH) Futures,CNY,100000,0.0001,1,
+cme,CSC,future,Cash-Settled Cheese Futures,USD,20000,0.001,1,
+cme,DC,future,Class III Milk Futures,USD,2000,0.01,1,
+cme,DY,future,Dry Whey Futures,USD,44000,0.00025,1,
+cme,E7,future,E-mini Euro FX Futures,USD,62500,0.0001,1,
+cme,EAD,future,Euro/Australian Dollar Futures,AUD,125000,0.0001,1,
+cme,ECD,future,Euro/Canadian Dollar Futures,CAD,125000,0.0001,1,
+cme,EI,future,E-mini FTSE Emerging Index Futures,USD,100,0.1,1,
+cme,EMD,future,E-mini S&P MidCap 400 Futures,USD,100,0.1,1,
+cme,ES,future,E-mini S&P 500 Futures,USD,50,0.25,1,
+cme,ESK,future,Euro/Swedish Krona Futures,SEK,125000,0.0005,1,
+cme,GD,future,S&P-GSCI Commodity Index Futures,USD,250,0.05,1,
+cme,GDK,future,Class IV Milk Futures,USD,2000,0.01,1,
+cme,GE,future,Eurodollar Futures,USD,2500,0.0025,1,
+cme,GF,future,Feeder Cattle Futures,USD,500,0.025,1,
+cme,GNF,future,Nonfat Dry Milk Futures,USD,44000,0.00025,1,
+cme,HE,future,Lean Hog Futures,USD,400,0.025,1,
+cme,IBV,future,USD-Denominated Ibovespa Index Futures,USD,1,5,1,
+cme,J7,future,E-mini Japanese Yen Futures,USD,6250000,1.00E-06,1,
+cme,LBS,future,Random Length Lumber Futures,USD,110,0.1,1,
+cme,LE,future,Live Cattle Futures,USD,400,0.025,1,
+cme,NKD,future,Nikkei/USD Futures,USD,5,5,1,
+cme,NQ,future,E-mini Nasdaq-100 Futures,USD,20,0.25,1,
+cme,RTY,future,E-mini  Russell 2000 Index Futures,USD,50,0.1,1,
+comex,AUP,future,Aluminum MW U.S. Transaction Premium Platts (25MT) Futures,USD,55116,1.00E-05,1,
+comex,EDP,future,Aluminium European Premium Duty-Paid (Metal Bulletin) Futures,USD,25,0.01,1,
+comex,GC,future,Gold Futures,USD,100,0.1,1,
+comex,HG,future,Copper Futures,USD,25000,0.0005,1,
+comex,SI,future,Silver Futures,USD,5000,0.005,1,
+ice,B,future,Brent Crude Futures,USD,1000,0.01,1,
+ice,CC,future,Cocoa Futures,USD,10,1,1,
+ice,CT,future,Cotton No. 2 Futures,USD,50000,0.0001,1,
+ice,DX,future,US Dollar Index Futures,USD,1000,0.005,1,
+ice,G,future,Low Sulfur Gasoil,USD,100,0.25,1,
+ice,KC,future,Coffee C Arabica Futures,USD,37500,0.0005,1,
+ice,OJ,future,Frozen Concentrated Orange Juice,USD,15000,0.0005,1,
+ice,SB,future,Sugar No. 11 Futures,USD,112000,0.0001,1,
+nymex,1S,future,Propane Non-LDH Mont Belvieu (OPIS) BALMO Futures,USD,42000,1.00E-05,1,
+nymex,22,future,Argus Propane Far East Index BALMO Futures,USD,1000,0.001,1,
+nymex,A0D,future,Mini European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,100,0.001,1,
+nymex,A0F,future,Mini Singapore Fuel Oil 180 cst (Platts) Futures,USD,100,0.001,1,
+nymex,A1L,future,Gulf Coast ULSD (Platts) Up-Down BALMO Futures,USD,42000,0.0001,1,
+nymex,A1M,future,Gulf Coast Jet (Platts) Up-Down BALMO Futures,USD,42000,0.0001,1,
+nymex,A1R,future,Propane Non-LDH Mont Belvieu (OPIS) Futures,USD,42000,1.00E-05,1,
+nymex,A32,future,European Propane CIF ARA (Argus) BALMO Futures,USD,1000,0.01,1,
+nymex,A3G,future,Premium Unleaded Gasoline 10 ppm FOB MED (Platts) Futures,USD,1000,0.001,1,
+nymex,A7E,future,Argus Propane Far East Index Futures,USD,1000,0.001,1,
+nymex,A7I,future,Gasoline Euro-bob Oxy NWE Barges (Argus) Crack Spread BALMO Futures,USD,1000,0.001,1,
+nymex,A7Q,future,Mont Belvieu Natural Gasoline (OPIS) Futures,USD,42000,1.00E-05,1,
+nymex,A8J,future,Mont Belvieu Normal Butane (OPIS) BALMO Futures,USD,42000,1.00E-05,1,
+nymex,A8K,future,Conway Propane (OPIS) Futures,USD,42000,1.00E-05,1,
+nymex,A8O,future,Mont Belvieu LDH Propane (OPIS) BALMO Futures,USD,42000,1.00E-05,1,
+nymex,A91,future,Argus Propane Far East Index vs. European Propane CIF ARA (Argus) Futures,USD,1000,0.001,1,
+nymex,A9N,future,Argus Propane (Saudi Aramco) Futures,USD,1000,0.001,1,
+nymex,AA6,future,Group Three ULSD (Platts) vs. NY Harbor ULSD Futures,USD,42000,0.0001,1,
+nymex,AA8,future,Group Three Sub-octane Gasoline (Platts) vs. RBOB Futures,USD,42000,0.0001,1,
+nymex,ABS,future,Singapore Fuel Oil 180 cst (Platts) BALMO Futures,USD,1000,0.001,1,
+nymex,ABT,future,Singapore Fuel Oil 380 cst (Platts) BALMO Futures,USD,1000,0.001,1,
+nymex,AC0,future,Mont Belvieu Ethane (OPIS) Futures,USD,42000,1.00E-05,1,
+nymex,AD0,future,Mont Belvieu Normal Butane (OPIS) Futures,USD,42000,1.00E-05,1,
+nymex,ADB,future,Brent Crude Oil vs. Dubai Crude Oil (Platts) Futures,USD,1000,0.001,1,
+nymex,AE5,future,Argus LLS vs. WTI (Argus) Trade Month Futures,USD,1000,0.01,1,
+nymex,AGA,future,Singapore Gasoil (Platts) vs. Low Sulphur Gasoil Futures,USD,1000,0.001,1,
+nymex,AJL,future,Los Angeles CARBOB Gasoline (OPIS) vs. RBOB Gasoline Futures,USD,42000,0.0001,1,
+nymex,AJS,future,Los Angeles Jet (OPIS) vs. NY Harbor ULSD Futures,USD,42000,0.0001,1,
+nymex,AKL,future,Los Angeles CARB Diesel (OPIS) vs. NY Harbor ULSD Futures,USD,42000,0.0001,1,
+nymex,AKZ,future,European Naphtha (Platts) BALMO Futures,USD,1000,0.001,1,
+nymex,APS,future,European Propane CIF ARA (Argus) Futures,USD,1000,0.01,1,
+nymex,AR0,future,Mont Belvieu Natural Gasoline (OPIS) BALMO Futures,USD,42000,1.00E-05,1,
+nymex,ARE,future,RBOB Gasoline Crack Spread Futures,USD,1000,0.01,1,
+nymex,AVZ,future,Gulf Coast HSFO (Platts) BALMO Futures,USD,1000,0.001,1,
+nymex,AYV,future,Mars (Argus) vs. WTI Trade Month Futures,USD,1000,0.01,1,
+nymex,AYX,future,Mars (Argus) vs. WTI Financial Futures,USD,1000,0.01,1,
+nymex,AZ1,future,Ethanol T2 FOB Rdam Including Duty (Platts) Futures,EUR,100,0.001,1,
+nymex,B0,future,Mont Belvieu LDH Propane (OPIS) Futures,USD,42000,1.00E-05,1,
+nymex,B7H,future,Gasoline Euro-bob Oxy NWE Barges (Argus) Futures,USD,1000,0.001,1,
+nymex,BK,future,WTI-Brent Financial Futures,USD,1000,0.01,1,
+nymex,BOO,future,3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread (1000mt) Futures,USD,6350,0.001,1,
+nymex,BR7,future,Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO Futures,USD,1000,0.001,1,
+nymex,BZ,future,Brent Last Day Financial Futures,USD,1000,0.01,1,
+nymex,CL,future,Crude Oil Futures,USD,1000,0.01,1,
+nymex,CRB,future,Gulf Coast CBOB Gasoline A2 (Platts) vs. RBOB Gasoline Futures,USD,42000,0.0001,1,
+nymex,CSW,future,Clearbrook Bakken Sweet (NE2) Monthly Index Futures,USD,1000,0.001,1,
+nymex,CSX,future,WTI Financial Futures,USD,1000,0.01,1,
+nymex,CU,future,Chicago Ethanol (Platts) Futures,USD,42000,0.0001,1,
+nymex,D1N,future,Singapore Mogas 92 Unleaded (Platts) Brent Crack Spread Futures,USD,1000,0.001,1,
+nymex,DCB,future,Dubai Crude Oil (Platts) Financial Futures,USD,1000,0.001,1,
+nymex,E6,future,Japan C&F Naphtha (Platts) BALMO Futures,USD,1000,0.001,1,
+nymex,EN,future,European Naphtha (Platts) Crack Spread Futures,USD,1000,0.001,1,
+nymex,EPN,future,European Propane CIF ARA (Argus) vs. Naphtha Cargoes CIF NWE (Platts) Futures,USD,1000,0.001,1,
+nymex,EVC,future,Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000,0.001,1,
+nymex,EWG,future,East-West Gasoline Spread (Platts-Argus) Futures,USD,1000,0.001,1,
+nymex,EWN,future,East-West Naphtha: Japan C&F vs. Cargoes CIF NWE Spread (Platts) Futures,USD,1000,0.001,1,
+nymex,EXR,future,RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350000 gallons) Futures,USD,350000,0.0001,1,
+nymex,FO,future,3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures,USD,1000,0.001,1,
+nymex,FRC,future,Freight Route TC14 (Baltic) Futures,USD,1000,0.0001,1,
+nymex,FSS,future,1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000,0.001,1,
+nymex,GCU,future,Gulf Coast HSFO (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000,0.001,1,
+nymex,HCL,future,WTI Houston Crude Oil Futures,USD,1000,0.01,1,
+nymex,HH,future,Natural Gas (Henry Hub) Last-day Financial Futures,USD,10000,0.001,1,
+nymex,HO,future,NY Harbor ULSD Futures,USD,42000,0.0001,1,
+nymex,HP,future,Natural Gas (Henry Hub) Penultimate Financial Futures,USD,10000,0.001,1,
+nymex,HRC,future,U.S. Midwest Domestic Hot-Rolled Coil Steel (CRU) Index Futures,USD,20,1,1,
+nymex,HTT,future,WTI Houston (Argus) vs. WTI Trade Month Futures,USD,1000,0.01,1,
+nymex,NG,future,Henry Hub Natural Gas Futures,USD,10000,0.001,1,
+nymex,PA,future,Palladium Futures,USD,100,0.05,1,
+nymex,PL,future,Platinum Futures,USD,50,0.1,1,
+nymex,RB,future,RBOB Gasoline Futures,USD,42000,0.0001,1,
+nymex,YO,future,No. 11 Sugar Futures,USD,112000,0.0001,1,
+sgx,NK,future,SGX Nikkei 225 Index Futures,JPY,500,5,5,
+sgx,TW,future,MSCI Taiwan Index Futures,USD,100,0.1,50,
+sgx,IN,future,Nifty Indices Futures,USD,2,0.5,50,
+india,NIFTY,future,Nifty50 Index,INR,0.05,75,1,
+india,BANKNIFTY,future,BankNifty Index,INR,0.05,25,1,
+india,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1,
+hkfe,HSI,future,Hang Seng Index,HKD,50,1,1,
+,,,,,,,,
+# Futures options -- will default to Futures contract specs in case no entry exists,,,,,,,,
+cbot,OZB,futureoption,U.S. Treasury Bond American Futures Options,USD,1000,0.015625,1,
+cbot,OZC,futureoption,Corn American Futures Options,USD,5000,0.00125,1,
+cbot,OZS,futureoption,Soybean American Futures Options,USD,5000,0.00125,1,
+cbot,OZT,futureoption,2-Year T-Note American Futures Options,USD,2000,0.0078125,1,
+cbot,OZW,futureoption,Chicago SRW Wheat American Futures Options,USD,5000,0.00125,1,
+comex,SO,futureoption,Silver American Futures Options,USD,5000,0.001,1,
+,,,,,,,,
+,,,,,,,,
+fxcm,AUDCAD,forex,,CAD,1,0.00001,1000,
+fxcm,AUDCHF,forex,,CHF,1,0.00001,1000,
+fxcm,AUDJPY,forex,,JPY,1,0.001,1000,
+fxcm,AUDNZD,forex,,NZD,1,0.00001,1000,
+fxcm,AUDUSD,forex,,USD,1,0.00001,1000,
+fxcm,CADCHF,forex,,CHF,1,0.00001,1000,
+fxcm,CADJPY,forex,,JPY,1,0.001,1000,
+fxcm,CHFJPY,forex,,JPY,1,0.001,1000,
+fxcm,EURAUD,forex,,AUD,1,0.00001,1000,
+fxcm,EURCAD,forex,,CAD,1,0.00001,1000,
+fxcm,EURCHF,forex,,CHF,1,0.00001,1000,
+fxcm,EURGBP,forex,,GBP,1,0.00001,1000,
+fxcm,EURJPY,forex,,JPY,1,0.001,1000,
+fxcm,EURNOK,forex,,NOK,1,0.00001,1000,
+fxcm,EURNZD,forex,,NZD,1,0.00001,1000,
+fxcm,EURSEK,forex,,SEK,1,0.00001,1000,
+fxcm,EURTRY,forex,,TRY,1,0.00001,1000,
+fxcm,EURUSD,forex,,USD,1,0.00001,1000,
+fxcm,GBPAUD,forex,,AUD,1,0.00001,1000,
+fxcm,GBPCAD,forex,,CAD,1,0.00001,1000,
+fxcm,GBPCHF,forex,,CHF,1,0.00001,1000,
+fxcm,GBPJPY,forex,,JPY,1,0.001,1000,
+fxcm,GBPNZD,forex,,NZD,1,0.00001,1000,
+fxcm,GBPUSD,forex,,USD,1,0.00001,1000,
+fxcm,NZDCAD,forex,,CAD,1,0.00001,1000,
+fxcm,NZDCHF,forex,,CHF,1,0.00001,1000,
+fxcm,NZDJPY,forex,,JPY,1,0.001,1000,
+fxcm,NZDUSD,forex,,USD,1,0.00001,1000,
+fxcm,TRYJPY,forex,,JPY,1,0.001,1000,
+fxcm,USDCAD,forex,,CAD,1,0.00001,1000,
+fxcm,USDCHF,forex,,CHF,1,0.00001,1000,
+fxcm,USDCNH,forex,,CNH,1,0.00001,1000,
+fxcm,USDJPY,forex,,JPY,1,0.001,1000,
+fxcm,USDMXN,forex,,MXN,1,0.00001,1000,
+fxcm,USDNOK,forex,,NOK,1,0.00001,1000,
+fxcm,USDSEK,forex,,SEK,1,0.00001,1000,
+fxcm,USDTRY,forex,,TRY,1,0.00001,1000,
+fxcm,USDZAR,forex,,ZAR,1,0.00001,1000,
+fxcm,ZARJPY,forex,,JPY,1,0.001,1000,
+,,,,,,,,
+oanda,AUDCAD,forex,AUD/CAD,CAD,1,0.00001,1,
+oanda,AUDCHF,forex,AUD/CHF,CHF,1,0.00001,1,
+oanda,AUDHKD,forex,AUD/HKD,HKD,1,0.00001,1,
+oanda,AUDJPY,forex,AUD/JPY,JPY,1,0.001,1,
+oanda,AUDNZD,forex,AUD/NZD,NZD,1,0.00001,1,
+oanda,AUDSGD,forex,AUD/SGD,SGD,1,0.00001,1,
+oanda,AUDUSD,forex,AUD/USD,USD,1,0.00001,1,
+oanda,CADCHF,forex,CAD/CHF,CHF,1,0.00001,1,
+oanda,CADHKD,forex,CAD/HKD,HKD,1,0.00001,1,
+oanda,CADJPY,forex,CAD/JPY,JPY,1,0.001,1,
+oanda,CADSGD,forex,CAD/SGD,SGD,1,0.00001,1,
+oanda,CHFHKD,forex,CHF/HKD,HKD,1,0.00001,1,
+oanda,CHFJPY,forex,CHF/JPY,JPY,1,0.001,1,
+oanda,CHFZAR,forex,CHF/ZAR,ZAR,1,0.00001,1,
+oanda,EURAUD,forex,EUR/AUD,AUD,1,0.00001,1,
+oanda,EURCAD,forex,EUR/CAD,CAD,1,0.00001,1,
+oanda,EURCHF,forex,EUR/CHF,CHF,1,0.00001,1,
+oanda,EURCZK,forex,EUR/CZK,CZK,1,0.00001,1,
+oanda,EURDKK,forex,EUR/DKK,DKK,1,0.00001,1,
+oanda,EURGBP,forex,EUR/GBP,GBP,1,0.00001,1,
+oanda,EURHKD,forex,EUR/HKD,HKD,1,0.00001,1,
+oanda,EURHUF,forex,EUR/HUF,HUF,1,0.001,1,
+oanda,EURJPY,forex,EUR/JPY,JPY,1,0.001,1,
+oanda,EURNOK,forex,EUR/NOK,NOK,1,0.00001,1,
+oanda,EURNZD,forex,EUR/NZD,NZD,1,0.00001,1,
+oanda,EURPLN,forex,EUR/PLN,PLN,1,0.00001,1,
+oanda,EURSEK,forex,EUR/SEK,SEK,1,0.00001,1,
+oanda,EURSGD,forex,EUR/SGD,SGD,1,0.00001,1,
+oanda,EURTRY,forex,EUR/TRY,TRY,1,0.00001,1,
+oanda,EURUSD,forex,EUR/USD,USD,1,0.00001,1,
+oanda,EURZAR,forex,EUR/ZAR,ZAR,1,0.00001,1,
+oanda,GBPAUD,forex,GBP/AUD,AUD,1,0.00001,1,
+oanda,GBPCAD,forex,GBP/CAD,CAD,1,0.00001,1,
+oanda,GBPCHF,forex,GBP/CHF,CHF,1,0.00001,1,
+oanda,GBPHKD,forex,GBP/HKD,HKD,1,0.00001,1,
+oanda,GBPJPY,forex,GBP/JPY,JPY,1,0.001,1,
+oanda,GBPNZD,forex,GBP/NZD,NZD,1,0.00001,1,
+oanda,GBPPLN,forex,GBP/PLN,PLN,1,0.00001,1,
+oanda,GBPSGD,forex,GBP/SGD,SGD,1,0.00001,1,
+oanda,GBPUSD,forex,GBP/USD,USD,1,0.00001,1,
+oanda,GBPZAR,forex,GBP/ZAR,ZAR,1,0.00001,1,
+oanda,HKDJPY,forex,HKD/JPY,JPY,1,0.00001,1,
+oanda,NZDCAD,forex,NZD/CAD,CAD,1,0.00001,1,
+oanda,NZDCHF,forex,NZD/CHF,CHF,1,0.00001,1,
+oanda,NZDHKD,forex,NZD/HKD,HKD,1,0.00001,1,
+oanda,NZDJPY,forex,NZD/JPY,JPY,1,0.001,1,
+oanda,NZDSGD,forex,NZD/SGD,SGD,1,0.00001,1,
+oanda,NZDUSD,forex,NZD/USD,USD,1,0.00001,1,
+oanda,SGDCHF,forex,SGD/CHF,CHF,1,0.00001,1,
+oanda,SGDHKD,forex,SGD/HKD,HKD,1,0.00001,1,
+oanda,SGDJPY,forex,SGD/JPY,JPY,1,0.001,1,
+oanda,TRYJPY,forex,TRY/JPY,JPY,1,0.001,1,
+oanda,USDCAD,forex,USD/CAD,CAD,1,0.00001,1,
+oanda,USDCHF,forex,USD/CHF,CHF,1,0.00001,1,
+oanda,USDCNH,forex,USD/CNH,CNH,1,0.00001,1,
+oanda,USDCZK,forex,USD/CZK,CZK,1,0.00001,1,
+oanda,USDDKK,forex,USD/DKK,DKK,1,0.00001,1,
+oanda,USDHKD,forex,USD/HKD,HKD,1,0.00001,1,
+oanda,USDHUF,forex,USD/HUF,HUF,1,0.001,1,
+oanda,USDINR,forex,USD/INR,INR,1,0.001,1,
+oanda,USDJPY,forex,USD/JPY,JPY,1,0.001,1,
+oanda,USDMXN,forex,USD/MXN,MXN,1,0.00001,1,
+oanda,USDNOK,forex,USD/NOK,NOK,1,0.00001,1,
+oanda,USDPLN,forex,USD/PLN,PLN,1,0.00001,1,
+oanda,USDSAR,forex,USD/SAR,SAR,1,0.00001,1,
+oanda,USDSEK,forex,USD/SEK,SEK,1,0.00001,1,
+oanda,USDSGD,forex,USD/SGD,SGD,1,0.00001,1,
+oanda,USDTHB,forex,USD/THB,THB,1,0.001,1,
+oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1,
+oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1,
+oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1,
+,,,,,,,,
+# Source : https://pro.coinbase.com/markets,,,,,,,,
 gdax,ALGOEUR,crypto,Algorand-Euro,EUR,1,0.0001,1,ALGO-EUR
 gdax,ALGOGBP,crypto,Algorand-British Pound,GBP,1,0.0001,1,ALGO-GBP
 gdax,ALGOUSD,crypto,Algorand-United States Dollar,USD,1,0.0001,1,ALGO-USD
@@ -466,7 +466,7 @@ gdax,ZECUSDC,crypto,Zcash-USD Coin,USDC,1,0.01,0.00000001,ZEC-USDC
 gdax,ZRXBTC,crypto,0x-Bitcoin,BTC,1,0.00000001,0.00001,ZRX-BTC
 gdax,ZRXEUR,crypto,0x-Euro,EUR,1,0.000001,0.00001,ZRX-EUR
 gdax,ZRXUSD,crypto,0x-United States Dollar,USD,1,0.000001,0.00001,ZRX-USD
-
+,,,,,,,,
 bitfinex,ABYSSUSD,crypto,The Abyss-US Dollar,USD,1,0.00001,0.00000001,tABSUSD
 bitfinex,ADABTC,crypto,Cardano ADA-Bitcoin,BTC,1,0.00001,0.00000001,tADABTC
 bitfinex,ADAUSD,crypto,Cardano ADA-US Dollar,USD,1,0.00001,0.00000001,tADAUSD
@@ -762,1105 +762,1105 @@ bitfinex,ZILUSD,crypto,Zilliqa-US Dollar,USD,1,0.00001,0.00000001,tZILUSD
 bitfinex,ZRXBTC,crypto,0x-Bitcoin,BTC,1,0.00001,0.00000001,tZRXBTC
 bitfinex,ZRXETH,crypto,0x-Ethereum,ETH,1,0.00001,0.00000001,tZRXETH
 bitfinex,ZRXUSD,crypto,0x-US Dollar,USD,1,0.00001,0.00000001,tZRXUSD
-
-binance,AAVEBKRW,crypto,AAVEBKRW,BKRW,1,1.00000000,0.00100000,AAVEBKRW
-binance,AAVEBNB,crypto,AAVEBNB,BNB,1,0.00010000,0.01000000,AAVEBNB
-binance,AAVEBTC,crypto,AAVEBTC,BTC,1,0.00000100,0.01000000,AAVEBTC
-binance,AAVEBUSD,crypto,AAVEBUSD,BUSD,1,0.00100000,0.00100000,AAVEBUSD
-binance,AAVEETH,crypto,AAVEETH,ETH,1,0.00001000,0.00100000,AAVEETH
-binance,AAVEUSDT,crypto,AAVEUSDT,USDT,1,0.00100000,0.00100000,AAVEUSDT
-binance,ADABKRW,crypto,ADABKRW,BKRW,1,0.01000000,0.10000000,ADABKRW
-binance,ADABNB,crypto,ADABNB,BNB,1,0.00000100,1.00000000,ADABNB
-binance,ADABTC,crypto,ADABTC,BTC,1,0.00000001,1.00000000,ADABTC
-binance,ADABUSD,crypto,ADABUSD,BUSD,1,0.00001000,0.10000000,ADABUSD
-binance,ADAETH,crypto,ADAETH,ETH,1,0.00000001,1.00000000,ADAETH
-binance,ADAPAX,crypto,ADAPAX,PAX,1,0.00001000,0.10000000,ADAPAX
-binance,ADATUSD,crypto,ADATUSD,TUSD,1,0.00001000,0.10000000,ADATUSD
-binance,ADAUSDC,crypto,ADAUSDC,USDC,1,0.00001000,0.10000000,ADAUSDC
-binance,ADAUSDT,crypto,ADAUSDT,USDT,1,0.00001000,0.10000000,ADAUSDT
-binance,ADXBNB,crypto,ADXBNB,BNB,1,0.00000100,1.00000000,ADXBNB
-binance,ADXBTC,crypto,ADXBTC,BTC,1,0.00000001,1.00000000,ADXBTC
-binance,ADXETH,crypto,ADXETH,ETH,1,0.00000010,1.00000000,ADXETH
-binance,AEBNB,crypto,AEBNB,BNB,1,0.00001000,0.10000000,AEBNB
-binance,AEBTC,crypto,AEBTC,BTC,1,0.00000001,1.00000000,AEBTC
-binance,AEETH,crypto,AEETH,ETH,1,0.00000100,0.01000000,AEETH
-binance,AERGOBTC,crypto,AERGOBTC,BTC,1,0.00000001,1.00000000,AERGOBTC
-binance,AERGOBUSD,crypto,AERGOBUSD,BUSD,1,0.00001000,0.10000000,AERGOBUSD
-binance,AGIBNB,crypto,AGIBNB,BNB,1,0.00000100,1.00000000,AGIBNB
-binance,AGIBTC,crypto,AGIBTC,BTC,1,0.00000001,1.00000000,AGIBTC
-binance,AGIETH,crypto,AGIETH,ETH,1,0.00000001,1.00000000,AGIETH
-binance,AIONBNB,crypto,AIONBNB,BNB,1,0.00000100,1.00000000,AIONBNB
-binance,AIONBTC,crypto,AIONBTC,BTC,1,0.00000001,1.00000000,AIONBTC
-binance,AIONBUSD,crypto,AIONBUSD,BUSD,1,0.00010000,0.01000000,AIONBUSD
-binance,AIONETH,crypto,AIONETH,ETH,1,0.00000100,0.01000000,AIONETH
-binance,AIONUSDT,crypto,AIONUSDT,USDT,1,0.00010000,0.01000000,AIONUSDT
-binance,ALGOBNB,crypto,ALGOBNB,BNB,1,0.00001000,0.10000000,ALGOBNB
-binance,ALGOBTC,crypto,ALGOBTC,BTC,1,0.00000001,1.00000000,ALGOBTC
-binance,ALGOBUSD,crypto,ALGOBUSD,BUSD,1,0.00010000,0.01000000,ALGOBUSD
-binance,ALGOPAX,crypto,ALGOPAX,PAX,1,0.00010000,0.01000000,ALGOPAX
-binance,ALGOTUSD,crypto,ALGOTUSD,TUSD,1,0.00010000,0.01000000,ALGOTUSD
-binance,ALGOUSDC,crypto,ALGOUSDC,USDC,1,0.00010000,0.01000000,ALGOUSDC
-binance,ALGOUSDT,crypto,ALGOUSDT,USDT,1,0.00010000,0.01000000,ALGOUSDT
-binance,ALPHABNB,crypto,ALPHABNB,BNB,1,0.00000010,1.00000000,ALPHABNB
-binance,ALPHABTC,crypto,ALPHABTC,BTC,1,0.00000001,1.00000000,ALPHABTC
-binance,ALPHABUSD,crypto,ALPHABUSD,BUSD,1,0.00001000,0.10000000,ALPHABUSD
-binance,ALPHAUSDT,crypto,ALPHAUSDT,USDT,1,0.00001000,0.10000000,ALPHAUSDT
-binance,AMBBNB,crypto,AMBBNB,BNB,1,0.00000100,1.00000000,AMBBNB
-binance,AMBBTC,crypto,AMBBTC,BTC,1,0.00000001,1.00000000,AMBBTC
-binance,AMBETH,crypto,AMBETH,ETH,1,0.00000001,1.00000000,AMBETH
-binance,ANKRBNB,crypto,ANKRBNB,BNB,1,0.00000010,1.00000000,ANKRBNB
-binance,ANKRBTC,crypto,ANKRBTC,BTC,1,0.00000001,1.00000000,ANKRBTC
-binance,ANKRPAX,crypto,ANKRPAX,PAX,1,0.00000100,1.00000000,ANKRPAX
-binance,ANKRTUSD,crypto,ANKRTUSD,TUSD,1,0.00000100,1.00000000,ANKRTUSD
-binance,ANKRUSDC,crypto,ANKRUSDC,USDC,1,0.00000100,1.00000000,ANKRUSDC
-binance,ANKRUSDT,crypto,ANKRUSDT,USDT,1,0.00000100,1.00000000,ANKRUSDT
-binance,ANTBNB,crypto,ANTBNB,BNB,1,0.00010000,0.01000000,ANTBNB
-binance,ANTBTC,crypto,ANTBTC,BTC,1,0.00000010,0.01000000,ANTBTC
-binance,ANTBUSD,crypto,ANTBUSD,BUSD,1,0.00010000,0.01000000,ANTBUSD
-binance,ANTUSDT,crypto,ANTUSDT,USDT,1,0.00010000,0.01000000,ANTUSDT
-binance,APPCBNB,crypto,APPCBNB,BNB,1,0.00000100,1.00000000,APPCBNB
-binance,APPCBTC,crypto,APPCBTC,BTC,1,0.00000001,1.00000000,APPCBTC
-binance,APPCETH,crypto,APPCETH,ETH,1,0.00000010,1.00000000,APPCETH
-binance,ARDRBNB,crypto,ARDRBNB,BNB,1,0.00000100,1.00000000,ARDRBNB
-binance,ARDRBTC,crypto,ARDRBTC,BTC,1,0.00000001,1.00000000,ARDRBTC
-binance,ARDRETH,crypto,ARDRETH,ETH,1,0.00000001,1.00000000,ARDRETH
-binance,ARDRUSDT,crypto,ARDRUSDT,USDT,1,0.00001000,0.10000000,ARDRUSDT
-binance,ARKBTC,crypto,ARKBTC,BTC,1,0.00000001,1.00000000,ARKBTC
-binance,ARKETH,crypto,ARKETH,ETH,1,0.00000100,0.01000000,ARKETH
-binance,ARNBTC,crypto,ARNBTC,BTC,1,0.00000001,1.00000000,ARNBTC
-binance,ARNETH,crypto,ARNETH,ETH,1,0.00000001,1.00000000,ARNETH
-binance,ARPABNB,crypto,ARPABNB,BNB,1,0.00000100,1.00000000,ARPABNB
-binance,ARPABTC,crypto,ARPABTC,BTC,1,0.00000001,1.00000000,ARPABTC
-binance,ARPAUSDT,crypto,ARPAUSDT,USDT,1,0.00001000,0.10000000,ARPAUSDT
-binance,ASTBTC,crypto,ASTBTC,BTC,1,0.00000001,1.00000000,ASTBTC
-binance,ASTETH,crypto,ASTETH,ETH,1,0.00000010,1.00000000,ASTETH
-binance,ATOMBNB,crypto,ATOMBNB,BNB,1,0.00010000,0.01000000,ATOMBNB
-binance,ATOMBTC,crypto,ATOMBTC,BTC,1,0.00000010,0.01000000,ATOMBTC
-binance,ATOMBUSD,crypto,ATOMBUSD,BUSD,1,0.00100000,0.00100000,ATOMBUSD
-binance,ATOMPAX,crypto,ATOMPAX,PAX,1,0.00100000,0.00100000,ATOMPAX
-binance,ATOMTUSD,crypto,ATOMTUSD,TUSD,1,0.00100000,0.00100000,ATOMTUSD
-binance,ATOMUSDC,crypto,ATOMUSDC,USDC,1,0.00100000,0.00100000,ATOMUSDC
-binance,ATOMUSDT,crypto,ATOMUSDT,USDT,1,0.00100000,0.00100000,ATOMUSDT
-binance,AUDBUSD,crypto,AUDBUSD,BUSD,1,0.00001000,0.10000000,AUDBUSD
-binance,AUDIOBTC,crypto,AUDIOBTC,BTC,1,0.00000001,1.00000000,AUDIOBTC
-binance,AUDIOBUSD,crypto,AUDIOBUSD,BUSD,1,0.00001000,0.10000000,AUDIOBUSD
-binance,AUDIOUSDT,crypto,AUDIOUSDT,USDT,1,0.00001000,0.10000000,AUDIOUSDT
-binance,AUDUSDT,crypto,AUDUSDT,USDT,1,0.00001000,0.10000000,AUDUSDT
-binance,AVABNB,crypto,AVABNB,BNB,1,0.00001000,0.10000000,AVABNB
-binance,AVABTC,crypto,AVABTC,BTC,1,0.00000010,0.01000000,AVABTC
-binance,AVABUSD,crypto,AVABUSD,BUSD,1,0.00010000,0.01000000,AVABUSD
-binance,AVAXBNB,crypto,AVAXBNB,BNB,1,0.00001000,0.10000000,AVAXBNB
-binance,AVAXBTC,crypto,AVAXBTC,BTC,1,0.00000001,0.10000000,AVAXBTC
-binance,AVAXBUSD,crypto,AVAXBUSD,BUSD,1,0.00010000,0.01000000,AVAXBUSD
-binance,AVAXUSDT,crypto,AVAXUSDT,USDT,1,0.00010000,0.01000000,AVAXUSDT
-binance,BAKEBNB,crypto,BAKEBNB,BNB,1,0.00000100,1.00000000,BAKEBNB
-binance,BALBNB,crypto,BALBNB,BNB,1,0.00010000,0.01000000,BALBNB
-binance,BALBTC,crypto,BALBTC,BTC,1,0.00000010,0.01000000,BALBTC
-binance,BALBUSD,crypto,BALBUSD,BUSD,1,0.00100000,0.00100000,BALBUSD
-binance,BALUSDT,crypto,BALUSDT,USDT,1,0.00100000,0.00100000,BALUSDT
-binance,BANDBNB,crypto,BANDBNB,BNB,1,0.00001000,0.10000000,BANDBNB
-binance,BANDBTC,crypto,BANDBTC,BTC,1,0.00000001,0.10000000,BANDBTC
-binance,BANDUSDT,crypto,BANDUSDT,USDT,1,0.00010000,0.01000000,BANDUSDT
-binance,BATBNB,crypto,BATBNB,BNB,1,0.00001000,0.10000000,BATBNB
-binance,BATBTC,crypto,BATBTC,BTC,1,0.00000001,1.00000000,BATBTC
-binance,BATBUSD,crypto,BATBUSD,BUSD,1,0.00010000,0.01000000,BATBUSD
-binance,BATETH,crypto,BATETH,ETH,1,0.00000001,1.00000000,BATETH
-binance,BATPAX,crypto,BATPAX,PAX,1,0.00010000,0.01000000,BATPAX
-binance,BATTUSD,crypto,BATTUSD,TUSD,1,0.00010000,0.01000000,BATTUSD
-binance,BATUSDC,crypto,BATUSDC,USDC,1,0.00010000,0.01000000,BATUSDC
-binance,BATUSDT,crypto,BATUSDT,USDT,1,0.00010000,0.01000000,BATUSDT
-binance,BCCBNB,crypto,BCCBNB,BNB,1,0.01000000,0.00001000,BCCBNB
-binance,BCCBTC,crypto,BCCBTC,BTC,1,0.00000100,0.00100000,BCCBTC
-binance,BCCETH,crypto,BCCETH,ETH,1,0.00001000,0.00100000,BCCETH
-binance,BCCUSDT,crypto,BCCUSDT,USDT,1,0.01000000,0.00001000,BCCUSDT
-binance,BCDBTC,crypto,BCDBTC,BTC,1,0.00000001,1.00000000,BCDBTC
-binance,BCDETH,crypto,BCDETH,ETH,1,0.00001000,0.00100000,BCDETH
-binance,BCHABCBTC,crypto,BCHABCBTC,BTC,1,0.00000100,0.00100000,BCHABCBTC
-binance,BCHABCBUSD,crypto,BCHABCBUSD,BUSD,1,0.01000000,0.00001000,BCHABCBUSD
-binance,BCHABCPAX,crypto,BCHABCPAX,PAX,1,0.01000000,0.00001000,BCHABCPAX
-binance,BCHABCTUSD,crypto,BCHABCTUSD,TUSD,1,0.01000000,0.00001000,BCHABCTUSD
-binance,BCHABCUSDC,crypto,BCHABCUSDC,USDC,1,0.01000000,0.00001000,BCHABCUSDC
-binance,BCHABCUSDT,crypto,BCHABCUSDT,USDT,1,0.01000000,0.00001000,BCHABCUSDT
-binance,BCHBNB,crypto,BCHBNB,BNB,1,0.00100000,0.00100000,BCHBNB
-binance,BCHBTC,crypto,BCHBTC,BTC,1,0.00000100,0.00100000,BCHBTC
-binance,BCHBUSD,crypto,BCHBUSD,BUSD,1,0.01000000,0.00001000,BCHBUSD
-binance,BCHPAX,crypto,BCHPAX,PAX,1,0.01000000,0.00001000,BCHPAX
-binance,BCHSVBTC,crypto,BCHSVBTC,BTC,1,0.00000100,0.00100000,BCHSVBTC
-binance,BCHSVPAX,crypto,BCHSVPAX,PAX,1,0.01000000,0.00001000,BCHSVPAX
-binance,BCHSVTUSD,crypto,BCHSVTUSD,TUSD,1,0.01000000,0.00001000,BCHSVTUSD
-binance,BCHSVUSDC,crypto,BCHSVUSDC,USDC,1,0.01000000,0.00001000,BCHSVUSDC
-binance,BCHSVUSDT,crypto,BCHSVUSDT,USDT,1,0.01000000,0.00001000,BCHSVUSDT
-binance,BCHTUSD,crypto,BCHTUSD,TUSD,1,0.01000000,0.00001000,BCHTUSD
-binance,BCHUSDC,crypto,BCHUSDC,USDC,1,0.01000000,0.00001000,BCHUSDC
-binance,BCHUSDT,crypto,BCHUSDT,USDT,1,0.01000000,0.00001000,BCHUSDT
-binance,BCNBNB,crypto,BCNBNB,BNB,1,0.00000100,1.00000000,BCNBNB
-binance,BCNBTC,crypto,BCNBTC,BTC,1,0.00000001,1.00000000,BCNBTC
-binance,BCNETH,crypto,BCNETH,ETH,1,0.00000001,1.00000000,BCNETH
-binance,BCPTBNB,crypto,BCPTBNB,BNB,1,0.00000100,1.00000000,BCPTBNB
-binance,BCPTBTC,crypto,BCPTBTC,BTC,1,0.00000001,1.00000000,BCPTBTC
-binance,BCPTETH,crypto,BCPTETH,ETH,1,0.00000001,1.00000000,BCPTETH
-binance,BCPTPAX,crypto,BCPTPAX,PAX,1,0.00001000,0.10000000,BCPTPAX
-binance,BCPTTUSD,crypto,BCPTTUSD,TUSD,1,0.00001000,0.10000000,BCPTTUSD
-binance,BCPTUSDC,crypto,BCPTUSDC,USDC,1,0.00001000,0.10000000,BCPTUSDC
-binance,BEAMBNB,crypto,BEAMBNB,BNB,1,0.00001000,0.10000000,BEAMBNB
-binance,BEAMBTC,crypto,BEAMBTC,BTC,1,0.00000010,0.01000000,BEAMBTC
-binance,BEAMUSDT,crypto,BEAMUSDT,USDT,1,0.00010000,0.01000000,BEAMUSDT
-binance,BEARBUSD,crypto,BEARBUSD,BUSD,1,0.01000000,0.00001000,BEARBUSD
-binance,BEARUSDT,crypto,BEARUSDT,USDT,1,0.01000000,0.00001000,BEARUSDT
-binance,BELBNB,crypto,BELBNB,BNB,1,0.00001000,0.10000000,BELBNB
-binance,BELBTC,crypto,BELBTC,BTC,1,0.00000001,1.00000000,BELBTC
-binance,BELBUSD,crypto,BELBUSD,BUSD,1,0.00010000,0.01000000,BELBUSD
-binance,BELUSDT,crypto,BELUSDT,USDT,1,0.00010000,0.01000000,BELUSDT
-binance,BGBPUSDC,crypto,BGBPUSDC,USDC,1,0.00010000,0.01000000,BGBPUSDC
-binance,BKRWBUSD,crypto,BKRWBUSD,BUSD,1,0.00000010,1.00000000,BKRWBUSD
-binance,BKRWUSDT,crypto,BKRWUSDT,USDT,1,0.00000010,1.00000000,BKRWUSDT
-binance,BLZBNB,crypto,BLZBNB,BNB,1,0.00000100,1.00000000,BLZBNB
-binance,BLZBTC,crypto,BLZBTC,BTC,1,0.00000001,1.00000000,BLZBTC
-binance,BLZBUSD,crypto,BLZBUSD,BUSD,1,0.00001000,0.10000000,BLZBUSD
-binance,BLZETH,crypto,BLZETH,ETH,1,0.00000001,1.00000000,BLZETH
-binance,BLZUSDT,crypto,BLZUSDT,USDT,1,0.00001000,0.10000000,BLZUSDT
-binance,BNBAUD,crypto,BNBAUD,AUD,1,0.00100000,0.00100000,BNBAUD
-binance,BNBBEARBUSD,crypto,BNBBEARBUSD,BUSD,1,0.01000000,0.00001000,BNBBEARBUSD
-binance,BNBBEARUSDT,crypto,BNBBEARUSDT,USDT,1,0.01000000,0.00001000,BNBBEARUSDT
-binance,BNBBIDR,crypto,BNBBIDR,BIDR,1,1.00,0.00100000,BNBBIDR
-binance,BNBBKRW,crypto,BNBBKRW,BKRW,1,1.00000000,0.00100000,BNBBKRW
-binance,BNBBTC,crypto,BNBBTC,BTC,1,0.00000010,0.01000000,BNBBTC
-binance,BNBBULLBUSD,crypto,BNBBULLBUSD,BUSD,1,0.01000000,0.00001000,BNBBULLBUSD
-binance,BNBBULLUSDT,crypto,BNBBULLUSDT,USDT,1,0.01000000,0.00001000,BNBBULLUSDT
-binance,BNBBUSD,crypto,BNBBUSD,BUSD,1,0.00010000,0.01000000,BNBBUSD
-binance,BNBDAI,crypto,BNBDAI,DAI,1,0.00100000,0.00100000,BNBDAI
-binance,BNBETH,crypto,BNBETH,ETH,1,0.00000100,0.01000000,BNBETH
-binance,BNBEUR,crypto,BNBEUR,EUR,1,0.00010000,0.00100000,BNBEUR
-binance,BNBGBP,crypto,BNBGBP,GBP,1,0.00100000,0.00100000,BNBGBP
-binance,BNBIDRT,crypto,BNBIDRT,IDRT,1,1.00,0.00100000,BNBIDRT
-binance,BNBNGN,crypto,BNBNGN,NGN,1,1.00000000,0.00100000,BNBNGN
-binance,BNBPAX,crypto,BNBPAX,PAX,1,0.00010000,0.01000000,BNBPAX
-binance,BNBRUB,crypto,BNBRUB,RUB,1,0.01000000,0.01000000,BNBRUB
-binance,BNBTRY,crypto,BNBTRY,TRY,1,0.01000000,0.01000000,BNBTRY
-binance,BNBTUSD,crypto,BNBTUSD,TUSD,1,0.00010000,0.01000000,BNBTUSD
-binance,BNBUSDC,crypto,BNBUSDC,USDC,1,0.00010000,0.01000000,BNBUSDC
-binance,BNBUSDS,crypto,BNBUSDS,USDS,1,0.00010000,0.01000000,BNBUSDS
-binance,BNBUSDT,crypto,BNBUSDT,USDT,1,0.00010000,0.00100000,BNBUSDT
-binance,BNBZAR,crypto,BNBZAR,ZAR,1,0.01000000,0.01000000,BNBZAR
-binance,BNTBTC,crypto,BNTBTC,BTC,1,0.00000001,1.00000000,BNTBTC
-binance,BNTBUSD,crypto,BNTBUSD,BUSD,1,0.00010000,0.01000000,BNTBUSD
-binance,BNTETH,crypto,BNTETH,ETH,1,0.00000100,0.01000000,BNTETH
-binance,BNTUSDT,crypto,BNTUSDT,USDT,1,0.00010000,0.01000000,BNTUSDT
-binance,BQXBTC,crypto,BQXBTC,BTC,1,0.00000001,1.00000000,BQXBTC
-binance,BQXETH,crypto,BQXETH,ETH,1,0.00000010,1.00000000,BQXETH
-binance,BRDBNB,crypto,BRDBNB,BNB,1,0.00001000,0.10000000,BRDBNB
-binance,BRDBTC,crypto,BRDBTC,BTC,1,0.00000001,1.00000000,BRDBTC
-binance,BRDETH,crypto,BRDETH,ETH,1,0.00000010,1.00000000,BRDETH
-binance,BTCAUD,crypto,BTCAUD,AUD,1,0.01000000,0.00000100,BTCAUD
-binance,BTCBBTC,crypto,BTCBBTC,BTC,1,0.00000100,0.00100000,BTCBBTC
-binance,BTCBIDR,crypto,BTCBIDR,BIDR,1,1.00,0.00000100,BTCBIDR
-binance,BTCBKRW,crypto,BTCBKRW,BKRW,1,1.00000000,0.00000100,BTCBKRW
-binance,BTCBRL,crypto,BTCBRL,BRL,1,1.00000000,0.00000100,BTCBRL
-binance,BTCBUSD,crypto,BTCBUSD,BUSD,1,0.01000000,0.00000100,BTCBUSD
-binance,BTCDAI,crypto,BTCDAI,DAI,1,0.01000000,0.00000100,BTCDAI
-binance,BTCEUR,crypto,BTCEUR,EUR,1,0.01000000,0.00000100,BTCEUR
-binance,BTCGBP,crypto,BTCGBP,GBP,1,0.01000000,0.00000100,BTCGBP
-binance,BTCIDRT,crypto,BTCIDRT,IDRT,1,1.00,0.00000100,BTCIDRT
-binance,BTCNGN,crypto,BTCNGN,NGN,1,1.00000000,0.00000100,BTCNGN
-binance,BTCPAX,crypto,BTCPAX,PAX,1,0.01000000,0.00000100,BTCPAX
-binance,BTCRUB,crypto,BTCRUB,RUB,1,1.00000000,0.00000100,BTCRUB
-binance,BTCTRY,crypto,BTCTRY,TRY,1,1.00000000,0.00000100,BTCTRY
-binance,BTCTUSD,crypto,BTCTUSD,TUSD,1,0.01000000,0.00000100,BTCTUSD
-binance,BTCUAH,crypto,BTCUAH,UAH,1,1.00000000,0.00000100,BTCUAH
-binance,BTCUSDC,crypto,BTCUSDC,USDC,1,0.01000000,0.00000100,BTCUSDC
-binance,BTCUSDS,crypto,BTCUSDS,USDS,1,0.01000000,0.00000100,BTCUSDS
-binance,BTCUSDT,crypto,BTCUSDT,USDT,1,0.01000000,0.00000100,BTCUSDT
-binance,BTCZAR,crypto,BTCZAR,ZAR,1,1.00000000,0.00000100,BTCZAR
-binance,BTGBTC,crypto,BTGBTC,BTC,1,0.00000100,0.01000000,BTGBTC
-binance,BTGETH,crypto,BTGETH,ETH,1,0.00000100,0.01000000,BTGETH
-binance,BTSBNB,crypto,BTSBNB,BNB,1,0.00000100,1.00000000,BTSBNB
-binance,BTSBTC,crypto,BTSBTC,BTC,1,0.00000001,1.00000000,BTSBTC
-binance,BTSBUSD,crypto,BTSBUSD,BUSD,1,0.00001000,0.10000000,BTSBUSD
-binance,BTSETH,crypto,BTSETH,ETH,1,0.00000001,1.00000000,BTSETH
-binance,BTSUSDT,crypto,BTSUSDT,USDT,1,0.00001000,0.10000000,BTSUSDT
-binance,BTTBNB,crypto,BTTBNB,BNB,1,0.00000001,1.00000000,BTTBNB
-binance,BTTBTC,crypto,BTTBTC,BTC,1,0.00000001,1.00000000,BTTBTC
-binance,BTTBUSD,crypto,BTTBUSD,BUSD,1,0.00000010,1.00000000,BTTBUSD
-binance,BTTPAX,crypto,BTTPAX,PAX,1,0.00000010,1.00000000,BTTPAX
-binance,BTTTRX,crypto,BTTTRX,TRX,1,0.00001000,0.10000000,BTTTRX
-binance,BTTTUSD,crypto,BTTTUSD,TUSD,1,0.00000010,1.00000000,BTTTUSD
-binance,BTTUSDC,crypto,BTTUSDC,USDC,1,0.00000010,1.00000000,BTTUSDC
-binance,BTTUSDT,crypto,BTTUSDT,USDT,1,0.00000010,1.00000000,BTTUSDT
-binance,BULLBUSD,crypto,BULLBUSD,BUSD,1,0.01000000,0.00000100,BULLBUSD
-binance,BULLUSDT,crypto,BULLUSDT,USDT,1,0.01000000,0.00000100,BULLUSDT
-binance,BURGERBNB,crypto,BURGERBNB,BNB,1,0.00001000,0.10000000,BURGERBNB
-binance,BUSDBIDR,crypto,BUSDBIDR,BIDR,1,1.00,0.01000000,BUSDBIDR
-binance,BUSDBKRW,crypto,BUSDBKRW,BKRW,1,0.01000000,0.10000000,BUSDBKRW
-binance,BUSDDAI,crypto,BUSDDAI,DAI,1,0.00010000,0.01000000,BUSDDAI
-binance,BUSDIDRT,crypto,BUSDIDRT,IDRT,1,1.00,0.01000000,BUSDIDRT
-binance,BUSDNGN,crypto,BUSDNGN,NGN,1,0.01000000,0.01000000,BUSDNGN
-binance,BUSDRUB,crypto,BUSDRUB,RUB,1,0.00100000,0.10000000,BUSDRUB
-binance,BUSDTRY,crypto,BUSDTRY,TRY,1,0.00100000,0.01000000,BUSDTRY
-binance,BUSDUSDT,crypto,BUSDUSDT,USDT,1,0.00010000,0.01000000,BUSDUSDT
-binance,BUSDZAR,crypto,BUSDZAR,ZAR,1,0.00100000,0.10000000,BUSDZAR
-binance,BZRXBNB,crypto,BZRXBNB,BNB,1,0.00001000,0.10000000,BZRXBNB
-binance,BZRXBTC,crypto,BZRXBTC,BTC,1,0.00000001,1.00000000,BZRXBTC
-binance,BZRXBUSD,crypto,BZRXBUSD,BUSD,1,0.00010000,0.01000000,BZRXBUSD
-binance,BZRXUSDT,crypto,BZRXUSDT,USDT,1,0.00010000,0.01000000,BZRXUSDT
-binance,CAKEBNB,crypto,CAKEBNB,BNB,1,0.00001000,0.10000000,CAKEBNB
-binance,CAKEBUSD,crypto,CAKEBUSD,BUSD,1,0.00010000,0.01000000,CAKEBUSD
-binance,CDTBTC,crypto,CDTBTC,BTC,1,0.00000001,1.00000000,CDTBTC
-binance,CDTETH,crypto,CDTETH,ETH,1,0.00000001,1.00000000,CDTETH
-binance,CELRBNB,crypto,CELRBNB,BNB,1,0.00000010,1.00000000,CELRBNB
-binance,CELRBTC,crypto,CELRBTC,BTC,1,0.00000001,1.00000000,CELRBTC
-binance,CELRUSDT,crypto,CELRUSDT,USDT,1,0.00001000,0.10000000,CELRUSDT
-binance,CHATBTC,crypto,CHATBTC,BTC,1,0.00000001,1.00000000,CHATBTC
-binance,CHATETH,crypto,CHATETH,ETH,1,0.00000001,1.00000000,CHATETH
-binance,CHRBNB,crypto,CHRBNB,BNB,1,0.00000100,1.00000000,CHRBNB
-binance,CHRBTC,crypto,CHRBTC,BTC,1,0.00000001,1.00000000,CHRBTC
-binance,CHRUSDT,crypto,CHRUSDT,USDT,1,0.00001000,0.10000000,CHRUSDT
-binance,CHZBNB,crypto,CHZBNB,BNB,1,0.00000010,1.00000000,CHZBNB
-binance,CHZBTC,crypto,CHZBTC,BTC,1,0.00000001,1.00000000,CHZBTC
-binance,CHZUSDT,crypto,CHZUSDT,USDT,1,0.00000100,1.00000000,CHZUSDT
-binance,CLOAKBTC,crypto,CLOAKBTC,BTC,1,0.00000010,0.01000000,CLOAKBTC
-binance,CLOAKETH,crypto,CLOAKETH,ETH,1,0.00000100,0.01000000,CLOAKETH
-binance,CMTBNB,crypto,CMTBNB,BNB,1,0.00000100,1.00000000,CMTBNB
-binance,CMTBTC,crypto,CMTBTC,BTC,1,0.00000001,1.00000000,CMTBTC
-binance,CMTETH,crypto,CMTETH,ETH,1,0.00000001,1.00000000,CMTETH
-binance,CNDBNB,crypto,CNDBNB,BNB,1,0.00000010,1.00000000,CNDBNB
-binance,CNDBTC,crypto,CNDBTC,BTC,1,0.00000001,1.00000000,CNDBTC
-binance,CNDETH,crypto,CNDETH,ETH,1,0.00000001,1.00000000,CNDETH
-binance,COCOSBNB,crypto,COCOSBNB,BNB,1,0.00000010,1.00000000,COCOSBNB
-binance,COCOSBTC,crypto,COCOSBTC,BTC,1,0.00000001,1.00000000,COCOSBTC
-binance,COCOSUSDT,crypto,COCOSUSDT,USDT,1,0.00000100,1.00000000,COCOSUSDT
-binance,COMPBNB,crypto,COMPBNB,BNB,1,0.00100000,0.00100000,COMPBNB
-binance,COMPBTC,crypto,COMPBTC,BTC,1,0.00000100,0.00100000,COMPBTC
-binance,COMPBUSD,crypto,COMPBUSD,BUSD,1,0.01000000,0.00001000,COMPBUSD
-binance,COMPUSDT,crypto,COMPUSDT,USDT,1,0.01000000,0.00001000,COMPUSDT
-binance,COSBNB,crypto,COSBNB,BNB,1,0.00000100,1.00000000,COSBNB
-binance,COSBTC,crypto,COSBTC,BTC,1,0.00000001,1.00000000,COSBTC
-binance,COSUSDT,crypto,COSUSDT,USDT,1,0.00001000,0.10000000,COSUSDT
-binance,COTIBNB,crypto,COTIBNB,BNB,1,0.00000100,1.00000000,COTIBNB
-binance,COTIBTC,crypto,COTIBTC,BTC,1,0.00000001,1.00000000,COTIBTC
-binance,COTIUSDT,crypto,COTIUSDT,USDT,1,0.00001000,0.10000000,COTIUSDT
-binance,CREAMBNB,crypto,CREAMBNB,BNB,1,0.00010000,0.01000000,CREAMBNB
-binance,CREAMBUSD,crypto,CREAMBUSD,BUSD,1,0.00100000,0.00100000,CREAMBUSD
-binance,CRVBNB,crypto,CRVBNB,BNB,1,0.00010000,0.01000000,CRVBNB
-binance,CRVBTC,crypto,CRVBTC,BTC,1,0.00000010,0.01000000,CRVBTC
-binance,CRVBUSD,crypto,CRVBUSD,BUSD,1,0.00100000,0.00100000,CRVBUSD
-binance,CRVUSDT,crypto,CRVUSDT,USDT,1,0.00100000,0.00100000,CRVUSDT
-binance,CTSIBNB,crypto,CTSIBNB,BNB,1,0.00000100,1.00000000,CTSIBNB
-binance,CTSIBTC,crypto,CTSIBTC,BTC,1,0.00000001,1.00000000,CTSIBTC
-binance,CTSIBUSD,crypto,CTSIBUSD,BUSD,1,0.00001000,0.10000000,CTSIBUSD
-binance,CTSIUSDT,crypto,CTSIUSDT,USDT,1,0.00001000,0.10000000,CTSIUSDT
-binance,CTXCBNB,crypto,CTXCBNB,BNB,1,0.00000100,1.00000000,CTXCBNB
-binance,CTXCBTC,crypto,CTXCBTC,BTC,1,0.00000001,1.00000000,CTXCBTC
-binance,CTXCUSDT,crypto,CTXCUSDT,USDT,1,0.00010000,0.01000000,CTXCUSDT
-binance,CVCBNB,crypto,CVCBNB,BNB,1,0.00000100,1.00000000,CVCBNB
-binance,CVCBTC,crypto,CVCBTC,BTC,1,0.00000001,1.00000000,CVCBTC
-binance,CVCETH,crypto,CVCETH,ETH,1,0.00000001,1.00000000,CVCETH
-binance,CVCUSDT,crypto,CVCUSDT,USDT,1,0.00001000,0.10000000,CVCUSDT
-binance,DAIBNB,crypto,DAIBNB,BNB,1,0.00001000,0.10000000,DAIBNB
-binance,DAIBTC,crypto,DAIBTC,BTC,1,0.00000001,1.00000000,DAIBTC
-binance,DAIBUSD,crypto,DAIBUSD,BUSD,1,0.00010000,0.01000000,DAIBUSD
-binance,DAIUSDT,crypto,DAIUSDT,USDT,1,0.00010000,0.01000000,DAIUSDT
-binance,DASHBNB,crypto,DASHBNB,BNB,1,0.00100000,0.00100000,DASHBNB
-binance,DASHBTC,crypto,DASHBTC,BTC,1,0.00000100,0.00100000,DASHBTC
-binance,DASHBUSD,crypto,DASHBUSD,BUSD,1,0.01000000,0.00001000,DASHBUSD
-binance,DASHETH,crypto,DASHETH,ETH,1,0.00001000,0.00100000,DASHETH
-binance,DASHUSDT,crypto,DASHUSDT,USDT,1,0.01000000,0.00001000,DASHUSDT
-binance,DATABTC,crypto,DATABTC,BTC,1,0.00000001,1.00000000,DATABTC
-binance,DATABUSD,crypto,DATABUSD,BUSD,1,0.00001000,0.10000000,DATABUSD
-binance,DATAETH,crypto,DATAETH,ETH,1,0.00000001,1.00000000,DATAETH
-binance,DATAUSDT,crypto,DATAUSDT,USDT,1,0.00001000,0.10000000,DATAUSDT
-binance,DCRBNB,crypto,DCRBNB,BNB,1,0.00100000,0.00100000,DCRBNB
-binance,DCRBTC,crypto,DCRBTC,BTC,1,0.00000100,0.00100000,DCRBTC
-binance,DCRBUSD,crypto,DCRBUSD,BUSD,1,0.00100000,0.00100000,DCRBUSD
-binance,DCRUSDT,crypto,DCRUSDT,USDT,1,0.00100000,0.00100000,DCRUSDT
-binance,DENTBTC,crypto,DENTBTC,BTC,1,0.00000001,1.00000000,DENTBTC
-binance,DENTETH,crypto,DENTETH,ETH,1,0.00000001,1.00000000,DENTETH
-binance,DENTUSDT,crypto,DENTUSDT,USDT,1,0.00000010,1.00000000,DENTUSDT
-binance,DGBBNB,crypto,DGBBNB,BNB,1,0.00000100,1.00000000,DGBBNB
-binance,DGBBTC,crypto,DGBBTC,BTC,1,0.00000001,1.00000000,DGBBTC
-binance,DGBBUSD,crypto,DGBBUSD,BUSD,1,0.00001000,0.10000000,DGBBUSD
-binance,DGBUSDT,crypto,DGBUSDT,USDT,1,0.00001000,0.10000000,DGBUSDT
-binance,DGDBTC,crypto,DGDBTC,BTC,1,0.00000100,0.00100000,DGDBTC
-binance,DGDETH,crypto,DGDETH,ETH,1,0.00001000,0.00100000,DGDETH
-binance,DIABNB,crypto,DIABNB,BNB,1,0.00010000,0.01000000,DIABNB
-binance,DIABTC,crypto,DIABTC,BTC,1,0.00000010,0.01000000,DIABTC
-binance,DIABUSD,crypto,DIABUSD,BUSD,1,0.00100000,0.00100000,DIABUSD
-binance,DIAUSDT,crypto,DIAUSDT,USDT,1,0.00100000,0.00100000,DIAUSDT
-binance,DLTBNB,crypto,DLTBNB,BNB,1,0.00000100,1.00000000,DLTBNB
-binance,DLTBTC,crypto,DLTBTC,BTC,1,0.00000001,1.00000000,DLTBTC
-binance,DLTETH,crypto,DLTETH,ETH,1,0.00000001,1.00000000,DLTETH
-binance,DNTBTC,crypto,DNTBTC,BTC,1,0.00000001,1.00000000,DNTBTC
-binance,DNTETH,crypto,DNTETH,ETH,1,0.00000001,1.00000000,DNTETH
-binance,DOCKBTC,crypto,DOCKBTC,BTC,1,0.00000001,1.00000000,DOCKBTC
-binance,DOCKETH,crypto,DOCKETH,ETH,1,0.00000001,1.00000000,DOCKETH
-binance,DOCKUSDT,crypto,DOCKUSDT,USDT,1,0.00000100,1.00000000,DOCKUSDT
-binance,DOGEBNB,crypto,DOGEBNB,BNB,1,0.00000001,1.00000000,DOGEBNB
-binance,DOGEBTC,crypto,DOGEBTC,BTC,1,0.00000001,1.00000000,DOGEBTC
-binance,DOGEBUSD,crypto,DOGEBUSD,BUSD,1,0.00000100,1.00000000,DOGEBUSD
-binance,DOGEPAX,crypto,DOGEPAX,PAX,1,0.00000010,1.00000000,DOGEPAX
-binance,DOGEUSDC,crypto,DOGEUSDC,USDC,1,0.00000010,1.00000000,DOGEUSDC
-binance,DOGEUSDT,crypto,DOGEUSDT,USDT,1,0.00000010,1.00000000,DOGEUSDT
-binance,DOTBIDR,crypto,DOTBIDR,BIDR,1,1.00,0.00100000,DOTBIDR
-binance,DOTBKRW,crypto,DOTBKRW,BKRW,1,0.01000000,0.10000000,DOTBKRW
-binance,DOTBNB,crypto,DOTBNB,BNB,1,0.00001000,0.10000000,DOTBNB
-binance,DOTBTC,crypto,DOTBTC,BTC,1,0.00000001,0.10000000,DOTBTC
-binance,DOTBUSD,crypto,DOTBUSD,BUSD,1,0.00010000,0.01000000,DOTBUSD
-binance,DOTUSDT,crypto,DOTUSDT,USDT,1,0.00010000,0.01000000,DOTUSDT
-binance,DREPBNB,crypto,DREPBNB,BNB,1,0.00000010,1.00000000,DREPBNB
-binance,DREPBTC,crypto,DREPBTC,BTC,1,0.00000001,1.00000000,DREPBTC
-binance,DREPUSDT,crypto,DREPUSDT,USDT,1,0.00000100,1.00000000,DREPUSDT
-binance,DUSKBNB,crypto,DUSKBNB,BNB,1,0.00001000,0.10000000,DUSKBNB
-binance,DUSKBTC,crypto,DUSKBTC,BTC,1,0.00000001,1.00000000,DUSKBTC
-binance,DUSKPAX,crypto,DUSKPAX,PAX,1,0.00010000,0.01000000,DUSKPAX
-binance,DUSKUSDC,crypto,DUSKUSDC,USDC,1,0.00010000,0.01000000,DUSKUSDC
-binance,DUSKUSDT,crypto,DUSKUSDT,USDT,1,0.00010000,0.01000000,DUSKUSDT
-binance,EASYETH,crypto,EASYETH,ETH,1,0.00000100,0.01000000,EASYETH
-binance,EDOBTC,crypto,EDOBTC,BTC,1,0.00000001,1.00000000,EDOBTC
-binance,EDOETH,crypto,EDOETH,ETH,1,0.00000100,0.01000000,EDOETH
-binance,EGLDBNB,crypto,EGLDBNB,BNB,1,0.00010000,0.01000000,EGLDBNB
-binance,EGLDBTC,crypto,EGLDBTC,BTC,1,0.00000100,0.00100000,EGLDBTC
-binance,EGLDBUSD,crypto,EGLDBUSD,BUSD,1,0.00100000,0.00100000,EGLDBUSD
-binance,EGLDUSDT,crypto,EGLDUSDT,USDT,1,0.00100000,0.00100000,EGLDUSDT
-binance,ELFBTC,crypto,ELFBTC,BTC,1,0.00000001,1.00000000,ELFBTC
-binance,ELFETH,crypto,ELFETH,ETH,1,0.00000001,1.00000000,ELFETH
-binance,ENGBTC,crypto,ENGBTC,BTC,1,0.00000001,1.00000000,ENGBTC
-binance,ENGETH,crypto,ENGETH,ETH,1,0.00000010,1.00000000,ENGETH
-binance,ENJBNB,crypto,ENJBNB,BNB,1,0.00000100,1.00000000,ENJBNB
-binance,ENJBTC,crypto,ENJBTC,BTC,1,0.00000001,1.00000000,ENJBTC
-binance,ENJBUSD,crypto,ENJBUSD,BUSD,1,0.00001000,0.10000000,ENJBUSD
-binance,ENJETH,crypto,ENJETH,ETH,1,0.00000001,1.00000000,ENJETH
-binance,ENJUSDT,crypto,ENJUSDT,USDT,1,0.00001000,0.10000000,ENJUSDT
-binance,EOSBEARBUSD,crypto,EOSBEARBUSD,BUSD,1,0.01000000,0.00001000,EOSBEARBUSD
-binance,EOSBEARUSDT,crypto,EOSBEARUSDT,USDT,1,0.01000000,0.00001000,EOSBEARUSDT
-binance,EOSBNB,crypto,EOSBNB,BNB,1,0.00010000,0.01000000,EOSBNB
-binance,EOSBTC,crypto,EOSBTC,BTC,1,0.00000010,0.01000000,EOSBTC
-binance,EOSBULLBUSD,crypto,EOSBULLBUSD,BUSD,1,0.01000000,0.00001000,EOSBULLBUSD
-binance,EOSBULLUSDT,crypto,EOSBULLUSDT,USDT,1,0.01000000,0.00001000,EOSBULLUSDT
-binance,EOSBUSD,crypto,EOSBUSD,BUSD,1,0.00010000,0.01000000,EOSBUSD
-binance,EOSETH,crypto,EOSETH,ETH,1,0.00000100,0.01000000,EOSETH
-binance,EOSPAX,crypto,EOSPAX,PAX,1,0.00010000,0.01000000,EOSPAX
-binance,EOSTUSD,crypto,EOSTUSD,TUSD,1,0.00010000,0.01000000,EOSTUSD
-binance,EOSUSDC,crypto,EOSUSDC,USDC,1,0.00010000,0.01000000,EOSUSDC
-binance,EOSUSDT,crypto,EOSUSDT,USDT,1,0.00010000,0.01000000,EOSUSDT
-binance,ERDBNB,crypto,ERDBNB,BNB,1,0.00000001,1.00000000,ERDBNB
-binance,ERDBTC,crypto,ERDBTC,BTC,1,0.00000001,1.00000000,ERDBTC
-binance,ERDBUSD,crypto,ERDBUSD,BUSD,1,0.00000100,1.00000000,ERDBUSD
-binance,ERDPAX,crypto,ERDPAX,PAX,1,0.00000010,1.00000000,ERDPAX
-binance,ERDUSDC,crypto,ERDUSDC,USDC,1,0.00000010,1.00000000,ERDUSDC
-binance,ERDUSDT,crypto,ERDUSDT,USDT,1,0.00000100,1.00000000,ERDUSDT
-binance,ETCBNB,crypto,ETCBNB,BNB,1,0.00010000,0.01000000,ETCBNB
-binance,ETCBTC,crypto,ETCBTC,BTC,1,0.00000010,0.01000000,ETCBTC
-binance,ETCBUSD,crypto,ETCBUSD,BUSD,1,0.00010000,0.01000000,ETCBUSD
-binance,ETCETH,crypto,ETCETH,ETH,1,0.00000100,0.01000000,ETCETH
-binance,ETCPAX,crypto,ETCPAX,PAX,1,0.00100000,0.00100000,ETCPAX
-binance,ETCTUSD,crypto,ETCTUSD,TUSD,1,0.00100000,0.00100000,ETCTUSD
-binance,ETCUSDC,crypto,ETCUSDC,USDC,1,0.00100000,0.00100000,ETCUSDC
-binance,ETCUSDT,crypto,ETCUSDT,USDT,1,0.00010000,0.01000000,ETCUSDT
-binance,ETHAUD,crypto,ETHAUD,AUD,1,0.01000000,0.00001000,ETHAUD
-binance,ETHBEARBUSD,crypto,ETHBEARBUSD,BUSD,1,0.01000000,0.00001000,ETHBEARBUSD
-binance,ETHBEARUSDT,crypto,ETHBEARUSDT,USDT,1,0.01000000,0.00001000,ETHBEARUSDT
-binance,ETHBIDR,crypto,ETHBIDR,BIDR,1,1.00,0.00001000,ETHBIDR
-binance,ETHBKRW,crypto,ETHBKRW,BKRW,1,1.00000000,0.00001000,ETHBKRW
-binance,ETHBTC,crypto,ETHBTC,BTC,1,0.00000100,0.00100000,ETHBTC
-binance,ETHBULLBUSD,crypto,ETHBULLBUSD,BUSD,1,0.01000000,0.00000100,ETHBULLBUSD
-binance,ETHBULLUSDT,crypto,ETHBULLUSDT,USDT,1,0.01000000,0.00000100,ETHBULLUSDT
-binance,ETHBUSD,crypto,ETHBUSD,BUSD,1,0.01000000,0.00001000,ETHBUSD
-binance,ETHDAI,crypto,ETHDAI,DAI,1,0.01000000,0.00001000,ETHDAI
-binance,ETHEUR,crypto,ETHEUR,EUR,1,0.01000000,0.00001000,ETHEUR
-binance,ETHGBP,crypto,ETHGBP,GBP,1,0.01000000,0.00001000,ETHGBP
-binance,ETHNGN,crypto,ETHNGN,NGN,1,1.00000000,0.00001000,ETHNGN
-binance,ETHPAX,crypto,ETHPAX,PAX,1,0.01000000,0.00001000,ETHPAX
-binance,ETHRUB,crypto,ETHRUB,RUB,1,0.10000000,0.00001000,ETHRUB
-binance,ETHTRY,crypto,ETHTRY,TRY,1,0.01000000,0.00001000,ETHTRY
-binance,ETHTUSD,crypto,ETHTUSD,TUSD,1,0.01000000,0.00001000,ETHTUSD
-binance,ETHUSDC,crypto,ETHUSDC,USDC,1,0.01000000,0.00001000,ETHUSDC
-binance,ETHUSDT,crypto,ETHUSDT,USDT,1,0.01000000,0.00001000,ETHUSDT
-binance,ETHZAR,crypto,ETHZAR,ZAR,1,0.10000000,0.00001000,ETHZAR
-binance,EURBUSD,crypto,EURBUSD,BUSD,1,0.00010000,0.01000000,EURBUSD
-binance,EURUSDT,crypto,EURUSDT,USDT,1,0.00010000,0.01000000,EURUSDT
-binance,EVXBTC,crypto,EVXBTC,BTC,1,0.00000001,1.00000000,EVXBTC
-binance,EVXETH,crypto,EVXETH,ETH,1,0.00000010,1.00000000,EVXETH
-binance,FETBNB,crypto,FETBNB,BNB,1,0.00000100,1.00000000,FETBNB
-binance,FETBTC,crypto,FETBTC,BTC,1,0.00000001,1.00000000,FETBTC
-binance,FETUSDT,crypto,FETUSDT,USDT,1,0.00001000,0.10000000,FETUSDT
-binance,FILBNB,crypto,FILBNB,BNB,1,0.00001000,0.10000000,FILBNB
-binance,FILBTC,crypto,FILBTC,BTC,1,0.00000010,0.01000000,FILBTC
-binance,FILBUSD,crypto,FILBUSD,BUSD,1,0.00010000,0.01000000,FILBUSD
-binance,FILUSDT,crypto,FILUSDT,USDT,1,0.00010000,0.01000000,FILUSDT
-binance,FIOBNB,crypto,FIOBNB,BNB,1,0.00001000,0.10000000,FIOBNB
-binance,FIOBTC,crypto,FIOBTC,BTC,1,0.00000001,1.00000000,FIOBTC
-binance,FIOBUSD,crypto,FIOBUSD,BUSD,1,0.00010000,0.01000000,FIOBUSD
-binance,FIOUSDT,crypto,FIOUSDT,USDT,1,0.00010000,0.01000000,FIOUSDT
-binance,FLMBNB,crypto,FLMBNB,BNB,1,0.00001000,0.10000000,FLMBNB
-binance,FLMBTC,crypto,FLMBTC,BTC,1,0.00000001,1.00000000,FLMBTC
-binance,FLMBUSD,crypto,FLMBUSD,BUSD,1,0.00010000,0.01000000,FLMBUSD
-binance,FLMUSDT,crypto,FLMUSDT,USDT,1,0.00010000,0.01000000,FLMUSDT
-binance,FTMBNB,crypto,FTMBNB,BNB,1,0.00000100,1.00000000,FTMBNB
-binance,FTMBTC,crypto,FTMBTC,BTC,1,0.00000001,1.00000000,FTMBTC
-binance,FTMPAX,crypto,FTMPAX,PAX,1,0.00001000,0.10000000,FTMPAX
-binance,FTMTUSD,crypto,FTMTUSD,TUSD,1,0.00001000,0.10000000,FTMTUSD
-binance,FTMUSDC,crypto,FTMUSDC,USDC,1,0.00001000,0.10000000,FTMUSDC
-binance,FTMUSDT,crypto,FTMUSDT,USDT,1,0.00001000,0.10000000,FTMUSDT
-binance,FTTBNB,crypto,FTTBNB,BNB,1,0.00010000,0.01000000,FTTBNB
-binance,FTTBTC,crypto,FTTBTC,BTC,1,0.00000010,0.01000000,FTTBTC
-binance,FTTUSDT,crypto,FTTUSDT,USDT,1,0.00100000,0.00100000,FTTUSDT
-binance,FUELBTC,crypto,FUELBTC,BTC,1,0.00000001,1.00000000,FUELBTC
-binance,FUELETH,crypto,FUELETH,ETH,1,0.00000001,1.00000000,FUELETH
-binance,FUNBTC,crypto,FUNBTC,BTC,1,0.00000001,1.00000000,FUNBTC
-binance,FUNETH,crypto,FUNETH,ETH,1,0.00000001,1.00000000,FUNETH
-binance,FUNUSDT,crypto,FUNUSDT,USDT,1,0.00000100,1.00000000,FUNUSDT
-binance,GASBTC,crypto,GASBTC,BTC,1,0.00000010,0.01000000,GASBTC
-binance,GBPBUSD,crypto,GBPBUSD,BUSD,1,0.00010000,0.01000000,GBPBUSD
-binance,GBPUSDT,crypto,GBPUSDT,USDT,1,0.00010000,0.01000000,GBPUSDT
-binance,GNTBNB,crypto,GNTBNB,BNB,1,0.00000100,1.00000000,GNTBNB
-binance,GNTBTC,crypto,GNTBTC,BTC,1,0.00000001,1.00000000,GNTBTC
-binance,GNTETH,crypto,GNTETH,ETH,1,0.00000001,1.00000000,GNTETH
-binance,GOBNB,crypto,GOBNB,BNB,1,0.00000010,1.00000000,GOBNB
-binance,GOBTC,crypto,GOBTC,BTC,1,0.00000001,1.00000000,GOBTC
-binance,GRSBTC,crypto,GRSBTC,BTC,1,0.00000001,1.00000000,GRSBTC
-binance,GRSETH,crypto,GRSETH,ETH,1,0.00000001,1.00000000,GRSETH
-binance,GTOBNB,crypto,GTOBNB,BNB,1,0.00000100,1.00000000,GTOBNB
-binance,GTOBTC,crypto,GTOBTC,BTC,1,0.00000001,1.00000000,GTOBTC
-binance,GTOETH,crypto,GTOETH,ETH,1,0.00000001,1.00000000,GTOETH
-binance,GTOPAX,crypto,GTOPAX,PAX,1,0.00001000,0.10000000,GTOPAX
-binance,GTOTUSD,crypto,GTOTUSD,TUSD,1,0.00001000,0.10000000,GTOTUSD
-binance,GTOUSDC,crypto,GTOUSDC,USDC,1,0.00001000,0.10000000,GTOUSDC
-binance,GTOUSDT,crypto,GTOUSDT,USDT,1,0.00001000,0.10000000,GTOUSDT
-binance,GVTBTC,crypto,GVTBTC,BTC,1,0.00000010,0.01000000,GVTBTC
-binance,GVTETH,crypto,GVTETH,ETH,1,0.00000100,0.01000000,GVTETH
-binance,GXSBTC,crypto,GXSBTC,BTC,1,0.00000001,1.00000000,GXSBTC
-binance,GXSETH,crypto,GXSETH,ETH,1,0.00000100,0.01000000,GXSETH
-binance,GXSUSDT,crypto,GXSUSDT,USDT,1,0.00010000,0.01000000,GXSUSDT
-binance,HBARBNB,crypto,HBARBNB,BNB,1,0.00000100,1.00000000,HBARBNB
-binance,HBARBTC,crypto,HBARBTC,BTC,1,0.00000001,1.00000000,HBARBTC
-binance,HBARBUSD,crypto,HBARBUSD,BUSD,1,0.00001000,0.10000000,HBARBUSD
-binance,HBARUSDT,crypto,HBARUSDT,USDT,1,0.00001000,0.10000000,HBARUSDT
-binance,HCBTC,crypto,HCBTC,BTC,1,0.00000010,0.01000000,HCBTC
-binance,HCETH,crypto,HCETH,ETH,1,0.00000100,0.01000000,HCETH
-binance,HCUSDT,crypto,HCUSDT,USDT,1,0.00010000,0.01000000,HCUSDT
-binance,HIVEBNB,crypto,HIVEBNB,BNB,1,0.00001000,0.10000000,HIVEBNB
-binance,HIVEBTC,crypto,HIVEBTC,BTC,1,0.00000001,1.00000000,HIVEBTC
-binance,HIVEUSDT,crypto,HIVEUSDT,USDT,1,0.00010000,0.01000000,HIVEUSDT
-binance,HNTBTC,crypto,HNTBTC,BTC,1,0.00000010,0.01000000,HNTBTC
-binance,HNTUSDT,crypto,HNTUSDT,USDT,1,0.00100000,0.00100000,HNTUSDT
-binance,HOTBNB,crypto,HOTBNB,BNB,1,0.00000001,1.00000000,HOTBNB
-binance,HOTBTC,crypto,HOTBTC,BTC,1,0.00000001,1.00000000,HOTBTC
-binance,HOTETH,crypto,HOTETH,ETH,1,0.00000001,1.00000000,HOTETH
-binance,HOTUSDT,crypto,HOTUSDT,USDT,1,0.00000010,1.00000000,HOTUSDT
-binance,HSRBTC,crypto,HSRBTC,BTC,1,0.00000100,0.01000000,HSRBTC
-binance,HSRETH,crypto,HSRETH,ETH,1,0.00000100,0.01000000,HSRETH
-binance,ICNBTC,crypto,ICNBTC,BTC,1,0.00000001,1.00000000,ICNBTC
-binance,ICNETH,crypto,ICNETH,ETH,1,0.00000010,1.00000000,ICNETH
-binance,ICXBNB,crypto,ICXBNB,BNB,1,0.00001000,0.10000000,ICXBNB
-binance,ICXBTC,crypto,ICXBTC,BTC,1,0.00000001,1.00000000,ICXBTC
-binance,ICXBUSD,crypto,ICXBUSD,BUSD,1,0.00010000,0.01000000,ICXBUSD
-binance,ICXETH,crypto,ICXETH,ETH,1,0.00000100,0.01000000,ICXETH
-binance,ICXUSDT,crypto,ICXUSDT,USDT,1,0.00010000,0.01000000,ICXUSDT
-binance,IDEXBTC,crypto,IDEXBTC,BTC,1,0.00000001,1.00000000,IDEXBTC
-binance,IDEXBUSD,crypto,IDEXBUSD,BUSD,1,0.00001000,0.10000000,IDEXBUSD
-binance,INJBNB,crypto,INJBNB,BNB,1,0.00001000,0.10000000,INJBNB
-binance,INJBTC,crypto,INJBTC,BTC,1,0.00000001,0.10000000,INJBTC
-binance,INJBUSD,crypto,INJBUSD,BUSD,1,0.00010000,0.01000000,INJBUSD
-binance,INJUSDT,crypto,INJUSDT,USDT,1,0.00010000,0.01000000,INJUSDT
-binance,INSBTC,crypto,INSBTC,BTC,1,0.00000001,1.00000000,INSBTC
-binance,INSETH,crypto,INSETH,ETH,1,0.00000100,0.01000000,INSETH
-binance,IOSTBNB,crypto,IOSTBNB,BNB,1,0.00000010,1.00000000,IOSTBNB
-binance,IOSTBTC,crypto,IOSTBTC,BTC,1,0.00000001,1.00000000,IOSTBTC
-binance,IOSTETH,crypto,IOSTETH,ETH,1,0.00000001,1.00000000,IOSTETH
-binance,IOSTUSDT,crypto,IOSTUSDT,USDT,1,0.00000100,1.00000000,IOSTUSDT
-binance,IOTABNB,crypto,IOTABNB,BNB,1,0.00001000,0.10000000,IOTABNB
-binance,IOTABTC,crypto,IOTABTC,BTC,1,0.00000001,1.00000000,IOTABTC
-binance,IOTABUSD,crypto,IOTABUSD,BUSD,1,0.00010000,0.01000000,IOTABUSD
-binance,IOTAETH,crypto,IOTAETH,ETH,1,0.00000001,1.00000000,IOTAETH
-binance,IOTAUSDT,crypto,IOTAUSDT,USDT,1,0.00010000,0.01000000,IOTAUSDT
-binance,IOTXBTC,crypto,IOTXBTC,BTC,1,0.00000001,1.00000000,IOTXBTC
-binance,IOTXETH,crypto,IOTXETH,ETH,1,0.00000001,1.00000000,IOTXETH
-binance,IOTXUSDT,crypto,IOTXUSDT,USDT,1,0.00000100,1.00000000,IOTXUSDT
-binance,IQBNB,crypto,IQBNB,BNB,1,0.00000010,1.00000000,IQBNB
-binance,IQBUSD,crypto,IQBUSD,BUSD,1,0.00000100,1.00000000,IQBUSD
-binance,IRISBNB,crypto,IRISBNB,BNB,1,0.00000100,1.00000000,IRISBNB
-binance,IRISBTC,crypto,IRISBTC,BTC,1,0.00000001,1.00000000,IRISBTC
-binance,IRISBUSD,crypto,IRISBUSD,BUSD,1,0.00001000,0.10000000,IRISBUSD
-binance,IRISUSDT,crypto,IRISUSDT,USDT,1,0.00001000,0.10000000,IRISUSDT
-binance,JSTBNB,crypto,JSTBNB,BNB,1,0.00000100,1.00000000,JSTBNB
-binance,JSTBTC,crypto,JSTBTC,BTC,1,0.00000001,1.00000000,JSTBTC
-binance,JSTBUSD,crypto,JSTBUSD,BUSD,1,0.00001000,0.10000000,JSTBUSD
-binance,JSTUSDT,crypto,JSTUSDT,USDT,1,0.00001000,0.10000000,JSTUSDT
-binance,KAVABNB,crypto,KAVABNB,BNB,1,0.00001000,0.10000000,KAVABNB
-binance,KAVABTC,crypto,KAVABTC,BTC,1,0.00000001,1.00000000,KAVABTC
-binance,KAVAUSDT,crypto,KAVAUSDT,USDT,1,0.00010000,0.01000000,KAVAUSDT
-binance,KEYBTC,crypto,KEYBTC,BTC,1,0.00000001,1.00000000,KEYBTC
-binance,KEYETH,crypto,KEYETH,ETH,1,0.00000001,1.00000000,KEYETH
-binance,KEYUSDT,crypto,KEYUSDT,USDT,1,0.00000100,1.00000000,KEYUSDT
-binance,KMDBTC,crypto,KMDBTC,BTC,1,0.00000010,0.01000000,KMDBTC
-binance,KMDBUSD,crypto,KMDBUSD,BUSD,1,0.00010000,0.01000000,KMDBUSD
-binance,KMDETH,crypto,KMDETH,ETH,1,0.00000100,0.01000000,KMDETH
-binance,KMDUSDT,crypto,KMDUSDT,USDT,1,0.00010000,0.01000000,KMDUSDT
-binance,KNCBTC,crypto,KNCBTC,BTC,1,0.00000001,1.00000000,KNCBTC
-binance,KNCBUSD,crypto,KNCBUSD,BUSD,1,0.00100000,0.00100000,KNCBUSD
-binance,KNCETH,crypto,KNCETH,ETH,1,0.00000010,1.00000000,KNCETH
-binance,KNCUSDT,crypto,KNCUSDT,USDT,1,0.00100000,0.00100000,KNCUSDT
-binance,KSMBNB,crypto,KSMBNB,BNB,1,0.00010000,0.01000000,KSMBNB
-binance,KSMBTC,crypto,KSMBTC,BTC,1,0.00000100,0.00100000,KSMBTC
-binance,KSMBUSD,crypto,KSMBUSD,BUSD,1,0.00100000,0.00100000,KSMBUSD
-binance,KSMUSDT,crypto,KSMUSDT,USDT,1,0.00100000,0.00100000,KSMUSDT
-binance,LENDBKRW,crypto,LENDBKRW,BKRW,1,0.01000000,0.10000000,LENDBKRW
-binance,LENDBTC,crypto,LENDBTC,BTC,1,0.00000001,1.00000000,LENDBTC
-binance,LENDBUSD,crypto,LENDBUSD,BUSD,1,0.00010000,0.01000000,LENDBUSD
-binance,LENDETH,crypto,LENDETH,ETH,1,0.00000001,1.00000000,LENDETH
-binance,LENDUSDT,crypto,LENDUSDT,USDT,1,0.00001000,0.10000000,LENDUSDT
-binance,LINKAUD,crypto,LINKAUD,AUD,1,0.00100000,0.00100000,LINKAUD
-binance,LINKBKRW,crypto,LINKBKRW,BKRW,1,0.01000000,0.10000000,LINKBKRW
-binance,LINKBTC,crypto,LINKBTC,BTC,1,0.00000001,0.10000000,LINKBTC
-binance,LINKBUSD,crypto,LINKBUSD,BUSD,1,0.00010000,0.01000000,LINKBUSD
-binance,LINKETH,crypto,LINKETH,ETH,1,0.00000100,0.01000000,LINKETH
-binance,LINKEUR,crypto,LINKEUR,EUR,1,0.00100000,0.00100000,LINKEUR
-binance,LINKPAX,crypto,LINKPAX,PAX,1,0.00010000,0.01000000,LINKPAX
-binance,LINKTRY,crypto,LINKTRY,TRY,1,0.00100000,0.01000000,LINKTRY
-binance,LINKTUSD,crypto,LINKTUSD,TUSD,1,0.00010000,0.01000000,LINKTUSD
-binance,LINKUSDC,crypto,LINKUSDC,USDC,1,0.00010000,0.01000000,LINKUSDC
-binance,LINKUSDT,crypto,LINKUSDT,USDT,1,0.00010000,0.01000000,LINKUSDT
-binance,LOOMBNB,crypto,LOOMBNB,BNB,1,0.00000100,1.00000000,LOOMBNB
-binance,LOOMBTC,crypto,LOOMBTC,BTC,1,0.00000001,1.00000000,LOOMBTC
-binance,LOOMETH,crypto,LOOMETH,ETH,1,0.00000001,1.00000000,LOOMETH
-binance,LRCBTC,crypto,LRCBTC,BTC,1,0.00000001,1.00000000,LRCBTC
-binance,LRCBUSD,crypto,LRCBUSD,BUSD,1,0.00001000,0.10000000,LRCBUSD
-binance,LRCETH,crypto,LRCETH,ETH,1,0.00000001,1.00000000,LRCETH
-binance,LRCUSDT,crypto,LRCUSDT,USDT,1,0.00001000,0.10000000,LRCUSDT
-binance,LSKBNB,crypto,LSKBNB,BNB,1,0.00001000,0.10000000,LSKBNB
-binance,LSKBTC,crypto,LSKBTC,BTC,1,0.00000010,0.01000000,LSKBTC
-binance,LSKETH,crypto,LSKETH,ETH,1,0.00000100,0.01000000,LSKETH
-binance,LSKUSDT,crypto,LSKUSDT,USDT,1,0.00010000,0.01000000,LSKUSDT
-binance,LTCBNB,crypto,LTCBNB,BNB,1,0.00100000,0.00100000,LTCBNB
-binance,LTCBTC,crypto,LTCBTC,BTC,1,0.00000100,0.01000000,LTCBTC
-binance,LTCBUSD,crypto,LTCBUSD,BUSD,1,0.01000000,0.00001000,LTCBUSD
-binance,LTCETH,crypto,LTCETH,ETH,1,0.00001000,0.00100000,LTCETH
-binance,LTCPAX,crypto,LTCPAX,PAX,1,0.01000000,0.00001000,LTCPAX
-binance,LTCTUSD,crypto,LTCTUSD,TUSD,1,0.01000000,0.00001000,LTCTUSD
-binance,LTCUSDC,crypto,LTCUSDC,USDC,1,0.01000000,0.00001000,LTCUSDC
-binance,LTCUSDT,crypto,LTCUSDT,USDT,1,0.01000000,0.00001000,LTCUSDT
-binance,LTOBNB,crypto,LTOBNB,BNB,1,0.00000100,1.00000000,LTOBNB
-binance,LTOBTC,crypto,LTOBTC,BTC,1,0.00000001,1.00000000,LTOBTC
-binance,LTOUSDT,crypto,LTOUSDT,USDT,1,0.00001000,0.10000000,LTOUSDT
-binance,LUNABNB,crypto,LUNABNB,BNB,1,0.00001000,0.10000000,LUNABNB
-binance,LUNABTC,crypto,LUNABTC,BTC,1,0.00000001,1.00000000,LUNABTC
-binance,LUNABUSD,crypto,LUNABUSD,BUSD,1,0.00010000,0.01000000,LUNABUSD
-binance,LUNAUSDT,crypto,LUNAUSDT,USDT,1,0.00010000,0.01000000,LUNAUSDT
-binance,LUNBTC,crypto,LUNBTC,BTC,1,0.00000010,0.01000000,LUNBTC
-binance,LUNETH,crypto,LUNETH,ETH,1,0.00000100,0.01000000,LUNETH
-binance,MANABTC,crypto,MANABTC,BTC,1,0.00000001,1.00000000,MANABTC
-binance,MANABUSD,crypto,MANABUSD,BUSD,1,0.00001000,0.10000000,MANABUSD
-binance,MANAETH,crypto,MANAETH,ETH,1,0.00000001,1.00000000,MANAETH
-binance,MANAUSDT,crypto,MANAUSDT,USDT,1,0.00001000,0.10000000,MANAUSDT
-binance,MATICBNB,crypto,MATICBNB,BNB,1,0.00000010,1.00000000,MATICBNB
-binance,MATICBTC,crypto,MATICBTC,BTC,1,0.00000001,1.00000000,MATICBTC
-binance,MATICBUSD,crypto,MATICBUSD,BUSD,1,0.00001000,0.10000000,MATICBUSD
-binance,MATICUSDT,crypto,MATICUSDT,USDT,1,0.00001000,0.10000000,MATICUSDT
-binance,MBLBNB,crypto,MBLBNB,BNB,1,0.00000010,1.00000000,MBLBNB
-binance,MBLBTC,crypto,MBLBTC,BTC,1,0.00000001,1.00000000,MBLBTC
-binance,MBLUSDT,crypto,MBLUSDT,USDT,1,0.00000100,1.00000000,MBLUSDT
-binance,MCOBNB,crypto,MCOBNB,BNB,1,0.00001000,0.10000000,MCOBNB
-binance,MCOBTC,crypto,MCOBTC,BTC,1,0.00000010,0.01000000,MCOBTC
-binance,MCOETH,crypto,MCOETH,ETH,1,0.00000100,0.01000000,MCOETH
-binance,MCOUSDT,crypto,MCOUSDT,USDT,1,0.00100000,0.00100000,MCOUSDT
-binance,MDABTC,crypto,MDABTC,BTC,1,0.00000001,1.00000000,MDABTC
-binance,MDAETH,crypto,MDAETH,ETH,1,0.00000010,1.00000000,MDAETH
-binance,MDTBNB,crypto,MDTBNB,BNB,1,0.00000010,1.00000000,MDTBNB
-binance,MDTBTC,crypto,MDTBTC,BTC,1,0.00000001,1.00000000,MDTBTC
-binance,MDTUSDT,crypto,MDTUSDT,USDT,1,0.00001000,0.10000000,MDTUSDT
-binance,MFTBNB,crypto,MFTBNB,BNB,1,0.00000010,1.00000000,MFTBNB
-binance,MFTBTC,crypto,MFTBTC,BTC,1,0.00000001,1.00000000,MFTBTC
-binance,MFTETH,crypto,MFTETH,ETH,1,0.00000001,1.00000000,MFTETH
-binance,MFTUSDT,crypto,MFTUSDT,USDT,1,0.00000100,1.00000000,MFTUSDT
-binance,MITHBNB,crypto,MITHBNB,BNB,1,0.00000100,1.00000000,MITHBNB
-binance,MITHBTC,crypto,MITHBTC,BTC,1,0.00000001,1.00000000,MITHBTC
-binance,MITHUSDT,crypto,MITHUSDT,USDT,1,0.00001000,0.10000000,MITHUSDT
-binance,MKRBNB,crypto,MKRBNB,BNB,1,0.00100000,0.00100000,MKRBNB
-binance,MKRBTC,crypto,MKRBTC,BTC,1,0.00000100,0.00100000,MKRBTC
-binance,MKRBUSD,crypto,MKRBUSD,BUSD,1,0.01000000,0.00001000,MKRBUSD
-binance,MKRUSDT,crypto,MKRUSDT,USDT,1,0.01000000,0.00001000,MKRUSDT
-binance,MODBTC,crypto,MODBTC,BTC,1,0.00000010,0.01000000,MODBTC
-binance,MODETH,crypto,MODETH,ETH,1,0.00000100,0.01000000,MODETH
-binance,MTHBTC,crypto,MTHBTC,BTC,1,0.00000001,1.00000000,MTHBTC
-binance,MTHETH,crypto,MTHETH,ETH,1,0.00000001,1.00000000,MTHETH
-binance,MTLBTC,crypto,MTLBTC,BTC,1,0.00000001,1.00000000,MTLBTC
-binance,MTLETH,crypto,MTLETH,ETH,1,0.00000100,0.01000000,MTLETH
-binance,MTLUSDT,crypto,MTLUSDT,USDT,1,0.00010000,0.01000000,MTLUSDT
-binance,NANOBNB,crypto,NANOBNB,BNB,1,0.00001000,0.10000000,NANOBNB
-binance,NANOBTC,crypto,NANOBTC,BTC,1,0.00000010,0.01000000,NANOBTC
-binance,NANOBUSD,crypto,NANOBUSD,BUSD,1,0.00010000,0.01000000,NANOBUSD
-binance,NANOETH,crypto,NANOETH,ETH,1,0.00000100,0.01000000,NANOETH
-binance,NANOUSDT,crypto,NANOUSDT,USDT,1,0.00010000,0.01000000,NANOUSDT
-binance,NASBNB,crypto,NASBNB,BNB,1,0.00001000,0.10000000,NASBNB
-binance,NASBTC,crypto,NASBTC,BTC,1,0.00000010,0.01000000,NASBTC
-binance,NASETH,crypto,NASETH,ETH,1,0.00000100,0.01000000,NASETH
-binance,NAVBNB,crypto,NAVBNB,BNB,1,0.00000100,1.00000000,NAVBNB
-binance,NAVBTC,crypto,NAVBTC,BTC,1,0.00000001,1.00000000,NAVBTC
-binance,NAVETH,crypto,NAVETH,ETH,1,0.00000100,0.01000000,NAVETH
-binance,NBSBTC,crypto,NBSBTC,BTC,1,0.00000001,1.00000000,NBSBTC
-binance,NBSUSDT,crypto,NBSUSDT,USDT,1,0.00001000,0.10000000,NBSUSDT
-binance,NCASHBNB,crypto,NCASHBNB,BNB,1,0.00000010,1.00000000,NCASHBNB
-binance,NCASHBTC,crypto,NCASHBTC,BTC,1,0.00000001,1.00000000,NCASHBTC
-binance,NCASHETH,crypto,NCASHETH,ETH,1,0.00000001,1.00000000,NCASHETH
-binance,NEARBNB,crypto,NEARBNB,BNB,1,0.00001000,0.10000000,NEARBNB
-binance,NEARBTC,crypto,NEARBTC,BTC,1,0.00000010,0.01000000,NEARBTC
-binance,NEARBUSD,crypto,NEARBUSD,BUSD,1,0.00010000,0.01000000,NEARBUSD
-binance,NEARUSDT,crypto,NEARUSDT,USDT,1,0.00010000,0.01000000,NEARUSDT
-binance,NEBLBNB,crypto,NEBLBNB,BNB,1,0.00001000,0.10000000,NEBLBNB
-binance,NEBLBTC,crypto,NEBLBTC,BTC,1,0.00000001,1.00000000,NEBLBTC
-binance,NEBLETH,crypto,NEBLETH,ETH,1,0.00000100,0.01000000,NEBLETH
-binance,NEOBNB,crypto,NEOBNB,BNB,1,0.00010000,0.01000000,NEOBNB
-binance,NEOBTC,crypto,NEOBTC,BTC,1,0.00000100,0.01000000,NEOBTC
-binance,NEOBUSD,crypto,NEOBUSD,BUSD,1,0.00100000,0.00100000,NEOBUSD
-binance,NEOETH,crypto,NEOETH,ETH,1,0.00000100,0.01000000,NEOETH
-binance,NEOPAX,crypto,NEOPAX,PAX,1,0.00100000,0.00100000,NEOPAX
-binance,NEOTUSD,crypto,NEOTUSD,TUSD,1,0.00100000,0.00100000,NEOTUSD
-binance,NEOUSDC,crypto,NEOUSDC,USDC,1,0.00100000,0.00100000,NEOUSDC
-binance,NEOUSDT,crypto,NEOUSDT,USDT,1,0.00100000,0.00100000,NEOUSDT
-binance,NKNBNB,crypto,NKNBNB,BNB,1,0.00000100,1.00000000,NKNBNB
-binance,NKNBTC,crypto,NKNBTC,BTC,1,0.00000001,1.00000000,NKNBTC
-binance,NKNUSDT,crypto,NKNUSDT,USDT,1,0.00001000,0.10000000,NKNUSDT
-binance,NMRBNB,crypto,NMRBNB,BNB,1,0.00010000,0.01000000,NMRBNB
-binance,NMRBTC,crypto,NMRBTC,BTC,1,0.00000100,0.00100000,NMRBTC
-binance,NMRBUSD,crypto,NMRBUSD,BUSD,1,0.00100000,0.00100000,NMRBUSD
-binance,NMRUSDT,crypto,NMRUSDT,USDT,1,0.00100000,0.00100000,NMRUSDT
-binance,NPXSBTC,crypto,NPXSBTC,BTC,1,0.00000001,1.00000000,NPXSBTC
-binance,NPXSETH,crypto,NPXSETH,ETH,1,0.00000001,1.00000000,NPXSETH
-binance,NPXSUSDC,crypto,NPXSUSDC,USDC,1,0.00000010,1.00000000,NPXSUSDC
-binance,NPXSUSDT,crypto,NPXSUSDT,USDT,1,0.00000010,1.00000000,NPXSUSDT
-binance,NULSBNB,crypto,NULSBNB,BNB,1,0.00001000,0.10000000,NULSBNB
-binance,NULSBTC,crypto,NULSBTC,BTC,1,0.00000001,1.00000000,NULSBTC
-binance,NULSETH,crypto,NULSETH,ETH,1,0.00000001,1.00000000,NULSETH
-binance,NULSUSDT,crypto,NULSUSDT,USDT,1,0.00010000,0.01000000,NULSUSDT
-binance,NXSBNB,crypto,NXSBNB,BNB,1,0.00001000,0.10000000,NXSBNB
-binance,NXSBTC,crypto,NXSBTC,BTC,1,0.00000001,1.00000000,NXSBTC
-binance,NXSETH,crypto,NXSETH,ETH,1,0.00000100,0.01000000,NXSETH
-binance,OAXBTC,crypto,OAXBTC,BTC,1,0.00000001,1.00000000,OAXBTC
-binance,OAXETH,crypto,OAXETH,ETH,1,0.00000010,1.00000000,OAXETH
-binance,OCEANBNB,crypto,OCEANBNB,BNB,1,0.00001000,0.10000000,OCEANBNB
-binance,OCEANBTC,crypto,OCEANBTC,BTC,1,0.00000001,1.00000000,OCEANBTC
-binance,OCEANBUSD,crypto,OCEANBUSD,BUSD,1,0.00010000,0.01000000,OCEANBUSD
-binance,OCEANUSDT,crypto,OCEANUSDT,USDT,1,0.00010000,0.01000000,OCEANUSDT
-binance,OGNBNB,crypto,OGNBNB,BNB,1,0.00001000,0.10000000,OGNBNB
-binance,OGNBTC,crypto,OGNBTC,BTC,1,0.00000001,1.00000000,OGNBTC
-binance,OGNUSDT,crypto,OGNUSDT,USDT,1,0.00010000,0.01000000,OGNUSDT
-binance,OMGBNB,crypto,OMGBNB,BNB,1,0.00001000,0.10000000,OMGBNB
-binance,OMGBTC,crypto,OMGBTC,BTC,1,0.00000010,0.01000000,OMGBTC
-binance,OMGETH,crypto,OMGETH,ETH,1,0.00000100,0.01000000,OMGETH
-binance,OMGUSDT,crypto,OMGUSDT,USDT,1,0.00010000,0.01000000,OMGUSDT
-binance,ONEBIDR,crypto,ONEBIDR,BIDR,1,0.01,1.00000000,ONEBIDR
-binance,ONEBNB,crypto,ONEBNB,BNB,1,0.00000010,1.00000000,ONEBNB
-binance,ONEBTC,crypto,ONEBTC,BTC,1,0.00000001,1.00000000,ONEBTC
-binance,ONEBUSD,crypto,ONEBUSD,BUSD,1,0.00000100,1.00000000,ONEBUSD
-binance,ONEPAX,crypto,ONEPAX,PAX,1,0.00001000,0.10000000,ONEPAX
-binance,ONETUSD,crypto,ONETUSD,TUSD,1,0.00001000,0.10000000,ONETUSD
-binance,ONEUSDC,crypto,ONEUSDC,USDC,1,0.00001000,0.10000000,ONEUSDC
-binance,ONEUSDT,crypto,ONEUSDT,USDT,1,0.00001000,0.10000000,ONEUSDT
-binance,ONGBNB,crypto,ONGBNB,BNB,1,0.00001000,0.10000000,ONGBNB
-binance,ONGBTC,crypto,ONGBTC,BTC,1,0.00000001,1.00000000,ONGBTC
-binance,ONGUSDT,crypto,ONGUSDT,USDT,1,0.00010000,0.01000000,ONGUSDT
-binance,ONTBNB,crypto,ONTBNB,BNB,1,0.00001000,0.10000000,ONTBNB
-binance,ONTBTC,crypto,ONTBTC,BTC,1,0.00000010,0.01000000,ONTBTC
-binance,ONTBUSD,crypto,ONTBUSD,BUSD,1,0.00010000,0.01000000,ONTBUSD
-binance,ONTETH,crypto,ONTETH,ETH,1,0.00000100,0.01000000,ONTETH
-binance,ONTPAX,crypto,ONTPAX,PAX,1,0.00010000,0.01000000,ONTPAX
-binance,ONTUSDC,crypto,ONTUSDC,USDC,1,0.00010000,0.01000000,ONTUSDC
-binance,ONTUSDT,crypto,ONTUSDT,USDT,1,0.00010000,0.01000000,ONTUSDT
-binance,ORNBTC,crypto,ORNBTC,BTC,1,0.00000010,0.01000000,ORNBTC
-binance,ORNUSDT,crypto,ORNUSDT,USDT,1,0.00010000,0.01000000,ORNUSDT
-binance,OSTBNB,crypto,OSTBNB,BNB,1,0.00000010,1.00000000,OSTBNB
-binance,OSTBTC,crypto,OSTBTC,BTC,1,0.00000001,1.00000000,OSTBTC
-binance,OSTETH,crypto,OSTETH,ETH,1,0.00000001,1.00000000,OSTETH
-binance,OXTBTC,crypto,OXTBTC,BTC,1,0.00000001,1.00000000,OXTBTC
-binance,OXTUSDT,crypto,OXTUSDT,USDT,1,0.00010000,0.01000000,OXTUSDT
-binance,PAXBNB,crypto,PAXBNB,BNB,1,0.00001000,0.10000000,PAXBNB
-binance,PAXBTC,crypto,PAXBTC,BTC,1,0.00000001,1.00000000,PAXBTC
-binance,PAXETH,crypto,PAXETH,ETH,1,0.00000001,1.00000000,PAXETH
-binance,PAXGBNB,crypto,PAXGBNB,BNB,1,0.00100000,0.00100000,PAXGBNB
-binance,PAXGBTC,crypto,PAXGBTC,BTC,1,0.00001000,0.00010000,PAXGBTC
-binance,PAXGBUSD,crypto,PAXGBUSD,BUSD,1,0.01000000,0.00000100,PAXGBUSD
-binance,PAXGUSDT,crypto,PAXGUSDT,USDT,1,0.01000000,0.00000100,PAXGUSDT
-binance,PAXTUSD,crypto,PAXTUSD,TUSD,1,0.00010000,0.01000000,PAXTUSD
-binance,PAXUSDT,crypto,PAXUSDT,USDT,1,0.00010000,0.01000000,PAXUSDT
-binance,PERLBNB,crypto,PERLBNB,BNB,1,0.00000100,1.00000000,PERLBNB
-binance,PERLBTC,crypto,PERLBTC,BTC,1,0.00000001,1.00000000,PERLBTC
-binance,PERLUSDC,crypto,PERLUSDC,USDC,1,0.00001000,0.10000000,PERLUSDC
-binance,PERLUSDT,crypto,PERLUSDT,USDT,1,0.00001000,0.10000000,PERLUSDT
-binance,PHBBNB,crypto,PHBBNB,BNB,1,0.00000010,1.00000000,PHBBNB
-binance,PHBBTC,crypto,PHBBTC,BTC,1,0.00000001,1.00000000,PHBBTC
-binance,PHBPAX,crypto,PHBPAX,PAX,1,0.00001000,0.10000000,PHBPAX
-binance,PHBTUSD,crypto,PHBTUSD,TUSD,1,0.00001000,0.10000000,PHBTUSD
-binance,PHBUSDC,crypto,PHBUSDC,USDC,1,0.00001000,0.10000000,PHBUSDC
-binance,PHXBNB,crypto,PHXBNB,BNB,1,0.00000100,1.00000000,PHXBNB
-binance,PHXBTC,crypto,PHXBTC,BTC,1,0.00000001,1.00000000,PHXBTC
-binance,PHXETH,crypto,PHXETH,ETH,1,0.00000001,1.00000000,PHXETH
-binance,PIVXBNB,crypto,PIVXBNB,BNB,1,0.00001000,0.10000000,PIVXBNB
-binance,PIVXBTC,crypto,PIVXBTC,BTC,1,0.00000001,1.00000000,PIVXBTC
-binance,PIVXETH,crypto,PIVXETH,ETH,1,0.00000100,0.01000000,PIVXETH
-binance,PNTBTC,crypto,PNTBTC,BTC,1,0.00000001,1.00000000,PNTBTC
-binance,PNTUSDT,crypto,PNTUSDT,USDT,1,0.00010000,0.01000000,PNTUSDT
-binance,POABNB,crypto,POABNB,BNB,1,0.00000100,1.00000000,POABNB
-binance,POABTC,crypto,POABTC,BTC,1,0.00000001,1.00000000,POABTC
-binance,POAETH,crypto,POAETH,ETH,1,0.00000001,1.00000000,POAETH
-binance,POEBTC,crypto,POEBTC,BTC,1,0.00000001,1.00000000,POEBTC
-binance,POEETH,crypto,POEETH,ETH,1,0.00000001,1.00000000,POEETH
-binance,POLYBNB,crypto,POLYBNB,BNB,1,0.00000100,1.00000000,POLYBNB
-binance,POLYBTC,crypto,POLYBTC,BTC,1,0.00000001,1.00000000,POLYBTC
-binance,POWRBNB,crypto,POWRBNB,BNB,1,0.00001000,0.10000000,POWRBNB
-binance,POWRBTC,crypto,POWRBTC,BTC,1,0.00000001,1.00000000,POWRBTC
-binance,POWRETH,crypto,POWRETH,ETH,1,0.00000001,1.00000000,POWRETH
-binance,PPTBTC,crypto,PPTBTC,BTC,1,0.00000001,1.00000000,PPTBTC
-binance,PPTETH,crypto,PPTETH,ETH,1,0.00000100,0.01000000,PPTETH
-binance,QKCBTC,crypto,QKCBTC,BTC,1,0.00000001,1.00000000,QKCBTC
-binance,QKCETH,crypto,QKCETH,ETH,1,0.00000001,1.00000000,QKCETH
-binance,QLCBNB,crypto,QLCBNB,BNB,1,0.00000100,1.00000000,QLCBNB
-binance,QLCBTC,crypto,QLCBTC,BTC,1,0.00000001,1.00000000,QLCBTC
-binance,QLCETH,crypto,QLCETH,ETH,1,0.00000001,1.00000000,QLCETH
-binance,QSPBNB,crypto,QSPBNB,BNB,1,0.00000010,1.00000000,QSPBNB
-binance,QSPBTC,crypto,QSPBTC,BTC,1,0.00000001,1.00000000,QSPBTC
-binance,QSPETH,crypto,QSPETH,ETH,1,0.00000001,1.00000000,QSPETH
-binance,QTUMBNB,crypto,QTUMBNB,BNB,1,0.00001000,0.10000000,QTUMBNB
-binance,QTUMBTC,crypto,QTUMBTC,BTC,1,0.00000010,0.01000000,QTUMBTC
-binance,QTUMBUSD,crypto,QTUMBUSD,BUSD,1,0.00100000,0.00100000,QTUMBUSD
-binance,QTUMETH,crypto,QTUMETH,ETH,1,0.00000100,0.01000000,QTUMETH
-binance,QTUMUSDT,crypto,QTUMUSDT,USDT,1,0.00100000,0.00100000,QTUMUSDT
-binance,RCNBNB,crypto,RCNBNB,BNB,1,0.00000100,1.00000000,RCNBNB
-binance,RCNBTC,crypto,RCNBTC,BTC,1,0.00000001,1.00000000,RCNBTC
-binance,RCNETH,crypto,RCNETH,ETH,1,0.00000001,1.00000000,RCNETH
-binance,RDNBNB,crypto,RDNBNB,BNB,1,0.00001000,0.10000000,RDNBNB
-binance,RDNBTC,crypto,RDNBTC,BTC,1,0.00000001,1.00000000,RDNBTC
-binance,RDNETH,crypto,RDNETH,ETH,1,0.00000010,1.00000000,RDNETH
-binance,RENBNB,crypto,RENBNB,BNB,1,0.00000100,1.00000000,RENBNB
-binance,RENBTC,crypto,RENBTC,BTC,1,0.00000001,1.00000000,RENBTC
-binance,RENUSDT,crypto,RENUSDT,USDT,1,0.00001000,0.10000000,RENUSDT
-binance,REPBNB,crypto,REPBNB,BNB,1,0.00010000,0.01000000,REPBNB
-binance,REPBTC,crypto,REPBTC,BTC,1,0.00000100,0.00100000,REPBTC
-binance,REPBUSD,crypto,REPBUSD,BUSD,1,0.00100000,0.00100000,REPBUSD
-binance,REPETH,crypto,REPETH,ETH,1,0.00001000,0.00100000,REPETH
-binance,REPUSDT,crypto,REPUSDT,USDT,1,0.00100000,0.00100000,REPUSDT
-binance,REQBTC,crypto,REQBTC,BTC,1,0.00000001,1.00000000,REQBTC
-binance,REQETH,crypto,REQETH,ETH,1,0.00000001,1.00000000,REQETH
-binance,RLCBNB,crypto,RLCBNB,BNB,1,0.00001000,0.10000000,RLCBNB
-binance,RLCBTC,crypto,RLCBTC,BTC,1,0.00000001,1.00000000,RLCBTC
-binance,RLCETH,crypto,RLCETH,ETH,1,0.00000100,0.01000000,RLCETH
-binance,RLCUSDT,crypto,RLCUSDT,USDT,1,0.00010000,0.01000000,RLCUSDT
-binance,RPXBNB,crypto,RPXBNB,BNB,1,0.00000100,1.00000000,RPXBNB
-binance,RPXBTC,crypto,RPXBTC,BTC,1,0.00000001,1.00000000,RPXBTC
-binance,RPXETH,crypto,RPXETH,ETH,1,0.00000001,1.00000000,RPXETH
-binance,RSRBNB,crypto,RSRBNB,BNB,1,0.00000100,1.00000000,RSRBNB
-binance,RSRBTC,crypto,RSRBTC,BTC,1,0.00000001,1.00000000,RSRBTC
-binance,RSRBUSD,crypto,RSRBUSD,BUSD,1,0.00001000,0.10000000,RSRBUSD
-binance,RSRUSDT,crypto,RSRUSDT,USDT,1,0.00001000,0.10000000,RSRUSDT
-binance,RUNEBNB,crypto,RUNEBNB,BNB,1,0.00001000,0.10000000,RUNEBNB
-binance,RUNEBTC,crypto,RUNEBTC,BTC,1,0.00000001,1.00000000,RUNEBTC
-binance,RUNEBUSD,crypto,RUNEBUSD,BUSD,1,0.00010000,0.01000000,RUNEBUSD
-binance,RUNEUSDT,crypto,RUNEUSDT,USDT,1,0.00010000,0.01000000,RUNEUSDT
-binance,RVNBNB,crypto,RVNBNB,BNB,1,0.00000100,1.00000000,RVNBNB
-binance,RVNBTC,crypto,RVNBTC,BTC,1,0.00000001,1.00000000,RVNBTC
-binance,RVNBUSD,crypto,RVNBUSD,BUSD,1,0.00001000,0.10000000,RVNBUSD
-binance,RVNUSDT,crypto,RVNUSDT,USDT,1,0.00001000,0.10000000,RVNUSDT
-binance,SALTBTC,crypto,SALTBTC,BTC,1,0.00000010,0.01000000,SALTBTC
-binance,SALTETH,crypto,SALTETH,ETH,1,0.00000100,0.01000000,SALTETH
-binance,SANDBNB,crypto,SANDBNB,BNB,1,0.00000010,1.00000000,SANDBNB
-binance,SANDBTC,crypto,SANDBTC,BTC,1,0.00000001,1.00000000,SANDBTC
-binance,SANDBUSD,crypto,SANDBUSD,BUSD,1,0.00000100,1.00000000,SANDBUSD
-binance,SANDUSDT,crypto,SANDUSDT,USDT,1,0.00000100,1.00000000,SANDUSDT
-binance,SCBNB,crypto,SCBNB,BNB,1,0.00000010,1.00000000,SCBNB
-binance,SCBTC,crypto,SCBTC,BTC,1,0.00000001,1.00000000,SCBTC
-binance,SCETH,crypto,SCETH,ETH,1,0.00000001,1.00000000,SCETH
-binance,SCRTBTC,crypto,SCRTBTC,BTC,1,0.00000001,1.00000000,SCRTBTC
-binance,SCRTETH,crypto,SCRTETH,ETH,1,0.00000100,0.01000000,SCRTETH
-binance,SCUSDT,crypto,SCUSDT,USDT,1,0.00000100,1.00000000,SCUSDT
-binance,SKYBNB,crypto,SKYBNB,BNB,1,0.00001000,0.10000000,SKYBNB
-binance,SKYBTC,crypto,SKYBTC,BTC,1,0.00000001,1.00000000,SKYBTC
-binance,SKYETH,crypto,SKYETH,ETH,1,0.00001000,0.00100000,SKYETH
-binance,SNGLSBTC,crypto,SNGLSBTC,BTC,1,0.00000001,1.00000000,SNGLSBTC
-binance,SNGLSETH,crypto,SNGLSETH,ETH,1,0.00000001,1.00000000,SNGLSETH
-binance,SNMBTC,crypto,SNMBTC,BTC,1,0.00000001,1.00000000,SNMBTC
-binance,SNMETH,crypto,SNMETH,ETH,1,0.00000001,1.00000000,SNMETH
-binance,SNTBTC,crypto,SNTBTC,BTC,1,0.00000001,1.00000000,SNTBTC
-binance,SNTETH,crypto,SNTETH,ETH,1,0.00000001,1.00000000,SNTETH
-binance,SNXBNB,crypto,SNXBNB,BNB,1,0.00010000,0.01000000,SNXBNB
-binance,SNXBTC,crypto,SNXBTC,BTC,1,0.00000010,0.01000000,SNXBTC
-binance,SNXBUSD,crypto,SNXBUSD,BUSD,1,0.00100000,0.00100000,SNXBUSD
-binance,SNXUSDT,crypto,SNXUSDT,USDT,1,0.00100000,0.00100000,SNXUSDT
-binance,SOLBNB,crypto,SOLBNB,BNB,1,0.00001000,0.10000000,SOLBNB
-binance,SOLBTC,crypto,SOLBTC,BTC,1,0.00000001,1.00000000,SOLBTC
-binance,SOLBUSD,crypto,SOLBUSD,BUSD,1,0.00010000,0.01000000,SOLBUSD
-binance,SOLUSDT,crypto,SOLUSDT,USDT,1,0.00010000,0.01000000,SOLUSDT
-binance,SPARTABNB,crypto,SPARTABNB,BNB,1,0.00000100,1.00000000,SPARTABNB
-binance,SRMBIDR,crypto,SRMBIDR,BIDR,1,1.00,0.00100000,SRMBIDR
-binance,SRMBNB,crypto,SRMBNB,BNB,1,0.00000100,1.00000000,SRMBNB
-binance,SRMBTC,crypto,SRMBTC,BTC,1,0.00000001,1.00000000,SRMBTC
-binance,SRMBUSD,crypto,SRMBUSD,BUSD,1,0.00010000,0.01000000,SRMBUSD
-binance,SRMUSDT,crypto,SRMUSDT,USDT,1,0.00010000,0.01000000,SRMUSDT
-binance,STEEMBNB,crypto,STEEMBNB,BNB,1,0.00001000,0.10000000,STEEMBNB
-binance,STEEMBTC,crypto,STEEMBTC,BTC,1,0.00000001,1.00000000,STEEMBTC
-binance,STEEMETH,crypto,STEEMETH,ETH,1,0.00000100,0.01000000,STEEMETH
-binance,STMXBNB,crypto,STMXBNB,BNB,1,0.00000010,1.00000000,STMXBNB
-binance,STMXBTC,crypto,STMXBTC,BTC,1,0.00000001,1.00000000,STMXBTC
-binance,STMXETH,crypto,STMXETH,ETH,1,0.00000001,1.00000000,STMXETH
-binance,STMXUSDT,crypto,STMXUSDT,USDT,1,0.00000100,1.00000000,STMXUSDT
-binance,STORJBTC,crypto,STORJBTC,BTC,1,0.00000001,1.00000000,STORJBTC
-binance,STORJBUSD,crypto,STORJBUSD,BUSD,1,0.00010000,0.01000000,STORJBUSD
-binance,STORJETH,crypto,STORJETH,ETH,1,0.00000010,1.00000000,STORJETH
-binance,STORJUSDT,crypto,STORJUSDT,USDT,1,0.00010000,0.01000000,STORJUSDT
-binance,STORMBNB,crypto,STORMBNB,BNB,1,0.00000010,1.00000000,STORMBNB
-binance,STORMBTC,crypto,STORMBTC,BTC,1,0.00000001,1.00000000,STORMBTC
-binance,STORMETH,crypto,STORMETH,ETH,1,0.00000001,1.00000000,STORMETH
-binance,STORMUSDT,crypto,STORMUSDT,USDT,1,0.00000100,1.00000000,STORMUSDT
-binance,STPTBNB,crypto,STPTBNB,BNB,1,0.00000100,1.00000000,STPTBNB
-binance,STPTBTC,crypto,STPTBTC,BTC,1,0.00000001,1.00000000,STPTBTC
-binance,STPTUSDT,crypto,STPTUSDT,USDT,1,0.00001000,0.10000000,STPTUSDT
-binance,STRATBNB,crypto,STRATBNB,BNB,1,0.00001000,0.10000000,STRATBNB
-binance,STRATBTC,crypto,STRATBTC,BTC,1,0.00000001,1.00000000,STRATBTC
-binance,STRATBUSD,crypto,STRATBUSD,BUSD,1,0.00010000,0.01000000,STRATBUSD
-binance,STRATETH,crypto,STRATETH,ETH,1,0.00000100,0.01000000,STRATETH
-binance,STRATUSDT,crypto,STRATUSDT,USDT,1,0.00010000,0.01000000,STRATUSDT
-binance,STXBNB,crypto,STXBNB,BNB,1,0.00001000,0.10000000,STXBNB
-binance,STXBTC,crypto,STXBTC,BTC,1,0.00000001,1.00000000,STXBTC
-binance,STXUSDT,crypto,STXUSDT,USDT,1,0.00010000,0.01000000,STXUSDT
-binance,SUBBTC,crypto,SUBBTC,BTC,1,0.00000001,1.00000000,SUBBTC
-binance,SUBETH,crypto,SUBETH,ETH,1,0.00000001,1.00000000,SUBETH
-binance,SUNBTC,crypto,SUNBTC,BTC,1,0.00000100,0.00100000,SUNBTC
-binance,SUNUSDT,crypto,SUNUSDT,USDT,1,0.00100000,0.00100000,SUNUSDT
-binance,SUSHIBNB,crypto,SUSHIBNB,BNB,1,0.00010000,0.01000000,SUSHIBNB
-binance,SUSHIBTC,crypto,SUSHIBTC,BTC,1,0.00000010,0.01000000,SUSHIBTC
-binance,SUSHIBUSD,crypto,SUSHIBUSD,BUSD,1,0.00100000,0.00100000,SUSHIBUSD
-binance,SUSHIUSDT,crypto,SUSHIUSDT,USDT,1,0.00100000,0.00100000,SUSHIUSDT
-binance,SWRVBNB,crypto,SWRVBNB,BNB,1,0.00010000,0.01000000,SWRVBNB
-binance,SWRVBUSD,crypto,SWRVBUSD,BUSD,1,0.00100000,0.00100000,SWRVBUSD
-binance,SXPAUD,crypto,SXPAUD,AUD,1,0.00100000,0.00100000,SXPAUD
-binance,SXPBIDR,crypto,SXPBIDR,BIDR,1,1.00,0.01000000,SXPBIDR
-binance,SXPBNB,crypto,SXPBNB,BNB,1,0.00001000,0.10000000,SXPBNB
-binance,SXPBTC,crypto,SXPBTC,BTC,1,0.00000001,1.00000000,SXPBTC
-binance,SXPBUSD,crypto,SXPBUSD,BUSD,1,0.00010000,0.01000000,SXPBUSD
-binance,SXPEUR,crypto,SXPEUR,EUR,1,0.00100000,0.00100000,SXPEUR
-binance,SXPGBP,crypto,SXPGBP,GBP,1,0.00010000,0.01000000,SXPGBP
-binance,SXPTRY,crypto,SXPTRY,TRY,1,0.00100000,0.01000000,SXPTRY
-binance,SXPUSDT,crypto,SXPUSDT,USDT,1,0.00100000,0.00100000,SXPUSDT
-binance,SYSBNB,crypto,SYSBNB,BNB,1,0.00000100,1.00000000,SYSBNB
-binance,SYSBTC,crypto,SYSBTC,BTC,1,0.00000001,1.00000000,SYSBTC
-binance,SYSETH,crypto,SYSETH,ETH,1,0.00000001,1.00000000,SYSETH
-binance,TCTBNB,crypto,TCTBNB,BNB,1,0.00000010,1.00000000,TCTBNB
-binance,TCTBTC,crypto,TCTBTC,BTC,1,0.00000001,1.00000000,TCTBTC
-binance,TCTUSDT,crypto,TCTUSDT,USDT,1,0.00000100,1.00000000,TCTUSDT
-binance,TFUELBNB,crypto,TFUELBNB,BNB,1,0.00000010,1.00000000,TFUELBNB
-binance,TFUELBTC,crypto,TFUELBTC,BTC,1,0.00000001,1.00000000,TFUELBTC
-binance,TFUELPAX,crypto,TFUELPAX,PAX,1,0.00000100,1.00000000,TFUELPAX
-binance,TFUELTUSD,crypto,TFUELTUSD,TUSD,1,0.00000100,1.00000000,TFUELTUSD
-binance,TFUELUSDC,crypto,TFUELUSDC,USDC,1,0.00000100,1.00000000,TFUELUSDC
-binance,TFUELUSDT,crypto,TFUELUSDT,USDT,1,0.00000100,1.00000000,TFUELUSDT
-binance,THETABNB,crypto,THETABNB,BNB,1,0.00000100,1.00000000,THETABNB
-binance,THETABTC,crypto,THETABTC,BTC,1,0.00000001,1.00000000,THETABTC
-binance,THETAETH,crypto,THETAETH,ETH,1,0.00000001,1.00000000,THETAETH
-binance,THETAUSDT,crypto,THETAUSDT,USDT,1,0.00001000,0.10000000,THETAUSDT
-binance,TNBBTC,crypto,TNBBTC,BTC,1,0.00000001,1.00000000,TNBBTC
-binance,TNBETH,crypto,TNBETH,ETH,1,0.00000001,1.00000000,TNBETH
-binance,TNTBTC,crypto,TNTBTC,BTC,1,0.00000001,1.00000000,TNTBTC
-binance,TNTETH,crypto,TNTETH,ETH,1,0.00000001,1.00000000,TNTETH
-binance,TOMOBNB,crypto,TOMOBNB,BNB,1,0.00001000,0.10000000,TOMOBNB
-binance,TOMOBTC,crypto,TOMOBTC,BTC,1,0.00000001,1.00000000,TOMOBTC
-binance,TOMOBUSD,crypto,TOMOBUSD,BUSD,1,0.00010000,0.01000000,TOMOBUSD
-binance,TOMOUSDC,crypto,TOMOUSDC,USDC,1,0.00010000,0.01000000,TOMOUSDC
-binance,TOMOUSDT,crypto,TOMOUSDT,USDT,1,0.00010000,0.01000000,TOMOUSDT
-binance,TRBBNB,crypto,TRBBNB,BNB,1,0.00100000,0.00100000,TRBBNB
-binance,TRBBTC,crypto,TRBBTC,BTC,1,0.00000100,0.00100000,TRBBTC
-binance,TRBBUSD,crypto,TRBBUSD,BUSD,1,0.00100000,0.00100000,TRBBUSD
-binance,TRBUSDT,crypto,TRBUSDT,USDT,1,0.00100000,0.00100000,TRBUSDT
-binance,TRIGBNB,crypto,TRIGBNB,BNB,1,0.00001000,0.10000000,TRIGBNB
-binance,TRIGBTC,crypto,TRIGBTC,BTC,1,0.00000010,0.01000000,TRIGBTC
-binance,TRIGETH,crypto,TRIGETH,ETH,1,0.00000100,0.01000000,TRIGETH
-binance,TROYBNB,crypto,TROYBNB,BNB,1,0.00000010,1.00000000,TROYBNB
-binance,TROYBTC,crypto,TROYBTC,BTC,1,0.00000001,1.00000000,TROYBTC
-binance,TROYUSDT,crypto,TROYUSDT,USDT,1,0.00000010,1.00000000,TROYUSDT
-binance,TRXBNB,crypto,TRXBNB,BNB,1,0.00000100,1.00000000,TRXBNB
-binance,TRXBTC,crypto,TRXBTC,BTC,1,0.00000001,1.00000000,TRXBTC
-binance,TRXBUSD,crypto,TRXBUSD,BUSD,1,0.00001000,0.10000000,TRXBUSD
-binance,TRXETH,crypto,TRXETH,ETH,1,0.00000001,1.00000000,TRXETH
-binance,TRXNGN,crypto,TRXNGN,NGN,1,0.01000000,0.01000000,TRXNGN
-binance,TRXPAX,crypto,TRXPAX,PAX,1,0.00001000,0.10000000,TRXPAX
-binance,TRXTUSD,crypto,TRXTUSD,TUSD,1,0.00001000,0.10000000,TRXTUSD
-binance,TRXUSDC,crypto,TRXUSDC,USDC,1,0.00001000,0.10000000,TRXUSDC
-binance,TRXUSDT,crypto,TRXUSDT,USDT,1,0.00001000,0.10000000,TRXUSDT
-binance,TRXXRP,crypto,TRXXRP,XRP,1,0.00001000,0.10000000,TRXXRP
-binance,TUSDBNB,crypto,TUSDBNB,BNB,1,0.00001000,0.10000000,TUSDBNB
-binance,TUSDBTC,crypto,TUSDBTC,BTC,1,0.00000001,1.00000000,TUSDBTC
-binance,TUSDBTUSD,crypto,TUSDBTUSD,TUSD,1,0.00010000,0.01000000,TUSDBTUSD
-binance,TUSDETH,crypto,TUSDETH,ETH,1,0.00000001,1.00000000,TUSDETH
-binance,TUSDUSDT,crypto,TUSDUSDT,USDT,1,0.00010000,0.01000000,TUSDUSDT
-binance,UMABTC,crypto,UMABTC,BTC,1,0.00000100,0.00100000,UMABTC
-binance,UMAUSDT,crypto,UMAUSDT,USDT,1,0.00100000,0.00100000,UMAUSDT
-binance,UNIBNB,crypto,UNIBNB,BNB,1,0.00001000,0.10000000,UNIBNB
-binance,UNIBTC,crypto,UNIBTC,BTC,1,0.00000001,1.00000000,UNIBTC
-binance,UNIBUSD,crypto,UNIBUSD,BUSD,1,0.00010000,0.01000000,UNIBUSD
-binance,UNIUSDT,crypto,UNIUSDT,USDT,1,0.00010000,0.01000000,UNIUSDT
-binance,USDCBNB,crypto,USDCBNB,BNB,1,0.00001000,0.10000000,USDCBNB
-binance,USDCPAX,crypto,USDCPAX,PAX,1,0.00010000,0.01000000,USDCPAX
-binance,USDCTUSD,crypto,USDCTUSD,TUSD,1,0.00010000,0.01000000,USDCTUSD
-binance,USDCUSDT,crypto,USDCUSDT,USDT,1,0.00010000,0.01000000,USDCUSDT
-binance,USDSBUSDS,crypto,USDSBUSDS,USDS,1,0.00010000,0.01000000,USDSBUSDS
-binance,USDSBUSDT,crypto,USDSBUSDT,USDT,1,0.00010000,0.01000000,USDSBUSDT
-binance,USDSPAX,crypto,USDSPAX,PAX,1,0.00010000,0.01000000,USDSPAX
-binance,USDSTUSD,crypto,USDSTUSD,TUSD,1,0.00010000,0.01000000,USDSTUSD
-binance,USDSUSDC,crypto,USDSUSDC,USDC,1,0.00010000,0.01000000,USDSUSDC
-binance,USDSUSDT,crypto,USDSUSDT,USDT,1,0.00010000,0.01000000,USDSUSDT
-binance,USDTBIDR,crypto,USDTBIDR,BIDR,1,1.00,0.01000000,USDTBIDR
-binance,USDTBKRW,crypto,USDTBKRW,BKRW,1,0.01000000,0.10000000,USDTBKRW
-binance,USDTBRL,crypto,USDTBRL,BRL,1,0.00100000,0.01000000,USDTBRL
-binance,USDTDAI,crypto,USDTDAI,DAI,1,0.00010000,0.01000000,USDTDAI
-binance,USDTIDRT,crypto,USDTIDRT,IDRT,1,1.00,0.01000000,USDTIDRT
-binance,USDTNGN,crypto,USDTNGN,NGN,1,0.01000000,0.01000000,USDTNGN
-binance,USDTRUB,crypto,USDTRUB,RUB,1,0.00100000,0.10000000,USDTRUB
-binance,USDTTRY,crypto,USDTTRY,TRY,1,0.00100000,0.01000000,USDTTRY
-binance,USDTUAH,crypto,USDTUAH,UAH,1,0.00100000,0.10000000,USDTUAH
-binance,USDTZAR,crypto,USDTZAR,ZAR,1,0.00100000,0.10000000,USDTZAR
-binance,UTKBTC,crypto,UTKBTC,BTC,1,0.00000001,1.00000000,UTKBTC
-binance,UTKUSDT,crypto,UTKUSDT,USDT,1,0.00010000,0.01000000,UTKUSDT
-binance,VENBNB,crypto,VENBNB,BNB,1,0.00010000,0.01000000,VENBNB
-binance,VENBTC,crypto,VENBTC,BTC,1,0.00000001,1.00000000,VENBTC
-binance,VENETH,crypto,VENETH,ETH,1,0.00000001,1.00000000,VENETH
-binance,VENUSDT,crypto,VENUSDT,USDT,1,0.00010000,0.01000000,VENUSDT
-binance,VETBNB,crypto,VETBNB,BNB,1,0.00000010,1.00000000,VETBNB
-binance,VETBTC,crypto,VETBTC,BTC,1,0.00000001,1.00000000,VETBTC
-binance,VETBUSD,crypto,VETBUSD,BUSD,1,0.00000100,1.00000000,VETBUSD
-binance,VETETH,crypto,VETETH,ETH,1,0.00000001,1.00000000,VETETH
-binance,VETUSDT,crypto,VETUSDT,USDT,1,0.00000100,1.00000000,VETUSDT
-binance,VIABNB,crypto,VIABNB,BNB,1,0.00001000,0.10000000,VIABNB
-binance,VIABTC,crypto,VIABTC,BTC,1,0.00000001,1.00000000,VIABTC
-binance,VIAETH,crypto,VIAETH,ETH,1,0.00000100,0.01000000,VIAETH
-binance,VIBBTC,crypto,VIBBTC,BTC,1,0.00000001,1.00000000,VIBBTC
-binance,VIBEBTC,crypto,VIBEBTC,BTC,1,0.00000001,1.00000000,VIBEBTC
-binance,VIBEETH,crypto,VIBEETH,ETH,1,0.00000010,1.00000000,VIBEETH
-binance,VIBETH,crypto,VIBETH,ETH,1,0.00000001,1.00000000,VIBETH
-binance,VIDTBTC,crypto,VIDTBTC,BTC,1,0.00000001,1.00000000,VIDTBTC
-binance,VIDTBUSD,crypto,VIDTBUSD,BUSD,1,0.00010000,0.01000000,VIDTBUSD
-binance,VITEBNB,crypto,VITEBNB,BNB,1,0.00000100,1.00000000,VITEBNB
-binance,VITEBTC,crypto,VITEBTC,BTC,1,0.00000001,1.00000000,VITEBTC
-binance,VITEUSDT,crypto,VITEUSDT,USDT,1,0.00001000,0.10000000,VITEUSDT
-binance,VTHOBNB,crypto,VTHOBNB,BNB,1,0.00000001,1.00000000,VTHOBNB
-binance,VTHOBUSD,crypto,VTHOBUSD,BUSD,1,0.00000100,1.00000000,VTHOBUSD
-binance,VTHOUSDT,crypto,VTHOUSDT,USDT,1,0.00000100,1.00000000,VTHOUSDT
-binance,WABIBNB,crypto,WABIBNB,BNB,1,0.00000100,1.00000000,WABIBNB
-binance,WABIBTC,crypto,WABIBTC,BTC,1,0.00000001,1.00000000,WABIBTC
-binance,WABIETH,crypto,WABIETH,ETH,1,0.00000001,1.00000000,WABIETH
-binance,WANBNB,crypto,WANBNB,BNB,1,0.00001000,0.10000000,WANBNB
-binance,WANBTC,crypto,WANBTC,BTC,1,0.00000001,1.00000000,WANBTC
-binance,WANETH,crypto,WANETH,ETH,1,0.00000100,0.01000000,WANETH
-binance,WANUSDT,crypto,WANUSDT,USDT,1,0.00010000,0.01000000,WANUSDT
-binance,WAVESBNB,crypto,WAVESBNB,BNB,1,0.00001000,0.10000000,WAVESBNB
-binance,WAVESBTC,crypto,WAVESBTC,BTC,1,0.00000010,0.01000000,WAVESBTC
-binance,WAVESBUSD,crypto,WAVESBUSD,BUSD,1,0.00010000,0.01000000,WAVESBUSD
-binance,WAVESETH,crypto,WAVESETH,ETH,1,0.00000100,0.01000000,WAVESETH
-binance,WAVESPAX,crypto,WAVESPAX,PAX,1,0.00010000,0.01000000,WAVESPAX
-binance,WAVESTUSD,crypto,WAVESTUSD,TUSD,1,0.00010000,0.01000000,WAVESTUSD
-binance,WAVESUSDC,crypto,WAVESUSDC,USDC,1,0.00010000,0.01000000,WAVESUSDC
-binance,WAVESUSDT,crypto,WAVESUSDT,USDT,1,0.00010000,0.01000000,WAVESUSDT
-binance,WBTCBTC,crypto,WBTCBTC,BTC,1,0.00001000,0.00010000,WBTCBTC
-binance,WBTCETH,crypto,WBTCETH,ETH,1,0.00010000,0.00010000,WBTCETH
-binance,WINBNB,crypto,WINBNB,BNB,1,0.00000001,1.00000000,WINBNB
-binance,WINBTC,crypto,WINBTC,BTC,1,0.00000001,1.00000000,WINBTC
-binance,WINGBNB,crypto,WINGBNB,BNB,1,0.00010000,0.01000000,WINGBNB
-binance,WINGBTC,crypto,WINGBTC,BTC,1,0.00000100,0.00100000,WINGBTC
-binance,WINGBUSD,crypto,WINGBUSD,BUSD,1,0.00100000,0.00100000,WINGBUSD
-binance,WINGSBTC,crypto,WINGSBTC,BTC,1,0.00000001,1.00000000,WINGSBTC
-binance,WINGSETH,crypto,WINGSETH,ETH,1,0.00000010,1.00000000,WINGSETH
-binance,WINGUSDT,crypto,WINGUSDT,USDT,1,0.00100000,0.00100000,WINGUSDT
-binance,WINTRX,crypto,WINTRX,TRX,1,0.00001000,0.10000000,WINTRX
-binance,WINUSDC,crypto,WINUSDC,USDC,1,0.00000010,1.00000000,WINUSDC
-binance,WINUSDT,crypto,WINUSDT,USDT,1,0.00000010,1.00000000,WINUSDT
-binance,WNXMBNB,crypto,WNXMBNB,BNB,1,0.00100000,0.00100000,WNXMBNB
-binance,WNXMBTC,crypto,WNXMBTC,BTC,1,0.00000100,0.00100000,WNXMBTC
-binance,WNXMBUSD,crypto,WNXMBUSD,BUSD,1,0.00100000,0.00100000,WNXMBUSD
-binance,WNXMUSDT,crypto,WNXMUSDT,USDT,1,0.00100000,0.00100000,WNXMUSDT
-binance,WPRBTC,crypto,WPRBTC,BTC,1,0.00000001,1.00000000,WPRBTC
-binance,WPRETH,crypto,WPRETH,ETH,1,0.00000001,1.00000000,WPRETH
-binance,WRXBNB,crypto,WRXBNB,BNB,1,0.00000100,1.00000000,WRXBNB
-binance,WRXBTC,crypto,WRXBTC,BTC,1,0.00000001,1.00000000,WRXBTC
-binance,WRXBUSD,crypto,WRXBUSD,BUSD,1,0.00001000,0.10000000,WRXBUSD
-binance,WRXUSDT,crypto,WRXUSDT,USDT,1,0.00001000,0.10000000,WRXUSDT
-binance,WTCBNB,crypto,WTCBNB,BNB,1,0.00001000,0.10000000,WTCBNB
-binance,WTCBTC,crypto,WTCBTC,BTC,1,0.00000010,0.01000000,WTCBTC
-binance,WTCETH,crypto,WTCETH,ETH,1,0.00000100,0.01000000,WTCETH
-binance,WTCUSDT,crypto,WTCUSDT,USDT,1,0.00010000,0.01000000,WTCUSDT
-binance,XEMBNB,crypto,XEMBNB,BNB,1,0.00000100,1.00000000,XEMBNB
-binance,XEMBTC,crypto,XEMBTC,BTC,1,0.00000001,1.00000000,XEMBTC
-binance,XEMETH,crypto,XEMETH,ETH,1,0.00000001,1.00000000,XEMETH
-binance,XLMBNB,crypto,XLMBNB,BNB,1,0.00000100,1.00000000,XLMBNB
-binance,XLMBTC,crypto,XLMBTC,BTC,1,0.00000001,1.00000000,XLMBTC
-binance,XLMBUSD,crypto,XLMBUSD,BUSD,1,0.00001000,0.10000000,XLMBUSD
-binance,XLMETH,crypto,XLMETH,ETH,1,0.00000001,1.00000000,XLMETH
-binance,XLMPAX,crypto,XLMPAX,PAX,1,0.00001000,0.10000000,XLMPAX
-binance,XLMTUSD,crypto,XLMTUSD,TUSD,1,0.00001000,0.10000000,XLMTUSD
-binance,XLMUSDC,crypto,XLMUSDC,USDC,1,0.00001000,0.10000000,XLMUSDC
-binance,XLMUSDT,crypto,XLMUSDT,USDT,1,0.00001000,0.10000000,XLMUSDT
-binance,XMRBNB,crypto,XMRBNB,BNB,1,0.00100000,0.00100000,XMRBNB
-binance,XMRBTC,crypto,XMRBTC,BTC,1,0.00000100,0.00100000,XMRBTC
-binance,XMRBUSD,crypto,XMRBUSD,BUSD,1,0.01000000,0.00001000,XMRBUSD
-binance,XMRETH,crypto,XMRETH,ETH,1,0.00001000,0.00100000,XMRETH
-binance,XMRUSDT,crypto,XMRUSDT,USDT,1,0.01000000,0.00001000,XMRUSDT
-binance,XRPAUD,crypto,XRPAUD,AUD,1,0.00001000,0.10000000,XRPAUD
-binance,XRPBEARBUSD,crypto,XRPBEARBUSD,BUSD,1,0.01000000,0.00001000,XRPBEARBUSD
-binance,XRPBEARUSDT,crypto,XRPBEARUSDT,USDT,1,0.01000000,0.00001000,XRPBEARUSDT
-binance,XRPBKRW,crypto,XRPBKRW,BKRW,1,0.01000000,0.10000000,XRPBKRW
-binance,XRPBNB,crypto,XRPBNB,BNB,1,0.00001000,0.10000000,XRPBNB
-binance,XRPBTC,crypto,XRPBTC,BTC,1,0.00000001,1.00000000,XRPBTC
-binance,XRPBULLBUSD,crypto,XRPBULLBUSD,BUSD,1,0.01000000,0.00001000,XRPBULLBUSD
-binance,XRPBULLUSDT,crypto,XRPBULLUSDT,USDT,1,0.01000000,0.00001000,XRPBULLUSDT
-binance,XRPBUSD,crypto,XRPBUSD,BUSD,1,0.00001000,0.10000000,XRPBUSD
-binance,XRPETH,crypto,XRPETH,ETH,1,0.00000001,1.00000000,XRPETH
-binance,XRPEUR,crypto,XRPEUR,EUR,1,0.00001000,0.10000000,XRPEUR
-binance,XRPGBP,crypto,XRPGBP,GBP,1,0.00001000,0.10000000,XRPGBP
-binance,XRPPAX,crypto,XRPPAX,PAX,1,0.00001000,0.10000000,XRPPAX
-binance,XRPRUB,crypto,XRPRUB,RUB,1,0.00100000,0.10000000,XRPRUB
-binance,XRPTRY,crypto,XRPTRY,TRY,1,0.00100000,0.01000000,XRPTRY
-binance,XRPTUSD,crypto,XRPTUSD,TUSD,1,0.00001000,0.10000000,XRPTUSD
-binance,XRPUSDC,crypto,XRPUSDC,USDC,1,0.00001000,0.10000000,XRPUSDC
-binance,XRPUSDT,crypto,XRPUSDT,USDT,1,0.00001000,0.10000000,XRPUSDT
-binance,XTZBNB,crypto,XTZBNB,BNB,1,0.00001000,0.10000000,XTZBNB
-binance,XTZBTC,crypto,XTZBTC,BTC,1,0.00000010,0.01000000,XTZBTC
-binance,XTZBUSD,crypto,XTZBUSD,BUSD,1,0.00010000,0.01000000,XTZBUSD
-binance,XTZUSDT,crypto,XTZUSDT,USDT,1,0.00010000,0.01000000,XTZUSDT
-binance,XVGBTC,crypto,XVGBTC,BTC,1,0.00000001,1.00000000,XVGBTC
-binance,XVGETH,crypto,XVGETH,ETH,1,0.00000001,1.00000000,XVGETH
-binance,XVSBNB,crypto,XVSBNB,BNB,1,0.00010000,0.01000000,XVSBNB
-binance,XVSBTC,crypto,XVSBTC,BTC,1,0.00000010,0.01000000,XVSBTC
-binance,XVSBUSD,crypto,XVSBUSD,BUSD,1,0.00100000,0.00100000,XVSBUSD
-binance,XVSUSDT,crypto,XVSUSDT,USDT,1,0.00100000,0.00100000,XVSUSDT
-binance,XZCBNB,crypto,XZCBNB,BNB,1,0.00010000,0.01000000,XZCBNB
-binance,XZCBTC,crypto,XZCBTC,BTC,1,0.00000010,0.01000000,XZCBTC
-binance,XZCETH,crypto,XZCETH,ETH,1,0.00000100,0.01000000,XZCETH
-binance,XZCUSDT,crypto,XZCUSDT,USDT,1,0.00100000,0.00100000,XZCUSDT
-binance,XZCXRP,crypto,XZCXRP,XRP,1,0.00100000,0.00100000,XZCXRP
-binance,YFIBNB,crypto,YFIBNB,BNB,1,0.01000000,0.00010000,YFIBNB
-binance,YFIBTC,crypto,YFIBTC,BTC,1,0.00001000,0.00010000,YFIBTC
-binance,YFIBUSD,crypto,YFIBUSD,BUSD,1,0.01000000,0.00000100,YFIBUSD
-binance,YFIIBNB,crypto,YFIIBNB,BNB,1,0.01000000,0.00010000,YFIIBNB
-binance,YFIIBTC,crypto,YFIIBTC,BTC,1,0.00001000,0.00010000,YFIIBTC
-binance,YFIIBUSD,crypto,YFIIBUSD,BUSD,1,0.01000000,0.00000100,YFIIBUSD
-binance,YFIIUSDT,crypto,YFIIUSDT,USDT,1,0.01000000,0.00000100,YFIIUSDT
-binance,YFIUSDT,crypto,YFIUSDT,USDT,1,0.01000000,0.00000100,YFIUSDT
-binance,YOYOBNB,crypto,YOYOBNB,BNB,1,0.00000100,1.00000000,YOYOBNB
-binance,YOYOBTC,crypto,YOYOBTC,BTC,1,0.00000001,1.00000000,YOYOBTC
-binance,YOYOETH,crypto,YOYOETH,ETH,1,0.00000001,1.00000000,YOYOETH
-binance,ZECBNB,crypto,ZECBNB,BNB,1,0.00100000,0.00100000,ZECBNB
-binance,ZECBTC,crypto,ZECBTC,BTC,1,0.00000100,0.00100000,ZECBTC
-binance,ZECBUSD,crypto,ZECBUSD,BUSD,1,0.01000000,0.00001000,ZECBUSD
-binance,ZECETH,crypto,ZECETH,ETH,1,0.00001000,0.00100000,ZECETH
-binance,ZECPAX,crypto,ZECPAX,PAX,1,0.01000000,0.00001000,ZECPAX
-binance,ZECTUSD,crypto,ZECTUSD,TUSD,1,0.01000000,0.00001000,ZECTUSD
-binance,ZECUSDC,crypto,ZECUSDC,USDC,1,0.01000000,0.00001000,ZECUSDC
-binance,ZECUSDT,crypto,ZECUSDT,USDT,1,0.01000000,0.00001000,ZECUSDT
-binance,ZENBNB,crypto,ZENBNB,BNB,1,0.00010000,0.01000000,ZENBNB
-binance,ZENBTC,crypto,ZENBTC,BTC,1,0.00000010,0.01000000,ZENBTC
-binance,ZENETH,crypto,ZENETH,ETH,1,0.00001000,0.00100000,ZENETH
-binance,ZENUSDT,crypto,ZENUSDT,USDT,1,0.00100000,0.00100000,ZENUSDT
-binance,ZILBNB,crypto,ZILBNB,BNB,1,0.00000010,1.00000000,ZILBNB
-binance,ZILBTC,crypto,ZILBTC,BTC,1,0.00000001,1.00000000,ZILBTC
-binance,ZILBUSD,crypto,ZILBUSD,BUSD,1,0.00001000,0.10000000,ZILBUSD
-binance,ZILETH,crypto,ZILETH,ETH,1,0.00000001,1.00000000,ZILETH
-binance,ZILUSDT,crypto,ZILUSDT,USDT,1,0.00001000,0.10000000,ZILUSDT
-binance,ZRXBNB,crypto,ZRXBNB,BNB,1,0.00001000,0.10000000,ZRXBNB
-binance,ZRXBTC,crypto,ZRXBTC,BTC,1,0.00000001,1.00000000,ZRXBTC
-binance,ZRXBUSD,crypto,ZRXBUSD,BUSD,1,0.00010000,0.01000000,ZRXBUSD
-binance,ZRXETH,crypto,ZRXETH,ETH,1,0.00000001,1.00000000,ZRXETH
-binance,ZRXUSDT,crypto,ZRXUSDT,USDT,1,0.00010000,0.01000000,ZRXUSDT
+,,,,,,,,
+binance,AAVEBKRW,crypto,AAVEBKRW,BKRW,1,1,0.001,AAVEBKRW
+binance,AAVEBNB,crypto,AAVEBNB,BNB,1,0.0001,0.01,AAVEBNB
+binance,AAVEBTC,crypto,AAVEBTC,BTC,1,0.000001,0.01,AAVEBTC
+binance,AAVEBUSD,crypto,AAVEBUSD,BUSD,1,0.001,0.001,AAVEBUSD
+binance,AAVEETH,crypto,AAVEETH,ETH,1,0.00001,0.001,AAVEETH
+binance,AAVEUSDT,crypto,AAVEUSDT,USDT,1,0.001,0.001,AAVEUSDT
+binance,ADABKRW,crypto,ADABKRW,BKRW,1,0.01,0.1,ADABKRW
+binance,ADABNB,crypto,ADABNB,BNB,1,0.000001,1,ADABNB
+binance,ADABTC,crypto,ADABTC,BTC,1,0.00000001,1,ADABTC
+binance,ADABUSD,crypto,ADABUSD,BUSD,1,0.00001,0.1,ADABUSD
+binance,ADAETH,crypto,ADAETH,ETH,1,0.00000001,1,ADAETH
+binance,ADAPAX,crypto,ADAPAX,PAX,1,0.00001,0.1,ADAPAX
+binance,ADATUSD,crypto,ADATUSD,TUSD,1,0.00001,0.1,ADATUSD
+binance,ADAUSDC,crypto,ADAUSDC,USDC,1,0.00001,0.1,ADAUSDC
+binance,ADAUSDT,crypto,ADAUSDT,USDT,1,0.00001,0.1,ADAUSDT
+binance,ADXBNB,crypto,ADXBNB,BNB,1,0.000001,1,ADXBNB
+binance,ADXBTC,crypto,ADXBTC,BTC,1,0.00000001,1,ADXBTC
+binance,ADXETH,crypto,ADXETH,ETH,1,0.0000001,1,ADXETH
+binance,AEBNB,crypto,AEBNB,BNB,1,0.00001,0.1,AEBNB
+binance,AEBTC,crypto,AEBTC,BTC,1,0.00000001,1,AEBTC
+binance,AEETH,crypto,AEETH,ETH,1,0.000001,0.01,AEETH
+binance,AERGOBTC,crypto,AERGOBTC,BTC,1,0.00000001,1,AERGOBTC
+binance,AERGOBUSD,crypto,AERGOBUSD,BUSD,1,0.00001,0.1,AERGOBUSD
+binance,AGIBNB,crypto,AGIBNB,BNB,1,0.000001,1,AGIBNB
+binance,AGIBTC,crypto,AGIBTC,BTC,1,0.00000001,1,AGIBTC
+binance,AGIETH,crypto,AGIETH,ETH,1,0.00000001,1,AGIETH
+binance,AIONBNB,crypto,AIONBNB,BNB,1,0.000001,1,AIONBNB
+binance,AIONBTC,crypto,AIONBTC,BTC,1,0.00000001,1,AIONBTC
+binance,AIONBUSD,crypto,AIONBUSD,BUSD,1,0.0001,0.01,AIONBUSD
+binance,AIONETH,crypto,AIONETH,ETH,1,0.000001,0.01,AIONETH
+binance,AIONUSDT,crypto,AIONUSDT,USDT,1,0.0001,0.01,AIONUSDT
+binance,ALGOBNB,crypto,ALGOBNB,BNB,1,0.00001,0.1,ALGOBNB
+binance,ALGOBTC,crypto,ALGOBTC,BTC,1,0.00000001,1,ALGOBTC
+binance,ALGOBUSD,crypto,ALGOBUSD,BUSD,1,0.0001,0.01,ALGOBUSD
+binance,ALGOPAX,crypto,ALGOPAX,PAX,1,0.0001,0.01,ALGOPAX
+binance,ALGOTUSD,crypto,ALGOTUSD,TUSD,1,0.0001,0.01,ALGOTUSD
+binance,ALGOUSDC,crypto,ALGOUSDC,USDC,1,0.0001,0.01,ALGOUSDC
+binance,ALGOUSDT,crypto,ALGOUSDT,USDT,1,0.0001,0.01,ALGOUSDT
+binance,ALPHABNB,crypto,ALPHABNB,BNB,1,0.0000001,1,ALPHABNB
+binance,ALPHABTC,crypto,ALPHABTC,BTC,1,0.00000001,1,ALPHABTC
+binance,ALPHABUSD,crypto,ALPHABUSD,BUSD,1,0.00001,0.1,ALPHABUSD
+binance,ALPHAUSDT,crypto,ALPHAUSDT,USDT,1,0.00001,0.1,ALPHAUSDT
+binance,AMBBNB,crypto,AMBBNB,BNB,1,0.000001,1,AMBBNB
+binance,AMBBTC,crypto,AMBBTC,BTC,1,0.00000001,1,AMBBTC
+binance,AMBETH,crypto,AMBETH,ETH,1,0.00000001,1,AMBETH
+binance,ANKRBNB,crypto,ANKRBNB,BNB,1,0.0000001,1,ANKRBNB
+binance,ANKRBTC,crypto,ANKRBTC,BTC,1,0.00000001,1,ANKRBTC
+binance,ANKRPAX,crypto,ANKRPAX,PAX,1,0.000001,1,ANKRPAX
+binance,ANKRTUSD,crypto,ANKRTUSD,TUSD,1,0.000001,1,ANKRTUSD
+binance,ANKRUSDC,crypto,ANKRUSDC,USDC,1,0.000001,1,ANKRUSDC
+binance,ANKRUSDT,crypto,ANKRUSDT,USDT,1,0.000001,1,ANKRUSDT
+binance,ANTBNB,crypto,ANTBNB,BNB,1,0.0001,0.01,ANTBNB
+binance,ANTBTC,crypto,ANTBTC,BTC,1,0.0000001,0.01,ANTBTC
+binance,ANTBUSD,crypto,ANTBUSD,BUSD,1,0.0001,0.01,ANTBUSD
+binance,ANTUSDT,crypto,ANTUSDT,USDT,1,0.0001,0.01,ANTUSDT
+binance,APPCBNB,crypto,APPCBNB,BNB,1,0.000001,1,APPCBNB
+binance,APPCBTC,crypto,APPCBTC,BTC,1,0.00000001,1,APPCBTC
+binance,APPCETH,crypto,APPCETH,ETH,1,0.0000001,1,APPCETH
+binance,ARDRBNB,crypto,ARDRBNB,BNB,1,0.000001,1,ARDRBNB
+binance,ARDRBTC,crypto,ARDRBTC,BTC,1,0.00000001,1,ARDRBTC
+binance,ARDRETH,crypto,ARDRETH,ETH,1,0.00000001,1,ARDRETH
+binance,ARDRUSDT,crypto,ARDRUSDT,USDT,1,0.00001,0.1,ARDRUSDT
+binance,ARKBTC,crypto,ARKBTC,BTC,1,0.00000001,1,ARKBTC
+binance,ARKETH,crypto,ARKETH,ETH,1,0.000001,0.01,ARKETH
+binance,ARNBTC,crypto,ARNBTC,BTC,1,0.00000001,1,ARNBTC
+binance,ARNETH,crypto,ARNETH,ETH,1,0.00000001,1,ARNETH
+binance,ARPABNB,crypto,ARPABNB,BNB,1,0.000001,1,ARPABNB
+binance,ARPABTC,crypto,ARPABTC,BTC,1,0.00000001,1,ARPABTC
+binance,ARPAUSDT,crypto,ARPAUSDT,USDT,1,0.00001,0.1,ARPAUSDT
+binance,ASTBTC,crypto,ASTBTC,BTC,1,0.00000001,1,ASTBTC
+binance,ASTETH,crypto,ASTETH,ETH,1,0.0000001,1,ASTETH
+binance,ATOMBNB,crypto,ATOMBNB,BNB,1,0.0001,0.01,ATOMBNB
+binance,ATOMBTC,crypto,ATOMBTC,BTC,1,0.0000001,0.01,ATOMBTC
+binance,ATOMBUSD,crypto,ATOMBUSD,BUSD,1,0.001,0.001,ATOMBUSD
+binance,ATOMPAX,crypto,ATOMPAX,PAX,1,0.001,0.001,ATOMPAX
+binance,ATOMTUSD,crypto,ATOMTUSD,TUSD,1,0.001,0.001,ATOMTUSD
+binance,ATOMUSDC,crypto,ATOMUSDC,USDC,1,0.001,0.001,ATOMUSDC
+binance,ATOMUSDT,crypto,ATOMUSDT,USDT,1,0.001,0.001,ATOMUSDT
+binance,AUDBUSD,crypto,AUDBUSD,BUSD,1,0.00001,0.1,AUDBUSD
+binance,AUDIOBTC,crypto,AUDIOBTC,BTC,1,0.00000001,1,AUDIOBTC
+binance,AUDIOBUSD,crypto,AUDIOBUSD,BUSD,1,0.00001,0.1,AUDIOBUSD
+binance,AUDIOUSDT,crypto,AUDIOUSDT,USDT,1,0.00001,0.1,AUDIOUSDT
+binance,AUDUSDT,crypto,AUDUSDT,USDT,1,0.00001,0.1,AUDUSDT
+binance,AVABNB,crypto,AVABNB,BNB,1,0.00001,0.1,AVABNB
+binance,AVABTC,crypto,AVABTC,BTC,1,0.0000001,0.01,AVABTC
+binance,AVABUSD,crypto,AVABUSD,BUSD,1,0.0001,0.01,AVABUSD
+binance,AVAXBNB,crypto,AVAXBNB,BNB,1,0.00001,0.1,AVAXBNB
+binance,AVAXBTC,crypto,AVAXBTC,BTC,1,0.00000001,0.1,AVAXBTC
+binance,AVAXBUSD,crypto,AVAXBUSD,BUSD,1,0.0001,0.01,AVAXBUSD
+binance,AVAXUSDT,crypto,AVAXUSDT,USDT,1,0.0001,0.01,AVAXUSDT
+binance,BAKEBNB,crypto,BAKEBNB,BNB,1,0.000001,1,BAKEBNB
+binance,BALBNB,crypto,BALBNB,BNB,1,0.0001,0.01,BALBNB
+binance,BALBTC,crypto,BALBTC,BTC,1,0.0000001,0.01,BALBTC
+binance,BALBUSD,crypto,BALBUSD,BUSD,1,0.001,0.001,BALBUSD
+binance,BALUSDT,crypto,BALUSDT,USDT,1,0.001,0.001,BALUSDT
+binance,BANDBNB,crypto,BANDBNB,BNB,1,0.00001,0.1,BANDBNB
+binance,BANDBTC,crypto,BANDBTC,BTC,1,0.00000001,0.1,BANDBTC
+binance,BANDUSDT,crypto,BANDUSDT,USDT,1,0.0001,0.01,BANDUSDT
+binance,BATBNB,crypto,BATBNB,BNB,1,0.00001,0.1,BATBNB
+binance,BATBTC,crypto,BATBTC,BTC,1,0.00000001,1,BATBTC
+binance,BATBUSD,crypto,BATBUSD,BUSD,1,0.0001,0.01,BATBUSD
+binance,BATETH,crypto,BATETH,ETH,1,0.00000001,1,BATETH
+binance,BATPAX,crypto,BATPAX,PAX,1,0.0001,0.01,BATPAX
+binance,BATTUSD,crypto,BATTUSD,TUSD,1,0.0001,0.01,BATTUSD
+binance,BATUSDC,crypto,BATUSDC,USDC,1,0.0001,0.01,BATUSDC
+binance,BATUSDT,crypto,BATUSDT,USDT,1,0.0001,0.01,BATUSDT
+binance,BCCBNB,crypto,BCCBNB,BNB,1,0.01,0.00001,BCCBNB
+binance,BCCBTC,crypto,BCCBTC,BTC,1,0.000001,0.001,BCCBTC
+binance,BCCETH,crypto,BCCETH,ETH,1,0.00001,0.001,BCCETH
+binance,BCCUSDT,crypto,BCCUSDT,USDT,1,0.01,0.00001,BCCUSDT
+binance,BCDBTC,crypto,BCDBTC,BTC,1,0.00000001,1,BCDBTC
+binance,BCDETH,crypto,BCDETH,ETH,1,0.00001,0.001,BCDETH
+binance,BCHABCBTC,crypto,BCHABCBTC,BTC,1,0.000001,0.001,BCHABCBTC
+binance,BCHABCBUSD,crypto,BCHABCBUSD,BUSD,1,0.01,0.00001,BCHABCBUSD
+binance,BCHABCPAX,crypto,BCHABCPAX,PAX,1,0.01,0.00001,BCHABCPAX
+binance,BCHABCTUSD,crypto,BCHABCTUSD,TUSD,1,0.01,0.00001,BCHABCTUSD
+binance,BCHABCUSDC,crypto,BCHABCUSDC,USDC,1,0.01,0.00001,BCHABCUSDC
+binance,BCHABCUSDT,crypto,BCHABCUSDT,USDT,1,0.01,0.00001,BCHABCUSDT
+binance,BCHBNB,crypto,BCHBNB,BNB,1,0.001,0.001,BCHBNB
+binance,BCHBTC,crypto,BCHBTC,BTC,1,0.000001,0.001,BCHBTC
+binance,BCHBUSD,crypto,BCHBUSD,BUSD,1,0.01,0.00001,BCHBUSD
+binance,BCHPAX,crypto,BCHPAX,PAX,1,0.01,0.00001,BCHPAX
+binance,BCHSVBTC,crypto,BCHSVBTC,BTC,1,0.000001,0.001,BCHSVBTC
+binance,BCHSVPAX,crypto,BCHSVPAX,PAX,1,0.01,0.00001,BCHSVPAX
+binance,BCHSVTUSD,crypto,BCHSVTUSD,TUSD,1,0.01,0.00001,BCHSVTUSD
+binance,BCHSVUSDC,crypto,BCHSVUSDC,USDC,1,0.01,0.00001,BCHSVUSDC
+binance,BCHSVUSDT,crypto,BCHSVUSDT,USDT,1,0.01,0.00001,BCHSVUSDT
+binance,BCHTUSD,crypto,BCHTUSD,TUSD,1,0.01,0.00001,BCHTUSD
+binance,BCHUSDC,crypto,BCHUSDC,USDC,1,0.01,0.00001,BCHUSDC
+binance,BCHUSDT,crypto,BCHUSDT,USDT,1,0.01,0.00001,BCHUSDT
+binance,BCNBNB,crypto,BCNBNB,BNB,1,0.000001,1,BCNBNB
+binance,BCNBTC,crypto,BCNBTC,BTC,1,0.00000001,1,BCNBTC
+binance,BCNETH,crypto,BCNETH,ETH,1,0.00000001,1,BCNETH
+binance,BCPTBNB,crypto,BCPTBNB,BNB,1,0.000001,1,BCPTBNB
+binance,BCPTBTC,crypto,BCPTBTC,BTC,1,0.00000001,1,BCPTBTC
+binance,BCPTETH,crypto,BCPTETH,ETH,1,0.00000001,1,BCPTETH
+binance,BCPTPAX,crypto,BCPTPAX,PAX,1,0.00001,0.1,BCPTPAX
+binance,BCPTTUSD,crypto,BCPTTUSD,TUSD,1,0.00001,0.1,BCPTTUSD
+binance,BCPTUSDC,crypto,BCPTUSDC,USDC,1,0.00001,0.1,BCPTUSDC
+binance,BEAMBNB,crypto,BEAMBNB,BNB,1,0.00001,0.1,BEAMBNB
+binance,BEAMBTC,crypto,BEAMBTC,BTC,1,0.0000001,0.01,BEAMBTC
+binance,BEAMUSDT,crypto,BEAMUSDT,USDT,1,0.0001,0.01,BEAMUSDT
+binance,BEARBUSD,crypto,BEARBUSD,BUSD,1,0.01,0.00001,BEARBUSD
+binance,BEARUSDT,crypto,BEARUSDT,USDT,1,0.01,0.00001,BEARUSDT
+binance,BELBNB,crypto,BELBNB,BNB,1,0.00001,0.1,BELBNB
+binance,BELBTC,crypto,BELBTC,BTC,1,0.00000001,1,BELBTC
+binance,BELBUSD,crypto,BELBUSD,BUSD,1,0.0001,0.01,BELBUSD
+binance,BELUSDT,crypto,BELUSDT,USDT,1,0.0001,0.01,BELUSDT
+binance,BGBPUSDC,crypto,BGBPUSDC,USDC,1,0.0001,0.01,BGBPUSDC
+binance,BKRWBUSD,crypto,BKRWBUSD,BUSD,1,0.0000001,1,BKRWBUSD
+binance,BKRWUSDT,crypto,BKRWUSDT,USDT,1,0.0000001,1,BKRWUSDT
+binance,BLZBNB,crypto,BLZBNB,BNB,1,0.000001,1,BLZBNB
+binance,BLZBTC,crypto,BLZBTC,BTC,1,0.00000001,1,BLZBTC
+binance,BLZBUSD,crypto,BLZBUSD,BUSD,1,0.00001,0.1,BLZBUSD
+binance,BLZETH,crypto,BLZETH,ETH,1,0.00000001,1,BLZETH
+binance,BLZUSDT,crypto,BLZUSDT,USDT,1,0.00001,0.1,BLZUSDT
+binance,BNBAUD,crypto,BNBAUD,AUD,1,0.001,0.001,BNBAUD
+binance,BNBBEARBUSD,crypto,BNBBEARBUSD,BUSD,1,0.01,0.00001,BNBBEARBUSD
+binance,BNBBEARUSDT,crypto,BNBBEARUSDT,USDT,1,0.01,0.00001,BNBBEARUSDT
+binance,BNBBIDR,crypto,BNBBIDR,BIDR,1,1,0.001,BNBBIDR
+binance,BNBBKRW,crypto,BNBBKRW,BKRW,1,1,0.001,BNBBKRW
+binance,BNBBTC,crypto,BNBBTC,BTC,1,0.0000001,0.01,BNBBTC
+binance,BNBBULLBUSD,crypto,BNBBULLBUSD,BUSD,1,0.01,0.00001,BNBBULLBUSD
+binance,BNBBULLUSDT,crypto,BNBBULLUSDT,USDT,1,0.01,0.00001,BNBBULLUSDT
+binance,BNBBUSD,crypto,BNBBUSD,BUSD,1,0.0001,0.01,BNBBUSD
+binance,BNBDAI,crypto,BNBDAI,DAI,1,0.001,0.001,BNBDAI
+binance,BNBETH,crypto,BNBETH,ETH,1,0.000001,0.01,BNBETH
+binance,BNBEUR,crypto,BNBEUR,EUR,1,0.0001,0.001,BNBEUR
+binance,BNBGBP,crypto,BNBGBP,GBP,1,0.001,0.001,BNBGBP
+binance,BNBIDRT,crypto,BNBIDRT,IDRT,1,1,0.001,BNBIDRT
+binance,BNBNGN,crypto,BNBNGN,NGN,1,1,0.001,BNBNGN
+binance,BNBPAX,crypto,BNBPAX,PAX,1,0.0001,0.01,BNBPAX
+binance,BNBRUB,crypto,BNBRUB,RUB,1,0.01,0.01,BNBRUB
+binance,BNBTRY,crypto,BNBTRY,TRY,1,0.01,0.01,BNBTRY
+binance,BNBTUSD,crypto,BNBTUSD,TUSD,1,0.0001,0.01,BNBTUSD
+binance,BNBUSDC,crypto,BNBUSDC,USDC,1,0.0001,0.01,BNBUSDC
+binance,BNBUSDS,crypto,BNBUSDS,USDS,1,0.0001,0.01,BNBUSDS
+binance,BNBUSDT,crypto,BNBUSDT,USDT,1,0.0001,0.001,BNBUSDT
+binance,BNBZAR,crypto,BNBZAR,ZAR,1,0.01,0.01,BNBZAR
+binance,BNTBTC,crypto,BNTBTC,BTC,1,0.00000001,1,BNTBTC
+binance,BNTBUSD,crypto,BNTBUSD,BUSD,1,0.0001,0.01,BNTBUSD
+binance,BNTETH,crypto,BNTETH,ETH,1,0.000001,0.01,BNTETH
+binance,BNTUSDT,crypto,BNTUSDT,USDT,1,0.0001,0.01,BNTUSDT
+binance,BQXBTC,crypto,BQXBTC,BTC,1,0.00000001,1,BQXBTC
+binance,BQXETH,crypto,BQXETH,ETH,1,0.0000001,1,BQXETH
+binance,BRDBNB,crypto,BRDBNB,BNB,1,0.00001,0.1,BRDBNB
+binance,BRDBTC,crypto,BRDBTC,BTC,1,0.00000001,1,BRDBTC
+binance,BRDETH,crypto,BRDETH,ETH,1,0.0000001,1,BRDETH
+binance,BTCAUD,crypto,BTCAUD,AUD,1,0.01,0.000001,BTCAUD
+binance,BTCBBTC,crypto,BTCBBTC,BTC,1,0.000001,0.001,BTCBBTC
+binance,BTCBIDR,crypto,BTCBIDR,BIDR,1,1,0.000001,BTCBIDR
+binance,BTCBKRW,crypto,BTCBKRW,BKRW,1,1,0.000001,BTCBKRW
+binance,BTCBRL,crypto,BTCBRL,BRL,1,1,0.000001,BTCBRL
+binance,BTCBUSD,crypto,BTCBUSD,BUSD,1,0.01,0.000001,BTCBUSD
+binance,BTCDAI,crypto,BTCDAI,DAI,1,0.01,0.000001,BTCDAI
+binance,BTCEUR,crypto,BTCEUR,EUR,1,0.01,0.000001,BTCEUR
+binance,BTCGBP,crypto,BTCGBP,GBP,1,0.01,0.000001,BTCGBP
+binance,BTCIDRT,crypto,BTCIDRT,IDRT,1,1,0.000001,BTCIDRT
+binance,BTCNGN,crypto,BTCNGN,NGN,1,1,0.000001,BTCNGN
+binance,BTCPAX,crypto,BTCPAX,PAX,1,0.01,0.000001,BTCPAX
+binance,BTCRUB,crypto,BTCRUB,RUB,1,1,0.000001,BTCRUB
+binance,BTCTRY,crypto,BTCTRY,TRY,1,1,0.000001,BTCTRY
+binance,BTCTUSD,crypto,BTCTUSD,TUSD,1,0.01,0.000001,BTCTUSD
+binance,BTCUAH,crypto,BTCUAH,UAH,1,1,0.000001,BTCUAH
+binance,BTCUSDC,crypto,BTCUSDC,USDC,1,0.01,0.000001,BTCUSDC
+binance,BTCUSDS,crypto,BTCUSDS,USDS,1,0.01,0.000001,BTCUSDS
+binance,BTCUSDT,crypto,BTCUSDT,USDT,1,0.01,0.000001,BTCUSDT
+binance,BTCZAR,crypto,BTCZAR,ZAR,1,1,0.000001,BTCZAR
+binance,BTGBTC,crypto,BTGBTC,BTC,1,0.000001,0.01,BTGBTC
+binance,BTGETH,crypto,BTGETH,ETH,1,0.000001,0.01,BTGETH
+binance,BTSBNB,crypto,BTSBNB,BNB,1,0.000001,1,BTSBNB
+binance,BTSBTC,crypto,BTSBTC,BTC,1,0.00000001,1,BTSBTC
+binance,BTSBUSD,crypto,BTSBUSD,BUSD,1,0.00001,0.1,BTSBUSD
+binance,BTSETH,crypto,BTSETH,ETH,1,0.00000001,1,BTSETH
+binance,BTSUSDT,crypto,BTSUSDT,USDT,1,0.00001,0.1,BTSUSDT
+binance,BTTBNB,crypto,BTTBNB,BNB,1,0.00000001,1,BTTBNB
+binance,BTTBTC,crypto,BTTBTC,BTC,1,0.00000001,1,BTTBTC
+binance,BTTBUSD,crypto,BTTBUSD,BUSD,1,0.0000001,1,BTTBUSD
+binance,BTTPAX,crypto,BTTPAX,PAX,1,0.0000001,1,BTTPAX
+binance,BTTTRX,crypto,BTTTRX,TRX,1,0.00001,0.1,BTTTRX
+binance,BTTTUSD,crypto,BTTTUSD,TUSD,1,0.0000001,1,BTTTUSD
+binance,BTTUSDC,crypto,BTTUSDC,USDC,1,0.0000001,1,BTTUSDC
+binance,BTTUSDT,crypto,BTTUSDT,USDT,1,0.0000001,1,BTTUSDT
+binance,BULLBUSD,crypto,BULLBUSD,BUSD,1,0.01,0.000001,BULLBUSD
+binance,BULLUSDT,crypto,BULLUSDT,USDT,1,0.01,0.000001,BULLUSDT
+binance,BURGERBNB,crypto,BURGERBNB,BNB,1,0.00001,0.1,BURGERBNB
+binance,BUSDBIDR,crypto,BUSDBIDR,BIDR,1,1,0.01,BUSDBIDR
+binance,BUSDBKRW,crypto,BUSDBKRW,BKRW,1,0.01,0.1,BUSDBKRW
+binance,BUSDDAI,crypto,BUSDDAI,DAI,1,0.0001,0.01,BUSDDAI
+binance,BUSDIDRT,crypto,BUSDIDRT,IDRT,1,1,0.01,BUSDIDRT
+binance,BUSDNGN,crypto,BUSDNGN,NGN,1,0.01,0.01,BUSDNGN
+binance,BUSDRUB,crypto,BUSDRUB,RUB,1,0.001,0.1,BUSDRUB
+binance,BUSDTRY,crypto,BUSDTRY,TRY,1,0.001,0.01,BUSDTRY
+binance,BUSDUSDT,crypto,BUSDUSDT,USDT,1,0.0001,0.01,BUSDUSDT
+binance,BUSDZAR,crypto,BUSDZAR,ZAR,1,0.001,0.1,BUSDZAR
+binance,BZRXBNB,crypto,BZRXBNB,BNB,1,0.00001,0.1,BZRXBNB
+binance,BZRXBTC,crypto,BZRXBTC,BTC,1,0.00000001,1,BZRXBTC
+binance,BZRXBUSD,crypto,BZRXBUSD,BUSD,1,0.0001,0.01,BZRXBUSD
+binance,BZRXUSDT,crypto,BZRXUSDT,USDT,1,0.0001,0.01,BZRXUSDT
+binance,CAKEBNB,crypto,CAKEBNB,BNB,1,0.00001,0.1,CAKEBNB
+binance,CAKEBUSD,crypto,CAKEBUSD,BUSD,1,0.0001,0.01,CAKEBUSD
+binance,CDTBTC,crypto,CDTBTC,BTC,1,0.00000001,1,CDTBTC
+binance,CDTETH,crypto,CDTETH,ETH,1,0.00000001,1,CDTETH
+binance,CELRBNB,crypto,CELRBNB,BNB,1,0.0000001,1,CELRBNB
+binance,CELRBTC,crypto,CELRBTC,BTC,1,0.00000001,1,CELRBTC
+binance,CELRUSDT,crypto,CELRUSDT,USDT,1,0.00001,0.1,CELRUSDT
+binance,CHATBTC,crypto,CHATBTC,BTC,1,0.00000001,1,CHATBTC
+binance,CHATETH,crypto,CHATETH,ETH,1,0.00000001,1,CHATETH
+binance,CHRBNB,crypto,CHRBNB,BNB,1,0.000001,1,CHRBNB
+binance,CHRBTC,crypto,CHRBTC,BTC,1,0.00000001,1,CHRBTC
+binance,CHRUSDT,crypto,CHRUSDT,USDT,1,0.00001,0.1,CHRUSDT
+binance,CHZBNB,crypto,CHZBNB,BNB,1,0.0000001,1,CHZBNB
+binance,CHZBTC,crypto,CHZBTC,BTC,1,0.00000001,1,CHZBTC
+binance,CHZUSDT,crypto,CHZUSDT,USDT,1,0.000001,1,CHZUSDT
+binance,CLOAKBTC,crypto,CLOAKBTC,BTC,1,0.0000001,0.01,CLOAKBTC
+binance,CLOAKETH,crypto,CLOAKETH,ETH,1,0.000001,0.01,CLOAKETH
+binance,CMTBNB,crypto,CMTBNB,BNB,1,0.000001,1,CMTBNB
+binance,CMTBTC,crypto,CMTBTC,BTC,1,0.00000001,1,CMTBTC
+binance,CMTETH,crypto,CMTETH,ETH,1,0.00000001,1,CMTETH
+binance,CNDBNB,crypto,CNDBNB,BNB,1,0.0000001,1,CNDBNB
+binance,CNDBTC,crypto,CNDBTC,BTC,1,0.00000001,1,CNDBTC
+binance,CNDETH,crypto,CNDETH,ETH,1,0.00000001,1,CNDETH
+binance,COCOSBNB,crypto,COCOSBNB,BNB,1,0.0000001,1,COCOSBNB
+binance,COCOSBTC,crypto,COCOSBTC,BTC,1,0.00000001,1,COCOSBTC
+binance,COCOSUSDT,crypto,COCOSUSDT,USDT,1,0.000001,1,COCOSUSDT
+binance,COMPBNB,crypto,COMPBNB,BNB,1,0.001,0.001,COMPBNB
+binance,COMPBTC,crypto,COMPBTC,BTC,1,0.000001,0.001,COMPBTC
+binance,COMPBUSD,crypto,COMPBUSD,BUSD,1,0.01,0.00001,COMPBUSD
+binance,COMPUSDT,crypto,COMPUSDT,USDT,1,0.01,0.00001,COMPUSDT
+binance,COSBNB,crypto,COSBNB,BNB,1,0.000001,1,COSBNB
+binance,COSBTC,crypto,COSBTC,BTC,1,0.00000001,1,COSBTC
+binance,COSUSDT,crypto,COSUSDT,USDT,1,0.00001,0.1,COSUSDT
+binance,COTIBNB,crypto,COTIBNB,BNB,1,0.000001,1,COTIBNB
+binance,COTIBTC,crypto,COTIBTC,BTC,1,0.00000001,1,COTIBTC
+binance,COTIUSDT,crypto,COTIUSDT,USDT,1,0.00001,0.1,COTIUSDT
+binance,CREAMBNB,crypto,CREAMBNB,BNB,1,0.0001,0.01,CREAMBNB
+binance,CREAMBUSD,crypto,CREAMBUSD,BUSD,1,0.001,0.001,CREAMBUSD
+binance,CRVBNB,crypto,CRVBNB,BNB,1,0.0001,0.01,CRVBNB
+binance,CRVBTC,crypto,CRVBTC,BTC,1,0.0000001,0.01,CRVBTC
+binance,CRVBUSD,crypto,CRVBUSD,BUSD,1,0.001,0.001,CRVBUSD
+binance,CRVUSDT,crypto,CRVUSDT,USDT,1,0.001,0.001,CRVUSDT
+binance,CTSIBNB,crypto,CTSIBNB,BNB,1,0.000001,1,CTSIBNB
+binance,CTSIBTC,crypto,CTSIBTC,BTC,1,0.00000001,1,CTSIBTC
+binance,CTSIBUSD,crypto,CTSIBUSD,BUSD,1,0.00001,0.1,CTSIBUSD
+binance,CTSIUSDT,crypto,CTSIUSDT,USDT,1,0.00001,0.1,CTSIUSDT
+binance,CTXCBNB,crypto,CTXCBNB,BNB,1,0.000001,1,CTXCBNB
+binance,CTXCBTC,crypto,CTXCBTC,BTC,1,0.00000001,1,CTXCBTC
+binance,CTXCUSDT,crypto,CTXCUSDT,USDT,1,0.0001,0.01,CTXCUSDT
+binance,CVCBNB,crypto,CVCBNB,BNB,1,0.000001,1,CVCBNB
+binance,CVCBTC,crypto,CVCBTC,BTC,1,0.00000001,1,CVCBTC
+binance,CVCETH,crypto,CVCETH,ETH,1,0.00000001,1,CVCETH
+binance,CVCUSDT,crypto,CVCUSDT,USDT,1,0.00001,0.1,CVCUSDT
+binance,DAIBNB,crypto,DAIBNB,BNB,1,0.00001,0.1,DAIBNB
+binance,DAIBTC,crypto,DAIBTC,BTC,1,0.00000001,1,DAIBTC
+binance,DAIBUSD,crypto,DAIBUSD,BUSD,1,0.0001,0.01,DAIBUSD
+binance,DAIUSDT,crypto,DAIUSDT,USDT,1,0.0001,0.01,DAIUSDT
+binance,DASHBNB,crypto,DASHBNB,BNB,1,0.001,0.001,DASHBNB
+binance,DASHBTC,crypto,DASHBTC,BTC,1,0.000001,0.001,DASHBTC
+binance,DASHBUSD,crypto,DASHBUSD,BUSD,1,0.01,0.00001,DASHBUSD
+binance,DASHETH,crypto,DASHETH,ETH,1,0.00001,0.001,DASHETH
+binance,DASHUSDT,crypto,DASHUSDT,USDT,1,0.01,0.00001,DASHUSDT
+binance,DATABTC,crypto,DATABTC,BTC,1,0.00000001,1,DATABTC
+binance,DATABUSD,crypto,DATABUSD,BUSD,1,0.00001,0.1,DATABUSD
+binance,DATAETH,crypto,DATAETH,ETH,1,0.00000001,1,DATAETH
+binance,DATAUSDT,crypto,DATAUSDT,USDT,1,0.00001,0.1,DATAUSDT
+binance,DCRBNB,crypto,DCRBNB,BNB,1,0.001,0.001,DCRBNB
+binance,DCRBTC,crypto,DCRBTC,BTC,1,0.000001,0.001,DCRBTC
+binance,DCRBUSD,crypto,DCRBUSD,BUSD,1,0.001,0.001,DCRBUSD
+binance,DCRUSDT,crypto,DCRUSDT,USDT,1,0.001,0.001,DCRUSDT
+binance,DENTBTC,crypto,DENTBTC,BTC,1,0.00000001,1,DENTBTC
+binance,DENTETH,crypto,DENTETH,ETH,1,0.00000001,1,DENTETH
+binance,DENTUSDT,crypto,DENTUSDT,USDT,1,0.0000001,1,DENTUSDT
+binance,DGBBNB,crypto,DGBBNB,BNB,1,0.000001,1,DGBBNB
+binance,DGBBTC,crypto,DGBBTC,BTC,1,0.00000001,1,DGBBTC
+binance,DGBBUSD,crypto,DGBBUSD,BUSD,1,0.00001,0.1,DGBBUSD
+binance,DGBUSDT,crypto,DGBUSDT,USDT,1,0.00001,0.1,DGBUSDT
+binance,DGDBTC,crypto,DGDBTC,BTC,1,0.000001,0.001,DGDBTC
+binance,DGDETH,crypto,DGDETH,ETH,1,0.00001,0.001,DGDETH
+binance,DIABNB,crypto,DIABNB,BNB,1,0.0001,0.01,DIABNB
+binance,DIABTC,crypto,DIABTC,BTC,1,0.0000001,0.01,DIABTC
+binance,DIABUSD,crypto,DIABUSD,BUSD,1,0.001,0.001,DIABUSD
+binance,DIAUSDT,crypto,DIAUSDT,USDT,1,0.001,0.001,DIAUSDT
+binance,DLTBNB,crypto,DLTBNB,BNB,1,0.000001,1,DLTBNB
+binance,DLTBTC,crypto,DLTBTC,BTC,1,0.00000001,1,DLTBTC
+binance,DLTETH,crypto,DLTETH,ETH,1,0.00000001,1,DLTETH
+binance,DNTBTC,crypto,DNTBTC,BTC,1,0.00000001,1,DNTBTC
+binance,DNTETH,crypto,DNTETH,ETH,1,0.00000001,1,DNTETH
+binance,DOCKBTC,crypto,DOCKBTC,BTC,1,0.00000001,1,DOCKBTC
+binance,DOCKETH,crypto,DOCKETH,ETH,1,0.00000001,1,DOCKETH
+binance,DOCKUSDT,crypto,DOCKUSDT,USDT,1,0.000001,1,DOCKUSDT
+binance,DOGEBNB,crypto,DOGEBNB,BNB,1,0.00000001,1,DOGEBNB
+binance,DOGEBTC,crypto,DOGEBTC,BTC,1,0.00000001,1,DOGEBTC
+binance,DOGEBUSD,crypto,DOGEBUSD,BUSD,1,0.000001,1,DOGEBUSD
+binance,DOGEPAX,crypto,DOGEPAX,PAX,1,0.0000001,1,DOGEPAX
+binance,DOGEUSDC,crypto,DOGEUSDC,USDC,1,0.0000001,1,DOGEUSDC
+binance,DOGEUSDT,crypto,DOGEUSDT,USDT,1,0.0000001,1,DOGEUSDT
+binance,DOTBIDR,crypto,DOTBIDR,BIDR,1,1,0.001,DOTBIDR
+binance,DOTBKRW,crypto,DOTBKRW,BKRW,1,0.01,0.1,DOTBKRW
+binance,DOTBNB,crypto,DOTBNB,BNB,1,0.00001,0.1,DOTBNB
+binance,DOTBTC,crypto,DOTBTC,BTC,1,0.00000001,0.1,DOTBTC
+binance,DOTBUSD,crypto,DOTBUSD,BUSD,1,0.0001,0.01,DOTBUSD
+binance,DOTUSDT,crypto,DOTUSDT,USDT,1,0.0001,0.01,DOTUSDT
+binance,DREPBNB,crypto,DREPBNB,BNB,1,0.0000001,1,DREPBNB
+binance,DREPBTC,crypto,DREPBTC,BTC,1,0.00000001,1,DREPBTC
+binance,DREPUSDT,crypto,DREPUSDT,USDT,1,0.000001,1,DREPUSDT
+binance,DUSKBNB,crypto,DUSKBNB,BNB,1,0.00001,0.1,DUSKBNB
+binance,DUSKBTC,crypto,DUSKBTC,BTC,1,0.00000001,1,DUSKBTC
+binance,DUSKPAX,crypto,DUSKPAX,PAX,1,0.0001,0.01,DUSKPAX
+binance,DUSKUSDC,crypto,DUSKUSDC,USDC,1,0.0001,0.01,DUSKUSDC
+binance,DUSKUSDT,crypto,DUSKUSDT,USDT,1,0.0001,0.01,DUSKUSDT
+binance,EASYETH,crypto,EASYETH,ETH,1,0.000001,0.01,EASYETH
+binance,EDOBTC,crypto,EDOBTC,BTC,1,0.00000001,1,EDOBTC
+binance,EDOETH,crypto,EDOETH,ETH,1,0.000001,0.01,EDOETH
+binance,EGLDBNB,crypto,EGLDBNB,BNB,1,0.0001,0.01,EGLDBNB
+binance,EGLDBTC,crypto,EGLDBTC,BTC,1,0.000001,0.001,EGLDBTC
+binance,EGLDBUSD,crypto,EGLDBUSD,BUSD,1,0.001,0.001,EGLDBUSD
+binance,EGLDUSDT,crypto,EGLDUSDT,USDT,1,0.001,0.001,EGLDUSDT
+binance,ELFBTC,crypto,ELFBTC,BTC,1,0.00000001,1,ELFBTC
+binance,ELFETH,crypto,ELFETH,ETH,1,0.00000001,1,ELFETH
+binance,ENGBTC,crypto,ENGBTC,BTC,1,0.00000001,1,ENGBTC
+binance,ENGETH,crypto,ENGETH,ETH,1,0.0000001,1,ENGETH
+binance,ENJBNB,crypto,ENJBNB,BNB,1,0.000001,1,ENJBNB
+binance,ENJBTC,crypto,ENJBTC,BTC,1,0.00000001,1,ENJBTC
+binance,ENJBUSD,crypto,ENJBUSD,BUSD,1,0.00001,0.1,ENJBUSD
+binance,ENJETH,crypto,ENJETH,ETH,1,0.00000001,1,ENJETH
+binance,ENJUSDT,crypto,ENJUSDT,USDT,1,0.00001,0.1,ENJUSDT
+binance,EOSBEARBUSD,crypto,EOSBEARBUSD,BUSD,1,0.01,0.00001,EOSBEARBUSD
+binance,EOSBEARUSDT,crypto,EOSBEARUSDT,USDT,1,0.01,0.00001,EOSBEARUSDT
+binance,EOSBNB,crypto,EOSBNB,BNB,1,0.0001,0.01,EOSBNB
+binance,EOSBTC,crypto,EOSBTC,BTC,1,0.0000001,0.01,EOSBTC
+binance,EOSBULLBUSD,crypto,EOSBULLBUSD,BUSD,1,0.01,0.00001,EOSBULLBUSD
+binance,EOSBULLUSDT,crypto,EOSBULLUSDT,USDT,1,0.01,0.00001,EOSBULLUSDT
+binance,EOSBUSD,crypto,EOSBUSD,BUSD,1,0.0001,0.01,EOSBUSD
+binance,EOSETH,crypto,EOSETH,ETH,1,0.000001,0.01,EOSETH
+binance,EOSPAX,crypto,EOSPAX,PAX,1,0.0001,0.01,EOSPAX
+binance,EOSTUSD,crypto,EOSTUSD,TUSD,1,0.0001,0.01,EOSTUSD
+binance,EOSUSDC,crypto,EOSUSDC,USDC,1,0.0001,0.01,EOSUSDC
+binance,EOSUSDT,crypto,EOSUSDT,USDT,1,0.0001,0.01,EOSUSDT
+binance,ERDBNB,crypto,ERDBNB,BNB,1,0.00000001,1,ERDBNB
+binance,ERDBTC,crypto,ERDBTC,BTC,1,0.00000001,1,ERDBTC
+binance,ERDBUSD,crypto,ERDBUSD,BUSD,1,0.000001,1,ERDBUSD
+binance,ERDPAX,crypto,ERDPAX,PAX,1,0.0000001,1,ERDPAX
+binance,ERDUSDC,crypto,ERDUSDC,USDC,1,0.0000001,1,ERDUSDC
+binance,ERDUSDT,crypto,ERDUSDT,USDT,1,0.000001,1,ERDUSDT
+binance,ETCBNB,crypto,ETCBNB,BNB,1,0.0001,0.01,ETCBNB
+binance,ETCBTC,crypto,ETCBTC,BTC,1,0.0000001,0.01,ETCBTC
+binance,ETCBUSD,crypto,ETCBUSD,BUSD,1,0.0001,0.01,ETCBUSD
+binance,ETCETH,crypto,ETCETH,ETH,1,0.000001,0.01,ETCETH
+binance,ETCPAX,crypto,ETCPAX,PAX,1,0.001,0.001,ETCPAX
+binance,ETCTUSD,crypto,ETCTUSD,TUSD,1,0.001,0.001,ETCTUSD
+binance,ETCUSDC,crypto,ETCUSDC,USDC,1,0.001,0.001,ETCUSDC
+binance,ETCUSDT,crypto,ETCUSDT,USDT,1,0.0001,0.01,ETCUSDT
+binance,ETHAUD,crypto,ETHAUD,AUD,1,0.01,0.00001,ETHAUD
+binance,ETHBEARBUSD,crypto,ETHBEARBUSD,BUSD,1,0.01,0.00001,ETHBEARBUSD
+binance,ETHBEARUSDT,crypto,ETHBEARUSDT,USDT,1,0.01,0.00001,ETHBEARUSDT
+binance,ETHBIDR,crypto,ETHBIDR,BIDR,1,1,0.00001,ETHBIDR
+binance,ETHBKRW,crypto,ETHBKRW,BKRW,1,1,0.00001,ETHBKRW
+binance,ETHBTC,crypto,ETHBTC,BTC,1,0.000001,0.001,ETHBTC
+binance,ETHBULLBUSD,crypto,ETHBULLBUSD,BUSD,1,0.01,0.000001,ETHBULLBUSD
+binance,ETHBULLUSDT,crypto,ETHBULLUSDT,USDT,1,0.01,0.000001,ETHBULLUSDT
+binance,ETHBUSD,crypto,ETHBUSD,BUSD,1,0.01,0.00001,ETHBUSD
+binance,ETHDAI,crypto,ETHDAI,DAI,1,0.01,0.00001,ETHDAI
+binance,ETHEUR,crypto,ETHEUR,EUR,1,0.01,0.00001,ETHEUR
+binance,ETHGBP,crypto,ETHGBP,GBP,1,0.01,0.00001,ETHGBP
+binance,ETHNGN,crypto,ETHNGN,NGN,1,1,0.00001,ETHNGN
+binance,ETHPAX,crypto,ETHPAX,PAX,1,0.01,0.00001,ETHPAX
+binance,ETHRUB,crypto,ETHRUB,RUB,1,0.1,0.00001,ETHRUB
+binance,ETHTRY,crypto,ETHTRY,TRY,1,0.01,0.00001,ETHTRY
+binance,ETHTUSD,crypto,ETHTUSD,TUSD,1,0.01,0.00001,ETHTUSD
+binance,ETHUSDC,crypto,ETHUSDC,USDC,1,0.01,0.00001,ETHUSDC
+binance,ETHUSDT,crypto,ETHUSDT,USDT,1,0.01,0.00001,ETHUSDT
+binance,ETHZAR,crypto,ETHZAR,ZAR,1,0.1,0.00001,ETHZAR
+binance,EURBUSD,crypto,EURBUSD,BUSD,1,0.0001,0.01,EURBUSD
+binance,EURUSDT,crypto,EURUSDT,USDT,1,0.0001,0.01,EURUSDT
+binance,EVXBTC,crypto,EVXBTC,BTC,1,0.00000001,1,EVXBTC
+binance,EVXETH,crypto,EVXETH,ETH,1,0.0000001,1,EVXETH
+binance,FETBNB,crypto,FETBNB,BNB,1,0.000001,1,FETBNB
+binance,FETBTC,crypto,FETBTC,BTC,1,0.00000001,1,FETBTC
+binance,FETUSDT,crypto,FETUSDT,USDT,1,0.00001,0.1,FETUSDT
+binance,FILBNB,crypto,FILBNB,BNB,1,0.00001,0.1,FILBNB
+binance,FILBTC,crypto,FILBTC,BTC,1,0.0000001,0.01,FILBTC
+binance,FILBUSD,crypto,FILBUSD,BUSD,1,0.0001,0.01,FILBUSD
+binance,FILUSDT,crypto,FILUSDT,USDT,1,0.0001,0.01,FILUSDT
+binance,FIOBNB,crypto,FIOBNB,BNB,1,0.00001,0.1,FIOBNB
+binance,FIOBTC,crypto,FIOBTC,BTC,1,0.00000001,1,FIOBTC
+binance,FIOBUSD,crypto,FIOBUSD,BUSD,1,0.0001,0.01,FIOBUSD
+binance,FIOUSDT,crypto,FIOUSDT,USDT,1,0.0001,0.01,FIOUSDT
+binance,FLMBNB,crypto,FLMBNB,BNB,1,0.00001,0.1,FLMBNB
+binance,FLMBTC,crypto,FLMBTC,BTC,1,0.00000001,1,FLMBTC
+binance,FLMBUSD,crypto,FLMBUSD,BUSD,1,0.0001,0.01,FLMBUSD
+binance,FLMUSDT,crypto,FLMUSDT,USDT,1,0.0001,0.01,FLMUSDT
+binance,FTMBNB,crypto,FTMBNB,BNB,1,0.000001,1,FTMBNB
+binance,FTMBTC,crypto,FTMBTC,BTC,1,0.00000001,1,FTMBTC
+binance,FTMPAX,crypto,FTMPAX,PAX,1,0.00001,0.1,FTMPAX
+binance,FTMTUSD,crypto,FTMTUSD,TUSD,1,0.00001,0.1,FTMTUSD
+binance,FTMUSDC,crypto,FTMUSDC,USDC,1,0.00001,0.1,FTMUSDC
+binance,FTMUSDT,crypto,FTMUSDT,USDT,1,0.00001,0.1,FTMUSDT
+binance,FTTBNB,crypto,FTTBNB,BNB,1,0.0001,0.01,FTTBNB
+binance,FTTBTC,crypto,FTTBTC,BTC,1,0.0000001,0.01,FTTBTC
+binance,FTTUSDT,crypto,FTTUSDT,USDT,1,0.001,0.001,FTTUSDT
+binance,FUELBTC,crypto,FUELBTC,BTC,1,0.00000001,1,FUELBTC
+binance,FUELETH,crypto,FUELETH,ETH,1,0.00000001,1,FUELETH
+binance,FUNBTC,crypto,FUNBTC,BTC,1,0.00000001,1,FUNBTC
+binance,FUNETH,crypto,FUNETH,ETH,1,0.00000001,1,FUNETH
+binance,FUNUSDT,crypto,FUNUSDT,USDT,1,0.000001,1,FUNUSDT
+binance,GASBTC,crypto,GASBTC,BTC,1,0.0000001,0.01,GASBTC
+binance,GBPBUSD,crypto,GBPBUSD,BUSD,1,0.0001,0.01,GBPBUSD
+binance,GBPUSDT,crypto,GBPUSDT,USDT,1,0.0001,0.01,GBPUSDT
+binance,GNTBNB,crypto,GNTBNB,BNB,1,0.000001,1,GNTBNB
+binance,GNTBTC,crypto,GNTBTC,BTC,1,0.00000001,1,GNTBTC
+binance,GNTETH,crypto,GNTETH,ETH,1,0.00000001,1,GNTETH
+binance,GOBNB,crypto,GOBNB,BNB,1,0.0000001,1,GOBNB
+binance,GOBTC,crypto,GOBTC,BTC,1,0.00000001,1,GOBTC
+binance,GRSBTC,crypto,GRSBTC,BTC,1,0.00000001,1,GRSBTC
+binance,GRSETH,crypto,GRSETH,ETH,1,0.00000001,1,GRSETH
+binance,GTOBNB,crypto,GTOBNB,BNB,1,0.000001,1,GTOBNB
+binance,GTOBTC,crypto,GTOBTC,BTC,1,0.00000001,1,GTOBTC
+binance,GTOETH,crypto,GTOETH,ETH,1,0.00000001,1,GTOETH
+binance,GTOPAX,crypto,GTOPAX,PAX,1,0.00001,0.1,GTOPAX
+binance,GTOTUSD,crypto,GTOTUSD,TUSD,1,0.00001,0.1,GTOTUSD
+binance,GTOUSDC,crypto,GTOUSDC,USDC,1,0.00001,0.1,GTOUSDC
+binance,GTOUSDT,crypto,GTOUSDT,USDT,1,0.00001,0.1,GTOUSDT
+binance,GVTBTC,crypto,GVTBTC,BTC,1,0.0000001,0.01,GVTBTC
+binance,GVTETH,crypto,GVTETH,ETH,1,0.000001,0.01,GVTETH
+binance,GXSBTC,crypto,GXSBTC,BTC,1,0.00000001,1,GXSBTC
+binance,GXSETH,crypto,GXSETH,ETH,1,0.000001,0.01,GXSETH
+binance,GXSUSDT,crypto,GXSUSDT,USDT,1,0.0001,0.01,GXSUSDT
+binance,HBARBNB,crypto,HBARBNB,BNB,1,0.000001,1,HBARBNB
+binance,HBARBTC,crypto,HBARBTC,BTC,1,0.00000001,1,HBARBTC
+binance,HBARBUSD,crypto,HBARBUSD,BUSD,1,0.00001,0.1,HBARBUSD
+binance,HBARUSDT,crypto,HBARUSDT,USDT,1,0.00001,0.1,HBARUSDT
+binance,HCBTC,crypto,HCBTC,BTC,1,0.0000001,0.01,HCBTC
+binance,HCETH,crypto,HCETH,ETH,1,0.000001,0.01,HCETH
+binance,HCUSDT,crypto,HCUSDT,USDT,1,0.0001,0.01,HCUSDT
+binance,HIVEBNB,crypto,HIVEBNB,BNB,1,0.00001,0.1,HIVEBNB
+binance,HIVEBTC,crypto,HIVEBTC,BTC,1,0.00000001,1,HIVEBTC
+binance,HIVEUSDT,crypto,HIVEUSDT,USDT,1,0.0001,0.01,HIVEUSDT
+binance,HNTBTC,crypto,HNTBTC,BTC,1,0.0000001,0.01,HNTBTC
+binance,HNTUSDT,crypto,HNTUSDT,USDT,1,0.001,0.001,HNTUSDT
+binance,HOTBNB,crypto,HOTBNB,BNB,1,0.00000001,1,HOTBNB
+binance,HOTBTC,crypto,HOTBTC,BTC,1,0.00000001,1,HOTBTC
+binance,HOTETH,crypto,HOTETH,ETH,1,0.00000001,1,HOTETH
+binance,HOTUSDT,crypto,HOTUSDT,USDT,1,0.0000001,1,HOTUSDT
+binance,HSRBTC,crypto,HSRBTC,BTC,1,0.000001,0.01,HSRBTC
+binance,HSRETH,crypto,HSRETH,ETH,1,0.000001,0.01,HSRETH
+binance,ICNBTC,crypto,ICNBTC,BTC,1,0.00000001,1,ICNBTC
+binance,ICNETH,crypto,ICNETH,ETH,1,0.0000001,1,ICNETH
+binance,ICXBNB,crypto,ICXBNB,BNB,1,0.00001,0.1,ICXBNB
+binance,ICXBTC,crypto,ICXBTC,BTC,1,0.00000001,1,ICXBTC
+binance,ICXBUSD,crypto,ICXBUSD,BUSD,1,0.0001,0.01,ICXBUSD
+binance,ICXETH,crypto,ICXETH,ETH,1,0.000001,0.01,ICXETH
+binance,ICXUSDT,crypto,ICXUSDT,USDT,1,0.0001,0.01,ICXUSDT
+binance,IDEXBTC,crypto,IDEXBTC,BTC,1,0.00000001,1,IDEXBTC
+binance,IDEXBUSD,crypto,IDEXBUSD,BUSD,1,0.00001,0.1,IDEXBUSD
+binance,INJBNB,crypto,INJBNB,BNB,1,0.00001,0.1,INJBNB
+binance,INJBTC,crypto,INJBTC,BTC,1,0.00000001,0.1,INJBTC
+binance,INJBUSD,crypto,INJBUSD,BUSD,1,0.0001,0.01,INJBUSD
+binance,INJUSDT,crypto,INJUSDT,USDT,1,0.0001,0.01,INJUSDT
+binance,INSBTC,crypto,INSBTC,BTC,1,0.00000001,1,INSBTC
+binance,INSETH,crypto,INSETH,ETH,1,0.000001,0.01,INSETH
+binance,IOSTBNB,crypto,IOSTBNB,BNB,1,0.0000001,1,IOSTBNB
+binance,IOSTBTC,crypto,IOSTBTC,BTC,1,0.00000001,1,IOSTBTC
+binance,IOSTETH,crypto,IOSTETH,ETH,1,0.00000001,1,IOSTETH
+binance,IOSTUSDT,crypto,IOSTUSDT,USDT,1,0.000001,1,IOSTUSDT
+binance,IOTABNB,crypto,IOTABNB,BNB,1,0.00001,0.1,IOTABNB
+binance,IOTABTC,crypto,IOTABTC,BTC,1,0.00000001,1,IOTABTC
+binance,IOTABUSD,crypto,IOTABUSD,BUSD,1,0.0001,0.01,IOTABUSD
+binance,IOTAETH,crypto,IOTAETH,ETH,1,0.00000001,1,IOTAETH
+binance,IOTAUSDT,crypto,IOTAUSDT,USDT,1,0.0001,0.01,IOTAUSDT
+binance,IOTXBTC,crypto,IOTXBTC,BTC,1,0.00000001,1,IOTXBTC
+binance,IOTXETH,crypto,IOTXETH,ETH,1,0.00000001,1,IOTXETH
+binance,IOTXUSDT,crypto,IOTXUSDT,USDT,1,0.000001,1,IOTXUSDT
+binance,IQBNB,crypto,IQBNB,BNB,1,0.0000001,1,IQBNB
+binance,IQBUSD,crypto,IQBUSD,BUSD,1,0.000001,1,IQBUSD
+binance,IRISBNB,crypto,IRISBNB,BNB,1,0.000001,1,IRISBNB
+binance,IRISBTC,crypto,IRISBTC,BTC,1,0.00000001,1,IRISBTC
+binance,IRISBUSD,crypto,IRISBUSD,BUSD,1,0.00001,0.1,IRISBUSD
+binance,IRISUSDT,crypto,IRISUSDT,USDT,1,0.00001,0.1,IRISUSDT
+binance,JSTBNB,crypto,JSTBNB,BNB,1,0.000001,1,JSTBNB
+binance,JSTBTC,crypto,JSTBTC,BTC,1,0.00000001,1,JSTBTC
+binance,JSTBUSD,crypto,JSTBUSD,BUSD,1,0.00001,0.1,JSTBUSD
+binance,JSTUSDT,crypto,JSTUSDT,USDT,1,0.00001,0.1,JSTUSDT
+binance,KAVABNB,crypto,KAVABNB,BNB,1,0.00001,0.1,KAVABNB
+binance,KAVABTC,crypto,KAVABTC,BTC,1,0.00000001,1,KAVABTC
+binance,KAVAUSDT,crypto,KAVAUSDT,USDT,1,0.0001,0.01,KAVAUSDT
+binance,KEYBTC,crypto,KEYBTC,BTC,1,0.00000001,1,KEYBTC
+binance,KEYETH,crypto,KEYETH,ETH,1,0.00000001,1,KEYETH
+binance,KEYUSDT,crypto,KEYUSDT,USDT,1,0.000001,1,KEYUSDT
+binance,KMDBTC,crypto,KMDBTC,BTC,1,0.0000001,0.01,KMDBTC
+binance,KMDBUSD,crypto,KMDBUSD,BUSD,1,0.0001,0.01,KMDBUSD
+binance,KMDETH,crypto,KMDETH,ETH,1,0.000001,0.01,KMDETH
+binance,KMDUSDT,crypto,KMDUSDT,USDT,1,0.0001,0.01,KMDUSDT
+binance,KNCBTC,crypto,KNCBTC,BTC,1,0.00000001,1,KNCBTC
+binance,KNCBUSD,crypto,KNCBUSD,BUSD,1,0.001,0.001,KNCBUSD
+binance,KNCETH,crypto,KNCETH,ETH,1,0.0000001,1,KNCETH
+binance,KNCUSDT,crypto,KNCUSDT,USDT,1,0.001,0.001,KNCUSDT
+binance,KSMBNB,crypto,KSMBNB,BNB,1,0.0001,0.01,KSMBNB
+binance,KSMBTC,crypto,KSMBTC,BTC,1,0.000001,0.001,KSMBTC
+binance,KSMBUSD,crypto,KSMBUSD,BUSD,1,0.001,0.001,KSMBUSD
+binance,KSMUSDT,crypto,KSMUSDT,USDT,1,0.001,0.001,KSMUSDT
+binance,LENDBKRW,crypto,LENDBKRW,BKRW,1,0.01,0.1,LENDBKRW
+binance,LENDBTC,crypto,LENDBTC,BTC,1,0.00000001,1,LENDBTC
+binance,LENDBUSD,crypto,LENDBUSD,BUSD,1,0.0001,0.01,LENDBUSD
+binance,LENDETH,crypto,LENDETH,ETH,1,0.00000001,1,LENDETH
+binance,LENDUSDT,crypto,LENDUSDT,USDT,1,0.00001,0.1,LENDUSDT
+binance,LINKAUD,crypto,LINKAUD,AUD,1,0.001,0.001,LINKAUD
+binance,LINKBKRW,crypto,LINKBKRW,BKRW,1,0.01,0.1,LINKBKRW
+binance,LINKBTC,crypto,LINKBTC,BTC,1,0.00000001,0.1,LINKBTC
+binance,LINKBUSD,crypto,LINKBUSD,BUSD,1,0.0001,0.01,LINKBUSD
+binance,LINKETH,crypto,LINKETH,ETH,1,0.000001,0.01,LINKETH
+binance,LINKEUR,crypto,LINKEUR,EUR,1,0.001,0.001,LINKEUR
+binance,LINKPAX,crypto,LINKPAX,PAX,1,0.0001,0.01,LINKPAX
+binance,LINKTRY,crypto,LINKTRY,TRY,1,0.001,0.01,LINKTRY
+binance,LINKTUSD,crypto,LINKTUSD,TUSD,1,0.0001,0.01,LINKTUSD
+binance,LINKUSDC,crypto,LINKUSDC,USDC,1,0.0001,0.01,LINKUSDC
+binance,LINKUSDT,crypto,LINKUSDT,USDT,1,0.0001,0.01,LINKUSDT
+binance,LOOMBNB,crypto,LOOMBNB,BNB,1,0.000001,1,LOOMBNB
+binance,LOOMBTC,crypto,LOOMBTC,BTC,1,0.00000001,1,LOOMBTC
+binance,LOOMETH,crypto,LOOMETH,ETH,1,0.00000001,1,LOOMETH
+binance,LRCBTC,crypto,LRCBTC,BTC,1,0.00000001,1,LRCBTC
+binance,LRCBUSD,crypto,LRCBUSD,BUSD,1,0.00001,0.1,LRCBUSD
+binance,LRCETH,crypto,LRCETH,ETH,1,0.00000001,1,LRCETH
+binance,LRCUSDT,crypto,LRCUSDT,USDT,1,0.00001,0.1,LRCUSDT
+binance,LSKBNB,crypto,LSKBNB,BNB,1,0.00001,0.1,LSKBNB
+binance,LSKBTC,crypto,LSKBTC,BTC,1,0.0000001,0.01,LSKBTC
+binance,LSKETH,crypto,LSKETH,ETH,1,0.000001,0.01,LSKETH
+binance,LSKUSDT,crypto,LSKUSDT,USDT,1,0.0001,0.01,LSKUSDT
+binance,LTCBNB,crypto,LTCBNB,BNB,1,0.001,0.001,LTCBNB
+binance,LTCBTC,crypto,LTCBTC,BTC,1,0.000001,0.01,LTCBTC
+binance,LTCBUSD,crypto,LTCBUSD,BUSD,1,0.01,0.00001,LTCBUSD
+binance,LTCETH,crypto,LTCETH,ETH,1,0.00001,0.001,LTCETH
+binance,LTCPAX,crypto,LTCPAX,PAX,1,0.01,0.00001,LTCPAX
+binance,LTCTUSD,crypto,LTCTUSD,TUSD,1,0.01,0.00001,LTCTUSD
+binance,LTCUSDC,crypto,LTCUSDC,USDC,1,0.01,0.00001,LTCUSDC
+binance,LTCUSDT,crypto,LTCUSDT,USDT,1,0.01,0.00001,LTCUSDT
+binance,LTOBNB,crypto,LTOBNB,BNB,1,0.000001,1,LTOBNB
+binance,LTOBTC,crypto,LTOBTC,BTC,1,0.00000001,1,LTOBTC
+binance,LTOUSDT,crypto,LTOUSDT,USDT,1,0.00001,0.1,LTOUSDT
+binance,LUNABNB,crypto,LUNABNB,BNB,1,0.00001,0.1,LUNABNB
+binance,LUNABTC,crypto,LUNABTC,BTC,1,0.00000001,1,LUNABTC
+binance,LUNABUSD,crypto,LUNABUSD,BUSD,1,0.0001,0.01,LUNABUSD
+binance,LUNAUSDT,crypto,LUNAUSDT,USDT,1,0.0001,0.01,LUNAUSDT
+binance,LUNBTC,crypto,LUNBTC,BTC,1,0.0000001,0.01,LUNBTC
+binance,LUNETH,crypto,LUNETH,ETH,1,0.000001,0.01,LUNETH
+binance,MANABTC,crypto,MANABTC,BTC,1,0.00000001,1,MANABTC
+binance,MANABUSD,crypto,MANABUSD,BUSD,1,0.00001,0.1,MANABUSD
+binance,MANAETH,crypto,MANAETH,ETH,1,0.00000001,1,MANAETH
+binance,MANAUSDT,crypto,MANAUSDT,USDT,1,0.00001,0.1,MANAUSDT
+binance,MATICBNB,crypto,MATICBNB,BNB,1,0.0000001,1,MATICBNB
+binance,MATICBTC,crypto,MATICBTC,BTC,1,0.00000001,1,MATICBTC
+binance,MATICBUSD,crypto,MATICBUSD,BUSD,1,0.00001,0.1,MATICBUSD
+binance,MATICUSDT,crypto,MATICUSDT,USDT,1,0.00001,0.1,MATICUSDT
+binance,MBLBNB,crypto,MBLBNB,BNB,1,0.0000001,1,MBLBNB
+binance,MBLBTC,crypto,MBLBTC,BTC,1,0.00000001,1,MBLBTC
+binance,MBLUSDT,crypto,MBLUSDT,USDT,1,0.000001,1,MBLUSDT
+binance,MCOBNB,crypto,MCOBNB,BNB,1,0.00001,0.1,MCOBNB
+binance,MCOBTC,crypto,MCOBTC,BTC,1,0.0000001,0.01,MCOBTC
+binance,MCOETH,crypto,MCOETH,ETH,1,0.000001,0.01,MCOETH
+binance,MCOUSDT,crypto,MCOUSDT,USDT,1,0.001,0.001,MCOUSDT
+binance,MDABTC,crypto,MDABTC,BTC,1,0.00000001,1,MDABTC
+binance,MDAETH,crypto,MDAETH,ETH,1,0.0000001,1,MDAETH
+binance,MDTBNB,crypto,MDTBNB,BNB,1,0.0000001,1,MDTBNB
+binance,MDTBTC,crypto,MDTBTC,BTC,1,0.00000001,1,MDTBTC
+binance,MDTUSDT,crypto,MDTUSDT,USDT,1,0.00001,0.1,MDTUSDT
+binance,MFTBNB,crypto,MFTBNB,BNB,1,0.0000001,1,MFTBNB
+binance,MFTBTC,crypto,MFTBTC,BTC,1,0.00000001,1,MFTBTC
+binance,MFTETH,crypto,MFTETH,ETH,1,0.00000001,1,MFTETH
+binance,MFTUSDT,crypto,MFTUSDT,USDT,1,0.000001,1,MFTUSDT
+binance,MITHBNB,crypto,MITHBNB,BNB,1,0.000001,1,MITHBNB
+binance,MITHBTC,crypto,MITHBTC,BTC,1,0.00000001,1,MITHBTC
+binance,MITHUSDT,crypto,MITHUSDT,USDT,1,0.00001,0.1,MITHUSDT
+binance,MKRBNB,crypto,MKRBNB,BNB,1,0.001,0.001,MKRBNB
+binance,MKRBTC,crypto,MKRBTC,BTC,1,0.000001,0.001,MKRBTC
+binance,MKRBUSD,crypto,MKRBUSD,BUSD,1,0.01,0.00001,MKRBUSD
+binance,MKRUSDT,crypto,MKRUSDT,USDT,1,0.01,0.00001,MKRUSDT
+binance,MODBTC,crypto,MODBTC,BTC,1,0.0000001,0.01,MODBTC
+binance,MODETH,crypto,MODETH,ETH,1,0.000001,0.01,MODETH
+binance,MTHBTC,crypto,MTHBTC,BTC,1,0.00000001,1,MTHBTC
+binance,MTHETH,crypto,MTHETH,ETH,1,0.00000001,1,MTHETH
+binance,MTLBTC,crypto,MTLBTC,BTC,1,0.00000001,1,MTLBTC
+binance,MTLETH,crypto,MTLETH,ETH,1,0.000001,0.01,MTLETH
+binance,MTLUSDT,crypto,MTLUSDT,USDT,1,0.0001,0.01,MTLUSDT
+binance,NANOBNB,crypto,NANOBNB,BNB,1,0.00001,0.1,NANOBNB
+binance,NANOBTC,crypto,NANOBTC,BTC,1,0.0000001,0.01,NANOBTC
+binance,NANOBUSD,crypto,NANOBUSD,BUSD,1,0.0001,0.01,NANOBUSD
+binance,NANOETH,crypto,NANOETH,ETH,1,0.000001,0.01,NANOETH
+binance,NANOUSDT,crypto,NANOUSDT,USDT,1,0.0001,0.01,NANOUSDT
+binance,NASBNB,crypto,NASBNB,BNB,1,0.00001,0.1,NASBNB
+binance,NASBTC,crypto,NASBTC,BTC,1,0.0000001,0.01,NASBTC
+binance,NASETH,crypto,NASETH,ETH,1,0.000001,0.01,NASETH
+binance,NAVBNB,crypto,NAVBNB,BNB,1,0.000001,1,NAVBNB
+binance,NAVBTC,crypto,NAVBTC,BTC,1,0.00000001,1,NAVBTC
+binance,NAVETH,crypto,NAVETH,ETH,1,0.000001,0.01,NAVETH
+binance,NBSBTC,crypto,NBSBTC,BTC,1,0.00000001,1,NBSBTC
+binance,NBSUSDT,crypto,NBSUSDT,USDT,1,0.00001,0.1,NBSUSDT
+binance,NCASHBNB,crypto,NCASHBNB,BNB,1,0.0000001,1,NCASHBNB
+binance,NCASHBTC,crypto,NCASHBTC,BTC,1,0.00000001,1,NCASHBTC
+binance,NCASHETH,crypto,NCASHETH,ETH,1,0.00000001,1,NCASHETH
+binance,NEARBNB,crypto,NEARBNB,BNB,1,0.00001,0.1,NEARBNB
+binance,NEARBTC,crypto,NEARBTC,BTC,1,0.0000001,0.01,NEARBTC
+binance,NEARBUSD,crypto,NEARBUSD,BUSD,1,0.0001,0.01,NEARBUSD
+binance,NEARUSDT,crypto,NEARUSDT,USDT,1,0.0001,0.01,NEARUSDT
+binance,NEBLBNB,crypto,NEBLBNB,BNB,1,0.00001,0.1,NEBLBNB
+binance,NEBLBTC,crypto,NEBLBTC,BTC,1,0.00000001,1,NEBLBTC
+binance,NEBLETH,crypto,NEBLETH,ETH,1,0.000001,0.01,NEBLETH
+binance,NEOBNB,crypto,NEOBNB,BNB,1,0.0001,0.01,NEOBNB
+binance,NEOBTC,crypto,NEOBTC,BTC,1,0.000001,0.01,NEOBTC
+binance,NEOBUSD,crypto,NEOBUSD,BUSD,1,0.001,0.001,NEOBUSD
+binance,NEOETH,crypto,NEOETH,ETH,1,0.000001,0.01,NEOETH
+binance,NEOPAX,crypto,NEOPAX,PAX,1,0.001,0.001,NEOPAX
+binance,NEOTUSD,crypto,NEOTUSD,TUSD,1,0.001,0.001,NEOTUSD
+binance,NEOUSDC,crypto,NEOUSDC,USDC,1,0.001,0.001,NEOUSDC
+binance,NEOUSDT,crypto,NEOUSDT,USDT,1,0.001,0.001,NEOUSDT
+binance,NKNBNB,crypto,NKNBNB,BNB,1,0.000001,1,NKNBNB
+binance,NKNBTC,crypto,NKNBTC,BTC,1,0.00000001,1,NKNBTC
+binance,NKNUSDT,crypto,NKNUSDT,USDT,1,0.00001,0.1,NKNUSDT
+binance,NMRBNB,crypto,NMRBNB,BNB,1,0.0001,0.01,NMRBNB
+binance,NMRBTC,crypto,NMRBTC,BTC,1,0.000001,0.001,NMRBTC
+binance,NMRBUSD,crypto,NMRBUSD,BUSD,1,0.001,0.001,NMRBUSD
+binance,NMRUSDT,crypto,NMRUSDT,USDT,1,0.001,0.001,NMRUSDT
+binance,NPXSBTC,crypto,NPXSBTC,BTC,1,0.00000001,1,NPXSBTC
+binance,NPXSETH,crypto,NPXSETH,ETH,1,0.00000001,1,NPXSETH
+binance,NPXSUSDC,crypto,NPXSUSDC,USDC,1,0.0000001,1,NPXSUSDC
+binance,NPXSUSDT,crypto,NPXSUSDT,USDT,1,0.0000001,1,NPXSUSDT
+binance,NULSBNB,crypto,NULSBNB,BNB,1,0.00001,0.1,NULSBNB
+binance,NULSBTC,crypto,NULSBTC,BTC,1,0.00000001,1,NULSBTC
+binance,NULSETH,crypto,NULSETH,ETH,1,0.00000001,1,NULSETH
+binance,NULSUSDT,crypto,NULSUSDT,USDT,1,0.0001,0.01,NULSUSDT
+binance,NXSBNB,crypto,NXSBNB,BNB,1,0.00001,0.1,NXSBNB
+binance,NXSBTC,crypto,NXSBTC,BTC,1,0.00000001,1,NXSBTC
+binance,NXSETH,crypto,NXSETH,ETH,1,0.000001,0.01,NXSETH
+binance,OAXBTC,crypto,OAXBTC,BTC,1,0.00000001,1,OAXBTC
+binance,OAXETH,crypto,OAXETH,ETH,1,0.0000001,1,OAXETH
+binance,OCEANBNB,crypto,OCEANBNB,BNB,1,0.00001,0.1,OCEANBNB
+binance,OCEANBTC,crypto,OCEANBTC,BTC,1,0.00000001,1,OCEANBTC
+binance,OCEANBUSD,crypto,OCEANBUSD,BUSD,1,0.0001,0.01,OCEANBUSD
+binance,OCEANUSDT,crypto,OCEANUSDT,USDT,1,0.0001,0.01,OCEANUSDT
+binance,OGNBNB,crypto,OGNBNB,BNB,1,0.00001,0.1,OGNBNB
+binance,OGNBTC,crypto,OGNBTC,BTC,1,0.00000001,1,OGNBTC
+binance,OGNUSDT,crypto,OGNUSDT,USDT,1,0.0001,0.01,OGNUSDT
+binance,OMGBNB,crypto,OMGBNB,BNB,1,0.00001,0.1,OMGBNB
+binance,OMGBTC,crypto,OMGBTC,BTC,1,0.0000001,0.01,OMGBTC
+binance,OMGETH,crypto,OMGETH,ETH,1,0.000001,0.01,OMGETH
+binance,OMGUSDT,crypto,OMGUSDT,USDT,1,0.0001,0.01,OMGUSDT
+binance,ONEBIDR,crypto,ONEBIDR,BIDR,1,0.01,1,ONEBIDR
+binance,ONEBNB,crypto,ONEBNB,BNB,1,0.0000001,1,ONEBNB
+binance,ONEBTC,crypto,ONEBTC,BTC,1,0.00000001,1,ONEBTC
+binance,ONEBUSD,crypto,ONEBUSD,BUSD,1,0.000001,1,ONEBUSD
+binance,ONEPAX,crypto,ONEPAX,PAX,1,0.00001,0.1,ONEPAX
+binance,ONETUSD,crypto,ONETUSD,TUSD,1,0.00001,0.1,ONETUSD
+binance,ONEUSDC,crypto,ONEUSDC,USDC,1,0.00001,0.1,ONEUSDC
+binance,ONEUSDT,crypto,ONEUSDT,USDT,1,0.00001,0.1,ONEUSDT
+binance,ONGBNB,crypto,ONGBNB,BNB,1,0.00001,0.1,ONGBNB
+binance,ONGBTC,crypto,ONGBTC,BTC,1,0.00000001,1,ONGBTC
+binance,ONGUSDT,crypto,ONGUSDT,USDT,1,0.0001,0.01,ONGUSDT
+binance,ONTBNB,crypto,ONTBNB,BNB,1,0.00001,0.1,ONTBNB
+binance,ONTBTC,crypto,ONTBTC,BTC,1,0.0000001,0.01,ONTBTC
+binance,ONTBUSD,crypto,ONTBUSD,BUSD,1,0.0001,0.01,ONTBUSD
+binance,ONTETH,crypto,ONTETH,ETH,1,0.000001,0.01,ONTETH
+binance,ONTPAX,crypto,ONTPAX,PAX,1,0.0001,0.01,ONTPAX
+binance,ONTUSDC,crypto,ONTUSDC,USDC,1,0.0001,0.01,ONTUSDC
+binance,ONTUSDT,crypto,ONTUSDT,USDT,1,0.0001,0.01,ONTUSDT
+binance,ORNBTC,crypto,ORNBTC,BTC,1,0.0000001,0.01,ORNBTC
+binance,ORNUSDT,crypto,ORNUSDT,USDT,1,0.0001,0.01,ORNUSDT
+binance,OSTBNB,crypto,OSTBNB,BNB,1,0.0000001,1,OSTBNB
+binance,OSTBTC,crypto,OSTBTC,BTC,1,0.00000001,1,OSTBTC
+binance,OSTETH,crypto,OSTETH,ETH,1,0.00000001,1,OSTETH
+binance,OXTBTC,crypto,OXTBTC,BTC,1,0.00000001,1,OXTBTC
+binance,OXTUSDT,crypto,OXTUSDT,USDT,1,0.0001,0.01,OXTUSDT
+binance,PAXBNB,crypto,PAXBNB,BNB,1,0.00001,0.1,PAXBNB
+binance,PAXBTC,crypto,PAXBTC,BTC,1,0.00000001,1,PAXBTC
+binance,PAXETH,crypto,PAXETH,ETH,1,0.00000001,1,PAXETH
+binance,PAXGBNB,crypto,PAXGBNB,BNB,1,0.001,0.001,PAXGBNB
+binance,PAXGBTC,crypto,PAXGBTC,BTC,1,0.00001,0.0001,PAXGBTC
+binance,PAXGBUSD,crypto,PAXGBUSD,BUSD,1,0.01,0.000001,PAXGBUSD
+binance,PAXGUSDT,crypto,PAXGUSDT,USDT,1,0.01,0.000001,PAXGUSDT
+binance,PAXTUSD,crypto,PAXTUSD,TUSD,1,0.0001,0.01,PAXTUSD
+binance,PAXUSDT,crypto,PAXUSDT,USDT,1,0.0001,0.01,PAXUSDT
+binance,PERLBNB,crypto,PERLBNB,BNB,1,0.000001,1,PERLBNB
+binance,PERLBTC,crypto,PERLBTC,BTC,1,0.00000001,1,PERLBTC
+binance,PERLUSDC,crypto,PERLUSDC,USDC,1,0.00001,0.1,PERLUSDC
+binance,PERLUSDT,crypto,PERLUSDT,USDT,1,0.00001,0.1,PERLUSDT
+binance,PHBBNB,crypto,PHBBNB,BNB,1,0.0000001,1,PHBBNB
+binance,PHBBTC,crypto,PHBBTC,BTC,1,0.00000001,1,PHBBTC
+binance,PHBPAX,crypto,PHBPAX,PAX,1,0.00001,0.1,PHBPAX
+binance,PHBTUSD,crypto,PHBTUSD,TUSD,1,0.00001,0.1,PHBTUSD
+binance,PHBUSDC,crypto,PHBUSDC,USDC,1,0.00001,0.1,PHBUSDC
+binance,PHXBNB,crypto,PHXBNB,BNB,1,0.000001,1,PHXBNB
+binance,PHXBTC,crypto,PHXBTC,BTC,1,0.00000001,1,PHXBTC
+binance,PHXETH,crypto,PHXETH,ETH,1,0.00000001,1,PHXETH
+binance,PIVXBNB,crypto,PIVXBNB,BNB,1,0.00001,0.1,PIVXBNB
+binance,PIVXBTC,crypto,PIVXBTC,BTC,1,0.00000001,1,PIVXBTC
+binance,PIVXETH,crypto,PIVXETH,ETH,1,0.000001,0.01,PIVXETH
+binance,PNTBTC,crypto,PNTBTC,BTC,1,0.00000001,1,PNTBTC
+binance,PNTUSDT,crypto,PNTUSDT,USDT,1,0.0001,0.01,PNTUSDT
+binance,POABNB,crypto,POABNB,BNB,1,0.000001,1,POABNB
+binance,POABTC,crypto,POABTC,BTC,1,0.00000001,1,POABTC
+binance,POAETH,crypto,POAETH,ETH,1,0.00000001,1,POAETH
+binance,POEBTC,crypto,POEBTC,BTC,1,0.00000001,1,POEBTC
+binance,POEETH,crypto,POEETH,ETH,1,0.00000001,1,POEETH
+binance,POLYBNB,crypto,POLYBNB,BNB,1,0.000001,1,POLYBNB
+binance,POLYBTC,crypto,POLYBTC,BTC,1,0.00000001,1,POLYBTC
+binance,POWRBNB,crypto,POWRBNB,BNB,1,0.00001,0.1,POWRBNB
+binance,POWRBTC,crypto,POWRBTC,BTC,1,0.00000001,1,POWRBTC
+binance,POWRETH,crypto,POWRETH,ETH,1,0.00000001,1,POWRETH
+binance,PPTBTC,crypto,PPTBTC,BTC,1,0.00000001,1,PPTBTC
+binance,PPTETH,crypto,PPTETH,ETH,1,0.000001,0.01,PPTETH
+binance,QKCBTC,crypto,QKCBTC,BTC,1,0.00000001,1,QKCBTC
+binance,QKCETH,crypto,QKCETH,ETH,1,0.00000001,1,QKCETH
+binance,QLCBNB,crypto,QLCBNB,BNB,1,0.000001,1,QLCBNB
+binance,QLCBTC,crypto,QLCBTC,BTC,1,0.00000001,1,QLCBTC
+binance,QLCETH,crypto,QLCETH,ETH,1,0.00000001,1,QLCETH
+binance,QSPBNB,crypto,QSPBNB,BNB,1,0.0000001,1,QSPBNB
+binance,QSPBTC,crypto,QSPBTC,BTC,1,0.00000001,1,QSPBTC
+binance,QSPETH,crypto,QSPETH,ETH,1,0.00000001,1,QSPETH
+binance,QTUMBNB,crypto,QTUMBNB,BNB,1,0.00001,0.1,QTUMBNB
+binance,QTUMBTC,crypto,QTUMBTC,BTC,1,0.0000001,0.01,QTUMBTC
+binance,QTUMBUSD,crypto,QTUMBUSD,BUSD,1,0.001,0.001,QTUMBUSD
+binance,QTUMETH,crypto,QTUMETH,ETH,1,0.000001,0.01,QTUMETH
+binance,QTUMUSDT,crypto,QTUMUSDT,USDT,1,0.001,0.001,QTUMUSDT
+binance,RCNBNB,crypto,RCNBNB,BNB,1,0.000001,1,RCNBNB
+binance,RCNBTC,crypto,RCNBTC,BTC,1,0.00000001,1,RCNBTC
+binance,RCNETH,crypto,RCNETH,ETH,1,0.00000001,1,RCNETH
+binance,RDNBNB,crypto,RDNBNB,BNB,1,0.00001,0.1,RDNBNB
+binance,RDNBTC,crypto,RDNBTC,BTC,1,0.00000001,1,RDNBTC
+binance,RDNETH,crypto,RDNETH,ETH,1,0.0000001,1,RDNETH
+binance,RENBNB,crypto,RENBNB,BNB,1,0.000001,1,RENBNB
+binance,RENBTC,crypto,RENBTC,BTC,1,0.00000001,1,RENBTC
+binance,RENUSDT,crypto,RENUSDT,USDT,1,0.00001,0.1,RENUSDT
+binance,REPBNB,crypto,REPBNB,BNB,1,0.0001,0.01,REPBNB
+binance,REPBTC,crypto,REPBTC,BTC,1,0.000001,0.001,REPBTC
+binance,REPBUSD,crypto,REPBUSD,BUSD,1,0.001,0.001,REPBUSD
+binance,REPETH,crypto,REPETH,ETH,1,0.00001,0.001,REPETH
+binance,REPUSDT,crypto,REPUSDT,USDT,1,0.001,0.001,REPUSDT
+binance,REQBTC,crypto,REQBTC,BTC,1,0.00000001,1,REQBTC
+binance,REQETH,crypto,REQETH,ETH,1,0.00000001,1,REQETH
+binance,RLCBNB,crypto,RLCBNB,BNB,1,0.00001,0.1,RLCBNB
+binance,RLCBTC,crypto,RLCBTC,BTC,1,0.00000001,1,RLCBTC
+binance,RLCETH,crypto,RLCETH,ETH,1,0.000001,0.01,RLCETH
+binance,RLCUSDT,crypto,RLCUSDT,USDT,1,0.0001,0.01,RLCUSDT
+binance,RPXBNB,crypto,RPXBNB,BNB,1,0.000001,1,RPXBNB
+binance,RPXBTC,crypto,RPXBTC,BTC,1,0.00000001,1,RPXBTC
+binance,RPXETH,crypto,RPXETH,ETH,1,0.00000001,1,RPXETH
+binance,RSRBNB,crypto,RSRBNB,BNB,1,0.000001,1,RSRBNB
+binance,RSRBTC,crypto,RSRBTC,BTC,1,0.00000001,1,RSRBTC
+binance,RSRBUSD,crypto,RSRBUSD,BUSD,1,0.00001,0.1,RSRBUSD
+binance,RSRUSDT,crypto,RSRUSDT,USDT,1,0.00001,0.1,RSRUSDT
+binance,RUNEBNB,crypto,RUNEBNB,BNB,1,0.00001,0.1,RUNEBNB
+binance,RUNEBTC,crypto,RUNEBTC,BTC,1,0.00000001,1,RUNEBTC
+binance,RUNEBUSD,crypto,RUNEBUSD,BUSD,1,0.0001,0.01,RUNEBUSD
+binance,RUNEUSDT,crypto,RUNEUSDT,USDT,1,0.0001,0.01,RUNEUSDT
+binance,RVNBNB,crypto,RVNBNB,BNB,1,0.000001,1,RVNBNB
+binance,RVNBTC,crypto,RVNBTC,BTC,1,0.00000001,1,RVNBTC
+binance,RVNBUSD,crypto,RVNBUSD,BUSD,1,0.00001,0.1,RVNBUSD
+binance,RVNUSDT,crypto,RVNUSDT,USDT,1,0.00001,0.1,RVNUSDT
+binance,SALTBTC,crypto,SALTBTC,BTC,1,0.0000001,0.01,SALTBTC
+binance,SALTETH,crypto,SALTETH,ETH,1,0.000001,0.01,SALTETH
+binance,SANDBNB,crypto,SANDBNB,BNB,1,0.0000001,1,SANDBNB
+binance,SANDBTC,crypto,SANDBTC,BTC,1,0.00000001,1,SANDBTC
+binance,SANDBUSD,crypto,SANDBUSD,BUSD,1,0.000001,1,SANDBUSD
+binance,SANDUSDT,crypto,SANDUSDT,USDT,1,0.000001,1,SANDUSDT
+binance,SCBNB,crypto,SCBNB,BNB,1,0.0000001,1,SCBNB
+binance,SCBTC,crypto,SCBTC,BTC,1,0.00000001,1,SCBTC
+binance,SCETH,crypto,SCETH,ETH,1,0.00000001,1,SCETH
+binance,SCRTBTC,crypto,SCRTBTC,BTC,1,0.00000001,1,SCRTBTC
+binance,SCRTETH,crypto,SCRTETH,ETH,1,0.000001,0.01,SCRTETH
+binance,SCUSDT,crypto,SCUSDT,USDT,1,0.000001,1,SCUSDT
+binance,SKYBNB,crypto,SKYBNB,BNB,1,0.00001,0.1,SKYBNB
+binance,SKYBTC,crypto,SKYBTC,BTC,1,0.00000001,1,SKYBTC
+binance,SKYETH,crypto,SKYETH,ETH,1,0.00001,0.001,SKYETH
+binance,SNGLSBTC,crypto,SNGLSBTC,BTC,1,0.00000001,1,SNGLSBTC
+binance,SNGLSETH,crypto,SNGLSETH,ETH,1,0.00000001,1,SNGLSETH
+binance,SNMBTC,crypto,SNMBTC,BTC,1,0.00000001,1,SNMBTC
+binance,SNMETH,crypto,SNMETH,ETH,1,0.00000001,1,SNMETH
+binance,SNTBTC,crypto,SNTBTC,BTC,1,0.00000001,1,SNTBTC
+binance,SNTETH,crypto,SNTETH,ETH,1,0.00000001,1,SNTETH
+binance,SNXBNB,crypto,SNXBNB,BNB,1,0.0001,0.01,SNXBNB
+binance,SNXBTC,crypto,SNXBTC,BTC,1,0.0000001,0.01,SNXBTC
+binance,SNXBUSD,crypto,SNXBUSD,BUSD,1,0.001,0.001,SNXBUSD
+binance,SNXUSDT,crypto,SNXUSDT,USDT,1,0.001,0.001,SNXUSDT
+binance,SOLBNB,crypto,SOLBNB,BNB,1,0.00001,0.1,SOLBNB
+binance,SOLBTC,crypto,SOLBTC,BTC,1,0.00000001,1,SOLBTC
+binance,SOLBUSD,crypto,SOLBUSD,BUSD,1,0.0001,0.01,SOLBUSD
+binance,SOLUSDT,crypto,SOLUSDT,USDT,1,0.0001,0.01,SOLUSDT
+binance,SPARTABNB,crypto,SPARTABNB,BNB,1,0.000001,1,SPARTABNB
+binance,SRMBIDR,crypto,SRMBIDR,BIDR,1,1,0.001,SRMBIDR
+binance,SRMBNB,crypto,SRMBNB,BNB,1,0.000001,1,SRMBNB
+binance,SRMBTC,crypto,SRMBTC,BTC,1,0.00000001,1,SRMBTC
+binance,SRMBUSD,crypto,SRMBUSD,BUSD,1,0.0001,0.01,SRMBUSD
+binance,SRMUSDT,crypto,SRMUSDT,USDT,1,0.0001,0.01,SRMUSDT
+binance,STEEMBNB,crypto,STEEMBNB,BNB,1,0.00001,0.1,STEEMBNB
+binance,STEEMBTC,crypto,STEEMBTC,BTC,1,0.00000001,1,STEEMBTC
+binance,STEEMETH,crypto,STEEMETH,ETH,1,0.000001,0.01,STEEMETH
+binance,STMXBNB,crypto,STMXBNB,BNB,1,0.0000001,1,STMXBNB
+binance,STMXBTC,crypto,STMXBTC,BTC,1,0.00000001,1,STMXBTC
+binance,STMXETH,crypto,STMXETH,ETH,1,0.00000001,1,STMXETH
+binance,STMXUSDT,crypto,STMXUSDT,USDT,1,0.000001,1,STMXUSDT
+binance,STORJBTC,crypto,STORJBTC,BTC,1,0.00000001,1,STORJBTC
+binance,STORJBUSD,crypto,STORJBUSD,BUSD,1,0.0001,0.01,STORJBUSD
+binance,STORJETH,crypto,STORJETH,ETH,1,0.0000001,1,STORJETH
+binance,STORJUSDT,crypto,STORJUSDT,USDT,1,0.0001,0.01,STORJUSDT
+binance,STORMBNB,crypto,STORMBNB,BNB,1,0.0000001,1,STORMBNB
+binance,STORMBTC,crypto,STORMBTC,BTC,1,0.00000001,1,STORMBTC
+binance,STORMETH,crypto,STORMETH,ETH,1,0.00000001,1,STORMETH
+binance,STORMUSDT,crypto,STORMUSDT,USDT,1,0.000001,1,STORMUSDT
+binance,STPTBNB,crypto,STPTBNB,BNB,1,0.000001,1,STPTBNB
+binance,STPTBTC,crypto,STPTBTC,BTC,1,0.00000001,1,STPTBTC
+binance,STPTUSDT,crypto,STPTUSDT,USDT,1,0.00001,0.1,STPTUSDT
+binance,STRATBNB,crypto,STRATBNB,BNB,1,0.00001,0.1,STRATBNB
+binance,STRATBTC,crypto,STRATBTC,BTC,1,0.00000001,1,STRATBTC
+binance,STRATBUSD,crypto,STRATBUSD,BUSD,1,0.0001,0.01,STRATBUSD
+binance,STRATETH,crypto,STRATETH,ETH,1,0.000001,0.01,STRATETH
+binance,STRATUSDT,crypto,STRATUSDT,USDT,1,0.0001,0.01,STRATUSDT
+binance,STXBNB,crypto,STXBNB,BNB,1,0.00001,0.1,STXBNB
+binance,STXBTC,crypto,STXBTC,BTC,1,0.00000001,1,STXBTC
+binance,STXUSDT,crypto,STXUSDT,USDT,1,0.0001,0.01,STXUSDT
+binance,SUBBTC,crypto,SUBBTC,BTC,1,0.00000001,1,SUBBTC
+binance,SUBETH,crypto,SUBETH,ETH,1,0.00000001,1,SUBETH
+binance,SUNBTC,crypto,SUNBTC,BTC,1,0.000001,0.001,SUNBTC
+binance,SUNUSDT,crypto,SUNUSDT,USDT,1,0.001,0.001,SUNUSDT
+binance,SUSHIBNB,crypto,SUSHIBNB,BNB,1,0.0001,0.01,SUSHIBNB
+binance,SUSHIBTC,crypto,SUSHIBTC,BTC,1,0.0000001,0.01,SUSHIBTC
+binance,SUSHIBUSD,crypto,SUSHIBUSD,BUSD,1,0.001,0.001,SUSHIBUSD
+binance,SUSHIUSDT,crypto,SUSHIUSDT,USDT,1,0.001,0.001,SUSHIUSDT
+binance,SWRVBNB,crypto,SWRVBNB,BNB,1,0.0001,0.01,SWRVBNB
+binance,SWRVBUSD,crypto,SWRVBUSD,BUSD,1,0.001,0.001,SWRVBUSD
+binance,SXPAUD,crypto,SXPAUD,AUD,1,0.001,0.001,SXPAUD
+binance,SXPBIDR,crypto,SXPBIDR,BIDR,1,1,0.01,SXPBIDR
+binance,SXPBNB,crypto,SXPBNB,BNB,1,0.00001,0.1,SXPBNB
+binance,SXPBTC,crypto,SXPBTC,BTC,1,0.00000001,1,SXPBTC
+binance,SXPBUSD,crypto,SXPBUSD,BUSD,1,0.0001,0.01,SXPBUSD
+binance,SXPEUR,crypto,SXPEUR,EUR,1,0.001,0.001,SXPEUR
+binance,SXPGBP,crypto,SXPGBP,GBP,1,0.0001,0.01,SXPGBP
+binance,SXPTRY,crypto,SXPTRY,TRY,1,0.001,0.01,SXPTRY
+binance,SXPUSDT,crypto,SXPUSDT,USDT,1,0.001,0.001,SXPUSDT
+binance,SYSBNB,crypto,SYSBNB,BNB,1,0.000001,1,SYSBNB
+binance,SYSBTC,crypto,SYSBTC,BTC,1,0.00000001,1,SYSBTC
+binance,SYSETH,crypto,SYSETH,ETH,1,0.00000001,1,SYSETH
+binance,TCTBNB,crypto,TCTBNB,BNB,1,0.0000001,1,TCTBNB
+binance,TCTBTC,crypto,TCTBTC,BTC,1,0.00000001,1,TCTBTC
+binance,TCTUSDT,crypto,TCTUSDT,USDT,1,0.000001,1,TCTUSDT
+binance,TFUELBNB,crypto,TFUELBNB,BNB,1,0.0000001,1,TFUELBNB
+binance,TFUELBTC,crypto,TFUELBTC,BTC,1,0.00000001,1,TFUELBTC
+binance,TFUELPAX,crypto,TFUELPAX,PAX,1,0.000001,1,TFUELPAX
+binance,TFUELTUSD,crypto,TFUELTUSD,TUSD,1,0.000001,1,TFUELTUSD
+binance,TFUELUSDC,crypto,TFUELUSDC,USDC,1,0.000001,1,TFUELUSDC
+binance,TFUELUSDT,crypto,TFUELUSDT,USDT,1,0.000001,1,TFUELUSDT
+binance,THETABNB,crypto,THETABNB,BNB,1,0.000001,1,THETABNB
+binance,THETABTC,crypto,THETABTC,BTC,1,0.00000001,1,THETABTC
+binance,THETAETH,crypto,THETAETH,ETH,1,0.00000001,1,THETAETH
+binance,THETAUSDT,crypto,THETAUSDT,USDT,1,0.00001,0.1,THETAUSDT
+binance,TNBBTC,crypto,TNBBTC,BTC,1,0.00000001,1,TNBBTC
+binance,TNBETH,crypto,TNBETH,ETH,1,0.00000001,1,TNBETH
+binance,TNTBTC,crypto,TNTBTC,BTC,1,0.00000001,1,TNTBTC
+binance,TNTETH,crypto,TNTETH,ETH,1,0.00000001,1,TNTETH
+binance,TOMOBNB,crypto,TOMOBNB,BNB,1,0.00001,0.1,TOMOBNB
+binance,TOMOBTC,crypto,TOMOBTC,BTC,1,0.00000001,1,TOMOBTC
+binance,TOMOBUSD,crypto,TOMOBUSD,BUSD,1,0.0001,0.01,TOMOBUSD
+binance,TOMOUSDC,crypto,TOMOUSDC,USDC,1,0.0001,0.01,TOMOUSDC
+binance,TOMOUSDT,crypto,TOMOUSDT,USDT,1,0.0001,0.01,TOMOUSDT
+binance,TRBBNB,crypto,TRBBNB,BNB,1,0.001,0.001,TRBBNB
+binance,TRBBTC,crypto,TRBBTC,BTC,1,0.000001,0.001,TRBBTC
+binance,TRBBUSD,crypto,TRBBUSD,BUSD,1,0.001,0.001,TRBBUSD
+binance,TRBUSDT,crypto,TRBUSDT,USDT,1,0.001,0.001,TRBUSDT
+binance,TRIGBNB,crypto,TRIGBNB,BNB,1,0.00001,0.1,TRIGBNB
+binance,TRIGBTC,crypto,TRIGBTC,BTC,1,0.0000001,0.01,TRIGBTC
+binance,TRIGETH,crypto,TRIGETH,ETH,1,0.000001,0.01,TRIGETH
+binance,TROYBNB,crypto,TROYBNB,BNB,1,0.0000001,1,TROYBNB
+binance,TROYBTC,crypto,TROYBTC,BTC,1,0.00000001,1,TROYBTC
+binance,TROYUSDT,crypto,TROYUSDT,USDT,1,0.0000001,1,TROYUSDT
+binance,TRXBNB,crypto,TRXBNB,BNB,1,0.000001,1,TRXBNB
+binance,TRXBTC,crypto,TRXBTC,BTC,1,0.00000001,1,TRXBTC
+binance,TRXBUSD,crypto,TRXBUSD,BUSD,1,0.00001,0.1,TRXBUSD
+binance,TRXETH,crypto,TRXETH,ETH,1,0.00000001,1,TRXETH
+binance,TRXNGN,crypto,TRXNGN,NGN,1,0.01,0.01,TRXNGN
+binance,TRXPAX,crypto,TRXPAX,PAX,1,0.00001,0.1,TRXPAX
+binance,TRXTUSD,crypto,TRXTUSD,TUSD,1,0.00001,0.1,TRXTUSD
+binance,TRXUSDC,crypto,TRXUSDC,USDC,1,0.00001,0.1,TRXUSDC
+binance,TRXUSDT,crypto,TRXUSDT,USDT,1,0.00001,0.1,TRXUSDT
+binance,TRXXRP,crypto,TRXXRP,XRP,1,0.00001,0.1,TRXXRP
+binance,TUSDBNB,crypto,TUSDBNB,BNB,1,0.00001,0.1,TUSDBNB
+binance,TUSDBTC,crypto,TUSDBTC,BTC,1,0.00000001,1,TUSDBTC
+binance,TUSDBTUSD,crypto,TUSDBTUSD,TUSD,1,0.0001,0.01,TUSDBTUSD
+binance,TUSDETH,crypto,TUSDETH,ETH,1,0.00000001,1,TUSDETH
+binance,TUSDUSDT,crypto,TUSDUSDT,USDT,1,0.0001,0.01,TUSDUSDT
+binance,UMABTC,crypto,UMABTC,BTC,1,0.000001,0.001,UMABTC
+binance,UMAUSDT,crypto,UMAUSDT,USDT,1,0.001,0.001,UMAUSDT
+binance,UNIBNB,crypto,UNIBNB,BNB,1,0.00001,0.1,UNIBNB
+binance,UNIBTC,crypto,UNIBTC,BTC,1,0.00000001,1,UNIBTC
+binance,UNIBUSD,crypto,UNIBUSD,BUSD,1,0.0001,0.01,UNIBUSD
+binance,UNIUSDT,crypto,UNIUSDT,USDT,1,0.0001,0.01,UNIUSDT
+binance,USDCBNB,crypto,USDCBNB,BNB,1,0.00001,0.1,USDCBNB
+binance,USDCPAX,crypto,USDCPAX,PAX,1,0.0001,0.01,USDCPAX
+binance,USDCTUSD,crypto,USDCTUSD,TUSD,1,0.0001,0.01,USDCTUSD
+binance,USDCUSDT,crypto,USDCUSDT,USDT,1,0.0001,0.01,USDCUSDT
+binance,USDSBUSDS,crypto,USDSBUSDS,USDS,1,0.0001,0.01,USDSBUSDS
+binance,USDSBUSDT,crypto,USDSBUSDT,USDT,1,0.0001,0.01,USDSBUSDT
+binance,USDSPAX,crypto,USDSPAX,PAX,1,0.0001,0.01,USDSPAX
+binance,USDSTUSD,crypto,USDSTUSD,TUSD,1,0.0001,0.01,USDSTUSD
+binance,USDSUSDC,crypto,USDSUSDC,USDC,1,0.0001,0.01,USDSUSDC
+binance,USDSUSDT,crypto,USDSUSDT,USDT,1,0.0001,0.01,USDSUSDT
+binance,USDTBIDR,crypto,USDTBIDR,BIDR,1,1,0.01,USDTBIDR
+binance,USDTBKRW,crypto,USDTBKRW,BKRW,1,0.01,0.1,USDTBKRW
+binance,USDTBRL,crypto,USDTBRL,BRL,1,0.001,0.01,USDTBRL
+binance,USDTDAI,crypto,USDTDAI,DAI,1,0.0001,0.01,USDTDAI
+binance,USDTIDRT,crypto,USDTIDRT,IDRT,1,1,0.01,USDTIDRT
+binance,USDTNGN,crypto,USDTNGN,NGN,1,0.01,0.01,USDTNGN
+binance,USDTRUB,crypto,USDTRUB,RUB,1,0.001,0.1,USDTRUB
+binance,USDTTRY,crypto,USDTTRY,TRY,1,0.001,0.01,USDTTRY
+binance,USDTUAH,crypto,USDTUAH,UAH,1,0.001,0.1,USDTUAH
+binance,USDTZAR,crypto,USDTZAR,ZAR,1,0.001,0.1,USDTZAR
+binance,UTKBTC,crypto,UTKBTC,BTC,1,0.00000001,1,UTKBTC
+binance,UTKUSDT,crypto,UTKUSDT,USDT,1,0.0001,0.01,UTKUSDT
+binance,VENBNB,crypto,VENBNB,BNB,1,0.0001,0.01,VENBNB
+binance,VENBTC,crypto,VENBTC,BTC,1,0.00000001,1,VENBTC
+binance,VENETH,crypto,VENETH,ETH,1,0.00000001,1,VENETH
+binance,VENUSDT,crypto,VENUSDT,USDT,1,0.0001,0.01,VENUSDT
+binance,VETBNB,crypto,VETBNB,BNB,1,0.0000001,1,VETBNB
+binance,VETBTC,crypto,VETBTC,BTC,1,0.00000001,1,VETBTC
+binance,VETBUSD,crypto,VETBUSD,BUSD,1,0.000001,1,VETBUSD
+binance,VETETH,crypto,VETETH,ETH,1,0.00000001,1,VETETH
+binance,VETUSDT,crypto,VETUSDT,USDT,1,0.000001,1,VETUSDT
+binance,VIABNB,crypto,VIABNB,BNB,1,0.00001,0.1,VIABNB
+binance,VIABTC,crypto,VIABTC,BTC,1,0.00000001,1,VIABTC
+binance,VIAETH,crypto,VIAETH,ETH,1,0.000001,0.01,VIAETH
+binance,VIBBTC,crypto,VIBBTC,BTC,1,0.00000001,1,VIBBTC
+binance,VIBEBTC,crypto,VIBEBTC,BTC,1,0.00000001,1,VIBEBTC
+binance,VIBEETH,crypto,VIBEETH,ETH,1,0.0000001,1,VIBEETH
+binance,VIBETH,crypto,VIBETH,ETH,1,0.00000001,1,VIBETH
+binance,VIDTBTC,crypto,VIDTBTC,BTC,1,0.00000001,1,VIDTBTC
+binance,VIDTBUSD,crypto,VIDTBUSD,BUSD,1,0.0001,0.01,VIDTBUSD
+binance,VITEBNB,crypto,VITEBNB,BNB,1,0.000001,1,VITEBNB
+binance,VITEBTC,crypto,VITEBTC,BTC,1,0.00000001,1,VITEBTC
+binance,VITEUSDT,crypto,VITEUSDT,USDT,1,0.00001,0.1,VITEUSDT
+binance,VTHOBNB,crypto,VTHOBNB,BNB,1,0.00000001,1,VTHOBNB
+binance,VTHOBUSD,crypto,VTHOBUSD,BUSD,1,0.000001,1,VTHOBUSD
+binance,VTHOUSDT,crypto,VTHOUSDT,USDT,1,0.000001,1,VTHOUSDT
+binance,WABIBNB,crypto,WABIBNB,BNB,1,0.000001,1,WABIBNB
+binance,WABIBTC,crypto,WABIBTC,BTC,1,0.00000001,1,WABIBTC
+binance,WABIETH,crypto,WABIETH,ETH,1,0.00000001,1,WABIETH
+binance,WANBNB,crypto,WANBNB,BNB,1,0.00001,0.1,WANBNB
+binance,WANBTC,crypto,WANBTC,BTC,1,0.00000001,1,WANBTC
+binance,WANETH,crypto,WANETH,ETH,1,0.000001,0.01,WANETH
+binance,WANUSDT,crypto,WANUSDT,USDT,1,0.0001,0.01,WANUSDT
+binance,WAVESBNB,crypto,WAVESBNB,BNB,1,0.00001,0.1,WAVESBNB
+binance,WAVESBTC,crypto,WAVESBTC,BTC,1,0.0000001,0.01,WAVESBTC
+binance,WAVESBUSD,crypto,WAVESBUSD,BUSD,1,0.0001,0.01,WAVESBUSD
+binance,WAVESETH,crypto,WAVESETH,ETH,1,0.000001,0.01,WAVESETH
+binance,WAVESPAX,crypto,WAVESPAX,PAX,1,0.0001,0.01,WAVESPAX
+binance,WAVESTUSD,crypto,WAVESTUSD,TUSD,1,0.0001,0.01,WAVESTUSD
+binance,WAVESUSDC,crypto,WAVESUSDC,USDC,1,0.0001,0.01,WAVESUSDC
+binance,WAVESUSDT,crypto,WAVESUSDT,USDT,1,0.0001,0.01,WAVESUSDT
+binance,WBTCBTC,crypto,WBTCBTC,BTC,1,0.00001,0.0001,WBTCBTC
+binance,WBTCETH,crypto,WBTCETH,ETH,1,0.0001,0.0001,WBTCETH
+binance,WINBNB,crypto,WINBNB,BNB,1,0.00000001,1,WINBNB
+binance,WINBTC,crypto,WINBTC,BTC,1,0.00000001,1,WINBTC
+binance,WINGBNB,crypto,WINGBNB,BNB,1,0.0001,0.01,WINGBNB
+binance,WINGBTC,crypto,WINGBTC,BTC,1,0.000001,0.001,WINGBTC
+binance,WINGBUSD,crypto,WINGBUSD,BUSD,1,0.001,0.001,WINGBUSD
+binance,WINGSBTC,crypto,WINGSBTC,BTC,1,0.00000001,1,WINGSBTC
+binance,WINGSETH,crypto,WINGSETH,ETH,1,0.0000001,1,WINGSETH
+binance,WINGUSDT,crypto,WINGUSDT,USDT,1,0.001,0.001,WINGUSDT
+binance,WINTRX,crypto,WINTRX,TRX,1,0.00001,0.1,WINTRX
+binance,WINUSDC,crypto,WINUSDC,USDC,1,0.0000001,1,WINUSDC
+binance,WINUSDT,crypto,WINUSDT,USDT,1,0.0000001,1,WINUSDT
+binance,WNXMBNB,crypto,WNXMBNB,BNB,1,0.001,0.001,WNXMBNB
+binance,WNXMBTC,crypto,WNXMBTC,BTC,1,0.000001,0.001,WNXMBTC
+binance,WNXMBUSD,crypto,WNXMBUSD,BUSD,1,0.001,0.001,WNXMBUSD
+binance,WNXMUSDT,crypto,WNXMUSDT,USDT,1,0.001,0.001,WNXMUSDT
+binance,WPRBTC,crypto,WPRBTC,BTC,1,0.00000001,1,WPRBTC
+binance,WPRETH,crypto,WPRETH,ETH,1,0.00000001,1,WPRETH
+binance,WRXBNB,crypto,WRXBNB,BNB,1,0.000001,1,WRXBNB
+binance,WRXBTC,crypto,WRXBTC,BTC,1,0.00000001,1,WRXBTC
+binance,WRXBUSD,crypto,WRXBUSD,BUSD,1,0.00001,0.1,WRXBUSD
+binance,WRXUSDT,crypto,WRXUSDT,USDT,1,0.00001,0.1,WRXUSDT
+binance,WTCBNB,crypto,WTCBNB,BNB,1,0.00001,0.1,WTCBNB
+binance,WTCBTC,crypto,WTCBTC,BTC,1,0.0000001,0.01,WTCBTC
+binance,WTCETH,crypto,WTCETH,ETH,1,0.000001,0.01,WTCETH
+binance,WTCUSDT,crypto,WTCUSDT,USDT,1,0.0001,0.01,WTCUSDT
+binance,XEMBNB,crypto,XEMBNB,BNB,1,0.000001,1,XEMBNB
+binance,XEMBTC,crypto,XEMBTC,BTC,1,0.00000001,1,XEMBTC
+binance,XEMETH,crypto,XEMETH,ETH,1,0.00000001,1,XEMETH
+binance,XLMBNB,crypto,XLMBNB,BNB,1,0.000001,1,XLMBNB
+binance,XLMBTC,crypto,XLMBTC,BTC,1,0.00000001,1,XLMBTC
+binance,XLMBUSD,crypto,XLMBUSD,BUSD,1,0.00001,0.1,XLMBUSD
+binance,XLMETH,crypto,XLMETH,ETH,1,0.00000001,1,XLMETH
+binance,XLMPAX,crypto,XLMPAX,PAX,1,0.00001,0.1,XLMPAX
+binance,XLMTUSD,crypto,XLMTUSD,TUSD,1,0.00001,0.1,XLMTUSD
+binance,XLMUSDC,crypto,XLMUSDC,USDC,1,0.00001,0.1,XLMUSDC
+binance,XLMUSDT,crypto,XLMUSDT,USDT,1,0.00001,0.1,XLMUSDT
+binance,XMRBNB,crypto,XMRBNB,BNB,1,0.001,0.001,XMRBNB
+binance,XMRBTC,crypto,XMRBTC,BTC,1,0.000001,0.001,XMRBTC
+binance,XMRBUSD,crypto,XMRBUSD,BUSD,1,0.01,0.00001,XMRBUSD
+binance,XMRETH,crypto,XMRETH,ETH,1,0.00001,0.001,XMRETH
+binance,XMRUSDT,crypto,XMRUSDT,USDT,1,0.01,0.00001,XMRUSDT
+binance,XRPAUD,crypto,XRPAUD,AUD,1,0.00001,0.1,XRPAUD
+binance,XRPBEARBUSD,crypto,XRPBEARBUSD,BUSD,1,0.01,0.00001,XRPBEARBUSD
+binance,XRPBEARUSDT,crypto,XRPBEARUSDT,USDT,1,0.01,0.00001,XRPBEARUSDT
+binance,XRPBKRW,crypto,XRPBKRW,BKRW,1,0.01,0.1,XRPBKRW
+binance,XRPBNB,crypto,XRPBNB,BNB,1,0.00001,0.1,XRPBNB
+binance,XRPBTC,crypto,XRPBTC,BTC,1,0.00000001,1,XRPBTC
+binance,XRPBULLBUSD,crypto,XRPBULLBUSD,BUSD,1,0.01,0.00001,XRPBULLBUSD
+binance,XRPBULLUSDT,crypto,XRPBULLUSDT,USDT,1,0.01,0.00001,XRPBULLUSDT
+binance,XRPBUSD,crypto,XRPBUSD,BUSD,1,0.00001,0.1,XRPBUSD
+binance,XRPETH,crypto,XRPETH,ETH,1,0.00000001,1,XRPETH
+binance,XRPEUR,crypto,XRPEUR,EUR,1,0.00001,0.1,XRPEUR
+binance,XRPGBP,crypto,XRPGBP,GBP,1,0.00001,0.1,XRPGBP
+binance,XRPPAX,crypto,XRPPAX,PAX,1,0.00001,0.1,XRPPAX
+binance,XRPRUB,crypto,XRPRUB,RUB,1,0.001,0.1,XRPRUB
+binance,XRPTRY,crypto,XRPTRY,TRY,1,0.001,0.01,XRPTRY
+binance,XRPTUSD,crypto,XRPTUSD,TUSD,1,0.00001,0.1,XRPTUSD
+binance,XRPUSDC,crypto,XRPUSDC,USDC,1,0.00001,0.1,XRPUSDC
+binance,XRPUSDT,crypto,XRPUSDT,USDT,1,0.00001,0.1,XRPUSDT
+binance,XTZBNB,crypto,XTZBNB,BNB,1,0.00001,0.1,XTZBNB
+binance,XTZBTC,crypto,XTZBTC,BTC,1,0.0000001,0.01,XTZBTC
+binance,XTZBUSD,crypto,XTZBUSD,BUSD,1,0.0001,0.01,XTZBUSD
+binance,XTZUSDT,crypto,XTZUSDT,USDT,1,0.0001,0.01,XTZUSDT
+binance,XVGBTC,crypto,XVGBTC,BTC,1,0.00000001,1,XVGBTC
+binance,XVGETH,crypto,XVGETH,ETH,1,0.00000001,1,XVGETH
+binance,XVSBNB,crypto,XVSBNB,BNB,1,0.0001,0.01,XVSBNB
+binance,XVSBTC,crypto,XVSBTC,BTC,1,0.0000001,0.01,XVSBTC
+binance,XVSBUSD,crypto,XVSBUSD,BUSD,1,0.001,0.001,XVSBUSD
+binance,XVSUSDT,crypto,XVSUSDT,USDT,1,0.001,0.001,XVSUSDT
+binance,XZCBNB,crypto,XZCBNB,BNB,1,0.0001,0.01,XZCBNB
+binance,XZCBTC,crypto,XZCBTC,BTC,1,0.0000001,0.01,XZCBTC
+binance,XZCETH,crypto,XZCETH,ETH,1,0.000001,0.01,XZCETH
+binance,XZCUSDT,crypto,XZCUSDT,USDT,1,0.001,0.001,XZCUSDT
+binance,XZCXRP,crypto,XZCXRP,XRP,1,0.001,0.001,XZCXRP
+binance,YFIBNB,crypto,YFIBNB,BNB,1,0.01,0.0001,YFIBNB
+binance,YFIBTC,crypto,YFIBTC,BTC,1,0.00001,0.0001,YFIBTC
+binance,YFIBUSD,crypto,YFIBUSD,BUSD,1,0.01,0.000001,YFIBUSD
+binance,YFIIBNB,crypto,YFIIBNB,BNB,1,0.01,0.0001,YFIIBNB
+binance,YFIIBTC,crypto,YFIIBTC,BTC,1,0.00001,0.0001,YFIIBTC
+binance,YFIIBUSD,crypto,YFIIBUSD,BUSD,1,0.01,0.000001,YFIIBUSD
+binance,YFIIUSDT,crypto,YFIIUSDT,USDT,1,0.01,0.000001,YFIIUSDT
+binance,YFIUSDT,crypto,YFIUSDT,USDT,1,0.01,0.000001,YFIUSDT
+binance,YOYOBNB,crypto,YOYOBNB,BNB,1,0.000001,1,YOYOBNB
+binance,YOYOBTC,crypto,YOYOBTC,BTC,1,0.00000001,1,YOYOBTC
+binance,YOYOETH,crypto,YOYOETH,ETH,1,0.00000001,1,YOYOETH
+binance,ZECBNB,crypto,ZECBNB,BNB,1,0.001,0.001,ZECBNB
+binance,ZECBTC,crypto,ZECBTC,BTC,1,0.000001,0.001,ZECBTC
+binance,ZECBUSD,crypto,ZECBUSD,BUSD,1,0.01,0.00001,ZECBUSD
+binance,ZECETH,crypto,ZECETH,ETH,1,0.00001,0.001,ZECETH
+binance,ZECPAX,crypto,ZECPAX,PAX,1,0.01,0.00001,ZECPAX
+binance,ZECTUSD,crypto,ZECTUSD,TUSD,1,0.01,0.00001,ZECTUSD
+binance,ZECUSDC,crypto,ZECUSDC,USDC,1,0.01,0.00001,ZECUSDC
+binance,ZECUSDT,crypto,ZECUSDT,USDT,1,0.01,0.00001,ZECUSDT
+binance,ZENBNB,crypto,ZENBNB,BNB,1,0.0001,0.01,ZENBNB
+binance,ZENBTC,crypto,ZENBTC,BTC,1,0.0000001,0.01,ZENBTC
+binance,ZENETH,crypto,ZENETH,ETH,1,0.00001,0.001,ZENETH
+binance,ZENUSDT,crypto,ZENUSDT,USDT,1,0.001,0.001,ZENUSDT
+binance,ZILBNB,crypto,ZILBNB,BNB,1,0.0000001,1,ZILBNB
+binance,ZILBTC,crypto,ZILBTC,BTC,1,0.00000001,1,ZILBTC
+binance,ZILBUSD,crypto,ZILBUSD,BUSD,1,0.00001,0.1,ZILBUSD
+binance,ZILETH,crypto,ZILETH,ETH,1,0.00000001,1,ZILETH
+binance,ZILUSDT,crypto,ZILUSDT,USDT,1,0.00001,0.1,ZILUSDT
+binance,ZRXBNB,crypto,ZRXBNB,BNB,1,0.00001,0.1,ZRXBNB
+binance,ZRXBTC,crypto,ZRXBTC,BTC,1,0.00000001,1,ZRXBTC
+binance,ZRXBUSD,crypto,ZRXBUSD,BUSD,1,0.0001,0.01,ZRXBUSD
+binance,ZRXETH,crypto,ZRXETH,ETH,1,0.00000001,1,ZRXETH
+binance,ZRXUSDT,crypto,ZRXUSDT,USDT,1,0.0001,0.01,ZRXUSDT
