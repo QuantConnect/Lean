@@ -348,7 +348,9 @@ namespace QuantConnect.Lean.Engine.Results
                 if (Algorithm != null)
                 {
                     //Convert local dictionary:
-                    var charts = new Dictionary<string, Chart>(Charts);
+                    var charts = new Dictionary<string, Chart>(Charts.Where(x =>
+                        x.Value.Series.Any(series =>
+                            !series.Value.IsEmpty() && series.Value.Values.Any(point => point.y != 0))));
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
                     var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate);
