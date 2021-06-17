@@ -68,8 +68,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             _statisticsManager = statisticsManager;
             _liveMode = algorithm.LiveMode;
 
-            // Add our series for 
-            // Chart for average scores over sample period
+            // Add our series for average scores over sample period to our "Alpha" chart
             foreach (var scoreType in InsightManager.ScoreTypes)
             {
                 var series = new Series($"{scoreType} Score", SeriesType.Line, "%");
@@ -88,6 +87,8 @@ namespace QuantConnect.Lean.Engine.Alphas
         public void Step(DateTime frontierTimeUtc)
         {
             // Only add our charts to the algorithm when we actually have an insight 
+            // We will still update our internal charts anyways, but this keeps Alpha charts out of
+            // algorithms that don't use the framework.
             if (!_chartsAdded && _dailyInsightCount > 0)
             {
                 _algorithm.AddChart(_insightScoreChart);
