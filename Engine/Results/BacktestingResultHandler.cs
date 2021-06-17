@@ -175,7 +175,8 @@ namespace QuantConnect.Lean.Engine.Results
                 lock (ChartLock)
                 {
                     //Get the updates since the last chart
-                    foreach (var kvp in Charts)
+                    foreach (var kvp in Charts.Where(x => 
+                        x.Value.Series.Any(series => !series.Value.IsEmpty() && series.Value.Values.Any(point => point.y != 0))))
                     {
                         var chart = kvp.Value;
 
