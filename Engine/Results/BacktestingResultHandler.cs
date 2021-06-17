@@ -514,6 +514,23 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Samples portfolio equity, benchmark, and daily performance
+        /// </summary>
+        /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
+        /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
+        public override void Sample(DateTime time, bool force = false)
+        {
+            // Use previous time for sample unless forced
+            var sampleTime = force ? time : PreviousUtcSampleTime;
+
+            // Sample strategy capacity
+            Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, sampleTime, _capacityEstimate.Capacity.Value);
+            
+            // Call base to sample the rest of our default charts, also updates PreviousUtcSampleTime
+            base.Sample(time, force);
+        }
+
+        /// <summary>
         /// Process brokerage message events
         /// </summary>
         /// <param name="brokerageMessageEvent">The brokerage message event</param>
