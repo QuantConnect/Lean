@@ -1102,14 +1102,15 @@ namespace QuantConnect.Brokerages.Zerodha
 
                                 var bestBidQuote = tick.Bids[0];
                                 var bestAskQuote = tick.Offers[0];
+                                var instrumentTokenvalue =  tick.InstrumentToken;
 
                                 var time = tick.Timestamp ?? DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata);
 
-                                EmitQuoteTick(symbol, time, bestBidQuote.Price, bestBidQuote.Quantity, bestAskQuote.Price, bestAskQuote.Quantity);
+                                EmitQuoteTick(symbol, instrumentTokenvalue, time, bestBidQuote.Price, bestBidQuote.Quantity, bestAskQuote.Price, bestAskQuote.Quantity);
 
                                 if (_lastTradeTickTime != time)
                                 {
-                                    EmitTradeTick(symbol, tick.InstrumentToken, time, tick.LastPrice, tick.LastQuantity);
+                                    EmitTradeTick(symbol, instrumentTokenvalue, time, tick.LastPrice, tick.LastQuantity);
                                     _lastTradeTickTime = time;
                                 }
                             }
@@ -1154,11 +1155,16 @@ namespace QuantConnect.Brokerages.Zerodha
             _aggregator.Update(tick);
         }
 
-        private void EmitQuoteTick(Symbol symbol, DateTime time, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        private void EmitQuoteTick(Symbol symbol, uint instrumentToken, DateTime time, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
             if (bidPrice > 0 && askPrice > 0)
             {
-                var tick = new Tick(time, symbol, string.Empty, string.Empty, bidSize, bidPrice, askSize, askPrice);
+                var exchange = _symbolMapper.GetZerodhaExchangeFromToken(instrumentToken);
+                if (string.IsNullOrEmpty(exchange))
+                {
+                    Log.Error($"ZerodhaBrokerage.EmitQuoteTick(): market info is NUll/Empty for: {symbol.ID.Symbol}");
+                }
+                var tick = new Tick(time, symbol, string.Empty, exchange, bidSize, bidPrice, askSize, askPrice);
                 _aggregator.Update(tick);
             }
         }

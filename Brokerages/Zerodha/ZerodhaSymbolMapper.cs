@@ -104,7 +104,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 var securityType = SecurityType.Equity;
                 var market = Market.India;
-                ZerodhaTokenExchangeDict[tp.InstrumentToken] = tp.Exchange;
+                ZerodhaTokenExchangeDict[tp.InstrumentToken] = tp.Exchange.ToLowerInvariant();
                 OptionRight optionRight = 0;
 
                 switch (tp.InstrumentType)
