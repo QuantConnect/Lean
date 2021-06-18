@@ -12,12 +12,14 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class ExanteBrokerageModel : DefaultBrokerageModel
     {
+        /// <inheritdoc />
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.Bitfinex);
             return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
+        /// <inheritdoc />
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
@@ -41,6 +43,7 @@ namespace QuantConnect.Brokerages
             return true;
         }
 
+        /// <inheritdoc />
         public override IFeeModel GetFeeModel(Security security)
         {
             return new ExanteFeeModel(
