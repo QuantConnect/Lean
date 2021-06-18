@@ -59,6 +59,21 @@ namespace QuantConnect.Data.Custom.Quiver
         [ProtoMember(13)]
         [JsonProperty(PropertyName = "pct_change_month")]
         public decimal? MonthPercentChange { get; set; }
+        
+        /// <summary>
+        /// The period of time that occurs between the starting time and ending time of the data point
+        /// </summary>
+        [ProtoMember(14)]
+        public TimeSpan Period { get; set; }
+
+        /// <summary>
+        /// The time the data point ends at and becomes available to the algorithm
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Time = value - Period; }
+        }
 
         /// <summary>
         /// Required for successful Json.NET deserialization
@@ -79,7 +94,9 @@ namespace QuantConnect.Data.Custom.Quiver
             PageViews = csv[1].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             WeekPercentChange = csv[2].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             MonthPercentChange = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            
             Time = Date;
+            Period = TimeSpan.FromDays(1);
         }
 
         /// <summary>
@@ -130,9 +147,9 @@ namespace QuantConnect.Data.Custom.Quiver
         public override string ToString()
         {
             return Invariant($"{Symbol}({Date}) :: ") +
-                   Invariant($"Followers: {PageViews} ") +
-                   Invariant($"% Change Week: {WeekPercentChange}") +
-                   Invariant($"% Change Month: {MonthPercentChange}");
+                   Invariant($"Page Views: {PageViews} ") +
+                   Invariant($"Percentage Change Week: {WeekPercentChange} ") +
+                   Invariant($"Percentage Change Month: {MonthPercentChange}");
         }
 
         /// <summary>

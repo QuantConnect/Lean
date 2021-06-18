@@ -38,7 +38,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         /// Creates a new instance of <see cref="QuiverWikipediaDataDownloader"/>
         /// </summary>
         /// <param name="destinationFolder">The folder where the data will be saved</param>
-        public QuiverWikipediaDataDownloader(string destinationFolder)
+        public QuiverWikipediaDataDownloader(string destinationFolder, string apiKey = null) : base(apiKey)
         {
             _destinationFolder = Path.Combine(destinationFolder, "wikipedia");
 
@@ -108,18 +108,21 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                         // We've already logged inside HttpRequester
                                         return;
                                     }
-                                    Log.Trace(result);
 
-                                    var followers = JsonConvert.DeserializeObject<List<QuiverWikipedia>>(result, JsonSerializerSettings);
+                                    var wikipediaPageViews = JsonConvert.DeserializeObject<List<QuiverWikipedia>>(result, JsonSerializerSettings);
+                                    var csvContents = new List<string>();
 
-                                    foreach (var kvp in followers)
+                                    foreach (var wikipediaPage in wikipediaPageViews)
                                     {
-                                        var csvContents = new string[] {
-                                            $"{kvp.Date.ToStringInvariant("yyyyMMdd")}," +
-                                            $"{kvp.PageViews}," +
-                                            $"{kvp.WeekPercentChange}," +
-                                            $"{kvp.MonthPercentChange}"
-                                        };
+                                        csvContents.Add(string.Join(",",
+                                            $"{wikipediaPage.Date:yyyyMMdd}",
+                                            $"{wikipediaPage.PageViews}",
+                                            $"{wikipediaPage.WeekPercentChange}",
+                                            $"{wikipediaPage.MonthPercentChange}"));
+                                    }
+
+                                    if (csvContents.Count != 0)
+                                    {
                                         SaveContentToFile(_destinationFolder, ticker, csvContents);
                                     }
 
@@ -132,9 +135,19 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                 }
                             )
                     );
+                    
+                    if (tasks.Count == 10)
+                    {
+                        Task.WaitAll(tasks.ToArray());
+                        tasks.Clear();
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                if (tasks.Count != 0)
+                {
+                    Task.WaitAll(tasks.ToArray());
+                    tasks.Clear();
+                }
             }
             catch (Exception e)
             {

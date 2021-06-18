@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         /// Creates a new instance of <see cref="QuiverWikipediaDataDownloader"/>
         /// </summary>
         /// <param name="destinationFolder">The folder where the data will be saved</param>
-        public QuiverWallStreetBetsDataDownloader(string destinationFolder)
+        public QuiverWallStreetBetsDataDownloader(string destinationFolder, string apiKey = null) : base(apiKey)
         {
             _destinationFolder = Path.Combine(destinationFolder, "wallstreetbets");
 
@@ -106,19 +106,24 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                         // We've already logged inside HttpRequester
                                         return;
                                     }
-                                    Log.Trace(result);
 
-                                    var followers = JsonConvert.DeserializeObject<List<QuiverWallStreetBets>>(result, JsonSerializerSettings);
-
-                                    foreach (var kvp in followers)
+                                    var wsbData = JsonConvert.DeserializeObject<List<QuiverWallStreetBets>>(result, JsonSerializerSettings);
+                                    var wsbCsvLines = new List<string>();
+                                    
+                                    foreach (var wsb in wsbData)
                                     {
-                                        var csvContents = new string[] {
-                                            $"{kvp.Date.ToStringInvariant("yyyyMMdd")}," +
-                                            $"{kvp.Mentions}"
-                                        };
-                                        SaveContentToFile(_destinationFolder, ticker, csvContents);
+                                        wsbCsvLines.Add(string.Join(",",
+                                            wsb.Date.ToStringInvariant("yyyyMMdd"),
+                                            wsb.Mentions.ToStringInvariant(),
+                                            wsb.Rank.ToStringInvariant(),
+                                            wsb.Sentiment.ToStringInvariant()));
                                     }
 
+                                    if (wsbCsvLines.Count != 0)
+                                    {
+                                        SaveContentToFile(_destinationFolder, ticker, wsbCsvLines);
+                                    }
+                                    
                                     var percentageDone = i / count;
                                     if (percentageDone >= currentPercent)
                                     {
@@ -128,9 +133,19 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                 }
                             )
                     );
+                    
+                    if (tasks.Count == 10)
+                    {
+                        Task.WaitAll(tasks.ToArray());
+                        tasks.Clear();
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                if (tasks.Count != 0)
+                {
+                    Task.WaitAll(tasks.ToArray());
+                    tasks.Clear();
+                }
             }
             catch (Exception e)
             {

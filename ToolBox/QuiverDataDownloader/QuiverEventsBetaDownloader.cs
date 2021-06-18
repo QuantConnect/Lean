@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         /// Creates a new instance of <see cref="QuiverPoliticalBetaDataDownloader"/>
         /// </summary>
         /// <param name="destinationFolder">The folder where the data will be saved</param>
-        public QuiverEventsBetaDataDownloader(string destinationFolder)
+        public QuiverEventsBetaDataDownloader(string destinationFolder, string apiKey = null) : base(apiKey)
         {
             _destinationFolder = Path.Combine(destinationFolder, "eventsbeta");
 
@@ -107,22 +107,26 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                         // We've already logged inside HttpRequester
                                         return;
                                     }
-                                    Log.Trace(result);
 
-                                    var followers = JsonConvert.DeserializeObject<List<QuiverEventsBeta>>(result, JsonSerializerSettings);
-
-                                    foreach (var kvp in followers)
+                                    var politicalBetas = JsonConvert.DeserializeObject<List<QuiverEventsBeta>>(result, JsonSerializerSettings);
+                                    var csvContents = new List<string>();
+                                    
+                                    foreach (var politicalEvent in politicalBetas)
                                     {
-                                        var csvContents = new string[] {
-                                            $"{kvp.Date.ToStringInvariant("yyyyMMdd")}," +
-                                            $"{kvp.EventName}," +
-                                            $"{kvp.FirstEventName}," +
-                                            $"{kvp.SecondEventName}," +
-                                            $"{kvp.FirstEventBeta}," +
-                                            $"{kvp.SecondEventBeta}," +
-                                            $"{kvp.FirstEventOdds}," +
-                                            $"{kvp.SecondEventOdds}"
-                                        };
+                                        csvContents.Add(string.Join(",",
+                                            $"{politicalEvent.Date.ToStringInvariant("yyyyMMdd")}",
+                                            $"{politicalEvent.EventName}",
+                                            $"{politicalEvent.FirstEventName}",
+                                            $"{politicalEvent.SecondEventName}",
+                                            $"{politicalEvent.FirstEventBeta}",
+                                            $"{politicalEvent.SecondEventBeta}",
+                                            $"{politicalEvent.FirstEventOdds}",
+                                            $"{politicalEvent.SecondEventOdds}"));
+                                        
+                                    }
+
+                                    if (csvContents.Count != 0)
+                                    {
                                         SaveContentToFile(_destinationFolder, ticker, csvContents);
                                     }
 
@@ -135,9 +139,19 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                 }
                             )
                     );
+                    
+                    if (tasks.Count == 10)
+                    {
+                        Task.WaitAll(tasks.ToArray());
+                        tasks.Clear();
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                if (tasks.Count != 0)
+                {
+                    Task.WaitAll(tasks.ToArray());
+                    tasks.Clear();
+                }
             }
             catch (Exception e)
             {

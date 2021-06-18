@@ -76,6 +76,21 @@ namespace QuantConnect.Data.Custom.Quiver
         [JsonProperty(PropertyName = "House")]
         [JsonConverter(typeof(StringEnumConverter))]
         public Congress House { get; set; }
+        
+        /// <summary>
+        /// The period of time that occurs between the starting time and ending time of the data point
+        /// </summary>
+        [ProtoMember(16)]
+        public TimeSpan Period { get; set; }
+
+        /// <summary>
+        /// The time the data point ends at and becomes available to the algorithm
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Time = value - Period; }
+        }
 
         /// <summary>
         /// Required for successful Json.NET deserialization
@@ -95,10 +110,11 @@ namespace QuantConnect.Data.Custom.Quiver
             ReportDate = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             TransactionDate = Parse.DateTimeExact(csv[1], "yyyyMMdd");
             Representative = csv[2];
-            var transaction = (TransactionDirection)Enum.Parse(typeof(TransactionDirection), csv[3], true);
-            Transaction = transaction == TransactionDirection.Purchase ? OrderDirection.Buy : OrderDirection.Sell;
+            Transaction = (OrderDirection)Enum.Parse(typeof(OrderDirection), csv[3], true);
             Amount = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             House = (Congress)Enum.Parse(typeof(Congress), csv[5], true);
+
+            Period = TimeSpan.FromDays(1);
             Time = ReportDate;
         }
 
@@ -153,7 +169,7 @@ namespace QuantConnect.Data.Custom.Quiver
                    Invariant($"Transaction Date: {TransactionDate} ") +
                    Invariant($"Representative: {Representative} ") +
                    Invariant($"House: {House} ") +
-                   Invariant($"Transaction: {Transaction}") +
+                   Invariant($"Transaction: {Transaction} ") +
                    Invariant($"Amount: {Amount}");
         }
 

@@ -49,6 +49,7 @@ using QuantConnect.ToolBox.SmartInsider;
 using QuantConnect.ToolBox.TiingoNewsConverter;
 using QuantConnect.ToolBox.ZerodhaDownloader;
 using QuantConnect.ToolBox.AlphaVantageDownloader;
+using QuantConnect.ToolBox.QuiverDataDownloader;
 
 namespace QuantConnect.ToolBox
 {
@@ -196,6 +197,34 @@ namespace QuantConnect.ToolBox
                             toDate,
                             GetParameterOrExit(optionsObject, "api-key")
                         );
+                        break;
+                    
+                    case "qqcongressdl":
+                    case "quiverquantcongressdownloader":
+                        new QuiverCongressDataDownloader(
+                            GetParameterOrExit(optionsObject, "destination-dir"),
+                            GetParameterOrDefault(optionsObject, "api-key", null)).Run();
+                        break;
+                    
+                    case "qqeventsbetadl":
+                    case "quiverquanteventsbetadownloader":
+                        new QuiverEventsBetaDataDownloader(
+                            GetParameterOrExit(optionsObject, "destination-dir"),
+                            GetParameterOrDefault(optionsObject, "api-key", null)).Run();
+                        break;
+                    
+                    case "qqwsbdl":
+                    case "quiverquantwallstreetbetsdownloader":
+                        new QuiverWallStreetBetsDataDownloader(
+                            GetParameterOrExit(optionsObject, "destination-dir"),
+                            GetParameterOrDefault(optionsObject, "api-key", null)).Run();
+                        break;
+                    
+                    case "qqwikidl":
+                    case "quiverquantwikipediadownloader":
+                        new QuiverWikipediaDataDownloader(
+                            GetParameterOrExit(optionsObject, "destination-dir"),
+                            GetParameterOrDefault(optionsObject, "api-key", null)).Run();
                         break;
 
                     default:

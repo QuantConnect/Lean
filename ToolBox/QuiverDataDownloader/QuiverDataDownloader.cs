@@ -54,11 +54,9 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
             DateTimeZoneHandling = DateTimeZoneHandling.Utc
         };
 
-
-
-        protected QuiverDataDownloader()
+        protected QuiverDataDownloader(string apiKey = null)
         {
-            _clientKey = Config.Get("quiver-auth-token");
+            _clientKey = apiKey ?? Config.Get("quiver-auth-token");
 
             // Represents rate limits of 10 requests per 1.1 second
             IndexGate = new RateGate(10, TimeSpan.FromSeconds(1.1));

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Orders;
 using QuantConnect.Util;
 
@@ -30,7 +31,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <returns>Resulting string</returns>
         protected override string Convert(OrderDirection value)
         {
-            return value == OrderDirection.Buy ? "purchase" : "sale";
+            return value.ToString();
         }
 
         /// <summary>
@@ -40,7 +41,17 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <returns>Resulting OrderDirection</returns>
         protected override OrderDirection Convert(string value)
         {
-            return value.ToLowerInvariant() == "purchase" ? OrderDirection.Buy : OrderDirection.Sell;
+            switch (value.ToLowerInvariant())
+            {
+                case "purchase":
+                case "buy":
+                    return OrderDirection.Buy;
+                case "sale":
+                case "sell":
+                    return OrderDirection.Sell;
+                default:
+                    throw new ArgumentException($"The provided order direction \"{value}\" is not valid.");
+            }
         }
     }
 }

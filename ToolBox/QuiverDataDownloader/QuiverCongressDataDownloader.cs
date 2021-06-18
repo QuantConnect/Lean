@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         /// Creates a new instance of <see cref="QuiverCongress"/>
         /// </summary>
         /// <param name="destinationFolder">The folder where the data will be saved</param>
-        public QuiverCongressDataDownloader(string destinationFolder)
+        public QuiverCongressDataDownloader(string destinationFolder, string apiKey = null) : base(apiKey)
         {
             _destinationFolder = Path.Combine(destinationFolder, "congresstrading");
 
@@ -106,20 +106,23 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                         // We've already logged inside HttpRequester
                                         return;
                                     }
-                                    Log.Trace(result);
 
-                                    var followers = JsonConvert.DeserializeObject<List<QuiverCongress>>(result, JsonSerializerSettings);
+                                    var congressTrades = JsonConvert.DeserializeObject<List<QuiverCongress>>(result, JsonSerializerSettings);
+                                    var csvContents = new List<string>();
 
-                                    foreach (var kvp in followers)
+                                    foreach (var congressTrade in congressTrades)
                                     {
-                                        var csvContents = new string[] {
-                                            $"{kvp.ReportDate.ToStringInvariant("yyyyMMdd")}," +
-                                            $"{kvp.TransactionDate.ToStringInvariant("yyyyMMdd")}," +
-                                            $"{kvp.Representative}," +
-                                            $"{kvp.Transaction}," +
-                                            $"{kvp.Amount}," +
-                                            $"{kvp.House}"
-                                        };
+                                        csvContents.Add(string.Join(",",
+                                            $"{congressTrade.ReportDate.ToStringInvariant("yyyyMMdd")}",
+                                            $"{congressTrade.TransactionDate.ToStringInvariant("yyyyMMdd")}",
+                                            $"{congressTrade.Representative.Trim()}",
+                                            $"{congressTrade.Transaction}",
+                                            $"{congressTrade.Amount}",
+                                            $"{congressTrade.House}"));
+                                    }
+
+                                    if (csvContents.Count != 0)
+                                    {
                                         SaveContentToFile(_destinationFolder, ticker, csvContents);
                                     }
 
@@ -132,9 +135,19 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                 }
                             )
                     );
+
+                    if (tasks.Count == 10)
+                    {
+                        Task.WaitAll(tasks.ToArray());
+                        tasks.Clear();
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                if (tasks.Count != 0)
+                {
+                    Task.WaitAll(tasks.ToArray());
+                    tasks.Clear();
+                }
             }
             catch (Exception e)
             {

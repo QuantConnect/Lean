@@ -41,8 +41,38 @@ namespace QuantConnect.Data.Custom.Quiver
         /// The number of mentions on the given date
         /// </summary>
         [ProtoMember(11)]
-        [JsonProperty(PropertyName = "Count")]
+        [JsonProperty(PropertyName = "Mentions")]
         public int Mentions { get; set; }
+        
+        /// <summary>
+        /// This ticker's rank on the given date (as determined by total number of mentions)
+        /// </summary>
+        [ProtoMember(12)]
+        [JsonProperty(PropertyName = "Rank")]
+        public int Rank { get; set; }
+        
+        /// <summary>
+        /// Average sentiment of all comments containing the given ticker on this date. Sentiment is calculated using VADER sentiment analysis.
+        /// The value can range between -1 and +1. Negative values imply negative sentiment, whereas positive values imply positive sentiment.
+        /// </summary>
+        [ProtoMember(13)]
+        [JsonProperty(PropertyName = "Sentiment")]
+        public decimal Sentiment { get; set; }
+        
+        /// <summary>
+        /// The period of time that occurs between the starting time and ending time of the data point
+        /// </summary>
+        [ProtoMember(14)]
+        public TimeSpan Period { get; set; }
+
+        /// <summary>
+        /// The time the data point ends at and becomes available to the algorithm
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Time = value - Period; }
+        }
 
         /// <summary>
         /// Required for successful Json.NET deserialization
@@ -57,11 +87,15 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <param name="csvLine">CSV line</param>
         public QuiverWallStreetBets(string csvLine)
         {
-            // Date[0], Mentions[1]
+            // Date[0], Mentions[1], Rank[2], Sentiment[3]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             Mentions = Parse.Int(csv[1]);
+            Rank = Parse.Int(csv[2]);
+            Sentiment = Parse.Decimal(csv[3]);
+            
             Time = Date;
+            Period = TimeSpan.FromDays(1);
         }
 
         /// <summary>
@@ -112,7 +146,10 @@ namespace QuantConnect.Data.Custom.Quiver
         public override string ToString()
         {
             return Invariant($"{Symbol}({Date}) :: ") +
-                   Invariant($"WallStreetBets Mentions: {Mentions} ");
+                Invariant($"WallStreetBets Mentions: {Mentions} ") +
+                Invariant($"WallStreetBets Rank: {Rank} ") +
+                Invariant($"WallStreetBets Sentiment: {Sentiment}");
+
         }
 
         /// <summary>

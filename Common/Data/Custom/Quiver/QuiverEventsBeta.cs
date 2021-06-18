@@ -88,6 +88,21 @@ namespace QuantConnect.Data.Custom.Quiver
         [ProtoMember(17)]
         [JsonProperty(PropertyName = "SecondEventOdds")]
         public decimal SecondEventOdds { get; set; }
+        
+        /// <summary>
+        /// The period of time that occurs between the starting time and ending time of the data point
+        /// </summary>
+        [ProtoMember(14)]
+        public TimeSpan Period { get; set; }
+
+        /// <summary>
+        /// The time the data point ends at and becomes available to the algorithm
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Time = value - Period; }
+        }
 
         /// <summary>
         /// Required for successful Json.NET deserialization
@@ -112,7 +127,9 @@ namespace QuantConnect.Data.Custom.Quiver
             SecondEventBeta = csv[5].IfNotNullOrEmpty<decimal>(s => Parse.Decimal(s));
             FirstEventOdds = csv[6].IfNotNullOrEmpty<decimal>(s => Parse.Decimal(s));
             SecondEventOdds = csv[7].IfNotNullOrEmpty<decimal>(s => Parse.Decimal(s));
+            
             Time = Date;
+            Period = TimeSpan.FromDays(1);
         }
 
         /// <summary>
@@ -163,13 +180,13 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         public override string ToString()
         {
-            return Invariant($"{Symbol}({Date}) :: ") +
+            return Invariant($"{Symbol}({Date:yyyy-MM-dd}) :: ") +
                    Invariant($"Event Name: {EventName} ") +
-                   Invariant($"Outcome #1: {FirstEventName}") +
-                   Invariant($"Outcome #2: {SecondEventName}") +
-                   Invariant($"First Outcome Beta: {FirstEventBeta}") +
-                   Invariant($"Second Outcome Beta: {SecondEventBeta}") +
-                   Invariant($"First Outcome Odds: {FirstEventOdds}") +
+                   Invariant($"Outcome #1: {FirstEventName} ") +
+                   Invariant($"Outcome #2: {SecondEventName} ") +
+                   Invariant($"First Outcome Beta: {FirstEventBeta} ") +
+                   Invariant($"Second Outcome Beta: {SecondEventBeta} ") +
+                   Invariant($"First Outcome Odds: {FirstEventOdds} ") +
                    Invariant($"Second Outcome Odds: {SecondEventOdds}");
         }
 
