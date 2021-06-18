@@ -622,21 +622,21 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Calculate the Underwater Drawdown
+        /// Calculate the drawdown between a high and current value
         /// </summary>
-        /// <param name="currentValue">Current value</param>
-        /// <param name="firstValue">First value</param>
-        /// <param name="cumulativeMax">Latest maximum</param>
-        /// <returns></returns>
-        public static decimal DrawdownUnderwater(decimal currentValue, decimal firstValue, decimal cumulativeMax)
+        /// <param name="current">Current value</param>
+        /// <param name="high">Latest maximum</param>
+        /// <param name="roundingDecimals">Digits to round the result too</param>
+        /// <returns>Drawdown percentage</returns>
+        public static decimal DrawdownPercent(decimal current, decimal high, int roundingDecimals = 2)
         {
-            if (firstValue == 0 || cumulativeMax == 0)
+            if (high == 0)
             {
-                throw new ArgumentException("First value and max cumulative value must not be 0");
+                throw new ArgumentException("High value must not be 0");
             }
 
-            var returns = currentValue / firstValue;
-            return (1 - (returns / cumulativeMax)) * -1;
+            var drawdownPercentage = ((current / high) - 1) * 100;
+            return Math.Round(drawdownPercentage, roundingDecimals);
         }
 
     } // End of Statistics

@@ -522,15 +522,15 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="currentPortfolioValue"></param>
         protected virtual void SampleDrawdown(DateTime time, decimal currentPortfolioValue)
         {
-            // This will throw otherwise, in this case just don't sample
-            if (StartingPortfolioValue != 0 && currentPortfolioValue != 0)
-            {
-                // Check for update on cumulative max, and then calculate our draw down
-                CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
-                var underwaterDrawdown = Statistics.Statistics.DrawdownUnderwater(currentPortfolioValue, StartingPortfolioValue,
-                    CumulativeMaxPortfolioValue);
+            // Check for update on cumulative max
+            CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
 
-                Sample("Drawdown", "Equity Drawdown", 0, SeriesType.Bar, time, underwaterDrawdown, "%");
+            // This will throw otherwise, in this case just don't sample
+            if (CumulativeMaxPortfolioValue != 0)
+            {
+                // Calculate our drawdown and sample it
+                var drawdown = Statistics.Statistics.DrawdownPercent(currentPortfolioValue, CumulativeMaxPortfolioValue);
+                Sample("Drawdown", "Equity Drawdown", 0, SeriesType.Line, time, drawdown, "%");
             }
         }
 
