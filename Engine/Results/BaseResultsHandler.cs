@@ -465,6 +465,7 @@ namespace QuantConnect.Lean.Engine.Results
                 SampleBenchmark(PreviousUtcSampleTime, GetBenchmarkValue());
                 SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
                 SampleDrawdown(PreviousUtcSampleTime, currentPortfolioValue);
+                SampleVolume(PreviousUtcSampleTime);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
                 // with skewed statistics if a processing event was forced.
@@ -531,6 +532,22 @@ namespace QuantConnect.Lean.Engine.Results
                 // Calculate our drawdown and sample it
                 var drawdown = Statistics.Statistics.DrawdownPercent(currentPortfolioValue, CumulativeMaxPortfolioValue);
                 Sample("Drawdown", "Equity Drawdown", 0, SeriesType.Line, time, drawdown, "%");
+            }
+        }
+
+        /// <summary>
+        /// Sample asset volume
+        /// </summary>
+        /// <param name="time"></param>
+        protected virtual void SampleVolume(DateTime time)
+        {
+            var volumeBySymbol = Algorithm.Portfolio.Values
+                .Select(x => new KeyValuePair<Symbol, decimal>(x.Symbol, x.TotalSaleVolume));
+
+            foreach (var kvp in volumeBySymbol)
+            {
+                Sample("Assets", $"{kvp.Value} Volume", 0, SeriesType.Treemap, time,
+                    kvp.Value, Currencies.GetCurrencySymbol(Algorithm.AccountCurrency));
             }
         }
 
