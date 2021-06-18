@@ -581,7 +581,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="message">Runtime error message</param>
         /// <param name="stacktrace">Associated error stack trace.</param>
-        public void RuntimeError(string message, string stacktrace = "")
+        public virtual void RuntimeError(string message, string stacktrace = "")
         {
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
