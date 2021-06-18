@@ -29,6 +29,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -461,11 +462,15 @@ namespace QuantConnect.Lean.Engine.Results
                 var currentPortfolioValue = GetPortfolioValue();
                 var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 
+                // Update our max portfolio value
+                CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
+
                 SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
                 SampleBenchmark(PreviousUtcSampleTime, GetBenchmarkValue());
                 SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
                 SampleDrawdown(PreviousUtcSampleTime, currentPortfolioValue);
                 SampleVolume(PreviousUtcSampleTime);
+                SampleExposure(PreviousUtcSampleTime, currentPortfolioValue);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
                 // with skewed statistics if a processing event was forced.
@@ -523,9 +528,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="currentPortfolioValue">Current equity value</param>
         protected virtual void SampleDrawdown(DateTime time, decimal currentPortfolioValue)
         {
-            // Check for update on cumulative max
-            CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
-
             // This will throw otherwise, in this case just don't sample
             if (CumulativeMaxPortfolioValue != 0)
             {
@@ -549,6 +551,58 @@ namespace QuantConnect.Lean.Engine.Results
                 Sample("Assets Sales Volume", $"{kvp.Key.Value}", 0, SeriesType.Treemap, time,
                     kvp.Value, Currencies.GetCurrencySymbol(Algorithm.AccountCurrency));
             }
+        }
+
+        /// <summary>
+        /// Sample portfolio exposure
+        /// </summary>
+        /// <param name="time">Time of the sample</param>
+        /// <param name="currentPortfolioValue">Current value of the portfolio</param>
+        protected virtual void SampleExposure(DateTime time, decimal currentPortfolioValue)
+        {
+            // Shorts multiplier -1 , long multiplier 1
+            var shortHoldings = Algorithm.Portfolio.Values.Where(holding => holding.HoldingsValue < 0);
+            var longHoldings = Algorithm.Portfolio.Values.Where(holding => holding.HoldingsValue > 0);
+
+            var shortBySecurityType = SumHoldingsBySecurityType(shortHoldings);
+            foreach (var shortHolding in shortBySecurityType)
+            {
+                Sample("Exposure", $"{shortHolding.Key} - Short", 0, SeriesType.Line, time,
+                    shortHolding.Value/currentPortfolioValue, "");
+            }
+
+            var longBySecurityType = SumHoldingsBySecurityType(longHoldings);
+            foreach (var longHolding in longBySecurityType)
+            {
+                Sample("Exposure", $"{longHolding.Key} - Long", 0, SeriesType.Line, time,
+                    longHolding.Value/currentPortfolioValue, "");
+            }
+        }
+
+        /// <summary>
+        /// Helper method for SampleExposure which separates security holdings by type and then sums their holdings
+        /// </summary>
+        /// <param name="holdings"></param>
+        /// <returns></returns>
+        private Dictionary<SecurityType, decimal> SumHoldingsBySecurityType(IEnumerable<SecurityHolding> holdings)
+        {
+            var holdingsByAssetClass = new Dictionary<SecurityType, decimal>();
+
+            foreach (var holding in holdings)
+            {
+                if (!holdingsByAssetClass.TryGetValue(holding.Symbol.SecurityType, out _))
+                {
+                    // We don't have this type in our dictionary yet, add it with our holdings
+                    holdingsByAssetClass.Add(holding.Symbol.SecurityType, holding.HoldingsValue);
+                }
+                else
+                {
+                    // We already have this type, add to our holdings
+                    holdingsByAssetClass[holding.Symbol.SecurityType] += holding.HoldingsValue;
+                }
+            }
+
+            return holdingsByAssetClass;
         }
 
         /// <summary>
