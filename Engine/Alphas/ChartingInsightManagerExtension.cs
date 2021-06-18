@@ -44,12 +44,12 @@ namespace QuantConnect.Lean.Engine.Alphas
         private bool _chartsAdded;
         private IAlgorithm _algorithm;
 
-        private readonly Chart _totalInsightCountPerSymbolChart = new Chart(AlphaAssets);          // Heatmap chart
+        // Heatmap chart
+        private readonly Chart _totalInsightCountPerSymbolChart = new Chart(AlphaAssets);          
         private readonly Dictionary<Symbol, int> _totalInsightCountPerSymbol = new Dictionary<Symbol, int>();
 
         private readonly Chart _totalInsightCountChart = new Chart("Insight Count");
         private readonly Chart _insightScoreChart = new Chart("Alpha");
-
 
         /// <summary>
         /// Gets or sets the interval at which alpha charts are updated. This is in realtion to algorithm time.
