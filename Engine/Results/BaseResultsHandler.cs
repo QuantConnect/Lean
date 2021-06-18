@@ -546,7 +546,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             foreach (var kvp in volumeBySymbol)
             {
-                Sample("Assets", $"{kvp.Value} Volume", 0, SeriesType.Treemap, time,
+                Sample("Asset Volume", $"{kvp.Key.Value}", 0, SeriesType.Treemap, time,
                     kvp.Value, Currencies.GetCurrencySymbol(Algorithm.AccountCurrency));
             }
         }
