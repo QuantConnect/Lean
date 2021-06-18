@@ -474,7 +474,7 @@ namespace QuantConnect.Lean.Engine.Results
                 SampleBenchmark(PreviousUtcSampleTime, GetBenchmarkValue());
                 SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
                 SampleDrawdown(PreviousUtcSampleTime, currentPortfolioValue);
-                SampleVolume(PreviousUtcSampleTime);
+                SampleSalesVolume(PreviousUtcSampleTime);
                 SampleExposure(PreviousUtcSampleTime, currentPortfolioValue);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
@@ -544,7 +544,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Sample assets sales volume
         /// </summary>
         /// <param name="time">Time of the sample</param>
-        protected virtual void SampleVolume(DateTime time)
+        protected virtual void SampleSalesVolume(DateTime time)
         {
             var volumeBySymbol = Algorithm.Portfolio.Values
                 .Select(x => new KeyValuePair<Symbol, decimal>(x.Symbol, x.TotalSaleVolume));
