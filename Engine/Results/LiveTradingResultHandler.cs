@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -584,6 +585,15 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
+        }
+
+        /// <summary>
+        /// Process brokerage message events
+        /// </summary>
+        /// <param name="brokerageMessageEvent">The brokerage message event</param>
+        public virtual void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent)
+        {
+            // NOP
         }
 
         /// <summary>
