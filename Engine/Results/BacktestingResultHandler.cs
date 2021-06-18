@@ -520,12 +520,18 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
         public override void Sample(DateTime time, bool force = false)
         {
-            // Use previous time for sample unless forced
-            var sampleTime = force ? time : PreviousUtcSampleTime;
+            // Only sample once a day unless forced
+            var dayChanged = PreviousUtcSampleTime.Date != time.Date;
+            if (dayChanged || force)
+            {
+                // Use previous time for sample unless forced
+                var sampleTime = force ? time : PreviousUtcSampleTime;
 
-            // Sample strategy capacity
-            Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, sampleTime, _capacityEstimate.Capacity.Value);
-            
+                // Sample strategy capacity
+                Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, sampleTime,
+                    _capacityEstimate.Capacity.Value);
+            }
+
             // Call base to sample the rest of our default charts, also updates PreviousUtcSampleTime
             base.Sample(time, force);
         }
