@@ -519,8 +519,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Sample drawdown of equity of the strategy
         /// </summary>
-        /// <param name="time"></param>
-        /// <param name="currentPortfolioValue"></param>
+        /// <param name="time">Time of the sample</param>
+        /// <param name="currentPortfolioValue">Current equity value</param>
         protected virtual void SampleDrawdown(DateTime time, decimal currentPortfolioValue)
         {
             // Check for update on cumulative max
@@ -536,9 +536,9 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Sample asset volume
+        /// Sample assets sales volume
         /// </summary>
-        /// <param name="time"></param>
+        /// <param name="time">Time of the sample</param>
         protected virtual void SampleVolume(DateTime time)
         {
             var volumeBySymbol = Algorithm.Portfolio.Values
@@ -546,7 +546,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             foreach (var kvp in volumeBySymbol)
             {
-                Sample("Asset Volume", $"{kvp.Key.Value}", 0, SeriesType.Treemap, time,
+                Sample("Assets Sales Volume", $"{kvp.Key.Value}", 0, SeriesType.Treemap, time,
                     kvp.Value, Currencies.GetCurrencySymbol(Algorithm.AccountCurrency));
             }
         }
