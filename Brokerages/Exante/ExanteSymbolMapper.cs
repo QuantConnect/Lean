@@ -17,8 +17,12 @@ using System;
 
 namespace QuantConnect.Brokerages.Exante
 {
+    /// <summary>
+    /// Provides the mapping between Lean symbols and Exante symbols.
+    /// </summary>
     public class ExanteSymbolMapper : ISymbolMapper
     {
+        /// <inheritdoc />
         public string GetBrokerageSymbol(Symbol symbol)
         {
             if (string.IsNullOrWhiteSpace(symbol?.Value))
@@ -61,6 +65,7 @@ namespace QuantConnect.Brokerages.Exante
             }
         }
 
+        /// <inheritdoc />
         public Symbol GetLeanSymbol(
             string brokerageSymbol,
             SecurityType securityType,
