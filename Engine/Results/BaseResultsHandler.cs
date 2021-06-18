@@ -169,6 +169,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected AlphaRuntimeStatistics AlphaRuntimeStatistics { get; set; }
 
         /// <summary>
+        /// Algorithm currency symbol, used in charting
+        /// </summary>
+        protected string AlgorithmCurrencySymbol { get; set; }
+
+        /// <summary>
         /// Closing portfolio value. Used to calculate daily performance.
         /// </summary>
         protected decimal DailyPortfolioValue;
@@ -491,9 +496,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Current equity value.</param>
         protected virtual void SampleEquity(DateTime time, decimal value)
         {
-            var accountCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
-
-            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, accountCurrencySymbol);
+            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, AlgorithmCurrencySymbol);
         }
 
         /// <summary>
@@ -549,7 +552,7 @@ namespace QuantConnect.Lean.Engine.Results
             foreach (var kvp in volumeBySymbol)
             {
                 Sample("Assets Sales Volume", $"{kvp.Key.Value}", 0, SeriesType.Treemap, time,
-                    kvp.Value, Currencies.GetCurrencySymbol(Algorithm.AccountCurrency));
+                    kvp.Value, AlgorithmCurrencySymbol);
             }
         }
 
@@ -560,7 +563,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="currentPortfolioValue">Current value of the portfolio</param>
         protected virtual void SampleExposure(DateTime time, decimal currentPortfolioValue)
         {
-            // Shorts multiplier -1 , long multiplier 1
+            // Shorts = holdings < 0 , longs = holdings > 0
             var shortHoldings = Algorithm.Portfolio.Values.Where(holding => holding.HoldingsValue < 0);
             var longHoldings = Algorithm.Portfolio.Values.Where(holding => holding.HoldingsValue > 0);
 
@@ -584,7 +587,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="holdings"></param>
         /// <returns></returns>
-        private Dictionary<SecurityType, decimal> SumHoldingsBySecurityType(IEnumerable<SecurityHolding> holdings)
+        private static Dictionary<SecurityType, decimal> SumHoldingsBySecurityType(IEnumerable<SecurityHolding> holdings)
         {
             var holdingsByAssetClass = new Dictionary<SecurityType, decimal>();
 

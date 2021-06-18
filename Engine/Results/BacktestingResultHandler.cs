@@ -404,6 +404,7 @@ namespace QuantConnect.Lean.Engine.Results
             PreviousUtcSampleTime = Algorithm.UtcTime;
             DailyPortfolioValue = StartingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
+            AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
             _capacityEstimate = new CapacityEstimate(Algorithm);
 
             //Get the resample period:
@@ -527,9 +528,10 @@ namespace QuantConnect.Lean.Engine.Results
                 // Use previous time for sample unless forced
                 var sampleTime = force ? time : PreviousUtcSampleTime;
 
-                // Sample strategy capacity
+                // Sample strategy capacity, round to 1k
+                var roundedCapacity = Math.Round(_capacityEstimate.Capacity.Value / 1000) * 1000;
                 Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, sampleTime,
-                    _capacityEstimate.Capacity.Value);
+                    roundedCapacity, AlgorithmCurrencySymbol);
             }
 
             // Call base to sample the rest of our default charts, also updates PreviousUtcSampleTime

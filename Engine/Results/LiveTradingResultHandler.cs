@@ -713,6 +713,7 @@ namespace QuantConnect.Lean.Engine.Results
             Algorithm = algorithm;
             _portfolioValue = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
+            AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
 
             var types = new List<SecurityType>();
             foreach (var kvp in Algorithm.Securities)
