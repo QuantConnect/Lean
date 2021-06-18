@@ -249,6 +249,10 @@ namespace QuantConnect.Brokerages.Zerodha
         public Quote GetQuote(Symbol symbol)
         {
             var instrumentTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.ID.Symbol);
+            if (instrumentTokenList.Count == 0)
+            {
+                throw new ArgumentException($"ZerodhaBrokerage.GetQuote(): Invalid Zerodha Instrument token for: {symbol.ID.Symbol}");
+            }
             var instrument = instrumentTokenList[0];
             var instrumentIds = new string[] { instrument.ToStringInvariant() };
             var quotes = _kite.GetQuote(instrumentIds);
@@ -999,7 +1003,12 @@ namespace QuantConnect.Brokerages.Zerodha
         private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution, string zerodhaResolution)
         {
             Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
-            var scripSymbol = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.Value)[0];
+            var scripSymbolTokenLIst = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.Value);
+            if (scripSymbolTokenLIst.Count == 0)
+            {
+                throw new ArgumentException($"ZerodhaBrokerage.GetQuote(): Invalid Zerodha Instrument token for: {symbol.Value}");
+            }
+            var scripSymbol = scripSymbolTokenLIst[0];
             var candles = _kite.GetHistoricalData(scripSymbol.ToStringInvariant(), start, end, zerodhaResolution);
 
             if (!candles.Any())
@@ -1137,6 +1146,10 @@ namespace QuantConnect.Brokerages.Zerodha
         private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal amount)
         {
             var exchange = _symbolMapper.GetZerodhaDefaultExchange(symbol.ID.Symbol);
+            if (string.IsNullOrEmpty(exchange))
+            {
+                Log.Error($"ZerodhaBrokerage.EmitTradeTick(): market info is NUll/Empty for: {symbol.ID.Symbol}");
+            }
             var tick = new Tick(time, symbol, string.Empty, exchange, Math.Abs(amount), price);
             _aggregator.Update(tick);
         }

@@ -62,42 +62,6 @@ namespace QuantConnect.Brokerages.Zerodha
                 exchange = exchangeName;
                 instrumentToken = token;
             }
-
-            /// <summary>
-            /// Serves as a hash function for a particular type.
-            /// </summary>
-            /// <returns>
-            /// A hash code for the current <see cref="T:System.Object"/>.
-            /// </returns>
-            /// <filterpriority>2</filterpriority>
-            public override int GetHashCode()             
-            {  
-                return Convert.ToInt32(instrumentToken); 
-            }
-
-            /// <summary>
-            /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
-            /// </summary>
-            /// <returns>
-            /// true if the specified object  is equal to the current object; otherwise, false.
-            /// </returns>
-            /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
-            public override bool Equals(object obj) 
-            { 
-                return Equals(obj as SymbolData); 
-            }
-
-            /// <summary>
-            /// Indicates whether the current object is equal to another object of the same type.
-            /// </summary>
-            /// <returns>
-            /// true if the current object is equal to the <paramref name="obj"/> parameter; otherwise, false.
-            /// </returns>
-            /// <param name="obj">An object to compare with this object.</param>
-            public bool Equals(SymbolData obj)
-            { 
-                return obj != null && obj.instrumentToken == this.instrumentToken; 
-            }
         }
 
         /// <summary>
@@ -316,6 +280,8 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>A default exchange value for the given ticker</returns>
         public string GetZerodhaDefaultExchange(string brokerageSymbol)
         {   
+            brokerageSymbol = brokerageSymbol.Replace(" ", "").Trim();
+
             List<SymbolData> tempSymbolDataList;
             if (ZerodhaInstrumentsList.TryGetValue(brokerageSymbol.Replace(" ", "").Trim(), out tempSymbolDataList))
             {   
@@ -331,17 +297,14 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>A new Lean Symbol instance</returns>
         public List<uint> GetZerodhaInstrumentTokenList(string brokerageSymbol)
         {
-            var symbol = KnownSymbols.Where(s => s.Value == brokerageSymbol.Replace(" ", "").Trim()).FirstOrDefault();
+            brokerageSymbol = brokerageSymbol.Replace(" ", "").Trim();
+
             List<uint> tokenList = new List<uint>();
             List<SymbolData> tempSymbolDataList;
-            if (symbol != null && ZerodhaInstrumentsList.TryGetValue(symbol.ID.Symbol, out tempSymbolDataList))
+            ZerodhaInstrumentsList.TryGetValue(brokerageSymbol, out tempSymbolDataList);
+            foreach (var sd in tempSymbolDataList)
             {
-                foreach (var sd in tempSymbolDataList)
-                {
-                    tokenList.Add(sd.instrumentToken);
-                }
-                               
-                return tokenList;
+                tokenList.Add(sd.instrumentToken);
             }
             return tokenList;
         }

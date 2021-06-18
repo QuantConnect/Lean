@@ -6,19 +6,17 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "live-zerodha", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  //"algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
-  "algorithm-type-name": "ronit_algo",
+  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
 
   // Algorithm language selector - options CSharp, Python
-  "algorithm-language": "Python",
+  "algorithm-language": "CSharp",
 
   //Physical DLL location
-  //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+  "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
   //"algorithm-location": "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
-  "algorithm-location": "../../../Algorithm.Python/ronit_algo.py",
 
   //Research notebook
   //"composer-dll-directory": ".",
@@ -175,8 +173,8 @@
   "polygon-api-key": "",
 
   // zerodha configuration goto https://kite.trade
-  "zerodha-access-token": "cZyavZGJs5NPup3xPiAMt3JER3kVFVy7",
-  "zerodha-api-key": "nq31y6ndsyyqwdbc",
+  "zerodha-access-token": "",
+  "zerodha-api-key": "",
   "zerodha-product-type": "MIS", //MIS(Intraday) or CNC(Delivery) or NRML(Carry Forward)
   "zerodha-trading-segment": "EQUITY", // EQUITY(NSE,BSE) or COMMODITY (MCX)
   "zerodha-history-subscription": false, // Enable this if History API Subscription available

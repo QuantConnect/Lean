@@ -38,7 +38,7 @@ class BasicTemplateAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("TCS", Resolution.Daily, Market.India)
+        self.AddEquity("TCS", Resolution.Tick, Market.India)
         self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
     def OnData(self, data):
@@ -47,5 +47,9 @@ class BasicTemplateAlgorithm(QCAlgorithm):
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
+        self.Debug("On Data")
+        self.Debug("TCS LTP: " + str(data["TCS"][-1].LastPrice))
         if not self.Portfolio.Invested:
             self.SetHoldings("TCS", 1)
+            self.DefaultOrderProperties.Exchange = "NSE"
+            marketTicket = self.MarketOrder("TCS", 1)
