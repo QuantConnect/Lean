@@ -470,12 +470,14 @@ namespace QuantConnect.Lean.Engine.Results
                 // Update our max portfolio value
                 CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
 
+                // Sample all our default charts
                 SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
                 SampleBenchmark(PreviousUtcSampleTime, GetBenchmarkValue());
                 SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
                 SampleDrawdown(PreviousUtcSampleTime, currentPortfolioValue);
                 SampleSalesVolume(PreviousUtcSampleTime);
                 SampleExposure(PreviousUtcSampleTime, currentPortfolioValue);
+                SampleCapacity(PreviousUtcSampleTime);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
                 // with skewed statistics if a processing event was forced.
@@ -546,13 +548,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time of the sample</param>
         protected virtual void SampleSalesVolume(DateTime time)
         {
-            var volumeBySymbol = Algorithm.Portfolio.Values
-                .Select(x => new KeyValuePair<Symbol, decimal>(x.Symbol, x.TotalSaleVolume));
-
-            foreach (var kvp in volumeBySymbol)
+            foreach (var holding in Algorithm.Portfolio.Values)
             {
-                Sample("Assets Sales Volume", $"{kvp.Key.Value}", 0, SeriesType.Treemap, time,
-                    kvp.Value, AlgorithmCurrencySymbol);
+                if (holding.TotalSaleVolume != 0)
+                {
+                    Sample("Assets Sales Volume", $"{holding.Symbol.Value}", 0, SeriesType.Treemap, time,
+                        holding.TotalSaleVolume, AlgorithmCurrencySymbol);
+                }
             }
         }
 
@@ -563,49 +565,40 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="currentPortfolioValue">Current value of the portfolio</param>
         protected virtual void SampleExposure(DateTime time, decimal currentPortfolioValue)
         {
+            // Will throw in this case, just return without sampling
+            if (currentPortfolioValue == 0)
+            {
+                return;
+            }
+
             // Shorts = holdings < 0 , longs = holdings > 0
             var shortHoldings = Algorithm.Portfolio.Values.Where(holding => holding.HoldingsValue < 0);
             var longHoldings = Algorithm.Portfolio.Values.Where(holding => holding.HoldingsValue > 0);
 
-            var shortBySecurityType = SumHoldingsBySecurityType(shortHoldings);
-            foreach (var shortHolding in shortBySecurityType)
+            var shortsBySecurityType = shortHoldings.GroupBy(x => x.Symbol.SecurityType);
+            foreach (var kvp in shortsBySecurityType)
             {
-                Sample("Exposure", $"{shortHolding.Key} - Short", 0, SeriesType.Line, time,
-                    shortHolding.Value/currentPortfolioValue, "");
+                var holdingsValue = kvp.Sum(x => x.HoldingsValue);
+                Sample("Exposure", $"{kvp.Key} - Short", 0, SeriesType.Line, time,
+                    holdingsValue/currentPortfolioValue, "");
             }
 
-            var longBySecurityType = SumHoldingsBySecurityType(longHoldings);
-            foreach (var longHolding in longBySecurityType)
+            var longsBySecurityType = longHoldings.GroupBy(x => x.Symbol.SecurityType);
+            foreach (var kvp in longsBySecurityType)
             {
-                Sample("Exposure", $"{longHolding.Key} - Long", 0, SeriesType.Line, time,
-                    longHolding.Value/currentPortfolioValue, "");
+                var holdingsValue = kvp.Sum(x => x.HoldingsValue);
+                Sample("Exposure", $"{kvp.Key} - Long", 0, SeriesType.Line, time,
+                    holdingsValue / currentPortfolioValue, "");
             }
         }
 
         /// <summary>
-        /// Helper method for SampleExposure which separates security holdings by type and then sums their holdings
+        /// Sample estimated strategy capacity
         /// </summary>
-        /// <param name="holdings"></param>
-        /// <returns></returns>
-        private static Dictionary<SecurityType, decimal> SumHoldingsBySecurityType(IEnumerable<SecurityHolding> holdings)
+        /// <param name="time">Time of the sample</param>
+        protected virtual void SampleCapacity(DateTime time)
         {
-            var holdingsByAssetClass = new Dictionary<SecurityType, decimal>();
-
-            foreach (var holding in holdings)
-            {
-                if (!holdingsByAssetClass.TryGetValue(holding.Symbol.SecurityType, out _))
-                {
-                    // We don't have this type in our dictionary yet, add it with our holdings
-                    holdingsByAssetClass.Add(holding.Symbol.SecurityType, holding.HoldingsValue);
-                }
-                else
-                {
-                    // We already have this type, add to our holdings
-                    holdingsByAssetClass[holding.Symbol.SecurityType] += holding.HoldingsValue;
-                }
-            }
-
-            return holdingsByAssetClass;
+            // NOP; Used only by BacktestingResultHandler because he owns a CapacityEstimate
         }
 
         /// <summary>

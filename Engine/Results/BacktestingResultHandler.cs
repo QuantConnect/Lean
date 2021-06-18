@@ -515,30 +515,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Samples portfolio equity, benchmark, and daily performance
-        /// </summary>
-        /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
-        /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
-        public override void Sample(DateTime time, bool force = false)
-        {
-            // Only sample once a day unless forced
-            var dayChanged = PreviousUtcSampleTime.Date != time.Date;
-            if (dayChanged || force)
-            {
-                // Use previous time for sample unless forced
-                var sampleTime = force ? time : PreviousUtcSampleTime;
-
-                // Sample strategy capacity, round to 1k
-                var roundedCapacity = Math.Round(_capacityEstimate.Capacity.Value / 1000) * 1000;
-                Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, sampleTime,
-                    roundedCapacity, AlgorithmCurrencySymbol);
-            }
-
-            // Call base to sample the rest of our default charts, also updates PreviousUtcSampleTime
-            base.Sample(time, force);
-        }
-
-        /// <summary>
         /// Process brokerage message events
         /// </summary>
         /// <param name="brokerageMessageEvent">The brokerage message event</param>
@@ -608,6 +584,18 @@ namespace QuantConnect.Lean.Engine.Results
             catch (OverflowException)
             {
             }
+        }
+
+        /// <summary>
+        /// Sample estimated strategy capacity
+        /// </summary>
+        /// <param name="time">Time of the sample</param>
+        protected override void SampleCapacity(DateTime time)
+        {
+            // Sample strategy capacity, round to 1k
+            var roundedCapacity = Math.Round(_capacityEstimate.Capacity.Value / 1000) * 1000;
+            Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, time,
+                roundedCapacity, AlgorithmCurrencySymbol);
         }
 
         /// <summary>

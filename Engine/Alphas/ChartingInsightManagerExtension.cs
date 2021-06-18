@@ -49,7 +49,10 @@ namespace QuantConnect.Lean.Engine.Alphas
         private readonly Dictionary<Symbol, int> _totalInsightCountPerSymbol = new Dictionary<Symbol, int>();
 
         private readonly Chart _totalInsightCountChart = new Chart("Insight Count");
+        private readonly Series _totalInsightCountSeries = new Series("Count", SeriesType.Bar, "#");
+
         private readonly Chart _insightScoreChart = new Chart("Alpha");
+        private readonly Dictionary<InsightScoreType, Series> _insightScoreSeriesByScoreType = new Dictionary<InsightScoreType, Series>();
 
         /// <summary>
         /// Gets or sets the interval at which alpha charts are updated. This is in realtion to algorithm time.
@@ -72,11 +75,12 @@ namespace QuantConnect.Lean.Engine.Alphas
             foreach (var scoreType in InsightManager.ScoreTypes)
             {
                 var series = new Series($"{scoreType} Score", SeriesType.Line, "%");
+                _insightScoreSeriesByScoreType[scoreType] = series;
                 _insightScoreChart.AddSeries(series);
             }
 
             // Add a series for insight count over sample period to the "Insight Count" chart
-            _totalInsightCountChart.AddSeries(new Series("Count", SeriesType.Bar, "#"));
+            _totalInsightCountChart.AddSeries(_totalInsightCountSeries);
         }
 
         /// <summary>
@@ -104,7 +108,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 _lastInsightCountSampleDateUtc = frontierTimeUtc.Date;
 
                 // add sum of daily insight counts to the total insight count series
-                _totalInsightCountChart.Series["Count"].AddPoint(frontierTimeUtc.Date, _dailyInsightCount);
+                _totalInsightCountSeries.AddPoint(frontierTimeUtc.Date, _dailyInsightCount);
 
                 // Create the pie chart every minute or so
                 PopulateChartWithSeriesPerSymbol(_totalInsightCountPerSymbol, _totalInsightCountPerSymbolChart, SeriesType.Treemap, frontierTimeUtc);
@@ -125,7 +129,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                         foreach (var scoreType in InsightManager.ScoreTypes)
                         {
                             var score = 100 * _statisticsManager.Statistics.RollingAveragedPopulationScore.GetScore(scoreType);
-                            _insightScoreChart.Series[$"{scoreType} Score"].AddPoint(frontierTimeUtc, score.SafeDecimalCast());
+                            _insightScoreSeriesByScoreType[scoreType].AddPoint(frontierTimeUtc, score.SafeDecimalCast());
                         }
                         _nextChartSampleAlgorithmTimeUtc = frontierTimeUtc + SampleInterval;
                     }
