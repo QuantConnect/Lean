@@ -1109,7 +1109,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
                                 if (_lastTradeTickTime != time)
                                 {
-                                    EmitTradeTick(symbol, time, tick.LastPrice, tick.LastQuantity);
+                                    EmitTradeTick(symbol, tick.InstrumentToken, time, tick.LastPrice, tick.LastQuantity);
                                     _lastTradeTickTime = time;
                                 }
                             }
@@ -1143,9 +1143,9 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
-        private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal amount)
+        private void EmitTradeTick(Symbol symbol, uint instrumentToken, DateTime time, decimal price, decimal amount)
         {
-            var exchange = _symbolMapper.GetZerodhaDefaultExchange(symbol.ID.Symbol);
+            var exchange = _symbolMapper.GetZerodhaExchangeFromToken(instrumentToken);
             if (string.IsNullOrEmpty(exchange))
             {
                 Log.Error($"ZerodhaBrokerage.EmitTradeTick(): market info is NUll/Empty for: {symbol.ID.Symbol}");

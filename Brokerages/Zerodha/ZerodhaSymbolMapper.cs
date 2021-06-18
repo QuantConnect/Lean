@@ -70,9 +70,14 @@ namespace QuantConnect.Brokerages.Zerodha
         public static List<Symbol> KnownSymbolsList = new List<Symbol>();
 
         /// <summary>
-        /// The list of known Zerodha symbols.
+        /// Gives information of all available SymbolData for given brokerageSymbol.
         /// </summary>
         public static Dictionary<string, List<SymbolData>> ZerodhaInstrumentsList = new Dictionary<string, List<SymbolData>>();
+
+        /// <summary>
+        /// Gives exchange name for a given instrumentToken.
+        /// </summary>
+        public static Dictionary<uint,string> ZerodhaInstrumentsExchangeMapping = new Dictionary<uint,string>();
 
         /// <summary>
         /// Constructs default instance of the Zerodha Sybol Mapper
@@ -93,12 +98,13 @@ namespace QuantConnect.Brokerages.Zerodha
             var tradableInstruments = kite.GetInstruments(exchange);
             var symbols = new List<Symbol>();
             var zerodhaInstrumentsMapping = new Dictionary<string, List<SymbolData>>();
-
+            var ZerodhaTokenExchangeDict = new Dictionary<uint,string>();
 
             foreach (var tp in tradableInstruments)
             {
                 var securityType = SecurityType.Equity;
                 var market = Market.India;
+                ZerodhaTokenExchangeDict[tp.InstrumentToken] = tp.Exchange;
                 OptionRight optionRight = 0;
 
                 switch (tp.InstrumentType)
@@ -125,7 +131,7 @@ namespace QuantConnect.Brokerages.Zerodha
                         securityType = SecurityType.Base;
                         break;
                 }
-
+                
                 if (securityType == SecurityType.Option)
                 {
                     var strikePrice = tp.Strike;
@@ -168,6 +174,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
             }
             ZerodhaInstrumentsList = zerodhaInstrumentsMapping;
+            ZerodhaInstrumentsExchangeMapping = ZerodhaTokenExchangeDict;
             return symbols;
         }
 
@@ -272,6 +279,22 @@ namespace QuantConnect.Brokerages.Zerodha
             var exchange = GetZerodhaDefaultExchange(brokerageSymbol);
             return GetLeanSymbol(brokerageSymbol, symbol.SecurityType, exchange);
         }
+
+        /// <summary>
+        /// Fetches the Real Market/Exchange vendor inside in India Market, E.g: NSE, BSE
+        /// </summary>
+        /// <param name="Token">The Zerodha Instrument Token</param>
+        /// <returns>An exchange value for the given ticker</returns>
+        public string GetZerodhaExchangeFromToken(uint Token)
+        {   
+            string exchange = string.Empty;
+            if (ZerodhaInstrumentsExchangeMapping.ContainsKey(Token))
+            {
+                ZerodhaInstrumentsExchangeMapping.TryGetValue(Token, out exchange);
+            }
+            return exchange;
+        }
+        
 
         /// <summary>
         /// Fetches the default Exchage value for the given symbol
