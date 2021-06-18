@@ -99,7 +99,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
             foreach (var symbol in symbols)
             {
-                if (!symbol.IsCanonical())
+                if (!symbol.Value.Contains("universe", StringComparison.InvariantCultureIgnoreCase))
                 {
                     var ticker = TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol);
                     if (!_subscribedTickers.ContainsKey(ticker))
@@ -198,21 +198,41 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                     string brokerageSymbol = item.Key;
                     var data = item.Value;
 
-                    var leanData = CreateLeanData(data, e == TDAmeritradeApi.Client.Models.Streamer.MarketDataType.LevelOneQuotes);
-                    if (leanData != null)
-                    {
-                        _aggregator.Update(leanData);
-                    }
+                    AddChartAndTickData(data, e == TDAmeritradeApi.Client.Models.Streamer.MarketDataType.LevelOneQuotes);
                 }
             }
         }
 
-        private object CreateLeanData(dynamic data, bool isQuoteAndTradeData)
+        private void AddChartAndTickData(dynamic data, bool isQuoteAndTradeData)
         {
             if (isQuoteAndTradeData)
-                return CreateTick(data);
+            {
+                ConcurrentQueue<LevelOneQuote> queue = data;
+                while (queue.TryDequeue(out LevelOneQuote quote))
+                {
+                    var tick = CreateTick(quote);
+
+                    if (tick != null)
+                    {
+                        _aggregator.Update(tick);
+                    }
+                }
+            }
             else
-                return CreateTradeBar(data);
+            {
+                ConcurrentQueue<MinuteChartData> queue = data;
+                while (queue.TryDequeue(out MinuteChartData chartData))
+                {
+                    var trade = CreateTradeBar(chartData);
+
+                    if (trade != null)
+                    {
+                        _aggregator.Update(trade);
+                    }
+                }
+            }
+
+            
         }
 
         private static TradeBar CreateTradeBar(MinuteChartData data)

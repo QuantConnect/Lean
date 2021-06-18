@@ -46,7 +46,7 @@
     <PackageReference Include="System.Security.Cryptography.Encoding" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.0" />
-    <PackageReference Include="TDAmeritradeApi.Client" Version="1.1.5" />
+    <PackageReference Include="TDAmeritradeApi.Client" Version="1.1.8" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CSharpAPI">
