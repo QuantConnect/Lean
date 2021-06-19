@@ -29,7 +29,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -559,7 +558,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Sample portfolio exposure
+        /// Sample portfolio exposure long/short ratios by security type
         /// </summary>
         /// <param name="time">Time of the sample</param>
         /// <param name="currentPortfolioValue">Current value of the portfolio</param>
@@ -571,24 +570,32 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
-            // Shorts = holdings < 0 , longs = holdings > 0
-            var shortHoldings = Algorithm.Portfolio.Values.Where(holding => holding.HoldingsValue < 0);
-            var longHoldings = Algorithm.Portfolio.Values.Where(holding => holding.HoldingsValue > 0);
+            // Sample our long and short positions
+            SampleExposureHelper(PositionSide.Long, time, currentPortfolioValue);
+            SampleExposureHelper(PositionSide.Short, time, currentPortfolioValue);
+        }
 
-            var shortsBySecurityType = shortHoldings.GroupBy(x => x.Symbol.SecurityType);
-            foreach (var kvp in shortsBySecurityType)
-            {
-                var holdingsValue = kvp.Sum(x => x.HoldingsValue);
-                Sample("Exposure", $"{kvp.Key} - Short", 0, SeriesType.Line, time,
-                    holdingsValue/currentPortfolioValue, "");
-            }
+        /// <summary>
+        /// Helper method for SampleExposure, finds holdings based on position side
+        /// and sample them by their security type to our exposure chart
+        /// </summary>
+        /// <param name="type">Side to sample from portfolio</param>
+        /// <param name="time">Time of the sample</param>
+        /// <param name="currentPortfolioValue">Current value of the portfolio</param>
+        private void SampleExposureHelper(PositionSide type, DateTime time, decimal currentPortfolioValue)
+        {
+            // Shorts = holdings < 0; Longs = holdings > 0
+            var multiplier = type == PositionSide.Long ? 1 : -1;
 
-            var longsBySecurityType = longHoldings.GroupBy(x => x.Symbol.SecurityType);
-            foreach (var kvp in longsBySecurityType)
+            // Select the holdings that fit our position side
+            var positionsBySecurityType = Algorithm.Portfolio.Values.Where(holding => multiplier * holding.HoldingsValue > 0)
+                .GroupBy(x => x.Symbol.SecurityType);
+
+            foreach (var kvp in positionsBySecurityType)
             {
-                var holdingsValue = kvp.Sum(x => x.HoldingsValue);
-                Sample("Exposure", $"{kvp.Key} - Long", 0, SeriesType.Line, time,
-                    holdingsValue / currentPortfolioValue, "");
+                var ratio = Math.Round(kvp.Sum(x => x.HoldingsValue) / currentPortfolioValue, 4);
+                Sample("Exposure", $"{kvp.Key} - {type} Ratio", 0, SeriesType.Line, time,
+                    ratio, "");
             }
         }
 
