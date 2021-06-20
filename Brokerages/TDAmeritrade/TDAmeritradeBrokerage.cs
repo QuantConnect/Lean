@@ -183,7 +183,6 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             return new Holding
             {
                 Symbol = symbol,
-                Type = symbol.SecurityType,
                 AveragePrice = averagePrice,
                 CurrencySymbol = "$",
                 MarketPrice = 0m, //--> GetAccountHoldings does a call to GetQuotes to fill this data in
