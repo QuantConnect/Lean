@@ -11,17 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System.Core")
-AddReference("System.Collections")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
+from AlgorithmImports import *
 
-from System import *
+AddReference("System.Collections")
 from System.Collections.Generic import List
-from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Data.UniverseSelection import *
 
 ### <summary>
 ### This algorithm shows how you can handle universe selection in anyway you like,

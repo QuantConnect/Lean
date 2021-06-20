@@ -81,8 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                     algorithm.DateRules.MonthStart(benchmark.Symbol),
                     algorithm.TimeRules.AfterMarketOpen(benchmark.Symbol),
                     datetime => SelectPair(algorithm, datetime),
-                    algorithm.UniverseSettings,
-                    algorithm.SecurityInitializer);
+                    algorithm.UniverseSettings);
             }
 
             /// <summary>

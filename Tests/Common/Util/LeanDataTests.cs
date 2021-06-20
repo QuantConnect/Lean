@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -191,6 +191,24 @@ namespace QuantConnect.Tests.Common.Util
         {
             Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Cfd), TickType.Quote);
             Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Forex), TickType.Quote);
+        }
+
+        [TestCase("forex/fxcm/eurusd/20160101_quote.zip", true, SecurityType.Forex)]
+        [TestCase("Data/f/fxcm/eurusd/20160101_quote.zip", false, SecurityType.Base)]
+        [TestCase("ooooooooooooooooooooooooooooooooooooooooooooooooooooooo", false, SecurityType.Base)]
+        [TestCase("", false, SecurityType.Base)]
+        [TestCase(null, false, SecurityType.Base)]
+
+        [TestCase("Data/option/u sa/minute/aapl/20140606_trade_american.zip", true, SecurityType.Option)]
+        [TestCase("../Data/equity/usa/daily/aapl.zip", true, SecurityType.Equity)]
+        [TestCase("Data/cfd/oanda/minute/bcousd/20160101_trade.zip", true, SecurityType.Cfd)]
+        [TestCase("Data\\alternative\\estimize\\consensus\\aapl.csv", true, SecurityType.Base)]
+        [TestCase("../../../Data/option/usa/minute/spy/20200922_quote_american.zip", true, SecurityType.Option)]
+        [TestCase("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", true, SecurityType.FutureOption)]
+        public void TryParseSecurityType(string path, bool result, SecurityType expectedSecurityType)
+        {
+            Assert.AreEqual(result, LeanData.TryParseSecurityType(path, out var securityType));
+            Assert.AreEqual(expectedSecurityType, securityType);
         }
 
         [Test]
@@ -598,9 +616,23 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.BTCUSD, new Bar(1, 2, 3, 4), 5, new Bar(6, 7, 8, 9), 10, TimeSpan.FromDays(1)), SecurityType.Crypto, Resolution.Daily,
                     "20160218 00:00,1,2,3,4,5,6,7,8,9,10"),
                 new LeanDataLineTestParameters(new Tick(time, Symbols.BTCUSD, 0, 1, 3) {Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "gdax", Suspicious = false}, SecurityType.Crypto, Resolution.Tick,
-                    "34200000,1,2,3,4"),
+                    "34200000,1,2,3,4,0"),
                 new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = "gdax", Suspicious = false}, SecurityType.Crypto, Resolution.Tick,
-                    "34200000,1,2"),
+                    "34200000,1,2,0"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = "gdax", Suspicious = true}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,1,2,1"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, BidPrice = 1m, AskPrice = 3m, Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "gdax", Suspicious = true}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,1,2,3,4,1"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, BidPrice = 1.25m, AskPrice = 1.50m, Value = 1.375m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "gdax", Suspicious = true}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,1.25,2,1.5,4,1"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, BidPrice = 1.25m, AskPrice = 1.50m, Value = 1.375m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "gdax", Suspicious = false}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,1.25,2,1.5,4,0"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, BidPrice = 1.25m, AskPrice = 1.50m, Value = 1.375m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "gdax", Suspicious = false}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,1.25,2,1.5,4,0"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, BidPrice = -1m, AskPrice = -1m, Value = -1m, TickType = TickType.Quote, BidSize = 0, AskSize = 0, Exchange = "gdax", Suspicious = false}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,-1,0,-1,0,0"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, BidPrice = -1m, AskPrice = -1m, Value = -1m, TickType = TickType.Quote, BidSize = 0, AskSize = 0, Exchange = "gdax", Suspicious = true}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,-1,0,-1,0,1"),
                 new LeanDataLineTestParameters(new TradeBar(time, Symbols.BTCUSD, 1, 2, 3, 4, 5, TimeSpan.FromMinutes(1)), SecurityType.Crypto, Resolution.Minute,
                     "34200000,1,2,3,4,5"),
                 new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.BTCUSD, 1, 2, 3, 4, 5, TimeSpan.FromDays(1)), SecurityType.Crypto, Resolution.Daily,

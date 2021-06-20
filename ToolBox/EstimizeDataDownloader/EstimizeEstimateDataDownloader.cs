@@ -34,6 +34,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
     {
         private readonly string _destinationFolder;
         private readonly MapFileResolver _mapFileResolver;
+        private readonly HashSet<string> _processTickers;
 
         /// <summary>
         /// Creates a new instance of <see cref="EstimizeEstimateDataDownloader"/>
@@ -44,6 +45,8 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
             _destinationFolder = Path.Combine(destinationFolder, "estimate");
             _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
                 .Get(Market.USA);
+
+            _processTickers = Config.Get("process-tickers", null)?.Split(",").ToHashSet();
 
             Directory.CreateDirectory(_destinationFolder);
         }
@@ -81,6 +84,12 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                     if (!TryNormalizeDefunctTicker(estimizeTicker, out ticker))
                     {
                         Log.Error($"EstimizeEstimateDataDownloader(): Defunct ticker {estimizeTicker} is unable to be parsed. Continuing...");
+                        continue;
+                    }
+
+                    if (_processTickers != null && !_processTickers.Contains(ticker, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        Log.Trace($"EstimizeEstimateDataDownloader.Run(): Skipping {ticker} since it is not in the list of predefined tickers");
                         continue;
                     }
 
@@ -136,9 +145,9 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                                     return string.Empty;
                                                 }
 
-                                                if (oldTicker != newTicker)
+                                                if (!string.Equals(oldTicker, newTicker, StringComparison.InvariantCultureIgnoreCase))
                                                 {
-                                                    Log.Trace($"EstimizeEstimateDataDonwloader.Run(): Remapping {oldTicker} to {newTicker}");
+                                                    Log.Trace($"EstimizeEstimateDataDownloader.Run(): Remapping {oldTicker} to {newTicker}");
                                                 }
                                             }
                                             // We get a failure inside the map file constructor rarely. It tries

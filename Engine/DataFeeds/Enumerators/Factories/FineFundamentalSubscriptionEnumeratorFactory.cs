@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 foreach (var date in tradableDays)
                 {
                     var fineFundamentalSource = GetSource(FineFundamental, fineFundamentalConfiguration, date);
-                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental);
+                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental, dataProvider);
                     var fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
 
                     // directly do not emit null points. Null points won't happen when used with Coarse data since we are pre filtering based on Coarse.HasFundamentalData

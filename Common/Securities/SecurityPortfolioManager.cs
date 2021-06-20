@@ -605,6 +605,7 @@ namespace QuantConnect.Securities
         {
             _setCashWasCalled = true;
             Cash item;
+            symbol = symbol.LazyToUpper();
             if (CashBook.TryGetValue(symbol, out item))
             {
                 item.SetAmount(cash);

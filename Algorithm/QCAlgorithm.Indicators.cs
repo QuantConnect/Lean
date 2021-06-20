@@ -1280,6 +1280,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new PivotPointsHighLow indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose PPHL we seek</param>
+        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
+        /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
+        /// <param name="lastStoredValues">The number of last stored indicator values</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The PivotPointsHighLow indicator for the requested symbol.</returns>
+        public PivotPointsHighLow PPHL(Symbol symbol, int lengthHigh, int lengthLow, int lastStoredValues = 100, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"PPHL({lengthHigh},{lengthLow})", resolution);
+            var pivotPointsHighLow = new PivotPointsHighLow(name, lengthHigh, lengthLow, lastStoredValues);
+            RegisterIndicator(symbol, pivotPointsHighLow, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, pivotPointsHighLow, resolution);
+            }
+
+            return pivotPointsHighLow;
+        }
+
+        /// <summary>
         /// Creates a new PercentagePriceOscillator indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose PPO we want</param>

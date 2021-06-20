@@ -159,12 +159,15 @@ namespace QuantConnect
         /// </summary>
         /// <param name="unixTimeStamp">Double unix timestamp (Time since Midnight Jan 1 1970) in milliseconds</param>
         /// <returns>C# date timeobject</returns>
-        public static DateTime UnixMillisecondTimeStampToDateTime(double unixTimeStamp)
+        public static DateTime UnixMillisecondTimeStampToDateTime(decimal unixTimeStamp)
         {
             DateTime time;
             try
             {
-                var ticks = unixTimeStamp * TimeSpan.TicksPerMillisecond;
+                // Any residual decimal numbers that remain are nanoseconds from [0, 100) nanoseconds.
+                // If we cast to (long), only the integer component of the decimal is taken, and can
+                // potentially result in look-ahead bias in increments of 100 nanoseconds, i.e. 1 DateTime tick.
+                var ticks = Math.Ceiling(unixTimeStamp * TimeSpan.TicksPerMillisecond);
                 time = EpochTime.AddTicks((long)ticks);
             }
             catch (Exception err)

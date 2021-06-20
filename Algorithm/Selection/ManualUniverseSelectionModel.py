@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,22 +17,21 @@ AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
 
-from QuantConnect import Extensions, Resolution, SecurityType, Symbol, SymbolCache
-from QuantConnect.Data import SubscriptionDataConfig
-from QuantConnect.Data.Market import Tick, TradeBar
-from QuantConnect.Securities import MarketHoursDatabase
-from QuantConnect.Algorithm.Framework.Selection import ManualUniverse
+from QuantConnect import *
+from QuantConnect.Data import *
+from QuantConnect.Data.Market import *
+from QuantConnect.Securities import *
+from QuantConnect.Algorithm.Framework.Selection import *
 from Selection.UniverseSelectionModel import UniverseSelectionModel
 from itertools import groupby
 
 class ManualUniverseSelectionModel(UniverseSelectionModel):
     '''Provides an implementation of IUniverseSelectionModel that simply subscribes to the specified set of symbols'''
 
-    def __init__(self, symbols = list(), universeSettings = None, securityInitializer = None):
+    def __init__(self, symbols = list(), universeSettings = None):
         self.MarketHours = MarketHoursDatabase.FromDataFolder()
         self.symbols = symbols
         self.universeSettings = universeSettings
-        self.securityInitializer = securityInitializer
 
         for symbol in symbols:
             SymbolCache.Set(symbol.Value, symbol)
@@ -45,9 +44,6 @@ class ManualUniverseSelectionModel(UniverseSelectionModel):
             The universes to be used by the algorithm'''
         universeSettings = self.universeSettings \
             if self.universeSettings is not None else algorithm.UniverseSettings
-
-        securityInitializer = self.securityInitializer \
-            if self.securityInitializer is not None else algorithm.SecurityInitializer
 
         resolution = universeSettings.Resolution
         type = typeof(Tick) if resolution == Resolution.Tick else typeof(TradeBar);

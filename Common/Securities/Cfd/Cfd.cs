@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -116,6 +117,26 @@ namespace QuantConnect.Securities.Cfd
         public decimal MinimumPriceVariation
         {
             get { return SymbolProperties.MinimumPriceVariation; }
+        }
+
+        /// <summary>
+        /// Decomposes the specified currency pair into a base and quote currency provided as out parameters
+        /// </summary>
+        /// <param name="symbol">The input symbol to be decomposed</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        /// <param name="baseCurrency">The output base currency</param>
+        /// <param name="quoteCurrency">The output quote currency</param>
+        public static void DecomposeCurrencyPair(Symbol symbol, SymbolProperties symbolProperties, out string baseCurrency, out string quoteCurrency)
+        {
+            quoteCurrency = symbolProperties.QuoteCurrency;
+            if (symbol.Value.EndsWith(quoteCurrency))
+            {
+                baseCurrency = symbol.Value.RemoveFromEnd(quoteCurrency);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Symbol doesn't end with {quoteCurrency}");
+            }
         }
     }
 }

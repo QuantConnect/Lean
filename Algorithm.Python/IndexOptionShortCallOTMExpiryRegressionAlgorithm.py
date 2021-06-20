@@ -11,16 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-from datetime import datetime, timedelta
-from QuantConnect.Algorithm import *
-from QuantConnect.Data import *
-from QuantConnect.Data.Market import *
-from QuantConnect.Orders import *
-from QuantConnect.Securities import *
-from QuantConnect.Securities.Future import *
-from QuantConnect import Market
-from QuantConnect import *
-
+from AlgorithmImports import *
 
 ### <summary>
 ### This regression algorithm tests Out of The Money (OTM) index option expiry for short calls.

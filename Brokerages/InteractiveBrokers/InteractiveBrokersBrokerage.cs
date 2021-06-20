@@ -274,6 +274,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _ibAutomater.OutputDataReceived += OnIbAutomaterOutputDataReceived;
             _ibAutomater.ErrorDataReceived += OnIbAutomaterErrorDataReceived;
             _ibAutomater.Exited += OnIbAutomaterExited;
+            _ibAutomater.Restarted += OnIbAutomaterRestarted;
 
             CheckIbAutomaterError(_ibAutomater.Start(false));
 
@@ -2335,7 +2336,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return new Holding
             {
                 Symbol = symbol,
-                Type = symbol.SecurityType,
                 Quantity = e.Position,
                 AveragePrice = Convert.ToDecimal(e.AverageCost) / multiplier,
                 MarketPrice = Convert.ToDecimal(e.MarketPrice),
@@ -3298,18 +3298,61 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Exit code: {e.ExitCode}");
 
+            _stateManager.Reset();
+
             // check if IBGateway was closed because of an IBAutomater error
             var result = _ibAutomater.GetLastStartResult();
             CheckIbAutomaterError(result, false);
 
             if (!result.HasError && !_isDisposeCalled)
             {
-                // IBGateway was closed by the v978+ automatic logoff or it was closed manually (less likely)
-                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
+                // IBGateway was closed by IBAutomater because the auto-restart token expired or it was closed manually (less likely)
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater in 10 seconds...");
 
-                Disconnect();
-                CheckIbAutomaterError(_ibAutomater.Start(false));
-                Connect();
+                Thread.Sleep(TimeSpan.FromSeconds(10));
+
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): restarting...");
+
+                try
+                {
+                    Disconnect();
+
+                    CheckIbAutomaterError(_ibAutomater.Start(false));
+
+                    Connect();
+                }
+                catch (Exception exception)
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterRestartError", exception.ToString()));
+                }
+            }
+        }
+
+        private void OnIbAutomaterRestarted(object sender, EventArgs e)
+        {
+            Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterRestarted()");
+
+            _stateManager.Reset();
+
+            // check if IBGateway was closed because of an IBAutomater error
+            var result = _ibAutomater.GetLastStartResult();
+            CheckIbAutomaterError(result, false);
+
+            if (!result.HasError && !_isDisposeCalled)
+            {
+                // IBGateway was restarted automatically
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterRestarted(): IBGateway restart detected, reconnecting...");
+
+                try
+                {
+                    Disconnect();
+
+                    Connect();
+                }
+                catch (Exception exception)
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterAutoRestartError", exception.ToString()));
+                }
             }
         }
 
@@ -3383,7 +3426,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // these are warning messages not sent as brokerage message events
         private static readonly HashSet<int> FilteredCodes = new HashSet<int>
         {
-            1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158
+            1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158, 10197
         };
     }
 }

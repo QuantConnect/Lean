@@ -11,21 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("QuantConnect.Algorithm")
+from AlgorithmImports import *
 
 import scipy.stats as sp
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework.Selection import *
 from Risk.NullRiskManagementModel import NullRiskManagementModel
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
-
 
 class ContingentClaimsAnalysisDefaultPredictionAlpha(QCAlgorithm):
     ''' Contingent Claim Analysis is put forth by Robert Merton, recepient of the Noble Prize in Economics in 1997 for his work in contributing to
@@ -66,7 +57,7 @@ class ContingentClaimsAnalysisDefaultPredictionAlpha(QCAlgorithm):
         self.SetBenchmark('IJR')
 
         ## Set Universe Selection Model
-        self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(self.CoarseSelectionFunction, self.FineSelectionFunction, None, None))
+        self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(self.CoarseSelectionFunction, self.FineSelectionFunction))
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
         ## Set CCA Alpha Model
         self.SetAlpha(ContingentClaimsAnalysisAlphaModel())

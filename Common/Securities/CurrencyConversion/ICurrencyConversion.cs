@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -11,53 +11,42 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
-using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using QuantConnect.Util;
 
-namespace QuantConnect.Api
+namespace QuantConnect.Securities.CurrencyConversion
 {
     /// <summary>
-    /// Prices rest response wrapper
+    /// Represents a type capable of calculating the conversion rate between two currencies
     /// </summary>
-    public class Prices
+    public interface ICurrencyConversion
     {
         /// <summary>
-        /// The requested Symbol
+        /// The currency this conversion converts from
         /// </summary>
-        public Symbol Symbol { get; set; }
+        string SourceCurrency { get; }
 
         /// <summary>
-        /// The requested symbol ID
+        /// The currency this conversion converts to
         /// </summary>
-        [JsonProperty(PropertyName = "symbol")]
-        public string SymbolID { get; set; }
+        string DestinationCurrency { get; }
 
         /// <summary>
-        /// The requested price
+        /// The current conversion rate between <see cref="SourceCurrency"/> and <see cref="DestinationCurrency"/>
         /// </summary>
-        [JsonProperty(PropertyName = "price")]
-        public decimal Price { get; set; }
+        decimal ConversionRate { get; }
 
         /// <summary>
-        /// UTC time the price was updated
+        /// The securities which the conversion rate is based on
         /// </summary>
-        [JsonProperty(PropertyName = "updated"), JsonConverter(typeof(DoubleUnixSecondsDateTimeJsonConverter))]
-        public DateTime Updated;
-    }
+        IEnumerable<Security> ConversionRateSecurities { get; }
 
-    /// <summary>
-    /// Collection container for a list of prices objects
-    /// </summary>
-    public class PricesList : RestResponse
-    {
         /// <summary>
-        /// Collection of prices objects
+        /// Updates the internal conversion rate based on the latest data, and returns the new conversion rate
         /// </summary>
-        [JsonProperty(PropertyName = "prices")]
-        public List<Prices> Prices;
+        /// <returns>The new conversion rate</returns>
+        decimal Update();
     }
 }

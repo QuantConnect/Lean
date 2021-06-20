@@ -11,24 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Indicators")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Risk import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework.Selection import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-
+from AlgorithmImports import *
 
 class PriceGapMeanReversionAlpha(QCAlgorithm):
     '''The motivating idea for this Alpha Model is that a large price gap (here we use true outliers --

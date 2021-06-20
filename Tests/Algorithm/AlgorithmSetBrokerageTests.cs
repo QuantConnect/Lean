@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -82,9 +82,7 @@ namespace QuantConnect.Tests.Algorithm
             {
                 var model = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect.Brokerages import *
+from AlgorithmImports import *
 
 class Test(AlphaStreamsBrokerageModel):
     def GetLeverage(self, security):

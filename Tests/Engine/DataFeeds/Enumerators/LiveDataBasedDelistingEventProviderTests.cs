@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -56,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 return Enumerable.Empty<BaseData>();
             }, timeProvider);
             var provider = new LiveDataBasedDelistingEventProvider(config, dataQueueHandler);
-            var mapFile = new LocalDiskMapFileProvider().Get(config.Symbol.ID.Market).ResolveMapFile(config.Symbol, config.Type);
+            var mapFile = TestGlobals.MapFileProvider.Get(config.Symbol.ID.Market).ResolveMapFile(config.Symbol, config.Type);
             provider.Initialize(config, null, mapFile, time);
             Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(100)));
 
@@ -81,6 +82,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(1, events.Count);
             Assert.AreEqual(time.AddDays(1), (events[0] as Delisting).Time);
             Assert.AreEqual(DelistingType.Delisted, (events[0] as Delisting).Type);
+
+            provider.DisposeSafely();
         }
     }
 }

@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.FillForward = false;
 
-            AddUniverse(new CustomDataCoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, CoarseSelectionFunction));
+            AddUniverse(new CustomDataCoarseFundamentalUniverse(UniverseSettings, CoarseSelectionFunction));
 
             _symbols = new List<Symbol>();
         }
@@ -93,8 +93,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private class CustomDataCoarseFundamentalUniverse : CoarseFundamentalUniverse
         {
-            public CustomDataCoarseFundamentalUniverse(UniverseSettings universeSettings, ISecurityInitializer securityInitializer, Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
-                : base(universeSettings, securityInitializer, selector)
+            public CustomDataCoarseFundamentalUniverse(UniverseSettings universeSettings, Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
+                : base(universeSettings, selector)
             { }
 
             public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc,

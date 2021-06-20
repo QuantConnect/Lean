@@ -170,3 +170,7 @@ QCAlgorithmFramework = QCAlgorithm
 QCAlgorithmFrameworkBridge = QCAlgorithm
 ```
 
+# Known Issues
+- Python can sometimes have issues when paired with our quantconnect stubs package on Windows. This issue can cause modules not to be found because `site-packages` directory is not present in the python path. If you have the required modules installed and are seeing errors about them not being found, please try the following steps:
+    - remove stubs -> pip uninstall quantconnect-stubs
+    - reinstall stubs -> pip install quantconnect-stubs

@@ -11,13 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import *
+from AlgorithmImports import *
 from collections import deque
-from datetime import timedelta
-
 
 ### <summary>
 ### Basic algorithm demonstrating how to place LimitIfTouched orders.

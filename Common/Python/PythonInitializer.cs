@@ -19,7 +19,7 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Logging;
 using System.Collections.Generic;
-using System.IO;
+using QuantConnect.Util;
 
 namespace QuantConnect.Python
 {
@@ -29,14 +29,17 @@ namespace QuantConnect.Python
     public static class PythonInitializer
     {
         // Used to allow multiple Python unit and regression tests to be run in the same test run
-        private static bool _isBeginAllowThreadsCalled;
+        private static bool _isInitialized;
+
+        // Used to hold pending path additions before Initialize is called
+        private static List<string> _pendingPathAdditions = new List<string>();
 
         /// <summary>
         /// Initialize the Python.NET library
         /// </summary>
         public static void Initialize()
         {
-            if (!_isBeginAllowThreadsCalled)
+            if (!_isInitialized)
             {
                 Log.Trace("PythonInitializer.Initialize(): start...");
                 PythonEngine.Initialize();
@@ -44,7 +47,7 @@ namespace QuantConnect.Python
                 // required for multi-threading usage
                 PythonEngine.BeginAllowThreads();
 
-                _isBeginAllowThreadsCalled = true;
+                _isInitialized = true;
                 Log.Trace("PythonInitializer.Initialize(): ended");
 
                 AddPythonPaths(new []{ Environment.CurrentDirectory });
@@ -56,48 +59,30 @@ namespace QuantConnect.Python
         /// </summary>
         public static void AddPythonPaths(IEnumerable<string> paths)
         {
-            if (_isBeginAllowThreadsCalled)
+            if (paths == null)
+            {
+                return;
+            }
+
+            if (_isInitialized)
             {
                 using (Py.GIL())
                 {
-                    var code = string.Join(";", paths.Select(s => $"sys.path.append('{s}')"))
+                    _pendingPathAdditions.AddRange(paths);
+
+                    // Generate the python code to add these to our path and execute
+                    var code = string.Join(";", _pendingPathAdditions.Select(s => $"sys.path.append('{s}')"))
                         .Replace('\\', '/');
+
                     PythonEngine.Exec($"import sys;{code}");
+                    _pendingPathAdditions.Clear();
                 }
             }
-        }
-
-        /// <summary>
-        /// Adds the provided paths to the end of the PYTHONPATH environment variable, as well
-        /// as the current working directory.
-        /// </summary>
-        /// <param name="extraDirectories">Additional paths to add to the end of PYTHONPATH</param>
-        public static void SetPythonPathEnvironmentVariable(IEnumerable<string> extraDirectories = null)
-        {
-            // create new python path environment variable containing directories
-            var pythonDirectories = new List<string>();
-
-            // Don't include an empty environment variable in pythonPath, otherwise the PYTHONPATH
-            // environment variable won't be used in the module import process
-            var pythonPathEnvironmentVariable = Environment.GetEnvironmentVariable("PYTHONPATH");
-            if (!string.IsNullOrEmpty(pythonPathEnvironmentVariable))
+            else
             {
-                pythonDirectories.Add(pythonPathEnvironmentVariable);
+                // Add these paths to our pending additions list
+                _pendingPathAdditions.AddRange(paths);
             }
-
-            // Since the order of the PYTHONPATH matters, let's add any new
-            // entries to the end of the new environment variable to prevent
-            // any potential Python standard library paths from being de-prioritized.
-            if (extraDirectories != null)
-            {
-                pythonDirectories.AddRange(extraDirectories);
-            }
-
-            // Add current directory too, allows python algorithms to find Lean's pre-defined submodules
-            pythonDirectories.Add(new DirectoryInfo(Environment.CurrentDirectory).FullName);
-            var finalPath = string.Join(OS.IsLinux ? ":" : ";", pythonDirectories.Distinct());
-
-            Environment.SetEnvironmentVariable("PYTHONPATH", finalPath);
         }
     }
 }

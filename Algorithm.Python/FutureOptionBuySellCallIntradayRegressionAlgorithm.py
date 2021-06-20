@@ -11,20 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-from datetime import datetime, timedelta
-
-import clr
-from System import *
-from System.Reflection import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data import *
-from QuantConnect.Data.Market import *
-from QuantConnect.Orders import *
-from QuantConnect.Securities import *
-from QuantConnect.Securities.Future import *
-from QuantConnect import Market
-
+from AlgorithmImports import *
 
 ### <summary>
 ### This regression algorithm tests In The Money (ITM) future option calls across different strike prices.
@@ -89,4 +76,3 @@ class FutureOptionBuySellCallIntradayRegressionAlgorithm(QCAlgorithm):
     def OnEndOfAlgorithm(self):
         if self.Portfolio.Invested:
             raise AssertionError(f"Expected no holdings at end of algorithm, but are invested in: {', '.join([str(i.ID) for i in self.Portfolio.Keys])}")
-    

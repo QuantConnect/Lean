@@ -17,6 +17,7 @@
 using System;
 using System.ComponentModel.Composition;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -194,7 +195,7 @@ namespace QuantConnect.Lean.Engine
             var objectStoreTypeName = Config.Get("object-store", "LocalObjectStore");
             var dataPermissionManager = Config.Get("data-permission-manager", "DataPermissionManager");
 
-            return new LeanEngineAlgorithmHandlers(
+            var result = new LeanEngineAlgorithmHandlers(
                 composer.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName),
                 composer.GetExportedValueByTypeName<ISetupHandler>(setupHandlerTypeName),
                 composer.GetExportedValueByTypeName<IDataFeed>(dataFeedHandlerTypeName),
@@ -207,6 +208,18 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IObjectStore>(objectStoreTypeName),
                 composer.GetExportedValueByTypeName<IDataPermissionManager>(dataPermissionManager)
                 );
+
+            result.FactorFileProvider.Initialize(result.MapFileProvider, result.DataProvider);
+            result.MapFileProvider.Initialize(result.DataProvider);
+
+            if (result.DataProvider is ApiDataProvider
+                && (result.FactorFileProvider is not LocalZipFactorFileProvider || result.MapFileProvider is not LocalZipMapFileProvider))
+            {
+                throw new ArgumentException($"The {typeof(ApiDataProvider)} can only be used with {typeof(LocalZipFactorFileProvider)}" +
+                    $" and {typeof(LocalZipMapFileProvider)}, please update 'config.json'");
+            }
+
+            return result;
         }
 
         /// <summary>

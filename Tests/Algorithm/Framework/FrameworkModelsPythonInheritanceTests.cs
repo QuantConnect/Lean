@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -66,10 +66,7 @@ class MockUniverseSelectionModel(ManualUniverseSelectionModel):
         public void FundamentalUniverseSelectionModelCanBeInherited()
         {
             var code = @"
-from clr import AddReference
-AddReference('QuantConnect.Common')
-
-from QuantConnect import Market, SecurityType, Symbol
+from AlgorithmImports import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
 class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):

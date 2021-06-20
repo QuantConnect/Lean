@@ -11,20 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
-from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
-from datetime import timedelta
+from AlgorithmImports import *
 
 #
 # Leveraged ETFs (LETF) promise a fixed leverage ratio with respect to an underlying asset or an index.

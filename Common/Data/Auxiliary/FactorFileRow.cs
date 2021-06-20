@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
@@ -95,12 +96,24 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads in the factor file for the specified equity symbol
         /// </summary>
-        public static IEnumerable<FactorFileRow> Read(string permtick, string market, out DateTime? factorFileMinimumDate)
+        public static IEnumerable<FactorFileRow> Read(Stream file, out DateTime? factorFileMinimumDate)
         {
             factorFileMinimumDate = null;
 
-            var path = Path.Combine(Globals.CacheDataFolder, "equity", market, "factor_files", permtick.ToLowerInvariant() + ".csv");
-            var lines = File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l));
+            var streamReader = new StreamReader(file, Encoding.UTF8);
+
+            string line;
+            var lines = new List<string>();
+            while (!streamReader.EndOfStream)
+            {
+                line = streamReader.ReadLine();
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    lines.Add(line);
+                }
+            }
+
+            streamReader.Dispose();
 
             return Parse(lines, out factorFileMinimumDate);
         }

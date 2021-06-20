@@ -48,16 +48,15 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// </summary>
         /// <param name="file">The source file.</param>
         /// <param name="processingDate">The processing date.</param>
-        /// <param name="market">The market/exchange.</param>
         /// <returns></returns>
-        public CoinApiEntryData GetCoinApiEntryData(FileInfo file, DateTime processingDate, string market)
+        public CoinApiEntryData GetCoinApiEntryData(FileInfo file, DateTime processingDate)
         {
             // crypto/<market>/<date>/<ticktype>-563-BITFINEX_SPOT_BTC_USD.csv.gz
-            var tickType = file.FullName.Contains("trade") ? TickType.Trade : TickType.Quote;
+            var tickType = file.FullName.Contains("trades") ? TickType.Trade : TickType.Quote;
 
             var symbolId = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file.Name)).Split('-').Last();
 
-            var symbol = _symbolMapper.GetLeanSymbol(symbolId, SecurityType.Crypto, market);
+            var symbol = _symbolMapper.GetLeanSymbol(symbolId, SecurityType.Crypto, null);
 
             return new CoinApiEntryData
             {
@@ -132,7 +131,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     Time = time,
                     Value = price,
                     Quantity = quantity,
-                    TickType = TickType.Trade
+                    TickType = TickType.Trade,
+                    Suspicious = price == -1
                 };
             }
         }
@@ -183,7 +183,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     AskSize = askSize,
                     BidPrice = bidPrice,
                     BidSize = bidSize,
-                    TickType = TickType.Quote
+                    TickType = TickType.Quote,
+                    Suspicious = bidPrice == -1m || askPrice == -1m
                 };
             }
         }

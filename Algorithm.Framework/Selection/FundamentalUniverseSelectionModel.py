@@ -23,16 +23,13 @@ class FundamentalUniverseSelectionModel:
     
     def __init__(self,
                  filterFineData,
-                 universeSettings = None, 
-                 securityInitializer = None):
+                 universeSettings = None):
         '''Initializes a new instance of the FundamentalUniverseSelectionModel class
         Args:
             filterFineData: True to also filter using fine fundamental data, false to only filter on coarse data
-            universeSettings: The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings
-            securityInitializer: Optional security initializer invoked when creating new securities, specify null to use algorithm.SecurityInitializer'''
+            universeSettings: The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings'''
         self.filterFineData = filterFineData
         self.universeSettings = universeSettings
-        self.securityInitializer = securityInitializer
 
 
     def CreateUniverses(self, algorithm):
@@ -55,8 +52,7 @@ class FundamentalUniverseSelectionModel:
         Returns:
             The coarse fundamental universe'''
         universeSettings = algorithm.UniverseSettings if self.universeSettings is None else self.universeSettings
-        securityInitializer = algorithm.SecurityInitializer if self.securityInitializer is None else self.securityInitializer
-        return CoarseFundamentalUniverse(universeSettings, securityInitializer, lambda coarse: self.FilteredSelectCoarse(algorithm, coarse))
+        return CoarseFundamentalUniverse(universeSettings, lambda coarse: self.FilteredSelectCoarse(algorithm, coarse))
 
 
     def FilteredSelectCoarse(self, algorithm, coarse):

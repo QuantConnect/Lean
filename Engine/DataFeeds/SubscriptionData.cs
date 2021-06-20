@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -91,7 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else if (normalizationMode == DataNormalizationMode.TotalReturn)
                 {
-                    normalizedData.Scale(p => p * factor.Value + sumOfDividends);
+                    normalizedData.Scale(p => p * factor.Value + sumOfDividends, 1/factor.Value);
                 }
 
                 return new PrecalculatedSubscriptionData(configuration, data, normalizedData, normalizationMode, emitTimeUtc);

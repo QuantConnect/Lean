@@ -531,7 +531,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         if (_iqFeedNameMap.ContainsKey(underlyingString))
                             underlyingString = _iqFeedNameMap[underlyingString];
 
-                        if (underlyingString != placeholder.Symbol.Value)
+                        if (underlyingString != placeholder.Symbol.Value.TrimStart('/'))
                         {
                             continue;
                         }

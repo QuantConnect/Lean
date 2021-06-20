@@ -1246,7 +1246,7 @@ actualDictionary.update({'IBM': 5})
                 algo.SetStartDate(DateTime.UtcNow.AddDays(-1));
 
                 var history = algo.History(new[] { Symbols.IBM }, new DateTime(2013, 10, 7), new DateTime(2013, 10, 8), Resolution.Tick).ToList();
-                Assert.AreEqual(57401, history.Count);
+                Assert.AreEqual(57460, history.Count);
 
                 foreach (var slice in history)
                 {

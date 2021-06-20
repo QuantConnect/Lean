@@ -137,6 +137,10 @@ namespace QuantConnect.Data.Consolidators
             {
                 _firstTick = false;
 
+                // Round our first rate to the same length as BarSize
+                var decimalPlaces = BitConverter.GetBytes(decimal.GetBits(BarSize)[3])[2];
+                rate = Math.Round(rate, decimalPlaces);
+
                 OpenOn = data.Time;
                 CloseOn = data.Time;
                 OpenRate = rate;

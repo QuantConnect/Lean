@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +20,8 @@ AddReference("QuantConnect.Algorithm.Framework")
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget
-from QuantConnect.Algorithm.Framework.Risk import RiskManagementModel
+from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Algorithm.Framework.Risk import *
 
 class MaximumUnrealizedProfitPercentPerSecurity(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that limits the unrealized profit per holding to the specified percentage'''

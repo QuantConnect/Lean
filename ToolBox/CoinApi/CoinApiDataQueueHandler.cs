@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -54,9 +55,9 @@ namespace QuantConnect.ToolBox.CoinApi
         private readonly string[] _streamingDataType;
         private readonly CoinApiWsClient _client;
         private readonly object _locker = new object();
+        private ConcurrentDictionary<string, Symbol> _symbolCache = new ConcurrentDictionary<string, Symbol>();
         private readonly CoinApiSymbolMapper _symbolMapper = new CoinApiSymbolMapper();
-        private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
-            Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+        private readonly IDataAggregator _dataAggregator;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         private readonly TimeSpan _subscribeDelay = TimeSpan.FromMilliseconds(250);
@@ -67,13 +68,19 @@ namespace QuantConnect.ToolBox.CoinApi
         private readonly TimeSpan _minimumTimeBetweenHelloMessages = TimeSpan.FromSeconds(5);
         private DateTime _nextHelloMessageUtcTime = DateTime.MinValue;
 
-        private readonly Dictionary<Symbol, Tick> _previousQuotes = new Dictionary<Symbol, Tick>();
+        private readonly ConcurrentDictionary<string, Tick> _previousQuotes = new ConcurrentDictionary<string, Tick>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoinApiDataQueueHandler"/> class
         /// </summary>
         public CoinApiDataQueueHandler()
         {
+            _dataAggregator = Composer.Instance.GetPart<IDataAggregator>();
+            if (_dataAggregator == null)
+            {
+                _dataAggregator =
+                    Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+            }
             var product = Config.GetValue<CoinApiProduct>("coinapi-product");
             _streamingDataType = product < CoinApiProduct.Streamer
                 ? new[] { "trade" }
@@ -174,7 +181,8 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             Log.Trace($"CoinApiDataQueueHandler.SubscribeMarkets(): {string.Join(",", markets)}");
 
-            SendHelloMessage(markets.Select(x => _symbolMapper.GetExchangeId(x)));
+            // we add '_' to be more precise, for example requesting 'BINANCE' doesn't match 'BINANCEUS'
+            SendHelloMessage(markets.Select(x => string.Concat(_symbolMapper.GetExchangeId(x.ToLowerInvariant()), "_")));
         }
 
         private void ProcessSubscriptionRequest()
@@ -255,12 +263,24 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             Log.Trace($"CoinApiDataQueueHandler.SubscribeSymbols(): {string.Join(",", symbolsToSubscribe)}");
 
-            SendHelloMessage(symbolsToSubscribe.Select(_symbolMapper.GetBrokerageSymbol));
+            // subscribe to symbols using exact match
+            SendHelloMessage(symbolsToSubscribe.Select(x => {
+                try
+                {
+                    var result = string.Concat(_symbolMapper.GetBrokerageSymbol(x), "$");
+                    return result;
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e);
+                    return null;
+                }
+                }).Where(x => x != null));
         }
 
         private void SendHelloMessage(IEnumerable<string> subscribeFilter)
         {
-            var list = subscribeFilter.Select(x => string.Concat(x, "$")).ToList();
+            var list = subscribeFilter.ToList();
             if (list.Count == 0)
             {
                 // If we use a null or empty filter in the CoinAPI hello message
@@ -284,16 +304,15 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             try
             {
-                var tick = new Tick
+                var symbol = GetSymbolUsingCache(trade.symbol_id);
+                if(symbol == null)
                 {
-                    Symbol = _symbolMapper.GetLeanSymbol(trade.symbol_id, SecurityType.Crypto, string.Empty),
-                    Time = trade.time_exchange,
-                    Value = trade.price,
-                    Quantity = trade.size,
-                    TickType = TickType.Trade
-                };
+                    return;
+                }
 
-                lock (_locker)
+                var tick = new Tick(trade.time_exchange, symbol, string.Empty, string.Empty, quantity: trade.size, price: trade.price);
+
+                lock (symbol)
                 {
                     _dataAggregator.Update(tick);
                 }
@@ -308,26 +327,25 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             try
             {
-                var tick = new Tick
+                // only emit quote ticks if bid price or ask price changed
+                Tick previousQuote;
+                if (!_previousQuotes.TryGetValue(quote.symbol_id, out previousQuote)
+                    || quote.ask_price != previousQuote.AskPrice
+                    || quote.bid_price != previousQuote.BidPrice)
                 {
-                    Symbol = _symbolMapper.GetLeanSymbol(quote.symbol_id, SecurityType.Crypto, string.Empty),
-                    Time = quote.time_exchange,
-                    AskPrice = quote.ask_price,
-                    AskSize = quote.ask_size,
-                    BidPrice = quote.bid_price,
-                    BidSize = quote.bid_size,
-                    TickType = TickType.Quote
-                };
-
-                lock (_locker)
-                {
-                    // only emit quote ticks if bid price or ask price changed
-                    Tick previousQuote;
-                    if (!_previousQuotes.TryGetValue(tick.Symbol, out previousQuote) ||
-                        tick.AskPrice != previousQuote.AskPrice ||
-                        tick.BidPrice != previousQuote.BidPrice)
+                    var symbol = GetSymbolUsingCache(quote.symbol_id);
+                    if (symbol == null)
                     {
-                        _previousQuotes[tick.Symbol] = tick;
+                        return;
+                    }
+
+                    var tick = new Tick(quote.time_exchange, symbol, string.Empty, string.Empty,
+                        bidSize: quote.bid_size, bidPrice: quote.bid_price,
+                        askSize: quote.ask_size, askPrice: quote.ask_price);
+
+                    _previousQuotes[quote.symbol_id] = tick;
+                    lock (symbol)
+                    {
                         _dataAggregator.Update(tick);
                     }
                 }
@@ -336,6 +354,25 @@ namespace QuantConnect.ToolBox.CoinApi
             {
                 Log.Error(e);
             }
+        }
+
+        private Symbol GetSymbolUsingCache(string ticker)
+        {
+            if(!_symbolCache.TryGetValue(ticker, out Symbol result))
+            {
+                try
+                {
+                    result = _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, string.Empty);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e);
+                    // we store the null so we don't keep going into the same mapping error
+                    result = null;
+                }
+                _symbolCache[ticker] = result;
+            }
+            return result;
         }
 
         private void OnError(object sender, Exception e)

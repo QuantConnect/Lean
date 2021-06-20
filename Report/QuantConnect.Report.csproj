@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -14,10 +14,11 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Description>QuantConnect LEAN Engine: Report Project - Generates live and backtesting reports</Description>
+    <LangVersion>9</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>$(SelectedOptimization)</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,19 +34,7 @@
   <PropertyGroup>
     <StartupObject>QuantConnect.Report.Program</StartupObject>
   </PropertyGroup>
-  <PropertyGroup>
-    <IsWindows>false</IsWindows>
-    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
-    <IsOSX>false</IsOSX>
-    <IsOSX Condition="'$(IsWindows)' != 'true' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
-    <IsLinux>false</IsLinux>
-    <IsLinux Condition="'$(IsWindows)' != 'true' AND '$(IsOSX)' != 'true' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
-  </PropertyGroup>
   <Target Name="PrintRID" BeforeTargets="Build">
-    <Message Text="IsWindows $(IsWindows)" Importance="high" />
-    <Message Text="IsOSX $(IsOSX)" Importance="high" />
-    <Message Text="IsLinux $(IsLinux)" Importance="high" />
-    <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
   <PropertyGroup>
@@ -53,7 +42,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.1" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.4" />
     <PackageReference Include="Deedle" Version="2.1.0" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

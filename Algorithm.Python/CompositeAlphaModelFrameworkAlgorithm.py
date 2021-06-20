@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,25 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
+from AlgorithmImports import *
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Risk import *
-from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.RsiAlphaModel import RsiAlphaModel
 from Alphas.EmaCrossAlphaModel import EmaCrossAlphaModel
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
-from datetime import timedelta
-import numpy as np
 
 ### <summary>
 ### Show cases how to use the CompositeAlphaModel to define.

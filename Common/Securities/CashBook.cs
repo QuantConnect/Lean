@@ -120,7 +120,7 @@ namespace QuantConnect.Securities
             {
                 var cash = kvp.Value;
 
-                var subscriptionDataConfig = cash.EnsureCurrencyDataFeed(
+                var subscriptionDataConfigs = cash.EnsureCurrencyDataFeed(
                     securities,
                     subscriptions,
                     marketMap,
@@ -128,9 +128,12 @@ namespace QuantConnect.Securities
                     securityService,
                     AccountCurrency,
                     defaultResolution);
-                if (subscriptionDataConfig != null)
+                if (subscriptionDataConfigs != null)
                 {
-                    addedSubscriptionDataConfigs.Add(subscriptionDataConfig);
+                    foreach (var subscriptionDataConfig in subscriptionDataConfigs)
+                    {
+                        addedSubscriptionDataConfigs.Add(subscriptionDataConfig);
+                    }
                 }
             }
             return addedSubscriptionDataConfigs;

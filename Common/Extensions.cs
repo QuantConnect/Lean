@@ -21,6 +21,8 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
@@ -86,6 +88,52 @@ namespace QuantConnect
         /// like future options the market close would match the delisted event time and would cancel all orders and mark the security
         /// as non tradable and delisted.</remarks>
         public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } = TimeSpan.FromMinutes(-15);
+
+        /// <summary>
+        /// Helper method to download a provided url as a string
+        /// </summary>
+        /// <param name="url">The url to download data from</param>
+        public static string DownloadData(this string url)
+        {
+            using (var client = new HttpClient())
+            {
+                try
+                {
+                    using (var response = client.GetAsync(url).Result)
+                    {
+                        using (var content = response.Content)
+                        {
+                            return content.ReadAsStringAsync().Result;
+                        }
+                    }
+                }
+                catch (WebException ex)
+                {
+                    Log.Error(ex, $"DownloadData(): failed for: '{url}'");
+                    // If server returned an error most likely on this day there is no data we are going to the next cycle
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to create an order request to liquidate a delisted asset
+        /// </summary>
+        public static SubmitOrderRequest CreateDelistedSecurityOrderRequest(this Security security, DateTime utcTime)
+        {
+            var orderType = OrderType.Market;
+            var tag = "Liquidate from delisting";
+            if (security.Type.IsOption())
+            {
+                // tx handler will determine auto exercise/assignment
+                tag = "Option Expired";
+                orderType = OrderType.OptionExercise;
+            }
+
+            // submit an order to liquidate on market close or exercise (for options)
+            return new SubmitOrderRequest(orderType, security.Type, security.Symbol,
+                -security.Holdings.Quantity, 0, 0, utcTime, tag);
+        }
 
         /// <summary>
         /// Safe multiplies a decimal by 100
@@ -2660,7 +2708,12 @@ namespace QuantConnect
         /// <summary>
         /// Scale data based on factor function
         /// </summary>
-        public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor)
+        /// <param name="data">Data to Adjust</param>
+        /// <param name="factor">Function to factor prices by</param>
+        /// <param name="volumeFactor">Factor to multiply volume/askSize/bidSize/quantity by</param>
+        /// <remarks>Volume values are rounded to the nearest integer, lot size purposefully not considered
+        /// as scaling only applies to equities</remarks>
+        public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor, decimal volumeFactor)
         {
             switch (data.DataType)
             {
@@ -2672,6 +2725,7 @@ namespace QuantConnect
                         tradeBar.High = factor(tradeBar.High);
                         tradeBar.Low = factor(tradeBar.Low);
                         tradeBar.Close = factor(tradeBar.Close);
+                        tradeBar.Volume = Math.Round(tradeBar.Volume * volumeFactor);
                     }
                     break;
                 case MarketDataType.Tick:
@@ -2692,11 +2746,14 @@ namespace QuantConnect
                     if (tick.TickType == TickType.Trade)
                     {
                         tick.Value = factor(tick.Value);
+                        tick.Quantity = Math.Round(tick.Quantity * volumeFactor);
                         break;
                     }
 
                     tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
+                    tick.BidSize = Math.Round(tick.BidSize * volumeFactor);
                     tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
+                    tick.AskSize = Math.Round(tick.AskSize * volumeFactor);
 
                     if (tick.BidPrice == 0)
                     {
@@ -2730,6 +2787,8 @@ namespace QuantConnect
                             quoteBar.Bid.Close = factor(quoteBar.Bid.Close);
                         }
                         quoteBar.Value = quoteBar.Close;
+                        quoteBar.LastAskSize = Math.Round(quoteBar.LastAskSize * volumeFactor);
+                        quoteBar.LastBidSize = Math.Round(quoteBar.LastBidSize * volumeFactor);
                     }
                     break;
                 case MarketDataType.Auxiliary:
@@ -2751,7 +2810,7 @@ namespace QuantConnect
         /// <returns></returns>
         public static BaseData Normalize(this BaseData data, SubscriptionDataConfig config)
         {
-            return data?.Scale(p => config.GetNormalizedPrice(p));
+            return data?.Scale(p => config.GetNormalizedPrice(p), 1/config.PriceScaleFactor);
         }
 
         /// <summary>
@@ -2762,7 +2821,7 @@ namespace QuantConnect
         /// <returns></returns>
         public static BaseData Adjust(this BaseData data, decimal scale)
         {
-            return data?.Scale(p => p * scale);
+            return data?.Scale(p => p * scale, 1/scale);
         }
 
         /// <summary>
@@ -3061,6 +3120,37 @@ namespace QuantConnect
                 }
 
                 return hashCode;
+            }
+        }
+
+        /// <summary>
+        /// Read all lines from a stream reader
+        /// </summary>
+        /// <param name="reader">Stream reader to read from</param>
+        /// <returns>Enumerable of lines in stream</returns>
+        public static IEnumerable<string> ReadAllLines(this StreamReader reader)
+        {
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                yield return line;
+            }
+        }
+
+        /// <summary>
+        /// Determine if this SecurityType requires mapping
+        /// </summary>
+        /// <param name="securityType">Type to check</param>
+        /// <returns>True if it needs to be mapped</returns>
+        public static bool RequiresMapping(this SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                case SecurityType.Option:
+                    return true;
+                default:
+                    return false;
             }
         }
     }

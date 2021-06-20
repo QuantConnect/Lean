@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -7,7 +7,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <LangVersion>6</LangVersion>
+    <LangVersion>9</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -233,6 +233,12 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
+            if (_algorithm.BrokerageModel.AccountType == AccountType.Cash)
+            {
+                // For cash account try loading pre - existing currency swaps from the job packet if provided
+                return base.GetAccountHoldings(_job?.BrokerageData, _algorithm?.Securities.Values);
+            }
+
             var endpoint = GetEndpoint("auth/r/positions");
             var request = new RestRequest(endpoint, Method.POST);
 

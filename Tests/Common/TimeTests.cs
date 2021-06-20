@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void UnixTimeStampMillisecondsToDateTimeHasSubMillisecondPrecision()
         {
-            const double stamp = 1520711961000.55;
+            const decimal stamp = 1520711961000.55m;
             var expected = new DateTime(2018, 3, 10, 19, 59, 21, 0).AddTicks(5500);
             var time = Time.UnixMillisecondTimeStampToDateTime(stamp);
             Assert.AreEqual(expected, time);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -203,8 +203,7 @@ namespace QuantConnect.Data
         /// <returns>True indicates mapping should be used</returns>
         public virtual bool RequiresMapping()
         {
-            return Symbol.SecurityType == SecurityType.Equity ||
-                   Symbol.SecurityType == SecurityType.Option;
+            return Symbol.SecurityType.RequiresMapping();
         }
 
         /// <summary>

@@ -19,7 +19,6 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Fasterflect;
-using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.InteractiveBrokers;
@@ -41,7 +40,7 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class BrokerageSetupHandler : ISetupHandler
     {
-        private bool _notifiedDefaultResolutionUsed;
+        private bool _notifiedUniverseSettingsUsed;
 
         /// <summary>
         /// Max allocation limit configuration variable name
@@ -433,17 +432,27 @@ namespace QuantConnect.Lean.Engine.Setup
                     var exchangeTime = utcNow.ConvertFromUtc(security.Exchange.TimeZone);
 
                     security.Holdings.SetHoldings(holding.AveragePrice, holding.Quantity);
-                    security.SetMarketPrice(new TradeBar
+
+                    if (holding.MarketPrice == 0)
                     {
-                        Time = exchangeTime,
-                        Open = holding.MarketPrice,
-                        High = holding.MarketPrice,
-                        Low = holding.MarketPrice,
-                        Close = holding.MarketPrice,
-                        Volume = 0,
-                        Symbol = holding.Symbol,
-                        DataType = MarketDataType.TradeBar
-                    });
+                        // try warming current market price
+                        holding.MarketPrice = algorithm.GetLastKnownPrice(security)?.Price ?? 0;
+                    }
+
+                    if (holding.MarketPrice != 0)
+                    {
+                        security.SetMarketPrice(new TradeBar
+                        {
+                            Time = exchangeTime,
+                            Open = holding.MarketPrice,
+                            High = holding.MarketPrice,
+                            Low = holding.MarketPrice,
+                            Close = holding.MarketPrice,
+                            Volume = 0,
+                            Symbol = holding.Symbol,
+                            DataType = MarketDataType.TradeBar
+                        });
+                    }
                 }
             }
             catch (Exception err)
@@ -461,11 +470,16 @@ namespace QuantConnect.Lean.Engine.Setup
             if (!algorithm.Portfolio.ContainsKey(symbol))
             {
                 var resolution = algorithm.UniverseSettings.Resolution;
-                if (!_notifiedDefaultResolutionUsed)
+                var fillForward = algorithm.UniverseSettings.FillForward;
+                var leverage = algorithm.UniverseSettings.Leverage;
+                var extendedHours = algorithm.UniverseSettings.ExtendedMarketHours;
+
+                if (!_notifiedUniverseSettingsUsed)
                 {
                     // let's just send the message once
-                    _notifiedDefaultResolutionUsed = true;
-                    algorithm.Debug($"Will use UniverseSettings.Resolution value '{resolution}' for automatically added securities for open orders and holdings.");
+                    _notifiedUniverseSettingsUsed = true;
+                    algorithm.Debug($"Will use UniverseSettings for automatically added securities for open orders and holdings. UniverseSettings:" +
+                        $" Resolution = {resolution}; Leverage = {leverage}; FillForward = {fillForward}; ExtendedHours = {extendedHours}");
                 }
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + symbol.Value);
@@ -473,17 +487,17 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (symbol.SecurityType.IsOption())
                 {
                     // add current option contract to the system
-                    algorithm.AddOptionContract(symbol, resolution, true, 1.0m);
+                    algorithm.AddOptionContract(symbol, resolution, fillForward, leverage);
                 }
                 else if (symbol.SecurityType == SecurityType.Future)
                 {
                     // add current future contract to the system
-                    algorithm.AddFutureContract(symbol, resolution, true, 1.0m);
+                    algorithm.AddFutureContract(symbol, resolution, fillForward, leverage);
                 }
                 else
                 {
                     // for items not directly requested set leverage to 1 and at the min resolution
-                    algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, true, 1.0m, false);
+                    algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, fillForward, leverage, extendedHours);
                 }
             }
         }

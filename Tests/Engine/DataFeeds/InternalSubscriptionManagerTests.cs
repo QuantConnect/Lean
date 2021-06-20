@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,6 +27,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -37,6 +38,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class InternalSubscriptionManagerTests
     {
+        private IResultHandler _resultHandler;
         private Synchronizer _synchronizer;
         private DataManager _dataManager;
         private QCAlgorithm _algorithm;
@@ -53,6 +55,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             _dataFeed.Exit();
             _dataManager.RemoveAllSubscriptions();
+            _resultHandler.Exit();
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
@@ -324,6 +327,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataFeed = new TestableLiveTradingDataFeed(dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? new AggregationManager()));
             _algorithm = new AlgorithmStub(createDataManager: false);
             _synchronizer = synchronizer ?? new LiveSynchronizer();
+
+
             var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook,
                 MarketHoursDatabase.FromDataFolder(),
@@ -335,20 +340,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _algorithm,
                 securityService,
                 new DataPermissionManager(),
-                new DefaultDataProvider(),
+                TestGlobals.DataProvider,
                 Resolution.Second);
             _dataManager = new DataManager(_dataFeed, universeSelection, _algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork),
                 MarketHoursDatabase.FromDataFolder(),
                 true,
                 new RegisteredSecurityDataTypesProvider(),
                 new DataPermissionManager());
+            _resultHandler = new TestResultHandler();
             _synchronizer.Initialize(_algorithm, _dataManager);
             _dataFeed.Initialize(_algorithm,
                 new LiveNodePacket(),
-                new TestResultHandler(),
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
-                new DefaultDataProvider(),
+                _resultHandler,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.DataProvider,
                 _dataManager,
                 _synchronizer,
                 new DataChannelProvider());
@@ -356,7 +362,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.Securities.SetSecurityService(securityService);
             _algorithm.SetFinishedWarmingUp();
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
-            backtestingTransactionHandler.Initialize(_algorithm, new PaperBrokerage(_algorithm, new LiveNodePacket()), new TestResultHandler());
+            backtestingTransactionHandler.Initialize(_algorithm, new PaperBrokerage(_algorithm, new LiveNodePacket()), _resultHandler);
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
             _algorithm.PostInitialize();
         }

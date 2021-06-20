@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            return new InteractiveBrokersBrokerage(new QCAlgorithm(), orderProvider, securityProvider, new AggregationManager(), new LocalDiskMapFileProvider());
+            return new InteractiveBrokersBrokerage(new QCAlgorithm(), orderProvider, securityProvider, new AggregationManager(), TestGlobals.MapFileProvider);
         }
 
         protected override void DisposeBrokerage(IBrokerage brokerage)

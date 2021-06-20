@@ -1,4 +1,4 @@
-﻿﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -34,9 +35,13 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void ReadsFactorFileWithoutInfValues()
         {
-            var factorFile = FactorFile.Read("AAPL", "usa");
+            var PermTick = "AAPL";
+            var Market = "usa";
+            var _symbol = new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick);
 
-            Assert.AreEqual(29, factorFile.SortedFactorFileData.Count);
+            var factorFile = TestGlobals.FactorFileProvider.Get(_symbol);
+
+            Assert.AreEqual(41, factorFile.SortedFactorFileData.Count);
 
             Assert.AreEqual(new DateTime(1998, 01, 01), factorFile.FactorFileMinimumDate.Value);
         }
@@ -412,7 +417,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
         private static FactorFile GetFactorFile(string permtick)
         {
-            return FactorFile.Read(permtick, QuantConnect.Market.USA);
+            return TestGlobals.FactorFileProvider.Get(permtick);
         }
 
         private static FactorFile GetFactorFile_LODE20191127()
