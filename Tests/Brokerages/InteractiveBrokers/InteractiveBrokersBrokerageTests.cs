@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,12 +30,11 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
-    [Ignore("These tests require the IBGateway to be installed.")]
+    [Explicit("These tests require the IBGateway to be installed.")]
     public class InteractiveBrokersBrokerageTests
     {
         private readonly List<Order> _orders = new List<Order>();
@@ -46,6 +45,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [SetUp]
         public void InitializeBrokerage()
         {
+            Log.LogHandler = new NUnitLogHandler();
+
             // grabs account info from configuration
             var securityProvider = new SecurityProvider();
             securityProvider[Symbols.USDJPY] = new Security(
@@ -68,11 +69,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             );
 
             _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(
-                new QCAlgorithm(), 
-                new OrderProvider(_orders), 
+                new QCAlgorithm(),
+                new OrderProvider(_orders),
                 securityProvider,
                 new AggregationManager(),
-                new LocalDiskMapFileProvider());
+                TestGlobals.MapFileProvider);
             _interactiveBrokersBrokerage.Connect();
         }
 

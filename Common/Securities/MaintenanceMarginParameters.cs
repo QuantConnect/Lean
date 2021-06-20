@@ -81,13 +81,8 @@ namespace QuantConnect.Securities
         /// Creates a new instance of the <see cref="MaintenanceMarginParameters"/> class to compute the maintenance margin
         /// required to support the algorithm's current holdings
         /// </summary>
-        public static MaintenanceMarginParameters ForCurrentHoldings(Security security, decimal? quantity = null)
+        public static MaintenanceMarginParameters ForCurrentHoldings(Security security)
         {
-            if (quantity != null)
-            {
-                return ForQuantityAtCurrentPrice(security, quantity.Value);
-            }
-
             return new MaintenanceMarginParameters(security,
                 security.Holdings.Quantity,
                 security.Holdings.HoldingsCost,
@@ -108,7 +103,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Creates a new instance of <see cref="MaintenanceMarginParameters"/> for the security's underlying
         /// </summary>
-        public MaintenanceMarginParameters ForUnderlying()
+        public MaintenanceMarginParameters ForUnderlying(decimal quantity)
         {
             var derivative = Security as IDerivativeSecurity;
             if (derivative == null)
@@ -116,7 +111,7 @@ namespace QuantConnect.Securities
                 throw new InvalidOperationException("ForUnderlying is only invokable for IDerivativeSecurity (Option|Future)");
             }
 
-            return ForCurrentHoldings(derivative.Underlying);
+            return ForQuantityAtCurrentPrice(derivative.Underlying, quantity);
         }
     }
 }

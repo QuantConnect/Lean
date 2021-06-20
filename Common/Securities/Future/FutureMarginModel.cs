@@ -17,8 +17,11 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Future
 {
@@ -35,6 +38,10 @@ namespace QuantConnect.Securities.Future
 
         private readonly Security _security;
 
+        private IDataProvider _dataProvider =
+            Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
+                "DefaultDataProvider"));
+
         /// <summary>
         /// True will enable usage of intraday margins.
         /// </summary>
@@ -45,22 +52,22 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// Initial Overnight margin requirement for the contract effective from the date of change
         /// </summary>
-        public decimal InitialOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialOvernight ?? 0m;
+        public virtual decimal InitialOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialOvernight ?? 0m;
 
         /// <summary>
         /// Maintenance Overnight margin requirement for the contract effective from the date of change
         /// </summary>
-        public decimal MaintenanceOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceOvernight ?? 0m;
+        public virtual decimal MaintenanceOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceOvernight ?? 0m;
 
         /// <summary>
         /// Initial Intraday margin for the contract effective from the date of change
         /// </summary>
-        public decimal InitialIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialIntraday ?? 0m;
+        public virtual decimal InitialIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialIntraday ?? 0m;
 
         /// <summary>
         /// Maintenance Intraday margin requirement for the contract effective from the date of change
         /// </summary>
-        public decimal MaintenanceIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceIntraday ?? 0m;
+        public virtual decimal MaintenanceIntradayMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceIntraday ?? 0m;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FutureMarginModel"/>
@@ -146,7 +153,7 @@ namespace QuantConnect.Securities.Future
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
             var security = parameters.Security;
-            if (security?.GetLastData() == null || security.Holdings.HoldingsCost == 0m)
+            if (security?.GetLastData() == null || parameters.Quantity == 0m)
             {
                 return 0m;
             }
@@ -232,7 +239,8 @@ namespace QuantConnect.Securities.Future
         {
             lock (DataFolderSymbolLock)
             {
-                if (!File.Exists(file))
+                var stream = _dataProvider.Fetch(file);
+                if (stream == null)
                 {
                     Log.Trace($"Unable to locate future margin requirements file. Defaulting to zero margin for this symbol. File: {file}");
 
@@ -244,14 +252,20 @@ namespace QuantConnect.Securities.Future
                             };
                 }
 
-                // skip the first header line, also skip #'s as these are comment lines
-
-                return File.ReadLines(file)
-                    .Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x))
-                    .Skip(1)
-                    .Select(FromCsvLine)
-                    .OrderBy(x => x.Date)
-                    .ToArray();
+                MarginRequirementsEntry[] marginRequirementsEntries;
+                using (var streamReader = new StreamReader(stream))
+                {
+                    // skip the first header line, also skip #'s as these are comment lines
+                    marginRequirementsEntries = streamReader.ReadAllLines()
+                        .Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x))
+                        .Skip(1)
+                        .Select(FromCsvLine)
+                        .OrderBy(x => x.Date)
+                        .ToArray();
+                }
+                
+                stream.Dispose();
+                return marginRequirementsEntries;
             }
         }
 

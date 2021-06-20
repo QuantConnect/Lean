@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.ToolBox
             var leanDataReader = new LeanDataReader(dataPath);
             var data = leanDataReader.Parse().ToList();
 
-            Assert.AreEqual(5580, data.Count);
+            Assert.AreEqual(5849, data.Count);
             Assert.IsTrue(data.All(baseData => baseData.Symbol == Symbols.AAPL && baseData is TradeBar));
         }
 
@@ -179,11 +179,11 @@ namespace QuantConnect.Tests.ToolBox
             //load future chain first
             var config = new SubscriptionDataConfig(typeof(ZipEntryName), baseFuture, res,
                                                     TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, tickType);
+            var factory = new ZipEntryNameSubscriptionDataSourceReader(TestGlobals.DataProvider, config, date, false);
 
-            var factory = new ZipEntryNameSubscriptionDataSourceReader(config, date, false);
-
-            return factory.Read(new SubscriptionDataSource(filePath, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName))
+            var result = factory.Read(new SubscriptionDataSource(filePath, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName))
                           .Select(s => s.Symbol).ToList();
+            return result;
         }
 
         private string LoadFutureData(Symbol future, TickType tickType, Resolution res)
@@ -440,11 +440,11 @@ namespace QuantConnect.Tests.ToolBox
         public static object[] SpotMarketCases =
         {
             //TODO: generate Low resolution sample data for equities
-            new object[] {"equity", "usa", "daily", "aig", "aig.zip", 5580, 331752.9901},
-            new object[] {"equity", "usa", "minute", "aapl", "20140605_trade.zip", 658, 425067.37},
-            new object[] {"equity", "usa", "minute", "ibm", "20131010_quote.zip", 584, 107061.28},
-            new object[] {"equity", "usa", "second", "ibm", "20131010_trade.zip", 2878, 528701.39},
-            new object[] {"equity", "usa", "tick", "bac", "20131011_trade.zip", 108505, 1539443.26},
+            new object[] {"equity", "usa", "daily", "aig", "aig.zip", 5849, 340770.5801},
+            new object[] {"equity", "usa", "minute", "aapl", "20140605_trade.zip", 686, 443184.58},
+            new object[] {"equity", "usa", "minute", "ibm", "20131010_quote.zip", 584, 107061.125},
+            new object[] {"equity", "usa", "second", "ibm", "20131010_trade.zip", 5060, 929385.34},
+            new object[] {"equity", "usa", "tick", "bac", "20131011_trade.zip", 112177, 1591680.73},
             new object[] {"forex", "oanda", "minute", "eurusd", "20140502_quote.zip", 1222, 1693.578875},
             new object[] {"forex", "oanda", "second", "nzdusd", "20140514_quote.zip", 18061, 15638.724575},
             new object[] {"forex", "oanda", "tick", "eurusd", "20140507_quote.zip", 41367, 57598.54664},

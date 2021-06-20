@@ -295,15 +295,11 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // poke each cash object to update from the recent security data
-                foreach (var kvp in algorithm.Portfolio.CashBook)
+                foreach (var cash in algorithm.Portfolio.CashBook.Values.Where(x => x.CurrencyConversion != null))
                 {
-                    var cash = kvp.Value;
-                    var updateData = cash.ConversionRateSecurity?.GetLastData();
-                    if (updateData != null)
-                    {
-                        cash.Update(updateData);
-                    }
+                    cash.Update();
                 }
+
                 // security prices got updated
                 algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
@@ -1059,18 +1055,8 @@ namespace QuantConnect.Lean.Engine
                     continue;
                 }
 
-                var orderType = OrderType.Market;
-                var tag = "Liquidate from delisting";
-                if (security.Type.IsOption())
-                {
-                    // tx handler will determine auto exercise/assignment
-                    tag = "Option Expired";
-                    orderType = OrderType.OptionExercise;
-                }
-
                 // submit an order to liquidate on market close or exercise (for options)
-                var request = new SubmitOrderRequest(orderType, security.Type, security.Symbol,
-                    -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, tag);
+                var request = security.CreateDelistedSecurityOrderRequest(algorithm.UtcTime);
 
                 delistings.RemoveAt(i);
                 algorithm.Transactions.ProcessRequest(request);

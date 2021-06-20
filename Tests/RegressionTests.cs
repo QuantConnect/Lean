@@ -24,7 +24,7 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests
 {
-    [TestFixture, Category("TravisExclude")]
+    [TestFixture, Category("TravisExclude"), Category("RegressionTests")]
     public class RegressionTests
     {
         [Test, TestCaseSource(nameof(GetRegressionTestParameters))]
@@ -70,6 +70,8 @@ namespace QuantConnect.Tests
 
         private static TestCaseData[] GetRegressionTestParameters()
         {
+            TestGlobals.Initialize();
+
             // since these are static test cases, they are executed before test setup
             AssemblyInitialize.AdjustCurrentDirectory();
 

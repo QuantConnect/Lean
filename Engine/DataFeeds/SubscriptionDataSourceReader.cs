@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -39,8 +39,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="date">The date to be processed</param>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
         /// <param name="factory">The base data instance factory</param>
+        /// <param name="dataProvider">The data provider to use</param>
         /// <returns>A new <see cref="ISubscriptionDataSourceReader"/> that can read the specified <paramref name="source"/></returns>
-        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, BaseData factory)
+        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, BaseData factory, IDataProvider dataProvider)
         {
             ISubscriptionDataSourceReader reader;
             TextSubscriptionDataSourceReader textReader = null;
@@ -55,11 +56,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
 
                 case FileFormat.ZipEntryName:
-                    reader = new ZipEntryNameSubscriptionDataSourceReader(config, date, isLiveMode);
+                    reader = new ZipEntryNameSubscriptionDataSourceReader(dataProvider, config, date, isLiveMode);
                     break;
 
                 case FileFormat.Index:
-                    return new IndexSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
+                    return new IndexSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, dataProvider);
 
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");

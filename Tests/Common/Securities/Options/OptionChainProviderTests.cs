@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
         [Test]
         public void BacktestingOptionChainProviderLoadsEquityOptionChain()
         {
-            var provider = new BacktestingOptionChainProvider();
+            var provider = new BacktestingOptionChainProvider(TestGlobals.DataProvider);
             var twxOptionChain = provider.GetOptionContractList(Symbol.Create("TWX", SecurityType.Equity, Market.USA), new DateTime(2014, 6, 5))
                 .ToList();
 
@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
         [Test]
         public void BacktestingOptionChainProviderLoadsFutureOptionChain()
         {
-            var provider = new BacktestingOptionChainProvider();
+            var provider = new BacktestingOptionChainProvider(TestGlobals.DataProvider);
             var esOptionChain = provider.GetOptionContractList(
                 Symbol.CreateFuture(
                     QuantConnect.Securities.Futures.Indices.SP500EMini,
@@ -56,6 +56,31 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(107, esOptionChain.Count);
             Assert.AreEqual(2900m, esOptionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
             Assert.AreEqual(3500m, esOptionChain.OrderBy(s => s.ID.StrikePrice).Last().ID.StrikePrice);
+        }
+
+        [Test]
+        public void BacktestingOptionChainProviderResolvesSymbolMapping()
+        {
+            var ticker = "GOOCV"; // Old ticker, should resolve and fetch GOOG
+            var provider = new BacktestingOptionChainProvider(TestGlobals.DataProvider);
+
+            var underlyingSymbol = QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            var alias = "?" + underlyingSymbol.Value;
+            var optionSymbol = Symbol.CreateOption(
+                underlyingSymbol,
+                underlyingSymbol.ID.Market,
+                Symbol.GetOptionTypeFromUnderlying(underlyingSymbol).DefaultOptionStyle(),
+                default(OptionRight),
+                0,
+                SecurityIdentifier.DefaultDate,
+                alias);
+
+            var googOptionChain = provider.GetOptionContractList(optionSymbol.Underlying, new DateTime(2015, 12, 23))
+                .ToList();
+
+            Assert.AreEqual(118, googOptionChain.Count);
+            Assert.AreEqual(600m, googOptionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
+            Assert.AreEqual(800m, googOptionChain.OrderBy(s => s.ID.StrikePrice).Last().ID.StrikePrice);
         }
 
         [Test]
@@ -112,7 +137,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.IsFalse(result.Any());
         }
 
-        [Test]
+        [Test, Ignore("Failing due to timeout, track issue at #5645")]
         public void LiveOptionChainProviderReturnsFutureOptionData()
         {
             var now = DateTime.Now;
@@ -145,7 +170,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             }
         }
 
-        [Test]
+        [Test, Ignore("Failing due to timeout, track issue at #5645")]
         public void LiveOptionChainProviderReturnsNoDataForOldFuture()
         {
             var now = DateTime.Now;
@@ -179,7 +204,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 strike,
                 expiry);
 
-            var provider = new BacktestingOptionChainProvider();
+            var provider = new BacktestingOptionChainProvider(TestGlobals.DataProvider);
             var contracts = provider.GetOptionContractList(underlying, new DateTime(2020, 1, 5))
                 .ToHashSet();
 

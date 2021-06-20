@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,22 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System.Core")
-AddReference("System.Collections")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from System.Linq import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data import *
-from QuantConnect.Orders import *
-from QuantConnect.Securities import *
-from QuantConnect.Util import *
+from AlgorithmImports import *
 from math import copysign
-from datetime import datetime
 
 ### <summary>
 ### Provides a regression baseline focused on updating orders

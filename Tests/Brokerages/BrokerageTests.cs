@@ -26,6 +26,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -43,6 +44,8 @@ namespace QuantConnect.Tests.Brokerages
         [SetUp]
         public void Setup()
         {
+            Log.LogHandler = new NUnitLogHandler();
+
             Log.Trace("");
             Log.Trace("");
             Log.Trace("--- SETUP ---");
@@ -159,7 +162,7 @@ namespace QuantConnect.Tests.Brokerages
             return brokerage;
         }
 
-        internal static Security CreateSecurity(Symbol symbol)
+        public static Security CreateSecurity(Symbol symbol)
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -204,6 +207,7 @@ namespace QuantConnect.Tests.Brokerages
         protected virtual void DisposeBrokerage(IBrokerage brokerage)
         {
             brokerage.Disconnect();
+            brokerage.DisposeSafely();
         }
 
         /// <summary>
@@ -417,7 +421,7 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         [Test]
-        public void GetCashBalanceContainsSomething()
+        public virtual void GetCashBalanceContainsSomething()
         {
             Log.Trace("");
             Log.Trace("GET CASH BALANCE");

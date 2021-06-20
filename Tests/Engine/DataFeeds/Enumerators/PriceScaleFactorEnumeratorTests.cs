@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,6 +21,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using Tick = QuantConnect.Data.Market.Tick;
 
@@ -44,8 +45,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 true,
                 true,
                 false);
-            _factorFile = FactorFile.Read(
-                _config.Symbol.Value, _config.Symbol.ID.Market);
+
+            _factorFile = TestGlobals.FactorFileProvider.Get(_config.Symbol);
             _rawDataEnumerator = new RawDataEnumerator();
         }
 

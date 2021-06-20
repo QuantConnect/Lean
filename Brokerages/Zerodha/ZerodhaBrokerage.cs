@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -863,7 +863,6 @@ namespace QuantConnect.Brokerages.Zerodha
                         Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
                         MarketPrice = item.LastPrice,
                         Quantity = item.Quantity,
-                        Type = SecurityType.Equity,
                         UnrealizedPnL = item.Unrealised,
                         CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
                         MarketValue = item.ClosePrice * item.Quantity
@@ -889,7 +888,6 @@ namespace QuantConnect.Brokerages.Zerodha
                         Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
                         MarketPrice = item.LastPrice,
                         Quantity = item.Quantity,
-                        Type = SecurityType.Equity,
                         UnrealizedPnL = item.PNL,
                         CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
                         MarketValue = item.ClosePrice * item.Quantity

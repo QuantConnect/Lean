@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -155,10 +155,7 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect import *
-from QuantConnect.Data.Market import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.GetProperty(""TradeBar"")
@@ -184,10 +181,7 @@ def Test(dynamicData):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect import *
-from QuantConnect.Data.Market import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.HasProperty(""TradeBar"")
@@ -211,10 +205,7 @@ def Test(dynamicData):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect import *
-from QuantConnect.Data.Market import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)
@@ -238,10 +229,7 @@ def Test(dynamicData):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect import *
-from QuantConnect.Data.Market import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.GetAll(TradeBar)
@@ -268,10 +256,7 @@ def Test(dynamicData):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect import *
-from QuantConnect.Data.Market import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)
@@ -296,10 +281,7 @@ def Test(dynamicData):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect import *
-from QuantConnect.Data.Market import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.GetAll(TradeBar)
@@ -324,10 +306,7 @@ def Test(dynamicData):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect import *
-from QuantConnect.Data.Market import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)
@@ -352,10 +331,7 @@ def Test(dynamicData):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect import *
-from QuantConnect.Data.Market import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)
@@ -376,11 +352,7 @@ def Test(dynamicData):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-AddReference(""System"")
-from System import *
-from QuantConnect import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)").GetAttr("Test");
@@ -400,10 +372,7 @@ def Test(dynamicData):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
-from clr import AddReference
-AddReference(""QuantConnect.Common"")
-from QuantConnect import *
-from QuantConnect.Data.Market import *
+from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.GetAll(TradeBar)

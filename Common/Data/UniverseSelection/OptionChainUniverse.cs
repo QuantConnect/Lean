@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,7 +20,6 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -51,27 +50,6 @@ namespace QuantConnect.Data.UniverseSelection
             UniverseSettings universeSettings,
             bool liveMode)
             : base(option.SubscriptionDataConfig)
-        {
-            Option = option;
-            _underlyingSymbol = new[] { Option.Symbol.Underlying };
-            _universeSettings = new UniverseSettings(universeSettings) { DataNormalizationMode = DataNormalizationMode.Raw };
-            _liveMode = liveMode;
-            _optionFilterUniverse = new OptionFilterUniverse();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
-        /// </summary>
-        /// <param name="option">The canonical option chain security</param>
-        /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
-        /// <param name="securityInitializer">The security initializer to use on newly created securities</param>
-        /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
-        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        public OptionChainUniverse(Option option,
-                                   UniverseSettings universeSettings,
-                                   ISecurityInitializer securityInitializer,
-                                   bool liveMode)
-            : base(option.SubscriptionDataConfig, securityInitializer)
         {
             Option = option;
             _underlyingSymbol = new[] { Option.Symbol.Underlying };
@@ -253,7 +231,6 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 // set the underlying security and pricing model from the canonical security
                 var option = (Option)security;
-                option.Underlying = Option.Underlying;
                 option.PriceModel = Option.PriceModel;
             }
 

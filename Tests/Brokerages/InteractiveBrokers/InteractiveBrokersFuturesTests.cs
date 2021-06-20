@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,9 +32,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [Test]
         public void CreatesExpectedFuturesContracts()
         {
-            var symbolMapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
+            var symbolMapper = new InteractiveBrokersSymbolMapper(TestGlobals.MapFileProvider);
 
-            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager(), new LocalDiskMapFileProvider()))
+            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager(), TestGlobals.MapFileProvider))
             {
                 ib.Connect();
                 Assert.IsTrue(ib.IsConnected);

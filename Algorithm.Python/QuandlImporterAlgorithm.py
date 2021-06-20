@@ -11,19 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from QuantConnect.Data.Custom import *
-from QuantConnect.Python import PythonQuandl
-from datetime import datetime, timedelta
+from AlgorithmImports import *
 
 ### <summary>
 ### Using the underlying dynamic data class "Quandl" QuantConnect take care of the data

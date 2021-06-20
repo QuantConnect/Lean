@@ -32,6 +32,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -49,6 +50,7 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
         private readonly bool _isDataQueueHandler;
+        private LiveNodePacket _job;
 
         /// <summary>
         /// Data Aggregator
@@ -88,10 +90,12 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">consolidate ticks</param>
+        /// <param name="job">The live job packet</param>
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
-            IPriceProvider priceProvider, IDataAggregator aggregator)
+            IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, "GDAX")
         {
+            _job = job;
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
             _algorithm = algorithm;

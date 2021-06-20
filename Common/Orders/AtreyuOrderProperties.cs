@@ -13,19 +13,26 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
+using QuantConnect.Interfaces;
 
-namespace QuantConnect.Api
+namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Response from reading purchased data
+    /// Contains additional properties and settings for an order submitted to Atreyu brokerage
     /// </summary>
-    public class Link : RestResponse
+    public class AtreyuOrderProperties : OrderProperties
     {
         /// <summary>
-        /// Link to the data
+        /// This flag will ensure the order add liquidity only
         /// </summary>
-        [JsonProperty(PropertyName = "link")]
-        public string DataLink { get; set; }
+        public bool PostOnly { get; set; }
+
+        /// <summary>
+        /// Returns a new instance clone of this object
+        /// </summary>
+        public override IOrderProperties Clone()
+        {
+            return (AtreyuOrderProperties)MemberwiseClone();
+        }
     }
 }

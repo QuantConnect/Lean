@@ -59,10 +59,15 @@
   // To get your api access token go to quantconnect.com/account
   "job-user-id": "0",
   "api-access-token": "",
+  "job-organization-id": "",
 
   // live data configuration
   "live-data-url": "ws://www.quantconnect.com/api/v2/live/data/",
   "live-data-port": 8020,
+
+  // live portfolio state
+  "live-cash-balance": "",
+  "live-holdings": "[]",
 
   // interactive brokers configuration
   "ib-account": "",
@@ -119,6 +124,9 @@
   "atreyu-sub-port": "",
   "atreyu-username": "",
   "atreyu-password": "",
+  "atreyu-client-id": "",
+  "atreyu-broker-mpid": "",
+  "atreyu-locate-rqd": "",
 
   // Trading Technologies configuration
   "tt-user-name": "",
@@ -182,7 +190,7 @@
   },
 
   // specify supported languages when running regression tests
-  "regression-test-languages": ["CSharp", "Python"],
+  "regression-test-languages": [ "CSharp", "Python" ],
 
   "environments": {
 

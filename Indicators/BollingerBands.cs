@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -126,6 +126,25 @@ namespace QuantConnect.Indicators
             Price.Update(input);
 
             return input.Value;
+        }
+
+        /// <summary>
+        /// Validate and Compute the next value for this indicator
+        /// </summary>
+        /// <param name="input">Input for this indicator</param>
+        /// <returns><see cref="IndicatorResult"/> of this update</returns>
+        /// <remarks>Override implemented to handle GH issue #4927</remarks>
+        protected override IndicatorResult ValidateAndComputeNextValue(IndicatorDataPoint input)
+        {
+            // Update our Indicators
+            var value = ComputeNextValue(input);
+
+            // If the STD = 0, we know that the our PercentB indicator will fail to update. This is
+            // because the denominator will be 0. When this is the case after fully ready we do not
+            // want the BollingerBands to emit an update because its PercentB property will be stale.
+            return IsReady && StandardDeviation.Current.Value == 0
+                ? new IndicatorResult(value, IndicatorStatus.MathError)
+                : new IndicatorResult(value);
         }
 
         /// <summary>

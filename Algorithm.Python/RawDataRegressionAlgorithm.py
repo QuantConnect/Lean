@@ -11,23 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System.Core")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Data.Auxiliary import FactorFile
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Orders import OrderStatus
-from QuantConnect.Orders.Fees import ConstantFeeModel
+from AlgorithmImports import *
+from QuantConnect.Data.Auxiliary import *
+from QuantConnect.Lean.Engine.DataFeeds import DefaultDataProvider
 
 _ticker = "GOOGL";
-_factorFile = FactorFile.Read(_ticker, Market.USA);
-_expectedRawPrices = [ 1158.1100, 1158.7200,
-1131.7800, 1114.2800, 1119.6100, 1114.5500, 1135.3200, 567.59000, 571.4900, 545.3000, 540.6400 ]
+_expectedRawPrices = [ 1157.93, 1158.72,
+1131.97, 1114.28, 1120.15, 1114.51, 1134.89, 567.55, 571.50, 545.25, 540.63 ]
 
 # <summary>
 # In this algorithm we demonstrate how to use the raw data for our securities
@@ -37,31 +27,40 @@ _expectedRawPrices = [ 1158.1100, 1158.7200,
 # <meta name="tag" content="regression test" />
 class RawDataRegressionAlgorithm(QCAlgorithm):
 
-        def Initialize(self):
-            self.SetStartDate(2014, 3, 25);    
-            self.SetEndDate(2014, 4, 7);         
-            self.SetCash(100000);                            
+    def Initialize(self):
+        self.SetStartDate(2014, 3, 25)
+        self.SetEndDate(2014, 4, 7)
+        self.SetCash(100000)
 
-            # Set our DataNormalizationMode to raw
-            self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
-            self._googl = self.AddEquity(_ticker, Resolution.Daily).Symbol;
-        
+        # Set our DataNormalizationMode to raw
+        self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw
+        self._googl = self.AddEquity(_ticker, Resolution.Daily).Symbol
 
-        def OnData(self, data):
-            if not self.Portfolio.Invested:
-                self.SetHoldings(self._googl, 1);
+        # Get our factor file for this regression
+        dataProvider = DefaultDataProvider()
+        mapFileProvider = LocalDiskMapFileProvider()
+        mapFileProvider.Initialize(dataProvider)
+        factorFileProvider = LocalDiskFactorFileProvider()
+        factorFileProvider.Initialize(mapFileProvider, dataProvider)
 
-            if (data.Bars.ContainsKey(self._googl)):
-                googlData = data.Bars[self._googl];
+        # Get our factor file for this regression
+        self._factorFile = factorFileProvider.Get(self._googl)
 
-                # Assert our volume matches what we expected
-                if _expectedRawPrices.pop(0) != googlData.Close:
-                    # Our values don't match lets try and give a reason why
-                    dayFactor = _factorFile.GetPriceScaleFactor(googlData.Time);
-                    probableRawPrice = googlData.Close / dayFactor; # Undo adjustment
 
-                    if _expectedRawPrices.Current == probableRawPrice:
-                        raise Exception("Close price was incorrect; it appears to be the adjusted value")
-                    else:
-                        raise Exception("Close price was incorrect; Data may have changed.")
-            
+    def OnData(self, data):
+        if not self.Portfolio.Invested:
+            self.SetHoldings(self._googl, 1)
+
+        if data.Bars.ContainsKey(self._googl):
+            googlData = data.Bars[self._googl]
+
+            # Assert our volume matches what we expected
+            expectedRawPrice = _expectedRawPrices.pop(0)
+            if expectedRawPrice != googlData.Close:
+                # Our values don't match lets try and give a reason why
+                dayFactor = self._factorFile.GetPriceScaleFactor(googlData.Time)
+                probableRawPrice = googlData.Close / dayFactor  # Undo adjustment
+
+                raise Exception("Close price was incorrect; it appears to be the adjusted value"
+                    if expectedRawPrice == probableRawPrice else
+                   "Close price was incorrect; Data may have changed.")

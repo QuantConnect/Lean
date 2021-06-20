@@ -11,15 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Data.Consolidators import *
-from QuantConnect.Data.Market import *
-from QuantConnect.Orders import OrderStatus
-from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Indicators import *
-import numpy as np
-from datetime import timedelta, datetime
+from AlgorithmImports import *
 
 ### <summary>
 ### Example structure for structuring an algorithm with indicator and consolidator data for many tickers.

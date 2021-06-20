@@ -60,7 +60,7 @@ namespace QuantConnect.ToolBox
                 _tickType = TickType.Quote;
             }
 
-            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd && _securityType != SecurityType.Crypto && _securityType != SecurityType.Future && _securityType != SecurityType.Option && _securityType != SecurityType.FutureOption && _securityType != SecurityType.IndexOption)
+            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd && _securityType != SecurityType.Crypto && _securityType != SecurityType.Future && _securityType != SecurityType.Option && _securityType != SecurityType.FutureOption && _securityType != SecurityType.Index && _securityType != SecurityType.IndexOption)
             {
                 throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
@@ -354,7 +354,7 @@ namespace QuantConnect.ToolBox
         /// <remarks>This function overwrites existing data files</remarks>
         private void WriteMinuteOrSecondOrTick(IEnumerable<BaseData> source)
         {
-            var sb = new StringBuilder();
+            var lines = new List<string>();
             var lastTime = new DateTime();
 
             // Loop through all the data and write to file as we go
@@ -368,21 +368,21 @@ namespace QuantConnect.ToolBox
                 {
                     // Write and clear the file contents
                     var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
-                    WriteFile(outputFile, sb.ToString(), lastTime);
-                    sb.Clear();
+                    WriteFile(outputFile, lines, lastTime);
+                    lines.Clear();
                 }
 
                 lastTime = data.Time;
 
                 // Build the line and append it to the file
-                sb.Append(LeanData.GenerateLine(data, _securityType, _resolution) + Environment.NewLine);
+                lines.Add(LeanData.GenerateLine(data, _securityType, _resolution));
             }
 
             // Write the last file
-            if (sb.Length > 0)
+            if (lines.Count > 0)
             {
                 var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
-                WriteFile(outputFile, sb.ToString(), lastTime);
+                WriteFile(outputFile, lines, lastTime);
             }
         }
 
@@ -393,7 +393,7 @@ namespace QuantConnect.ToolBox
         /// <remarks>This function performs a merge (insert/append/overwrite) with the existing Lean zip file</remarks>
         private void WriteDailyOrHour(IEnumerable<BaseData> source)
         {
-            var sb = new StringBuilder();
+            var lines = new List<string>();
             var lastTime = new DateTime();
 
             // Determine file path
@@ -422,13 +422,13 @@ namespace QuantConnect.ToolBox
             foreach (var kvp in rows)
             {
                 // Build the line and append it to the file
-                sb.Append(kvp.Value + Environment.NewLine);
+                lines.Add(kvp.Value);
             }
 
             // Write the file contents
-            if (sb.Length > 0)
+            if (lines.Count > 0)
             {
-                WriteFile(outputFile, sb.ToString(), lastTime);
+                WriteFile(outputFile, lines, lastTime);
             }
         }
 
@@ -467,11 +467,10 @@ namespace QuantConnect.ToolBox
         /// <param name="filePath">The full path to the new file</param>
         /// <param name="data">The data to write as a string</param>
         /// <param name="date">The date the data represents</param>
-        private void WriteFile(string filePath, string data, DateTime date)
+        private void WriteFile(string filePath, IEnumerable<string> data, DateTime date)
         {
             var tempFilePath = filePath + ".tmp";
 
-            data = data.TrimEnd();
             if (File.Exists(filePath) && !_appendToZips)
             {
                 File.Delete(filePath);
@@ -484,13 +483,13 @@ namespace QuantConnect.ToolBox
             if (_appendToZips)
             {
                 var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
-                Compression.ZipCreateAppendData(filePath, entryName, data, true);
+                Compression.ZipCreateAppendData(filePath, entryName, string.Join(Environment.NewLine, data), true);
                 Log.Trace("LeanDataWriter.Write(): Appended: " + filePath);
             }
             else
             {
                 // Write out this data string to a zip file
-                Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType));
+                Compression.ZipData(tempFilePath, LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType), data);
 
                 // Move temp file to the final destination with the appropriate name
                 File.Move(tempFilePath, filePath);

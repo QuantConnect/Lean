@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using QuantConnect.Brokerages.Bitfinex.Messages;
+using QuantConnect.Packets;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Bitfinex
@@ -43,6 +44,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private const string RestApiUrl = "https://api.bitfinex.com";
         private const string WebSocketUrl = "wss://api.bitfinex.com/ws/2";
 
+        private readonly LiveNodePacket _job;
         private readonly IAlgorithm _algorithm;
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
@@ -70,8 +72,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">consolidate ticks</param>
-        public BitfinexBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
-            : this(new WebSocketClientWrapper(), new RestClient(RestApiUrl), apiKey, apiSecret, algorithm, priceProvider, aggregator)
+        /// <param name="job">The live job packet</param>
+        public BitfinexBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+            : this(new WebSocketClientWrapper(), new RestClient(RestApiUrl), apiKey, apiSecret, algorithm, priceProvider, aggregator, job)
         {
         }
 
@@ -85,9 +88,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">consolidate ticks</param>
-        public BitfinexBrokerage(IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
+        /// <param name="job">The live job packet</param>
+        public BitfinexBrokerage(IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
             : base(WebSocketUrl, websocket, restClient, apiKey, apiSecret, "Bitfinex")
         {
+            _job = job;
             SubscriptionManager = new BitfinexSubscriptionManager(this, WebSocketUrl, _symbolMapper);
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,6 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly SubscriptionDataConfig _config;
         private readonly DateTime _date;
+        private IDataProvider _dataProvider;
         private readonly IndexedBaseData _factory;
 
         /// <summary>
@@ -46,11 +47,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IndexSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider,
             SubscriptionDataConfig config,
             DateTime date,
-            bool isLiveMode)
+            bool isLiveMode,
+            IDataProvider dataProvider)
         : base(dataCacheProvider, isLiveMode)
         {
             _config = config;
             _date = date;
+            _dataProvider = dataProvider;
             _factory = config.Type.GetBaseDataInstance() as IndexedBaseData;
             if (_factory == null)
             {
@@ -105,7 +108,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             _config,
                             _date,
                             IsLiveMode,
-                            _factory);
+                            _factory,
+                            _dataProvider);
 
                         var enumerator = dataReader.Read(dataSource).GetEnumerator();
                         while (enumerator.MoveNext())

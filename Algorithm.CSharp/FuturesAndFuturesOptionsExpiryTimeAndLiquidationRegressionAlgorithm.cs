@@ -14,11 +14,13 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System.Collections.Generic;
+using QuantConnect.Securities.Option;
+using Futures = QuantConnect.Securities.Futures;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -96,7 +98,32 @@ namespace QuantConnect.Algorithm.CSharp
                 _invested = true;
 
                 MarketOrder(_esFuture, 1);
+
+                var optionContract = Securities[_esFutureOption];
+                var marginModel = optionContract.BuyingPowerModel as FuturesOptionsMarginModel;
+                if (marginModel.InitialIntradayMarginRequirement == 0
+                    || marginModel.InitialOvernightMarginRequirement == 0
+                    || marginModel.MaintenanceIntradayMarginRequirement == 0
+                    || marginModel.MaintenanceOvernightMarginRequirement == 0)
+                {
+                    throw new Exception("Unexpected margin requirements");
+                }
+
+                if (marginModel.GetInitialMarginRequirement(optionContract, 1) == 0)
+                {
+                    throw new Exception("Unexpected Initial Margin requirement");
+                }
+                if (marginModel.GetMaintenanceMargin(optionContract) != 0)
+                {
+                    throw new Exception("Unexpected Maintenance Margin requirement");
+                }
+
                 MarketOrder(_esFutureOption, 1);
+
+                if (marginModel.GetMaintenanceMargin(optionContract) == 0)
+                {
+                    throw new Exception("Unexpected Maintenance Margin requirement");
+                }
             }
         }
 

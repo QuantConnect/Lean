@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,11 +38,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 dynamic model = PythonEngine.ModuleFromString(
                     "TestPCM",
                     @"
-
-from clr import AddReference
-AddReference(""QuantConnect.Algorithm.Framework"")
-
-from QuantConnect.Algorithm.Framework.Portfolio import *
+from AlgorithmImports import *
 
 class PyPCM(EqualWeightingPortfolioConstructionModel):
     def __init__(self):

@@ -48,6 +48,7 @@ using QuantConnect.Util;
 using QuantConnect.ToolBox.SmartInsider;
 using QuantConnect.ToolBox.TiingoNewsConverter;
 using QuantConnect.ToolBox.ZerodhaDownloader;
+using QuantConnect.ToolBox.AlphaVantageDownloader;
 
 namespace QuantConnect.ToolBox
 {
@@ -166,7 +167,7 @@ namespace QuantConnect.ToolBox
                             fromDate,
                             toDate,
                             GetParameterOrExit(optionsObject, "destination-dir"),
-                            GetParameterOrExit(optionsObject, "api-key")
+                            GetParameterOrDefault(optionsObject, "api-key", string.Empty)
                         );
                         break;
 
@@ -184,6 +185,17 @@ namespace QuantConnect.ToolBox
                             resolution, 
                             fromDate, 
                             toDate);
+                        break;
+
+                    case "avdl":
+                    case "alphavantagedownloader":
+                        AlphaVantageDownloaderProgram.AlphaVantageDownloader(
+                            tickers,
+                            resolution,
+                            fromDate,
+                            toDate,
+                            GetParameterOrExit(optionsObject, "api-key")
+                        );
                         break;
 
                     default:
@@ -231,7 +243,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "cadc":
                     case "coinapidataconverter":
-                        CoinApiDataConverterProgram.CoinApiDataProgram(GetParameterOrExit(optionsObject, "date"), GetParameterOrExit(optionsObject, "market"),
+                        CoinApiDataConverterProgram.CoinApiDataProgram(GetParameterOrExit(optionsObject, "date"), 
                             GetParameterOrExit(optionsObject, "source-dir"), GetParameterOrExit(optionsObject, "destination-dir"));
                         break;
                     case "nmdc":

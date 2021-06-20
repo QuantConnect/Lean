@@ -33,13 +33,13 @@ namespace QuantConnect.Algorithm.CSharp
         private const string UnderlyingTicker = "AAPL";
 
         private readonly Dictionary<DateTime, decimal?> _expectedCloseValues = new Dictionary<DateTime, decimal?>() {
-            { new DateTime(2014, 6, 6, 9, 57, 0), 86.04398m},
-            { new DateTime(2014, 6, 6, 9, 58, 0), 86.05196m},
-            { new DateTime(2014, 6, 6, 9, 59, 0), 648.29m},
+            { new DateTime(2014, 6, 6, 9, 57, 0), 20.83533m},
+            { new DateTime(2014, 6, 6, 9, 58, 0), 20.83565m},
+            { new DateTime(2014, 6, 6, 9, 59, 0), 648.37m},
             { new DateTime(2014, 6, 6, 10, 0, 0), 647.86m},
-            { new DateTime(2014, 6, 6, 10, 1, 0), 646.84m},
-            { new DateTime(2014, 6, 6, 10, 2, 0), 647.64m},
-            { new DateTime(2014, 6, 6, 10, 3, 0), 646.9m}
+            { new DateTime(2014, 6, 6, 10, 1, 0), 646.83m},
+            { new DateTime(2014, 6, 6, 10, 2, 0), 647.79m},
+            { new DateTime(2014, 6, 6, 10, 3, 0), 646.92m}
         };
 
         public override void Initialize()

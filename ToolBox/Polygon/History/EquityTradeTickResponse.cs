@@ -45,5 +45,16 @@ namespace QuantConnect.ToolBox.Polygon.History
 
         [JsonProperty("f")]
         public long TrfTimestamp { get; set; }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = SequenceNumber.GetHashCode();
+                hashCode = (hashCode * 397) ^ ExchangeTimestamp.GetHashCode();
+                hashCode = (hashCode * 397) ^ SipTimestamp.GetHashCode();
+                return hashCode;
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -25,6 +25,14 @@ namespace QuantConnect.Interfaces
     [InheritedExport(typeof(IFactorFileProvider))]
     public interface IFactorFileProvider
     {
+        /// <summary>
+        /// Initializes our FactorFileProvider by supplying our mapFileProvider
+        /// and dataProvider
+        /// </summary>
+        /// <param name="mapFileProvider">MapFileProvider to use</param>
+        /// <param name="dataProvider">DataProvider to use</param>
+        void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider);
+
         /// <summary>
         /// Gets a <see cref="FactorFile"/> instance for the specified symbol, or null if not found
         /// </summary>

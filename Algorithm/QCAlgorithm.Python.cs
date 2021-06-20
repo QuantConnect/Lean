@@ -479,7 +479,7 @@ namespace QuantConnect.Algorithm
 
             var selector = pySelector.ConvertToDelegate<Func<IEnumerable<IBaseData>, object>>();
 
-            return AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, baseDatas =>
+            return AddUniverse(new FuncUniverse(config, universeSettings, baseDatas =>
             {
                 var result = selector(baseDatas);
                 return ReferenceEquals(result, Universe.Unchanged)
