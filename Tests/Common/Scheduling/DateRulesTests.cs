@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,6 +25,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
@@ -122,6 +123,31 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(12, count);
         }
 
+        [TestCase(2, false)]       // Before 11th
+        [TestCase(4, false)]
+        [TestCase(8, false)]
+        [TestCase(12, true)]      // After 11th
+        [TestCase(16, true)]
+        [TestCase(20, true)]
+        public void StartOfMonthStartDateOffset(int startingDateDay, bool expectNone)
+        {
+            // Reproduces issue #5678, Assert that even though start is not first of month,
+            // we still schedule for that month.
+            var startingDate = new DateTime(2000, 12, startingDateDay);
+            var endingDate = new DateTime(2000, 12, 31);
+
+            var rules = GetDateRules();
+            var rule = rules.MonthStart(10); // 12/11/2000
+            var dates = rule.GetDates(startingDate, endingDate);
+
+            Assert.AreEqual(expectNone, dates.IsNullOrEmpty());
+
+            if (!expectNone)
+            {
+                Assert.AreEqual(new DateTime(2000, 12, 11), dates.First());
+            }
+        }
+
         [Test]
         public void StartOfMonthWithSymbol()
         {
@@ -215,6 +241,31 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreEqual(DateTime.DaysInMonth(date.Year, date.Month) - 5, date.Day);
             }
             Assert.AreEqual(12, count);
+        }
+
+        [TestCase(5, true)]       // Before 21th
+        [TestCase(10, true)]
+        [TestCase(15, true)]
+        [TestCase(21, false)]      // After 21th
+        [TestCase(25, false)]
+        [TestCase(30, false)]
+        public void EndOfMonthEndDateOffset(int endingDateDay, bool expectNone)
+        {
+            // Related to issue #5678, Assert that even though end date is not end of month,
+            // we still schedule for that month.
+            var startingDate = new DateTime(2000, 12, 1);
+            var endingDate = new DateTime(2000, 12, endingDateDay);
+
+            var rules = GetDateRules();
+            var rule = rules.MonthEnd(10); // 12/21/2000
+            var dates = rule.GetDates(startingDate, endingDate);
+
+            Assert.AreEqual(expectNone, dates.IsNullOrEmpty());
+
+            if (!expectNone)
+            {
+                Assert.AreEqual(new DateTime(2000, 12, 21), dates.First());
+            }
         }
 
         [Test]
