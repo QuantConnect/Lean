@@ -29,6 +29,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -569,9 +570,12 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
+            // Filter our holdings to those that actually have value
+            var filteredHoldings = Algorithm.Portfolio.Values.Where(x => x.HoldStock).ToList();
+
             // Sample our long and short positions
-            SampleExposureHelper(PositionSide.Long, time, currentPortfolioValue);
-            SampleExposureHelper(PositionSide.Short, time, currentPortfolioValue);
+            SampleExposureHelper(PositionSide.Long, time, currentPortfolioValue, filteredHoldings);
+            SampleExposureHelper(PositionSide.Short, time, currentPortfolioValue, filteredHoldings);
         }
 
         /// <summary>
@@ -581,13 +585,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="type">Side to sample from portfolio</param>
         /// <param name="time">Time of the sample</param>
         /// <param name="currentPortfolioValue">Current value of the portfolio</param>
-        private void SampleExposureHelper(PositionSide type, DateTime time, decimal currentPortfolioValue)
+        /// <param name="holdings">Enumerable of holdings to sample</param>
+        private void SampleExposureHelper(PositionSide type, DateTime time, decimal currentPortfolioValue, IEnumerable<SecurityHolding> holdings)
         {
             // Shorts = holdings < 0; Longs = holdings > 0
             var multiplier = type == PositionSide.Long ? 1 : -1;
 
             // Select the holdings that fit our position side
-            var positionsBySecurityType = Algorithm.Portfolio.Values.Where(holding => multiplier * holding.HoldingsValue > 0)
+            var positionsBySecurityType = holdings.Where(holding => multiplier * holding.HoldingsValue > 0)
                 .GroupBy(x => x.Symbol.SecurityType);
 
             foreach (var kvp in positionsBySecurityType)
