@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -355,7 +355,13 @@ namespace QuantConnect.Scheduling
                 securitySchedule = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
             }
 
-            foreach (var date in Time.EachDay(start, end))
+            // Iterate all days between the beginning of "start" month, through end of "end" month.
+            // Necessary to ensure we schedule events in the month we start and end. Will still filter
+            // out dates outside of start - end
+            var beginningOfStartMonth = new DateTime(start.Year, start.Month, 1);
+            var endOfEndMonth = new DateTime(end.Year, end.Month, DateTime.DaysInMonth(end.Year, end.Month));
+
+            foreach (var date in Time.EachDay(beginningOfStartMonth, endOfEndMonth))
             {
                 var daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
 
