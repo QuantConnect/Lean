@@ -570,34 +570,49 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
-            // Filter our holdings to those that actually have value
-            var filteredHoldings = Algorithm.Portfolio.Values.Where(x => x.HoldStock).ToList();
+            // Split up our holdings in one enumeration into long and shorts,
+            // only process those that we hold stock in.
+            var shortHoldings = new Dictionary<SecurityType, List<SecurityHolding>>();
+            var longHoldings = new Dictionary<SecurityType, List<SecurityHolding>>();
+            foreach (var holding in Algorithm.Portfolio.Values.Where(x => x.HoldStock))
+            {
+                // Ensure we have a list for this security type in both our dictionaries
+                if (!longHoldings.ContainsKey(holding.Symbol.SecurityType))
+                {
+                    longHoldings.Add(holding.Symbol.SecurityType, new List<SecurityHolding>());
+                    shortHoldings.Add(holding.Symbol.SecurityType, new List<SecurityHolding>());
+                }
+
+                // Long Position
+                if (holding.HoldingsValue > 0)
+                {
+                    longHoldings[holding.Symbol.SecurityType].Add(holding);
+                }
+                // Short Position
+                else
+                {
+                    shortHoldings[holding.Symbol.SecurityType].Add(holding);
+                }
+            }
 
             // Sample our long and short positions
-            SampleExposureHelper(PositionSide.Long, time, currentPortfolioValue, filteredHoldings);
-            SampleExposureHelper(PositionSide.Short, time, currentPortfolioValue, filteredHoldings);
+            SampleExposureHelper(PositionSide.Long, time, currentPortfolioValue, longHoldings);
+            SampleExposureHelper(PositionSide.Short, time, currentPortfolioValue, shortHoldings);
         }
 
         /// <summary>
-        /// Helper method for SampleExposure, finds holdings based on position side
-        /// and sample them by their security type to our exposure chart
+        /// Helper method for SampleExposure, samples a given list of holdings to
+        /// our exposure chart by their position side and security type
         /// </summary>
         /// <param name="type">Side to sample from portfolio</param>
         /// <param name="time">Time of the sample</param>
         /// <param name="currentPortfolioValue">Current value of the portfolio</param>
         /// <param name="holdings">Enumerable of holdings to sample</param>
-        private void SampleExposureHelper(PositionSide type, DateTime time, decimal currentPortfolioValue, IEnumerable<SecurityHolding> holdings)
+        private void SampleExposureHelper(PositionSide type, DateTime time, decimal currentPortfolioValue, Dictionary<SecurityType, List<SecurityHolding>> holdings)
         {
-            // Shorts = holdings < 0; Longs = holdings > 0
-            var multiplier = type == PositionSide.Long ? 1 : -1;
-
-            // Select the holdings that fit our position side
-            var positionsBySecurityType = holdings.Where(holding => multiplier * holding.HoldingsValue > 0)
-                .GroupBy(x => x.Symbol.SecurityType);
-
-            foreach (var kvp in positionsBySecurityType)
+            foreach (var kvp in holdings)
             {
-                var ratio = Math.Round(kvp.Sum(x => x.HoldingsValue) / currentPortfolioValue, 4);
+                var ratio = Math.Round(kvp.Value.Sum(x => x.HoldingsValue) / currentPortfolioValue, 4);
                 Sample("Exposure", $"{kvp.Key} - {type} Ratio", 0, SeriesType.Line, time,
                     ratio, "");
             }
