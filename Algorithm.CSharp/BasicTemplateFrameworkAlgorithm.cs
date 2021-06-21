@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            AddEquity("TCS", Resolution.Second, Market.India);
+            AddEquity("TCS", Resolution.Second, Market.India, extendedMarketHours: true);
 
             // There are other assets with similar methods. See "Selecting Options" etc for more details.
             // AddFuture, AddForex, AddCfd, AddOption
@@ -61,7 +61,6 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice data)
         {
             Debug("Hello from OnData");
-            MarketOrder("TCS", 1);
         }
 
 
