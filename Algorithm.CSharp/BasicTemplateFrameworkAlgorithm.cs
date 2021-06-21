@@ -22,6 +22,7 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -38,33 +39,32 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            // Set requested data resolution
-            UniverseSettings.Resolution = Resolution.Minute;
-
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetStartDate(2003, 10, 07);  //Set Start Date
+            SetEndDate(2003, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
+            AddEquity("TCS", Resolution.Second, Market.India);
 
-            // set algorithm framework models
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("TCS", SecurityType.Equity, Market.India)));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
-
-            // We can define who often the EWPCM will rebalance if no new insight is submitted using:
-            // Resolution Enum:
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(Resolution.Daily));
-            // TimeSpan
-            // SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(TimeSpan.FromDays(2)));
-            // A Func<DateTime, DateTime>. In this case, we can use the pre-defined func at Expiry helper class
-            // SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(Expiry.EndOfWeek));
-
-            SetExecution(new ImmediateExecutionModel());
-            SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
+            // There are other assets with similar methods. See "Selecting Options" etc for more details.
+            // AddFuture, AddForex, AddCfd, AddOption
+            Debug("Intialization Done");
         }
+
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice data)
+        {
+            Debug("Hello from OnData");
+            DefaultOrderProperties.Exchange = "nse";
+            MarketOrder("TCS", 1);
+        }
+
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
