@@ -48,11 +48,20 @@ namespace QuantConnect
         private Symbol _smallestAssetSymbol;
 
         /// <summary>
+        /// Private capacity member, We wrap this value type because it's being
+        /// read and written by multiple threads.
+        /// </summary>
+        private ReferenceWrapper<decimal> _capacity;
+
+        /// <summary>
         /// The total capacity of the strategy at a point in time
         /// </summary>
-        /// <remarks>We wrap this value type because it's being read and written by multiple threads.
-        /// <see cref="IResultHandler"/></remarks>
-        public ReferenceWrapper<decimal> Capacity { get; private set; }
+        public decimal Capacity
+        {
+            // Round off to nearest 1000, and cut off empty decimals past 2
+            get => Math.Round(_capacity.Value -= _capacity.Value % 1000, 2);
+            private set => _capacity = new ReferenceWrapper<decimal>(value);
+        }
 
         /// <summary>
         /// Provide a reference to the lowest capacity symbol used in scaling down the capacity for debugging.
@@ -72,7 +81,7 @@ namespace QuantConnect
             // Set the minimum snapshot period to one day, but use algorithm start/end if the algo runtime is less than seven days
             _snapshotPeriod = TimeSpan.FromDays(Math.Max(Math.Min((_algorithm.EndDate - _algorithm.StartDate).TotalDays - 1, 7), 1)); 
             _nextSnapshotDate = _algorithm.StartDate + _snapshotPeriod;
-            Capacity = new ReferenceWrapper<decimal>(0);
+            _capacity = new ReferenceWrapper<decimal>(0);
         }
 
         /// <summary>
@@ -154,17 +163,16 @@ namespace QuantConnect
                 var dailyMarketCapacityDollarVolume = smallestAsset.MarketCapacityDollarVolume / smallestAsset.Trades;
 
                 var newCapacity = scalingFactor == 0
-                    ? Capacity.Value
+                    ? _capacity.Value
                     : dailyMarketCapacityDollarVolume / scalingFactor;
 
-                if (Capacity.Value == 0)
+                // Weight our capacity based on previous value if we have one
+                if (_capacity.Value != 0)
                 {
-                    Capacity = new ReferenceWrapper<decimal>(newCapacity);
+                    newCapacity = (0.33m * newCapacity) + (_capacity.Value * 0.66m);
                 }
-                else
-                {
-                    Capacity = new ReferenceWrapper<decimal>((0.33m * newCapacity) + (Capacity.Value * 0.66m));
-                }
+
+                _capacity = new ReferenceWrapper<decimal>(newCapacity);
 
                 foreach (var capacity in _capacityBySymbol.Select(pair => pair.Value).ToList())
                 {
