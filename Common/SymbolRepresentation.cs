@@ -202,9 +202,13 @@ namespace QuantConnect
             }
             var strike = split[1].Substring(1);
 
-            var expirationYearShort = parsed.ExpirationYearShort;
-            var expirationYear = GetExpirationYear(expirationYearShort);
-            var expirationDate = new DateTime(expirationYear, parsed.ExpirationMonth, 1);
+            if (parsed.ExpirationYearShort < 10)
+            {
+                parsed.ExpirationYearShort += 20;
+            }
+            var expirationYearParsed = 2000 + parsed.ExpirationYearShort;
+
+            var expirationDate = new DateTime(expirationYearParsed, parsed.ExpirationMonth, 1);
 
             var strikePrice = decimal.Parse(strike, NumberStyles.Any, CultureInfo.InvariantCulture);
             var futureTicker = FuturesOptionsSymbolMappings.MapFromOption(ticker);

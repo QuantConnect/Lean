@@ -283,16 +283,5 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 return null;
             }
         }
-
-        private int GetExpirationYear(DateTime currentdate, int year)
-        {
-            var baseNum = 2000;
-            while (baseNum + year < currentdate.Year)
-            {
-                baseNum += 10;
-            }
-
-            return baseNum + year;
-        }
     }
 }
