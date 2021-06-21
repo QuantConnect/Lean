@@ -58,8 +58,8 @@ namespace QuantConnect
         /// </summary>
         public decimal Capacity
         {
-            // Round off to nearest 1000, and cut off empty decimals past 2
-            get => Math.Round(_capacity.Value -= _capacity.Value % 1000, 2);
+            // Round our capacity to the nearest 1000
+            get => _capacity.Value.DiscretelyRoundBy(1000.00m);
             private set => _capacity = new ReferenceWrapper<decimal>(value);
         }
 
@@ -172,7 +172,8 @@ namespace QuantConnect
                     newCapacity = (0.33m * newCapacity) + (_capacity.Value * 0.66m);
                 }
 
-                _capacity = new ReferenceWrapper<decimal>(newCapacity);
+                // Set our new capacity value
+                Capacity = newCapacity;
 
                 foreach (var capacity in _capacityBySymbol.Select(pair => pair.Value).ToList())
                 {
