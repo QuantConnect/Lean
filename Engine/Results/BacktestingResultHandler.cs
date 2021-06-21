@@ -593,7 +593,7 @@ namespace QuantConnect.Lean.Engine.Results
         protected override void SampleCapacity(DateTime time)
         {
             // Sample strategy capacity, round to 1k
-            var roundedCapacity = Math.Round(_capacityEstimate.Capacity.Value / 1000) * 1000;
+            var roundedCapacity = _capacityEstimate.Capacity.Value.DiscretelyRoundBy(1000);
             Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, time,
                 roundedCapacity, AlgorithmCurrencySymbol);
         }

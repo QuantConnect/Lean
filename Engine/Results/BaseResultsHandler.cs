@@ -547,13 +547,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time of the sample</param>
         protected virtual void SampleSalesVolume(DateTime time)
         {
-            foreach (var holding in Algorithm.Portfolio.Values)
+            // Sample top 30 holdings by sales volume
+            foreach (var holding in Algorithm.Portfolio.Values.Where(y => y.TotalSaleVolume != 0)
+                .OrderByDescending(x => x.TotalSaleVolume).Take(30))
             {
-                if (holding.TotalSaleVolume != 0)
-                {
-                    Sample("Assets Sales Volume", $"{holding.Symbol.Value}", 0, SeriesType.Treemap, time,
-                        holding.TotalSaleVolume, AlgorithmCurrencySymbol);
-                }
+                Sample("Assets Sales Volume", $"{holding.Symbol.Value}", 0, SeriesType.Treemap, time,
+                    holding.TotalSaleVolume, AlgorithmCurrencySymbol);
             }
         }
 
