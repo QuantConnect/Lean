@@ -61,7 +61,6 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice data)
         {
             Debug("Hello from OnData");
-            DefaultOrderProperties.Exchange = "nse";
             MarketOrder("TCS", 1);
         }
 
