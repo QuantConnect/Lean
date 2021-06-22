@@ -129,7 +129,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         [TestCase(12, true)]      // After 11th
         [TestCase(16, true)]
         [TestCase(20, true)]
-        public void StartOfMonthStartDateOffset(int startingDateDay, bool expectNone)
+        public void StartOfMonthSameMonthSchedule(int startingDateDay, bool expectNone)
         {
             // Reproduces issue #5678, Assert that even though start is not first of month,
             // we still schedule for that month.
@@ -249,7 +249,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         [TestCase(21, false)]      // After 21th
         [TestCase(25, false)]
         [TestCase(30, false)]
-        public void EndOfMonthEndDateOffset(int endingDateDay, bool expectNone)
+        public void EndOfMonthSameMonthSchedule(int endingDateDay, bool expectNone)
         {
             // Related to issue #5678, Assert that even though end date is not end of month,
             // we still schedule for that month.
@@ -400,7 +400,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         [TestCase(7, true)]     // Start after the 6th
         [TestCase(8, true)]
         [TestCase(9, true)]
-        public void StartOfWeekStartDateOffset(int startingDateDay, bool expectNone)
+        public void StartOfWeekSameWeekSchedule(int startingDateDay, bool expectNone)
         {
             // Related to issue #5678, Assert that even though starting date may not be
             // not monday we still schedule for that week.
@@ -521,7 +521,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         [TestCase(7, false)]     
         [TestCase(8, false)]
         [TestCase(9, false)]
-        public void EndOfWeekEndDateOffset(int endDateDay, bool expectNone)
+        public void EndOfWeekSameWeekSchedule(int endDateDay, bool expectNone)
         {
             // Related to issue #5678, Assert that even though starting date may not be
             // not monday we still schedule for that week.
