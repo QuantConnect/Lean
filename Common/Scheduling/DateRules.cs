@@ -411,8 +411,12 @@ namespace QuantConnect.Scheduling
 
             // Iterate all days between the beginning of "start" week, through end of "end" week.
             // Necessary to ensure we schedule events in the week we start and end. 
-            var beginningOfStartWeek = start.AddDays(-(int)start.DayOfWeek + 1); // +1, Monday is our start of week so offset
-            var endOfEndWeek = end.AddDays(7 - (end.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)end.DayOfWeek)); // Sunday is our end of week so substitute its value as 7
+            // Also if we have a sunday for start/end we need to adjust for it being the front of the week when we want it as the end of the week.
+            var startAdjustment = start.DayOfWeek == DayOfWeek.Sunday ? -7 : 0;
+            var beginningOfStartWeek = start.AddDays(-(int)start.DayOfWeek + 1 + startAdjustment); // Date - DayOfWeek + 1
+
+            var endAdjustment = end.DayOfWeek == DayOfWeek.Sunday ? -7 : 0;
+            var endOfEndWeek = end.AddDays(-(int)end.DayOfWeek + 7 + endAdjustment); // Date - DayOfWeek + 7 
 
             // Determine the schedule for each week in this range
             foreach (var date in Time.EachDay(beginningOfStartWeek, endOfEndWeek).Where(x => x.DayOfWeek == weeklyBaseDay))
