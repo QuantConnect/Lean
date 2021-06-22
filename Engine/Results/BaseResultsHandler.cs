@@ -29,7 +29,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -572,26 +571,26 @@ namespace QuantConnect.Lean.Engine.Results
 
             // Split up our holdings in one enumeration into long and shorts,
             // only process those that we hold stock in.
-            var shortHoldings = new Dictionary<SecurityType, List<SecurityHolding>>();
-            var longHoldings = new Dictionary<SecurityType, List<SecurityHolding>>();
+            var shortHoldings = new Dictionary<SecurityType, decimal>();
+            var longHoldings = new Dictionary<SecurityType, decimal>();
             foreach (var holding in Algorithm.Portfolio.Values.Where(x => x.HoldStock))
             {
                 // Ensure we have a list for this security type in both our dictionaries
                 if (!longHoldings.ContainsKey(holding.Symbol.SecurityType))
                 {
-                    longHoldings.Add(holding.Symbol.SecurityType, new List<SecurityHolding>());
-                    shortHoldings.Add(holding.Symbol.SecurityType, new List<SecurityHolding>());
+                    longHoldings.Add(holding.Symbol.SecurityType, 0);
+                    shortHoldings.Add(holding.Symbol.SecurityType, 0);
                 }
 
                 // Long Position
                 if (holding.HoldingsValue > 0)
                 {
-                    longHoldings[holding.Symbol.SecurityType].Add(holding);
+                    longHoldings[holding.Symbol.SecurityType] += holding.HoldingsValue;
                 }
                 // Short Position
                 else
                 {
-                    shortHoldings[holding.Symbol.SecurityType].Add(holding);
+                    shortHoldings[holding.Symbol.SecurityType] += holding.HoldingsValue;
                 }
             }
 
@@ -601,18 +600,18 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Helper method for SampleExposure, samples a given list of holdings to
+        /// Helper method for SampleExposure, samples our holdings value to
         /// our exposure chart by their position side and security type
         /// </summary>
         /// <param name="type">Side to sample from portfolio</param>
         /// <param name="time">Time of the sample</param>
         /// <param name="currentPortfolioValue">Current value of the portfolio</param>
         /// <param name="holdings">Enumerable of holdings to sample</param>
-        private void SampleExposureHelper(PositionSide type, DateTime time, decimal currentPortfolioValue, Dictionary<SecurityType, List<SecurityHolding>> holdings)
+        private void SampleExposureHelper(PositionSide type, DateTime time, decimal currentPortfolioValue, Dictionary<SecurityType, decimal> holdings)
         {
             foreach (var kvp in holdings)
             {
-                var ratio = Math.Round(kvp.Value.Sum(x => x.HoldingsValue) / currentPortfolioValue, 4);
+                var ratio = Math.Round(kvp.Value / currentPortfolioValue, 4);
                 Sample("Exposure", $"{kvp.Key} - {type} Ratio", 0, SeriesType.Line, time,
                     ratio, "");
             }
