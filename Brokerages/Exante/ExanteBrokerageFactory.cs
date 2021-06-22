@@ -106,7 +106,7 @@ namespace QuantConnect.Brokerages.Exante
             var accountId = Read<string>(job.BrokerageData, "exante-account-id", errors);
             var platformTypeStr = Read<string>(job.BrokerageData, "exante-platform-type", errors);
 
-            if (errors.empty())
+            if (!errors.empty())
             {
                 // if we had errors then we can't create the instance
                 throw new Exception(string.Join(System.Environment.NewLine, errors));
