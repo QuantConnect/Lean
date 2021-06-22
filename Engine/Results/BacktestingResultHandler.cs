@@ -172,19 +172,22 @@ namespace QuantConnect.Lean.Engine.Results
                 var deltaCharts = new Dictionary<string, Chart>();
                 var serverStatistics = GetServerStatistics(utcNow);
                 var performanceCharts = new Dictionary<string, Chart>();
+
+                // Process our charts updates
                 lock (ChartLock)
                 {
-                    //Get the updates since the last chart
                     foreach (var kvp in Charts)
                     {
                         var chart = kvp.Value;
 
+                        // Get a copy of this chart with updates only since last request
                         var updates = chart.GetUpdates();
                         if (!updates.IsEmpty())
                         {
                             deltaCharts.Add(chart.Name, updates);
                         }
 
+                        // Update our algorithm performance charts 
                         if (AlgorithmPerformanceCharts.Contains(kvp.Key))
                         {
                             performanceCharts[kvp.Key] = chart.Clone();
@@ -400,6 +403,8 @@ namespace QuantConnect.Lean.Engine.Results
             StartingPortfolioValue = startingPortfolioValue;
             PreviousUtcSampleTime = Algorithm.UtcTime;
             DailyPortfolioValue = StartingPortfolioValue;
+            CumulativeMaxPortfolioValue = StartingPortfolioValue;
+            AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
             _capacityEstimate = new CapacityEstimate(Algorithm);
 
             //Get the resample period:
@@ -579,6 +584,18 @@ namespace QuantConnect.Lean.Engine.Results
             catch (OverflowException)
             {
             }
+        }
+
+        /// <summary>
+        /// Sample estimated strategy capacity
+        /// </summary>
+        /// <param name="time">Time of the sample</param>
+        protected override void SampleCapacity(DateTime time)
+        {
+            // Sample strategy capacity, round to 1k
+            var roundedCapacity = _capacityEstimate.Capacity;
+            Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, time,
+                roundedCapacity, AlgorithmCurrencySymbol);
         }
 
         /// <summary>
