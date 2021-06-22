@@ -448,7 +448,9 @@ namespace QuantConnect.Brokerages.Zerodha
             var security = _securityProvider.GetSecurity(order.Symbol);
             var orderFee = security.FeeModel.GetOrderFee(
                         new OrderFeeParameters(security, order));
-            var orderProperties = order.Properties as ZerodhaOrderProperties;
+            ZerodhaOrderProperties orderProperties = new ZerodhaOrderProperties(ZerodhaOrderProperties.KiteProductType.MIS);
+            orderProperties.Exchange = order.Properties.Exchange;
+            //var orderProperties = order.Properties as ZerodhaOrderProperties;
             if (orderProperties == null)
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid product type Please set either MIS,CNC or NRML";

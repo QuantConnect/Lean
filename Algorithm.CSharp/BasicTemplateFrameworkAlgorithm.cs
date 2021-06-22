@@ -47,11 +47,12 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            AddEquity("TCS", Resolution.Second, Market.India, extendedMarketHours: true);
+            AddEquity("UNIONBANK", Resolution.Second, Market.India);
 
             // There are other assets with similar methods. See "Selecting Options" etc for more details.
             // AddFuture, AddForex, AddCfd, AddOption
             Debug("Intialization Done");
+
         }
 
         /// <summary>
@@ -60,16 +61,23 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            Debug("Hello from OnData");
+            Debug("Hello from OnData"); 
+            if (!Portfolio.Invested)
+            {
+                DefaultOrderProperties.Exchange = "bse";
+                //SetHoldings("UNIONBANK", 1);
+                var marketTicket = MarketOrder("UNIONBANK", 1);
+                Debug("Sending Order");
+            }
         }
 
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            Debug("Hello from OnOrderEvent");
             if (orderEvent.Status.IsFill())
             {
-                Debug("Hello");
-                Debug($"Purchased Stock: {orderEvent.Symbol}");
+                Debug($"Purchased Complete: {orderEvent.Symbol}");
             }
         }
 

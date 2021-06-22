@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,6 +26,11 @@ namespace QuantConnect.Interfaces
         /// Defines the length of time over which an order will continue working before it is cancelled
         /// </summary>
         TimeInForce TimeInForce { get; set; }
+
+        /// <summary>
+        /// Defines the length of time over which an order will continue working before it is cancelled
+        /// </summary>
+        string Exchange { get; set; }
 
         /// <summary>
         /// Returns a new instance clone of this object
