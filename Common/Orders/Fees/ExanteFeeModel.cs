@@ -4,20 +4,30 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders.Fees
 {
+    /// <summary>
+    /// Provides an implementation of <see cref="FeeModel"/> that models Exante order fees.
+    /// According to:
+    /// <list type="bullet">
+    ///   <item>https://support.exante.eu/hc/en-us/articles/115005873143-Fees-overview-exchange-imposed-fees?source=search</item>
+    ///   <item>https://exante.eu/markets/</item>
+    /// </list>
+    /// </summary>
     public class ExanteFeeModel : FeeModel
     {
         private readonly decimal _forexCommissionRate;
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="forexCommissionRate">Commission rate for FX operations</param>
         public ExanteFeeModel(decimal forexCommissionRate)
         {
             _forexCommissionRate = forexCommissionRate;
         }
 
+        /// <inheritdoc />
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            // According to
-            // https://support.exante.eu/hc/en-us/articles/115005873143-Fees-overview-exchange-imposed-fees?source=search
-            // https://exante.eu/markets/
             var order = parameters.Order;
             var security = parameters.Security;
 
@@ -58,6 +68,11 @@ namespace QuantConnect.Orders.Fees
             return new OrderFee(new CashAmount(feeResult, feeCurrency));
         }
 
+        /// <summary>
+        /// Computes fee for equity order
+        /// </summary>
+        /// <param name="exchange">exchange of order</param>
+        /// <param name="order">LEAN order</param>
         private static CashAmount ComputeEquityFee(string exchange, Order order)
         {
             switch (exchange)
@@ -71,6 +86,11 @@ namespace QuantConnect.Orders.Fees
             }
         }
 
+        /// <summary>
+        /// Computes fee for option order
+        /// </summary>
+        /// <param name="exchange">exchange of order</param>
+        /// <param name="order">LEAN order</param>
         private static CashAmount ComputeOptionFee(string exchange, Order order)
         {
             switch (exchange)
