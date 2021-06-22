@@ -1,8 +1,10 @@
+using System;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
+using static QuantConnect.Util.SecurityExtensions;
 
 
 namespace QuantConnect.Brokerages
@@ -12,6 +14,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class ExanteBrokerageModel : DefaultBrokerageModel
     {
+        private const decimal _equityLeverage = 1.2m;
+
         /// <inheritdoc />
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
@@ -49,6 +53,26 @@ namespace QuantConnect.Brokerages
             return new ExanteFeeModel(
                 forexCommissionRate: 0.25m
             );
+        }
+
+        /// <summary>
+        /// Bitfinex global leverage rule
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
+        public override decimal GetLeverage(Security security)
+        {
+            if (AccountType == AccountType.Cash || security.IsInternalFeed() || security.Type == SecurityType.Base)
+            {
+                return 1m;
+            }
+
+            if (security.Type == SecurityType.Equity)
+            {
+                return _equityLeverage;
+            }
+
+            throw new ArgumentException($"Invalid security type: {security.Type}", nameof(security));
         }
     }
 }
