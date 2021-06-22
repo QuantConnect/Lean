@@ -216,7 +216,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 3000);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            Assert.AreEqual(-1005m, actual);
+            Assert.AreEqual(-1006m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
@@ -230,9 +230,13 @@ namespace QuantConnect.Tests.Algorithm
             //75% cash spent on 3000 MSFT shares.
             algo.Portfolio.SetCash(25000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 3000);
-            //Sell all 2000 held:
+            // TPV =  Cash + Holdings  - Fees  - Buffer => Target = TVP * 0.5
+            // TPV = 25000 + 25 * 3000 - 10000 - 250 = 89750 => 89750 * 0.5 = 44875
+            // Final Quantity = Target / Unit - Holdings Quantity
+            // Final Quantity = 44875 / 25 - 3000 = 1795.0 - 3000 = -1205
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            Assert.AreEqual(-1204m, actual);
+            // 3000 - 1204 = 1796. Multiply by unit 1796 * 25 = 44900. Weight = 44900 / 89750 (TPV) = 0.50027855 > 0.5
+            Assert.AreEqual(-1205m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
@@ -794,7 +798,7 @@ namespace QuantConnect.Tests.Algorithm
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
             // Need to sell ($150k total value * 0.5m  target * 0.9975 buffer - 100k current holdings) / 50 =~ -500
-            Assert.AreEqual(-503m, actual);
+            Assert.AreEqual(-504m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
@@ -821,7 +825,7 @@ namespace QuantConnect.Tests.Algorithm
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
             // Need to sell ($150k total value * 0.5m  target * 0.9975 buffer - 100k current holdings) / 50 =~ -500
-            Assert.AreEqual(-503m, actual);
+            Assert.AreEqual(-504m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
@@ -848,7 +852,7 @@ namespace QuantConnect.Tests.Algorithm
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
             // Need to sell (( $150k total value - 10 k fees) * 0.5m  target * 0.9975 buffer - 100k current holdings) / 50 =~ -603
-            Assert.AreEqual(-603, actual);
+            Assert.AreEqual(-604, actual);
             // After the trade: TPV 140k (due to fees), holdings at 1397 shares (2000 - 603) * $50 = 69850 value, which is 0.4989% holdings
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
@@ -953,8 +957,8 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the order for 50% MSFT:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
-            //Need to sell to make position ($175k total value * 0.5 target * 0.9975 buffer - $150k current holdings) / 50 =~ -1254m
-            Assert.AreEqual(-1254m, actual);
+            //Need to sell to make position ($175k total value * 0.5 target * 0.9975 buffer - $150k current holdings) / 50 =~ -1255m
+            Assert.AreEqual(-1255m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
@@ -1005,11 +1009,11 @@ namespace QuantConnect.Tests.Algorithm
             // TPV: 50k
             Assert.AreEqual(50000, algo.Portfolio.TotalPortfolioValue);
 
-            // we should end with -750 shares (-.75*50000/50)
+            // we should end with -748 shares (-.75*(50000-125)/50)
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.75m);
 
-            // currently -2000, so plus 1251
-            Assert.AreEqual(1251m, actual);
+            // currently -2000, so plus 1252
+            Assert.AreEqual(1252m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
