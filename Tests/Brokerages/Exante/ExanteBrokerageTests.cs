@@ -24,7 +24,7 @@ using System.Linq;
 namespace QuantConnect.Tests.Brokerages.Exante
 {
     [TestFixture]
-    public class ExanteBrokerageTests : BrokerageTests
+    public partial class ExanteBrokerageTests : BrokerageTests
     {
         private readonly ExanteBrokerage _brokerage;
 
@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Brokerages.Exante
             var accountId = Config.Get("exante-account-id");
             var platformTypeStr = Config.Get("exante-platform-type");
             var exanteClientOptions =
-                ExanteBrokerageFactory.createExanteClientOptions(clientId, applicationId, sharedKey, platformTypeStr);
+                ExanteBrokerageFactory.CreateExanteClientOptions(clientId, applicationId, sharedKey, platformTypeStr);
 
             _brokerage = new ExanteBrokerage(
                 exanteClientOptions,
