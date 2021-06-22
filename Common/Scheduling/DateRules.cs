@@ -356,8 +356,7 @@ namespace QuantConnect.Scheduling
             }
 
             // Iterate all days between the beginning of "start" month, through end of "end" month.
-            // Necessary to ensure we schedule events in the month we start and end. Will still filter
-            // out dates outside of start - end
+            // Necessary to ensure we schedule events in the month we start and end.
             var beginningOfStartMonth = new DateTime(start.Year, start.Month, 1);
             var endOfEndMonth = new DateTime(end.Year, end.Month, DateTime.DaysInMonth(end.Year, end.Month));
 
@@ -410,8 +409,13 @@ namespace QuantConnect.Scheduling
                 weeklyBoundaryDay = searchForward ? weeklySchedule.Last().DayOfWeek : weeklySchedule.First().DayOfWeek;
             }
 
+            // Iterate all days between the beginning of "start" week, through end of "end" week.
+            // Necessary to ensure we schedule events in the week we start and end. 
+            var beginningOfStartWeek = start.AddDays(-(int)start.DayOfWeek + 1); // +1, Monday is our start of week so offset
+            var endOfEndWeek = end.AddDays(7 - (end.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)end.DayOfWeek)); // Sunday is our end of week so substitute its value as 7
+
             // Determine the schedule for each week in this range
-            foreach (var date in Time.EachDay(start, end).Where(x => x.DayOfWeek == weeklyBaseDay))
+            foreach (var date in Time.EachDay(beginningOfStartWeek, endOfEndWeek).Where(x => x.DayOfWeek == weeklyBaseDay))
             {
                 var boundary = date.AddDays(weeklyBoundaryDay - weeklyBaseDay);
                 var scheduledDay = GetScheduledDay(securitySchedule, date, offset, searchForward, boundary);

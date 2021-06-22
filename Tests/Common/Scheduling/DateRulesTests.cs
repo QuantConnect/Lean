@@ -347,7 +347,9 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreEqual(expectedDayOfWeek, date.DayOfWeek);
             }
 
-            Assert.AreEqual(52, count);
+            // There are 53 saturday and sundays in 2000, otherwise we expect only 52
+            int expected = expectedDayOfWeek == DayOfWeek.Saturday || expectedDayOfWeek == DayOfWeek.Sunday ? 53 : 52;
+            Assert.AreEqual(expected, count);
         }
 
         [TestCase(Symbols.SymbolsKey.SPY, new[] { 3, 10, 18, 24, 31 })]
@@ -388,6 +390,35 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var pair in datesAndExpectedDays)
             {
                 Assert.AreEqual(pair.expectedDay, pair.date.Day);
+            }
+        }
+
+        [TestCase(3, false)]    // Start before the 6th
+        [TestCase(4, false)]    
+        [TestCase(5, false)]
+        [TestCase(6, false)]
+        [TestCase(7, true)]     // Start after the 6th
+        [TestCase(8, true)]
+        [TestCase(9, true)]
+        public void StartOfWeekStartDateOffset(int startingDateDay, bool expectNone)
+        {
+            // Related to issue #5678, Assert that even though starting date may not be
+            // not monday we still schedule for that week.
+
+            // For this test and the EndOfWeek counterpart we will use the week of
+            // 1/3/2000 Monday to 1/9/2000 Sunday; with our variable date applied.
+            var startingDate = new DateTime(2000, 1, startingDateDay);
+            var endingDate = new DateTime(2000, 1, 9);
+
+            var rules = GetDateRules();
+            var rule = rules.WeekStart(3); // 1/6/2000
+            var dates = rule.GetDates(startingDate, endingDate);
+
+            Assert.AreEqual(expectNone, dates.IsNullOrEmpty());
+
+            if (!expectNone)
+            {
+                Assert.AreEqual(new DateTime(2000, 1, 6), dates.First());
             }
         }
 
@@ -480,6 +511,35 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var pair in datesAndExpectedDays)
             {
                 Assert.AreEqual(pair.expectedDay, pair.date.Day);
+            }
+        }
+
+        [TestCase(3, true)]     // End before the 6th
+        [TestCase(4, true)]
+        [TestCase(5, true)]
+        [TestCase(6, false)]    // End after the 6th
+        [TestCase(7, false)]     
+        [TestCase(8, false)]
+        [TestCase(9, false)]
+        public void EndOfWeekEndDateOffset(int endDateDay, bool expectNone)
+        {
+            // Related to issue #5678, Assert that even though starting date may not be
+            // not monday we still schedule for that week.
+
+            // For this test and the EndOfWeek counterpart we will use the week of
+            // 1/3/2000 Monday to 1/9/2000 Sunday; with our variable date applied.
+            var startingDate = new DateTime(2000, 1, 3);
+            var endingDate = new DateTime(2000, 1, endDateDay);
+
+            var rules = GetDateRules();
+            var rule = rules.WeekEnd(1); // 1/6/2000 (For weekEnd, Friday is the base day)
+            var dates = rule.GetDates(startingDate, endingDate);
+
+            Assert.AreEqual(expectNone, dates.IsNullOrEmpty());
+
+            if (!expectNone)
+            {
+                Assert.AreEqual(new DateTime(2000, 1, 6), dates.First());
             }
         }
 
