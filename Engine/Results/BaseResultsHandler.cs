@@ -569,13 +569,13 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
-            // Split up our holdings in one enumeration into long and shorts,
+            // Split up our holdings in one enumeration into long and shorts holding values
             // only process those that we hold stock in.
             var shortHoldings = new Dictionary<SecurityType, decimal>();
             var longHoldings = new Dictionary<SecurityType, decimal>();
             foreach (var holding in Algorithm.Portfolio.Values.Where(x => x.HoldStock))
             {
-                // Ensure we have a list for this security type in both our dictionaries
+                // Ensure we have a value for this security type in both our dictionaries
                 if (!longHoldings.ContainsKey(holding.Symbol.SecurityType))
                 {
                     longHoldings.Add(holding.Symbol.SecurityType, 0);
