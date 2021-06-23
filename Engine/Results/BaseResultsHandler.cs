@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -168,9 +168,19 @@ namespace QuantConnect.Lean.Engine.Results
         protected AlphaRuntimeStatistics AlphaRuntimeStatistics { get; set; }
 
         /// <summary>
+        /// Algorithm currency symbol, used in charting
+        /// </summary>
+        protected string AlgorithmCurrencySymbol { get; set; }
+
+        /// <summary>
         /// Closing portfolio value. Used to calculate daily performance.
         /// </summary>
         protected decimal DailyPortfolioValue;
+
+        /// <summary>
+        /// Cumulative max portfolio value. Used to calculate drawdown underwater.
+        /// </summary>
+        protected decimal CumulativeMaxPortfolioValue;
 
         /// <summary>
         /// Last time the <see cref="IResultHandler.Sample(DateTime, bool)"/> method was called in UTC
@@ -456,9 +466,17 @@ namespace QuantConnect.Lean.Engine.Results
                 var currentPortfolioValue = GetPortfolioValue();
                 var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 
+                // Update our max portfolio value
+                CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
+
+                // Sample all our default charts
                 SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
                 SampleBenchmark(PreviousUtcSampleTime, GetBenchmarkValue());
                 SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
+                SampleDrawdown(PreviousUtcSampleTime, currentPortfolioValue);
+                SampleSalesVolume(PreviousUtcSampleTime);
+                SampleExposure(PreviousUtcSampleTime, currentPortfolioValue);
+                SampleCapacity(PreviousUtcSampleTime);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
                 // with skewed statistics if a processing event was forced.
@@ -479,9 +497,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Current equity value.</param>
         protected virtual void SampleEquity(DateTime time, decimal value)
         {
-            var accountCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
-
-            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, accountCurrencySymbol);
+            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, AlgorithmCurrencySymbol);
         }
 
         /// <summary>
@@ -507,6 +523,107 @@ namespace QuantConnect.Lean.Engine.Results
         protected virtual void SampleBenchmark(DateTime time, decimal value)
         {
             Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
+        }
+
+        /// <summary>
+        /// Sample drawdown of equity of the strategy
+        /// </summary>
+        /// <param name="time">Time of the sample</param>
+        /// <param name="currentPortfolioValue">Current equity value</param>
+        protected virtual void SampleDrawdown(DateTime time, decimal currentPortfolioValue)
+        {
+            // This will throw otherwise, in this case just don't sample
+            if (CumulativeMaxPortfolioValue != 0)
+            {
+                // Calculate our drawdown and sample it
+                var drawdown = Statistics.Statistics.DrawdownPercent(currentPortfolioValue, CumulativeMaxPortfolioValue);
+                Sample("Drawdown", "Equity Drawdown", 0, SeriesType.Line, time, drawdown, "%");
+            }
+        }
+
+        /// <summary>
+        /// Sample assets sales volume
+        /// </summary>
+        /// <param name="time">Time of the sample</param>
+        protected virtual void SampleSalesVolume(DateTime time)
+        {
+            // Sample top 30 holdings by sales volume
+            foreach (var holding in Algorithm.Portfolio.Values.Where(y => y.TotalSaleVolume != 0)
+                .OrderByDescending(x => x.TotalSaleVolume).Take(30))
+            {
+                Sample("Assets Sales Volume", $"{holding.Symbol.Value}", 0, SeriesType.Treemap, time,
+                    holding.TotalSaleVolume, AlgorithmCurrencySymbol);
+            }
+        }
+
+        /// <summary>
+        /// Sample portfolio exposure long/short ratios by security type
+        /// </summary>
+        /// <param name="time">Time of the sample</param>
+        /// <param name="currentPortfolioValue">Current value of the portfolio</param>
+        protected virtual void SampleExposure(DateTime time, decimal currentPortfolioValue)
+        {
+            // Will throw in this case, just return without sampling
+            if (currentPortfolioValue == 0)
+            {
+                return;
+            }
+
+            // Split up our holdings in one enumeration into long and shorts holding values
+            // only process those that we hold stock in.
+            var shortHoldings = new Dictionary<SecurityType, decimal>();
+            var longHoldings = new Dictionary<SecurityType, decimal>();
+            foreach (var holding in Algorithm.Portfolio.Values.Where(x => x.HoldStock))
+            {
+                // Ensure we have a value for this security type in both our dictionaries
+                if (!longHoldings.ContainsKey(holding.Symbol.SecurityType))
+                {
+                    longHoldings.Add(holding.Symbol.SecurityType, 0);
+                    shortHoldings.Add(holding.Symbol.SecurityType, 0);
+                }
+
+                // Long Position
+                if (holding.HoldingsValue > 0)
+                {
+                    longHoldings[holding.Symbol.SecurityType] += holding.HoldingsValue;
+                }
+                // Short Position
+                else
+                {
+                    shortHoldings[holding.Symbol.SecurityType] += holding.HoldingsValue;
+                }
+            }
+
+            // Sample our long and short positions
+            SampleExposureHelper(PositionSide.Long, time, currentPortfolioValue, longHoldings);
+            SampleExposureHelper(PositionSide.Short, time, currentPortfolioValue, shortHoldings);
+        }
+
+        /// <summary>
+        /// Helper method for SampleExposure, samples our holdings value to
+        /// our exposure chart by their position side and security type
+        /// </summary>
+        /// <param name="type">Side to sample from portfolio</param>
+        /// <param name="time">Time of the sample</param>
+        /// <param name="currentPortfolioValue">Current value of the portfolio</param>
+        /// <param name="holdings">Enumerable of holdings to sample</param>
+        private void SampleExposureHelper(PositionSide type, DateTime time, decimal currentPortfolioValue, Dictionary<SecurityType, decimal> holdings)
+        {
+            foreach (var kvp in holdings)
+            {
+                var ratio = Math.Round(kvp.Value / currentPortfolioValue, 4);
+                Sample("Exposure", $"{kvp.Key} - {type} Ratio", 0, SeriesType.Line, time,
+                    ratio, "");
+            }
+        }
+
+        /// <summary>
+        /// Sample estimated strategy capacity
+        /// </summary>
+        /// <param name="time">Time of the sample</param>
+        protected virtual void SampleCapacity(DateTime time)
+        {
+            // NOP; Used only by BacktestingResultHandler because he owns a CapacityEstimate
         }
 
         /// <summary>
@@ -559,7 +676,7 @@ namespace QuantConnect.Lean.Engine.Results
             runtimeStatistics["Volume"] = accountCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
             if (capacityEstimate != null)
             {
-                runtimeStatistics["Capacity"] = accountCurrencySymbol + capacityEstimate.Capacity.Value.RoundToSignificantDigits(2).ToFinancialFigures();
+                runtimeStatistics["Capacity"] = accountCurrencySymbol + capacityEstimate.Capacity.RoundToSignificantDigits(2).ToFinancialFigures();
             }
 
             return runtimeStatistics;
