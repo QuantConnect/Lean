@@ -177,7 +177,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 var instrumentTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.ID.Symbol);
                 if (instrumentTokenList.Count == 0)
                 {
-                    Log.Error("ZerodhaBrokerage.Subscribe(): Invalid Zerodha Instrument token");
+                    Log.Error($"ZerodhaBrokerage.Subscribe(): Invalid Zerodha Instrument token for: {symbol.ID.Symbol}");
                     continue;
                 }
                 foreach (var instrumentToken in instrumentTokenList)
@@ -219,7 +219,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     var instrumentTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.ID.Symbol);
                     if (instrumentTokenList.Count == 0)
                     {
-                        Log.Error("ZerodhaBrokerage.Unsubscribe(): Invalid Zerodha Instrument token");
+                        Log.Error($"ZerodhaBrokerage.Unsubscribe(): Invalid Zerodha Instrument token for: {symbol.ID.Symbol}");
                         continue;
                     }
                     foreach (var instrumentToken in instrumentTokenList)
@@ -461,7 +461,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             if (orderProperties.Exchange == null)
             {
-                throw new NullReferenceException("Error! Please set required exchange for Placing an Order");   
+                throw new NullReferenceException("Please set exchange attribute using DefaultOrderProperties because placing an order");   
             }
 
             try
@@ -622,7 +622,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             if (orderProperties.Exchange == null)
             {
-                throw new NullReferenceException("Error! Please set required exchange for Placing an Order");   
+                throw new NullReferenceException("Please set exchange attribute using DefaultOrderProperties because placing an order");   
             }
 
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
@@ -1040,7 +1040,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private void OnError(object sender, WebSocketError e)
         {
-            Log.Error($"ZerodhaSubscriptionManager.OnError(): Message: {e.Message} Exception: {e.Exception}");
+            Log.Error($"ZerodhaBrokerage.OnError(): Message: {e.Message} Exception: {e.Exception}");
         }
 
         private void OnMessage(object sender, MessageData e)

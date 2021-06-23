@@ -281,10 +281,10 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
-        /// Fetches the Real Market/Exchange vendor inside in India Market, E.g: NSE, BSE
+        /// Fetches the trading segment inside India Market, E.g: NSE, BSE for the given Instrument Token
         /// </summary>
         /// <param name="Token">The Zerodha Instrument Token</param>
-        /// <returns>An exchange value for the given ticker</returns>
+        /// <returns>An exchange value for the given token</returns>
         public string GetZerodhaExchangeFromToken(uint Token)
         {   
             string exchange = string.Empty;
@@ -297,7 +297,7 @@ namespace QuantConnect.Brokerages.Zerodha
         
 
         /// <summary>
-        /// Fetches the default Exchage value for the given symbol
+        /// Fetches the first available Exchage value for the given symbol from list of possible exchanges
         /// </summary>
         /// <param name="brokerageSymbol">The Zerodha symbol</param>
         /// <returns>A default exchange value for the given ticker</returns>
@@ -314,7 +314,7 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
-        /// Converts an Zerodha symbol to a Zerodha Instrument Token instance
+        /// Converts an Zerodha symbol to a List of Zerodha Instrument Tokens available from various exchange
         /// </summary>
         /// <param name="brokerageSymbol">The Zerodha symbol</param>
         /// <returns>A new Lean Symbol instance</returns>
@@ -324,10 +324,12 @@ namespace QuantConnect.Brokerages.Zerodha
 
             List<uint> tokenList = new List<uint>();
             List<SymbolData> tempSymbolDataList;
-            ZerodhaInstrumentsList.TryGetValue(brokerageSymbol, out tempSymbolDataList);
-            foreach (var sd in tempSymbolDataList)
+            if (ZerodhaInstrumentsList.TryGetValue(brokerageSymbol, out tempSymbolDataList))
             {
-                tokenList.Add(sd.instrumentToken);
+                foreach (var sd in tempSymbolDataList)
+                {
+                    tokenList.Add(sd.instrumentToken);
+                }
             }
             return tokenList;
         }

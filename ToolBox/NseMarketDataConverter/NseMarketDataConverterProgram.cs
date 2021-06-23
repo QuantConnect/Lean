@@ -184,7 +184,7 @@ namespace QuantConnect.ToolBox.NseMarketDataConverter
                 default:
                     break;
             }
-            return Symbol.Create(file.Replace(".csv", ""), SecurityType.Equity, "nse");
+            return Symbol.Create(file.Replace(".csv", ""), SecurityType.Equity, Market.India);
         }
 
         /// <summary>
