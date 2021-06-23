@@ -385,13 +385,22 @@ namespace QuantConnect.Securities
             var orderQuantity = finalHoldingsQuantity - parameters.Security.Holdings.Quantity;
             var targetHoldingsMargin = finalHoldingsQuantity * unitMargin;
 
-            // Check order quantity 
+            // Check order quantity before moving on
             if (orderQuantity == 0)
             {
-                string reason = parameters.SilenceNonErrorReasons
-                        ? null
-                        : $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize}";
-                return new GetMaximumOrderQuantityResult(0, reason, false);
+                string reason;
+                if (finalHoldingsQuantity == parameters.Security.Holdings.Quantity)
+                {
+                    reason =
+                        $"Already at target holding {finalHoldingsQuantity} for {parameters.Security.Symbol.Value}" +
+                        $" Current holdings: {parameters.Security.Holdings.Quantity}";
+                }
+                else
+                {
+                    reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize}";
+                }
+
+                return new GetMaximumOrderQuantityResult(0, parameters.SilenceNonErrorReasons ? null : reason, false);
             }
 
             // This loop will factor in order fees and adjust our quantities accordingly
