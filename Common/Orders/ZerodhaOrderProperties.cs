@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using System;
 
 namespace QuantConnect.Orders
 {
@@ -35,6 +36,20 @@ namespace QuantConnect.Orders
         public ZerodhaOrderProperties(KiteProductType productType)
         {
             ProductType = productType.ToStringInvariant();
+        }
+
+        /// <summary>
+        /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
+        /// </summary>
+        /// <param name="productType">Product type</param>
+         /// <param name="exchange">Exchange value, nse/bse etc</param>
+        public ZerodhaOrderProperties(KiteProductType productType,string exchange): this(productType)
+        {
+            if (string.IsNullOrEmpty(exchange))
+            {
+                throw new ArgumentException("Parameter cannot be null/empty", nameof(exchange));
+            }
+            Exchange = exchange;
         }
 
         /// <summary>

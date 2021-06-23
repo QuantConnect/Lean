@@ -28,11 +28,6 @@ namespace QuantConnect.Interfaces
         TimeInForce TimeInForce { get; set; }
 
         /// <summary>
-        /// Defines the length of time over which an order will continue working before it is cancelled
-        /// </summary>
-        string Exchange { get; set; }
-
-        /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
         IOrderProperties Clone();

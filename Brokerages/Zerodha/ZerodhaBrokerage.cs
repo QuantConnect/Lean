@@ -448,9 +448,7 @@ namespace QuantConnect.Brokerages.Zerodha
             var security = _securityProvider.GetSecurity(order.Symbol);
             var orderFee = security.FeeModel.GetOrderFee(
                         new OrderFeeParameters(security, order));
-            ZerodhaOrderProperties orderProperties = new ZerodhaOrderProperties(ZerodhaOrderProperties.KiteProductType.MIS);
-            orderProperties.Exchange = order.Properties.Exchange;
-            //var orderProperties = order.Properties as ZerodhaOrderProperties;
+            var orderProperties = order.Properties as ZerodhaOrderProperties;
             if (orderProperties == null)
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid product type Please set either MIS,CNC or NRML";
@@ -909,11 +907,11 @@ namespace QuantConnect.Brokerages.Zerodha
             var response = _kite.GetMargins();
             if (_tradingSegment == "EQUITY")
             {
-                amt = Convert.ToDecimal(response.Equity.Net, CultureInfo.InvariantCulture);
+                amt = Convert.ToDecimal(response.Equity.Available.Cash, CultureInfo.InvariantCulture);
             }
             else
             {
-                amt = Convert.ToDecimal(response.Commodity.Net, CultureInfo.InvariantCulture);
+                amt = Convert.ToDecimal(response.Commodity.Available.Cash, CultureInfo.InvariantCulture);
             }
             list.Add(new CashAmount(amt, AccountBaseCurrency));
             return list;
