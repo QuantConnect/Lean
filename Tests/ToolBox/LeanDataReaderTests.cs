@@ -181,9 +181,8 @@ namespace QuantConnect.Tests.ToolBox
                                                     TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, tickType);
             var factory = new ZipEntryNameSubscriptionDataSourceReader(TestGlobals.DataProvider, config, date, false);
 
-            var result = factory.Read(new SubscriptionDataSource(filePath, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName))
+            return factory.Read(new LocalFileSubscriptionDataSource(filePath, FileFormat.ZipEntryName))
                           .Select(s => s.Symbol).ToList();
-            return result;
         }
 
         private string LoadFutureData(Symbol future, TickType tickType, Resolution res)

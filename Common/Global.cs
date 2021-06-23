@@ -668,7 +668,7 @@ namespace QuantConnect
         /// <summary>
         /// The subscription's data comes from a rest call that is polled and returns a single line/data point of information
         /// </summary>
-        Rest,
+        Web,
 
         /// <summary>
         /// The subscription's data is streamed

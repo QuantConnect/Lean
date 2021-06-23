@@ -129,7 +129,7 @@ namespace QuantConnect.Algorithm.CSharp
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 var url = isLiveMode ? LiveUrl : BacktestUrl;
-                return new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile);
+                return new RemoteFileSubscriptionDataSource(url);
             }
 
             /// <summary>

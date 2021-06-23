@@ -82,7 +82,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         {
             var symbol = config.Symbol.Value.ToLowerInvariant();
             var source = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "indicator", symbol, Invariant($"{date:yyyyMMdd}.zip"));
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Collection);
+            return new LocalFileSubscriptionDataSource(source, FileFormat.Collection);
         }
 
         /// <summary>

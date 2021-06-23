@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Represents the source location and transport medium for a subscription
     /// </summary>
-    public class SubscriptionDataSource : IEquatable<SubscriptionDataSource>
+    public abstract class SubscriptionDataSource : IEquatable<SubscriptionDataSource>
     {
         /// <summary>
         /// Identifies where to get the subscription's data from
@@ -40,18 +41,15 @@ namespace QuantConnect.Data
         /// </summary>
         public readonly SubscriptionTransportMedium TransportMedium;
 
-        /// <summary>
-        /// Gets the header values to be used in the web request.
-        /// </summary>
-        public readonly IReadOnlyList<KeyValuePair<string, string>> Headers;
+        public Func<IDataCacheProvider, IStreamReader> GetStreamReader { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class.
         /// </summary>
         /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
-        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium)
-            : this(source, transportMedium, FileFormat.Csv)
+        public SubscriptionDataSource(Func<IDataCacheProvider, IStreamReader> getStreamReader, string source, SubscriptionTransportMedium transportMedium)
+            : this(getStreamReader, source, transportMedium, FileFormat.Csv)
         {
         }
 
@@ -61,25 +59,25 @@ namespace QuantConnect.Data
         /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         /// <param name="format">The format of the data within the source</param>
-        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format)
-            : this(source, transportMedium, format, null)
+        public SubscriptionDataSource(Func<IDataCacheProvider, IStreamReader> getStreamReader, string source, SubscriptionTransportMedium transportMedium, FileFormat format)
+            : this(getStreamReader, source, transportMedium, format, null)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class with <see cref="SubscriptionTransportMedium.Rest"/>
+        /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class with <see cref="SubscriptionTransportMedium.Web"/>
         /// including the specified header values
         /// </summary>
         /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         /// <param name="format">The format of the data within the source</param>
         /// <param name="headers">The headers to be used for this source</param>
-        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format, IEnumerable<KeyValuePair<string, string>> headers)
+        public SubscriptionDataSource(Func<IDataCacheProvider, IStreamReader> getStreamReader, string source, SubscriptionTransportMedium transportMedium, FileFormat format, IEnumerable<KeyValuePair<string, string>> headers)
         {
             Source = source;
             Format = format;
             TransportMedium = transportMedium;
-            Headers = (headers?.ToList() ?? new List<KeyValuePair<string, string>>()).AsReadOnly();
+            GetStreamReader = getStreamReader;
         }
 
         /// <summary>
@@ -94,8 +92,7 @@ namespace QuantConnect.Data
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return string.Equals(Source, other.Source)
-                && TransportMedium == other.TransportMedium
-                && Headers.SequenceEqual(other.Headers);
+                && TransportMedium == other.TransportMedium;
         }
 
         /// <summary>

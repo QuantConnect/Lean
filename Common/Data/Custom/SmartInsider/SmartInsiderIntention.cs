@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -240,7 +240,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <returns>Subscription data source object pointing LEAN to the data location</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return new SubscriptionDataSource(
+            return new LocalFileSubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,
                     "alternative",
@@ -248,7 +248,6 @@ namespace QuantConnect.Data.Custom.SmartInsider
                     "intentions",
                     $"{config.Symbol.Value.ToLowerInvariant()}.tsv"
                 ),
-                SubscriptionTransportMedium.LocalFile,
                 FileFormat.Csv
             );
         }

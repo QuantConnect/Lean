@@ -182,7 +182,7 @@ namespace QuantConnect.Data
             if (isLiveMode)
             {
                 // live trading by default always gets a rest endpoint
-                return new SubscriptionDataSource(source, SubscriptionTransportMedium.Rest);
+                return new RestSubscriptionDataSource(source, isLiveMode);
             }
 
             // construct a uri to determine if we have a local or remote file
@@ -190,10 +190,10 @@ namespace QuantConnect.Data
 
             if (uri.IsAbsoluteUri && !uri.IsLoopback)
             {
-                return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
+                return new RemoteFileSubscriptionDataSource(source);
             }
 
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
+            return new LocalFileSubscriptionDataSource(source);
         }
 
         /// <summary>

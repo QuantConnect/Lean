@@ -107,7 +107,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                         IEnumerator<BaseData> collectionEnumerator;
                         if (collection != null)
                         {
-                            if (source.TransportMedium == SubscriptionTransportMedium.Rest)
+                            if (source.TransportMedium == SubscriptionTransportMedium.Web)
                             {
                                 // we want to make sure the data points we *unroll* are not past
                                 collectionEnumerator = collection.Data

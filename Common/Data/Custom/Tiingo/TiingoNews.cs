@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -139,9 +139,7 @@ namespace QuantConnect.Data.Custom.Tiingo
                 "content",
                 $"{date.ToStringInvariant(DateFormat.EightCharacter)}.zip#{index}"
             );
-            return new SubscriptionDataSource(source,
-                SubscriptionTransportMedium.LocalFile,
-                FileFormat.Csv);
+            return new LocalFileSubscriptionDataSource(source, FileFormat.Csv);
         }
 
         /// <summary>
@@ -164,9 +162,7 @@ namespace QuantConnect.Data.Custom.Tiingo
                 var tiingoTicker = TiingoSymbolMapper.GetTiingoTicker(config.Symbol);
                 var url = Invariant($"https://api.tiingo.com/tiingo/news?tickers={tiingoTicker}&startDate={date:yyyy-MM-dd}&token={Tiingo.AuthCode}&sortBy=crawlDate");
 
-                return new SubscriptionDataSource(url,
-                    SubscriptionTransportMedium.Rest,
-                    FileFormat.Collection);
+                return new RestSubscriptionDataSource(url, isLiveMode, returnsACollection: true);
             }
 
             var source = Path.Combine(
@@ -176,9 +172,7 @@ namespace QuantConnect.Data.Custom.Tiingo
                 $"{config.MappedSymbol.ToLowerInvariant()}",
                 $"{date.ToStringInvariant(DateFormat.EightCharacter)}.csv"
             );
-            return new SubscriptionDataSource(source,
-                SubscriptionTransportMedium.LocalFile,
-                FileFormat.Index);
+            return new LocalFileSubscriptionDataSource(source, FileFormat.Index);
         }
 
         /// <summary>

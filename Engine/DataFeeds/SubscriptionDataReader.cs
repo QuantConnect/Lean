@@ -511,7 +511,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 $"Error: {args.Exception.Message}", args.Exception.StackTrace));
                         break;
 
-                    case SubscriptionTransportMedium.Rest:
+                    case SubscriptionTransportMedium.Web:
                         break;
 
                     default:
@@ -519,10 +519,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             };
 
-            if (dataSourceReader is TextSubscriptionDataSourceReader)
+            if (dataSourceReader is CollectionSubscriptionDataSourceReader collectionSubscriptionDataSource)
+            {
+                collectionSubscriptionDataSource.ReaderError += (sender, args) =>
+                {
+                    OnReaderErrorDetected(
+                        new ReaderErrorDetectedEventArgs(_config.Symbol,
+                            $"Error invoking {_config.Symbol} data reader. " +
+                            $"Line: {args.Line} Error: {args.Exception.Message}",
+                            args.Exception.StackTrace));
+                };
+            }
+
+            if (dataSourceReader is TextSubscriptionDataSourceReader textSubscriptionFactory)
             {
                 // handle empty files/instantiation errors
-                var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
                 textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
                     if (_config.IsCustomData && !_config.Type.GetBaseDataInstance().IsSparseData())
