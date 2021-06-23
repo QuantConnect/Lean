@@ -42,7 +42,7 @@ namespace QuantConnect.Orders
         /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
         /// </summary>
         /// <param name="productType">Product type</param>
-         /// <param name="exchange">Exchange value, nse/bse etc</param>
+        /// <param name="exchange">Exchange value, nse/bse etc</param>
         public ZerodhaOrderProperties(KiteProductType productType,string exchange): this(productType)
         {
             if (string.IsNullOrEmpty(exchange))

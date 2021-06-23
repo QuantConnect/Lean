@@ -70,12 +70,12 @@ namespace QuantConnect.Brokerages.Zerodha
         public static List<Symbol> KnownSymbolsList = new List<Symbol>();
 
         /// <summary>
-        /// Gives information of all available SymbolData for given brokerageSymbol.
+        /// Mapping between brokerageSymbol and a list of all available SymbolData objects for the brokerageSymbol.
         /// </summary>
         public static Dictionary<string, List<SymbolData>> ZerodhaInstrumentsList = new Dictionary<string, List<SymbolData>>();
 
         /// <summary>
-        /// Gives exchange name for a given instrumentToken.
+        /// Mapping between instrumentToken and it's market segment ( E.g: 408065-> nse)
         /// </summary>
         public static Dictionary<uint,string> ZerodhaInstrumentsExchangeMapping = new Dictionary<uint,string>();
 
@@ -317,7 +317,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// Converts an Zerodha symbol to a List of Zerodha Instrument Tokens available from various exchange
         /// </summary>
         /// <param name="brokerageSymbol">The Zerodha symbol</param>
-        /// <returns>A new Lean Symbol instance</returns>
+        /// <returns>A list of Zerodha Instrument Tokens</returns>
         public List<uint> GetZerodhaInstrumentTokenList(string brokerageSymbol)
         {
             brokerageSymbol = brokerageSymbol.Replace(" ", "").Trim();
