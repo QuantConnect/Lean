@@ -810,8 +810,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         }
                     }
 
-                    // enable detailed logging
-                    _client.ClientSocket.setServerLogLevel(5);
+                    // enable logging at info level
+                    _client.ClientSocket.setServerLogLevel(4);
 
                     break;
                 }
