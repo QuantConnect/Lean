@@ -198,8 +198,14 @@ namespace QuantConnect.Tests.Algorithm
             //75% cash spent on 3000 MSFT shares.
             algo.Portfolio.SetCash(25000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 3000);
-            //Sell all 2000 held:
+
+            // TPV =  Cash + Holdings  - Fees  - Buffer => Target = TVP * 0.5
+            // TPV = 25000 + 25 * 3000 - 0 - 250 = 99,749 => 99,750 * 0.5 = 49875
+            // Final Quantity = Target / Unit - Holdings Quantity
+            // Final Quantity = 49875 / 25 - 3000 = 1995 - 3000 = -1,005
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
+
+            // 3000 - 1006 = 1994. Multiply by unit 1994 * 25 = 49,850. Weight = 49,875 / 99,749 (TPV) = 0.49975 < 0.5
             Assert.AreEqual(-1005m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
@@ -214,8 +220,14 @@ namespace QuantConnect.Tests.Algorithm
             //75% cash spent on 3000 MSFT shares.
             algo.Portfolio.SetCash(25000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 3000);
-            //Sell all 2000 held:
+
+            // TPV =  Cash + Holdings  - Fees  - Buffer => Target = TVP * 0.5
+            // TPV = 25000 + 25 * 3000 - 1 - 250 = 99,749 => 99,749 * 0.5 = 49874.5
+            // Final Quantity = Target / Unit - Holdings Quantity
+            // Final Quantity = 49874.5 / 25 - 3000 = 1794.98 - 3000 = -1,005.02 -> -1006
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
+
+            // 3000 - 1006 = 1994. Multiply by unit 1994 * 25 = 49,850. Weight = 49,875 / 99,749 (TPV) = 0.49975 < 0.5
             Assert.AreEqual(-1006m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
@@ -230,12 +242,14 @@ namespace QuantConnect.Tests.Algorithm
             //75% cash spent on 3000 MSFT shares.
             algo.Portfolio.SetCash(25000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 3000);
+
             // TPV =  Cash + Holdings  - Fees  - Buffer => Target = TVP * 0.5
             // TPV = 25000 + 25 * 3000 - 10000 - 250 = 89750 => 89750 * 0.5 = 44875
             // Final Quantity = Target / Unit - Holdings Quantity
             // Final Quantity = 44875 / 25 - 3000 = 1795.0 - 3000 = -1205
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            // 3000 - 1204 = 1796. Multiply by unit 1796 * 25 = 44900. Weight = 44900 / 89750 (TPV) = 0.50027855 > 0.5
+
+            // 3000 - 1205 = 1795. Multiply by unit 1795 * 25 = 44875. Weight = 44875 / 89750 (TPV) = 0.5
             Assert.AreEqual(-1205m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
