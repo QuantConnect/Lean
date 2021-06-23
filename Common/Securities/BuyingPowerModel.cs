@@ -358,112 +358,72 @@ namespace QuantConnect.Securities
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
-            // determine the margin required for 1 unit, positive since we'll work in the land of absolutes
-            var absUnitMargin = this.GetInitialMarginRequirement(parameters.Security, 1);
-            if (absUnitMargin == 0)
+            // determine the margin required for 1 unit; if zero then we don't have a price yet.
+            var unitMargin = this.GetInitialMarginRequirement(parameters.Security, 1);
+            if (unitMargin == 0)
             {
                 return new GetMaximumOrderQuantityResult(0, parameters.Security.Symbol.GetZeroPriceMessage());
             }
 
-            // this is expensive so let's fetch it once
-            var totalPortfolioValue = parameters.Portfolio.TotalPortfolioValue * (1 - RequiredFreeBuyingPowerPercent);
+            // Determine how much of our portfolio is useable for this target; TPV * (1 - BufferPercent)
+            var totalUseablePortfolioValue = parameters.Portfolio.TotalPortfolioValue * (1 - RequiredFreeBuyingPowerPercent);
 
-            // adjust target buying power to comply with required Free Buying Power Percent
-            var absFinalTargetMargin = Math.Abs(parameters.TargetBuyingPower * totalPortfolioValue);
-
-            // if targeting zero, simply return the negative of the quantity
-            if (absFinalTargetMargin == 0)
+            // Our max target margin allocated to this security; if targeting zero, simply return the negative of the quantity
+            var targetMarginAllocated = parameters.TargetBuyingPower * totalUseablePortfolioValue;
+            if (targetMarginAllocated == 0)
             {
-                return new GetMaximumOrderQuantityResult(-parameters.Security.Holdings.Quantity, string.Empty, false);
+                return new GetMaximumOrderQuantityResult(-parameters.Security.Holdings.Quantity, string.Empty,
+                    false);
             }
 
-            var sign = Math.Sign(parameters.TargetBuyingPower * totalPortfolioValue);
+            // First pass, calculate:
+            // - Final holdings quantity;
+            // - Order quantity to get to our final holdings
+            // - Total target holdings margin requirement
+            var finalHoldingsQuantity = (targetMarginAllocated / unitMargin)
+                .DiscretelyRoundBy(parameters.Security.SymbolProperties.LotSize);
+            var orderQuantity = finalHoldingsQuantity - parameters.Security.Holdings.Quantity;
+            var totalTargetHoldingsMargin = finalHoldingsQuantity * unitMargin;
 
-            // compute the final holdings quantity
-            var finalHoldingsQuantity = absFinalTargetMargin / absUnitMargin;
-            finalHoldingsQuantity -= finalHoldingsQuantity % parameters.Security.SymbolProperties.LotSize;
-
-            // compute the final order quantity and round it off to the nearest multiple of Lot Size
-            var orderQuantity = sign * finalHoldingsQuantity - parameters.Security.Holdings.Quantity;
-            orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
-            if (orderQuantity == 0)
-            {
-                var reason = parameters.SilenceNonErrorReasons
-                    ? null
-                    : $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
-                    "and has been rounded to zero.";
-
-                return new GetMaximumOrderQuantityResult(0, reason, false);
-            }
-
-            var loopCount = 0;
-            var targetMargin = finalHoldingsQuantity * absUnitMargin;
-            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
-
-            // Just in case...
-            var lastOrderQuantity = 0m;
+            // This loop will factor in order fees and adjust our quantities accordingly
             do
             {
-                // Each loop will reduce the order quantity based on the difference between targetMargin and absFinalTargetMargin
-                if (targetMargin > absFinalTargetMargin)
+                // Our target holdings value is over our target allocation, adjust the order size and final quantity
+                if(Math.Abs(totalTargetHoldingsMargin) > Math.Abs(targetMarginAllocated))
                 {
-                    var amountOfOrdersToRemove = (targetMargin - absFinalTargetMargin) / absUnitMargin;
-                    if (amountOfOrdersToRemove < parameters.Security.SymbolProperties.LotSize)
+                    // Use absolutes for this, we will apply sign before adjusting our quantities
+                    var sign = Math.Sign(targetMarginAllocated);
+
+                    var amountToAdjustOrder = Math.Abs((totalTargetHoldingsMargin - targetMarginAllocated) / unitMargin);
+                    if (amountToAdjustOrder < parameters.Security.SymbolProperties.LotSize)
                     {
-                        // we will always subtract at least 1 LotSize
-                        amountOfOrdersToRemove = parameters.Security.SymbolProperties.LotSize;
+                        // We will always adjust by at least 1 LotSize
+                        amountToAdjustOrder = parameters.Security.SymbolProperties.LotSize;
                     }
 
-                    orderQuantity -= sign * amountOfOrdersToRemove;
-                    orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
+                    // Round our order adjustment and reapply our sign
+                    amountToAdjustOrder = sign * amountToAdjustOrder.DiscretelyRoundBy(parameters.Security.SymbolProperties.LotSize);
+
+                    // Update our order size and final holdings quantity
+                    orderQuantity -= amountToAdjustOrder;
+                    finalHoldingsQuantity -= amountToAdjustOrder;
                 }
 
-                // generate the order
+                // Generate our order to determine fees; ensure those fees are not negative
+                var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
                 var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, utcTime);
-
                 var fees = parameters.Security.FeeModel.GetOrderFee(
                     new OrderFeeParameters(parameters.Security, order)).Value;
+                var orderFee = Math.Max(0, parameters.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount);
 
-                // Ensure fees are not negative
-                var orderFees = Math.Max(0, parameters.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount);
-
-                // The TPV, take out the fees(unscaled) => yields available margin for trading(less fees) then scale that by the target
-                absFinalTargetMargin = Math.Abs((totalPortfolioValue - orderFees) * parameters.TargetBuyingPower);
-
-                // After the first loop we need to recalculate order quantity since now we have fees included
-                if (loopCount == 0)
-                {
-                    // re compute the initial order quantity
-                    finalHoldingsQuantity = absFinalTargetMargin / absUnitMargin;
-                    finalHoldingsQuantity -= finalHoldingsQuantity % parameters.Security.SymbolProperties.LotSize;
-                    orderQuantity = sign * finalHoldingsQuantity - parameters.Security.Holdings.Quantity;
-                    orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
-                }
-                else
-                {
-                    // Start safe check after first loop
-                    if (lastOrderQuantity == orderQuantity)
-                    {
-                        var orderMargin = orderQuantity * absUnitMargin;
-                        var absFinalOrderMargin = absFinalTargetMargin
-                            - this.GetInitialMarginRequirement(parameters.Security, parameters.Security.Holdings.Quantity);
-
-                        var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target holdings margin " +
-                            Invariant($"{absFinalOrderMargin}. Current order margin is {orderMargin}. Order quantity {orderQuantity}. ") +
-                            Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
-                            $"{parameters.Security.Symbol}. Margin unit {absUnitMargin}.";
-                        throw new ArgumentException(message);
-                    }
-
-                    lastOrderQuantity = orderQuantity;
-                }
-
-                targetMargin = Math.Abs(orderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
-                loopCount++;
-                // we always have to loop at least twice
+                // Update our target holdings margin & target margin allocated values
+                totalTargetHoldingsMargin = (finalHoldingsQuantity * unitMargin);
+                targetMarginAllocated = parameters.TargetBuyingPower * (totalUseablePortfolioValue - orderFee);
             }
-            while (loopCount < 2 || targetMargin > absFinalTargetMargin);
+            // Must loop at least once to include fees into target margin allocated calculation
+            while (Math.Abs(totalTargetHoldingsMargin) > Math.Abs(targetMarginAllocated));
 
+            // Return our determined order quantity
             return new GetMaximumOrderQuantityResult(orderQuantity);
         }
 
