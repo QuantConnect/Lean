@@ -426,6 +426,16 @@ namespace QuantConnect.Securities
                     // Update our order size and final holdings quantity
                     orderQuantity -= amountToAdjustOrder;
                     finalHoldingsQuantity -= amountToAdjustOrder;
+
+                    if (orderQuantity == 0)
+                    {
+                        string reason = parameters.SilenceNonErrorReasons
+                            ? null
+                            : $"Order reduced to 0 to keep holdings margin below {targetHoldingsMargin}." +
+                            $" Current holdings {parameters.Security.Holdings.Quantity}, per unit margin {unitMargin}," +
+                            $" Total current margin {parameters.Security.Holdings.Quantity * unitMargin}";
+                        return new GetMaximumOrderQuantityResult(0, parameters.SilenceNonErrorReasons ? null : reason, false);
+                    }
                 }
 
                 // Generate our order to determine fees; ensure those fees are not negative
