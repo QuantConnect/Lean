@@ -377,24 +377,34 @@ namespace QuantConnect.Securities
             }
 
             // First pass, calculate:
-            // - Final holdings quantity;
+            // - Final holdings quantity
             // - Order quantity to get to our final holdings
             // - Total target holdings margin requirement
             var finalHoldingsQuantity = (targetMarginAllocated / unitMargin)
                 .DiscretelyRoundBy(parameters.Security.SymbolProperties.LotSize);
             var orderQuantity = finalHoldingsQuantity - parameters.Security.Holdings.Quantity;
-            var totalTargetHoldingsMargin = finalHoldingsQuantity * unitMargin;
+            var targetHoldingsMargin = finalHoldingsQuantity * unitMargin;
+
+            // Check order quantity 
+            if (orderQuantity == 0)
+            {
+                string reason = parameters.SilenceNonErrorReasons
+                        ? null
+                        : $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize}";
+                return new GetMaximumOrderQuantityResult(0, reason, false);
+            }
 
             // This loop will factor in order fees and adjust our quantities accordingly
+            var lastOrderQuantity = 0m; // For safety check
             do
             {
                 // Our target holdings value is over our target allocation, adjust the order size and final quantity
-                if(Math.Abs(totalTargetHoldingsMargin) > Math.Abs(targetMarginAllocated))
+                if(Math.Abs(targetHoldingsMargin) > Math.Abs(targetMarginAllocated))
                 {
                     // Use absolutes for this, we will apply sign before adjusting our quantities
                     var sign = Math.Sign(targetMarginAllocated);
 
-                    var amountToAdjustOrder = Math.Abs((totalTargetHoldingsMargin - targetMarginAllocated) / unitMargin);
+                    var amountToAdjustOrder = Math.Abs((targetHoldingsMargin - targetMarginAllocated) / unitMargin);
                     if (amountToAdjustOrder < parameters.Security.SymbolProperties.LotSize)
                     {
                         // We will always adjust by at least 1 LotSize
@@ -417,11 +427,22 @@ namespace QuantConnect.Securities
                 var orderFee = Math.Max(0, parameters.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount);
 
                 // Update our target holdings margin & target margin allocated values
-                totalTargetHoldingsMargin = (finalHoldingsQuantity * unitMargin);
+                targetHoldingsMargin = (finalHoldingsQuantity * unitMargin);
                 targetMarginAllocated = parameters.TargetBuyingPower * (totalUseablePortfolioValue - orderFee);
+
+                // Safety check, stops infinite loop that doesn't converge, should not occur but just in case.
+                if (lastOrderQuantity == orderQuantity)
+                {
+                    var orderMargin = orderQuantity * unitMargin;
+                    var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
+                        Invariant($"{targetHoldingsMargin}. Current order margin is {orderMargin}. Order quantity {orderQuantity}. ") +
+                        Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFee}. Security symbol ") +
+                        $"{parameters.Security.Symbol}. Margin per unit {unitMargin}.";
+                    throw new ArgumentException(message);
+                }
+                lastOrderQuantity = orderQuantity;
             }
-            // Must loop at least once to include fees into target margin allocated calculation
-            while (Math.Abs(totalTargetHoldingsMargin) > Math.Abs(targetMarginAllocated));
+            while (Math.Abs(targetHoldingsMargin) > Math.Abs(targetMarginAllocated));
 
             // Return our determined order quantity
             return new GetMaximumOrderQuantityResult(orderQuantity);
