@@ -432,8 +432,8 @@ namespace QuantConnect.Securities
                         string reason = parameters.SilenceNonErrorReasons
                             ? null
                             : $"Order reduced to 0 to keep holdings margin below {targetHoldingsMargin}." +
-                            $" Current holdings {parameters.Security.Holdings.Quantity}, per unit margin {unitMargin}," +
-                            $" Total current margin {parameters.Security.Holdings.Quantity * unitMargin}";
+                            $" Current holdings: {parameters.Security.Holdings.Quantity}; Per unit margin: {unitMargin};" +
+                            $" Total current margin: {parameters.Security.Holdings.Quantity * unitMargin}";
                         return new GetMaximumOrderQuantityResult(0, parameters.SilenceNonErrorReasons ? null : reason, false);
                     }
                 }
