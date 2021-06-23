@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -172,19 +172,22 @@ namespace QuantConnect.Lean.Engine.Results
                 var deltaCharts = new Dictionary<string, Chart>();
                 var serverStatistics = GetServerStatistics(utcNow);
                 var performanceCharts = new Dictionary<string, Chart>();
+
+                // Process our charts updates
                 lock (ChartLock)
                 {
-                    //Get the updates since the last chart
                     foreach (var kvp in Charts)
                     {
                         var chart = kvp.Value;
 
+                        // Get a copy of this chart with updates only since last request
                         var updates = chart.GetUpdates();
                         if (!updates.IsEmpty())
                         {
                             deltaCharts.Add(chart.Name, updates);
                         }
 
+                        // Update our algorithm performance charts 
                         if (AlgorithmPerformanceCharts.Contains(kvp.Key))
                         {
                             performanceCharts[kvp.Key] = chart.Clone();
@@ -400,6 +403,8 @@ namespace QuantConnect.Lean.Engine.Results
             StartingPortfolioValue = startingPortfolioValue;
             PreviousUtcSampleTime = Algorithm.UtcTime;
             DailyPortfolioValue = StartingPortfolioValue;
+            CumulativeMaxPortfolioValue = StartingPortfolioValue;
+            AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
             _capacityEstimate = new CapacityEstimate(Algorithm);
 
             //Get the resample period:
@@ -510,6 +515,15 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Process brokerage message events
+        /// </summary>
+        /// <param name="brokerageMessageEvent">The brokerage message event</param>
+        public virtual void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent)
+        {
+            // NOP
+        }
+
+        /// <summary>
         /// Add a sample to the chart specified by the chartName, and seriesName.
         /// </summary>
         /// <param name="chartName">String chart name to place the sample.</param>
@@ -570,6 +584,18 @@ namespace QuantConnect.Lean.Engine.Results
             catch (OverflowException)
             {
             }
+        }
+
+        /// <summary>
+        /// Sample estimated strategy capacity
+        /// </summary>
+        /// <param name="time">Time of the sample</param>
+        protected override void SampleCapacity(DateTime time)
+        {
+            // Sample strategy capacity, round to 1k
+            var roundedCapacity = _capacityEstimate.Capacity;
+            Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, time,
+                roundedCapacity, AlgorithmCurrencySymbol);
         }
 
         /// <summary>

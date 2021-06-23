@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -111,7 +111,8 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Fetch the updates of the chart, and save the index position.
+        /// Fetch a chart with only the updates since the last request,
+        /// Underlying series will save the index position.
         /// </summary>
         /// <returns></returns>
         public Chart GetUpdates()
