@@ -405,6 +405,7 @@ namespace QuantConnect.Securities
 
             // This loop will factor in order fees and adjust our quantities accordingly
             var lastOrderQuantity = 0m; // For safety check
+            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone); // For orders -> fee
             do
             {
                 // Our target holdings value is over our target allocation, adjust the order size and final quantity
@@ -439,7 +440,6 @@ namespace QuantConnect.Securities
                 }
 
                 // Generate our order to determine fees; ensure those fees are not negative
-                var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
                 var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, utcTime);
                 var fees = parameters.Security.FeeModel.GetOrderFee(
                     new OrderFeeParameters(parameters.Security, order)).Value;
