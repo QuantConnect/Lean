@@ -74,33 +74,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "20"},
+            {"Total Trades", "19"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.13%"},
-            {"Compounding Annual Return", "62.435%"},
+            {"Average Loss", "-0.15%"},
+            {"Compounding Annual Return", "62.481%"},
             {"Drawdown", "1.100%"},
             {"Expectancy", "-1"},
             {"Net Profit", "0.667%"},
-            {"Sharpe Ratio", "3.507"},
-            {"Probabilistic Sharpe Ratio", "59.181%"},
+            {"Sharpe Ratio", "3.51"},
+            {"Probabilistic Sharpe Ratio", "59.190%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.384"},
+            {"Alpha", "-0.383"},
             {"Beta", "0.564"},
             {"Annual Standard Deviation", "0.116"},
             {"Annual Variance", "0.013"},
-            {"Information Ratio", "-10.791"},
+            {"Information Ratio", "-10.781"},
             {"Tracking Error", "0.092"},
-            {"Treynor Ratio", "0.718"},
-            {"Total Fees", "$46.20"},
-            {"Estimated Strategy Capacity", "$2300000.00"},
+            {"Treynor Ratio", "0.719"},
+            {"Total Fees", "$45.20"},
+            {"Estimated Strategy Capacity", "$2600000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
             {"Fitness Score", "0.645"},
             {"Kelly Criterion Estimate", "13.787"},
             {"Kelly Criterion Probability Value", "0.231"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "65.642"},
+            {"Return Over Maximum Drawdown", "65.691"},
             {"Portfolio Turnover", "0.645"},
             {"Total Insights Generated", "13"},
             {"Total Insights Closed", "10"},
@@ -115,7 +115,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "70%"},
             {"Rolling Averaged Population Direction", "94.5154%"},
             {"Rolling Averaged Population Magnitude", "94.5154%"},
-            {"OrderListHash", "0945ff7a39bb8f8a07b3dcc817c070aa"}
+            {"OrderListHash", "c9982ab2222c119228e6a06ce9917fa7"}
         };
     }
 }

@@ -79,27 +79,27 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "362"},
-            {"Average Win", "0.06%"},
+            {"Total Trades", "339"},
+            {"Average Win", "0.07%"},
             {"Average Loss", "-0.03%"},
-            {"Compounding Annual Return", "11.407%"},
+            {"Compounding Annual Return", "11.415%"},
             {"Drawdown", "18.200%"},
-            {"Expectancy", "1.300"},
-            {"Net Profit", "24.116%"},
-            {"Sharpe Ratio", "0.689"},
-            {"Probabilistic Sharpe Ratio", "29.629%"},
-            {"Loss Rate", "24%"},
-            {"Win Rate", "76%"},
-            {"Profit-Loss Ratio", "2.01"},
+            {"Expectancy", "1.259"},
+            {"Net Profit", "24.134%"},
+            {"Sharpe Ratio", "0.69"},
+            {"Probabilistic Sharpe Ratio", "29.641%"},
+            {"Loss Rate", "23%"},
+            {"Win Rate", "77%"},
+            {"Profit-Loss Ratio", "1.92"},
             {"Alpha", "0.106"},
             {"Beta", "0.006"},
             {"Annual Standard Deviation", "0.154"},
             {"Annual Variance", "0.024"},
             {"Information Ratio", "0.219"},
             {"Tracking Error", "0.201"},
-            {"Treynor Ratio", "16.79"},
-            {"Total Fees", "$366.83"},
-            {"Estimated Strategy Capacity", "$40000000.00"},
+            {"Treynor Ratio", "16.933"},
+            {"Total Fees", "$343.83"},
+            {"Estimated Strategy Capacity", "$69000000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
             {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "20d5c49aff16826f5a7fba8f3b9c23f2"}
+            {"OrderListHash", "daf71524516172723a18d74ef85abbdc"}
         };
     }
 }
