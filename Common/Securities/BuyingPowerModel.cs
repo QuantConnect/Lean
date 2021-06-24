@@ -358,7 +358,7 @@ namespace QuantConnect.Securities
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
-            // determine the margin required for 1 unit; if zero then we don't have a price yet.
+            // Determine the margin required for 1 unit; if zero then we don't have a price yet.
             var unitMargin = this.GetInitialMarginRequirement(parameters.Security, 1);
             if (unitMargin == 0)
             {
@@ -388,19 +388,22 @@ namespace QuantConnect.Securities
             // Check order quantity before moving on
             if (orderQuantity == 0)
             {
-                string reason;
-                if (finalHoldingsQuantity != 0 && finalHoldingsQuantity == parameters.Security.Holdings.Quantity)
+                string reason = null;
+                if (!parameters.SilenceNonErrorReasons)
                 {
-                    reason =
-                        $"Already at target holding {finalHoldingsQuantity} for {parameters.Security.Symbol.Value}" +
-                        $" Current holdings: {parameters.Security.Holdings.Quantity}";
-                }
-                else
-                {
-                    reason = $"The order quantity is less than the minimum lot size of {parameters.Security.SymbolProperties.LotSize}";
+                    if (finalHoldingsQuantity != 0 && finalHoldingsQuantity == parameters.Security.Holdings.Quantity)
+                    {
+                        reason =
+                            $"Already at target holding {finalHoldingsQuantity} for {parameters.Security.Symbol.Value}" +
+                            $" Current holdings: {parameters.Security.Holdings.Quantity}";
+                    }
+                    else
+                    {
+                        reason = $"The order quantity is less than the minimum lot size of {parameters.Security.SymbolProperties.LotSize}";
+                    }
                 }
 
-                return new GetMaximumOrderQuantityResult(0, parameters.SilenceNonErrorReasons ? null : reason, false);
+                return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
             // This loop will factor in order fees and adjust our quantities accordingly
