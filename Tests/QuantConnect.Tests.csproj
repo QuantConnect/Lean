@@ -36,7 +36,6 @@
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.4" />
     <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="Accord.Math" Version="3.6.0" />
-    <PackageReference Include="AsyncIO" Version="0.1.26.0" />
     <PackageReference Include="Castle.Core" Version="4.1.0" />
     <PackageReference Include="CloneExtensions" Version="1.3.0" />
     <PackageReference Include="Common.Logging" Version="3.4.1" />
@@ -53,7 +52,7 @@
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.9.4" />
     <PackageReference Include="Mono.Cecil" Version="0.11.3" />
     <PackageReference Include="Moq" Version="4.7.63" />
-    <PackageReference Include="NetMQ" Version="4.0.0.1" />
+    <PackageReference Include="NetMQ" Version="4.0.1.6" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
     <PackageReference Include="NUnit" Version="3.13.1" />
@@ -90,7 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CSharpAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\Brokerages\InteractiveBrokers\CSharpAPI.dll</HintPath>
+      <HintPath>..\Brokerages\CSharpAPI.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
   </ItemGroup>
