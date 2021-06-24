@@ -389,7 +389,7 @@ namespace QuantConnect.Securities
             if (orderQuantity == 0)
             {
                 string reason;
-                if (finalHoldingsQuantity == parameters.Security.Holdings.Quantity)
+                if (finalHoldingsQuantity != 0 && finalHoldingsQuantity == parameters.Security.Holdings.Quantity)
                 {
                     reason =
                         $"Already at target holding {finalHoldingsQuantity} for {parameters.Security.Symbol.Value}" +
@@ -397,7 +397,7 @@ namespace QuantConnect.Securities
                 }
                 else
                 {
-                    reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize}";
+                    reason = $"The order quantity is less than the minimum lot size of {parameters.Security.SymbolProperties.LotSize}";
                 }
 
                 return new GetMaximumOrderQuantityResult(0, parameters.SilenceNonErrorReasons ? null : reason, false);
