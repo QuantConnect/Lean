@@ -810,8 +810,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         }
                     }
 
-                    // enable detailed logging
-                    _client.ClientSocket.setServerLogLevel(5);
+                    // enable logging at info level
+                    _client.ClientSocket.setServerLogLevel(4);
 
                     break;
                 }
@@ -3429,4 +3429,5 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158, 10197
         };
     }
+
 }

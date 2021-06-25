@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -620,6 +620,25 @@ namespace QuantConnect.Statistics
             // we don't annualize it
             return standardDeviation.IsNaNOrZero() ? 0 : performanceAverage / standardDeviation;
         }
+
+        /// <summary>
+        /// Calculate the drawdown between a high and current value
+        /// </summary>
+        /// <param name="current">Current value</param>
+        /// <param name="high">Latest maximum</param>
+        /// <param name="roundingDecimals">Digits to round the result too</param>
+        /// <returns>Drawdown percentage</returns>
+        public static decimal DrawdownPercent(decimal current, decimal high, int roundingDecimals = 2)
+        {
+            if (high == 0)
+            {
+                throw new ArgumentException("High value must not be 0");
+            }
+
+            var drawdownPercentage = ((current / high) - 1) * 100;
+            return Math.Round(drawdownPercentage, roundingDecimals);
+        }
+
     } // End of Statistics
 
 } // End of Namespace

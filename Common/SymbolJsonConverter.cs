@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -61,22 +61,11 @@ namespace QuantConnect
         {
             var jobject = JObject.Load(reader);
 
-            JToken underlying;
-            Symbol underlyingSymbol = null;
-
-            if (jobject.TryGetValue("Underlying", out underlying))
+            if (jobject.TryGetValue("type", StringComparison.InvariantCultureIgnoreCase, out var type))
             {
-                underlyingSymbol = new Symbol(SecurityIdentifier.Parse(underlying["ID"].ToString()), underlying["Value"].ToString());
+                return BuildSymbolFromUserFriendlyValue(jobject);
             }
-
-            var symbolId = jobject["ID"];
-
-            if (symbolId == null)
-            {
-                return null;
-            }
-
-            return new Symbol(SecurityIdentifier.Parse(symbolId.ToString()), jobject["Value"].ToString(), underlyingSymbol);
+            return ReadSymbolFromJson(jobject);
         }
 
         /// <summary>
@@ -89,6 +78,61 @@ namespace QuantConnect
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof (Symbol);
+        }
+
+        private Symbol ReadSymbolFromJson(JObject jObject)
+        {
+            JToken symbolId;
+            JToken value;
+
+            if (jObject.TryGetValue("ID", StringComparison.InvariantCultureIgnoreCase, out symbolId)
+                && jObject.TryGetValue("Value", StringComparison.InvariantCultureIgnoreCase, out value))
+            {
+                Symbol underlyingSymbol = null;
+                JToken underlying;
+                if (jObject.TryGetValue("Underlying", StringComparison.InvariantCultureIgnoreCase, out underlying))
+                {
+                    underlyingSymbol = ReadSymbolFromJson(underlying as JObject);
+                }
+
+                return new Symbol(SecurityIdentifier.Parse(symbolId.ToString()), value.ToString(), underlyingSymbol);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Creates a symbol from the user friendly string representation
+        /// </summary>
+        private Symbol BuildSymbolFromUserFriendlyValue(JObject jObject)
+        {
+            if (jObject.TryGetValue("value", StringComparison.InvariantCultureIgnoreCase, out var value)
+                && jObject.TryGetValue("type", StringComparison.InvariantCultureIgnoreCase, out var securityTypeToken)
+                && securityTypeToken.ToString().TryParseSecurityType(out var securityType))
+            {
+                if (securityType == SecurityType.Option)
+                {
+                    return SymbolRepresentation.ParseOptionTickerOSI(value.ToString());
+                }
+                else if (securityType == SecurityType.Future)
+                {
+                    return SymbolRepresentation.ParseFutureSymbol(value.ToString());
+                }
+                else if(securityType == SecurityType.FutureOption)
+                {
+                    return SymbolRepresentation.ParseFutureOptionSymbol(value.ToString());
+                }
+                else if (securityType == SecurityType.IndexOption)
+                {
+                    return SymbolRepresentation.ParseOptionTickerOSI(value.ToString(), securityType: securityType);
+                }
+
+                if (!jObject.TryGetValue("market", StringComparison.InvariantCultureIgnoreCase, out var market))
+                {
+                    market = Market.USA;
+                }
+                return Symbol.Create(value.ToString(), securityType, market.ToString());
+            }
+            return null;
         }
     }
 }

@@ -23,12 +23,11 @@ RUN apt-fast install -y git bzip2 clang cmake curl unzip wget python3-pip python
     xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
     r-base pandoc libcurl4-openssl-dev
 
-# Install IB Gateway: Installs to ~/Jts
-RUN wget https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
-    chmod 777 ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
-    ./ibgateway-stable-standalone-linux-x64-v978.2c.sh -q && \
-    wget -O ~/Jts/jts.ini https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.jts.ini && \
-    rm ibgateway-stable-standalone-linux-x64-v978.2c.sh
+# Install IB Gateway: Installs to /usr/local/ibgateway
+RUN wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v984.1h.sh && \
+    chmod 777 ibgateway-latest-standalone-linux-x64.v984.1h.sh && \
+    ./ibgateway-latest-standalone-linux-x64.v984.1h.sh -q && \
+    rm ibgateway-latest-standalone-linux-x64.v984.1h.sh
 
 # Install dotnet 5 sdk & runtime
 RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
