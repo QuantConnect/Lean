@@ -687,6 +687,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts a long to an uppercase alpha numeric string
+        /// </summary>
+        public static string EncodeBase36(this ulong data)
+        {
+            var stack = new Stack<char>(15);
+            while (data != 0)
+            {
+                var value = data % 36;
+                var c = value < 10
+                    ? (char)(value + '0')
+                    : (char)(value - 10 + 'A');
+
+                stack.Push(c);
+                data /= 36;
+            }
+            return new string(stack.ToArray());
+        }
+
+        /// <summary>
         /// Lazy string to upper implementation.
         /// Will first verify the string is not already upper and avoid
         /// the call to <see cref="string.ToUpperInvariant()"/> if possible.

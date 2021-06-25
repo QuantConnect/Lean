@@ -672,25 +672,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Converts a long to an uppercase alpha numeric string
-        /// </summary>
-        private static string EncodeBase36(ulong data)
-        {
-            var stack = new Stack<char>(15);
-            while (data != 0)
-            {
-                var value = data % 36;
-                var c = value < 10
-                    ? (char)(value + '0')
-                    : (char)(value - 10 + 'A');
-
-                stack.Push(c);
-                data /= 36;
-            }
-            return new string(stack.ToArray());
-        }
-
-        /// <summary>
         /// The strike is normalized into deci-cents and then a scale factor
         /// is also saved to bring it back to un-normalized
         /// </summary>
@@ -1000,7 +981,7 @@ namespace QuantConnect
         {
             if (_stringRep == null)
             {
-                var props = EncodeBase36(_properties);
+                var props = _properties.EncodeBase36();
                 props = props.Length == 0 ? "0" : props;
                 _stringRep = HasUnderlying ? $"{_symbol} {props}|{_underlying}" : $"{_symbol} {props}";
             }
