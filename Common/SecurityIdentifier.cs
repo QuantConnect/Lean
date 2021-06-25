@@ -649,29 +649,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Converts an upper case alpha numeric string into a long
-        /// </summary>
-        private static ulong DecodeBase36(string symbol)
-        {
-            var result = 0ul;
-            var baseValue = 1ul;
-            for (var i = symbol.Length - 1; i > -1; i--)
-            {
-                var c = symbol[i];
-
-                // assumes alpha numeric upper case only strings
-                var value = (uint)(c <= 57
-                    ? c - '0'
-                    : c - 'A' + 10);
-
-                result += baseValue * value;
-                baseValue *= 36;
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// The strike is normalized into deci-cents and then a scale factor
         /// is also saved to bring it back to un-normalized
         /// </summary>
@@ -828,7 +805,7 @@ namespace QuantConnect
 
                     var symbol = parts[0];
                     var otherData = parts[1];
-                    var props = DecodeBase36(otherData);
+                    var props = otherData.DecodeBase36();
 
                     // toss the previous in as the underlying, if Empty, ignored by ctor
                     identifier = new SecurityIdentifier(symbol, props, identifier);
