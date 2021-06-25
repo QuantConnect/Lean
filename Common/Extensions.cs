@@ -729,6 +729,38 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Convert a string to Base64 Encoding
+        /// </summary>
+        /// <param name="text">Text to encode</param>
+        /// <returns>Encoded result</returns>
+        public static string EncodeBase64(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            byte[] textBytes = Encoding.UTF8.GetBytes(text);
+            return Convert.ToBase64String(textBytes);
+        }
+
+        /// <summary>
+        /// Decode a Base64 Encoded string
+        /// </summary>
+        /// <param name="base64EncodedText">Text to decode</param>
+        /// <returns>Decoded result</returns>
+        public static string DecodeBase64(this string base64EncodedText)
+        {
+            if (string.IsNullOrEmpty(base64EncodedText))
+            {
+                return base64EncodedText;
+            }
+
+            byte[] base64EncodedBytes = Convert.FromBase64String(base64EncodedText);
+            return Encoding.UTF8.GetString(base64EncodedBytes);
+        }
+
+        /// <summary>
         /// Lazy string to upper implementation.
         /// Will first verify the string is not already upper and avoid
         /// the call to <see cref="string.ToUpperInvariant()"/> if possible.

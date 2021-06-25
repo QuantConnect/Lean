@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -226,6 +226,16 @@ namespace QuantConnect.Tests.Common
                 });
             }
             Assert.AreEqual(expected, sourceString.SafeSubstring(startIndex, length));
+        }
+
+        [TestCase("test input")]
+        [TestCase("[ asdd[ \" 12344 :::}")]
+        public void EncodeDecode64String(string input)
+        {
+            var encoded = input.EncodeBase64();
+            var decoded = encoded.DecodeBase64();
+
+            Assert.AreEqual(input, decoded);
         }
     }
 }
