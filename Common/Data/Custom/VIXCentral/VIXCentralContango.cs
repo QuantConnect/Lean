@@ -144,7 +144,7 @@ namespace QuantConnect.Data.Custom.VIXCentral
                 "vixcentral",
                 "vix_contango.csv");
 
-            return new SubscriptionDataSource(localFilePath, SubscriptionTransportMedium.LocalFile);
+            return new LocalFileSubscriptionDataSource(localFilePath);
         }
 
         /// <summary>

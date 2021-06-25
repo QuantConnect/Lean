@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,10 +14,10 @@
 */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -76,19 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    switch (source.TransportMedium)
-                    {
-                        default:
-                        case SubscriptionTransportMedium.Rest:
-                            reader = new RestSubscriptionStreamReader(source.Source, source.Headers, _isLiveMode);
-                            break;
-                        case SubscriptionTransportMedium.LocalFile:
-                            reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
-                            break;
-                        case SubscriptionTransportMedium.RemoteFile:
-                            reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers);
-                            break;
-                    }
+                    reader = source.GetStreamReader(_dataCacheProvider);
                 }
                 catch (Exception e)
                 {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -24,8 +24,8 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void ComparesEqualWithIdenticalSourceAndTransportMedium()
         {
-            var one = new SubscriptionDataSource("source", SubscriptionTransportMedium.LocalFile);
-            var two = new SubscriptionDataSource("source", SubscriptionTransportMedium.LocalFile);
+            var one = new LocalFileSubscriptionDataSource("source");
+            var two = new LocalFileSubscriptionDataSource("source");
             Assert.IsTrue(one == two);
             Assert.IsTrue(one.Equals(two));
         }
@@ -33,8 +33,8 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void ComparesNotEqualWithDifferentSource()
         {
-            var one = new SubscriptionDataSource("source1", SubscriptionTransportMedium.LocalFile);
-            var two = new SubscriptionDataSource("source2", SubscriptionTransportMedium.LocalFile);
+            var one = new LocalFileSubscriptionDataSource("source1");
+            var two = new LocalFileSubscriptionDataSource("source2");
             Assert.IsTrue(one != two);
             Assert.IsTrue(!one.Equals(two));
         }
@@ -42,8 +42,8 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void ComparesNotEqualWithDifferentTransportMedium()
         {
-            var one = new SubscriptionDataSource("source", SubscriptionTransportMedium.LocalFile);
-            var two = new SubscriptionDataSource("source", SubscriptionTransportMedium.RemoteFile);
+            var one = new LocalFileSubscriptionDataSource("source");
+            var two = new RemoteFileSubscriptionDataSource("source");
             Assert.IsTrue(one != two);
             Assert.IsTrue(!one.Equals(two));
         }

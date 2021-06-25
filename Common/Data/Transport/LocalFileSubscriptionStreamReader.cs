@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Transport
+namespace QuantConnect.Data.Transport
 {
     /// <summary>
     /// Represents a stream reader capable of reading lines from disk

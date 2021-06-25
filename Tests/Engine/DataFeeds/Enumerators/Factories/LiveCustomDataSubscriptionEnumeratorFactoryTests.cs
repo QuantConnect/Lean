@@ -49,9 +49,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _timeProvider = new ManualTimeProvider(_referenceUtc);
 
                 _dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
-                _dataSourceReader.Setup(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
+                _dataSourceReader.Setup(dsr => dsr.Read(It.Is<RestSubscriptionDataSource>(sds =>
                         sds.Source == "rest.source" &&
-                        sds.TransportMedium == SubscriptionTransportMedium.Rest &&
+                        sds.TransportMedium == SubscriptionTransportMedium.Web &&
                         sds.Format == FileFormat.Csv))
                     )
                     .Returns(Enumerable.Range(0, 100)
@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNull(_enumerator.Current);
 
-                VerifyGetSourceInvocationCount(_dataSourceReader, 1, "rest.source", SubscriptionTransportMedium.Rest, FileFormat.Csv);
+                VerifyGetSourceInvocationCount(_dataSourceReader, 1, "rest.source", SubscriptionTransportMedium.Web, FileFormat.Csv);
             }
         }
 
@@ -117,9 +117,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _timeProvider = new ManualTimeProvider(_referenceUtc);
 
                 _dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
-                _dataSourceReader.Setup(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
+                _dataSourceReader.Setup(dsr => dsr.Read(It.Is<RestSubscriptionDataSource>(sds =>
                         sds.Source == "rest.collection.source" &&
-                        sds.TransportMedium == SubscriptionTransportMedium.Rest &&
+                        sds.TransportMedium == SubscriptionTransportMedium.Web &&
                         sds.Format == FileFormat.Collection))
                     )
                     .Returns(Enumerable.Range(0, 100)
@@ -169,7 +169,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNull(_enumerator.Current);
 
-                VerifyGetSourceInvocationCount(_dataSourceReader, 1, "rest.collection.source", SubscriptionTransportMedium.Rest, FileFormat.Collection);
+                VerifyGetSourceInvocationCount(_dataSourceReader, 1, "rest.collection.source", SubscriptionTransportMedium.Web, FileFormat.Collection);
             }
         }
 
@@ -189,7 +189,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _timeProvider = new ManualTimeProvider(_referenceUtc);
 
                 _dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
-                _dataSourceReader.Setup(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
+                _dataSourceReader.Setup(dsr => dsr.Read(It.Is<RemoteFileSubscriptionDataSource>(sds =>
                         sds.Source == "remote.file.source" &&
                         sds.TransportMedium == SubscriptionTransportMedium.RemoteFile &&
                         sds.Format == FileFormat.Csv))
@@ -258,7 +258,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _timeProvider = new ManualTimeProvider(_referenceUtc);
 
                 _dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
-                _dataSourceReader.Setup(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
+                _dataSourceReader.Setup(dsr => dsr.Read(It.Is<RemoteFileSubscriptionDataSource>(sds =>
                         sds.Source == "remote.file.source" &&
                         sds.TransportMedium == SubscriptionTransportMedium.RemoteFile &&
                         sds.Format == FileFormat.Csv))
@@ -401,7 +401,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
             var callCount = 0;
             var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
-            dataSourceReader.Setup(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
+            dataSourceReader.Setup(dsr => dsr.Read(It.Is<LocalFileSubscriptionDataSource>(sds =>
                     sds.Source == "local.file.source" &&
                     sds.TransportMedium == SubscriptionTransportMedium.LocalFile &&
                     sds.Format == FileFormat.Csv))
@@ -469,7 +469,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource("rest.source", SubscriptionTransportMedium.Rest);
+                return new RestSubscriptionDataSource("rest.source", isLiveMode);
             }
         }
 
@@ -477,7 +477,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource("rest.collection.source", SubscriptionTransportMedium.Rest, FileFormat.Collection);
+                return new RestSubscriptionDataSource("rest.collection.source", isLiveMode, returnsACollection: true);
             }
         }
 
@@ -491,7 +491,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource("remote.file.source", SubscriptionTransportMedium.RemoteFile);
+                return new RemoteFileSubscriptionDataSource("remote.file.source");
             }
         }
 
@@ -499,7 +499,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource("local.file.source", SubscriptionTransportMedium.LocalFile);
+                return new LocalFileSubscriptionDataSource("local.file.source");
             }
         }
 

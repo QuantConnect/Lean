@@ -75,10 +75,10 @@ namespace QuantConnect.Data.Custom
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return new SubscriptionDataSource(
+            return new RestSubscriptionDataSource(
                 $"https://api.eia.gov/series/?api_key={AuthCode}&series_id={config.Symbol}",
-                SubscriptionTransportMedium.Rest,
-                FileFormat.Collection);
+                isLiveMode,
+                returnsACollection:true);
         }
 
         /// <summary>

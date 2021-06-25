@@ -18,8 +18,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using NUnit.Framework;
+using QuantConnect.Data.Transport;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Transport

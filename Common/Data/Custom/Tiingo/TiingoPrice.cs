@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -154,7 +154,7 @@ namespace QuantConnect.Data.Custom.Tiingo
 
             var tiingoTicker = TiingoSymbolMapper.GetTiingoTicker(config.Symbol);
             var source = Invariant($"https://api.tiingo.com/tiingo/daily/{tiingoTicker}/prices?startDate={startDate:yyyy-MM-dd}&token={Tiingo.AuthCode}");
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile, FileFormat.Collection);
+            return new RemoteFileSubscriptionDataSource(source, null, FileFormat.Collection);
         }
 
         /// <summary>
