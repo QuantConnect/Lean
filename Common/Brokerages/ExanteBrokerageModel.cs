@@ -16,14 +16,28 @@ namespace QuantConnect.Brokerages
     {
         private const decimal _equityLeverage = 1.2m;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.Bitfinex);
             return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Returns true if the brokerage could accept this order. This takes into account
+        /// order type, security type, and order size limits.
+        /// </summary>
+        /// <remarks>
+        /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
+        /// </remarks>
+        /// <param name="security">The security being ordered</param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
@@ -47,7 +61,11 @@ namespace QuantConnect.Brokerages
             return true;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
             return new ExanteFeeModel(

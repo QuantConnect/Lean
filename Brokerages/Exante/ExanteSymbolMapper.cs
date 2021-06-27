@@ -22,7 +22,11 @@ namespace QuantConnect.Brokerages.Exante
     /// </summary>
     public class ExanteSymbolMapper : ISymbolMapper
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Converts a Lean symbol instance to a brokerage symbol
+        /// </summary>
+        /// <param name="symbol">A Lean symbol instance</param>
+        /// <returns>The brokerage symbol</returns>
         public string GetBrokerageSymbol(Symbol symbol)
         {
             if (string.IsNullOrWhiteSpace(symbol?.Value))
@@ -65,7 +69,16 @@ namespace QuantConnect.Brokerages.Exante
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Converts a brokerage symbol to a Lean symbol instance
+        /// </summary>
+        /// <param name="brokerageSymbol">The brokerage symbol</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="market">The market</param>
+        /// <param name="expirationDate">Expiration date of the security(if applicable)</param>
+        /// <param name="strike">The strike of the security (if applicable)</param>
+        /// <param name="optionRight">The option right of the security (if applicable)</param>
+        /// <returns>A new Lean Symbol instance</returns>
         public Symbol GetLeanSymbol(
             string brokerageSymbol,
             SecurityType securityType,
