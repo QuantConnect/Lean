@@ -191,25 +191,19 @@ namespace QuantConnect.Brokerages.Exante
         /// <summary>
         /// Create a tick from the Exante tick shorts stream data
         /// </summary>
-        /// <param name="ets">Exante tick short stream data object</param>
+        /// <param name="exanteTickShort">Exante tick short stream data object</param>
         /// <returns>LEAN Tick object</returns>
-        private Tick CreateTick(ExanteTickShort ets)
+        private Tick CreateTick(ExanteTickShort exanteTickShort)
         {
-            if (!_subscribedTickers.TryGetValue(ets.SymbolId, out var symbol))
+            if (!_subscribedTickers.TryGetValue(exanteTickShort.SymbolId, out var symbol))
             {
                 // Not subscribed to this symbol.
                 return null;
             }
 
-            // Tradier trades are US NY time only. Convert local server time to NY Time:
-            var utc = ets.Date;
-
-            // Convert the timestamp to exchange timezone and pass into algorithm
-            var time = utc.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
-
-            var bids = ets.Bid.ToList();
-            var asks = ets.Ask.ToList();
-            return new Tick(time, symbol, "", "",
+            var bids = exanteTickShort.Bid.ToList();
+            var asks = exanteTickShort.Ask.ToList();
+            return new Tick(exanteTickShort.Date, symbol, "", "",
                 bids.IsNullOrEmpty() ? decimal.Zero : bids[0].Size,
                 bids.IsNullOrEmpty() ? decimal.Zero : bids[0].Price,
                 asks.IsNullOrEmpty() ? decimal.Zero : asks[0].Size,

@@ -202,7 +202,7 @@ namespace QuantConnect.Brokerages.Exante
         {
             var orderSide = ConvertOrderDirection(order.Direction);
 
-            DateTime? gttExpiration = null;
+            DateTime? goodTilDateTimeInForceExpiration = null;
             ExanteOrderDuration orderDuration;
             switch (order.TimeInForce)
             {
@@ -212,9 +212,9 @@ namespace QuantConnect.Brokerages.Exante
                 case DayTimeInForce _:
                     orderDuration = ExanteOrderDuration.Day;
                     break;
-                case GoodTilDateTimeInForce gtdtif:
+                case GoodTilDateTimeInForce goodTilDateTimeInForce:
                     orderDuration = ExanteOrderDuration.GoodTillTime;
-                    gttExpiration = gtdtif.Expiry;
+                    goodTilDateTimeInForceExpiration = goodTilDateTimeInForce.Expiry;
                     break;
                 default:
                     throw new NotSupportedException(
@@ -234,7 +234,7 @@ namespace QuantConnect.Brokerages.Exante
                         orderSide,
                         quantity,
                         orderDuration,
-                        gttExpiration: gttExpiration
+                        gttExpiration: goodTilDateTimeInForceExpiration
                     );
                     break;
 
@@ -248,7 +248,7 @@ namespace QuantConnect.Brokerages.Exante
                         quantity,
                         orderDuration,
                         limitPrice: limitOrder.LimitPrice,
-                        gttExpiration: gttExpiration
+                        gttExpiration: goodTilDateTimeInForceExpiration
                     );
                     break;
 
@@ -262,7 +262,7 @@ namespace QuantConnect.Brokerages.Exante
                         quantity,
                         orderDuration,
                         stopPrice: stopMarketOrder.StopPrice,
-                        gttExpiration: gttExpiration
+                        gttExpiration: goodTilDateTimeInForceExpiration
                     );
                     break;
 
@@ -277,7 +277,7 @@ namespace QuantConnect.Brokerages.Exante
                         orderDuration,
                         limitPrice: stopLimitOrder.LimitPrice,
                         stopPrice: stopLimitOrder.StopPrice,
-                        gttExpiration: gttExpiration
+                        gttExpiration: goodTilDateTimeInForceExpiration
                     );
                     break;
 

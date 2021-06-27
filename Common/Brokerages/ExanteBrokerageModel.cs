@@ -56,7 +56,7 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Bitfinex global leverage rule
+        /// Exante global leverage rule
         /// </summary>
         /// <param name="security"></param>
         /// <returns></returns>
