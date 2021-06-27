@@ -43,7 +43,9 @@ namespace QuantConnect.Brokerages.Exante
         private readonly ConcurrentDictionary<Guid, Order> _orderMap = new ConcurrentDictionary<Guid, Order>();
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
         public override string AccountBaseCurrency => Currencies.USD;
 
         /// <summary>
@@ -95,10 +97,16 @@ namespace QuantConnect.Brokerages.Exante
             });
         }
 
-        /// <inheritdoc cref="Brokerage.IsConnected" />
+        /// <summary>
+        /// Returns true if we're currently connected to the broker
+        /// </summary>
         public override bool IsConnected => _isConnected;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets all open orders on the account.
+        /// NOTE: The order objects returned do not have QC order IDs.
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
             var orders = _client.GetActiveOrders().Data;
@@ -176,7 +184,10 @@ namespace QuantConnect.Brokerages.Exante
             return list;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
             var accountSummary = _client.GetAccountSummary(_accountId, AccountBaseCurrency);
@@ -187,7 +198,10 @@ namespace QuantConnect.Brokerages.Exante
             return positions;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the current cash balance for each currency held in the brokerage account
+        /// </summary>
+        /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<CashAmount> GetCashBalance()
         {
             var accountSummary = _client.GetAccountSummary(_accountId, AccountBaseCurrency);
@@ -197,7 +211,11 @@ namespace QuantConnect.Brokerages.Exante
             return cashAmounts.ToList();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Places a new order and assigns a new broker ID to the order
+        /// </summary>
+        /// <param name="order">The order to be placed</param>
+        /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
             var orderSide = ConvertOrderDirection(order.Direction);
@@ -301,7 +319,11 @@ namespace QuantConnect.Brokerages.Exante
             return orderPlacement.Success;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Updates the order with the same id
+        /// </summary>
+        /// <param name="order">The new order information</param>
+        /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
             var updateResult = true;
@@ -360,7 +382,11 @@ namespace QuantConnect.Brokerages.Exante
             return updateResult;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Cancels the order with the specified ID
+        /// </summary>
+        /// <param name="order">The order to cancel</param>
+        /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
             var cancelResult = true;
@@ -375,13 +401,17 @@ namespace QuantConnect.Brokerages.Exante
             return cancelResult;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Connects the client to the broker's remote servers
+        /// </summary>
         public override void Connect()
         {
             _isConnected = true;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Disconnects the client from the broker's remote servers
+        /// </summary>
         public override void Disconnect()
         {
             _isConnected = false;

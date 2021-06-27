@@ -38,7 +38,12 @@ namespace QuantConnect.Brokerages.Exante
             _subscribedTickersStreamSubscriptions =
                 new ConcurrentDictionary<string, (ExanteStreamSubscription, ExanteStreamSubscription)>();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Subscribe to the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             if (!CanSubscribe(dataConfig.Symbol))
@@ -80,19 +85,27 @@ namespace QuantConnect.Brokerages.Exante
             return !symbol.Value.Contains("-UNIVERSE-");
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             _subscriptionManager.Unsubscribe(dataConfig);
             Aggregator.Remove(dataConfig);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Dispose of the brokerage instance
+        /// </summary>
         public override void Dispose()
         {
             Aggregator.DisposeSafely();

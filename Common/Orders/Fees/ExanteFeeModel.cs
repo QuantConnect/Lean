@@ -25,7 +25,12 @@ namespace QuantConnect.Orders.Fees
             _forexCommissionRate = forexCommissionRate;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the order fee associated with the specified order.
+        /// </summary>
+        /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
+        /// containing the security and order</param>
+        /// <returns>The cost of the order in a <see cref="CashAmount"/> instance</returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             var order = parameters.Order;
