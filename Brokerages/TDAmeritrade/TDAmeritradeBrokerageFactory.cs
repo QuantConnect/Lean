@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -20,6 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using TDAmeritradeApi.Client;
 
 namespace QuantConnect.Brokerages.TDAmeritrade
 {
@@ -28,6 +30,8 @@ namespace QuantConnect.Brokerages.TDAmeritrade
     /// </summary>
     public class TDAmeritradeBrokerageFactory : BrokerageFactory
     {
+        private readonly List<TDAmeritradeBrokerage> instances = new List<TDAmeritradeBrokerage>();
+
         /// <summary>
         /// Gets tradier values from configuration
         /// </summary>
@@ -45,7 +49,6 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
             public static string RedirectUri => Config.Get("td-redirect-uri");
 
-            public static string AuthorizationCode => Config.Get("td-authorization-code");
         }
 
         /// <summary>
@@ -71,8 +74,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                 {
                     { "td-account-id", Configuration.AccountId.ToStringInvariant() },
                     { "td-client-id", Configuration.ClientId.ToStringInvariant() },
-                    { "td-redirect-uri", Configuration.RedirectUri.ToStringInvariant() },
-                    { "td-authorization-code", Configuration.AuthorizationCode.ToStringInvariant() }
+                    { "td-redirect-uri", Configuration.RedirectUri.ToStringInvariant() }
                 };
                 return data;
             }
@@ -96,9 +98,9 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             var accountId = Read<string>(job.BrokerageData, "td-account-id", errors);
             var clientId = Read<string>(job.BrokerageData, "td-client-id", errors);
             var redirectUri = Read<string>(job.BrokerageData, "td-redirect-uri", errors);
-            var authorizationCode = Read<string>(job.BrokerageData, "td-authorization-code", errors);
 
-            var brokerage = new TDAmeritradeBrokerage(
+#pragma warning disable CA2000 // Dispose objects before losing scope
+            var tdBrokerage = new TDAmeritradeBrokerage(
                 algorithm,
                 algorithm.Transactions,
                 algorithm.Portfolio,
@@ -106,14 +108,18 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                 accountId,
                 clientId,
                 redirectUri,
-                authorizationCode);
+                Composer.Instance.GetExportedValueByTypeName<ICredentials>(Config.Get("td-credentials-provider", "QuantConnect.Brokerages.TDAmeritrade.TDCliCredentialProvider")));
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
             // Add the brokerage to the composer to ensure its accessible to the live data feed.
-            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
-            Composer.Instance.AddPart<IHistoryProvider>(brokerage);
-            Composer.Instance.AddPart<IOptionChainProvider>(brokerage);
+            Composer.Instance.AddPart<IDataQueueUniverseProvider>(tdBrokerage);
+            Composer.Instance.AddPart<IDataQueueHandler>(tdBrokerage);
+            Composer.Instance.AddPart<IHistoryProvider>(tdBrokerage);
+            Composer.Instance.AddPart<IOptionChainProvider>(tdBrokerage);
 
-            return brokerage;
+            instances.Add(tdBrokerage);
+
+            return tdBrokerage;
         }
 
         /// <summary>
@@ -122,6 +128,12 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         /// <filterpriority>2</filterpriority>
         public override void Dispose()
         {
+            foreach (var instance in instances)
+            {
+                instance.DisposeSafely();
+            }
+
+            GC.SuppressFinalize(this);
         }
     }
 }

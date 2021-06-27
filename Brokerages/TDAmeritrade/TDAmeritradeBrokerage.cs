@@ -53,9 +53,8 @@ namespace QuantConnect.Brokerages.TDAmeritrade
     public partial class TDAmeritradeBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider, IOptionChainProvider
     {
         private readonly string _accountId;
-        private readonly string clientId;
-        private readonly string redirectUri;
-        private readonly string authorizationCode;
+        private readonly string _clientId;
+        private readonly string _redirectUri;
 
         // we're reusing the equity exchange here to grab typical exchange hours
         private static readonly EquityExchange Exchange =
@@ -90,7 +89,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             string accountId,
             string clientId,
             string redirectUri,
-            string authorizationCode)
+            ICredentials tdCredentials)
             : base("TD Ameritrade Brokerage")
         {
             _algorithm = algorithm;
@@ -98,17 +97,16 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             _securityProvider = securityProvider;
             _aggregator = aggregator;
             _accountId = accountId;
-            this.clientId = clientId;
-            this.redirectUri = redirectUri;
-            this.authorizationCode = authorizationCode;
+            _clientId = clientId;
+            _redirectUri = redirectUri;
+            
 
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += Subscribe;
             _subscriptionManager.UnsubscribeImpl += Unsubscribe;
 
             tdClient = new TDAmeritradeClient(clientId, redirectUri);
-            tdClient.LogIn(authorizationCode).Wait();
-
+            tdClient.LogIn(tdCredentials).Wait();
         }
 
         #region IBrokerage implementation
