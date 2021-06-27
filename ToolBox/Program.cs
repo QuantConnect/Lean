@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -49,6 +49,7 @@ using QuantConnect.ToolBox.SmartInsider;
 using QuantConnect.ToolBox.TiingoNewsConverter;
 using QuantConnect.ToolBox.ZerodhaDownloader;
 using QuantConnect.ToolBox.AlphaVantageDownloader;
+using QuantConnect.ToolBox.TDAmeritradeDownloader;
 
 namespace QuantConnect.ToolBox
 {
@@ -195,6 +196,17 @@ namespace QuantConnect.ToolBox
                             fromDate,
                             toDate,
                             GetParameterOrExit(optionsObject, "api-key")
+                        );
+                        break;
+
+                    case "tdadl":
+                    case "tdameritradedownloader":
+                        TDAmeritradeDownloaderProgram.TDAmeritradeDownloader(
+                            tickers,
+                            resolution,
+                            fromDate,
+                            toDate,
+                            GetParameterOrExit(optionsObject, "security-type")
                         );
                         break;
 

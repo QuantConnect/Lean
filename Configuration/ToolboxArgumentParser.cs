@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -42,6 +42,7 @@ namespace QuantConnect.Configuration
                                                      + "/SmartInsiderConverter or SICV"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC/NseMarketDataConverter or NMDC"
                                                      + "/QuantQuoteConverter or QQC/CoarseUniverseGenerator or CUG/\n"
+                                                     + "/TDAmeritradeDownloader or TDADL/\n"
                                                      + "RandomDataGenerator or RDG/USTYCDL or USTreasuryYieldCurveDownloader"
                                                      + "/USTYCCV or USTreasuryYieldCurveConverter/TIINC or TiingoNewsConverter/BZCV or BenzingaNewsDataConverter\n"
                                                      + "Example 1: --app=DDL\n"

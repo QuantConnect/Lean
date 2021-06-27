@@ -21,6 +21,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using TDAmeritradeApi.Client;
 using TDAmeritradeApi.Client.Models.MarketData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -83,45 +84,59 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         {
             foreach (var request in requests)
             {
-                if (request.StartTimeUtc >= request.EndTimeUtc)
-                {
-                    throw new ArgumentException("Invalid date range specified");
-                }
+                var history = GetPriceHistory(tdClient, request.Symbol, request.Resolution, request.StartTimeUtc, request.EndTimeUtc);
 
-                var start = request.StartTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
-                var end = request.EndTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
+                DataPointCount += history.Count();
 
-                var history = Enumerable.Empty<Slice>();
-
-                switch (request.Resolution)
-                {
-                    case Resolution.Tick:
-                        history = Enumerable.Empty<Slice>();
-                        break;
-
-                    case Resolution.Second:
-                        history = Enumerable.Empty<Slice>();
-                        break;
-
-                    case Resolution.Minute:
-                        history = GetHistoryMinute(request.Symbol, start, end);
-                        break;
-
-                    case Resolution.Hour:
-                        history = GetHistoryHour(request.Symbol, start, end);
-                        break;
-
-                    case Resolution.Daily:
-                        history = GetHistoryDaily(request.Symbol, start, end);
-                        break;
-                }
-
-                foreach (var slice in history)
+                foreach (var slice in TradeBarsToSlices(history))
                 {
                     yield return slice;
                 }
             }
         }
+
+        /// <summary>
+        /// Method for getting price history
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="symbol"></param>
+        /// <param name="resolution"></param>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
+        public static IEnumerable<TradeBar> GetPriceHistory(TDAmeritradeClient client, Symbol symbol, Resolution resolution, DateTime startDate, DateTime endDate)
+        {
+            if (startDate >= endDate)
+            {
+                throw new ArgumentException("Invalid date range specified");
+            }
+
+            var start = startDate.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
+            var end = endDate.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
+
+            var history = Enumerable.Empty<TradeBar>();
+
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                case Resolution.Second:
+                    break;
+
+                case Resolution.Minute:
+                    history = GetHistoryMinute(client, symbol, start, end);
+                    break;
+
+                case Resolution.Hour:
+                    history = GetHistoryHour(client, symbol, start, end);
+                    break;
+
+                case Resolution.Daily:
+                    history = GetHistoryDaily(client, symbol, start, end);
+                    break;
+            }
+
+            return history;
+        }    
 
         /// <summary>
         /// Event invocator for the <see cref="InvalidConfigurationDetected"/> event
@@ -159,13 +174,13 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             ReaderErrorDetected?.Invoke(this, e);
         }
 
-        private IEnumerable<Slice> GetHistoryMinute(Symbol symbol, DateTime start, DateTime end)
+        private static IEnumerable<TradeBar> GetHistoryMinute(TDAmeritradeClient tdClient, Symbol symbol, DateTime start, DateTime end)
         {
             string brokerageSymbol = TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol);
 
             var history = tdClient.MarketDataApi.GetPriceHistoryAsync(brokerageSymbol, frequencyType: FrequencyType.minute, frequency: 1, startDate: new DateTimeOffset(start), endDate: new DateTimeOffset(end)).Result;
 
-            return CandlesToSlices(symbol, history, Time.OneMinute);
+            return CandlesToTradeBars(symbol, history, Time.OneMinute);
         }
 
         private IEnumerable<Slice> CandlesToSlices(Symbol symbol, CandleList history, TimeSpan time)
@@ -183,18 +198,16 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             return tradeBars.Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
         }
 
-        private IEnumerable<TradeBar> CandlesToTradeBars(Symbol symbol, CandleList history, TimeSpan time)
+        private static IEnumerable<TradeBar> CandlesToTradeBars(Symbol symbol, CandleList history, TimeSpan time)
         {
             if (history == null)
                 return Enumerable.Empty<TradeBar>();
-
-            DataPointCount += history.candles.Length;
 
             return history.candles
                             .Select(candle => new TradeBar(candle.datetime, symbol, candle.open, candle.high, candle.low, candle.close, candle.volume, time));
         }
 
-        private IEnumerable<Slice> GetHistoryHour(Symbol symbol, DateTime start, DateTime end)
+        private static IEnumerable<TradeBar> GetHistoryHour(TDAmeritradeClient tdClient, Symbol symbol, DateTime start, DateTime end)
         {
             string brokerageSymbol = TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol);
 
@@ -214,16 +227,16 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                     g.Sum(t => t.Volume),
                     Time.OneHour));
 
-            return TradeBarsToSlices(aggregatedBars);
+            return aggregatedBars;
         }
 
-        private IEnumerable<Slice> GetHistoryDaily(Symbol symbol, DateTime start, DateTime end)
+        private static IEnumerable<TradeBar> GetHistoryDaily(TDAmeritradeClient tdClient, Symbol symbol, DateTime start, DateTime end)
         {
             string brokerageSymbol = TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol);
 
-            var history = tdClient.MarketDataApi.GetPriceHistoryAsync(brokerageSymbol, frequencyType: FrequencyType.daily, frequency: 1, startDate: new DateTimeOffset(start), endDate: new DateTimeOffset(end)).Result;
+            var history = tdClient.MarketDataApi.GetPriceHistoryAsync(brokerageSymbol, periodType: PeriodType.year, frequencyType: FrequencyType.daily, frequency: 1, startDate: new DateTimeOffset(start), endDate: new DateTimeOffset(end)).Result;
 
-            return CandlesToSlices(symbol, history, Time.OneDay);
+            return CandlesToTradeBars(symbol, history, Time.OneDay);
         }
 
         #endregion

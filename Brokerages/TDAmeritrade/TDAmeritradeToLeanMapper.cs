@@ -7,6 +7,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.TimeInForces;
 using TDAmeritradeApi.Client.Models;
 using TDAmeritradeApi.Client.Models.AccountsAndTrading;
+using TDAmeritradeApi.Client.Models.MarketData;
 using AccountsAndTrading = TDAmeritradeApi.Client.Models.AccountsAndTrading;
 
 namespace QuantConnect.Brokerages.TDAmeritrade
