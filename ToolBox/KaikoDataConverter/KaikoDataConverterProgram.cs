@@ -14,12 +14,13 @@
  * limitations under the License.
 */
 
-using QuantConnect.Logging;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using QuantConnect.Data;
+using System.Diagnostics;
+using QuantConnect.Logging;
+using System.Collections.Generic;
 using ZipFile = Ionic.Zip.ZipFile;
 
 namespace QuantConnect.ToolBox.KaikoDataConverter

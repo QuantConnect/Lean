@@ -52,6 +52,7 @@ using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using Microsoft.IO;
 using NodaTime.TimeZones;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
@@ -63,9 +64,11 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
-        private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
         private static ConcurrentBag<Guid> Guids = new ConcurrentBag<Guid>();
-        private static readonly HashSet<string> _invalidSecurityTypes = new HashSet<string>();
+        private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
+        private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
+        private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
+        private static readonly int DataUpdatePeriod = Config.GetInt("api-data-update-period", 1);
 
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
@@ -88,6 +91,19 @@ namespace QuantConnect
         /// like future options the market close would match the delisted event time and would cancel all orders and mark the security
         /// as non tradable and delisted.</remarks>
         public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } = TimeSpan.FromMinutes(-15);
+
+        /// <summary>
+        /// Determine if the file is out of date according to our download period.
+        /// Date based files are never out of date (Files with YYYYMMDD)
+        /// </summary>
+        /// <param name="filepath">Path to the file</param>
+        /// <returns>True if the file is out of date</returns>
+        public static bool IsOutOfDate(this string filepath)
+        {
+            var fileName = Path.GetFileName(filepath);
+            // helper to determine if file is date based using regex, matches a 8 digit value because we expect YYYYMMDD
+            return !DateCheck.IsMatch(fileName) && DateTime.Now - TimeSpan.FromDays(DataUpdatePeriod) > File.GetLastWriteTime(filepath);
+        }
 
         /// <summary>
         /// Helper method to download a provided url as a string
@@ -1752,7 +1768,7 @@ namespace QuantConnect
                 return true;
             }
 
-            if (_invalidSecurityTypes.Add(value))
+            if (InvalidSecurityTypes.Add(value))
             {
                 Log.Error($"Extensions.TryParseSecurityType(): Attempted to parse unknown SecurityType: {value}");
             }
