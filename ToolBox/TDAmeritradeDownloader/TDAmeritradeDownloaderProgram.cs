@@ -51,7 +51,7 @@ namespace QuantConnect.ToolBox.TDAmeritradeDownloader
                 var redirectUri = Config.Get("td-redirect-uri", "");
                 var credentials = new TDCliCredentialProvider();
 
-                var downloader = new TDAmeritradeDownloader(clientId, redirectUri, credentials);
+                var downloader = new TDAmeritradeDataDownloader(clientId, redirectUri, credentials);
                 var symbolMapper = new TDAmeritradeSymbolMapper();
 
                 foreach (var ticker in tickers)

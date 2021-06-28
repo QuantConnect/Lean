@@ -10,11 +10,11 @@ using TDAmeritradeApi.Client.Models.MarketData;
 
 namespace QuantConnect.ToolBox.TDAmeritradeDownloader
 {
-    public class TDAmeritradeDownloader : IDataDownloader
+    public class TDAmeritradeDataDownloader : IDataDownloader
     {
         private readonly TDAmeritradeClient tdClient;
 
-        public TDAmeritradeDownloader(string clientID, string redirectUri, ICredentials tdCredentials)
+        public TDAmeritradeDataDownloader(string clientID, string redirectUri, ICredentials tdCredentials)
         {
             tdClient = new TDAmeritradeClient(clientID, redirectUri);
             tdClient.LogIn(tdCredentials).Wait();
