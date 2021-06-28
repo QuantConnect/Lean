@@ -78,7 +78,7 @@ namespace QuantConnect.Data
             _resolution = resolution;
             _securityType = securityType;
             _tickType = tickType;
-            _appendToZips = securityType == SecurityType.Future;
+            _appendToZips = securityType == SecurityType.Future || securityType.IsOption();
         }
 
         /// <summary>
