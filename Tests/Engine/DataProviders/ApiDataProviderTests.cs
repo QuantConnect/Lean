@@ -103,8 +103,8 @@ namespace QuantConnect.Tests.Engine.DataProviders
             File.Create(path).Dispose();
             File.SetLastWriteTime(path, time);
 
-
-            var result = _dataProvider.NeedToDownload(path);
+            var dataProvider = new ApiDataProviderTest();
+            var result = dataProvider.NeedToDownloadExposed(path);
             Assert.AreEqual(expected, result);
 
             // Cleanup after test
@@ -184,12 +184,16 @@ namespace QuantConnect.Tests.Engine.DataProviders
         {
             public int DownLoadCount;
 
-            protected override FileStream DownloadData(string filePath)
+            public bool NeedToDownloadExposed(string filePath)
+            {
+                return base.NeedToDownload(filePath);
+            }
+            protected override bool DownloadData(string filePath)
             {
                 Interlocked.Increment(ref DownLoadCount);
                 // simulate download delay
                 Thread.Sleep(100);
-                return null;
+                return false;
             }
         }
     }

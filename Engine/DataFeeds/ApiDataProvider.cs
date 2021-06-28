@@ -24,24 +24,20 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// An instance of the <see cref="IDataProvider"/> that will download and update data files as needed via QC's Api.
     /// </summary>
-    public class ApiDataProvider : DefaultDataProvider
+    public class ApiDataProvider : BaseDownloaderDataProvider
     {
-        private static readonly int DataUpdatePeriod = Config.GetInt("api-data-update-period", 1);
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _organizationId = Config.Get("job-organization-id");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
         private decimal _purchaseLimit = Config.GetValue("data-purchase-limit", decimal.MaxValue); //QCC
 
-        private readonly ConcurrentDictionary<string, string> _currentDownloads;
         private readonly HashSet<SecurityType> _unsupportedSecurityType;
         private readonly DataPricesList _dataPrices;
         private readonly Api.Api _api;
@@ -55,7 +51,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _api = new Api.Api();
             _unsupportedSecurityType = new HashSet<SecurityType> { SecurityType.Future, SecurityType.FutureOption, SecurityType.Index, SecurityType.IndexOption };
-            _currentDownloads = new ConcurrentDictionary<string, string>();
             _api.Initialize(_uid, _token, _dataPath);
 
             // If we have no value for organization get account preferred
@@ -118,53 +113,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A <see cref="Stream"/> of the data requested</returns>
         public override Stream Fetch(string key)
         {
-            // If we don't already have this file or its out of date, download it
-            if (NeedToDownload(key))
+            return DownloadOnce(key, s =>
             {
-                lock (key)
+                // Verify we have enough credit to handle this
+                var pricePath = _api.FormatPathForDataRequest(key);
+                var price = _dataPrices.GetPrice(pricePath);
+
+                // No price found
+                if (price == -1)
                 {
-                    // only one thread can add a path at the same time
-                    // - The thread that adds the path, downloads the file and removes the path from the collection after it finishes.
-                    // - Threads that don't add the path, will get the value in the collection and try taking a lock on it, since the downloading
-                    // thread takes the lock on it first, they will wait till he finishes.
-                    // This will allow different threads to download different paths at the same time.
-                    if (_currentDownloads.TryAdd(key, key))
-                    {
-                        // Verify we have enough credit to handle this
-                        var pricePath = _api.FormatPathForDataRequest(key);
-                        var price = _dataPrices.GetPrice(pricePath);
-
-                        // No price found
-                        if (price == -1)
-                        {
-                            throw new ArgumentException($"ApiDataProvider.Fetch(): No price found for {pricePath}");
-                        }
-
-                        if (_purchaseLimit < price)
-                        {
-                            throw new ArgumentException($"ApiDataProvider.Fetch(): Cost {price} for {pricePath} data exceeds remaining purchase limit: {_purchaseLimit}");
-                        }
-
-                        var result = DownloadData(key);
-                        if (result != null)
-                        {
-                            // Update our purchase limit.
-                            _purchaseLimit -= price;
-                        }
-                        _currentDownloads.TryRemove(key, out _);
-                        return result;
-                    }
-
-                    // this is rare
-                    _currentDownloads.TryGetValue(key, out var existingKey);
-                    lock (existingKey ?? new object())
-                    {
-                        return base.Fetch(key);
-                    }
+                    throw new ArgumentException($"ApiDataProvider.Fetch(): No price found for {pricePath}");
                 }
-            }
 
-            return base.Fetch(key);
+                if (_purchaseLimit < price)
+                {
+                    throw new ArgumentException($"ApiDataProvider.Fetch(): Cost {price} for {pricePath} data exceeds remaining purchase limit: {_purchaseLimit}");
+                }
+
+                if (DownloadData(key))
+                {
+                    // Update our purchase limit.
+                    _purchaseLimit -= price;
+                }
+            });
         }
 
         /// <summary>
@@ -172,10 +143,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="filePath">File we are looking at</param>
         /// <returns>True if should download</returns>
-        public bool NeedToDownload(string filePath)
+        protected override bool NeedToDownload(string filePath)
         {
             // Ignore null and fine fundamental data requests
-            if (filePath == null || filePath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }).Any(x => x == "fine"))
+            if (filePath == null || filePath.Contains("fine", StringComparison.InvariantCultureIgnoreCase) && filePath.Contains("fundamental", StringComparison.InvariantCultureIgnoreCase))
             {
                 return false;
             }
@@ -194,7 +165,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // Only download if it doesn't exist or is out of date.
             // Files are only "out of date" for non date based files (hour, daily, margins, etc.) because this data is stored all in one file
-            var shouldDownload = !File.Exists(filePath) || IsOutOfDate(filePath);
+            var shouldDownload = !File.Exists(filePath) || filePath.IsOutOfDate();
 
             // Final check; If we want to download and the request requires equity data we need to be sure they are subscribed to map and factor files
             if (shouldDownload && (securityType == SecurityType.Equity || securityType == SecurityType.Option || IsEquitiesAux(filePath)))
@@ -210,29 +181,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="filePath">The path to store the file</param>
         /// <returns>A FileStream of the data</returns>
-        protected virtual FileStream DownloadData(string filePath)
+        protected virtual bool DownloadData(string filePath)
         {
-            Log.Debug($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
+            if (Log.DebuggingEnabled)
+            {
+                Log.Debug($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
+            }
 
             if (_api.DownloadData(filePath, _organizationId))
             {
                 Log.Trace($"ApiDataProvider.Fetch(): Successfully retrieved data for {filePath}.");
-                return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return true;
             }
-
             // Failed to download; _api.DownloadData() will post error
-            return null;
-        }
-
-        /// <summary>
-        /// Determine if the file is out of date according to our download period.
-        /// Date based files are never out of date (Files with YYYYMMDD)
-        /// </summary>
-        /// <param name="filepath">Path to the file</param>
-        /// <returns>True if the file is out of date</returns>
-        private static bool IsOutOfDate(string filepath)
-        {
-            return !IsDateBased(filepath) && DateTime.Now - TimeSpan.FromDays(DataUpdatePeriod) > File.GetLastWriteTime(filepath);
+            return false;
         }
 
         /// <summary>
@@ -246,18 +208,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 || filepath.Contains("factor_files", StringComparison.InvariantCulture)
                 || filepath.Contains("fundamental", StringComparison.InvariantCulture)
                 || filepath.Contains("shortable", StringComparison.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Helper to determine if file is date based using regex
-        /// Matches a 8 digit value because we expect YYYYMMDD
-        /// </summary>
-        /// <param name="filepath">File to attempt to match against</param>
-        /// <returns>True if matches pattern</returns>
-        private static bool IsDateBased(string filepath)
-        {
-            var fileName = Path.GetFileName(filepath);
-            return Regex.IsMatch(fileName, @"\d{8}");
         }
 
         /// <summary>

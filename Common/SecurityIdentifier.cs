@@ -649,48 +649,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Converts an upper case alpha numeric string into a long
-        /// </summary>
-        private static ulong DecodeBase36(string symbol)
-        {
-            var result = 0ul;
-            var baseValue = 1ul;
-            for (var i = symbol.Length - 1; i > -1; i--)
-            {
-                var c = symbol[i];
-
-                // assumes alpha numeric upper case only strings
-                var value = (uint)(c <= 57
-                    ? c - '0'
-                    : c - 'A' + 10);
-
-                result += baseValue * value;
-                baseValue *= 36;
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Converts a long to an uppercase alpha numeric string
-        /// </summary>
-        private static string EncodeBase36(ulong data)
-        {
-            var stack = new Stack<char>(15);
-            while (data != 0)
-            {
-                var value = data % 36;
-                var c = value < 10
-                    ? (char)(value + '0')
-                    : (char)(value - 10 + 'A');
-
-                stack.Push(c);
-                data /= 36;
-            }
-            return new string(stack.ToArray());
-        }
-
-        /// <summary>
         /// The strike is normalized into deci-cents and then a scale factor
         /// is also saved to bring it back to un-normalized
         /// </summary>
@@ -847,7 +805,7 @@ namespace QuantConnect
 
                     var symbol = parts[0];
                     var otherData = parts[1];
-                    var props = DecodeBase36(otherData);
+                    var props = otherData.DecodeBase36();
 
                     // toss the previous in as the underlying, if Empty, ignored by ctor
                     identifier = new SecurityIdentifier(symbol, props, identifier);
@@ -1000,7 +958,7 @@ namespace QuantConnect
         {
             if (_stringRep == null)
             {
-                var props = EncodeBase36(_properties);
+                var props = _properties.EncodeBase36();
                 props = props.Length == 0 ? "0" : props;
                 _stringRep = HasUnderlying ? $"{_symbol} {props}|{_underlying}" : $"{_symbol} {props}";
             }
