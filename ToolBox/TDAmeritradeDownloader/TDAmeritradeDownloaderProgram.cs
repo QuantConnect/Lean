@@ -46,12 +46,8 @@ namespace QuantConnect.ToolBox.TDAmeritradeDownloader
 
                 // Load settings from config.json and create downloader
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                var accountId = Config.Get("td-account-id", "");
-                var clientId = Config.Get("td-client-id", "");
-                var redirectUri = Config.Get("td-redirect-uri", "");
-                var credentials = new TDCliCredentialProvider();
 
-                var downloader = new TDAmeritradeDataDownloader(clientId, redirectUri, credentials);
+                var downloader = new TDAmeritradeDataDownloader();
                 var symbolMapper = new TDAmeritradeSymbolMapper();
 
                 foreach (var ticker in tickers)
