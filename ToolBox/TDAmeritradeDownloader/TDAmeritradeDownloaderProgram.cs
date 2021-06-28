@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Brokerages.TDAmeritrade;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
