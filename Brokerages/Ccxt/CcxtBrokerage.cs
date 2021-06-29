@@ -14,10 +14,12 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Python.Runtime;
+using QuantConnect.Brokerages.Ccxt.Messages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -49,6 +51,22 @@ namespace QuantConnect.Brokerages.Ccxt
 
         private dynamic _pyBridge;
         private bool _isConnected;
+        private volatile bool _streamLocked;
+        private readonly ConcurrentQueue<MessageEvent> _messageEventBuffer = new();
+
+        private enum MessageType { OrderEvent, MyTrade }
+
+        private class MessageEvent
+        {
+            public MessageType Type { get; }
+            public string Message { get; }
+
+            public MessageEvent(MessageType type, string message)
+            {
+                Type = type;
+                Message = message;
+            }
+        }
 
         /// <summary>
         /// Constructor for brokerage
@@ -199,9 +217,10 @@ namespace QuantConnect.Brokerages.Ccxt
                     _exchangeName,
                     JsonConvert.SerializeObject(config),
                     new Action<string>(OnOrderEvent),
+                    new Action<string>(OnMyTradeEvent),
                     new Action<dynamic>(OnTrade),
                     new Action<string, dynamic>(OnQuote));
-                Log.Trace("CcxtPythonBridge module initialized.");
+                Log.Trace($"CcxtPythonBridge module initialized - exchange: {_exchangeName}");
             }
 
             _isConnected = true;
@@ -215,7 +234,7 @@ namespace QuantConnect.Brokerages.Ccxt
             using (Py.GIL())
             {
                 _pyBridge.Terminate();
-                Log.Trace("CcxtPythonBridge module terminated.");
+                Log.Trace($"CcxtPythonBridge module terminated - exchange: {_exchangeName}");
             }
 
             _isConnected = false;
@@ -310,61 +329,73 @@ namespace QuantConnect.Brokerages.Ccxt
                 {
                     case OrderType.Market:
                         {
-                            var pyOrder = _pyBridge.PlaceMarketOrder(brokerageSymbol, orderSide, amount);
+                            WithLockedStream(() =>
+                            {
+                                var pyOrder = _pyBridge.PlaceMarketOrder(brokerageSymbol, orderSide, amount);
 
-                            pyOrder.DelItem("info");
+                                pyOrder.DelItem("info");
 
-                            var ccxtOrder = ConvertToObject<Order>(pyOrder);
+                                var ccxtOrder = ConvertToObject<Order>(pyOrder);
 
-                            Log.Trace($"Order submitted: {ccxtOrder.Symbol} - Side: {ccxtOrder.Side} - Price: {ccxtOrder.Price} - Amount: {ccxtOrder.Amount} - Id: {ccxtOrder.Id}");
+                                Log.Trace($"MarketOrder submitted: {ccxtOrder.Symbol} - Side: {ccxtOrder.Side} - Price: {ccxtOrder.Price} - Amount: {ccxtOrder.Amount} - Id: {ccxtOrder.Id}");
 
-                            order.BrokerId.Add(ccxtOrder.Id.ToString());
+                                order.BrokerId.Add(ccxtOrder.Id.ToString());
+                            });
                         }
                         break;
 
                     case OrderType.Limit:
                         {
-                            var limitPrice = ((LimitOrder) order).LimitPrice;
-                            var pyOrder = _pyBridge.PlaceLimitOrder(brokerageSymbol, orderSide, amount, limitPrice);
+                            WithLockedStream(() =>
+                            {
+                                var limitPrice = ((LimitOrder) order).LimitPrice;
+                                var pyOrder = _pyBridge.PlaceLimitOrder(brokerageSymbol, orderSide, amount, limitPrice);
 
-                            pyOrder.DelItem("info");
+                                pyOrder.DelItem("info");
 
-                            var ccxtOrder = ConvertToObject<Order>(pyOrder);
+                                var ccxtOrder = ConvertToObject<Order>(pyOrder);
 
-                            Log.Trace($"Order submitted: {ccxtOrder.Symbol} - Side: {ccxtOrder.Side} - Price: {ccxtOrder.Price} - Amount: {ccxtOrder.Amount} - Id: {ccxtOrder.Id}");
+                                Log.Trace($"LimitOrder submitted: {ccxtOrder.Symbol} - Side: {ccxtOrder.Side} - Price: {ccxtOrder.Price} - Amount: {ccxtOrder.Amount} - Id: {ccxtOrder.Id}");
 
-                            order.BrokerId.Add(ccxtOrder.Id.ToString());
+                                order.BrokerId.Add(ccxtOrder.Id.ToString());
+                            });
                         }
                         break;
 
                     case OrderType.StopMarket:
                         {
-                            var stopPrice = ((StopMarketOrder)order).StopPrice;
-                            var pyOrder = _pyBridge.PlaceStopMarketOrder(brokerageSymbol, orderSide, amount, stopPrice);
+                            WithLockedStream(() =>
+                            {
+                                var stopPrice = ((StopMarketOrder) order).StopPrice;
+                                var pyOrder = _pyBridge.PlaceStopMarketOrder(brokerageSymbol, orderSide, amount, stopPrice);
 
-                            pyOrder.DelItem("info");
+                                pyOrder.DelItem("info");
 
-                            var ccxtOrder = ConvertToObject<Order>(pyOrder);
+                                var ccxtOrder = ConvertToObject<Order>(pyOrder);
 
-                            Log.Trace($"Order submitted: {ccxtOrder.Symbol} - Side: {ccxtOrder.Side} - Price: {ccxtOrder.Price} - Amount: {ccxtOrder.Amount} - Id: {ccxtOrder.Id}");
+                                Log.Trace($"StopMarketOrder submitted: {ccxtOrder.Symbol} - Side: {ccxtOrder.Side} - Price: {ccxtOrder.Price} - Amount: {ccxtOrder.Amount} - Id: {ccxtOrder.Id}");
 
-                            order.BrokerId.Add(ccxtOrder.Id.ToString());
+                                order.BrokerId.Add(ccxtOrder.Id.ToString());
+                            });
                         }
                         break;
 
                     case OrderType.StopLimit:
                         {
-                            var limitPrice = ((StopLimitOrder)order).LimitPrice;
-                            var stopPrice = ((StopLimitOrder)order).StopPrice;
-                            var pyOrder = _pyBridge.PlaceStopLimitOrder(brokerageSymbol, orderSide, amount, stopPrice, limitPrice);
+                            WithLockedStream(() =>
+                            {
+                                var limitPrice = ((StopLimitOrder) order).LimitPrice;
+                                var stopPrice = ((StopLimitOrder) order).StopPrice;
+                                var pyOrder = _pyBridge.PlaceStopLimitOrder(brokerageSymbol, orderSide, amount, stopPrice, limitPrice);
 
-                            pyOrder.DelItem("info");
+                                pyOrder.DelItem("info");
 
-                            var ccxtOrder = ConvertToObject<Order>(pyOrder);
+                                var ccxtOrder = ConvertToObject<Order>(pyOrder);
 
-                            Log.Trace($"Order submitted: {ccxtOrder.Symbol} - Side: {ccxtOrder.Side} - Price: {ccxtOrder.Price} - Amount: {ccxtOrder.Amount} - Id: {ccxtOrder.Id}");
+                                Log.Trace($"StopLimitOrder submitted: {ccxtOrder.Symbol} - Side: {ccxtOrder.Side} - Price: {ccxtOrder.Price} - Amount: {ccxtOrder.Amount} - Id: {ccxtOrder.Id}");
 
-                            order.BrokerId.Add(ccxtOrder.Id.ToString());
+                                order.BrokerId.Add(ccxtOrder.Id.ToString());
+                            });
                         }
                         break;
 
@@ -403,14 +434,12 @@ namespace QuantConnect.Brokerages.Ccxt
             {
                 var symbol = _symbolMapper.GetBrokerageSymbol(order.Symbol);
 
-                using (Py.GIL())
+                WithLockedStream(() =>
                 {
-                    _pyBridge.CancelOrder(orderId, symbol);
-                }
-
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "CCXT Order Event")
-                {
-                    Status = OrderStatus.Canceled
+                    using (Py.GIL())
+                    {
+                        _pyBridge.CancelOrder(orderId, symbol);
+                    }
                 });
             }
 
@@ -421,7 +450,43 @@ namespace QuantConnect.Brokerages.Ccxt
 
         private void OnOrderEvent(string message)
         {
-            Log.Trace($"OnOrderEvent(): Message: {message}");
+            try
+            {
+                if (_streamLocked)
+                {
+                    _messageEventBuffer.Enqueue(new MessageEvent(MessageType.OrderEvent, message));
+                    return;
+                }
+
+                OnOrderEventImpl(message);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        private void OnMyTradeEvent(string message)
+        {
+            try
+            {
+                if (_streamLocked)
+                {
+                    _messageEventBuffer.Enqueue(new MessageEvent(MessageType.MyTrade, message));
+                    return;
+                }
+
+                OnMyTradeEventImpl(message);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        private void OnOrderEventImpl(string message)
+        {
+            //Log.Trace($"CcxtBrokerage.OnOrderEventImpl(): Message: {message}", true);
 
             try
             {
@@ -431,18 +496,18 @@ namespace QuantConnect.Brokerages.Ccxt
                 {
                     foreach (var order in orders)
                     {
-                        Log.Trace($"OnOrderEvent(): Id: {order.Id} - Symbol: {order.Symbol} - Side: {order.Side} - Status: {order.Status} - Amount: {order.Amount} - Filled: {order.Filled} - Remaining: {order.Remaining}");
+                        //Log.Trace($"CcxtBrokerage.OnOrderEventImpl(): OrderId: {order.Id} - Symbol: {order.Symbol} - Side: {order.Side} - Status: {order.Status} - Amount: {order.Amount} - Filled: {order.Filled} - Remaining: {order.Remaining}");
 
                         var qcOrder = _orderProvider.GetOrderByBrokerageId(order.Id);
                         if (qcOrder == null)
                         {
-                            Log.Error($"OnOrderEvent(): Broker order id not found: {order.Id}");
+                            //Log.Error($"CcxtBrokerage.OnOrderEventImpl(): Broker order id not found: {order.Id}");
                             continue;
                         }
 
                         var orderStatus = ConvertOrderStatus(order);
 
-                        if (orderStatus != OrderStatus.Filled && orderStatus != OrderStatus.PartiallyFilled)
+                        if (orderStatus != OrderStatus.Filled && orderStatus != OrderStatus.PartiallyFilled && qcOrder.Status != orderStatus)
                         {
                             OnOrderEvent(new OrderEvent(qcOrder, DateTime.UtcNow, OrderFee.Zero, "CCXT Order Event")
                             {
@@ -455,7 +520,7 @@ namespace QuantConnect.Brokerages.Ccxt
                             var ticket = _orderProvider.GetOrderTicket(qcOrder.Id);
                             if (ticket == null)
                             {
-                                Log.Error($"OnOrderEvent(): Order ticket not found - OrderId: {order.Id}");
+                                Log.Error($"CcxtBrokerage.OnOrderEventImpl(): Order ticket not found - OrderId: {order.Id}");
                                 continue;
                             }
 
@@ -464,7 +529,7 @@ namespace QuantConnect.Brokerages.Ccxt
 
                             foreach (var trade in order.Trades)
                             {
-                                Log.Trace($"OnOrderEvent(): TradeId: {trade.Id} - Symbol: {trade.Symbol} - Side: {trade.Side} - Price: {trade.Price} - Amount: {trade.Amount}");
+                                //Log.Trace($"CcxtBrokerage.OnOrderEventImpl(): TradeId: {trade.Id} - Symbol: {trade.Symbol} - Side: {trade.Side} - Price: {trade.Price} - Amount: {trade.Amount}");
 
                                 totalQuantityFilled += trade.Amount;
 
@@ -484,6 +549,62 @@ namespace QuantConnect.Brokerages.Ccxt
                                 });
                             }
                         }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+            }
+        }
+
+        private void OnMyTradeEventImpl(string message)
+        {
+            //Log.Trace($"CcxtBrokerage.OnMyTradeEventImpl(): Message: {message}", true);
+
+            try
+            {
+                var trades = JsonConvert.DeserializeObject<List<Trade>>(message);
+
+                if (trades != null)
+                {
+                    foreach (var trade in trades)
+                    {
+                        //Log.Trace($"CcxtBrokerage.OnMyTradeEventImpl(): TradeId: {trade.Id} - Symbol: {trade.Symbol} - Side: {trade.Side} - Price: {trade.Price} - Amount: {trade.Amount}");
+
+                        var qcOrder = _orderProvider.GetOrderByBrokerageId(trade.Order);
+                        if (qcOrder == null)
+                        {
+                            //Log.Error($"CcxtBrokerage.OnMyTradeEventImpl(): Broker order id not found: {order.Id}");
+                            continue;
+                        }
+
+                        var ticket = _orderProvider.GetOrderTicket(qcOrder.Id);
+                        if (ticket == null)
+                        {
+                            Log.Error($"CcxtBrokerage.OnMyTradeEventImpl(): Order ticket not found - OrderId: {qcOrder.Id}");
+                            continue;
+                        }
+
+                        var orderQuantity = Math.Abs(ticket.Quantity);
+                        var totalQuantityFilled = Math.Abs(ticket.QuantityFilled);
+
+                        totalQuantityFilled += trade.Amount;
+
+                        var orderStatus = totalQuantityFilled < orderQuantity
+                            ? OrderStatus.PartiallyFilled
+                            : OrderStatus.Filled;
+
+                        var orderFee = OrderFee.Zero;
+                        if (trade.Fee?.Cost != null)
+                        {
+                            orderFee = new OrderFee(new CashAmount(trade.Fee.Cost.Value, trade.Fee.Currency));
+                        }
+
+                        OnOrderEvent(new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "CCXT Order Fill Event")
+                        {
+                            Status = orderStatus
+                        });
                     }
                 }
             }
@@ -646,5 +767,52 @@ namespace QuantConnect.Brokerages.Ccxt
                 .Replace(": False", ": false")
                 .Replace("'", "\"");
         }
+
+        /// <summary>
+        /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
+        /// </summary>
+        private void LockStream()
+        {
+            _streamLocked = true;
+        }
+
+        /// <summary>
+        /// Unlock stream and process all backed up messages.
+        /// </summary>
+        private void UnlockStream()
+        {
+            while (_messageEventBuffer.Any())
+            {
+                _messageEventBuffer.TryDequeue(out var messageEvent);
+
+                switch (messageEvent.Type)
+                {
+                    case MessageType.OrderEvent:
+                        OnOrderEventImpl(messageEvent.Message);
+                        break;
+
+                    case MessageType.MyTrade:
+                        OnMyTradeEventImpl(messageEvent.Message);
+                        break;
+                }
+            }
+
+            // Once dequeued in order; unlock stream.
+            _streamLocked = false;
+        }
+
+        private void WithLockedStream(Action code)
+        {
+            try
+            {
+                LockStream();
+                code();
+            }
+            finally
+            {
+                UnlockStream();
+            }
+        }
+
     }
 }

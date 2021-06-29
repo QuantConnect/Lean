@@ -19,6 +19,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Brokerages.Ccxt;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -33,7 +34,7 @@ namespace QuantConnect.Tests.Brokerages.Ccxt
     [TestFixture, Explicit("These tests require configuration and funded accounts on selected crypto exchanges.")]
     public class CcxtBrokerageTests
     {
-        private readonly List<Order> _orders = new();
+        private OrderProvider _orderProvider;
 
         [SetUp]
         public void Setup()
@@ -44,6 +45,65 @@ namespace QuantConnect.Tests.Brokerages.Ccxt
 
             // redirect python output
             PySysIo.ToTextWriter(TestContext.Progress);
+        }
+
+        [Test]
+        public void OutputTest()
+        {
+            using (Py.GIL())
+            {
+                PythonEngine.RunSimpleString(@"
+import asyncio
+import logging
+import sys
+import time
+from threading import Thread
+
+class AsyncLoopThread(Thread):
+    def __init__(self):
+        super().__init__(daemon=True)
+        self.loop = asyncio.new_event_loop()
+
+    def run(self):
+        asyncio.set_event_loop(self.loop)
+        self.loop.set_debug(True)
+        self.loop.run_forever()
+        return self.loop
+
+class Test:
+    def __init__(self):
+        logging.basicConfig(level=logging.DEBUG)
+
+    def Initialize(self):
+        self.loop_handler = AsyncLoopThread()
+        self.loop_handler.start()
+        print('Initialized')
+
+    def Terminate(self):
+        self.loop_handler.loop.stop()
+        print('Terminated')
+
+    def Subscribe(self, symbol):
+        print(f'Subscribing trades: {symbol}')
+        self.run_async(self.watch_trades(symbol))
+
+    def run_async(self, coroutine):
+        return asyncio.run_coroutine_threadsafe(coroutine, self.loop_handler.loop)
+
+    async def watch_trades(self, symbol):
+        try:
+            print('start watch_trades')
+            raise Exception('test watch_trades exception')
+        except Exception as e:
+            print(e)
+
+test = Test()
+test.Initialize()
+test.Subscribe('BTCUSD')
+time.sleep(10)
+test.Terminate()
+");
+            }
         }
 
         [TestCase("binance")]
@@ -161,25 +221,30 @@ namespace QuantConnect.Tests.Brokerages.Ccxt
             var market = new CcxtSymbolMapper(exchangeName).GetLeanMarket();
             var symbol = Symbol.Create(leanTicker, SecurityType.Crypto, market);
 
-            using var orderFilledResetEvent = new ManualResetEvent(false);
+            var orderEvents = new List<OrderEvent>();
 
             brokerage.OrderStatusChanged += (_, e) =>
             {
-                Log.Trace($"Order event: {e}");
+                Log.Trace($"OrderStatusChanged(): New order event: {e}");
+                orderEvents.Add(e);
 
-                if (e.Status == OrderStatus.Filled)
-                {
-                    orderFilledResetEvent.Set();
-                }
+                _orderProvider.UpdateOrderStatus(e.OrderId, e.Status);
             };
 
             Log.Trace("Submitting market order");
             var order = new MarketOrder(symbol, quantity, DateTime.UtcNow);
-            _orders.Add(order);
+            _orderProvider.Add(order);
             brokerage.PlaceOrder(order);
 
-            // TODO: no order events in unit tests?
-            //Assert.IsTrue(orderFilledResetEvent.WaitOne(5000));
+            Log.Trace("Order Events:");
+            foreach (var orderEvent in orderEvents)
+            {
+                Log.Trace($"  {orderEvent}", true);
+            }
+
+            Assert.AreEqual(2, orderEvents.Count);
+            Assert.AreEqual(OrderStatus.Submitted, orderEvents[0].Status);
+            Assert.AreEqual(OrderStatus.Filled, orderEvents[1].Status);
         }
 
         [TestCase("coinbasepro", "BTCEUR", 0.0001, 10000)]
@@ -198,25 +263,31 @@ namespace QuantConnect.Tests.Brokerages.Ccxt
             var market = new CcxtSymbolMapper(exchangeName).GetLeanMarket();
             var symbol = Symbol.Create(leanTicker, SecurityType.Crypto, market);
 
-            using var orderSubmittedResetEvent = new ManualResetEvent(false);
+            var orderEvents = new List<OrderEvent>();
 
             brokerage.OrderStatusChanged += (_, e) =>
             {
-                Log.Trace($"Order event: {e}");
+                Log.Trace($"OrderStatusChanged(): New order event: {e}");
+                orderEvents.Add(e);
 
-                if (e.Status == OrderStatus.Submitted)
-                {
-                    orderSubmittedResetEvent.Set();
-                }
+                _orderProvider.UpdateOrderStatus(e.OrderId, e.Status);
             };
 
             Log.Trace("Submitting limit order");
             var order = new LimitOrder(symbol, quantity, limitPrice, DateTime.UtcNow);
-            _orders.Add(order);
+            _orderProvider.Add(order);
             brokerage.PlaceOrder(order);
 
-            // TODO: no order events in unit tests?
-            //Assert.IsTrue(orderSubmittedResetEvent.WaitOne(5000));
+            Thread.Sleep(5000);
+
+            Log.Trace("Order Events:");
+            foreach (var orderEvent in orderEvents)
+            {
+                Log.Trace($"  {orderEvent}", true);
+            }
+
+            Assert.AreEqual(1, orderEvents.Count);
+            Assert.AreEqual(OrderStatus.Submitted, orderEvents[0].Status);
         }
 
         [TestCase("bittrex", "ETHBTC", -0.002, 0.03)]
@@ -232,25 +303,31 @@ namespace QuantConnect.Tests.Brokerages.Ccxt
             var market = new CcxtSymbolMapper(exchangeName).GetLeanMarket();
             var symbol = Symbol.Create(leanTicker, SecurityType.Crypto, market);
 
-            using var orderSubmittedResetEvent = new ManualResetEvent(false);
+            var orderEvents = new List<OrderEvent>();
 
             brokerage.OrderStatusChanged += (_, e) =>
             {
-                Log.Trace($"Order event: {e}");
+                Log.Trace($"OrderStatusChanged(): New order event: {e}");
+                orderEvents.Add(e);
 
-                if (e.Status == OrderStatus.Submitted)
-                {
-                    orderSubmittedResetEvent.Set();
-                }
+                _orderProvider.UpdateOrderStatus(e.OrderId, e.Status);
             };
 
             Log.Trace("Submitting stop market order");
             var order = new StopMarketOrder(symbol, quantity, stopPrice, DateTime.UtcNow);
-            _orders.Add(order);
+            _orderProvider.Add(order);
             brokerage.PlaceOrder(order);
 
-            // TODO: no order events in unit tests?
-            //Assert.IsTrue(orderSubmittedResetEvent.WaitOne(5000));
+            Thread.Sleep(5000);
+
+            Log.Trace("Order Events:");
+            foreach (var orderEvent in orderEvents)
+            {
+                Log.Trace($"  {orderEvent}", true);
+            }
+
+            Assert.AreEqual(1, orderEvents.Count);
+            Assert.AreEqual(OrderStatus.Submitted, orderEvents[0].Status);
         }
 
         [TestCase("coinbasepro", "BTCEUR", -0.0001, 10000, 10000)]
@@ -267,25 +344,31 @@ namespace QuantConnect.Tests.Brokerages.Ccxt
             var market = new CcxtSymbolMapper(exchangeName).GetLeanMarket();
             var symbol = Symbol.Create(leanTicker, SecurityType.Crypto, market);
 
-            using var orderSubmittedResetEvent = new ManualResetEvent(false);
+            var orderEvents = new List<OrderEvent>();
 
             brokerage.OrderStatusChanged += (_, e) =>
             {
-                Log.Trace($"Order event: {e}");
+                Log.Trace($"OrderStatusChanged(): New order event: {e}");
+                orderEvents.Add(e);
 
-                if (e.Status == OrderStatus.Submitted)
-                {
-                    orderSubmittedResetEvent.Set();
-                }
+                _orderProvider.UpdateOrderStatus(e.OrderId, e.Status);
             };
 
             Log.Trace("Submitting stop limit order");
             var order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, DateTime.UtcNow);
-            _orders.Add(order);
+            _orderProvider.Add(order);
             brokerage.PlaceOrder(order);
 
-            // TODO: no order events in unit tests?
-            //Assert.IsTrue(orderSubmittedResetEvent.WaitOne(5000));
+            Thread.Sleep(5000);
+
+            Log.Trace("Order Events:");
+            foreach (var orderEvent in orderEvents)
+            {
+                Log.Trace($"  {orderEvent}", true);
+            }
+
+            Assert.AreEqual(1, orderEvents.Count);
+            Assert.AreEqual(OrderStatus.Submitted, orderEvents[0].Status);
         }
 
         [TestCase("binance", "BTCUSDT", TickType.Trade)]
@@ -359,8 +442,10 @@ namespace QuantConnect.Tests.Brokerages.Ccxt
             var secret = brokerageData[$"ccxt-{exchangeName}-secret"];
             var password = brokerageData[$"ccxt-{exchangeName}-password"];
 
+            _orderProvider = new OrderProvider();
+
             return new CcxtBrokerage(
-                new OrderProvider(_orders),
+                _orderProvider,
                 exchangeName,
                 apiKey,
                 secret,

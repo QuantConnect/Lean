@@ -86,5 +86,16 @@ namespace QuantConnect.Tests.Brokerages
         {
             return _orders.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).Select(x => x.Clone()).ToList();
         }
+
+        public void UpdateOrderStatus(int orderId, OrderStatus status)
+        {
+            var order = _orders.FirstOrDefault(x => x.Id == orderId);
+            if (order == null)
+            {
+                throw new ArgumentException($"Order not found: {orderId}");
+            }
+
+            order.Status = status;
+        }
     }
 }
