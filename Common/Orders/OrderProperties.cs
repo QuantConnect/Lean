@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using System;
 
@@ -31,6 +32,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Defines the exchange name for a particular market
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Exchange { get; set; }
 
         /// <summary>
