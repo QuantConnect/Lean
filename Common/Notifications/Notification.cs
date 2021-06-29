@@ -164,7 +164,8 @@ namespace QuantConnect.Notifications
     {
         /// <summary>
         /// Send a notification message to this user on Telegram
-        /// Can be either a phone number or username
+        /// Can be either a personal ID, Group ID, or username.
+        /// user must include @.
         /// </summary>
         public string User;
 
@@ -177,7 +178,7 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Constructor for sending a notification SMS to a specified phone number
         /// </summary>
-        /// <param name="user">User to send the message to, can be either phone number or username</param>
+        /// <param name="user">User to send the message to</param>
         /// <param name="message">Message to send</param>
         public NotificationTelegram(string user, string message)
         {
