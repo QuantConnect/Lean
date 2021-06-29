@@ -334,16 +334,16 @@ namespace QuantConnect.Brokerages.Exante
         /// </summary>
         /// <param name="optionRight">Exante option right</param>
         /// <returns>LEAN option right</returns>
-        private OptionRight ConvertOptionRight(string optionRight)
+        private OptionRight ConvertOptionRight(ExanteOptionRight? optionRight)
         {
             switch (optionRight)
             {
-                case "put":
+                case ExanteOptionRight.Put:
                     return OptionRight.Put;
-                case "call":
+                case ExanteOptionRight.Call:
                     return OptionRight.Call;
                 default:
-                    return OptionRight.Call;
+                    throw new ArgumentOutOfRangeException(nameof(optionRight), optionRight, null);
             }
         }
 
