@@ -80,7 +80,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
         private static bool CanSubscribe(Symbol symbol)
         {
-            return TDAmeritradeBrokerageModel.DefaultMarketMap.ContainsKey(symbol.ID.SecurityType);
+            return TDAmeritradeBrokerageModel.DefaultMarketMap.ContainsKey(symbol.ID.SecurityType) && !symbol.Value.Contains("-UNIVERSE-");
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
             if (symbolsAdded)
             {
-                SubscribeTo(_subscribedTickers.ToList());
+                SubscribeTo(_subscribedTickers.ToList(), tickType);
             }
 
             return true;
@@ -138,7 +138,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                 var subscriptions = _subscribedTickers.ToList();
 
                 if (subscriptions.Count > 0)
-                    SubscribeTo(subscriptions);
+                    SubscribeTo(subscriptions, tickType);
                 else
                 {
                     tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.CHART_EQUITY);
@@ -153,7 +153,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             return true;
         }
 
-        private void SubscribeTo(List<KeyValuePair<string, Symbol>> brokerageSymbolToLeanSymbolsSubscribeList)
+        private void SubscribeTo(List<KeyValuePair<string, Symbol>> brokerageSymbolToLeanSymbolsSubscribeList, TickType tickType)
         {
             foreach (var brokerageSymbolToLeanSymbolToSubscribe in brokerageSymbolToLeanSymbolsSubscribeList)
             {
@@ -162,25 +162,22 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                     case SecurityType.Index:
                     case SecurityType.Equity:
                         tdClient.LiveMarketDataStreamer.SubscribeToLevelOneQuoteDataAsync(QuoteType.Equity, brokerageSymbolToLeanSymbolToSubscribe.Key);
-                        tdClient.LiveMarketDataStreamer.SubscribeToMinuteChartDataAsync(true, brokerageSymbolToLeanSymbolToSubscribe.Key);
                         break;
                     case SecurityType.IndexOption:
                     case SecurityType.Option:
-                        tdClient.LiveMarketDataStreamer.SubscribeToLevelOneQuoteDataAsync(QuoteType.Option, brokerageSymbolToLeanSymbolToSubscribe.Key);
+                        tdClient.LiveMarketDataStreamer.SubscribeToLevelOneQuoteDataAsync(QuoteType.Option, brokerageSymbolToLeanSymbolToSubscribe.Key).Wait();
                         break;
                     case SecurityType.Forex:
                         tdClient.LiveMarketDataStreamer.SubscribeToLevelOneQuoteDataAsync(QuoteType.Forex, brokerageSymbolToLeanSymbolToSubscribe.Key);
                         break;
                     case SecurityType.Future:
                         tdClient.LiveMarketDataStreamer.SubscribeToLevelOneQuoteDataAsync(QuoteType.Futures, brokerageSymbolToLeanSymbolToSubscribe.Key);
-                        tdClient.LiveMarketDataStreamer.SubscribeToMinuteChartDataAsync(false, brokerageSymbolToLeanSymbolToSubscribe.Key);
                         break;
                     case SecurityType.FutureOption:
                         tdClient.LiveMarketDataStreamer.SubscribeToLevelOneQuoteDataAsync(QuoteType.FuturesOptions, brokerageSymbolToLeanSymbolToSubscribe.Key);
-                        tdClient.LiveMarketDataStreamer.SubscribeToMinuteChartDataAsync(false, brokerageSymbolToLeanSymbolToSubscribe.Key);
                         break;
-                    //default:
-                    //    break;
+                        //default:
+                        //    break;
                 }
             }
 
@@ -189,7 +186,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
         private void OnMarketDateReceived(object _, TDAmeritradeApi.Client.Models.Streamer.MarketDataType e)
         {
-            if (e == TDAmeritradeApi.Client.Models.Streamer.MarketDataType.Charts || e == TDAmeritradeApi.Client.Models.Streamer.MarketDataType.LevelOneQuotes)
+            if (e == TDAmeritradeApi.Client.Models.Streamer.MarketDataType.LevelOneQuotes)
             {
                 var dataDictionary = tdClient.LiveMarketDataStreamer.MarketData[e];
 
@@ -198,19 +195,29 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                     string brokerageSymbol = item.Key;
                     var data = item.Value;
 
-                    AddChartAndTickData(data, e == TDAmeritradeApi.Client.Models.Streamer.MarketDataType.LevelOneQuotes);
+                    AddTickData(data);
                 }
             }
         }
 
-        private void AddChartAndTickData(dynamic data, bool isQuoteAndTradeData)
+        private void AddTickData(dynamic data)
         {
-            if (isQuoteAndTradeData)
+            ConcurrentQueue<LevelOneQuote> queue = data;
+            while (queue.TryDequeue(out LevelOneQuote quote))
             {
-                ConcurrentQueue<LevelOneQuote> queue = data;
-                while (queue.TryDequeue(out LevelOneQuote quote))
+                if (quote.HasQuotes)
                 {
-                    var tick = CreateTick(quote);
+                    var tick = GetQuote(quote);
+
+                    if (tick != null)
+                    {
+                        _aggregator.Update(tick);
+                    }
+                }
+
+                if (quote.HasTrades)
+                {
+                    var tick = GetTrade(quote);
 
                     if (tick != null)
                     {
@@ -218,21 +225,6 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                     }
                 }
             }
-            else
-            {
-                ConcurrentQueue<MinuteChartData> queue = data;
-                while (queue.TryDequeue(out MinuteChartData chartData))
-                {
-                    var trade = CreateTradeBar(chartData);
-
-                    if (trade != null)
-                    {
-                        _aggregator.Update(trade);
-                    }
-                }
-            }
-
-            
         }
 
         private static TradeBar CreateTradeBar(MinuteChartData data)
@@ -244,11 +236,11 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         }
 
         /// <summary>
-        /// Create a tick from the tradier stream data
+        /// Get quote from td stream
         /// </summary>
         /// <param name="marketQuote">TD stream data object</param>
         /// <returns>LEAN Tick object</returns>
-        private Tick CreateTick(LevelOneQuote marketQuote)
+        private Tick GetQuote(LevelOneQuote marketQuote)
         {
             Symbol symbol;
             if (!_subscribedTickers.TryGetValue(marketQuote.Symbol, out symbol))
@@ -263,7 +255,30 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             // Convert the timestamp to exchange timezone and pass into algorithm
             var time = utc.DateTime.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
 
-            return new Tick(time, symbol, string.Empty, string.Empty, (decimal)marketQuote.BidSize, (decimal)marketQuote.BidPrice, (decimal)marketQuote.AskSize, (decimal)marketQuote.AskPrice);
+            return new Tick(time, symbol, string.Empty, marketQuote.PrimaryListingExchangeName, (decimal)marketQuote.BidSize, (decimal)marketQuote.BidPrice, (decimal)marketQuote.AskSize, (decimal)marketQuote.AskPrice);
+        }
+
+        /// <summary>
+        /// Get quote from td stream
+        /// </summary>
+        /// <param name="marketQuote">TD stream data object</param>
+        /// <returns>LEAN Tick object</returns>
+        private Tick GetTrade(LevelOneQuote marketQuote)
+        {
+            Symbol symbol;
+            if (!_subscribedTickers.TryGetValue(marketQuote.Symbol, out symbol))
+            {
+                // Not subscribed to this symbol.
+                return null;
+            }
+
+            // Tradier trades are US NY time only. Convert local server time to NY Time:
+            var utc = marketQuote.TradeTime;
+
+            // Convert the timestamp to exchange timezone and pass into algorithm
+            var time = utc.DateTime.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
+
+            return new Tick(time, symbol, string.Empty, marketQuote.LastTradeExchange, (decimal)marketQuote.LastSize, (decimal)marketQuote.LastPrice);
         }
 
         #endregion
