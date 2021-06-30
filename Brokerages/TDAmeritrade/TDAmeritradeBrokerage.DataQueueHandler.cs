@@ -143,8 +143,6 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                     SubscribeTo(subscriptions);
                 else
                 {
-                    tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.CHART_EQUITY);
-                    tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.CHART_FUTURES);
                     tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.QUOTE);
                     tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES);
                     tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES_OPTIONS);
