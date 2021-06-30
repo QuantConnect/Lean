@@ -446,7 +446,7 @@ namespace QuantConnect.Securities
                 var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, utcTime);
                 var fees = parameters.Security.FeeModel.GetOrderFee(
                     new OrderFeeParameters(parameters.Security, order)).Value;
-                var orderFee = Math.Max(0, parameters.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount);
+                var orderFee = parameters.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount;
 
                 // Update our target holdings margin & target margin allocated values
                 targetHoldingsMargin = (finalHoldingsQuantity * unitMargin);
