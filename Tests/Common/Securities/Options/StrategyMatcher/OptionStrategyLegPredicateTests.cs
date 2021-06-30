@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.IsTrue(filtered.All(p => p.Right == OptionRight.Call));
         }
 
-        public static TestCaseData[] TestCases
+        public static IEnumerable<TestCase> TestCases
         {
             get
             {
@@ -172,8 +172,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                             .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
                             .ExpectMatch(),
                     }
-                    .Select(x => new TestCaseData(x.WithDefaults()).SetName(x.Name))
-                    .ToArray();
+                    .Select(x => x.WithDefaults());
             }
         }
 
