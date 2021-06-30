@@ -668,6 +668,12 @@ namespace QuantConnect
         /// <summary>
         /// The subscription's data comes from a rest call that is polled and returns a single line/data point of information
         /// </summary>
+        [Obsolete("Use SubscriptionDataSource derived class RestSubscriptionDataSource")]
+        Rest,
+
+        /// <summary>
+        /// The subscription's data comes from a web call that is polled and returns a single line/data point of information
+        /// </summary>
         Web,
 
         /// <summary>

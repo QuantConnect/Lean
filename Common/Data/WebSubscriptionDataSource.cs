@@ -1,19 +1,35 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using QuantConnect.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Data
 {
     /// <summary>
-    /// Base data source for anything
+    /// Represents the source location for a web call subscription
     /// </summary>
     public class WebSubscriptionDataSource : SubscriptionDataSource
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WebSubscriptionDataSource"/> class.
+        /// </summary>
         public WebSubscriptionDataSource(Func<IDataCacheProvider, IStreamReader> getStreamReader, string source, FileFormat format = FileFormat.Csv)
-            :base(getStreamReader, source, SubscriptionTransportMedium.Web, format)
+#pragma warning disable CS0618 // Type or member is obsolete
+            : base(source, SubscriptionTransportMedium.Web, format, getStreamReader)
+#pragma warning restore CS0618 // Type or member is obsolete
         {
         }
     }
