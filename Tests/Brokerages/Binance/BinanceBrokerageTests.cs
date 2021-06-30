@@ -90,11 +90,11 @@ namespace QuantConnect.Tests.Brokerages.Binance
         /// </summary>
         protected override SecurityType SecurityType => SecurityType.Crypto;
 
-        public static TestCaseData[] OrderParameters => new[]
+        public static OrderTestParameters[] OrderParameters => new OrderTestParameters[]
         {
-            new TestCaseData(new MarketOrderTestParameters(StaticSymbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(StaticSymbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new StopLimitOrderTestParameters(StaticSymbol, HighPrice, LowPrice)).SetName("StopLimitOrder"),
+            new MarketOrderTestParameters(StaticSymbol),
+            new LimitOrderTestParameters(StaticSymbol, HighPrice, LowPrice),
+            new StopLimitOrderTestParameters(StaticSymbol, HighPrice, LowPrice),
         };
 
         /// <summary>
