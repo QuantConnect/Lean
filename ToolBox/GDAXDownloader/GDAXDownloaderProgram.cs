@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
-using QuantConnect.Configuration;
-using QuantConnect.Logging;
+using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using System.Globalization;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.GDAXDownloader
 {

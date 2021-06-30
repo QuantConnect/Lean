@@ -243,6 +243,11 @@ namespace QuantConnect.Api
         /// <summary>
         /// Data Subscriptions
         /// </summary>
-        Data
+        Data,
+
+        /// <summary>
+        /// Modules Subscriptions
+        /// </summary>
+        Modules
     }
 }
