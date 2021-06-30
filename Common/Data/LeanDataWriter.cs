@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,18 +14,17 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
+using Ionic.Zip;
 using System.Linq;
 using System.Text;
-using Ionic.Zip;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
+using System.Collections.Generic;
 
-namespace QuantConnect.ToolBox
+namespace QuantConnect.Data
 {
     /// <summary>
     /// Data writer for saving an IEnumerable of BaseData into the LEAN data directory.
@@ -79,7 +78,7 @@ namespace QuantConnect.ToolBox
             _resolution = resolution;
             _securityType = securityType;
             _tickType = tickType;
-            _appendToZips = securityType == SecurityType.Future;
+            _appendToZips = securityType == SecurityType.Future || securityType.IsOption();
         }
 
         /// <summary>

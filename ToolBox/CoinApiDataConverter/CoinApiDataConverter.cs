@@ -15,14 +15,15 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using QuantConnect.Logging;
-using QuantConnect.ToolBox.CoinApi;
+using QuantConnect.Data;
 using QuantConnect.Util;
+using System.Diagnostics;
+using QuantConnect.Logging;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using QuantConnect.ToolBox.CoinApi;
 
 namespace QuantConnect.ToolBox.CoinApiDataConverter
 {

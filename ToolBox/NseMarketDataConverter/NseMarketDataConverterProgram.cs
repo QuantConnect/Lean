@@ -14,11 +14,12 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuantConnect.Data.Market;
+using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.ToolBox.NseMarketDataConverter
 {

@@ -122,6 +122,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                         {
                             var tick = reader.Current as Tick;
 
+                            if (tick.Symbol.ID.Symbol == "VX" && (
+                                tick.BidPrice >= 998m || tick.AskPrice >= 998m))
+                            {
+                                // Invalid value for VX futures. Invalid prices in raw data are 998/999
+                                continue;
+                            }
                             //Add or create the consolidator-flush mechanism for symbol:
                             List<List<AlgoSeekFuturesProcessor>> symbolProcessors;
                             if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
