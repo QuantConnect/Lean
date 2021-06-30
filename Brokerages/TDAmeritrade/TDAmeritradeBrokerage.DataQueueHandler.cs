@@ -49,6 +49,8 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            //set once
+            tdClient.LiveMarketDataStreamer.MarketData.DataReceived += OnMarketDateReceived;
         }
 
         /// <summary>
@@ -112,7 +114,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
             if (symbolsAdded)
             {
-                SubscribeTo(_subscribedTickers.ToList(), tickType);
+                SubscribeTo(_subscribedTickers.ToList());
             }
 
             return true;
@@ -138,7 +140,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                 var subscriptions = _subscribedTickers.ToList();
 
                 if (subscriptions.Count > 0)
-                    SubscribeTo(subscriptions, tickType);
+                    SubscribeTo(subscriptions);
                 else
                 {
                     tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.CHART_EQUITY);
@@ -153,7 +155,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             return true;
         }
 
-        private void SubscribeTo(List<KeyValuePair<string, Symbol>> brokerageSymbolToLeanSymbolsSubscribeList, TickType tickType)
+        private void SubscribeTo(List<KeyValuePair<string, Symbol>> brokerageSymbolToLeanSymbolsSubscribeList)
         {
             foreach (var brokerageSymbolToLeanSymbolToSubscribe in brokerageSymbolToLeanSymbolsSubscribeList)
             {
@@ -180,8 +182,6 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                         //    break;
                 }
             }
-
-            tdClient.LiveMarketDataStreamer.MarketData.DataReceived += OnMarketDateReceived;
         }
 
         private void OnMarketDateReceived(object _, TDAmeritradeApi.Client.Models.Streamer.MarketDataType e)
