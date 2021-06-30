@@ -27,15 +27,6 @@ from pythonnet import set_runtime
 # start.py file, and find the runtimeconfig.json relative to that.
 set_runtime(clr_loader.get_coreclr(os.path.join(os.path.dirname(os.path.realpath(__file__)), "QuantConnect.Lean.Launcher.runtimeconfig.json")))
 
-from clr import AddReference
-AddReference("System")
-
-#Load assemblies
-file_absolute_path = os.path.abspath(__file__)
-for file in os.listdir(os.path.dirname(file_absolute_path)):
-    if file.endswith(".dll"):
-        AddReference(file.replace(".dll", ""))
-
 from AlgorithmImports import *
 
 # Start an instance of an API class
