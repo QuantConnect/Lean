@@ -42,25 +42,25 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Custom class to store information about symbols
         /// </summary>
-        public class SymbolData 
+        private class SymbolData 
         { 
             /// <summary>
             /// Stores exchange name for the tradingSymbol
             /// </summary>
-            public string exchange { get; set;}
+            public string Exchange { get; set;}
 
             /// <summary>
             /// Stores instrumentToken name for the tradingSymbol
             /// </summary>
-            public uint instrumentToken {get; set;}
+            public uint InstrumentToken {get; set;}
 
             /// <summary>
             /// Initalize values to the class attributes
             /// </summary>
             public SymbolData(uint token, string exchangeName)
             {
-                exchange = exchangeName;
-                instrumentToken = token;
+                Exchange = exchangeName;
+                InstrumentToken = token;
             }
         }
 
@@ -72,7 +72,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Mapping between brokerageSymbol and a list of all available SymbolData objects for the brokerageSymbol.
         /// </summary>
-        public static Dictionary<string, List<SymbolData>> ZerodhaInstrumentsList = new Dictionary<string, List<SymbolData>>();
+        private static Dictionary<string, List<SymbolData>> ZerodhaInstrumentsList = new Dictionary<string, List<SymbolData>>();
 
         /// <summary>
         /// Mapping between instrumentToken and it's market segment ( E.g: 408065-> nse)
@@ -308,7 +308,7 @@ namespace QuantConnect.Brokerages.Zerodha
             List<SymbolData> tempSymbolDataList;
             if (ZerodhaInstrumentsList.TryGetValue(brokerageSymbol.Replace(" ", "").Trim(), out tempSymbolDataList))
             {   
-                return tempSymbolDataList[0].exchange;
+                return tempSymbolDataList[0].Exchange;
             }
             return string.Empty;
         }
@@ -328,7 +328,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 foreach (var sd in tempSymbolDataList)
                 {
-                    tokenList.Add(sd.instrumentToken);
+                    tokenList.Add(sd.InstrumentToken);
                 }
             }
             return tokenList;
@@ -373,7 +373,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 foreach( var sd in item.Value) 
                 { 
-                    if (sd.instrumentToken == ZerodhaSymbol) 
+                    if (sd.InstrumentToken == ZerodhaSymbol) 
                     {
                         _symbol = item.Key;
                         break;
