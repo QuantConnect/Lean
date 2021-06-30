@@ -174,30 +174,30 @@ namespace QuantConnect.Brokerages.Exante
         /// <summary>
         /// Create a tick from the Exante feed stream data
         /// </summary>
-        /// <param name="et">Exante feed stream data object</param>
+        /// <param name="exanteFeedTrade">Exante feed stream data object</param>
         /// <returns>LEAN Tick object</returns>
-        private Tick CreateTick(ExanteFeedTrade et)
+        private Tick CreateTick(ExanteFeedTrade exanteFeedTrade)
         {
-            var symbolId = et.SymbolId;
+            var symbolId = exanteFeedTrade.SymbolId;
             if (!_subscribedTickers.TryGetValue(symbolId, out var symbol))
             {
                 // Not subscribed to this symbol.
                 return null;
             }
 
-            if (et.Size == decimal.Zero)
+            if (exanteFeedTrade.Size == decimal.Zero)
             {
                 return null;
             }
 
-            var utc = et.Date;
+            var utc = exanteFeedTrade.Date;
             // Convert the timestamp to exchange timezone and pass into algorithm
             var time = utc.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
 
             var instrument = _client.GetSymbol(symbolId);
 
-            var size = et.Size ?? 0m;
-            var price = et.Price ?? 0m;
+            var size = exanteFeedTrade.Size ?? 0m;
+            var price = exanteFeedTrade.Price ?? 0m;
             return new Tick(time, symbol, "", instrument.Data.Exchange, size, price);
         }
 
