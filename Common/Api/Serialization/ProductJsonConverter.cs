@@ -33,6 +33,7 @@ namespace QuantConnect.Api.Serialization
             {"Live Trading Node", ProductType.LiveNode},
             {"Support", ProductType.Support},
             {"Data", ProductType.Data},
+            {"Modules", ProductType.Modules}
         };
 
         /// <summary>
@@ -92,9 +93,15 @@ namespace QuantConnect.Api.Serialization
                 return null;
             }
 
+            var productTypeName = jObject["name"].Value<string>();
+            if (!_productTypeMap.ContainsKey(productTypeName))
+            {
+                return null;
+            }
+
             return new Product
             {
-                Type = _productTypeMap[jObject["name"].Value<string>()],
+                Type = _productTypeMap[productTypeName],
                 Items = jObject["items"].ToObject<List<ProductItem>>()
             };
         }

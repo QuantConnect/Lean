@@ -19,10 +19,10 @@ using System.IO;
 using System.Linq;
 using QuantConnect.Util;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -88,9 +88,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     try
                     {
                         var data = _dataDownloader.Get(symbol, resolution, startTimeUtc, endTimeUtc)
-                            .Where(baseData => symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType);
+                            .Where(baseData => symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
+                            // for canonical symbols, downloader will return data for all of the chain
+                            .GroupBy(baseData => baseData.Symbol);
 
-                        writer.Write(data);
+                        foreach (var dataPerSymbol in data)
+                        {
+                            writer.Write(dataPerSymbol);
+                        }
                     }
                     catch (Exception e)
                     {
