@@ -141,9 +141,11 @@ namespace QuantConnect
         /// Helper method to parse and generate a future symbol from a given user friendly representation
         /// </summary>
         /// <param name="ticker">The future ticker, for example 'ESZ1'</param>
+        /// <param name="futureYear">Clarifies the year for the current future</param>
         /// <returns>The future symbol or null if failed</returns>
-        public static Symbol ParseFutureSymbol(string ticker)
+        public static Symbol ParseFutureSymbol(string ticker, int? futureYear = null)
         {
+            var disambiguatedFutureYear = futureYear ?? TodayUtc.Year;
             var parsed = ParseFutureTicker(ticker);
             if (parsed == null)
             {
@@ -153,7 +155,7 @@ namespace QuantConnect
             var underlying = parsed.Underlying;
             var expirationYearShort = parsed.ExpirationYearShort;
             var expirationMonth = parsed.ExpirationMonth;
-            var expirationYear = GetExpirationYear(expirationYearShort);
+            var expirationYear = GetExpirationYear(expirationYearShort, disambiguatedFutureYear);
 
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(underlying, SecurityType.Future, out var market))
             {
@@ -439,10 +441,10 @@ namespace QuantConnect
 
         private static IReadOnlyDictionary<int, string> _futuresMonthLookup = _futuresMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
 
-        private static int GetExpirationYear(int year)
+        private static int GetExpirationYear(int year, int futureYear)
         {
             var baseNum = 2000;
-            while (baseNum + year < TodayUtc.Year)
+            while (baseNum + year < futureYear)
             {
                 baseNum += 10;
             }

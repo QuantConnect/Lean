@@ -168,17 +168,17 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     return null;
                 }
 
-                var symbol = SymbolRepresentation.ParseFutureSymbol(ticker);
+                // ignoring time zones completely -- this is all in the 'data-time-zone'
+                var timeString = csv[_columnTimestamp];
+                var time = DateTime.ParseExact(timeString, "yyyyMMddHHmmssFFF", CultureInfo.InvariantCulture);
+
+                var symbol = SymbolRepresentation.ParseFutureSymbol(ticker, time.Year);
 
                 if (symbol == null || !_symbolMultipliers.ContainsKey(symbol.ID.Symbol) ||
                     _symbolFilter != null && !_symbolFilter.Contains(symbol.ID.Symbol, StringComparer.InvariantCultureIgnoreCase))
                 {
                     return null;
                 }
-
-                // ignoring time zones completely -- this is all in the 'data-time-zone'
-                var timeString = csv[_columnTimestamp];
-                var time = DateTime.ParseExact(timeString, "yyyyMMddHHmmssFFF", CultureInfo.InvariantCulture);
 
                 // detecting tick type (trade or quote)
                 TickType tickType;

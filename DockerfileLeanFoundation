@@ -280,3 +280,6 @@ ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.6m.so"
 
 # List all packages
 RUN conda list
+
+# Add IBGateway v984 dependency library
+RUN apt-get install -y libgtk2.0.0
