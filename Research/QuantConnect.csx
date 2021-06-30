@@ -1,4 +1,4 @@
-﻿#r "Python.Runtime.dll"
+#r "Python.Runtime.dll"
 #r "QuantConnect.Algorithm.dll"
 #r "QuantConnect.Algorithm.Framework.dll"
 #r "QuantConnect.Common.dll"
@@ -86,6 +86,3 @@ Api api = new Api();
 api.Initialize(Config.GetInt("job-user-id", 1), 
     Config.Get("api-access-token", "default"),
     Config.Get("data-folder"));
-
-// Loads composer so that we do not get an exception in the jupyter notebook
-Composer.Instance
