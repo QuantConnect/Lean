@@ -414,18 +414,12 @@ namespace QuantConnect.Securities
                 // Our target holdings value is over our target allocation, adjust the order size and final quantity
                 if(Math.Abs(targetHoldingsMargin) > Math.Abs(targetMarginAllocated))
                 {
-                    // Use absolutes for this, we will apply sign before adjusting our quantities
-                    var sign = Math.Sign(targetMarginAllocated);
+                    // Determine the amount we need to adjust the order to get back to our target
+                    var minimumAdjustmentNeeded = ((targetHoldingsMargin - targetMarginAllocated) / unitMargin);
 
-                    var amountToAdjustOrder = Math.Abs((targetHoldingsMargin - targetMarginAllocated) / unitMargin);
-                    if (amountToAdjustOrder < parameters.Security.SymbolProperties.LotSize)
-                    {
-                        // We will always adjust by at least 1 LotSize
-                        amountToAdjustOrder = parameters.Security.SymbolProperties.LotSize;
-                    }
-
-                    // Round our order adjustment and reapply our sign
-                    amountToAdjustOrder = sign * amountToAdjustOrder.DiscretelyRoundBy(parameters.Security.SymbolProperties.LotSize);
+                    // Round our adjustment amount to the nearest whole lot size value
+                    var amountToAdjustOrder = minimumAdjustmentNeeded.DiscretelyRoundBy(parameters.Security.SymbolProperties.LotSize,
+                        minimumAdjustmentNeeded < 0 ? MidpointRounding.ToNegativeInfinity : MidpointRounding.ToPositiveInfinity);
 
                     // Update our order size and final holdings quantity
                     orderQuantity -= amountToAdjustOrder;
