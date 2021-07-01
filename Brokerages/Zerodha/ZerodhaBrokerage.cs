@@ -182,11 +182,12 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
                 foreach (var instrumentToken in instrumentTokenList)
                 {
-                    if (!subscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
+                    var tokenStringInvariant = instrumentToken.ToStringInvariant();
+                    if (!subscribeInstrumentTokens.Contains(tokenStringInvariant))
                     {
-                        subscribeInstrumentTokens.Add(instrumentToken.ToStringInvariant());
-                        unSubscribeInstrumentTokens.Remove(instrumentToken.ToStringInvariant());
-                        _subscriptionsById[instrumentToken.ToStringInvariant()] = symbol;
+                        subscribeInstrumentTokens.Add(tokenStringInvariant);
+                        unSubscribeInstrumentTokens.Remove(tokenStringInvariant);
+                        _subscriptionsById[tokenStringInvariant] = symbol;
                     }
                 }
             }
@@ -223,13 +224,14 @@ namespace QuantConnect.Brokerages.Zerodha
                         continue;
                     }
                     foreach (var instrumentToken in instrumentTokenList)
-                    {
-                        if (!unSubscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
+                    {   
+                        var tokenStringInvariant = instrumentToken.ToStringInvariant();
+                        if (!unSubscribeInstrumentTokens.Contains(tokenStringInvariant))
                         {
-                            unSubscribeInstrumentTokens.Add(instrumentToken.ToStringInvariant());
-                            subscribeInstrumentTokens.Remove(instrumentToken.ToStringInvariant());
+                            unSubscribeInstrumentTokens.Add(tokenStringInvariant);
+                            subscribeInstrumentTokens.Remove(tokenStringInvariant);
                             Symbol unSubscribeSymbol;
-                            _subscriptionsById.TryRemove(instrumentToken.ToStringInvariant(), out unSubscribeSymbol);
+                            _subscriptionsById.TryRemove(tokenStringInvariant, out unSubscribeSymbol);
                         }
                     }
                 }
@@ -448,20 +450,15 @@ namespace QuantConnect.Brokerages.Zerodha
             var security = _securityProvider.GetSecurity(order.Symbol);
             var orderFee = security.FeeModel.GetOrderFee(
                         new OrderFeeParameters(security, order));
-            var orderProperties = order.Properties as ZerodhaOrderProperties;
-            if (orderProperties == null)
+            var orderProperties = order.Properties as OrderProperties;
+            if (orderProperties == null || orderProperties.Exchange == null)
             {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid product type Please set either MIS,CNC or NRML";
+                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
                 UnlockStream();
                 return false;
-            }
-
-            if (orderProperties.Exchange == null)
-            {
-                throw new NullReferenceException("Please set exchange attribute using DefaultOrderProperties because placing an order");   
             }
 
             try
@@ -573,11 +570,6 @@ namespace QuantConnect.Brokerages.Zerodha
         private static string ConvertOrderType(OrderType orderType)
         {
 
-            //            public const string ORDER_TYPE_MARKET = "MARKET";
-            //public const string ORDER_TYPE_LIMIT = "LIMIT";
-            //public const string ORDER_TYPE_SLM = "SL-M";
-            //public const string ORDER_TYPE_SL = "SL";
-
             switch (orderType)
             {
                 case OrderType.Limit:
@@ -610,19 +602,14 @@ namespace QuantConnect.Brokerages.Zerodha
                 return false;
             }
 
-
-            var orderProperties = order.Properties as ZerodhaOrderProperties;
-            if (orderProperties == null)
+            var orderProperties = order.Properties as OrderProperties;
+            if (orderProperties == null || orderProperties.Exchange == null)
             {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid product type Please set either MIS,CNC or NRML";
+                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
                 UnlockStream();
                 return false;
-            }
-            if (orderProperties.Exchange == null)
-            {
-                throw new NullReferenceException("Please set exchange attribute using DefaultOrderProperties because placing an order");   
             }
 
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
