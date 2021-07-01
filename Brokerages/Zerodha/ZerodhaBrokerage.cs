@@ -177,7 +177,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 var instrumentTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.ID.Symbol);
                 if (instrumentTokenList.Count == 0)
                 {
-                    Log.Error($"ZerodhaBrokerage.Subscribe(): Invalid Zerodha Instrument token for: {symbol.ID.Symbol}");
+                    Log.Error($"ZerodhaBrokerage.Subscribe(): Invalid Zerodha Instrument token for given: {symbol.ID.Symbol}");
                     continue;
                 }
                 foreach (var instrumentToken in instrumentTokenList)
@@ -219,7 +219,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     var instrumentTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.ID.Symbol);
                     if (instrumentTokenList.Count == 0)
                     {
-                        Log.Error($"ZerodhaBrokerage.Unsubscribe(): Invalid Zerodha Instrument token for: {symbol.ID.Symbol}");
+                        Log.Error($"ZerodhaBrokerage.Unsubscribe(): Invalid Zerodha Instrument token for given: {symbol.ID.Symbol}");
                         continue;
                     }
                     foreach (var instrumentToken in instrumentTokenList)
@@ -251,7 +251,7 @@ namespace QuantConnect.Brokerages.Zerodha
             var instrumentTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.ID.Symbol);
             if (instrumentTokenList.Count == 0)
             {
-                throw new ArgumentException($"ZerodhaBrokerage.GetQuote(): Invalid Zerodha Instrument token for: {symbol.ID.Symbol}");
+                throw new ArgumentException($"ZerodhaBrokerage.GetQuote(): Invalid Zerodha Instrument token for given: {symbol.ID.Symbol}");
             }
             var instrument = instrumentTokenList[0];
             var instrumentIds = new string[] { instrument.ToStringInvariant() };
@@ -1003,12 +1003,12 @@ namespace QuantConnect.Brokerages.Zerodha
         private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution, string zerodhaResolution)
         {
             Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
-            var scripSymbolTokenLIst = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.Value);
-            if (scripSymbolTokenLIst.Count == 0)
+            var scripSymbolTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.Value);
+            if (scripSymbolTokenList.Count == 0)
             {
-                throw new ArgumentException($"ZerodhaBrokerage.GetQuote(): Invalid Zerodha Instrument token for: {symbol.Value}");
+                throw new ArgumentException($"ZerodhaBrokerage.GetQuote(): Invalid Zerodha Instrument token for given: {symbol.Value}");
             }
-            var scripSymbol = scripSymbolTokenLIst[0];
+            var scripSymbol = scripSymbolTokenList[0];
             var candles = _kite.GetHistoricalData(scripSymbol.ToStringInvariant(), start, end, zerodhaResolution);
 
             if (!candles.Any())
@@ -1102,15 +1102,15 @@ namespace QuantConnect.Brokerages.Zerodha
 
                                 var bestBidQuote = tick.Bids[0];
                                 var bestAskQuote = tick.Offers[0];
-                                var instrumentTokenvalue =  tick.InstrumentToken;
+                                var instrumentTokenValue =  tick.InstrumentToken;
 
                                 var time = tick.Timestamp ?? DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata);
 
-                                EmitQuoteTick(symbol, instrumentTokenvalue, time, bestBidQuote.Price, bestBidQuote.Quantity, bestAskQuote.Price, bestAskQuote.Quantity);
+                                EmitQuoteTick(symbol, instrumentTokenValue, time, bestBidQuote.Price, bestBidQuote.Quantity, bestAskQuote.Price, bestAskQuote.Quantity);
 
                                 if (_lastTradeTickTime != time)
                                 {
-                                    EmitTradeTick(symbol, instrumentTokenvalue, time, tick.LastPrice, tick.LastQuantity);
+                                    EmitTradeTick(symbol, instrumentTokenValue, time, tick.LastPrice, tick.LastQuantity);
                                     _lastTradeTickTime = time;
                                 }
                             }

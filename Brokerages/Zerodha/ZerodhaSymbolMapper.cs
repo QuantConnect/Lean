@@ -98,13 +98,13 @@ namespace QuantConnect.Brokerages.Zerodha
             var tradableInstruments = kite.GetInstruments(exchange);
             var symbols = new List<Symbol>();
             var zerodhaInstrumentsMapping = new Dictionary<string, List<SymbolData>>();
-            var ZerodhaTokenExchangeDict = new Dictionary<uint,string>();
+            var zerodhaTokenExchangeDict = new Dictionary<uint,string>();
 
             foreach (var tp in tradableInstruments)
             {
                 var securityType = SecurityType.Equity;
                 var market = Market.India;
-                ZerodhaTokenExchangeDict[tp.InstrumentToken] = tp.Exchange.ToLowerInvariant();
+                zerodhaTokenExchangeDict[tp.InstrumentToken] = tp.Exchange.ToLowerInvariant();
                 OptionRight optionRight = 0;
 
                 switch (tp.InstrumentType)
@@ -174,7 +174,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
             }
             ZerodhaInstrumentsList = zerodhaInstrumentsMapping;
-            ZerodhaInstrumentsExchangeMapping = ZerodhaTokenExchangeDict;
+            ZerodhaInstrumentsExchangeMapping = zerodhaTokenExchangeDict;
             return symbols;
         }
 
