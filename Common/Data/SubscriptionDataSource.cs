@@ -48,6 +48,8 @@ namespace QuantConnect.Data
         /// </summary>
         public readonly IReadOnlyList<KeyValuePair<string, string>> Headers;
 
+        public int TimeoutInMilliseconds { get; set; } = 10000; //10 seconds
+
         /// <summary>
         /// Used for custom stream reader
         /// </summary>
