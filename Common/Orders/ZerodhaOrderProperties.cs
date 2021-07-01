@@ -29,13 +29,8 @@ namespace QuantConnect.Orders
         /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
         /// </summary>
         /// <param name="exchange">Exchange value, nse/bse etc</param>
-        public ZerodhaOrderProperties(string exchange)
+        public ZerodhaOrderProperties(string exchange) : base(exchange)
         {
-            if (string.IsNullOrEmpty(exchange))
-            {
-                throw new ArgumentException("Parameter cannot be null/empty", nameof(exchange));
-            }
-            Exchange = exchange;
         }
 
         /// <summary>
