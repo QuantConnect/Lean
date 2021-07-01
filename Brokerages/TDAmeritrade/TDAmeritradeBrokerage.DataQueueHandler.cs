@@ -210,7 +210,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             ConcurrentQueue<LevelOneQuote> queue = data;
             while (queue.TryDequeue(out LevelOneQuote quote))
             {
-                if (quote?.HasQuotes ?? false)
+                if (quote.HasQuotes)
                 {
                     var tick = GetQuote(quote);
 
@@ -220,7 +220,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                     }
                 }
 
-                if (quote?.HasTrades ?? false)
+                if (quote.HasTrades)
                 {
                     var tick = GetTrade(quote);
 
