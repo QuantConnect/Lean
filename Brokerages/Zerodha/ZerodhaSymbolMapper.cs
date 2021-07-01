@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// The list of known Zerodha symbols.
         /// </summary>
-        private static List<Symbol> KnownSymbolsList = new List<Symbol>();
+        private List<Symbol> KnownSymbolsList = new List<Symbol>();
 
         /// <summary>
         /// Mapping between brokerageSymbol and a list of all available SymbolData objects for the brokerageSymbol.
@@ -345,7 +345,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="brokerageSymbol">The Zerodha symbol</param>
         /// <returns>True if Zerodha supports the symbol</returns>
-        private static bool IsKnownBrokerageSymbol(string brokerageSymbol)
+        private bool IsKnownBrokerageSymbol(string brokerageSymbol)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
             {
