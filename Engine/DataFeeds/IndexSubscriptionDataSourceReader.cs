@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
@@ -83,7 +84,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 while (!reader.EndOfStream)
                 {
                     // read a line and pass it to the base data factory
-                    var line = reader.ReadLine();
+                    var readlineTask = Task.Run(() => reader.ReadLine());
+
+                    if (!readlineTask.Wait(source.TimeoutInMilliseconds))
+                        throw new TimeoutException($"{source.Source} did not return after {source.TimeoutInMilliseconds} milliseconds.");
+
+                    var line = readlineTask.Result;
                     if (line.IsNullOrEmpty())
                     {
                         continue;

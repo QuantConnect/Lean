@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +26,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Represents the source location and transport medium for a subscription
     /// </summary>
-    public abstract class SubscriptionDataSource : IEquatable<SubscriptionDataSource>
+    public class SubscriptionDataSource : IEquatable<SubscriptionDataSource>
     {
         /// <summary>
         /// Identifies where to get the subscription's data from
@@ -41,6 +43,16 @@ namespace QuantConnect.Data
         /// </summary>
         public readonly SubscriptionTransportMedium TransportMedium;
 
+        /// <summary>
+        /// Gets the header values to be used in the web request.
+        /// </summary>
+        public readonly IReadOnlyList<KeyValuePair<string, string>> Headers;
+
+        public int TimeoutInMilliseconds { get; set; } = 10000; //10 seconds
+
+        /// <summary>
+        /// Used for custom stream reader
+        /// </summary>
         public Func<IDataCacheProvider, IStreamReader> GetStreamReader { get; }
 
         /// <summary>
@@ -48,8 +60,9 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
-        public SubscriptionDataSource(Func<IDataCacheProvider, IStreamReader> getStreamReader, string source, SubscriptionTransportMedium transportMedium)
-            : this(getStreamReader, source, transportMedium, FileFormat.Csv)
+        [Obsolete("Use SubscriptionDataSource derived classes")]
+        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, Func<IDataCacheProvider, IStreamReader> getStreamReader = null)
+            : this(source, transportMedium, FileFormat.Csv, getStreamReader)
         {
         }
 
@@ -59,25 +72,57 @@ namespace QuantConnect.Data
         /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         /// <param name="format">The format of the data within the source</param>
-        public SubscriptionDataSource(Func<IDataCacheProvider, IStreamReader> getStreamReader, string source, SubscriptionTransportMedium transportMedium, FileFormat format)
-            : this(getStreamReader, source, transportMedium, format, null)
+        [Obsolete("Use SubscriptionDataSource derived classes")]
+        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format, Func<IDataCacheProvider, IStreamReader> getStreamReader = null)
+            : this(source, transportMedium, format, null, getStreamReader)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class with <see cref="SubscriptionTransportMedium.Web"/>
+        /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class with <see cref="SubscriptionTransportMedium.Rest"/>
         /// including the specified header values
         /// </summary>
         /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         /// <param name="format">The format of the data within the source</param>
         /// <param name="headers">The headers to be used for this source</param>
-        public SubscriptionDataSource(Func<IDataCacheProvider, IStreamReader> getStreamReader, string source, SubscriptionTransportMedium transportMedium, FileFormat format, IEnumerable<KeyValuePair<string, string>> headers)
+        [Obsolete("Use SubscriptionDataSource derived classes")]
+        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format, IEnumerable<KeyValuePair<string, string>> headers, Func<IDataCacheProvider, IStreamReader> getStreamReader = null)
         {
             Source = source;
             Format = format;
-            TransportMedium = transportMedium;
-            GetStreamReader = getStreamReader;
+            TransportMedium = transportMedium == SubscriptionTransportMedium.Rest ? SubscriptionTransportMedium.Web: transportMedium;
+            Headers = (headers?.ToList() ?? new List<KeyValuePair<string, string>>()).AsReadOnly();
+
+            //transition to prevent breaking changes
+            if (getStreamReader == null)
+            {
+                //Old way to prevent breaking change
+                //should be removed after a period of time
+                switch (transportMedium)
+                {
+                    case SubscriptionTransportMedium.LocalFile:
+                        GetStreamReader = (dataCacheProvider) => new Transport.LocalFileSubscriptionStreamReader(dataCacheProvider, Source);
+                        break;
+                    case SubscriptionTransportMedium.RemoteFile:
+                        GetStreamReader = (dataCacheProvider) => new Transport.RemoteFileSubscriptionStreamReader(dataCacheProvider, Source, Headers);
+                        break;
+                    case SubscriptionTransportMedium.Rest:
+                        Log.Error("SubscriptionTransportMedium.Rest is obsolete. Change to use RestSubscriptionDataSource");
+                        bool liveMode = Config.GetBool("live-mode");
+                        GetStreamReader = (dataCacheProvider) => new Transport.RestSubscriptionStreamReader(Source, Headers, liveMode);
+                        break;
+                    case SubscriptionTransportMedium.Web:
+                        Log.Error("Invalid SubscriptionDataSource: Use WebSubscriptionDataSource and define custom stream reader or use RestSubscriptionDataSource for rest calls.");
+                        GetStreamReader = (dataCacheProvider) => null;
+                        break;
+                    default:
+                        GetStreamReader = (dataCacheProvider) => null;
+                        break;
+                }
+            }
+            else
+                GetStreamReader = getStreamReader;
         }
 
         /// <summary>
@@ -92,7 +137,8 @@ namespace QuantConnect.Data
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return string.Equals(Source, other.Source)
-                && TransportMedium == other.TransportMedium;
+                && TransportMedium == other.TransportMedium
+                && Headers.SequenceEqual(other.Headers);
         }
 
         /// <summary>
@@ -106,8 +152,7 @@ namespace QuantConnect.Data
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((SubscriptionDataSource) obj);
+            return Equals(obj as SubscriptionDataSource);
         }
 
         /// <summary>
@@ -121,7 +166,7 @@ namespace QuantConnect.Data
         {
             unchecked
             {
-                return ((Source != null ? Source.GetHashCode() : 0)*397) ^ (int) TransportMedium;
+                return ((Source != null ? Source.GetHashCode() : 0) * 397) ^ (int)TransportMedium;
             }
         }
 

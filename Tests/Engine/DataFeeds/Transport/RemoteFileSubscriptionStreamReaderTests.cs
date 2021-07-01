@@ -52,7 +52,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             var remoteReader = new RemoteFileSubscriptionStreamReader(
                 new SingleEntryDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: isDataEphemeral),
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
-                Globals.Cache,
                 null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
@@ -61,7 +60,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             var remoteReader2 = new RemoteFileSubscriptionStreamReader(
                 new SingleEntryDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: isDataEphemeral),
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
-                Globals.Cache,
                 null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
@@ -79,7 +77,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             var remoteReader = new RemoteFileSubscriptionStreamReader(
                 cacheProvider,
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
-                Globals.Cache,
                 null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
@@ -88,7 +85,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             var remoteReader2 = new RemoteFileSubscriptionStreamReader(
                 cacheProvider,
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
-                Globals.Cache,
                 null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
@@ -105,7 +101,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             var remoteReader = new RemoteFileSubscriptionStreamReader(
                 new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                 @"http://helloworld.com",
-                Globals.Cache,
                 null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
@@ -114,7 +109,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             Assert.Throws<WebException>(() => new RemoteFileSubscriptionStreamReader(
                     new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                     @"helloworld.com",
-                    Globals.Cache,
                     null),
                 "Api.Download(): Failed to download data from helloworld.com. Please verify the source for missing http:// or https://"
             );
