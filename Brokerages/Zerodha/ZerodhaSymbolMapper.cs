@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// The list of known Zerodha symbols.
         /// </summary>
-        public List<Symbol> KnownSymbolsList = new List<Symbol>();
+        private static List<Symbol> KnownSymbolsList = new List<Symbol>();
 
         /// <summary>
         /// Mapping between brokerageSymbol and a list of all available SymbolData objects for the brokerageSymbol.
