@@ -144,6 +144,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                 else
                 {
                     tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.QUOTE);
+                    tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.OPTION);
                     tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES);
                     tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES_OPTIONS);
                     tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FOREX);
@@ -157,7 +158,13 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         {
             foreach (var brokerageSymbolToLeanSymbolToSubscribe in brokerageSymbolToLeanSymbolsSubscribeList)
             {
-                switch (brokerageSymbolToLeanSymbolToSubscribe.Value.SecurityType)
+                SecurityType securityType;
+                if (brokerageSymbolToLeanSymbolToSubscribe.Value.HasUnderlying && brokerageSymbolToLeanSymbolToSubscribe.Key == brokerageSymbolToLeanSymbolToSubscribe.Value.Underlying.Value)
+                    securityType = brokerageSymbolToLeanSymbolToSubscribe.Value.Underlying.SecurityType;
+                else
+                    securityType = brokerageSymbolToLeanSymbolToSubscribe.Value.SecurityType;
+
+                switch (securityType)
                 {
                     case SecurityType.Index:
                     case SecurityType.Equity:
@@ -203,7 +210,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             ConcurrentQueue<LevelOneQuote> queue = data;
             while (queue.TryDequeue(out LevelOneQuote quote))
             {
-                if (quote.HasQuotes)
+                if (quote?.HasQuotes ?? false)
                 {
                     var tick = GetQuote(quote);
 
@@ -213,7 +220,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                     }
                 }
 
-                if (quote.HasTrades)
+                if (quote?.HasTrades ?? false)
                 {
                     var tick = GetTrade(quote);
 

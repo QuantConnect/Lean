@@ -1,6 +1,7 @@
 using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,27 +19,33 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         /// <returns></returns>
         public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
         {
-            var optionsChain = tdClient.MarketDataApi.GetOptionChainAsync(symbol.Value, expirationsfromDate: date, expirationsToDate: date).Result;
+            try
+            {
+                var optionsChain = tdClient.MarketDataApi.GetOptionChainAsync(symbol.Value).Result;
 
-            List<Symbol> options = new List<Symbol>();
-            
-            options.AddRange(CreateSymbols(symbol, date, optionsChain.callExpDateMap, OptionRight.Call));
-            options.AddRange(CreateSymbols(symbol, date, optionsChain.putExpDateMap, OptionRight.Put));
+                List<Symbol> options = new List<Symbol>();
 
-            return options;
+                options.AddRange(CreateSymbols(symbol, optionsChain.callExpDateMap, OptionRight.Call));
+                options.AddRange(CreateSymbols(symbol, optionsChain.putExpDateMap, OptionRight.Put));
+
+                return options;
+            }
+            catch { }
+
+            return Enumerable.Empty<Symbol>(); ;
         }
 
-        private static List<Symbol> CreateSymbols(Symbol symbol, DateTime date, Dictionary<string, Dictionary<decimal, List<ExpirationDateMap>>> optionChain, OptionRight optionRight)
+        private static List<Symbol> CreateSymbols(Symbol symbol, Dictionary<string, Dictionary<decimal, List<ExpirationDateMap>>> optionChain, OptionRight optionRight)
         {
             List<Symbol> options = new List<Symbol>();
             foreach (var option in optionChain)
             {
-                var dateAndDaysToExpiration = option.Key;
+                var dateAndDaysToExpiration = option.Key.Split(':');
                 var strikes = option.Value.Keys.ToList();
 
                 foreach (var strike in strikes)
                 {
-                    options.Add(Symbol.CreateOption(symbol, Market.USA.ToString(), OptionStyle.American, optionRight, strike, date));
+                    options.Add(Symbol.CreateOption(symbol, Market.USA.ToString(), OptionStyle.American, optionRight, strike, DateTime.Parse(dateAndDaysToExpiration[0], CultureInfo.InvariantCulture)));
                 }
             }
             return options;

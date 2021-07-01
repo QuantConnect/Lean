@@ -38,8 +38,11 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
         private static string GetOptionSymbol(Symbol symbol)
         {
+            if (symbol.ID.Date < DateTime.UtcNow || symbol.ID.StrikePrice == 0)
+                return symbol.Underlying.Value;
+
             var optionSymbol = symbol.ID.OptionRight == OptionRight.Call ? "C" : "P";
-            return $"{symbol.Value}_{symbol.ID.Date.ToString("MMddyy", CultureInfo.InvariantCulture)}{optionSymbol}{symbol.ID.StrikePrice}";
+            return $"{symbol.Underlying.Value}_{symbol.ID.Date.ToString("MMddyy", CultureInfo.InvariantCulture)}{optionSymbol}{symbol.ID.StrikePrice}";
         }
 
         private Symbol GetOptionSymbolFromBrokerageSymbol(string brokerageSymbol)
