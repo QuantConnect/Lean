@@ -401,11 +401,8 @@ namespace QuantConnect.Securities
                 return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
-            // compute the initial order quantity
-            var orderQuantity = absFinalOrderMargin / absUnitMargin;
-
-            // rounding off Order Quantity to the nearest multiple of Lot Size
-            orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
+            // compute the initial order quantity; rounding off to the nearest multiple of Lot Size
+            var orderQuantity = (absFinalOrderMargin / absUnitMargin).DiscretelyRoundBy(parameters.Security.SymbolProperties.LotSize);
             if (orderQuantity == 0)
             {
                 string reason = null;
@@ -418,7 +415,6 @@ namespace QuantConnect.Securities
             }
 
             // Use the following loop to converge on a value that places us under our target allocation when adjusted for fees
-            var loopCount = 0;              // Need to loop twice
             var lastOrderQuantity = 0m;     // For safety check
 
             var targetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
@@ -461,34 +457,24 @@ namespace QuantConnect.Securities
                 signedTargetFinalMarginValue = (totalPortfolioValue - orderFees - totalPortfolioValue * RequiredFreeBuyingPowerPercent) * parameters.TargetBuyingPower;
                 absFinalOrderMargin = Math.Abs(signedTargetFinalMarginValue - currentSignedUsedMargin);
 
-                // After the first loop we need to recalculate order quantity since now we have fees included
-                if (loopCount == 0)
+                // Start safe check after first loop
+                if (lastOrderQuantity == orderQuantity)
                 {
-                    // re compute the initial order quantity
-                    orderQuantity = (absFinalOrderMargin / absUnitMargin).DiscretelyRoundBy(parameters.Security.SymbolProperties.LotSize);
+                    var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
+                        Invariant($"{absFinalOrderMargin}. Current order margin is {orderMargin}. Order quantity {orderQuantity}. ") +
+                        Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
+                        $"{parameters.Security.Symbol}. Margin unit {absUnitMargin}.";
+                    throw new ArgumentException(message);
                 }
-                else
-                {
-                    // Start safe check after first loop
-                    if (lastOrderQuantity == orderQuantity)
-                    {
-                        var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
-                            Invariant($"{absFinalOrderMargin}. Current order margin is {orderMargin}. Order quantity {orderQuantity}. ") +
-                            Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
-                            $"{parameters.Security.Symbol}. Margin unit {absUnitMargin}.";
-                        throw new ArgumentException(message);
-                    }
-
-                    lastOrderQuantity = orderQuantity;
-                }
+                lastOrderQuantity = orderQuantity;
+                
 
                 // Update our target holdings margin
                 targetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
                 orderMargin = orderQuantity * absUnitMargin;
-                loopCount++;
             }
-            // Loop at least twice, and ensure that our target holdings margin will be less than or equal to our target allocated margin
-            while (loopCount < 2 || Math.Abs(targetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue));
+            // Ensure that our target holdings margin will be less than or equal to our target allocated margin
+            while (Math.Abs(targetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue));
 
             // add directionality back in
             return new GetMaximumOrderQuantityResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);
