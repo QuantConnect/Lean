@@ -213,24 +213,5 @@ namespace QuantConnect.Brokerages
                 }
             }
         }
-
-        /// <summary>
-        /// Common price level removal method
-        /// </summary>
-        /// <param name="priceLevel"></param>
-        public void RemovePriceLevel(decimal priceLevel)
-        {
-            lock (_locker)
-            {
-                if (Asks.ContainsKey(priceLevel))
-                {
-                    RemoveAskRow(priceLevel);
-                }
-                else if (Bids.ContainsKey(priceLevel))
-                {
-                    RemoveBidRow(priceLevel);
-                }
-            }
-        }
     }
 }

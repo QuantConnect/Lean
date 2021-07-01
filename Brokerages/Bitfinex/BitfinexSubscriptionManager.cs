@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,6 +26,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages.Bitfinex.Messages;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -34,6 +35,9 @@ namespace QuantConnect.Brokerages.Bitfinex
     /// </summary>
     public class BitfinexSubscriptionManager : DataQueueHandlerSubscriptionManager
     {
+        // 50 times by default
+        private static readonly decimal _bitfinexFilterThreshold = Config.GetInt("bitfinex-tick-filter-threshold", 5000) / 100m;
+
         /// <summary>
         /// Maximum number of subscribed channels per websocket connection
         /// </summary>
@@ -53,6 +57,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>> _subscriptionsBySymbol = new ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>>();
         private readonly ConcurrentDictionary<BitfinexWebSocketWrapper, BitfinexWebSocketChannels> _channelsByWebSocket = new ConcurrentDictionary<BitfinexWebSocketWrapper, BitfinexWebSocketChannels>();
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
+        private readonly Dictionary<Symbol, Tick> _tradeTicks = new Dictionary<Symbol, Tick>();
+        private readonly ConcurrentDictionary<Symbol, Tick> _quoteTicks = new ConcurrentDictionary<Symbol, Tick>();
         private readonly IReadOnlyDictionary<TickType, string> _tickType2ChannelName = new Dictionary<TickType, string>
         {
             { TickType.Trade, "trades"},
@@ -589,22 +595,17 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     orderBook.BestBidAskUpdated -= OnBestBidAskUpdated;
                     orderBook.Clear();
+                    _quoteTicks.Clear();
                 }
 
                 foreach (var entry in entries)
                 {
-                    var price = decimal.Parse(entry[0], NumberStyles.Float, CultureInfo.InvariantCulture);
-                    var amount = decimal.Parse(entry[2], NumberStyles.Float, CultureInfo.InvariantCulture);
-
-                    if (amount > 0)
-                        orderBook.UpdateBidRow(price, amount);
-                    else
-                        orderBook.UpdateAskRow(price, Math.Abs(amount));
+                    ProcessOrderBookUpdate(channel, entry);
                 }
 
-                orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
-
                 EmitQuoteTick(symbol, orderBook.BestBidPrice, orderBook.BestBidSize, orderBook.BestAskPrice, orderBook.BestAskSize);
+
+                orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
             }
             catch (Exception e)
             {
@@ -639,7 +640,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                     case "book":
                         ProcessOrderBookUpdate(channel, entries);
                         return;
-
                     case "trades":
                         ProcessTradeUpdate(channel, entries);
                         return;
@@ -651,7 +651,9 @@ namespace QuantConnect.Brokerages.Bitfinex
                 throw;
             }
         }
-
+        /// <summary>
+        /// See https://docs.bitfinex.com/reference#ws-public-books
+        /// </summary>
         private void ProcessOrderBookUpdate(Channel channel, string[] entries)
         {
             try
@@ -663,18 +665,43 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var count = Parse.Long(entries[1]);
                 var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
 
+                _quoteTicks.TryGetValue(symbol, out var referenceTick);
+
                 if (count == 0)
                 {
-                    orderBook.RemovePriceLevel(price);
+                    if (amount == 1)
+                    {
+                        orderBook.RemoveBidRow(price);
+                    }
+                    else if(amount == -1)
+                    {
+                        orderBook.RemoveAskRow(price);
+                    }
                 }
                 else
                 {
                     if (amount > 0)
                     {
+                        if (referenceTick != null && !IsValidPrice(price, referenceTick.BidPrice))
+                        {
+                            if (Log.DebuggingEnabled)
+                            {
+                                Log.Debug($"BitfinexSubscriptionManager.ProcessOrderBookUpdate(): Drop invalid quote update: {symbol} refBid@{referenceTick.BidPrice} newBid@{price}");
+                            }
+                            return;
+                        }
                         orderBook.UpdateBidRow(price, amount);
                     }
                     else if (amount < 0)
                     {
+                        if (referenceTick != null && !IsValidPrice(price, referenceTick.AskPrice))
+                        {
+                            if (Log.DebuggingEnabled)
+                            {
+                                Log.Debug($"BitfinexSubscriptionManager.ProcessOrderBookUpdate(): Drop invalid quote update: {symbol} refAsk@{referenceTick.AskPrice} newAsk@{price}");
+                            }
+                            return;
+                        }
                         orderBook.UpdateAskRow(price, Math.Abs(amount));
                     }
                 }
@@ -694,29 +721,28 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
                 var price = decimal.Parse(entries[3], NumberStyles.Float, CultureInfo.InvariantCulture);
 
-                EmitTradeTick(channel.Symbol, time, price, amount);
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
-        }
-
-        private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal amount)
-        {
-            try
-            {
                 lock (_brokerage.TickLocker)
                 {
-                    _brokerage.EmitTick(new Tick
+                    var newTick = new Tick
                     {
                         Value = price,
                         Time = time,
-                        Symbol = symbol,
+                        Symbol = channel.Symbol,
                         TickType = TickType.Trade,
                         Quantity = Math.Abs(amount)
-                    });
+                    };
+
+                    if (_tradeTicks.TryGetValue(channel.Symbol, out var referenceTick) && !IsValidPrice(price, referenceTick.Price))
+                    {
+                        if (Log.DebuggingEnabled)
+                        {
+                            Log.Debug($"BitfinexSubscriptionManager.ProcessTradeUpdate(): DROP invalid trade update: {channel.Symbol} ref {referenceTick.Price} new {price}");
+                        }
+                        return;
+                    }
+                    _tradeTicks[channel.Symbol] = newTick;
+
+                    _brokerage.EmitTick(newTick);
                 }
             }
             catch (Exception e)
@@ -730,7 +756,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             lock (_brokerage.TickLocker)
             {
-                _brokerage.EmitTick(new Tick
+                var newTick = new Tick
                 {
                     AskPrice = askPrice,
                     BidPrice = bidPrice,
@@ -740,13 +766,32 @@ namespace QuantConnect.Brokerages.Bitfinex
                     TickType = TickType.Quote,
                     AskSize = Math.Abs(askSize),
                     BidSize = Math.Abs(bidSize)
-                });
+                };
+                _quoteTicks[symbol] = newTick;
+
+                _brokerage.EmitTick(newTick);
             }
         }
 
         private void OnBestBidAskUpdated(object sender, BestBidAskUpdatedEventArgs e)
         {
             EmitQuoteTick(e.Symbol, e.BestBidPrice, e.BestBidSize, e.BestAskPrice, e.BestAskSize);
+        }
+
+        /// <summary>
+        /// Validate new price
+        /// </summary>
+        public static bool IsValidPrice(decimal newPrice, decimal referencePrice)
+        {
+            if (referencePrice == 0)
+            {
+                return true;
+            }
+
+            var difference = Math.Abs(referencePrice - newPrice);
+            // valid if there is a difference less than '_bitfinexFilterThreshold' of reference
+            return difference < (referencePrice * _bitfinexFilterThreshold)
+                   && difference < (newPrice * _bitfinexFilterThreshold);
         }
     }
 }

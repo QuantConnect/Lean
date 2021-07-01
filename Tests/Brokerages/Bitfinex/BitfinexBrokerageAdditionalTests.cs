@@ -61,6 +61,21 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             _brokerage.Dispose();
         }
 
+        [TestCase(100000, 0, true)]
+        [TestCase(19, 900, true)]
+        [TestCase(509, 10, true)]
+
+        [TestCase(1, 101, false)]
+        [TestCase(9, 1000, false)]
+        [TestCase(1100, 10, false)]
+        [TestCase(10000, 10, false)]
+        [TestCase(100000, 1, false)]
+        [TestCase(1, 100000, false)]
+        public void PriceFiltering(decimal newPrice, decimal referencePrice, bool isValid)
+        {
+            Assert.AreEqual(isValid, BitfinexSubscriptionManager.IsValidPrice(newPrice, referencePrice));
+        }
+
         [Test]
         public void ReturnsCorrectCashBalancesWithMarginPositions()
         {
