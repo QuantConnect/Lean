@@ -357,7 +357,8 @@ namespace QuantConnect.Securities
         /// <param name="parameters">An object containing the portfolio, the security and the target signed buying power percentage</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         /// <remarks>This implementation ensures that our resulting holdings is less than the target, but it does not necessarily
-        /// maximize the holdings to meet the target. To do that we need a minimizing algorithm that reduces the difference betwen</remarks>
+        /// maximize the holdings to meet the target. To do that we need a minimizing algorithm that reduces the difference between
+        /// the target final margin value and the target holdings margin.</remarks>
         public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
             // this is expensive so lets fetch it once
