@@ -491,9 +491,6 @@ namespace QuantConnect.Securities
             // Determine the amount to order to put us at our target
             var orderSize = (currentMargin - targetMargin) / perUnitMargin;
 
-            // Determine our rounding mode
-            MidpointRounding roundingMode;
-
             // Determine if we are under our target
             var underTarget = false;
             // For negative target, we are under if target is a larger negative number
@@ -507,7 +504,8 @@ namespace QuantConnect.Securities
                 underTarget = true;
             }
 
-            // We are currently under our target
+            // Determine our rounding mode
+            MidpointRounding roundingMode;
             if (underTarget)
             {
                 // Negative orders need to be rounded "up" so we don't go over target
@@ -516,7 +514,6 @@ namespace QuantConnect.Securities
                     ? MidpointRounding.ToPositiveInfinity
                     : MidpointRounding.ToNegativeInfinity;
             }
-            // We are currently over our target
             else
             {
                 // Negative orders need to be rounded "down" so we are under our target
