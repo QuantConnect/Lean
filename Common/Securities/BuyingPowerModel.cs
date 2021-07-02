@@ -489,7 +489,7 @@ namespace QuantConnect.Securities
         public static decimal GetAmountToOrder(decimal currentMargin, decimal targetMargin, decimal perUnitMargin, decimal lotSize)
         {
             // Determine the amount to order to put us under our target
-            var minimumOrderNeeded = (currentMargin - targetMargin) / perUnitMargin;
+            var orderSize = (currentMargin - targetMargin) / perUnitMargin;
 
             // Determine our rounding mode
             MidpointRounding roundingMode;
@@ -512,7 +512,7 @@ namespace QuantConnect.Securities
             {
                 // Negative orders need to be rounded "up" so we don't go over target
                 // Positive orders need to be rounded "down" so we don't go over target
-                roundingMode = minimumOrderNeeded < 0
+                roundingMode = orderSize < 0
                     ? MidpointRounding.ToPositiveInfinity
                     : MidpointRounding.ToNegativeInfinity;
             }
@@ -521,16 +521,13 @@ namespace QuantConnect.Securities
             {
                 // Negative orders need to be rounded "down" so we are under our target
                 // Positive orders need to be rounded "up" so we are under our target
-                roundingMode = minimumOrderNeeded < 0
+                roundingMode = orderSize < 0
                     ? MidpointRounding.ToNegativeInfinity
                     : MidpointRounding.ToPositiveInfinity;
             }
 
-            // Apply our adjustment
-            var amountToAdjust = minimumOrderNeeded.DiscretelyRoundBy(lotSize, roundingMode);
-
-            // Apply adjustment to our quantity
-            return amountToAdjust;
+            // Round this order size appropriately
+            return orderSize.DiscretelyRoundBy(lotSize, roundingMode);
         }
 
         /// <summary>
