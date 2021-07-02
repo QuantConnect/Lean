@@ -34,6 +34,10 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(80, 25, -1250, 1, -50)]       // 2000
         [TestCase(45.5, 25, 1240, 0.5, 49.5)]   // 1125
         [TestCase(45.75, 25, 1285, 0.25, 51.25)]// 1125
+        [TestCase(-40, 25, 1500, 1, 60)]        // -1000
+        [TestCase(-40.5, 12.5, 1505, .5, 120)]  // -506.25
+        [TestCase(-40.5, 12.5, 1508, .5, 120.5)]// -506.25
+
         public void OrderAdjustmentCalculation(decimal currentOrderSize, decimal perUnitMargin, decimal targetMargin, decimal lotSize, decimal expectedOrderSize)
         {
             var currentOrderMargin = currentOrderSize * perUnitMargin;
