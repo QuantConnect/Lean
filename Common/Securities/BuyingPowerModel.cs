@@ -356,6 +356,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the target signed buying power percentage</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <remarks>This implementation ensures that our resulting holdings is less than the target, but it does not necessarily
+        /// maximize the holdings to meet the target. To do that we need a minimizing algorithm that reduces the difference between
+        /// the target final margin value and the target holdings margin.</remarks>
         public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
             // this is expensive so lets fetch it once
@@ -399,15 +402,10 @@ namespace QuantConnect.Securities
                 return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
-            // continue iterating while we do not have enough margin for the order
-            decimal orderMargin = 0;
-            decimal orderFees = 0;
             // compute the initial order quantity
-            var orderQuantity = absFinalOrderMargin / absUnitMargin;
-
-            // rounding off Order Quantity to the nearest multiple of Lot Size
-            orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
-            if (orderQuantity == 0)
+            var absOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin,
+                parameters.Security.SymbolProperties.LotSize));
+            if (absOrderQuantity == 0)
             {
                 string reason = null;
                 if (!parameters.SilenceNonErrorReasons)
@@ -418,81 +416,115 @@ namespace QuantConnect.Securities
                 return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
-            var loopCount = 0;
-            // Just in case...
-            var lastOrderQuantity = 0m;
+            // Use the following loop to converge on a value that places us under our target allocation when adjusted for fees
+            var lastOrderQuantity = 0m;     // For safety check
+
+            var signedTargetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
+            decimal absOrderMargin = absOrderQuantity * absUnitMargin;
+            decimal orderFees = 0;
             do
             {
-                // Each loop will reduce the order quantity based on the difference between orderMargin and targetOrderMargin
-                if (orderMargin > absFinalOrderMargin)
+                // If our order target holdings is larger than our target margin allocated we need to recalculate our order size
+                if (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue))
                 {
-                    var currentOrderMarginPerUnit = orderMargin / orderQuantity;
-                    var amountOfOrdersToRemove = (orderMargin - absFinalOrderMargin) / currentOrderMarginPerUnit;
-                    if (amountOfOrdersToRemove < parameters.Security.SymbolProperties.LotSize)
-                    {
-                        // we will always subtract at least 1 LotSize
-                        amountOfOrdersToRemove = parameters.Security.SymbolProperties.LotSize;
-                    }
-
-                    orderQuantity -= amountOfOrdersToRemove;
-                    orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
+                    absOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin, 
+                        parameters.Security.SymbolProperties.LotSize));
                 }
 
-                if (orderQuantity <= 0)
+                if (absOrderQuantity <= 0)
                 {
+                    var sign = direction == OrderDirection.Buy ? 1 : -1;
                     return new GetMaximumOrderQuantityResult(0,
                         Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
-                        Invariant($"and has been rounded to zero.Target order margin {absFinalOrderMargin}. Order fees ") +
-                        Invariant($"{orderFees}. Order quantity {orderQuantity}. Margin unit {absUnitMargin}."),
+                        Invariant($"and has been rounded to zero.Target order margin {absFinalOrderMargin * sign}. Order fees ") +
+                        Invariant($"{orderFees}. Order quantity {absOrderQuantity * sign}. Margin unit {absUnitMargin}."),
                         false
                     );
                 }
 
                 // generate the order
-                var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, utcTime);
-
+                var order = new MarketOrder(parameters.Security.Symbol, absOrderQuantity, utcTime);
                 var fees = parameters.Security.FeeModel.GetOrderFee(
                     new OrderFeeParameters(parameters.Security,
                         order)).Value;
                 orderFees = parameters.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount;
 
-                // The TPV, take out the fees(unscaled) => yields available margin for trading(less fees)
-                // then scale that by the target -- finally remove currentUsedMargin to get finalOrderMargin
-                absFinalOrderMargin = Math.Abs(
-                    (totalPortfolioValue - orderFees - totalPortfolioValue * RequiredFreeBuyingPowerPercent)
-                    * parameters.TargetBuyingPower - currentSignedUsedMargin
-                );
+                // Update our target portfolio margin allocated when considering fees, then calculate the new FinalOrderMargin
+                signedTargetFinalMarginValue = (totalPortfolioValue - orderFees - totalPortfolioValue * RequiredFreeBuyingPowerPercent) * parameters.TargetBuyingPower;
+                absFinalOrderMargin = Math.Abs(signedTargetFinalMarginValue - currentSignedUsedMargin);
 
-                // After the first loop we need to recalculate order quantity since now we have fees included
-                if (loopCount == 0)
+                // Start safe check after first loop
+                if (lastOrderQuantity == absOrderQuantity)
                 {
-                    // re compute the initial order quantity
-                    orderQuantity = absFinalOrderMargin / absUnitMargin;
-                    orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
+                    var sign = direction == OrderDirection.Buy ? 1 : -1;
+                    var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
+                        Invariant($"{absFinalOrderMargin * sign}. Current order margin is {absOrderMargin * sign}. Order quantity {absOrderQuantity * sign}. ") +
+                        Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
+                        $"{parameters.Security.Symbol}. Margin unit {absUnitMargin}.";
+                    throw new ArgumentException(message);
                 }
-                else
-                {
-                    // Start safe check after first loop
-                    if (lastOrderQuantity == orderQuantity)
-                    {
-                        var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
-                            Invariant($"{absFinalOrderMargin}. Current order margin is {orderMargin}. Order quantity {orderQuantity}. ") +
-                            Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
-                            $"{parameters.Security.Symbol}. Margin unit {absUnitMargin}.";
-                        throw new ArgumentException(message);
-                    }
+                lastOrderQuantity = absOrderQuantity;
+                
 
-                    lastOrderQuantity = orderQuantity;
-                }
-
-                orderMargin = orderQuantity * absUnitMargin;
-                loopCount++;
-                // we always have to loop at least twice
+                // Update our target holdings margin
+                signedTargetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
+                absOrderMargin = absOrderQuantity * absUnitMargin;
             }
-            while (loopCount < 2 || orderMargin > absFinalOrderMargin);
+            // Ensure that our target holdings margin will be less than or equal to our target allocated margin
+            while (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue));
 
             // add directionality back in
-            return new GetMaximumOrderQuantityResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);
+            return new GetMaximumOrderQuantityResult((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity);
+        }
+
+        /// <summary>
+        /// Helper function that determines the amount to order to get to a given target safely.
+        /// Meaning it will either be at or just below target always.
+        /// </summary>
+        /// <param name="currentMargin">Current margin</param>
+        /// <param name="targetMargin">Target margin</param>
+        /// <param name="perUnitMargin">Margin required for each unit</param>
+        /// <param name="lotSize">Lot size of the security we are ordering</param>
+        /// <returns>The size of the order to get safely to our target</returns>
+        public static decimal GetAmountToOrder(decimal currentMargin, decimal targetMargin, decimal perUnitMargin, decimal lotSize)
+        {
+            // Determine the amount to order to put us at our target
+            var orderSize = (currentMargin - targetMargin) / perUnitMargin;
+
+            // Determine if we are under our target
+            var underTarget = false;
+            // For negative target, we are under if target is a larger negative number
+            if (targetMargin < 0 && targetMargin - currentMargin < 0)
+            {
+                underTarget = true;
+            }
+            // For positive target, we are under if target is a larger positive number
+            else if (targetMargin > 0 && targetMargin - currentMargin > 0)
+            {
+                underTarget = true;
+            }
+
+            // Determine our rounding mode
+            MidpointRounding roundingMode;
+            if (underTarget)
+            {
+                // Negative orders need to be rounded "up" so we don't go over target
+                // Positive orders need to be rounded "down" so we don't go over target
+                roundingMode = orderSize < 0
+                    ? MidpointRounding.ToPositiveInfinity
+                    : MidpointRounding.ToNegativeInfinity;
+            }
+            else
+            {
+                // Negative orders need to be rounded "down" so we are under our target
+                // Positive orders need to be rounded "up" so we are under our target
+                roundingMode = orderSize < 0
+                    ? MidpointRounding.ToNegativeInfinity
+                    : MidpointRounding.ToPositiveInfinity;
+            }
+
+            // Round this order size appropriately
+            return orderSize.DiscretelyRoundBy(lotSize, roundingMode);
         }
 
         /// <summary>
