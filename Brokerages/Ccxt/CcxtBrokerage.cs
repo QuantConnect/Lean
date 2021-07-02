@@ -265,11 +265,7 @@ namespace QuantConnect.Brokerages.Ccxt
 
                 foreach (var pyOrder in pyOrders)
                 {
-                    pyOrder.DelItem("info");
-
-                    var ccxtOrder = ConvertToObject<Order>(pyOrder);
-
-                    list.Add(ConvertOrder(ccxtOrder));
+                    list.Add(ConvertOrder(pyOrder));
                 }
             }
 
@@ -686,29 +682,84 @@ namespace QuantConnect.Brokerages.Ccxt
                 symbol.SecurityType == SecurityType.Crypto;
         }
 
-        private Orders.Order ConvertOrder(Order ccxtOrder)
+        private Orders.Order ConvertOrder(dynamic ccxtOrder)
         {
             Orders.Order order;
-            switch (ccxtOrder.Type)
+
+            var orderType = ccxtOrder["type"].ToString();
+
+            switch (orderType)
             {
                 case "market":
                     order = new MarketOrder();
                     break;
 
                 case "limit":
-                    order = new LimitOrder { LimitPrice = ccxtOrder.Price.GetValueOrDefault() };
+                    order = new LimitOrder
+                    {
+                        LimitPrice = (decimal)ccxtOrder["price"]
+                    };
+                    break;
+
+                case "stop":
+                    if (_exchangeName == "ftx")
+                    {
+                        var info = ccxtOrder["info"];
+                        var orderPrice = info["orderPrice"].ToString() == "None" ? 0 : (decimal)info["orderPrice"];
+                        var triggerPrice = (decimal)info["triggerPrice"];
+                        if (orderPrice > 0)
+                        {
+                            order = new StopLimitOrder
+                            {
+                                StopPrice = triggerPrice,
+                                LimitPrice = orderPrice
+                            };
+                        }
+                        else
+                        {
+                            order = new StopMarketOrder
+                            {
+                                StopPrice = triggerPrice
+                            };
+                        }
+                    }
+                    else
+                    {
+                        throw new NotSupportedException($"Unsupported order type: {orderType}");
+                    }
+                    break;
+
+                case "stop-loss":
+                    order = new StopMarketOrder
+                    {
+                        StopPrice = (decimal)ccxtOrder["price"]
+                    };
+                    break;
+
+                case "stop-loss-limit":
+                    order = new StopLimitOrder
+                    {
+                        StopPrice = (decimal)ccxtOrder["stopPrice"],
+                        LimitPrice = (decimal)ccxtOrder["price"]
+                    };
+                    if (_exchangeName == "kraken")
+                    {
+                        var info = ccxtOrder["info"]["descr"];
+                        ((StopLimitOrder)order).StopPrice = (decimal)info["price"];
+                        ((StopLimitOrder)order).LimitPrice = (decimal)info["price2"];
+                    }
                     break;
 
                 default:
-                    throw new NotSupportedException($"Unsupported order type: {ccxtOrder.Type}");
+                    throw new NotSupportedException($"Unsupported order type: {orderType}");
             }
 
-            order.Quantity = ccxtOrder.Amount * (ccxtOrder.Side == "sell" ? -1 : 1);
-            order.BrokerId = new List<string> { ccxtOrder.Id };
-            order.Symbol = _symbolMapper.GetLeanSymbol(ccxtOrder.Symbol);
-            order.Time = ccxtOrder.Datetime ?? DateTime.UtcNow;
+            order.Quantity = (decimal)ccxtOrder["amount"] * (ccxtOrder["side"].ToString() == "sell" ? -1 : 1);
+            order.BrokerId = new List<string> { ccxtOrder["id"].ToString() };
+            order.Symbol = _symbolMapper.GetLeanSymbol(ccxtOrder["symbol"].ToString());
+            order.Time = Convert.ToDateTime(ccxtOrder["datetime"].ToString()) ?? DateTime.UtcNow;
             order.Status = ConvertOrderStatus(ccxtOrder);
-            order.Properties.TimeInForce = ConvertTimeInForce(ccxtOrder.TimeInForce);
+            order.Properties.TimeInForce = ConvertTimeInForce(ccxtOrder["timeInForce"].ToString());
 
             return order;
         }
@@ -721,7 +772,7 @@ namespace QuantConnect.Brokerages.Ccxt
                     return ccxtOrder.Filled > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Submitted;
 
                 case "closed":
-                    return OrderStatus.Filled;
+                    return ccxtOrder.Remaining == 0 ? OrderStatus.Filled : OrderStatus.Canceled;
 
                 case "canceled":
                 case "expired":
@@ -732,11 +783,33 @@ namespace QuantConnect.Brokerages.Ccxt
             }
         }
 
+        private static OrderStatus ConvertOrderStatus(dynamic ccxtOrder)
+        {
+            var status = ccxtOrder["status"].ToString();
+
+            switch (status)
+            {
+                case "open":
+                    return (decimal)ccxtOrder["filled"] > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Submitted;
+
+                case "closed":
+                    return (decimal)ccxtOrder["remaining"] == 0 ? OrderStatus.Filled : OrderStatus.Canceled;
+
+                case "canceled":
+                case "expired":
+                    return OrderStatus.Canceled;
+
+                default:
+                    throw new NotSupportedException($"Unsupported order status: {status}");
+            }
+        }
+
         private static TimeInForce ConvertTimeInForce(string ccxtTimeInForce)
         {
             switch (ccxtTimeInForce)
             {
                 case "GTC":
+                case "None":
                 case null:
                     return TimeInForce.GoodTilCanceled;
 

@@ -61,7 +61,15 @@ class CcxtPythonBridge:
         return self.run_sync(self.exchange.fetch_balance())
 
     def GetOpenOrders(self):
-        return self.run_sync(self.exchange.fetchOpenOrders())
+        orders = self.run_sync(self.exchange.fetchOpenOrders())
+        if (self.exchange_name == "ftx"):
+            self.exchange.options['fetchOpenOrders']['method'] = 'privateGetConditionalOrders'
+            conditional_orders = self.run_sync(self.exchange.fetchOpenOrders())
+            for order in conditional_orders:
+                orders.append(order)
+            self.exchange.options['fetchOpenOrders']['method'] = 'privateGetOrders'
+
+        return orders
 
     def PlaceMarketOrder(self, symbol, side, amount):
         # gateio - not supported by exchange

@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Brokerages
             throw new NotImplementedException();
         }
 
-        public OrderTicket GetOrderTicket(int orderId)
+        public virtual OrderTicket GetOrderTicket(int orderId)
         {
             throw new NotImplementedException("This method has not been implemented");
         }
