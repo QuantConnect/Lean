@@ -221,7 +221,7 @@ namespace QuantConnect.Lean.Engine.Storage
             // Verify we are within FileCount limit
             if (fileCount > Controls.StorageFileCount)
             {
-                var message = $"LocalObjectStore.InternalSaveBytes(): at file capacity: {fileCount}. Unable to save: '{key}'";
+                var message = $"LocalObjectStore.InternalSaveBytes(): You have reached the ObjectStore limit for files it can save: {fileCount}. Unable to save the new file: '{key}'";
                 Log.Error(message);
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
