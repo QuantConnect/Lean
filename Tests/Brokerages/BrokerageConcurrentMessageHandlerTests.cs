@@ -13,11 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
-using QuantConnect.Brokerages;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Brokerages;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -32,7 +33,7 @@ namespace QuantConnect.Tests.Brokerages
             void Action(string number) => numbers.Add(number);
             var handler = new BrokerageConcurrentMessageHandler<string>(Action);
 
-            Task.Factory.StartNew(() =>
+            var task = Task.Factory.StartNew(() =>
             {
                 var counter = 0;
                 for (var i = 0; i < expectedCount; i++)
@@ -58,6 +59,11 @@ namespace QuantConnect.Tests.Brokerages
                 {
                     Thread.Sleep(1);
                 }
+            }
+
+            if(!task.Wait(TimeSpan.FromSeconds(2)))
+            {
+                Assert.Fail("BrokerageConcurrentMessageHandlerTests.MessagesHandledCorrectly(): timeout waiting for task to finish");
             }
 
             // all processed
