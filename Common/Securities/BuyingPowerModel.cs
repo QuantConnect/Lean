@@ -488,7 +488,7 @@ namespace QuantConnect.Securities
         /// <returns>The size of the order to get safely to our target</returns>
         public static decimal GetAmountToOrder(decimal currentMargin, decimal targetMargin, decimal perUnitMargin, decimal lotSize)
         {
-            // Determine the amount to order to put us under our target
+            // Determine the amount to order to put us at our target
             var orderSize = (currentMargin - targetMargin) / perUnitMargin;
 
             // Determine our rounding mode
