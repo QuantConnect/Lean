@@ -193,7 +193,21 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         {
             if (e == TDAmeritradeApi.Client.Models.Streamer.MarketDataType.LevelOneQuotes)
             {
-                var dataDictionary = tdClient.LiveMarketDataStreamer.MarketData[e];
+                var dataDictionary = tdClient.LiveMarketDataStreamer.MarketData[e].ToList()
+                    .OrderBy(kvp =>
+                    {
+                        //
+                        if (kvp.Value is EquityLevelOneQuote)
+                            return 0;
+                        else if (kvp.Value is OptionLevelOneQuote)
+                            return 1;
+                        else if (kvp.Value is FutureMarketQuote)
+                            return 2;
+                        else if (kvp.Value is FutureOptionsMarketQuote)
+                            return 3;
+                        else
+                            return 4;
+                    }).ToList();
 
                 foreach (var item in dataDictionary)
                 {
@@ -229,15 +243,35 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                         _aggregator.Update(tick);
                     }
                 }
+
+                if( quote is OptionLevelOneQuote optionQuote)
+                {
+                    var openInterest = GetOpenInterest(optionQuote);
+
+                    if (openInterest != null)
+                    {
+                        _aggregator.Update(openInterest);
+                    }
+                }
             }
         }
 
-        private static TradeBar CreateTradeBar(MinuteChartData data)
+        private OpenInterest GetOpenInterest(OptionLevelOneQuote optionQuote)
         {
-            SecurityType securityType = data.Type == InstrumentType.EQUITY ? SecurityType.Equity : SecurityType.Future;
+            Symbol symbol;
+            if (!_subscribedTickers.TryGetValue(optionQuote.Symbol, out symbol))
+            {
+                // Not subscribed to this symbol.
+                return null;
+            }
 
-            var leanSymbol = TDAmeritradeToLeanMapper.GetLeanSymbol(data.Symbol, securityType);
-            return new TradeBar(data.ChartTime, leanSymbol, (decimal)data.OpenPrice, (decimal)data.HighPrice, (decimal)data.LowPrice, (decimal)data.ClosePrice, (decimal)data.Volume, Time.OneMinute);
+            // Tradier trades are US NY time only. Convert local server time to NY Time:
+            var utc = optionQuote.QuoteTime;
+
+            // Convert the timestamp to exchange timezone and pass into algorithm
+            var time = utc.DateTime.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
+
+            return new OpenInterest(time, symbol, optionQuote.OpenInterest);
         }
 
         /// <summary>
