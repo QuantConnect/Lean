@@ -426,15 +426,8 @@ namespace QuantConnect.Securities
                 // If our order target holdings is larger than our target margin allocated we need to reduce the order size
                 if (Math.Abs(targetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue))
                 {
-                    // Determine the amount to adjust the order by to put us under our target
-                    var minimumAdjustmentNeeded = (orderMargin - absFinalOrderMargin) / absUnitMargin;
-
-                    // Always round our adjustment to the nearest whole lot size, important that we always round away from zero
-                    var amountToAdjust = minimumAdjustmentNeeded.DiscretelyRoundBy(parameters.Security.SymbolProperties.LotSize,
-                        minimumAdjustmentNeeded < 0 ? MidpointRounding.ToNegativeInfinity : MidpointRounding.ToPositiveInfinity);
-
-                    // Apply adjustment to our quantity
-                    orderQuantity -= amountToAdjust;
+                    orderQuantity -= GetAmountToAdjustOrderQuantity(orderMargin, absFinalOrderMargin, absUnitMargin,
+                        parameters.Security.SymbolProperties.LotSize);
                 }
 
                 if (orderQuantity <= 0)
@@ -479,6 +472,27 @@ namespace QuantConnect.Securities
 
             // add directionality back in
             return new GetMaximumOrderQuantityResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);
+        }
+
+        /// <summary>
+        /// Helper function that determines the amount to adjust our order
+        /// </summary>
+        /// <param name="orderMargin">Current order margin</param>
+        /// <param name="finalOrderMargin">Target order margin</param>
+        /// <param name="perUnitMargin">Margin required for each unit</param>
+        /// <param name="lotSize">Lot size of the security we are ordering</param>
+        /// <returns>The amount to adjust the order to meet our target</returns>
+        public static decimal GetAmountToAdjustOrderQuantity(decimal orderMargin, decimal finalOrderMargin, decimal perUnitMargin, decimal lotSize)
+        {
+            // Determine the amount to adjust the order by to put us under our target
+            var minimumAdjustmentNeeded = (orderMargin - finalOrderMargin) / perUnitMargin;
+
+            // Always round our adjustment to the nearest whole lot size, important that we always round away from zero
+            var amountToAdjust = minimumAdjustmentNeeded.DiscretelyRoundBy(lotSize,
+                minimumAdjustmentNeeded < 0 ? MidpointRounding.ToNegativeInfinity : MidpointRounding.ToPositiveInfinity);
+
+            // Apply adjustment to our quantity
+            return amountToAdjust;
         }
 
         /// <summary>
