@@ -238,9 +238,9 @@ nymex,YO,future,No. 11 Sugar Futures,USD,112000.0,0.0001,1.0
 sgx,NK,future,SGX Nikkei 225 Index Futures,JPY,500,5,5.0
 sgx,TW,future,MSCI Taiwan Index Futures,USD,100,0.1,50.0
 sgx,IN,future,Nifty Indices Futures,USD,2,0.5,50.0
-nfo,NIFTY,future,Nifty50 Index,INR,0.05,75,1
-nfo,BANKNIFTY,future,BankNifty Index,INR,0.05,25,1.0
-bse,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1.0
+india,NIFTY,future,Nifty50 Index,INR,0.05,75,1
+india,BANKNIFTY,future,BankNifty Index,INR,0.05,25,1.0
+india,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1.0
 hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0
 
 # Futures options -- will default to Futures contract specs in case no entry exists
