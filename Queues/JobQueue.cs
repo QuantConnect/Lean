@@ -39,6 +39,7 @@ namespace QuantConnect.Queues
         private const string DefaultDataChannelProvider = "DataChannelProvider";
         private bool _liveMode = Config.GetBool("live-mode");
         private static readonly string AccessToken = Config.Get("api-access-token");
+        private static readonly string OrganizationId = Config.Get("job-organization-id");
         private static readonly int UserId = Config.GetInt("job-user-id", 0);
         private static readonly int ProjectId = Config.GetInt("job-project-id", 0);
         private readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
@@ -109,6 +110,7 @@ namespace QuantConnect.Queues
                     UserToken = AccessToken,
                     UserId = UserId,
                     ProjectId = ProjectId,
+                    OrganizationId = OrganizationId,
                     Version = Globals.Version,
                     DeployId = algorithmId,
                     Parameters = parameters,
@@ -140,6 +142,7 @@ namespace QuantConnect.Queues
                 UserToken = AccessToken,
                 UserId = UserId,
                 ProjectId = ProjectId,
+                OrganizationId = OrganizationId,
                 Version = Globals.Version,
                 BacktestId = algorithmId,
                 Language = Language,
