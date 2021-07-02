@@ -374,7 +374,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // CBOE Volatility Index Futures (VIX): https://cfe.cboe.com/cfe-products/vx-cboe-volatility-index-vix-futures/contract-specifications
-            {Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CBOE), (time =>
+            {Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CFE), (time =>
                 {
                     // Trading can occur up to 9:00 a.m. Eastern Time (ET) on the "Wednesday that is 30 days prior to
                     // the third Friday of the calendar month immediately following the month in which the contract expires".

@@ -588,7 +588,7 @@
       "earlyCloses": {},
       "lateOpens": {}
     },
-    "Future-cboe-[*]": {
+    "Future-cfe-[*]": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -23729,7 +23729,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-cboe-VX": {
+    "Future-cfe-VX": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [

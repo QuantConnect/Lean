@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase(Market.FXCM, SecurityType.Cfd)]
         [TestCase(Market.Oanda, SecurityType.Cfd)]
-        [TestCase(Market.CBOE, SecurityType.Future)]
+        [TestCase(Market.CFE, SecurityType.Future)]
         [TestCase(Market.CBOT, SecurityType.Future)]
         [TestCase(Market.CME, SecurityType.Future)]
         [TestCase(Market.COMEX, SecurityType.Future)]

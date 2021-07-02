@@ -88,7 +88,7 @@ usa,[*],index,,USD,1,0.01,1
 usa,[*],indexoption,,USD,100,0.05,1
 
 # for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
-cboe,VX,future,VIX futures ,USD,1000.0,0.05,1.0
+cfe,VX,future,VIX futures ,USD,1000.0,0.05,1.0
 cbot,AW,future,Bloomberg Commodity Index Futures,USD,100.0,0.1,1.0
 cbot,BCF,future,Black Sea Corn Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
 cbot,BWF,future,Black Sea Wheat Financially Settled (Platts) Futures,USD,50.0,0.25,1.0

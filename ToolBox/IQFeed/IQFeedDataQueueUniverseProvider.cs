@@ -76,7 +76,7 @@ namespace QuantConnect.ToolBox.IQFeed
             { "NYMEX", Market.NYMEX },
             { "CBOT", Market.CBOT },
             { "ICEFU", Market.ICE },
-            { "CFE", Market.CBOE  }
+            { "CFE", Market.CFE }
         };
 
         // futures fundamental data resolver
