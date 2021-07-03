@@ -54,10 +54,6 @@ namespace QuantConnect.Brokerages
                     {
                         ProcessMessages(message);
                     }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                    }
                     finally
                     {
                         Monitor.Exit(_streamLocked);
@@ -87,19 +83,14 @@ namespace QuantConnect.Brokerages
             }
             finally
             {
-                try
+                // once we finish our 'code' we will process any message that come through,
+                // to make sure no message get's left behind (race condition between us finishing 'ProcessMessages'
+                // and some message being enqueued to it, we just take a lock on the buffer
+                lock (_messageBuffer)
                 {
-                    // once we finish our 'code' we will process any message that come through,
-                    // to make sure no message get's left behind (race condition between us finishing 'ProcessMessages'
-                    // and some message being enqueued to it, we just take a lock on the buffer
-                    lock (_messageBuffer)
-                    {
-                        ProcessMessages();
-                    }
-                }
-                finally
-                {
+                    // we release the '_streamLocked' first so by the time we release '_messageBuffer' any new message is processed immediately and not enqueued
                     Monitor.Exit(_streamLocked);
+                    ProcessMessages();
                 }
             }
         }
@@ -110,15 +101,22 @@ namespace QuantConnect.Brokerages
         /// <remarks>To be called owing the stream lock</remarks>
         private void ProcessMessages(T message = null)
         {
-            // double check there isn't any pending message
-            while (_messageBuffer.TryDequeue(out var e))
+            try
             {
-                _processMessages(e);
-            }
+                // double check there isn't any pending message
+                while (_messageBuffer.TryDequeue(out var e))
+                {
+                    _processMessages(e);
+                }
 
-            if (message != null)
+                if (message != null)
+                {
+                    _processMessages(message);
+                }
+            }
+            catch (Exception e)
             {
-                _processMessages(message);
+                Log.Error(e);
             }
         }
     }
