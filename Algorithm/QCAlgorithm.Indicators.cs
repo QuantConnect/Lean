@@ -314,7 +314,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The AugenPriceSpike indicator for the given parameters</returns>
-        public AugenPriceSpike APS(Symbol symbol, int period = 2, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public AugenPriceSpike APS(Symbol symbol, int period = 3, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"APS({period})", resolution);
             var augenPriceSpike = new AugenPriceSpike(name, period);

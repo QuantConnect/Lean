@@ -15,7 +15,7 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Data.Market;
+using System.Collections.Generic;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            return new AugenPriceSpike(20);
+            return new AugenPriceSpike(22);
         }
 
         protected override string TestFileName => "spy_aps.txt";
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void TestWithStream()
         {
-            var aps = new AugenPriceSpike(20);
+            var aps = new AugenPriceSpike(22);
             foreach (var data in TestHelper.GetDataStream(50))
             {
                 aps.Update(data.Time, data.Value);
@@ -50,35 +50,47 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void PeriodSet()
         {
-            var aps = new AugenPriceSpike(period: 3);
-            var reference = System.DateTime.Today;
+            var aps = new AugenPriceSpike(period: 22);
+            var reference = DateTime.Today;
 
-            aps.Update(reference.AddMinutes(1), 5);
-            Assert.AreEqual(0, aps.Current.Value);
-            Assert.IsFalse(aps.IsReady);
+            double correctValue = 0.31192350881956543;
+            decimal finalTestValue = 22;
 
-            aps.Update(reference.AddMinutes(2), 10);
-            Assert.AreEqual(0, (double)aps.Current.Value, 0.00001);
-            Assert.IsFalse(aps.IsReady);
+            int count = 0;
+            List<double> testValues = new List<double>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 };
 
-            aps.Update(reference.AddMinutes(3), 8);
-            Assert.AreEqual(-0.09733285267845752, (double)aps.Current.Value, 0.00001);
+            foreach (decimal i in testValues)
+            {
+                count += 1;
+                aps.Update(reference.AddMinutes(count), i);
+                Assert.IsFalse(aps.IsReady);
+                Assert.AreEqual(0, aps.Current.Value);
+            }
+            aps.Update(reference.AddMinutes(count + 1), finalTestValue);
             Assert.IsTrue(aps.IsReady);
-
-            aps.Update(reference.AddMinutes(4), 12);
-            Assert.AreEqual(0.30618621784789724, (double)aps.Current.Value, 0.00001);
-            Assert.IsTrue(aps.IsReady);
+            Assert.AreEqual(correctValue, (double)aps.Current.Value, 0.00001);
         }
 
         [Test]
         public override void ResetsProperly()
         {
-            var aps = new AugenPriceSpike(3);
-            var reference = System.DateTime.Today;
+            var aps = new AugenPriceSpike(10);
+            var reference = DateTime.Today;
 
             aps.Update(reference.AddMinutes(1), 5);
             aps.Update(reference.AddMinutes(2), 10);
             aps.Update(reference.AddMinutes(3), 8);
+            aps.Update(reference.AddMinutes(4), 12);
+            aps.Update(reference.AddMinutes(5), 103);
+            aps.Update(reference.AddMinutes(6), 82);
+            aps.Update(reference.AddMinutes(7), 55);
+            aps.Update(reference.AddMinutes(8), 10);
+            aps.Update(reference.AddMinutes(9), 878);
+            aps.Update(reference.AddMinutes(10), 84);
+            aps.Update(reference.AddMinutes(11), 832);
+            aps.Update(reference.AddMinutes(12), 81);
+            aps.Update(reference.AddMinutes(13), 867);
+            aps.Update(reference.AddMinutes(14), 89);
             Assert.IsTrue(aps.IsReady);
             Assert.AreNotEqual(0m, aps.Current.Value);
 

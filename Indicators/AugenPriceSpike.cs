@@ -12,42 +12,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using QuantConnect.Data.Market;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
     /// The Augen Price Spike indicator is an indicator that measures price 
-    /// changes in terms of standard deviations. In the book, The 
-    /// Volatility Edge in Options Trading, Jeff Augen describes a 
-    /// method for tracking absolute price changes in terms of recent 
+    /// changes in terms of standard deviations. In the book, The
+    /// Volatility Edge in Options Trading, Jeff Augen describes a
+    /// method for tracking absolute price changes in terms of recent
     /// volatility, using the standard deviation.
     /// 
     /// length = x
-    /// sd = StandardDeviation(x)
-    /// m = sd.Current.Value * previousClose
-    /// spike = (currentPrice - previousClose) / m
+    /// closes = closeArray
+    /// closes1 = closeArray shifted right by 1
+    /// closes2 = closeArray shifted right by 2
+    /// closeLog = np.log(np.divide(closes1, closes2))
+    /// SDev = np.std(closeLog)
+    /// m = SDev * closes1[-1]
+    /// spike = (closes[-1]-closes1[-1])/m
+    /// return spike
+    /// 
+    /// Augen Price Spike from TradingView
+    /// https://www.tradingview.com/script/fC7Pn2X2-Price-Spike-Jeff-Augen/  
+    /// 
     /// </summary>
     public class AugenPriceSpike : Indicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly StandardDeviation _sd;
-        private decimal _previousValue;
+        private readonly StandardDeviation _standardDeviation;
+        private readonly RollingWindow<double> _rollingData;
+        private readonly RollingWindow<DateTime> _rollingTime;
+        private readonly int _userPeriod;
 
         /// <summary>
-        /// Gets a flag indicating when the indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => _sd.IsReady;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod => _sd.WarmUpPeriod;
-
-        /// <summary>
-        /// Initializeds a new instance of the AugenPriceSpike class using the specified period
+        /// Initializes a new instance of the AugenPriceSpike class using the specified period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
-        public AugenPriceSpike(int period = 2)
+        public AugenPriceSpike(int period = 3)
             : this($"APS({period})", period)
         {
         }
@@ -59,8 +61,25 @@ namespace QuantConnect.Indicators
         public AugenPriceSpike(string name, int period)
             : base(name)
         {
-            _sd = new StandardDeviation(period);
+            if (period < 3)
+            {
+                throw new ArgumentException("AugenPriceSpike Indicator must have a period of at least 3", nameof(period));
+            }
+            _standardDeviation = new StandardDeviation(period - 2);
+            _rollingData = new RollingWindow<double>(period);
+            _rollingTime = new RollingWindow<DateTime>(period - 2);
+            _userPeriod = period;
         }
+
+        /// <summary>
+        /// Gets a flag indicating when the indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => _rollingData.IsReady && _standardDeviation.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _userPeriod;
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -69,25 +88,29 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            if (_previousValue == 0) _previousValue = input.Value;
+            _rollingData.Add((double)input.Value);
+            _rollingTime.Add(input.Time);
+            var arrayData = _rollingData.ToArray();
+            if (arrayData.Length < 3) { return 0m; }
 
-            _sd.Update(input.Time, input.Value);
-            if (!_sd.IsReady)
+            var shiftData1 = arrayData.Skip(1).Take(arrayData.Length - 2).ToArray();
+            var shiftData2 = arrayData.Skip(2).Take(arrayData.Length).ToArray();
+
+            var logPoint = 0.0;
+            if (shiftData2[0] != 0)
             {
-                _previousValue = input.Value;
-                return 0;
+                logPoint = Math.Log(shiftData1[0] / shiftData2[0]);
             }
 
-            var m = _sd.Current.Value * _previousValue;
-            var val = input.Value;
-            if (m == 0)
-            {
-                _previousValue = input.Value;
-                return 0;
-            }
+            _standardDeviation.Update(input.Time, (decimal)logPoint);
 
-            var spikeValue = (input.Value - _previousValue) / m;
-            _previousValue = input.Value;
+            if (!_rollingData.IsReady) { return 0m; }
+            if (!_standardDeviation.IsReady) { return 0m; }
+
+            var m = _standardDeviation.Current.Value * (decimal)shiftData1[0];
+            if (m == 0) { return 0; }
+
+            var spikeValue = (input.Value - (decimal)shiftData1[0]) / m;
             return spikeValue;
         }
 
@@ -96,8 +119,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _sd.Reset();
-            _previousValue = 0.0m;
+            _standardDeviation.Reset();
+            _rollingData.Reset();
+            _rollingTime.Reset();
             base.Reset();
         }
     }
