@@ -528,8 +528,6 @@ namespace QuantConnect.Orders.Fills
                     // If the order was placed during the bar aggregation, we cannot use its open price
                     if (tradeBar.Time < localOrderTime) return fill;
 
-                    // If the first data after the market opens is a quote bar (high resolution only),
-                    // the open of the last trade bar is not the open for the current day, but the last open in cache.
                     // We need to verify whether the trade data is from the open market.
                     if (tradeBar.Period < Resolution.Hour.ToTimeSpan() && !asset.Exchange.DateTimeIsOpen(tradeBar.Time))
                     {
