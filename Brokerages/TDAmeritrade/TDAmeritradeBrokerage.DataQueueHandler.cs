@@ -62,11 +62,11 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             // initialize data queue handler on-demand
-            if (!_isDataQueueHandlerInitialized)
+            if (!_isDataQueueHandlerInitialized || !tdClient.LiveMarketDataStreamer.IsConnected)
             {
                 _isDataQueueHandlerInitialized = true;
 
-                tdClient.LiveMarketDataStreamer.LoginAsync(_accountId);
+                tdClient.LiveMarketDataStreamer.LoginAsync(_accountId).Wait();
             }
 
             if (!CanSubscribe(dataConfig.Symbol))
@@ -82,7 +82,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
         private static bool CanSubscribe(Symbol symbol)
         {
-            return TDAmeritradeBrokerageModel.DefaultMarketMap.ContainsKey(symbol.ID.SecurityType) && !symbol.Value.Contains("-UNIVERSE-");
+            return TDAmeritradeBrokerageModel.DefaultMarketMap.ContainsKey(symbol.ID.SecurityType) && !symbol.Value.Contains("universe", StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>
@@ -139,16 +139,14 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             {
                 var subscriptions = _subscribedTickers.ToList();
 
+                tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.QUOTE).Wait();
+                tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.OPTION).Wait();
+                //tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES).Wait();
+                //tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES_OPTIONS).Wait();
+                //tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FOREX).Wait();
+
                 if (subscriptions.Count > 0)
                     SubscribeTo(subscriptions);
-                else
-                {
-                    tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.QUOTE);
-                    tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.OPTION);
-                    tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES);
-                    tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES_OPTIONS);
-                    tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FOREX);
-                }
             }
 
             return true;

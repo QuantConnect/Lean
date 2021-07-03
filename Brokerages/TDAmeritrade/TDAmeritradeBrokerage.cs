@@ -300,7 +300,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         /// </summary>
         public override void Connect()
         {
-            tdClient.LiveMarketDataStreamer.LoginAsync().Wait();
+            tdClient.LiveMarketDataStreamer.LoginAsync(_accountId).Wait();
         }
 
         /// <summary>
