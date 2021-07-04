@@ -75,8 +75,11 @@ namespace QuantConnect.Tests.Common
 
             timeProvider.Advance(TimeSpan.FromSeconds(15));
 
-            while (provider.Invocations.Count == 0)
+            int i = 0;
+            while (provider.Invocations.Count == 0 && i++ < 3)
+            {
                 Thread.Sleep(15);
+            }
 
             minuteElapsed.Set();
             if (!consumeCompleted.Wait(50))
