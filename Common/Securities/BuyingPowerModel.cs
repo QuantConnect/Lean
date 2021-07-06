@@ -458,9 +458,10 @@ namespace QuantConnect.Securities
                 {
                     var sign = direction == OrderDirection.Buy ? 1 : -1;
                     var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
-                        Invariant($"{absFinalOrderMargin * sign}. Current order margin is {absOrderMargin * sign}. Order quantity {absOrderQuantity * sign}. ") +
-                        Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
-                        $"{parameters.Security.Symbol}. Margin unit {absUnitMargin}.";
+                        $"{absFinalOrderMargin * sign}. Current order margin is {absOrderMargin * sign}. Order quantity {absOrderQuantity * sign}. " +
+                        $"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol " +
+                        $"{parameters.Security.Symbol}. Margin per unit {absUnitMargin}. Target Percentage {parameters.TargetBuyingPower * 100}. " +
+                        $"Current Margin {currentSignedUsedMargin}; Target Margin {signedTargetFinalMarginValue}; TPV {totalPortfolioValue}";
                     throw new ArgumentException(message);
                 }
                 lastOrderQuantity = absOrderQuantity;
