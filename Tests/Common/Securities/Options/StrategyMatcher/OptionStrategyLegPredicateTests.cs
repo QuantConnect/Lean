@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -60,10 +60,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             );
 
             var position = new OptionPosition(Put[95m], 1);
-            var positiveSet = new List<OptionPosition> {new OptionPosition(Put[100m], 1)};
+            var positiveSet = new List<OptionPosition> { new OptionPosition(Put[100m], 1) };
             Assert.IsTrue(predicate.Matches(positiveSet, position));
 
-            var negativeSet = new List<OptionPosition> {new OptionPosition(Put[90m], 1)};
+            var negativeSet = new List<OptionPosition> { new OptionPosition(Put[90m], 1) };
             Assert.IsFalse(predicate.Matches(negativeSet, position));
         }
 
@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.IsTrue(filtered.All(p => p.Right == OptionRight.Call));
         }
 
-        public static TestCaseData[] TestCases
+        public static IEnumerable<TestCase> TestCases
         {
             get
             {
@@ -172,8 +172,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                             .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
                             .ExpectMatch(),
                     }
-                    .Select(x => new TestCaseData(x.WithDefaults()).SetName(x.Name))
-                    .ToArray();
+                    .Select(x => x.WithDefaults());
             }
         }
 
