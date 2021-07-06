@@ -460,7 +460,8 @@ namespace QuantConnect.Securities
                     var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
                         Invariant($"{absFinalOrderMargin * sign}. Current order margin is {absOrderMargin * sign}. Order quantity {absOrderQuantity * sign}. ") +
                         Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
-                        $"{parameters.Security.Symbol}. Margin unit {absUnitMargin}.";
+                        Invariant($"{parameters.Security.Symbol}. Margin per unit {absUnitMargin}. Target Percentage {parameters.TargetBuyingPower * 100}. ") +
+                        Invariant($"Current Margin {currentSignedUsedMargin}; Target Margin {signedTargetFinalMarginValue}; TPV {totalPortfolioValue}");
                     throw new ArgumentException(message);
                 }
                 lastOrderQuantity = absOrderQuantity;
