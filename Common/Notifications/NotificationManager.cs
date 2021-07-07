@@ -108,9 +108,9 @@ namespace QuantConnect.Notifications
         /// Python overload for Headers parameter.
         /// </summary>
         /// <param name="address">Endpoint address</param>
-        /// <param name="data">Data to send in body JSON encoded (optional)</param>
+        /// <param name="data">Data to send in body JSON encoded</param>
         /// <param name="headers">Optional headers to use</param>
-        public bool Web(string address, string data, PyObject headers)
+        public bool Web(string address, object data, PyObject headers)
         {
             return Web(address, data, headers.ConvertToDictionary<string, string>());
         }
