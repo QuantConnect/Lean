@@ -123,9 +123,8 @@ namespace QuantConnect.Notifications
         }
 
         /// <summary>
-        /// Send a telegram message to the chat ID specified
-        /// Note: Requires bot to be added to have chat with user or
-        /// be in the group specified by ID.
+        /// Send a telegram message to the chat ID specified, supply token for custom bot.
+        /// Note: Requires bot to have chat with user or be in the group specified by ID.
         /// </summary>
         /// <param name="user">Chat or group ID to send message to</param>
         /// <param name="message">Message to send</param>
