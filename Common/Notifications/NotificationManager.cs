@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -101,6 +101,18 @@ namespace QuantConnect.Notifications
             Messages.Enqueue(sms);
 
             return true;
+        }
+
+        /// <summary>
+        /// Place REST POST call to the specified address with the specified DATA.
+        /// Python overload for Headers parameter.
+        /// </summary>
+        /// <param name="address">Endpoint address</param>
+        /// <param name="data">Data to send in body JSON encoded (optional)</param>
+        /// <param name="headers">Optional headers to use</param>
+        public bool Web(string address, string data, PyObject headers)
+        {
+            return Web(address, data, headers.ConvertToDictionary<string, string>());
         }
 
         /// <summary>
