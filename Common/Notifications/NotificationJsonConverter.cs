@@ -74,11 +74,11 @@ namespace QuantConnect.Notifications
 
                 return new NotificationWeb(token.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
             }
-            else if (jObject.TryGetValue("User", StringComparison.InvariantCultureIgnoreCase, out token))
+            else if (jObject.TryGetValue("Id", StringComparison.InvariantCultureIgnoreCase, out token))
             {
                 var message = jObject.GetValue("Message", StringComparison.InvariantCultureIgnoreCase);
-
-                return new NotificationTelegram(token.ToString(), message?.ToString());
+                var botToken = jObject.GetValue("Token", StringComparison.InvariantCultureIgnoreCase);
+                return new NotificationTelegram(token.ToString(), message?.ToString(), botToken?.ToString());
             }
 
             throw new NotImplementedException($"Unexpected json object: '{jObject.ToString(Formatting.None)}'");

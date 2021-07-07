@@ -77,11 +77,13 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.Headers, result.Headers);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void TelegramRoundTrip(bool nullFields)
+        [TestCase(true, true)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(false, false)]
+        public void TelegramRoundTrip(bool nullMessage, bool nullToken)
         {
-            var expected = new NotificationTelegram("pepe", nullFields ? null : "ImAMessage");
+            var expected = new NotificationTelegram("pepe", nullMessage ? null : "ImAMessage", nullToken ? null : "botToken");
 
             var serialized = JsonConvert.SerializeObject(expected);
 
@@ -89,6 +91,7 @@ namespace QuantConnect.Tests.Common.Notifications
 
             Assert.AreEqual(expected.Id, result.Id);
             Assert.AreEqual(expected.Message, result.Message);
+            Assert.AreEqual(expected.Token, result.Token);
         }
 
         [Test]

@@ -123,18 +123,21 @@ namespace QuantConnect.Notifications
         }
 
         /// <summary>
-        /// Send a telegram message to the user specified
+        /// Send a telegram message to the chat ID specified
+        /// Note: Requires bot to be added to have chat with user or
+        /// be in the group specified by ID.
         /// </summary>
-        /// <param name="user">telegram user to send to</param>
+        /// <param name="user">Chat or group ID to send message to</param>
         /// <param name="message">Message to send</param>
-        public bool Telegram(string user, string message)
+        /// <param name="token">Bot token to use for this message</param>
+        public bool Telegram(string id, string message, string token = null)
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var telegram = new NotificationTelegram(user, message);
+            var telegram = new NotificationTelegram(id, message, token);
             Messages.Enqueue(telegram);
 
             return true;
