@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 using System;
-using System.Linq;
 
 namespace QuantConnect.Indicators
 {
@@ -41,9 +40,7 @@ namespace QuantConnect.Indicators
     public class AugenPriceSpike : Indicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly StandardDeviation _standardDeviation;
-        private readonly RollingWindow<double> _rollingData;
-        private readonly RollingWindow<DateTime> _rollingTime;
-        private readonly int _userPeriod;
+        private readonly RollingWindow<decimal> _rollingData;
 
         /// <summary>
         /// Initializes a new instance of the AugenPriceSpike class using the specified period
@@ -66,9 +63,8 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException("AugenPriceSpike Indicator must have a period of at least 3", nameof(period));
             }
             _standardDeviation = new StandardDeviation(period - 2);
-            _rollingData = new RollingWindow<double>(period);
-            _rollingTime = new RollingWindow<DateTime>(period - 2);
-            _userPeriod = period;
+            _rollingData = new RollingWindow<decimal>(3);
+            WarmUpPeriod = period;
         }
 
         /// <summary>
@@ -79,7 +75,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => _userPeriod;
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -88,18 +84,16 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            _rollingData.Add((double)input.Value);
-            _rollingTime.Add(input.Time);
-            var arrayData = _rollingData.ToArray();
-            if (arrayData.Length < 3) { return 0m; }
+            _rollingData.Add(input.Value);
+            if (_rollingData.Count < 3) { return 0m; }
 
-            var shiftData1 = arrayData.Skip(1).Take(arrayData.Length - 2).ToArray();
-            var shiftData2 = arrayData.Skip(2).Take(arrayData.Length).ToArray();
+            var previousPoint = _rollingData[1];
+            var previousPoint2 = _rollingData[2];
 
             var logPoint = 0.0;
-            if (shiftData2[0] != 0)
+            if (previousPoint2 != 0)
             {
-                logPoint = Math.Log(shiftData1[0] / shiftData2[0]);
+                logPoint = Math.Log((double)(previousPoint / previousPoint2));
             }
 
             _standardDeviation.Update(input.Time, (decimal)logPoint);
@@ -107,10 +101,10 @@ namespace QuantConnect.Indicators
             if (!_rollingData.IsReady) { return 0m; }
             if (!_standardDeviation.IsReady) { return 0m; }
 
-            var m = _standardDeviation.Current.Value * (decimal)shiftData1[0];
+            var m = _standardDeviation.Current.Value * previousPoint;
             if (m == 0) { return 0; }
 
-            var spikeValue = (input.Value - (decimal)shiftData1[0]) / m;
+            var spikeValue = (input.Value - previousPoint) / m;
             return spikeValue;
         }
 
@@ -121,7 +115,6 @@ namespace QuantConnect.Indicators
         {
             _standardDeviation.Reset();
             _rollingData.Reset();
-            _rollingTime.Reset();
             base.Reset();
         }
     }
