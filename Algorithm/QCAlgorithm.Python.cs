@@ -258,8 +258,6 @@ namespace QuantConnect.Algorithm
                 MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, alias, SecurityType.Base, timeZone);
             }
 
-            resolution = resolution.Value == Resolution.Tick ? Resolution.Second : resolution;
-
             //Add this new generic data as a tradeable security:
             var config = SubscriptionManager.SubscriptionDataConfigService.Add(
                 dataType,
