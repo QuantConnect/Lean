@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -212,6 +212,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return DataFeedSubscriptions.TryAdd(subscription);
+        }
+
+        /// <summary>
+        /// Removes the <see cref="Symbol"/>, if it exists
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/> of the subscription to remove</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        public bool Remove(Symbol symbol)
+        {
+            var subscriptions = GetSubscriptionDataConfigs(symbol);
+
+            foreach (var subscription in subscriptions)
+            {
+                if (!RemoveSubscription(subscription))
+                    return false;
+            }
+
+            return true;
         }
 
         /// <summary>
