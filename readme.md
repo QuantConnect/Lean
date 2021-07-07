@@ -7,7 +7,7 @@
 [Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8]
  
 ----------
-
+ 
 ## Introduction ##
   
 Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
