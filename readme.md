@@ -5,7 +5,7 @@
 
 
 [Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8]
-
+ 
 ----------
 
 ## Introduction ##
