@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -1486,6 +1486,29 @@ namespace QuantConnect.Algorithm
             }
 
             return relativeVigorIndex;
+        }
+
+        /// <summary>
+        /// Creates an RelativeVolume indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose RV we want</param>
+        /// <param name="period">The period of the RV</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Relative Volume indicator for the given parameters</returns>
+        public RelativeVolume RVOL(Symbol symbol, int period = 1, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RVOL({period})", resolution);
+            var relativeVolume = new RelativeVolume(name, period);
+            RegisterIndicator(symbol, relativeVolume, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, relativeVolume, resolution);
+            }
+
+            return relativeVolume;
         }
 
         /// <summary>
