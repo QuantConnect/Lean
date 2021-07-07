@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Common.Notifications
 
             var result = (NotificationTelegram)JsonConvert.DeserializeObject<Notification>(serialized);
 
-            Assert.AreEqual(expected.User, result.User);
+            Assert.AreEqual(expected.Id, result.Id);
             Assert.AreEqual(expected.Message, result.Message);
         }
 

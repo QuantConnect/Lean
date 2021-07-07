@@ -164,10 +164,9 @@ namespace QuantConnect.Notifications
     {
         /// <summary>
         /// Send a notification message to this user on Telegram
-        /// Can be either a personal ID, Group ID, or username.
-        /// Usernames must include @.
+        /// Can be either a personal ID or Group ID.
         /// </summary>
-        public string User;
+        public string Id;
 
         /// <summary>
         /// Message to send. Limited to 4096 characters
@@ -182,15 +181,17 @@ namespace QuantConnect.Notifications
         public string Token;
 
         /// <summary>
-        /// Constructor for sending a notification SMS to a specified phone number
+        /// Constructor for sending a telegram notification to a specific User ID
+        /// or group ID. Note: The bot must have an open chat with the user or be
+        /// added to the group for messages to deliver.
         /// </summary>
-        /// <param name="user">User to send the message to</param>
+        /// <param name="id">User Id or Group Id to send the message too</param>
         /// <param name="message">Message to send</param>
         /// <param name="token">Bot token to use, if null defaults to "telegram-token"
         /// in config on send</param>
-        public NotificationTelegram(string user, string message, string token = null)
+        public NotificationTelegram(string id, string message, string token = null)
         {
-            User = user;
+            Id = id;
             Message = message;
             Token = token;
         }
