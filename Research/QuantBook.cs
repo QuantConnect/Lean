@@ -129,6 +129,15 @@ namespace QuantConnect.Research
                     new AlgorithmManager(false));
                 systemHandlers.LeanManager.SetAlgorithm(this);
 
+                algorithmHandlers.DataPermissionsManager.Initialize(new AlgorithmNodePacket(PacketType.BacktestNode)
+                {
+                    UserToken = Config.Get("api-access-token"),
+                    UserId = Config.GetInt("job-user-id"),
+                    ProjectId = Config.GetInt("project-id"),
+                    OrganizationId = Config.Get("job-organization-id"),
+                    Version = Globals.Version
+                });
+
                 algorithmHandlers.ObjectStore.Initialize("QuantBook",
                     Config.GetInt("job-user-id"),
                     Config.GetInt("project-id"),

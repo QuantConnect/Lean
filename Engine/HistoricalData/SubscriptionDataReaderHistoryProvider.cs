@@ -108,7 +108,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.DataNormalizationMode
                 );
 
-            _dataPermissionManager.AssertConfiguration(config);
+            _dataPermissionManager.AssertConfiguration(config, startTimeLocal, endTimeLocal);
 
             var security = new Security(
                 request.ExchangeHours,
@@ -195,7 +195,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 return data.EndTime > startTimeLocal;
             });
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
-
             if (_parallelHistoryRequestsEnabled)
             {
                 return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider, false);
