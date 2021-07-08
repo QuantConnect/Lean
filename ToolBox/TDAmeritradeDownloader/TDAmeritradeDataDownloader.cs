@@ -1,6 +1,7 @@
 using QuantConnect.Brokerages.TDAmeritrade;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace QuantConnect.ToolBox.TDAmeritradeDownloader
         {
             var clientID = Config.Get("td-client-id", "");
             var redirectUri = Config.Get("td-redirect-uri", "");
-            var tdCredentials = new TDCliCredentialProvider();
+            var tdCredentials = Composer.Instance.GetExportedValueByTypeName<ICredentials>(Config.Get("td-credentials-provider", "QuantConnect.Brokerages.TDAmeritrade.TDCliCredentialProvider"));
             tdClient = new TDAmeritradeClient(clientID, redirectUri);
             tdClient.LogIn(tdCredentials).Wait();
         }
