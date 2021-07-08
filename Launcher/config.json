@@ -6,10 +6,10 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "live-td", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "OptionsEagleInvestorsIndicators",
 
   // Algorithm language selector - options CSharp, Python
   "algorithm-language": "CSharp",
@@ -85,6 +85,12 @@
   "tradier-use-sandbox": true,
   "tradier-account-id": "",
   "tradier-access-token": "",
+
+  // td ameritrade configuration
+  "td-account-id": "",
+  "td-client-id": "",
+  "td-redirect-uri": "",
+  "td-credentials-provider": "QuantConnect.Brokerages.TDAmeritrade.TDCliCredentialProvider",
 
   // oanda configuration
   "oanda-environment": "Practice",
@@ -219,6 +225,23 @@
       "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+    },
+
+    // defines the 'live-paper' environment
+    "live-td": {
+      "live-mode": true,
+
+      // the paper brokerage requires the BacktestingTransactionHandler
+      "live-mode-brokerage": "TDAmeritradeBrokerage",
+      "data-queue-handler": "TDAmeritradeBrokerage",
+      //"data-downloader": "TDAmeritradeDataDownloader",
+
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": "BrokerageHistoryProvider"
     },
 
     // defines 'live-zerodha' environment
