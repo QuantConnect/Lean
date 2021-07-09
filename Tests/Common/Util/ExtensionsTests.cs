@@ -67,15 +67,16 @@ namespace QuantConnect.Tests.Common.Util
             };
             var orders = new List<Order> { new MarketOrder(btcusd, 1000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 } };
 
-            var packet1 = new AlphaResultPacket("1", 1, insights: insights);
+            var packet1 = new AlphaResultPacket("1", 1, insights: insights, portfolio: new SecurityPortfolioState { TotalPortfolioValue = 11 });
             var packet2 = new AlphaResultPacket("1", 1, orders: orders);
-            var packet3 = new AlphaResultPacket("1", 1, orderEvents: orderEvents);
+            var packet3 = new AlphaResultPacket("1", 1, orderEvents: orderEvents, portfolio: new SecurityPortfolioState { TotalPortfolioValue = 12 });
 
             var result = new List<AlphaResultPacket> { packet1, packet2, packet3 }.Batch();
 
             Assert.AreEqual(2, result.Insights.Count);
             Assert.AreEqual(2, result.OrderEvents.Count);
             Assert.AreEqual(1, result.Orders.Count);
+            Assert.AreEqual(12, result.Portfolio.TotalPortfolioValue);
 
             Assert.IsTrue(result.Insights.SequenceEqual(insights));
             Assert.IsTrue(result.OrderEvents.SequenceEqual(orderEvents));
