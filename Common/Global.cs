@@ -138,6 +138,10 @@ namespace QuantConnect
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal UnrealizedPnL;
 
+        /// Current unrealized P/L of the holding
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal PortfolioPercentage;
+
         /// Create a new default holding:
         public Holding()
         {
