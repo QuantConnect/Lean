@@ -420,15 +420,14 @@ namespace QuantConnect.Securities
             var lastOrderQuantity = 0m;     // For safety check
 
             var signedTargetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
-            decimal absOrderMargin = absOrderQuantity * absUnitMargin;
             decimal orderFees = 0;
             do
             {
                 // If our order target holdings is larger than our target margin allocated we need to recalculate our order size
                 if (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue))
                 {
-                    absOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin, 
-                        parameters.Security.SymbolProperties.LotSize));
+                    absOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin,
+                        parameters.Security.SymbolProperties.LotSize, absOrderQuantity * (direction == OrderDirection.Sell ? -1 : 1)));
                 }
 
                 if (absOrderQuantity <= 0)
@@ -457,19 +456,18 @@ namespace QuantConnect.Securities
                 if (lastOrderQuantity == absOrderQuantity)
                 {
                     var sign = direction == OrderDirection.Buy ? 1 : -1;
-                    var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
-                        Invariant($"{absFinalOrderMargin * sign}. Current order margin is {absOrderMargin * sign}. Order quantity {absOrderQuantity * sign}. ") +
-                        Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
-                        Invariant($"{parameters.Security.Symbol}. Margin per unit {absUnitMargin}. Target Percentage {parameters.TargetBuyingPower * 100}. ") +
-                        Invariant($"Current Margin {currentSignedUsedMargin}; Target Margin {signedTargetFinalMarginValue}; TPV {totalPortfolioValue}");
+                    var message =
+                        Invariant($"GetMaximumOrderQuantityForTargetBuyingPower failed to converge on the target margin: {signedTargetFinalMarginValue}; ") +
+                        Invariant($"the following information can be used to reproduce the issue. Total Portfolio Cash: {parameters.Portfolio.Cash}; ") +
+                        Invariant($"Leverage: {parameters.Security.Leverage}; Order Fee: {orderFees}; Lot Size: {parameters.Security.SymbolProperties.LotSize}; ") +
+                        Invariant($"Per Unit Margin: {absUnitMargin}; Current Holdings: {parameters.Security.Holdings}; Target Percentage: %{parameters.TargetBuyingPower * 100}; ") +
+                        Invariant($"Current Order Target Margin: {absFinalOrderMargin * sign}; Current Order Margin: {absOrderQuantity * absUnitMargin * sign}");
                     throw new ArgumentException(message);
                 }
                 lastOrderQuantity = absOrderQuantity;
                 
-
                 // Update our target holdings margin
                 signedTargetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
-                absOrderMargin = absOrderQuantity * absUnitMargin;
             }
             // Ensure that our target holdings margin will be less than or equal to our target allocated margin
             while (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue));
@@ -487,10 +485,10 @@ namespace QuantConnect.Securities
         /// <param name="perUnitMargin">Margin required for each unit</param>
         /// <param name="lotSize">Lot size of the security we are ordering</param>
         /// <returns>The size of the order to get safely to our target</returns>
-        public static decimal GetAmountToOrder(decimal currentMargin, decimal targetMargin, decimal perUnitMargin, decimal lotSize)
+        public static decimal GetAmountToOrder(decimal currentMargin, decimal targetMargin, decimal perUnitMargin, decimal lotSize, decimal? currentOrderSize = null)
         {
             // Determine the amount to order to put us at our target
-            var orderSize = (currentMargin - targetMargin) / perUnitMargin;
+            var orderSize = (targetMargin - currentMargin) / perUnitMargin;
 
             // Determine if we are under our target
             var underTarget = false;
@@ -522,6 +520,22 @@ namespace QuantConnect.Securities
                 roundingMode = orderSize < 0
                     ? MidpointRounding.ToNegativeInfinity
                     : MidpointRounding.ToPositiveInfinity;
+            }
+
+            // For handling precision errors in OrderSize calculation
+            if (currentOrderSize.HasValue && orderSize % lotSize == 0 && orderSize == currentOrderSize.Value)
+            {
+                // Force an adjustment
+                if (roundingMode == MidpointRounding.ToPositiveInfinity)
+                {
+                    orderSize += lotSize;
+                }
+                else
+                {
+                    orderSize -= lotSize;
+                }
+
+                return orderSize;
             }
 
             // Round this order size appropriately
