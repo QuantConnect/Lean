@@ -427,26 +427,8 @@ namespace QuantConnect.Securities
                 // If our order target holdings is larger than our target margin allocated we need to recalculate our order size
                 if (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue))
                 {
-                    var newOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin,
-                        parameters.Security.SymbolProperties.LotSize));
-
-                    // If no change, then we need to force an adjustment directly
-                    // This can happen with precision issues on orderSize calculation in GetAmountToOrder
-                    if (absOrderQuantity == newOrderQuantity)
-                    {
-                        if (signedTargetFinalMarginValue > 0)
-                        {
-                            // Long positions; reduce by one lot size to bring us under target
-                            newOrderQuantity -= parameters.Security.SymbolProperties.LotSize;
-                        }
-                        else
-                        {
-                            // Short positions; increase by one to bring us under our target
-                            newOrderQuantity += parameters.Security.SymbolProperties.LotSize;
-                        }
-                    }
-
-                    absOrderQuantity = newOrderQuantity;
+                    absOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin,
+                        parameters.Security.SymbolProperties.LotSize, absOrderQuantity * (direction == OrderDirection.Sell ? -1 : 1)));
                 }
 
                 if (absOrderQuantity <= 0)
@@ -505,10 +487,10 @@ namespace QuantConnect.Securities
         /// <param name="perUnitMargin">Margin required for each unit</param>
         /// <param name="lotSize">Lot size of the security we are ordering</param>
         /// <returns>The size of the order to get safely to our target</returns>
-        public static decimal GetAmountToOrder(decimal currentMargin, decimal targetMargin, decimal perUnitMargin, decimal lotSize)
+        public static decimal GetAmountToOrder(decimal currentMargin, decimal targetMargin, decimal perUnitMargin, decimal lotSize, decimal? currentOrderSize = null)
         {
             // Determine the amount to order to put us at our target
-            var orderSize = (currentMargin - targetMargin) / perUnitMargin;
+            var orderSize = (targetMargin - currentMargin) / perUnitMargin;
 
             // Determine if we are under our target
             var underTarget = false;
@@ -540,6 +522,22 @@ namespace QuantConnect.Securities
                 roundingMode = orderSize < 0
                     ? MidpointRounding.ToNegativeInfinity
                     : MidpointRounding.ToPositiveInfinity;
+            }
+
+            // For handling precision errors in OrderSize calculation
+            if (currentOrderSize.HasValue && orderSize % lotSize == 0 && orderSize == currentOrderSize.Value)
+            {
+                // Force an adjustment
+                if (roundingMode == MidpointRounding.ToPositiveInfinity)
+                {
+                    orderSize += lotSize;
+                }
+                else
+                {
+                    orderSize -= lotSize;
+                }
+
+                return orderSize;
             }
 
             // Round this order size appropriately
