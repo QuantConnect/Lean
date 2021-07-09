@@ -427,8 +427,26 @@ namespace QuantConnect.Securities
                 // If our order target holdings is larger than our target margin allocated we need to recalculate our order size
                 if (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue))
                 {
-                    absOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin, 
+                    var newOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin,
                         parameters.Security.SymbolProperties.LotSize));
+
+                    // If no change, then we need to force an adjustment directly
+                    // This can happen with precision issues on orderSize calculation in GetAmountToOrder
+                    if (absOrderQuantity == newOrderQuantity)
+                    {
+                        if (signedTargetFinalMarginValue > 0)
+                        {
+                            // Long positions; reduce by one lot size to bring us under target
+                            newOrderQuantity -= parameters.Security.SymbolProperties.LotSize;
+                        }
+                        else
+                        {
+                            // Short positions; increase by one to bring us under our target
+                            newOrderQuantity += parameters.Security.SymbolProperties.LotSize;
+                        }
+                    }
+
+                    absOrderQuantity = newOrderQuantity;
                 }
 
                 if (absOrderQuantity <= 0)
