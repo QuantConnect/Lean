@@ -66,7 +66,6 @@ namespace QuantConnect.Brokerages.Exante
                 Symbol = symbol,
                 Quantity = position.Quantity,
                 CurrencySymbol = Currencies.GetCurrencySymbol(position.Currency),
-                Type = symbol.SecurityType
             };
 
             if (position.AveragePrice != null)
