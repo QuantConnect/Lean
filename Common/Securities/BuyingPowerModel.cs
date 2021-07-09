@@ -420,7 +420,6 @@ namespace QuantConnect.Securities
             var lastOrderQuantity = 0m;     // For safety check
 
             var signedTargetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
-            decimal absOrderMargin = absOrderQuantity * absUnitMargin;
             decimal orderFees = 0;
             do
             {
@@ -467,10 +466,8 @@ namespace QuantConnect.Securities
                 }
                 lastOrderQuantity = absOrderQuantity;
                 
-
                 // Update our target holdings margin
                 signedTargetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
-                absOrderMargin = absOrderQuantity * absUnitMargin;
             }
             // Ensure that our target holdings margin will be less than or equal to our target allocated margin
             while (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue));
