@@ -105,6 +105,18 @@ namespace QuantConnect.Notifications
 
         /// <summary>
         /// Place REST POST call to the specified address with the specified DATA.
+        /// Python overload for Headers parameter.
+        /// </summary>
+        /// <param name="address">Endpoint address</param>
+        /// <param name="data">Data to send in body JSON encoded</param>
+        /// <param name="headers">Optional headers to use</param>
+        public bool Web(string address, object data, PyObject headers)
+        {
+            return Web(address, data, headers.ConvertToDictionary<string, string>());
+        }
+
+        /// <summary>
+        /// Place REST POST call to the specified address with the specified DATA.
         /// </summary>
         /// <param name="address">Endpoint address</param>
         /// <param name="data">Data to send in body JSON encoded (optional)</param>
