@@ -457,11 +457,12 @@ namespace QuantConnect.Securities
                 if (lastOrderQuantity == absOrderQuantity)
                 {
                     var sign = direction == OrderDirection.Buy ? 1 : -1;
-                    var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
-                        Invariant($"{absFinalOrderMargin * sign}. Current order margin is {absOrderMargin * sign}. Order quantity {absOrderQuantity * sign}. ") +
-                        Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
-                        Invariant($"{parameters.Security.Symbol}. Margin per unit {absUnitMargin}. Target Percentage {parameters.TargetBuyingPower * 100}. ") +
-                        Invariant($"Current Margin {currentSignedUsedMargin}; Target Margin {signedTargetFinalMarginValue}; TPV {totalPortfolioValue}");
+                    var message =
+                        Invariant($"GetMaximumOrderQuantityForTargetBuyingPower failed to converge on the target margin: {signedTargetFinalMarginValue}; ") +
+                        Invariant($"the following information can be used to reproduce the issue. Total Portfolio Cash: {parameters.Portfolio.Cash}; ") +
+                        Invariant($"Leverage: {parameters.Security.Leverage}; Order Fee: {orderFees}; Lot Size: {parameters.Security.SymbolProperties.LotSize}; ") +
+                        Invariant($"Per Unit Margin: {absUnitMargin}; Current Holdings: {parameters.Security.Holdings}; Target Percentage: %{parameters.TargetBuyingPower * 100}; ") +
+                        Invariant($"Current Order Target Margin: {absFinalOrderMargin * sign}; Current Order Margin: {absOrderQuantity * absUnitMargin * sign}");
                     throw new ArgumentException(message);
                 }
                 lastOrderQuantity = absOrderQuantity;
