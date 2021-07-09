@@ -43,6 +43,10 @@ if [ ! -f "$CONFIG" ]; then
     }" > $CONFIG
 fi
 
+# Use our startup script for jupyter, needed to set runtime properly
+mkdir -p /root/.ipython/profile_default/startup/ && \
+ln -s /Lean/Launcher/bin/Debug/start.py /root/.ipython/profile_default/startup/start.py
+
 # Copy over any notebooks from build directory to notebook directory
 RESEARCH_FILES=$BUILD_DIR/*.ipynb
 if [ -d "$BUILD_DIR" ]; then 
