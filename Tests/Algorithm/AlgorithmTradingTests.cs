@@ -220,7 +220,7 @@ namespace QuantConnect.Tests.Algorithm
         public void PrecisionFailureAdjustment()
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 2, 1);
+            var algo = GetAlgorithm(out msft, 2, 0);
             Update(msft, 66.5m);
 
             algo.Portfolio.SetCash(112302.5m);
