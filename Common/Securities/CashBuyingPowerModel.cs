@@ -27,14 +27,6 @@ namespace QuantConnect.Securities
     public class CashBuyingPowerModel : BuyingPowerModel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="CashBuyingPowerModel"/> class
-        /// </summary>
-        public CashBuyingPowerModel()
-            : base(1m, 0m, 0m)
-        {
-        }
-
-        /// <summary>
         /// Gets the current leverage of the security
         /// </summary>
         /// <param name="security">The security to get leverage for</param>
