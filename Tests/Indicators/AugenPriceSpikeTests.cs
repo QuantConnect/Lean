@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            return new AugenPriceSpike(22);
+            return new AugenPriceSpike(20);
         }
 
         protected override string TestFileName => "spy_aps.txt";
@@ -42,6 +42,13 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        [Test]
+        public void TestForPeriod()
+        {
+            Assert.Throws<ArgumentException>(() => new AugenPriceSpike(1));
+            Assert.Throws<ArgumentException>(() => new AugenPriceSpike(2));
+        }
+
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
         {
             get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1); }
@@ -50,7 +57,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void PeriodSet()
         {
-            var aps = new AugenPriceSpike(period: 22);
+            var aps = new AugenPriceSpike(period: 20);
             var reference = DateTime.Today;
 
             double correctValue = 0.31192350881956543;

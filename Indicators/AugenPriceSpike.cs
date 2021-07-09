@@ -62,9 +62,9 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentException("AugenPriceSpike Indicator must have a period of at least 3", nameof(period));
             }
-            _standardDeviation = new StandardDeviation(period - 2);
+            _standardDeviation = new StandardDeviation(period);
             _rollingData = new RollingWindow<decimal>(3);
-            WarmUpPeriod = period;
+            WarmUpPeriod = period+2;
         }
 
         /// <summary>
