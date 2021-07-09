@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -154,6 +154,46 @@ namespace QuantConnect.Notifications
             Message = message ?? string.Empty;
             Subject = subject ?? string.Empty;
             Headers = headers;
+        }
+    }
+
+    /// <summary>
+    /// Telegram notification data
+    /// </summary>
+    public class NotificationTelegram : Notification
+    {
+        /// <summary>
+        /// Send a notification message to this user on Telegram
+        /// Can be either a personal ID or Group ID.
+        /// </summary>
+        public string Id;
+
+        /// <summary>
+        /// Message to send. Limited to 4096 characters
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Message;
+
+        /// <summary>
+        /// Token to use
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Token;
+
+        /// <summary>
+        /// Constructor for sending a telegram notification to a specific User ID
+        /// or group ID. Note: The bot must have an open chat with the user or be
+        /// added to the group for messages to deliver.
+        /// </summary>
+        /// <param name="id">User Id or Group Id to send the message too</param>
+        /// <param name="message">Message to send</param>
+        /// <param name="token">Bot token to use, if null defaults to "telegram-token"
+        /// in config on send</param>
+        public NotificationTelegram(string id, string message, string token = null)
+        {
+            Id = id;
+            Message = message;
+            Token = token;
         }
     }
 }

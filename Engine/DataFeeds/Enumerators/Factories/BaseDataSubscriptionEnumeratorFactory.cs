@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     }
 
                     var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode, sourceFactory);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode, sourceFactory, dataProvider);
                     var entriesForDate = factory.Read(source);
                     foreach (var entry in entriesForDate)
                     {

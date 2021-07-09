@@ -1,48 +1,70 @@
 ﻿QuantConnect Research Project
 =============
-Currently we have two ways to use QuantConnect research notebooks, you can either install and run locally or just use our docker image (Recommended).
+Currently we have a few ways to use QuantConnect research notebooks:
+- Lean CLI (Recommended)
+- Install locally and run directly on your OS.
 
-The up to date docker image is available at [quantconnect/research](https://hub.docker.com/repository/docker/quantconnect/research). You can pull this image with `docker pull quantconnect/research`.
-
-
-
-
-# Using the Docker Image
-
-## Starting the Container
-The docker image we created can be started using the included .bat/.sh file in this directory (Lean/Research). These scripts take care of all the work required to get the notebook container setup and started for use. Including launching a browser to the notebook lab environment for you.
-
-From a terminal launch the run_docker_notebook.bat/.sh script; there are a few options on how to launch this:
- 1. Launch with no parameters and answer the questions regarding configuration (Press enter for defaults) ex: `./run_docker_notebook.bat`
-   
-        *   Enter docker image [default: quantconnect/research:latest]:
-        *   Enter absolute path to Data folder [default: ~yourpathtolean~\Lean\Data\]:
-        *   Enter absolute path to store notebooks [default: ~yourpathtolean~\Lean\Research\Notebooks]:
-
- 2. Using the **docker.cfg** to store args for repeated use; any blank entries will resort to default values! ex: `./run_docker_notebook.bat docker.cfg`
-  
-         IMAGE=quantconnect/research:latest
-         DATA_DIR=
-         NOTEBOOK_DIR=
-
- 3. Inline arguments; anything you don't enter will use the default args! ex: `./run_docker.bat IMAGE=quantconnect/research:latest`
-      *    Accepted args for inline include all listed in the file **docker.cfg**
-
-Once the docker image starts, the script will attempt to open your browser to the Jupyter notebook web app, if this fails open your browser and go to `localhost:8888`
+This document will cover the setup, getting started, and known issues.
 
 <br>
 
-## C# Notebook
-When using C# for research notebooks it requires that you load our setup script CSX file `QuantConnect.csx` into your notebook. This will load our QuantConnect libraries into your C# Kernel. In this setup, the file is one directory above the notebooks dir. Be sure to use the following line in your first cell to load in this csx file:
+# Setup
+Below we cover how to get setup with our three option listed above. 
 
-`load "../QuantConnect.csx"`
+<br>
+
+## Research with Lean CLI (Recommended)
+
+Our research docker image has been integrated with Lean CLI to streamline the process and allow user to use their cloud and local projects in the research environment. Please refer to Lean CLI documentation [here](https://www.quantconnect.com/docs/v2/lean-cli/getting-started/lean-cli) on how to get started.
+
+Lean CLI research specific documentation is found [here](https://www.quantconnect.com/docs/v2/lean-cli/tutorials/research).
+
+We highly recommend using Lean CLI with docker for research but below in [Running Jupter Locally](#running-jupyter-locally) we cover how to install and prepare the environment on your personal desktop. 
+
+<br>
+
+## Running Jupyter Locally 
+Note: we recommend using the above approach with our Docker container, where the setup and evironment is tested and stable.
+
+Before we enable Jupyter support, follow [Lean installation](https://github.com/QuantConnect/Lean#installation-instructions)
+and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) to get LEAN running Python algorithms on your machine. Then be sure to build Lean at least once before the following. 
+
+**1. Installation:**
+   1. Install [JupyterLab](https://pypi.org/project/jupyterlab/):
+```
+    pip install jupyterlab
+```
+ 2.  Install [QuantConnect Python API](https://pypi.python.org/pypi/quantconnect/0.1)
+ ```
+    pip install quantconnect
+```
+ 3.  Install [pythonnet/clr-loader](https://github.com/pythonnet/clr-loader)
+ ```
+    pip install clr-loader
+```
+**2. Run Jupyter:**
+   1. Run Jupyter from the command line
+```
+    cd Lean/Launcher/bin/Debug
+    jupyter lab
+```
+<br>
+
+# Getting Started with Research
+
+## C# Notebook
+When using C# for research notebooks it requires that you load our setup script CSX file `Initialize.csx` into your notebook. This will load our QuantConnect libraries into your C# Kernel. In both docker setups, the file is one directory above the notebooks dir. Be sure to use the following line in your first cell to load in this csx file:
+
+`#load "../Initialize.csx"`
 
 After this the environment is ready to use; take a look at our reference notebook `KitchenSinkCSharpQuantBookTemplate.ipynb` for an example of how to use our `QuantBook` interface!
+
+Note: All Lean namespaces you want to use in your notebook need to be directly added via `using` statements.
 
 <br>
 
 ## Python Notebook
-With Python we have a setup script that will automatically load QuantBooks libraries into the Python kernel so there is no need to import them. 
+With Python we have a setup script that will automatically load QuantBooks libraries into the Python kernel so there is no need to import them. In our docker image the script should run automatically, but locally you will need to call `%run "start.py"` in the first cell.
 
 You notebook is ready to use; take a look at our reference notebook `KitchenSinkQuantBookTemplate.ipynb` for an example of how to use our `QuantBook` interface!
 
@@ -63,7 +85,7 @@ Reference our examples mentioned above for practical uses of this object.
 <br>
 
 ## Shutting Down the Notebook Lab
-When you are done with the research environment be sure to stop the container with either **Docker's dashboard** or through the **Docker CLI** with `docker kill LeanResearch`.
+When you are done with the research environment be sure to stop the container with **Docker Dashboard** or via **Docker CLI**.
 
 <br>
 
@@ -75,32 +97,12 @@ For most users this will not be necessary, simply use `docker pull quantconnect/
 
 <br>
 
-# Running Jupyter Locally 
-Note: we recommend using the above approach with our Docker container, where the setup and evironment is tested and stable.
 
-Before we enable Jupyter support, follow [Lean installation](https://github.com/QuantConnect/Lean#installation-instructions)
-and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) to get LEAN running Python algorithms in your machine. 
+# Known Issues
+- Python research is extremely dependent on the `start.py` script as it is responsible for assigning core clr as the runtime for PythonNet and clr-loader to use for C# library. For local use where the script is not launched automatically by Jupyter, one must call `%run "start.py"` in their first notebook cell for research to work properly. Note that the location of `start.py` is in the launcher bin directory so you may have to use `../start.py` or specify the full path.
 
-**1. Installation:**
-   1. Install [JupyterLab](https://pypi.org/project/jupyterlab/):
-```
-    pip install jupyterlab
-```
- 2.  Install [QuantConnect Python API](https://pypi.python.org/pypi/quantconnect/0.1)
- ```
-    pip install quantconnect
-```
- 3.  Install [pythonnet/clr-loader](https://github.com/pythonnet/clr-loader)
- ```
-    pip install clr-loader
-```
-**2. Run Jupyter:**
-   1. Update the `config.json` file in `Lean/Launcher/bin/Debug/` folder
- ```
-    "composer-dll-directory": ".",
- ```
-   2. Run Jupyter from the command line
-```
-    cd Lean/Launcher/bin/Debug
-    jupyter lab
-```
+- C# research latest kernel no longer supports using statements outside of the notebook context, meaning that `#load ./QuantConnect.csx` no longer applies QC namespaces to the notebook out of the box. Therefore one must specify the namespace directly in a cell. Our default notebooks include these statements as examples.
+
+- Python can sometimes have issues when paired with our quantconnect stubs package on Windows. This issue can cause modules not to be found because `site-packages` directory is not present in the python path. If you have the required modules installed and are seeing errors about them not being found, please try the following steps:
+    - remove stubs -> pip uninstall quantconnect-stubs
+    - reinstall stubs -> pip install quantconnect-stubs

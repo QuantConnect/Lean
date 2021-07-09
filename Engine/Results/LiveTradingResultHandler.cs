@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -148,7 +149,8 @@ namespace QuantConnect.Lean.Engine.Results
             //Error checks if the algorithm & threads have not loaded yet, or are closing down.
             if (Algorithm?.Transactions == null || TransactionHandler.Orders == null || !Algorithm.GetLocked())
             {
-                Log.Error("LiveTradingResultHandler.Update(): Algorithm not yet initialized.");
+                Log.Debug("LiveTradingResultHandler.Update(): Algorithm not yet initialized.");
+                ExitEvent.WaitOne(1000);
                 return;
             }
 
@@ -197,20 +199,10 @@ namespace QuantConnect.Lean.Engine.Results
                     Log.Debug("LiveTradingResultHandler.Update(): End build delta charts");
 
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
-                    var holdings = new Dictionary<string, Holding>();
                     var deltaStatistics = new Dictionary<string, string>();
                     var runtimeStatistics = new Dictionary<string, string>();
                     var serverStatistics = GetServerStatistics(utcNow);
-
-                    // Only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    foreach (var kvp in Algorithm.Securities
-                        // we send non internal, non canonical and tradable securities. When securities are removed they are marked as non tradable
-                        .Where(pair => pair.Value.IsTradable && !pair.Value.IsInternalFeed() && !pair.Key.IsCanonical())
-                        .OrderBy(x => x.Key.Value))
-                    {
-                        var security = kvp.Value;
-                        DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");
-                    }
+                    var holdings = GetHoldings();
 
                     //Add the algorithm statistics first.
                     Log.Debug("LiveTradingResultHandler.Update(): Build run time stats");
@@ -314,7 +306,8 @@ namespace QuantConnect.Lean.Engine.Results
                         }
                         StoreStatusFile(
                             runtimeStatistics,
-                            holdings,
+                            // only store holdings we are invested in
+                            holdings.Where(pair => pair.Value.Quantity != 0).ToDictionary(pair => pair.Key, pair => pair.Value),
                             chartComplete,
                             new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord),
                             serverStatistics);
@@ -392,9 +385,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         private void SetNextStatusUpdate()
         {
-            // Update the status json file each day at 1am UTC
-            // after the daily performance has been sampled
-            _nextStatusUpdate = DateTime.UtcNow.Date.AddDays(1).AddHours(1);
+            // Update the status json file every hour
+            _nextStatusUpdate = DateTime.UtcNow.AddHours(1);
         }
 
         /// <summary>
@@ -590,10 +582,19 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="message">Runtime error message</param>
         /// <param name="stacktrace">Associated error stack trace.</param>
-        public void RuntimeError(string message, string stacktrace = "")
+        public virtual void RuntimeError(string message, string stacktrace = "")
         {
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
+        }
+
+        /// <summary>
+        /// Process brokerage message events
+        /// </summary>
+        /// <param name="brokerageMessageEvent">The brokerage message event</param>
+        public virtual void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent)
+        {
+            // NOP
         }
 
         /// <summary>
@@ -712,6 +713,8 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Algorithm = algorithm;
             _portfolioValue = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
+            CumulativeMaxPortfolioValue = StartingPortfolioValue;
+            AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
 
             var types = new List<SecurityType>();
             foreach (var kvp in Algorithm.Securities)
@@ -788,7 +791,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                    var holdings = new Dictionary<string, Holding>();
+                    var holdings = GetHoldings(onlyInvested: true);
                     var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
                     var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
 
@@ -796,7 +799,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Create a packet:
                     result = new LiveResultPacket(_job,
-                        new LiveResult(new LiveResultParameters(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore())));
+                        new LiveResult(new LiveResultParameters(charts, orders, profitLoss, new Dictionary<string, Holding>(), Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore())));
                 }
                 else
                 {
@@ -1229,6 +1232,22 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 _portfolioValue = base.GetPortfolioValue();
             }
+        }
+
+        private Dictionary<string, Holding> GetHoldings(bool onlyInvested = false)
+        {
+            var holdings = new Dictionary<string, Holding>();
+
+            foreach (var kvp in Algorithm.Securities
+                // we send non internal, non canonical and tradable securities. When securities are removed they are marked as non tradable
+                .Where(pair => pair.Value.IsTradable && !pair.Value.IsInternalFeed() && !pair.Key.IsCanonical() && (!onlyInvested || pair.Value.Invested))
+                .OrderBy(x => x.Key.Value))
+            {
+                var security = kvp.Value;
+                DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");
+            }
+
+            return holdings;
         }
     }
 }

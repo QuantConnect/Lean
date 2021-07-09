@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 return Enumerable.Empty<BaseData>();
             }, timeProvider);
             var provider = new LiveDataBasedDelistingEventProvider(config, dataQueueHandler);
-            var mapFile = new LocalDiskMapFileProvider().Get(config.Symbol.ID.Market).ResolveMapFile(config.Symbol, config.Type);
+            var mapFile = TestGlobals.MapFileProvider.Get(config.Symbol.ID.Market).ResolveMapFile(config.Symbol, config.Type);
             provider.Initialize(config, null, mapFile, time);
             Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(100)));
 

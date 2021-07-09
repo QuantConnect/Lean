@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,15 +14,16 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Logging;
+using System.Threading.Tasks;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -197,6 +198,56 @@ namespace QuantConnect.Brokerages
             {
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Helper method that will try to get the live holdings from the provided brokerage data collection else will default to the algorithm state
+        /// </summary>
+        /// <remarks>Holdings will removed from the provided collection on the first call, since this method is expected to be called only
+        /// once on initialize, after which the algorithm should use Lean accounting</remarks>
+        protected virtual List<Holding> GetAccountHoldings(Dictionary<string, string> brokerageData, IEnumerable<Security> securities)
+        {
+            if (Log.DebuggingEnabled)
+            {
+                Log.Debug("Brokerage.GetAccountHoldings(): starting...");
+            }
+
+            if (brokerageData != null && brokerageData.Remove("live-holdings", out var value) && !string.IsNullOrEmpty(value))
+            {
+                // remove the key, we really only want to return the cached value on the first request
+                var result = JsonConvert.DeserializeObject<List<Holding>>(value);
+
+                Log.Trace($"Brokerage.GetAccountHoldings(): sourcing holdings from provided brokerage data, found {result.Count} entries");
+                return result;
+            }
+
+            return securities?.Where(security => security.Holdings.AbsoluteQuantity > 0)
+                .OrderBy(security => security.Symbol)
+                .Select(security => new Holding(security)).ToList() ?? new List<Holding>();
+        }
+
+        /// <summary>
+        /// Helper method that will try to get the live cash balance from the provided brokerage data collection else will default to the algorithm state
+        /// </summary>
+        /// <remarks>Cash balance will removed from the provided collection on the first call, since this method is expected to be called only
+        /// once on initialize, after which the algorithm should use Lean accounting</remarks>
+        protected virtual List<CashAmount> GetCashBalance(Dictionary<string, string> brokerageData, CashBook cashBook)
+        {
+            if (Log.DebuggingEnabled)
+            {
+                Log.Debug("Brokerage.GetCashBalance(): starting...");
+            }
+
+            if (brokerageData != null && brokerageData.Remove("live-cash-balance", out var value) && !string.IsNullOrEmpty(value))
+            {
+                // remove the key, we really only want to return the cached value on the first request
+                var result = JsonConvert.DeserializeObject<List<CashAmount>>(value);
+
+                Log.Trace($"Brokerage.GetCashBalance(): sourcing cash balance from provided brokerage data, found {result.Count} entries");
+                return result;
+            }
+
+            return cashBook?.Select(x => new CashAmount(x.Value.Amount, x.Value.Symbol)).ToList() ?? new List<CashAmount>();
         }
 
         /// <summary>

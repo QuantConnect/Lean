@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -12,11 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
-using System.Collections.Generic;
-using QuantConnect.Data;
 
-namespace QuantConnect.ToolBox
+using System;
+using QuantConnect.Data;
+using System.Collections.Generic;
+
+namespace QuantConnect
 {
     /// <summary>
     /// Data Downloader Interface for pulling data from a remote source.

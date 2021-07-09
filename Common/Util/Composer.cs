@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -58,8 +58,32 @@ namespace QuantConnect.Util
         /// </summary>
         public Composer()
         {
-            // grab assemblies from current executing directory if not defined by 'composer-dll-directory' configuration key
-            var primaryDllLookupDirectory = new DirectoryInfo(Config.Get("composer-dll-directory", AppDomain.CurrentDomain.BaseDirectory)).FullName;
+            // Determine what directory to grab our assemblies from if not defined by 'composer-dll-directory' configuration key
+            var dllDirectoryString = Config.Get("composer-dll-directory");
+            if (string.IsNullOrWhiteSpace(dllDirectoryString))
+            {
+                // Check our appdomain directory for QC Dll's, for most cases this will be true and fine to use
+                if (!string.IsNullOrEmpty(AppDomain.CurrentDomain.BaseDirectory) && Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "QuantConnect.*.dll").Any())
+                {
+                    dllDirectoryString = AppDomain.CurrentDomain.BaseDirectory;
+                }
+                else
+                {
+                    // Otherwise check out our parent and current working directory
+                    // this is helpful for research because kernel appdomain defaults to kernel location
+                    var currentDirectory = Directory.GetCurrentDirectory();
+                    var parentDirectory = Directory.GetParent(currentDirectory)?.FullName ?? currentDirectory; // If parent == null will just use current
+
+                    // If our parent directory contains QC Dlls use it, otherwise default to current working directory
+                    // In cloud and CLI research cases we expect the parent directory to contain the Dlls; but locally it's likely current directory
+                    dllDirectoryString = Directory.GetFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
+                }
+            }
+
+            // Resolve full path name just to be safe
+            var primaryDllLookupDirectory = new DirectoryInfo(dllDirectoryString).FullName;
+            Log.Trace($"Composer(): Loading Assemblies from {primaryDllLookupDirectory}");
+
             var loadFromPluginDir = !string.IsNullOrWhiteSpace(PluginDirectory)
                 && Directory.Exists(PluginDirectory) &&
                 new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;

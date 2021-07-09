@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -32,7 +33,11 @@ namespace QuantConnect.Brokerages.Paper
         /// The implementation of this property will create the brokerage data dictionary required for
         /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
-        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>();
+        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
+        {
+            { "live-cash-balance", Config.Get("live-cash-balance")},
+            { "live-holdings", Config.Get("live-holdings")},
+        };
 
         /// <summary>
         /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>

@@ -43,15 +43,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="fastPeriod">Fast EMA period</param>
         /// <param name="slowPeriod">Slow EMA period</param>
         /// <param name="universeCount">Maximum number of members of this universe selection</param>
-        /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings</param>
-        /// <param name="securityInitializer">Optional security initializer invoked when creating new securities, specify null to use algorithm.SecurityInitializer</param>
+        /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings</param>
         public EmaCrossUniverseSelectionModel(
             int fastPeriod = 100,
             int slowPeriod = 300,
             int universeCount = 500,
-            UniverseSettings universeSettings = null,
-            ISecurityInitializer securityInitializer = null)
-            : base(false, universeSettings, securityInitializer)
+            UniverseSettings universeSettings = null)
+            : base(false, universeSettings)
         {
             _fastPeriod = fastPeriod;
             _slowPeriod = slowPeriod;

@@ -56,25 +56,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="refreshInterval">Time interval between universe refreshes</param>
         /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
-        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        public FutureUniverseSelectionModel(
-            TimeSpan refreshInterval,
-            Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector,
-            UniverseSettings universeSettings,
-            ISecurityInitializer securityInitializer
-            )
-            : this(refreshInterval, futureChainSymbolSelector, universeSettings)
-        {
-
-        }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="FutureUniverseSelectionModel"/>
-        /// </summary>
-        /// <param name="refreshInterval">Time interval between universe refreshes</param>
-        /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
-        /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         public FutureUniverseSelectionModel(
             TimeSpan refreshInterval,
             Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector,
@@ -111,24 +92,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                     yield return CreateFutureChain(algorithm, futureSymbol);
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates the canonical <see cref="Future"/> chain security for a given symbol
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance to create universes for</param>
-        /// <param name="symbol">Symbol of the future</param>
-        /// <param name="settings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="initializer">Performs extra initialization (such as setting models) after we create a new security object</param>
-        /// <returns><see cref="Future"/> for the given symbol</returns>
-        [Obsolete("This method is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        protected virtual Future CreateFutureChainSecurity(QCAlgorithm algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
-        {
-            return CreateFutureChainSecurity(
-                algorithm.SubscriptionManager.SubscriptionDataConfigService,
-                symbol,
-                settings,
-                algorithm.Securities);
         }
 
         /// <summary>

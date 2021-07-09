@@ -576,8 +576,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return;
             }
 
-            Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Enter");
-
             // check if the brokerage should perform cash sync now
             if (_brokerage.ShouldPerformCashSync(CurrentTimeUtc))
             {
@@ -598,12 +596,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             const int maxOrdersToKeep = 10000;
             if (_completeOrders.Count < maxOrdersToKeep + 1)
             {
-                Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Exit");
                 return;
             }
 
-            int max = _completeOrders.Max(x => x.Key);
-            int lowestOrderIdToKeep = max - maxOrdersToKeep;
+            Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Start removing old orders...");
+            var max = _completeOrders.Max(x => x.Key);
+            var lowestOrderIdToKeep = max - maxOrdersToKeep;
             foreach (var item in _completeOrders.Where(x => x.Key <= lowestOrderIdToKeep))
             {
                 Order value;
@@ -612,7 +610,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _completeOrderTickets.TryRemove(item.Key, out ticket);
             }
 
-            Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Exit");
+            Log.Debug($"BrokerageTransactionHandler.ProcessSynchronousEvents(): New order count {_completeOrders.Count}. Exit");
         }
 
         /// <summary>

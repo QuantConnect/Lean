@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -39,6 +39,7 @@ namespace QuantConnect.Queues
         private const string DefaultDataChannelProvider = "DataChannelProvider";
         private bool _liveMode = Config.GetBool("live-mode");
         private static readonly string AccessToken = Config.Get("api-access-token");
+        private static readonly string OrganizationId = Config.Get("job-organization-id");
         private static readonly int UserId = Config.GetInt("job-user-id", 0);
         private static readonly int ProjectId = Config.GetInt("job-project-id", 0);
         private readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
@@ -92,15 +93,6 @@ namespace QuantConnect.Queues
                 MaximumDataPointsPerChartSeries =  Config.GetInt("maximum-data-points-per-chart-series", 4000)
             };
 
-            if ((Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language")) == Language.Python)
-            {
-                // Set the python path for loading python algorithms ("algorithm-location" config parameter)
-                var pythonFile = new FileInfo(location);
-
-                // PythonInitializer automatically adds the current working directory for us
-                PythonInitializer.SetPythonPathEnvironmentVariable(new string[] { pythonFile.Directory.FullName });
-            }
-
             var algorithmId = Config.Get("algorithm-id", AlgorithmTypeName);
 
             //If this isn't a backtesting mode/request, attempt a live job.
@@ -118,6 +110,7 @@ namespace QuantConnect.Queues
                     UserToken = AccessToken,
                     UserId = UserId,
                     ProjectId = ProjectId,
+                    OrganizationId = OrganizationId,
                     Version = Globals.Version,
                     DeployId = algorithmId,
                     Parameters = parameters,
@@ -149,6 +142,7 @@ namespace QuantConnect.Queues
                 UserToken = AccessToken,
                 UserId = UserId,
                 ProjectId = ProjectId,
+                OrganizationId = OrganizationId,
                 Version = Globals.Version,
                 BacktestId = algorithmId,
                 Language = Language,
@@ -167,21 +161,16 @@ namespace QuantConnect.Queues
         {
             if (Language == Language.Python)
             {
-                var pythonSource = AlgorithmTypeName + ".py";
-                if (!File.Exists(pythonSource))
+                if (!File.Exists(AlgorithmLocation))
                 {
-                    // Copies file to execution location
-                    foreach (var file in new DirectoryInfo(Path.GetDirectoryName(AlgorithmLocation)).GetFiles("*.py"))
-                    {
-                        file.CopyTo(file.FullName.Replace(file.DirectoryName, Environment.CurrentDirectory), true);
-                    }
-
-                    if (!File.Exists(pythonSource))
-                    {
-                        throw new FileNotFoundException($"JobQueue.TryCreatePythonAlgorithm(): Unable to find py file: {pythonSource}");
-                    }
+                    throw new FileNotFoundException($"JobQueue.TryCreatePythonAlgorithm(): Unable to find py file: {AlgorithmLocation}");
                 }
+
+                // Add this directory to our Python Path so it may be imported properly
+                var pythonFile = new FileInfo(AlgorithmLocation);
+                PythonInitializer.AddPythonPaths(new string[] { pythonFile.Directory.FullName });
             }
+
             return AlgorithmLocation;
         }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Notifications;
 
 namespace QuantConnect.Tests.Common.Notifications
@@ -113,6 +114,56 @@ namespace QuantConnect.Tests.Common.Notifications
                     }
                 }
             }
+        }
+
+        [TestCase("email")]
+        [TestCase("web")]
+        public void PythonOverloads(string notificationType)
+        {
+            using (Py.GIL())
+            {
+                dynamic function;
+                bool result;
+                var test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def email(notifier):
+    headers = {'header-key': 'header-value'}
+    return notifier.Email('me@email.com', 'subject', 'message', 'data', headers)
+    
+def web(notifier):
+    headers = {'header-key': 'header-value'}
+    data = {'objectA':'valueA', 'objectB':{'PropertyA':10, 'PropertyB':'stringB'}}
+    return notifier.Web('api.quantconnect.com', data, headers)");
+
+
+                switch (notificationType)
+                {
+                    case "email":
+                        function = test.GetAttr("email");
+                        result = function(_notify);
+                        break;
+
+                    case "web":
+                        function = test.GetAttr("web");
+                        result = function(_notify);
+                        break;
+
+                    default:
+                        throw new ArgumentException($"Invalid method: {notificationType}");
+                }
+
+                if (_liveMode)
+                {
+                    Assert.IsTrue(result);
+                }
+                else
+                {
+                    Assert.IsFalse(result);
+                }
+            }
+
         }
     }
 }

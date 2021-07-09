@@ -180,5 +180,13 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(expectedValue, result);
         }
+
+        [TestCase("VXZ2")]
+        public void GenerateFutureSymbolFromTickerMissingDecadeInfo(string ticker)
+        {
+            var result = SymbolRepresentation.ParseFutureSymbol(ticker, 2012);
+
+            Assert.AreEqual(new DateTime(2012, 12, 19), result.ID.Date.Date);
+        }
     }
 }

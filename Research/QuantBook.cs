@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -110,14 +110,17 @@ namespace QuantConnect.Research
                     SetStartDate(newYorkTime - TimeSpan.FromDays(1));
                 }
 
-
                 // Sets PandasConverter
                 SetPandasConverter();
 
-                // Initialize History Provider
-                var composer = new Composer();
+                // Reset our composer; needed for re-creation of QuantBook
+                Composer.Instance.Reset();
+                var composer = Composer.Instance;
+
+                // Create our handlers with our composer instance
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
+
                 // init the API
                 systemHandlers.Initialize();
                 systemHandlers.LeanManager.Initialize(systemHandlers,
@@ -178,8 +181,8 @@ namespace QuantConnect.Research
                     )
                 );
 
-                SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
-                SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));
+                SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider(_dataProvider)));
+                SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(_dataProvider)));
             }
             catch (Exception exception)
             {
@@ -195,14 +198,8 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>pandas DataFrame</returns>
-        public PyObject GetFundamental(PyObject input, string selector, DateTime? start = null, DateTime? end = null)
+        public PyObject GetFundamental(PyObject input, string selector = null, DateTime? start = null, DateTime? end = null)
         {
-            //Null selector is not allowed for Python DataFrame
-            if (string.IsNullOrWhiteSpace(selector))
-            {
-                throw new ArgumentException("Invalid selector. Cannot be None, empty or consist only of white-space characters");
-            }
-
             //Covert to symbols
             var symbols = PythonUtil.ConvertToSymbols(input);
 
@@ -233,7 +230,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data</returns>
-        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<Symbol> symbols, string selector, DateTime? start = null, DateTime? end = null)
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<Symbol> symbols, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             var data = GetAllFundamental(symbols, selector, start, end);
 
@@ -251,7 +248,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one Dictionary for each day there is data.</returns>
-        public IEnumerable<DataDictionary<dynamic>> GetFundamental(Symbol symbol, string selector, DateTime? start = null, DateTime? end = null)
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(Symbol symbol, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             var list = new List<Symbol>
             {
@@ -269,7 +266,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data.</returns>
-        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<string> tickers, string selector, DateTime? start = null, DateTime? end = null)
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<string> tickers, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             var list = new List<Symbol>();
             foreach (var ticker in tickers)
@@ -288,7 +285,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one Dictionary for each day there is data.</returns>
-        public dynamic GetFundamental(string ticker, string selector, DateTime? start = null, DateTime? end = null)
+        public dynamic GetFundamental(string ticker, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             //Check if its Python; PythonNet likes to convert the strings, but for python we want the DataFrame as the return object
             //So we must route the function call to the Python version.

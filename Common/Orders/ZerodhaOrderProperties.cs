@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using System;
 
 namespace QuantConnect.Orders
 {
@@ -23,39 +24,13 @@ namespace QuantConnect.Orders
     /// </summary>
     public class ZerodhaOrderProperties : OrderProperties
     {
-        /// <summary>
-        /// Kite product type
-        /// </summary>
-        public readonly string ProductType;
 
         /// <summary>
         /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
         /// </summary>
-        /// <param name="productType">Product type</param>
-        public ZerodhaOrderProperties(KiteProductType productType)
+        /// <param name="exchange">Exchange value, nse/bse etc</param>
+        public ZerodhaOrderProperties(string exchange) : base(exchange)
         {
-            ProductType = productType.ToStringInvariant();
-        }
-
-        /// <summary>
-        /// Define the Kite Order type that we are targeting (MIS/CNC/NRML).
-        /// </summary>
-        public enum KiteProductType
-        {
-            /// <summary>
-            /// Margin Intraday Square Off 
-            /// </summary>
-            MIS,
-
-            /// <summary>
-            /// Cash and Carry 
-            /// </summary>
-            CNC,
-
-            /// <summary>
-            /// Normal
-            /// </summary>
-            NRML
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,11 +14,12 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuantConnect.Data.Market;
+using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.ToolBox.NseMarketDataConverter
 {
@@ -184,7 +185,7 @@ namespace QuantConnect.ToolBox.NseMarketDataConverter
                 default:
                     break;
             }
-            return Symbol.Create(file.Replace(".csv", ""), SecurityType.Equity, Market.NSE);
+            return Symbol.Create(file.Replace(".csv", ""), SecurityType.Equity, Market.India);
         }
 
         /// <summary>

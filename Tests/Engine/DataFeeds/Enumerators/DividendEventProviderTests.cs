@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using System.Globalization;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -56,8 +57,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var dividendProvider = new DividendEventProvider();
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.AAPL, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork,
                 false, false, false);
-            var factorFile = new LocalDiskFactorFileProvider();
-            var mapFile = new LocalDiskMapFileProvider();
+
+            var mapFile = TestGlobals.MapFileProvider;
+            var factorFile = TestGlobals.FactorFileProvider;
 
             var start = new DateTime(1998, 01, 02);
             dividendProvider.Initialize(config, factorFile.Get(Symbols.AAPL), mapFile.Get(Market.USA).ResolveMapFile(Symbols.AAPL, start), start);

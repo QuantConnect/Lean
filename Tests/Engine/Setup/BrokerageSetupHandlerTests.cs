@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider));
 
             Assert.AreEqual(expected, result);
 
@@ -191,7 +191,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider));
 
             if (result != expected)
             {
@@ -246,7 +246,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider));
 
             Assert.AreEqual(expected, result);
 
@@ -291,7 +291,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.AreEqual(!fails, setupHandler.Setup(new SetupHandlerParameters(algorithm.DataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
 
             Assert.AreEqual(10000, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
             Assert.AreEqual(11, algorithm.Portfolio.CashBook[Currencies.GBP].Amount);
@@ -326,7 +326,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
 
             Assert.AreEqual(enforceAccountCurrency ? Currencies.USD : Currencies.EUR, algorithm.AccountCurrency);
         }
@@ -353,7 +353,7 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
             {
-                new Holding { Symbol = symbol, Type = symbol.SecurityType, Quantity = 100 }
+                new Holding { Symbol = symbol, Quantity = 100 }
             });
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
@@ -363,7 +363,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
 
             Security security;
             Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
@@ -392,7 +392,7 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
             {
-                new Holding { Symbol = symbol, Type = symbol.SecurityType, Quantity = 100, MarketPrice = 99}
+                new Holding { Symbol = symbol, Quantity = 100, MarketPrice = 99}
             });
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
@@ -402,7 +402,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
 
             Security security;
             Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
@@ -447,7 +447,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
 
             Assert.Greater(algorithm.UtcTime, time);
         }
@@ -484,7 +484,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 hasHoldings
                     ? new List<Holding>
                     {
-                        new Holding { Type = SecurityType.Equity, Symbol = Symbols.SPY, Quantity = 1, AveragePrice = 100, MarketPrice = 100 }
+                        new Holding { Symbol = Symbols.SPY, Quantity = 1, AveragePrice = 100, MarketPrice = 100 }
                     }
                     : new List<Holding>());
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
@@ -497,7 +497,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var dataManager = new DataManagerStub(algorithm, new MockDataFeed(), true);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
 
             if (!hasCashBalance && !hasHoldings)
             {
@@ -520,7 +520,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Equity, Symbol = Symbols.SPY, Quantity = 1 }
+                            new Holding { Symbol = Symbols.SPY, Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {
@@ -532,7 +532,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Option, Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
+                            new Holding { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {
@@ -544,8 +544,8 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Equity, Symbol = Symbols.SPY, Quantity = 1 },
-                            new Holding { Type = SecurityType.Option, Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
+                            new Holding { Symbol = Symbols.SPY, Quantity = 1 },
+                            new Holding { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {
@@ -558,8 +558,8 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Option, Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 },
-                            new Holding { Type = SecurityType.Equity, Symbol = Symbols.SPY, Quantity = 1 }
+                            new Holding { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 },
+                            new Holding { Symbol = Symbols.SPY, Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {
@@ -572,7 +572,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Option, Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
+                            new Holding { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {
@@ -584,7 +584,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Forex, Symbol = Symbols.EURUSD, Quantity = 1 }
+                            new Holding { Symbol = Symbols.EURUSD, Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {
@@ -596,7 +596,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Crypto, Symbol = Symbols.BTCUSD, Quantity = 1 }
+                            new Holding { Symbol = Symbols.BTCUSD, Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {
@@ -608,7 +608,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Future, Symbol = Symbols.Fut_SPY_Feb19_2016, Quantity = 1 }
+                            new Holding { Symbol = Symbols.Fut_SPY_Feb19_2016, Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {
@@ -620,7 +620,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Base, Symbol = Symbol.Create("XYZ", SecurityType.Base, Market.USA), Quantity = 1 }
+                            new Holding { Symbol = Symbol.Create("XYZ", SecurityType.Base, Market.USA), Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {

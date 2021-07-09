@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,7 +30,11 @@ namespace QuantConnect.Algorithm
         private static readonly Dictionary<string, List<string>> ReservedChartSeriesNames = new Dictionary<string, List<string>>
         {
             { "Strategy Equity", new List<string> { "Equity", "Daily Performance" } },
-            { "Meta", new List<string>() },
+            { "Capacity", new List<string> { "Strategy Capacity" } },
+            { "Drawdown", new List<string> { "Equity Drawdown" } },
+            { "Benchmark", new List<string>() { "Benchmark" } },
+            { "Assets Sales Volume", new List<string>() },
+            { "Exposure", new List<string>() },
             { "Alpha", new List<string> { "Direction Score", "Magnitude Score" } },
             { "Alpha Count", new List<string> { "Count" } },
             { "Alpha Assets", new List<string>() },

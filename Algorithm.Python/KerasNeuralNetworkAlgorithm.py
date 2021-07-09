@@ -11,18 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import clr
-clr.AddReference("System")
-clr.AddReference("QuantConnect.Algorithm")
-clr.AddReference("QuantConnect.Common")
+from AlgorithmImports import *
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-
-import json
-import numpy as np
-import pandas as pd
 from io import StringIO
 from keras.models import Sequential
 from keras.layers import Dense, Activation

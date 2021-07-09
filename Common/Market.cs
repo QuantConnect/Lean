@@ -43,7 +43,7 @@ namespace QuantConnect
             Tuple.Create(CBOT, 8),
             Tuple.Create(ICE, 9),
             Tuple.Create(CBOE, 10),
-            Tuple.Create(NSE, 11),
+            Tuple.Create(India, 11),
 
             Tuple.Create(GDAX, 12),
             Tuple.Create(Kraken, 13),
@@ -61,13 +61,6 @@ namespace QuantConnect
             Tuple.Create(SGX, 24),
             Tuple.Create(HKFE, 25),
 
-            Tuple.Create(NFO, 26),
-            Tuple.Create(CDS, 27),
-            Tuple.Create(NCDEX, 28),
-            Tuple.Create(BSE, 29),
-            Tuple.Create(BCD, 30),
-            Tuple.Create(MCX, 31),
-            Tuple.Create(BFO, 32),
         };
 
         static Market()
@@ -135,42 +128,7 @@ namespace QuantConnect
         /// <summary>
         /// NSE - National Stock Exchange
         /// </summary>
-        public const string NSE = "nse";
-
-        /// <summary>
-        /// NSE - National Stock Exchange Commodity Derivatives
-        /// </summary>
-        public const string CDS = "cds";
-
-        /// <summary>
-        /// NSE - National Stock Exchange Futures and Options
-        /// </summary>
-        public const string NFO = "nfo";
-
-        /// <summary>
-        /// BSE - Bombay Stock Exchange
-        /// </summary>
-        public const string BSE = "bse";
-
-        /// <summary>
-        /// BSE Futures and Options
-        /// </summary>
-        public const string BFO = "bfo";
-
-        /// <summary>
-        /// BSE Currency Derivatives
-        /// </summary>
-        public const string BCD = "bcd";
-
-        /// <summary>
-        /// MCX - Multi Commodity Exchange
-        /// </summary>
-        public const string MCX = "mcx";
-
-        /// <summary>
-        /// NCDEX
-        /// </summary>
-        public const string NCDEX = "ncdex";
+        public const string India = "india";
 
         
         /// <summary>

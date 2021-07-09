@@ -21,6 +21,8 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
@@ -50,6 +52,7 @@ using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using Microsoft.IO;
 using NodaTime.TimeZones;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
@@ -61,9 +64,11 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
-        private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
         private static ConcurrentBag<Guid> Guids = new ConcurrentBag<Guid>();
-        private static readonly HashSet<string> _invalidSecurityTypes = new HashSet<string>();
+        private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
+        private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
+        private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
+        private static readonly int DataUpdatePeriod = Config.GetInt("api-data-update-period", 1);
 
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
@@ -86,6 +91,46 @@ namespace QuantConnect
         /// like future options the market close would match the delisted event time and would cancel all orders and mark the security
         /// as non tradable and delisted.</remarks>
         public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } = TimeSpan.FromMinutes(-15);
+
+        /// <summary>
+        /// Determine if the file is out of date according to our download period.
+        /// Date based files are never out of date (Files with YYYYMMDD)
+        /// </summary>
+        /// <param name="filepath">Path to the file</param>
+        /// <returns>True if the file is out of date</returns>
+        public static bool IsOutOfDate(this string filepath)
+        {
+            var fileName = Path.GetFileName(filepath);
+            // helper to determine if file is date based using regex, matches a 8 digit value because we expect YYYYMMDD
+            return !DateCheck.IsMatch(fileName) && DateTime.Now - TimeSpan.FromDays(DataUpdatePeriod) > File.GetLastWriteTime(filepath);
+        }
+
+        /// <summary>
+        /// Helper method to download a provided url as a string
+        /// </summary>
+        /// <param name="url">The url to download data from</param>
+        public static string DownloadData(this string url)
+        {
+            using (var client = new HttpClient())
+            {
+                try
+                {
+                    using (var response = client.GetAsync(url).Result)
+                    {
+                        using (var content = response.Content)
+                        {
+                            return content.ReadAsStringAsync().Result;
+                        }
+                    }
+                }
+                catch (WebException ex)
+                {
+                    Log.Error(ex, $"DownloadData(): failed for: '{url}'");
+                    // If server returned an error most likely on this day there is no data we are going to the next cycle
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Helper method to create an order request to liquidate a delisted asset
@@ -655,6 +700,80 @@ namespace QuantConnect
                 hash.Append(theByte.ToStringInvariant("x2"));
             }
             return hash.ToString();
+        }
+
+        /// <summary>
+        /// Converts a long to an uppercase alpha numeric string
+        /// </summary>
+        public static string EncodeBase36(this ulong data)
+        {
+            var stack = new Stack<char>(15);
+            while (data != 0)
+            {
+                var value = data % 36;
+                var c = value < 10
+                    ? (char)(value + '0')
+                    : (char)(value - 10 + 'A');
+
+                stack.Push(c);
+                data /= 36;
+            }
+            return new string(stack.ToArray());
+        }
+
+        /// <summary>
+        /// Converts an upper case alpha numeric string into a long
+        /// </summary>
+        public static ulong DecodeBase36(this string symbol)
+        {
+            var result = 0ul;
+            var baseValue = 1ul;
+            for (var i = symbol.Length - 1; i > -1; i--)
+            {
+                var c = symbol[i];
+
+                // assumes alpha numeric upper case only strings
+                var value = (uint)(c <= 57
+                    ? c - '0'
+                    : c - 'A' + 10);
+
+                result += baseValue * value;
+                baseValue *= 36;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Convert a string to Base64 Encoding
+        /// </summary>
+        /// <param name="text">Text to encode</param>
+        /// <returns>Encoded result</returns>
+        public static string EncodeBase64(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            byte[] textBytes = Encoding.UTF8.GetBytes(text);
+            return Convert.ToBase64String(textBytes);
+        }
+
+        /// <summary>
+        /// Decode a Base64 Encoded string
+        /// </summary>
+        /// <param name="base64EncodedText">Text to decode</param>
+        /// <returns>Decoded result</returns>
+        public static string DecodeBase64(this string base64EncodedText)
+        {
+            if (string.IsNullOrEmpty(base64EncodedText))
+            {
+                return base64EncodedText;
+            }
+
+            byte[] base64EncodedBytes = Convert.FromBase64String(base64EncodedText);
+            return Encoding.UTF8.GetString(base64EncodedBytes);
         }
 
         /// <summary>
@@ -1649,7 +1768,7 @@ namespace QuantConnect
                 return true;
             }
 
-            if (_invalidSecurityTypes.Add(value))
+            if (InvalidSecurityTypes.Add(value))
             {
                 Log.Error($"Extensions.TryParseSecurityType(): Attempted to parse unknown SecurityType: {value}");
             }
@@ -3091,6 +3210,37 @@ namespace QuantConnect
                 }
 
                 return hashCode;
+            }
+        }
+
+        /// <summary>
+        /// Read all lines from a stream reader
+        /// </summary>
+        /// <param name="reader">Stream reader to read from</param>
+        /// <returns>Enumerable of lines in stream</returns>
+        public static IEnumerable<string> ReadAllLines(this StreamReader reader)
+        {
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                yield return line;
+            }
+        }
+
+        /// <summary>
+        /// Determine if this SecurityType requires mapping
+        /// </summary>
+        /// <param name="securityType">Type to check</param>
+        /// <returns>True if it needs to be mapped</returns>
+        public static bool RequiresMapping(this SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                case SecurityType.Option:
+                    return true;
+                default:
+                    return false;
             }
         }
     }

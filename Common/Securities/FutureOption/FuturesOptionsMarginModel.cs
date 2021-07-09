@@ -152,7 +152,7 @@ namespace QuantConnect.Securities.Option
                 return (int) maximumValue;
             }
 
-            return (int) (maximumValue / (1 + denominator.SafeDecimalCast()));
+            return (int) (maximumValue / (1 + denominator).SafeDecimalCast());
         }
     }
 }

@@ -1,0 +1,22 @@
+name: Regression Tests
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    container:
+        image: quantconnect/lean:foundation
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build
+        run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+
+      - name: Run Tests
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter TestCategory=RegressionTests -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\) TestRunParameters.Parameter\(name=\"reduced-disk-size\", value=\"true\"\)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -70,9 +70,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var synchronizer = new TestableLiveSynchronizer(timeProvider);
             synchronizer.Initialize(algorithm, algorithm.DataManager);
 
-            var mapFileProvider = new LocalDiskMapFileProvider();
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(), algorithm.DataManager, synchronizer, new DataChannelProvider());
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, new DataChannelProvider());
 
             var symbolIndex = 0;
             var coarseUniverseSelectionCount = 0;

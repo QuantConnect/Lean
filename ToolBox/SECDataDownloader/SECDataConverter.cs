@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,6 +30,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.SEC;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using Formatting = Newtonsoft.Json.Formatting;
@@ -159,8 +160,10 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             RawSource = rawSource;
             Destination = destination;
 
-            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
-                .Get(Market.USA);
+            var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider"));
+            var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+            mapFileProvider.Initialize(dataProvider);
+            _mapFileResolver = mapFileProvider.Get(Market.USA);
         }
 
         /// <summary>
@@ -239,7 +242,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             // For the meantime, let's only process .nc files, and deal with correction files later.
             Parallel.ForEach(
                 Compression.UnTar(localRawData.OpenRead(), isTarGz: true).Where(kvp => kvp.Key.EndsWith(".nc")),
-                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount / 2},
+                new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2) },
                 rawReportFilePath =>
                 {
                     var factory = new SECReportFactory();

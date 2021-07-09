@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -39,9 +39,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var job = new BacktestNodePacket();
             var resultHandler = new BacktestingResultHandler();
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var dataProvider = new DefaultDataProvider();
 
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             var feed = new FileSystemDataFeed();
@@ -64,7 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var synchronizer = new Synchronizer();
             synchronizer.Initialize(algorithm, dataManager);
 
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager, synchronizer, dataPermissionManager.DataChannelProvider);
+            feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, dataManager, synchronizer, dataPermissionManager.DataChannelProvider);
             algorithm.Initialize();
             algorithm.PostInitialize();
 
@@ -97,17 +94,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            var dataProvider = new DefaultDataProvider();
             var resultHandler = new BacktestingResultHandler();
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, enablePriceScaling: false);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.Securities.Single().Value;
             var securityConfig = security.Subscriptions.First();
             var subscriptionRequest = new SubscriptionRequest(false, universe, security, securityConfig, algorithm.StartDate, algorithm.EndDate);
-            var enumerator = factory.CreateEnumerator(subscriptionRequest, dataProvider);
+            var enumerator = factory.CreateEnumerator(subscriptionRequest, TestGlobals.DataProvider);
 
             var count = 0;
             var stopwatch = Stopwatch.StartNew();
@@ -147,9 +141,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var dataProvider = new DefaultDataProvider();
             var resultHandler = new TestResultHandler();
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, enablePriceScaling: false);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.AddEquity("AAA", Resolution.Daily);

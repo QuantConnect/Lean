@@ -108,7 +108,8 @@ namespace QuantConnect
         public Symbol Symbol = Symbol.Empty;
 
         /// Type of the security
-        public SecurityType Type;
+        [JsonIgnore]
+        public SecurityType Type => Symbol.SecurityType;
 
         /// The currency symbol of the holding, such as $
         public string CurrencySymbol;
@@ -153,7 +154,6 @@ namespace QuantConnect
             var holding = security.Holdings;
 
             Symbol = holding.Symbol;
-            Type = holding.Type;
             Quantity = holding.Quantity;
             MarketValue = holding.HoldingsValue;
             CurrencySymbol = Currencies.GetCurrencySymbol(security.QuoteCurrency.Symbol);
@@ -186,7 +186,6 @@ namespace QuantConnect
             {
                 AveragePrice = AveragePrice,
                 Symbol = Symbol,
-                Type = Type,
                 Quantity = Quantity,
                 MarketPrice = MarketPrice,
                 MarketValue = MarketValue,

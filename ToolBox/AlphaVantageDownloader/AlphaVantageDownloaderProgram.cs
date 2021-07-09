@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Util;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 using System.Collections.Generic;
 

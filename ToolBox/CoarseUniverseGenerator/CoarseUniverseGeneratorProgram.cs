@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Lean.Engine.DataFeeds;
 using DateTime = System.DateTime;
 using Log = QuantConnect.Logging.Log;
 
@@ -55,8 +56,11 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var fineFundamentalFolder = new DirectoryInfo(Path.Combine(dailyDataFolder.Parent.FullName, "fundamental", "fine"));
             var blackListedTickersFile = new FileInfo("blacklisted-tickers.txt");
             var reservedWordPrefix = Config.Get("reserved-words-prefix", "quantconnect-");
+            var dataProvider = new DefaultDataProvider();
             var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
+            mapFileProvider.Initialize(dataProvider);
+            var factorFileProvider = new LocalDiskFactorFileProvider();
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
             var generator = new CoarseUniverseGeneratorProgram(dailyDataFolder, destinationFolder, fineFundamentalFolder, Market.USA, blackListedTickersFile, reservedWordPrefix, mapFileProvider, factorFileProvider);
             return generator.Run();
         }
@@ -127,7 +131,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var dailyPricesByTicker = new ConcurrentDictionary<string, List<TradeBar>>();
             var outputCoarseContent = new ConcurrentDictionary<DateTime, List<string>>();
 
-            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount / 2 };
+            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2) };
 
             try
             {

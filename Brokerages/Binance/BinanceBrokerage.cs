@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -46,9 +46,11 @@ namespace QuantConnect.Brokerages.Binance
         private readonly RateGate _webSocketRateLimiter = new RateGate(1, TimeSpan.FromMilliseconds(250));
         private long _lastRequestId;
 
+        private LiveNodePacket _job;
         private readonly Timer _keepAliveTimer;
         private readonly Timer _reconnectTimer;
         private readonly BinanceRestApiClient _apiClient;
+        private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
 
         /// <summary>
         /// Constructor for brokerage
@@ -57,11 +59,14 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
-        public BinanceBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator)
+        /// <param name="job">The live job packet</param>
+        public BinanceBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
             : base(WebSocketBaseUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, "Binance")
         {
+            _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;
+            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnMessageImpl);
 
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             subscriptionManager.SubscribeImpl += (s, t) =>
@@ -152,6 +157,10 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
+            if (_algorithm.BrokerageModel.AccountType == AccountType.Cash)
+            {
+                return base.GetAccountHoldings(_job?.BrokerageData, _algorithm.Securities.Values);
+            }
             return _apiClient.GetAccountHoldings();
         }
 
@@ -236,7 +245,7 @@ namespace QuantConnect.Brokerages.Binance
         {
             var submitted = false;
 
-            WithLockedStream(() =>
+            _messageHandler.WithLockedStream(() =>
             {
                 submitted = _apiClient.PlaceOrder(order);
             });
@@ -263,7 +272,7 @@ namespace QuantConnect.Brokerages.Binance
         {
             var submitted = false;
 
-            WithLockedStream(() =>
+            _messageHandler.WithLockedStream(() =>
             {
                 submitted = _apiClient.CancelOrder(order);
             });
@@ -320,20 +329,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="e"></param>
         public override void OnMessage(object sender, WebSocketMessage e)
         {
-            try
-            {
-                if (_streamLocked)
-                {
-                    _messageBuffer.Enqueue(e);
-                    return;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            OnMessageImpl(e);
+            _messageHandler.HandleNewMessage(e);
         }
 
         #endregion

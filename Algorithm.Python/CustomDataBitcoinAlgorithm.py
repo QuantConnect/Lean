@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,20 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data import SubscriptionDataSource
-from QuantConnect.Python import PythonData
-
-from datetime import date, timedelta, datetime
-import numpy as np
-import json
+from AlgorithmImports import *
 
 ### <summary>
 ### Demonstration of using an external custom datasource. LEAN Engine is incredibly flexible and allows you to define your own data source.
@@ -86,7 +73,7 @@ class Bitcoin(PythonData):
                 value = liveBTC["last"]
                 if value == 0: return None
 
-                coin.Time = datetime.now()
+                coin.EndTime =  datetime.utcnow().astimezone(timezone(str(config.ExchangeTimeZone))).replace(tzinfo=None)
                 coin.Value = value
                 coin["Open"] = float(liveBTC["open"])
                 coin["High"] = float(liveBTC["high"])

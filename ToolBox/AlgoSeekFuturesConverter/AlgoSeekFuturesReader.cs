@@ -168,29 +168,17 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     return null;
                 }
 
-                var parsed = SymbolRepresentation.ParseFutureTicker(ticker);
-
-                if (parsed == null || !_symbolMultipliers.ContainsKey(parsed.Underlying) ||
-                    _symbolFilter != null && !_symbolFilter.Contains(parsed.Underlying, StringComparer.InvariantCultureIgnoreCase))
-                {
-                    return null;
-                }
-
                 // ignoring time zones completely -- this is all in the 'data-time-zone'
                 var timeString = csv[_columnTimestamp];
                 var time = DateTime.ParseExact(timeString, "yyyyMMddHHmmssFFF", CultureInfo.InvariantCulture);
 
-                var underlying = parsed.Underlying;
-                var expirationYearShort = parsed.ExpirationYearShort;
-                var expirationMonth = parsed.ExpirationMonth;
-                var expirationYear = GetExpirationYear(time, expirationYearShort);
+                var symbol = SymbolRepresentation.ParseFutureSymbol(ticker, time.Year);
 
-                string exchange;
-                _symbolProperties.TryGetMarket(underlying, SecurityType.Future, out exchange);
-                
-                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(Symbol.Create(underlying, SecurityType.Future, exchange));
-                var expiryDate = expiryFunc(new DateTime(expirationYear, expirationMonth, 1));
-                var symbol = Symbol.CreateFuture(underlying, exchange, expiryDate);
+                if (symbol == null || !_symbolMultipliers.ContainsKey(symbol.ID.Symbol) ||
+                    _symbolFilter != null && !_symbolFilter.Contains(symbol.ID.Symbol, StringComparer.InvariantCultureIgnoreCase))
+                {
+                    return null;
+                }
 
                 // detecting tick type (trade or quote)
                 TickType tickType;
@@ -234,7 +222,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var price = csv[_columnPrice].ToDecimal() / scaleFactor;
                 var quantity = csv[_columnQuantity].ToInt32();
 
-                price *= _symbolMultipliers[underlying];
+                price *= _symbolMultipliers[symbol.ID.Symbol];
 
                 switch (tickType)
                 {
@@ -280,7 +268,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = exchange,
+                            Exchange = symbol.ID.Market,
                             Value = quantity
                         };
                         return tick;
@@ -294,17 +282,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 Log.Trace("Line: {0}", line);
                 return null;
             }
-        }
-
-        private int GetExpirationYear(DateTime currentdate, int year)
-        {
-            var baseNum = 2000;
-            while (baseNum + year < currentdate.Year)
-            {
-                baseNum += 10;
-            }
-
-            return baseNum + year;
         }
     }
 }

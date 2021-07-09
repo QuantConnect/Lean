@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,7 +15,7 @@
 */
 
 using System.Collections.Concurrent;
-using QuantConnect.Configuration;
+using System.IO;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
@@ -26,27 +26,28 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class LocalDiskFactorFileProvider : IFactorFileProvider
     {
-        private readonly IMapFileProvider _mapFileProvider;
+        private IMapFileProvider _mapFileProvider;
+        private IDataProvider _dataProvider;
         private readonly ConcurrentDictionary<Symbol, FactorFile> _cache;
 
         /// <summary>
-        /// Initializes a new instance of <see cref="LocalDiskFactorFileProvider"/> that uses configuration
-        /// to resolve an instance of <see cref="IMapFileProvider"/> from the <see cref="Composer.Instance"/>
+        /// Creates a new instance of the <see cref="LocalDiskFactorFileProvider"/>
         /// </summary>
         public LocalDiskFactorFileProvider()
-            : this(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
         {
+            _cache = new ConcurrentDictionary<Symbol, FactorFile>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LocalDiskFactorFileProvider"/> using the specified
-        /// map file provider
+        /// Initializes our FactorFileProvider by supplying our mapFileProvider
+        /// and dataProvider
         /// </summary>
-        /// <param name="mapFileProvider">The map file provider used to resolve permticks of securities</param>
-        public LocalDiskFactorFileProvider(IMapFileProvider mapFileProvider)
+        /// <param name="mapFileProvider">MapFileProvider to use</param>
+        /// <param name="dataProvider">DataProvider to use</param>
+        public void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider)
         {
             _mapFileProvider = mapFileProvider;
-            _cache = new ConcurrentDictionary<Symbol, FactorFile>();
+            _dataProvider = dataProvider;
         }
 
         /// <summary>
@@ -86,9 +87,14 @@ namespace QuantConnect.Data.Auxiliary
         private FactorFile GetFactorFile(Symbol symbol, string permtick, string market)
         {
             FactorFile factorFile = null;
-            if (FactorFile.HasScalingFactors(permtick, market))
+
+            var path = Path.Combine(Globals.DataFolder, "equity", market, "factor_files", permtick.ToLowerInvariant() + ".csv");
+
+            var factorFileStream = _dataProvider.Fetch(path);
+            if (factorFileStream != null)
             {
-                factorFile = FactorFile.Read(permtick, market);
+                factorFile = FactorFile.Read(permtick, factorFileStream);
+                factorFileStream.DisposeSafely();
                 _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
             }
             else

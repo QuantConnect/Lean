@@ -68,7 +68,14 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                     throw new Exception("Error in Kraken API: " + result.error[0]);
                 }
 
-                data = result.result[symbol.Value].ToObject<List<List<string>>>();
+                if (result.result.ContainsKey(symbol.Value))
+                {
+                    data = result.result[symbol.Value].ToObject<List<List<string>>>();
+                }
+                else
+                {
+                    throw new NotSupportedException("Asset pair was not found in the response. Make sure you use the correct model (XBTUSD -> XXBTZUSD).");
+                }
 
                 foreach (var i in data)
                 {

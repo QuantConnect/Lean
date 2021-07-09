@@ -270,7 +270,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
 
             // start IB Gateway
-            _ibAutomater = new IBAutomater.IBAutomater(ibDirectory, ibVersion, userName, password, tradingMode, port);
+            var exportIbGatewayLogs = Config.GetBool("ib-export-ibgateway-logs");
+            _ibAutomater = new IBAutomater.IBAutomater(ibDirectory, ibVersion, userName, password, tradingMode, port, exportIbGatewayLogs);
             _ibAutomater.OutputDataReceived += OnIbAutomaterOutputDataReceived;
             _ibAutomater.ErrorDataReceived += OnIbAutomaterErrorDataReceived;
             _ibAutomater.Exited += OnIbAutomaterExited;
@@ -810,8 +811,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         }
                     }
 
-                    // enable detailed logging
-                    _client.ClientSocket.setServerLogLevel(5);
+                    // enable logging at Warning level
+                    _client.ClientSocket.setServerLogLevel(3);
 
                     break;
                 }
@@ -2336,7 +2337,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return new Holding
             {
                 Symbol = symbol,
-                Type = symbol.SecurityType,
                 Quantity = e.Position,
                 AveragePrice = Convert.ToDecimal(e.AverageCost) / multiplier,
                 MarketPrice = Convert.ToDecimal(e.MarketPrice),
@@ -3427,7 +3427,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // these are warning messages not sent as brokerage message events
         private static readonly HashSet<int> FilteredCodes = new HashSet<int>
         {
-            1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158
+            1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158, 10197
         };
     }
 }
