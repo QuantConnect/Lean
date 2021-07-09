@@ -61,14 +61,6 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            // initialize data queue handler on-demand
-            if (!_isDataQueueHandlerInitialized || !tdClient.LiveMarketDataStreamer.IsConnected)
-            {
-                _isDataQueueHandlerInitialized = true;
-
-                tdClient.LiveMarketDataStreamer.LoginAsync(_accountId).Wait();
-            }
-
             if (!CanSubscribe(dataConfig.Symbol))
             {
                 return Enumerable.Empty<BaseData>().GetEnumerator();
@@ -124,9 +116,10 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         {
             var symbolsRemoved = false;
 
-            foreach (var symbol in symbols)
+            var tickers = symbols.Select(symbol => TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol));
+
+            foreach (var ticker in tickers)
             {
-                var ticker = TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol);
                 if (_subscribedTickers.ContainsKey(ticker))
                 {
                     Symbol removedSymbol;
@@ -137,16 +130,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
             if (symbolsRemoved)
             {
-                var subscriptions = _subscribedTickers.ToList();
-
-                tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.QUOTE).Wait();
-                tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.OPTION).Wait();
-                //tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES).Wait();
-                //tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FUTURES_OPTIONS).Wait();
-                //tdClient.LiveMarketDataStreamer.UnsubscribeAsync(StreamerDataService.LEVELONE_FOREX).Wait();
-
-                if (subscriptions.Count > 0)
-                    SubscribeTo(subscriptions);
+                tdClient.LiveMarketDataStreamer.UnsubscribeAsync(TDAmeritradeApi.Client.Models.Streamer.MarketDataType.LevelOneQuotes, tickers.ToArray()).Wait();
             }
 
             return true;
