@@ -115,6 +115,9 @@ namespace QuantConnect.Lean.Engine
 
                     AlgorithmHandlers.Setup.WorkerThread = workerThread;
 
+                    // initialize the data permission manager
+                    AlgorithmHandlers.DataPermissionsManager.Initialize(job);
+
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = AlgorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
 
@@ -126,9 +129,6 @@ namespace QuantConnect.Lean.Engine
 
                     // initialize the object store
                     AlgorithmHandlers.ObjectStore.Initialize(algorithm.Name, job.UserId, job.ProjectId, job.UserToken, job.Controls);
-
-                    // initialize the data permission manager
-                    AlgorithmHandlers.DataPermissionsManager.Initialize(job);
 
                     // notify the user of any errors w/ object store persistence
                     AlgorithmHandlers.ObjectStore.ErrorRaised += (sender, args) => algorithm.Debug($"ObjectStore Persistence Error: {args.Error.Message}");
