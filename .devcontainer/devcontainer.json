@@ -1,7 +1,7 @@
 {
 	"name": "Lean Dev",
 
-	"workspaceMount": "source=${localWorkspaceFolder},target=/Lean,type=bind",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/Lean,type=bind,consistency=cached",
 	"workspaceFolder": "/Lean",
 
 	// Use devcontainer Dockerfile that is based on Lean foundation image
@@ -25,5 +25,7 @@
 
 	// Add mounts to docker container
 	"mounts": [ 
+		// Example data mount from local machine, must use target directory in Config.json
+		"source=C:/Data,target=/Data,type=bind,consistency=cached" 
 	],
 }

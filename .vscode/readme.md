@@ -45,6 +45,7 @@ Before anything we need to ensure a few things have been done for either option:
         - Ctrl+Shift+P (Command Palette) and select "Remote-Containers: Rebuild and Reopen in Container"
 
 You should now be in the development container, give VS Code a moment to prepare and you will be ready to go!
+If you would like to mount any additional local files to your container, checkout devcontainer.json "mounts" section for an example! Upon any mount changes you must rebuild the container using Command Palette as in step 5.
 
 <br />
 
