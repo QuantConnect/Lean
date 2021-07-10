@@ -73,6 +73,8 @@ This section will cover configuring, building, launching and debugging lean. Thi
 
 <br />
 
+<h2>Configuration</h2>
+
 We need to be sure that our Lean configuration at **.\Launcher\config.json** is properly set.
 
 Your configuration file should look something like this for the following languages:
