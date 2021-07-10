@@ -13,11 +13,10 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 // Collection of response objects for Quantconnect Data/ endpoints
 namespace QuantConnect.Api
@@ -87,8 +86,8 @@ namespace QuantConnect.Api
                 return -1;
             }
 
-            var entry = Prices.FirstOrDefault(x => Regex.IsMatch(path, x.RegEx));
-            return entry == null ? -1 : entry.Price;
+            var entry = Prices.FirstOrDefault(x => x.RegEx.IsMatch(path));
+            return entry?.Price ?? -1;
         }
     }
 
@@ -97,6 +96,8 @@ namespace QuantConnect.Api
     /// </summary>
     public class PriceEntry
     {
+        private Regex _regex;
+
         /// <summary>
         /// Vendor for this price
         /// </summary>
@@ -108,10 +109,16 @@ namespace QuantConnect.Api
         /// Trims regex open, close, and multiline flag
         /// because it won't match otherwise
         /// </summary>
-        public string RegEx
+        public Regex RegEx
         {
-            get => RawRegEx.TrimStart('/').TrimEnd('m').TrimEnd('/');
-            set => RawRegEx = value;
+            get
+            {
+                if (_regex == null && RawRegEx != null)
+                {
+                    _regex = new Regex(RawRegEx.TrimStart('/').TrimEnd('m').TrimEnd('/'), RegexOptions.Compiled);
+                }
+                return _regex;
+            }
         }
 
         /// <summary>
@@ -124,6 +131,24 @@ namespace QuantConnect.Api
         /// The price for this entry in QCC
         /// </summary>
         [JsonProperty(PropertyName = "price")]
-        public int Price { get; set; }
+        public int? Price { get; set; }
+
+        /// <summary>
+        /// The type associated to this price entry if any
+        /// </summary>
+        [JsonProperty(PropertyName = "type")]
+        public string Type { get; set; }
+
+        /// <summary>
+        /// True if the user is subscribed
+        /// </summary>
+        [JsonProperty(PropertyName = "subscribed")]
+        public bool? Subscribed { get; set; }
+
+        /// <summary>
+        /// The associated product id
+        /// </summary>
+        [JsonProperty(PropertyName = "productId")]
+        public int ProductId { get; set; }
     }
 }
