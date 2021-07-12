@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Brokerages
                 }
             }
 
-            if(!task.Wait(TimeSpan.FromSeconds(2)))
+            if(!task.Wait(TimeSpan.FromSeconds(5)))
             {
                 Assert.Fail("BrokerageConcurrentMessageHandlerTests.MessagesHandledCorrectly(): timeout waiting for task to finish");
             }

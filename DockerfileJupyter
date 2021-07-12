@@ -21,17 +21,17 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-RUN conda install -y -c conda-forge notebook=6.0.3
+RUN conda install -y -c conda-forge notebook=6.0.3 && conda clean -y --all
 
 # Install clr-loader for PythonNet
-RUN pip install clr-loader==0.1.6
+RUN pip install --no-cache-dir clr-loader==0.1.6
 
 ENV LD_LIBRARY_PATH=/lib/
 RUN ln -s /lib/$(uname -m)-linux-gnu/libc.so.6 /lib/$(uname -m)-linux-gnu/libc.so
 
 # Install .NET Interactive to support C# in Jupyter notebooks
 ENV PATH="${PATH}:/root/.dotnet/tools"
-RUN dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
+RUN dotnet tool install -g --no-cache --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
     dotnet interactive jupyter install
 
 # Setting some environment variables
