@@ -110,7 +110,7 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly string _wssUrl = "wss://ws.kite.trade/";
 
         private readonly string _tradingSegment;
-        private readonly string _zerodhaProductType;
+        private string _zerodhaProductType;
 
         private DateTime _lastTradeTickTime;
         #endregion
@@ -450,7 +450,7 @@ namespace QuantConnect.Brokerages.Zerodha
             var security = _securityProvider.GetSecurity(order.Symbol);
             var orderFee = security.FeeModel.GetOrderFee(
                         new OrderFeeParameters(security, order));
-            var orderProperties = order.Properties as OrderProperties;
+            var orderProperties = order.Properties as ZerodhaOrderProperties;
             if (orderProperties == null || orderProperties.Exchange == null)
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
@@ -461,6 +461,10 @@ namespace QuantConnect.Brokerages.Zerodha
                 return false;
             }
 
+            if (orderProperties.ProductType != null)
+            {
+                _zerodhaProductType = orderProperties.ProductType;
+            }
             try
             {
                 orderResponse = _kite.PlaceOrder(orderProperties.Exchange.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(),
@@ -602,7 +606,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 return false;
             }
 
-            var orderProperties = order.Properties as OrderProperties;
+            var orderProperties = order.Properties as ZerodhaOrderProperties;
             if (orderProperties == null || orderProperties.Exchange == null)
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
@@ -619,6 +623,12 @@ namespace QuantConnect.Brokerages.Zerodha
             var kiteOrderType = ConvertOrderType(order.Type);
 
             var orderFee = OrderFee.Zero;
+
+            if (orderProperties.ProductType != null)
+            {
+                _zerodhaProductType = orderProperties.ProductType;
+            }
+            
             try
             {
                 orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
@@ -826,20 +836,18 @@ namespace QuantConnect.Brokerages.Zerodha
 
 
         /// <summary>
-        /// Gets all open positions
+        /// Gets all open postions and account holdings
         /// </summary>
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
             var holdingsList = new List<Holding>();
-            if (_zerodhaProductType.ToUpperInvariant() == KiteProductType.MIS.ToString().ToUpperInvariant() || _zerodhaProductType.ToUpperInvariant() == KiteProductType.NRML.ToString().ToUpperInvariant())
+            // get MIS and NRML Positions
+            var PositionsResponse = _kite.GetPositions();
+            if (PositionsResponse.Day.Count != 0)
             {
-                var HoldingResponse = _kite.GetPositions();
-                if (HoldingResponse.Day.Count == 0)
-                {
-                    return holdingsList;
-                }
-                foreach (var item in HoldingResponse.Day)
+                
+                foreach (var item in PositionsResponse.Day)
                 {
 
                     Holding holding = new Holding
@@ -855,16 +863,11 @@ namespace QuantConnect.Brokerages.Zerodha
                     };
                     holdingsList.Add(holding);
                 }
-
             }
-            else if (_zerodhaProductType.ToUpperInvariant() == KiteProductType.CNC.ToString().ToUpperInvariant())
+            // get CNC Positions
+            var HoldingResponse = _kite.GetHoldings();
+            if (HoldingResponse != null)
             {
-                var HoldingResponse = _kite.GetHoldings();
-                if (HoldingResponse == null)
-                {
-                    return holdingsList;
-                }
-
                 foreach (var item in HoldingResponse)
                 {
                     Holding holding = new Holding
@@ -880,9 +883,9 @@ namespace QuantConnect.Brokerages.Zerodha
                     holdingsList.Add(holding);
                 }
             }
-
             return holdingsList;
         }
+
         /// <summary>
         /// Gets the total account cash balance for specified account type
         /// </summary>
