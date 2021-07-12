@@ -1561,7 +1561,7 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">The requested leverage for the </param>
         /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
-        public Option AddOption(Symbol underlying, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        public Option AddOption(Symbol underlying, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage, OptionStyle optionStyle= OptionStyle.American)
         {
             var optionType = QuantConnect.Symbol.GetOptionTypeFromUnderlying(underlying);
 
@@ -1572,6 +1572,7 @@ namespace QuantConnect.Algorithm
                     throw new KeyNotFoundException($"No default market set for security type: {optionType}");
                 }
             }
+            
 
             Symbol canonicalSymbol;
             var alias = "?" + underlying.Value;

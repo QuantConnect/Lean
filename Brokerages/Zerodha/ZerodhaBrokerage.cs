@@ -44,36 +44,30 @@ namespace QuantConnect.Brokerages.Zerodha
     /// Zerodha Brokerage implementation
     /// </summary>
     [BrokerageFactory(typeof(ZerodhaBrokerageFactory))]
-    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler
+    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         #region Declarations
         private const int ConnectionTimeout = 30000;
-
         /// <summary>
         /// The websockets client instance
         /// </summary>
         protected ZerodhaWebSocketClientWrapper WebSocket;
-
         /// <summary>
         /// standard json parsing settings
         /// </summary>
         protected JsonSerializerSettings JsonSettings = new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal };
-
         /// <summary>
         /// A list of currently active orders
         /// </summary>
         public ConcurrentDictionary<int, Order> CachedOrderIDs = new ConcurrentDictionary<int, Order>();
-
         /// <summary>
         /// A list of currently subscribed channels
         /// </summary>
         protected Dictionary<string, Channel> ChannelList = new Dictionary<string, Channel>();
-
         /// <summary>
         /// The api secret
         /// </summary>
         protected string ApiSecret;
-
         /// <summary>
         /// The api key
         /// </summary>
@@ -85,18 +79,27 @@ namespace QuantConnect.Brokerages.Zerodha
         /// Timestamp of most recent heartbeat message
         /// </summary>
         protected DateTime LastHeartbeatUtcTime = DateTime.UtcNow;
-
+        private const int _heartbeatTimeout = 90;
+        private Thread _connectionMonitorThread;
+        private CancellationTokenSource _cancellationTokenSource;
+        private readonly object _lockerConnectionMonitor = new object();
+        private volatile bool _connectionLost;
+        private const int _connectionTimeout = 30000;
         private readonly IAlgorithm _algorithm;
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
-
+        //private ZerodhaSubscriptionManager _subscriptionManager;
         private readonly DataQueueHandlerSubscriptionManager SubscriptionManager;
 
         private ConcurrentDictionary<string, Symbol> _subscriptionsById = new ConcurrentDictionary<string, Symbol>();
-
         private readonly ConcurrentQueue<MessageData> _messageBuffer = new ConcurrentQueue<MessageData>();
 
         private readonly IDataAggregator _aggregator;
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
+        /// <summary>
+        /// Locking object for the Ticks list in the data queue handler
+        /// </summary>
+        public readonly object TickLocker = new object();
 
         private readonly ZerodhaSymbolMapper _symbolMapper;
 
@@ -108,7 +111,6 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly string _apiKey;
         private readonly string _accessToken;
         private readonly string _wssUrl = "wss://ws.kite.trade/";
-
         private readonly string _tradingSegment;
         private readonly string _zerodhaProductType;
 
@@ -159,6 +161,7 @@ namespace QuantConnect.Brokerages.Zerodha
             subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
             SubscriptionManager = subscriptionManager;
 
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             Log.Trace("Start Zerodha Brokerage");
         }
 
@@ -308,12 +311,10 @@ namespace QuantConnect.Brokerages.Zerodha
                     var fillQuantity = orderUpdate.FilledQuantity;
                     var direction = orderUpdate.TransactionType == "SELL" ? OrderDirection.Sell : OrderDirection.Buy;
                     var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
-
-                    var security = _securityProvider.GetSecurity(order.Symbol);
-                    var orderFee = security.FeeModel.GetOrderFee(
-                        new OrderFeeParameters(security, order));
-
-                    
+                    var orderFee = new OrderFee(new CashAmount(
+                                CalculateBrokerageOrderFee(orderUpdate.AveragePrice * orderUpdate.FilledQuantity),
+                            Currencies.INR
+                        ));
                     if (direction == OrderDirection.Sell)
                     {
                         fillQuantity = -1 * fillQuantity;
@@ -355,8 +356,39 @@ namespace QuantConnect.Brokerages.Zerodha
                 throw;
             }
         }
-        
 
+        private decimal CalculateBrokerageOrderFee(decimal orderValue)
+        {
+            bool isSell = orderValue < 0;
+            orderValue = Math.Abs(orderValue);
+            var multiplied = orderValue * 0.0003M;
+            var brokerage = (multiplied > 20) ? 20 : Math.Round(multiplied, 2);
+
+            var turnover = Math.Round(orderValue, 2);
+
+            decimal stt_total = 0;
+            if (isSell)
+            {
+                stt_total = Math.Round(orderValue * 0.00025M, 2);
+            }
+
+            var exc_trans_charge = Math.Round(turnover * 0.0000325M, 2);
+            var cc = 0;
+
+
+            var stax = Math.Round(0.18M * (brokerage + exc_trans_charge), 2);
+
+            var sebi_charges = Math.Round((turnover * 0.000001M), 2);
+            decimal stamp_charges = 0;
+            if (!isSell)
+            {
+                stamp_charges = Math.Round(orderValue * 0.00003M, 2);
+            }
+
+            var total_tax = Math.Round(brokerage + stt_total + exc_trans_charge + stamp_charges + cc + stax + sebi_charges, 2);
+
+            return total_tax;
+        }
         /// <summary>
         /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
         /// </summary>
@@ -637,7 +669,6 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             catch (Exception ex)
             {
-
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}"));
 
@@ -940,6 +971,17 @@ namespace QuantConnect.Brokerages.Zerodha
                 yield break;
             }
 
+            // if the end time cannot be rounded to resolution without a remainder
+            //TODO Fix this 
+            //if (request.EndTimeUtc.Ticks % request.Resolution.ToTimeSpan().Ticks > 0)
+            //{
+            //    // give a warning and return
+            //    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidEndTime",
+            //        "The history request's end date is not a full multiple of a resolution. " +
+            //        "Zerodha API only allows to support trade bar history requests. The start and end dates " +
+            //        "of a such request are expected to match exactly with the beginning of the first bar and ending of the last"));
+            //    yield break;
+            //}
 
             DateTime latestTime = request.StartTimeUtc;
             var requests = new List<HistoryRequest>();

@@ -1,22 +1,7 @@
-﻿/*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
-using Moq;
+﻿using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
-using QuantConnect.Brokerages.Zerodha;
+using QuantConnect.Brokerages.Samco;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -27,21 +12,16 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
-namespace QuantConnect.Tests.Brokerages.Zerodha
+namespace QuantConnect.Tests.Brokerages.Samco
 {
-    [TestFixture, Ignore("This test requires a configured and active Zerodha account")]
-    public class ZerodhaBrokerageTests
+    [TestFixture, Ignore("This test requires a configured and active Samco account")]
+    public class SamcoBrokerageTests
     {
-
-
-        private static IOrderProperties orderProperties = new ZerodhaOrderProperties(exchange: "nse");
 
         private IBrokerage _brokerage;
         private OrderProvider _orderProvider;
@@ -62,7 +42,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             _securityProvider = null;
             Thread.Sleep(1000);
             CancelOpenOrders();
-            LiquidateZerodhaHoldings();
+            LiquidateSamcoHoldings();
             Thread.Sleep(1000);
         }
 
@@ -78,7 +58,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
                 Log.Trace("");
                 Thread.Sleep(1000);
                 CancelOpenOrders();
-                LiquidateZerodhaHoldings();
+                LiquidateSamcoHoldings();
                 Thread.Sleep(1000);
             }
             finally
@@ -179,19 +159,19 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
         internal static Security CreateSecurity(Symbol symbol)
         {
             return new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Kolkata),
                 new SubscriptionDataConfig(
                     typeof(TradeBar),
                     symbol,
                     Resolution.Minute,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
+                    TimeZones.Kolkata,
+                    TimeZones.Kolkata,
                     false,
                     false,
                     false
                 ),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
+                new Cash(Currencies.INR, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.INR),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
@@ -211,7 +191,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
         /// <summary>
         /// This is used to ensure each test starts with a clean, known state.
         /// </summary>
-        protected void LiquidateZerodhaHoldings()
+        protected void LiquidateSamcoHoldings()
         {
             Log.Trace("");
             Log.Trace("LIQUIDATE HOLDINGS");
@@ -223,9 +203,9 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             {
                 if (holding.Quantity == 0) continue;
                 Log.Trace("Liquidating: " + holding);
-                var order = new MarketOrder(holding.Symbol, -holding.Quantity, DateTime.UtcNow,properties:orderProperties);
+                var order = new MarketOrder(holding.Symbol, -holding.Quantity, DateTime.UtcNow);
                 _orderProvider.Add(order);
-                PlaceZerodhaOrderWaitForStatus(order, OrderStatus.Filled);
+                PlaceSamcoOrderWaitForStatus(order, OrderStatus.Filled);
             }
         }
 
@@ -236,10 +216,10 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
         {
             return new[]
             {
-                new TestCaseData(new MarketOrderTestParameters(Symbols.IDEA,orderProperties)).SetName("MarketOrder"),
-                new TestCaseData(new LimitOrderTestParameters(Symbols.IDEA, 9.00m, 9.30m,orderProperties)).SetName("LimitOrder"),
-                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IDEA, 10.50m,  9.50m,orderProperties)).SetName("StopMarketOrder"),
-                //new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA,  9.00m, 10.50m,orderProperties)).SetName("StopLimitOrder")
+                new TestCaseData(new MarketOrderTestParameters(Symbols.IOB)).SetName("MarketOrder"),
+                new TestCaseData(new LimitOrderTestParameters(Symbols.IOB, 9.00m, 9.30m)).SetName("LimitOrder"),
+                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IOB, 10.50m,  9.50m)).SetName("StopMarketOrder"),
+                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IOB,  9.00m, 10.50m)).SetName("StopLimitOrder")
             };
         }
 
@@ -260,22 +240,23 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
 
             var algorithm = new Mock<IAlgorithm>();
             algorithm.Setup(a => a.Transactions).Returns(transactions);
-            algorithm.Setup(a => a.BrokerageModel).Returns(new ZerodhaBrokerageModel());
+            algorithm.Setup(a => a.BrokerageModel).Returns(new SamcoBrokerageModel());
             algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
 
-            var accessToken = Config.Get("zerodha-access-token");
-            var apiKey = Config.Get("zerodha-api-key");
-            var tradingSegment = Config.Get("zerodha-trading-segment");
-            var productType = Config.Get("zerodha-product-type");
-            var zerodha = new ZerodhaBrokerage(tradingSegment, productType, apiKey, accessToken, algorithm.Object, algorithm.Object.Portfolio, new AggregationManager());
+            var apiSecret = Config.Get("samco.api-secret");
+            var apiKey = Config.Get("samco.api-key");
+            var yob = Config.Get("samco.year-of-birth");
+            var tradingSegment = Config.Get("samco.trading-segment");
+            var productType = Config.Get("samco.product-type");
+            var Samco = new SamcoBrokerage(tradingSegment, productType, apiKey, apiSecret, yob, algorithm.Object, new AggregationManager());
 
-            return zerodha;
+            return Samco;
         }
 
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected Symbol Symbol => Symbols.IDEA;
+        protected Symbol Symbol => Symbols.IOB;
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol"/>
@@ -304,15 +285,15 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
         /// </summary>
         protected decimal GetAskPrice(Symbol symbol)
         {
-            var zerodha = (ZerodhaBrokerage)Brokerage;
-            var quotes = zerodha.GetQuote(symbol);
-            return quotes.LastPrice;
+            var Samco = (SamcoBrokerage)Brokerage;
+            var quotes = Samco.GetQuote(symbol);
+            return Convert.ToDecimal(quotes.lastTradedPrice,CultureInfo.InvariantCulture);
         }
 
         [Test]
-        public void ShortIdea()
+        public void ShortIOB()
         {
-            PlaceZerodhaOrderWaitForStatus(new MarketOrder(Symbols.IDEA, -1, DateTime.Now, properties: orderProperties), OrderStatus.Submitted, allowFailedSubmission: true);
+            PlaceSamcoOrderWaitForStatus(new MarketOrder(Symbols.IOB, -1, DateTime.Now), OrderStatus.Submitted, allowFailedSubmission: true);
 
             // wait for output to be generated
             Thread.Sleep(20 * 1000);
@@ -326,7 +307,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             Log.Trace("CANCEL ORDERS");
             Log.Trace("");
 
-            var order = PlaceZerodhaOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
+            var order = PlaceSamcoOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
 
             var canceledOrderStatusEvent = new ManualResetEvent(false);
             EventHandler<OrderEvent> orderStatusCallback = (sender, fill) =>
@@ -381,39 +362,39 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
         [Test]
         public void ValidateStopLimitOrders()
         {
-            var zerodha = (ZerodhaBrokerage)Brokerage;
+            var Samco = (SamcoBrokerage)Brokerage;
             var symbol = Symbol;
             var lastPrice = GetAskPrice(symbol.Value);
 
-            // Buy StopLimit order below market TODO: This might not work because of the Zerodha structure. Verify this.
+            // Buy StopLimit order below market TODO: This might not work because of the Samco structure. Verify this.
             //var stopPrice = lastPrice - 0.10m; 
             //var limitPrice = stopPrice + 0.10m;
             //var order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.UtcNow, properties: orderProperties);
-            //Assert.IsTrue(zerodha.PlaceOrder(order));
+            //Assert.IsTrue(Samco.PlaceOrder(order));
 
             // Buy StopLimit order above market
             var stopPrice = lastPrice + 0.20m;
             var limitPrice = stopPrice + 0.25m;
-            var order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.UtcNow, properties: orderProperties);
-            Assert.IsTrue(zerodha.PlaceOrder(order));
+            var order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.UtcNow);
+            Assert.IsTrue(Samco.PlaceOrder(order));
 
             // In case there is no position, the following sell orders would not be placed
             // So build a position for them.
-            var marketOrder = new MarketOrder(symbol, 2, DateTime.UtcNow, properties: orderProperties);
-            Assert.IsTrue(zerodha.PlaceOrder(marketOrder));
+            var marketOrder = new MarketOrder(symbol, 2, DateTime.UtcNow);
+            Assert.IsTrue(Samco.PlaceOrder(marketOrder));
 
             Thread.Sleep(20000);
             // Sell StopLimit order below market
             stopPrice = lastPrice - 0.25m;
             limitPrice = stopPrice - 0.5m;
-            order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.UtcNow, properties: orderProperties);
-            Assert.IsTrue(zerodha.PlaceOrder(order));
+            order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.UtcNow);
+            Assert.IsTrue(Samco.PlaceOrder(order));
 
-            // Sell StopLimit order above market. TODO: This might not work because of the Zerodha structure. Verify this 
+            // Sell StopLimit order above market. TODO: This might not work because of the Samco structure. Verify this 
             //stopPrice = lastPrice + 0.5m;
             //limitPrice = stopPrice - 0.25m ;
             //order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.UtcNow, properties: orderProperties);
-            //Assert.IsTrue(zerodha.PlaceOrder(order));
+            //Assert.IsTrue(Samco.PlaceOrder(order));
         }
 
 
@@ -423,7 +404,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             Log.Trace("");
             Log.Trace("LONG FROM ZERO");
             Log.Trace("");
-            PlaceZerodhaOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
+            PlaceSamcoOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
         }
 
 
@@ -434,10 +415,10 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             Log.Trace("CLOSE FROM LONG");
             Log.Trace("");
             // first go long
-            PlaceZerodhaOrderWaitForStatus(parameters.CreateLongMarketOrder(GetDefaultQuantity()), OrderStatus.Filled);
+            PlaceSamcoOrderWaitForStatus(parameters.CreateLongMarketOrder(GetDefaultQuantity()), OrderStatus.Filled);
 
             // now close it
-            PlaceZerodhaOrderWaitForStatus(parameters.CreateShortOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
+            PlaceSamcoOrderWaitForStatus(parameters.CreateShortOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
         }
 
         [Test, TestCaseSource(nameof(OrderParameters))]
@@ -446,7 +427,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             Log.Trace("");
             Log.Trace("SHORT FROM ZERO");
             Log.Trace("");
-            PlaceZerodhaOrderWaitForStatus(parameters.CreateShortOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
+            PlaceSamcoOrderWaitForStatus(parameters.CreateShortOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
         }
 
         [Test, TestCaseSource(nameof(OrderParameters))]
@@ -456,10 +437,10 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             Log.Trace("CLOSE FROM SHORT");
             Log.Trace("");
             // first go short
-            PlaceZerodhaOrderWaitForStatus(parameters.CreateShortMarketOrder(GetDefaultQuantity()), OrderStatus.Filled);
+            PlaceSamcoOrderWaitForStatus(parameters.CreateShortMarketOrder(GetDefaultQuantity()), OrderStatus.Filled);
 
             // now close it
-            PlaceZerodhaOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
+            PlaceSamcoOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
         }
 
         [Test, TestCaseSource(nameof(OrderParameters))]
@@ -469,10 +450,10 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             Log.Trace("SHORT FROM LONG");
             Log.Trace("");
             // first go long
-            PlaceZerodhaOrderWaitForStatus(parameters.CreateLongMarketOrder(GetDefaultQuantity()));
+            PlaceSamcoOrderWaitForStatus(parameters.CreateLongMarketOrder(GetDefaultQuantity()));
 
             // now go net short
-            var order = PlaceZerodhaOrderWaitForStatus(parameters.CreateShortOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
+            var order = PlaceSamcoOrderWaitForStatus(parameters.CreateShortOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
 
             if (parameters.ModifyUntilFilled)
             {
@@ -502,7 +483,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             };
 
             // pick a security with low, but some, volume
-            var symbol = Symbols.EURUSD;
+            var symbol = Symbols.IOB;
             var order = new MarketOrder(symbol, qty, DateTime.UtcNow) { Id = 1 };
             OrderProvider.Add(order);
             Brokerage.PlaceOrder(order);
@@ -523,10 +504,10 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             Log.Trace("LONG FROM SHORT");
             Log.Trace("");
             // first fo short
-            PlaceZerodhaOrderWaitForStatus(parameters.CreateShortMarketOrder(-GetDefaultQuantity()), OrderStatus.Filled);
+            PlaceSamcoOrderWaitForStatus(parameters.CreateShortMarketOrder(-GetDefaultQuantity()), OrderStatus.Filled);
 
             // now go long
-            var order = PlaceZerodhaOrderWaitForStatus(parameters.CreateLongOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
+            var order = PlaceSamcoOrderWaitForStatus(parameters.CreateLongOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
 
             if (parameters.ModifyUntilFilled)
             {
@@ -552,7 +533,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             Log.Trace("");
             var before = Brokerage.GetAccountHoldings();
 
-            PlaceZerodhaOrderWaitForStatus(new MarketOrder(Symbol, GetDefaultQuantity(), DateTime.UtcNow,properties:orderProperties));
+            PlaceSamcoOrderWaitForStatus(new MarketOrder(Symbol, GetDefaultQuantity(), DateTime.UtcNow));
 
             Thread.Sleep(3000);
 
@@ -583,7 +564,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
         /// <param name="secondsTimeout">Maximum amount of time to wait for <paramref name="expectedStatus"/></param>
         /// <param name="allowFailedSubmission">Allow failed order submission</param>
         /// <returns>The same order that was submitted.</returns>
-        protected Order PlaceZerodhaOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled,
+        protected Order PlaceSamcoOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled,
                                                 double secondsTimeout = 10.0, bool allowFailedSubmission = false)
         {
             var requiredStatusEvent = new ManualResetEvent(false);

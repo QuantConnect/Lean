@@ -24,13 +24,20 @@ namespace QuantConnect.Orders
     /// </summary>
     public class ZerodhaOrderProperties : OrderProperties
     {
+        public readonly string ProductType;
+        public ZerodhaOrderProperties(KiteProductType productType)
+        {
+            ProductType = productType.ToStringInvariant();
+        }
 
         /// <summary>
-        /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
+        /// Define the Kite Order type that we are targeting (MIS/CNC/NRML).
         /// </summary>
-        /// <param name="exchange">Exchange value, nse/bse etc</param>
-        public ZerodhaOrderProperties(string exchange) : base(exchange)
+        public enum KiteProductType
         {
+            MIS,
+            CNC,
+            NRML
         }
 
         /// <summary>
