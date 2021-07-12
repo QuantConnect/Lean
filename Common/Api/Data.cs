@@ -150,5 +150,11 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "productId")]
         public int ProductId { get; set; }
+
+        /// <summary>
+        /// The associated data paths
+        /// </summary>
+        [JsonProperty(PropertyName = "paths")]
+        public HashSet<string> Paths { get; set; }
     }
 }
