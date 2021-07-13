@@ -823,44 +823,50 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             var holdingsList = new List<Holding>();
             // get MIS and NRML Positions
-            var PositionsResponse = _kite.GetPositions();
-            if (PositionsResponse.Day.Count != 0)
+            if (string.IsNullOrEmpty(_zerodhaProductType) || _zerodhaProductType.ToUpperInvariant() == KiteProductType.MIS.ToString().ToUpperInvariant() || _zerodhaProductType.ToUpperInvariant() == KiteProductType.NRML.ToString().ToUpperInvariant())
             {
-                
-                foreach (var item in PositionsResponse.Day)
+                var PositionsResponse = _kite.GetPositions();
+                if (PositionsResponse.Day.Count != 0)
                 {
-
-                    Holding holding = new Holding
+                    
+                    foreach (var item in PositionsResponse.Day)
                     {
-                        AveragePrice = item.AveragePrice,
-                        Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
-                        MarketPrice = item.LastPrice,
-                        Quantity = item.Quantity,
-                        UnrealizedPnL = item.Unrealised,
-                        CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
-                        MarketValue = item.ClosePrice * item.Quantity
 
-                    };
-                    holdingsList.Add(holding);
+                        Holding holding = new Holding
+                        {
+                            AveragePrice = item.AveragePrice,
+                            Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
+                            MarketPrice = item.LastPrice,
+                            Quantity = item.Quantity,
+                            UnrealizedPnL = item.Unrealised,
+                            CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
+                            MarketValue = item.ClosePrice * item.Quantity
+
+                        };
+                        holdingsList.Add(holding);
+                    }
                 }
             }
             // get CNC Positions
-            var HoldingResponse = _kite.GetHoldings();
-            if (HoldingResponse != null)
+            if (string.IsNullOrEmpty(_zerodhaProductType) || _zerodhaProductType.ToUpperInvariant() == KiteProductType.CNC.ToString().ToUpperInvariant() )
             {
-                foreach (var item in HoldingResponse)
+                var HoldingResponse = _kite.GetHoldings();
+                if (HoldingResponse != null)
                 {
-                    Holding holding = new Holding
+                    foreach (var item in HoldingResponse)
                     {
-                        AveragePrice = item.AveragePrice,
-                        Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
-                        MarketPrice = item.LastPrice,
-                        Quantity = item.Quantity,
-                        UnrealizedPnL = item.PNL,
-                        CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
-                        MarketValue = item.ClosePrice * item.Quantity
-                    };
-                    holdingsList.Add(holding);
+                        Holding holding = new Holding
+                        {
+                            AveragePrice = item.AveragePrice,
+                            Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
+                            MarketPrice = item.LastPrice,
+                            Quantity = item.Quantity,
+                            UnrealizedPnL = item.PNL,
+                            CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
+                            MarketValue = item.ClosePrice * item.Quantity
+                        };
+                        holdingsList.Add(holding);
+                    }
                 }
             }
             return holdingsList;
