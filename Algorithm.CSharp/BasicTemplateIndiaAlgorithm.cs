@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Find more symbols here: http://quantconnect.com/data
             // Equities Resolutions: Tick, Second, Minute, Hour, Daily.
-            AddEquity("TCS", Resolution.Tick, Market.India);
+            AddEquity("UNIONBANK", Resolution.Second, Market.India);
             
             //Set Order Prperties as per the requirements for order placement
             DefaultOrderProperties = new ZerodhaOrderProperties(exchange: "nse");
@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                var marketTicket = MarketOrder("TCS", 1);
+                var marketTicket = MarketOrder("UNIONBANK", 1);
             }
         }
 

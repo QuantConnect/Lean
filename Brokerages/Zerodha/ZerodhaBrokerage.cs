@@ -451,6 +451,7 @@ namespace QuantConnect.Brokerages.Zerodha
             var orderFee = security.FeeModel.GetOrderFee(
                         new OrderFeeParameters(security, order));
             var orderProperties = order.Properties as ZerodhaOrderProperties;
+            var zerodhaProductType = _zerodhaProductType;
             if (orderProperties == null || orderProperties.Exchange == null)
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
@@ -460,15 +461,18 @@ namespace QuantConnect.Brokerages.Zerodha
                 UnlockStream();
                 return false;
             }
-
             if (orderProperties.ProductType != null)
             {
-                _zerodhaProductType = orderProperties.ProductType;
+                zerodhaProductType = orderProperties.ProductType;
+            }
+            else if (string.IsNullOrEmpty(zerodhaProductType))
+            {
+                throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
             }
             try
             {
                 orderResponse = _kite.PlaceOrder(orderProperties.Exchange.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(),
-                    orderQuantity, orderPrice, _zerodhaProductType, kiteOrderType, null, null, triggerPrice);
+                    orderQuantity, orderPrice, zerodhaProductType, kiteOrderType, null, null, triggerPrice);
             }
             catch (Exception ex)
             {
@@ -607,6 +611,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
             var orderProperties = order.Properties as ZerodhaOrderProperties;
+            var zerodhaProductType = _zerodhaProductType; 
             if (orderProperties == null || orderProperties.Exchange == null)
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
@@ -614,6 +619,14 @@ namespace QuantConnect.Brokerages.Zerodha
 
                 UnlockStream();
                 return false;
+            }
+            if (orderProperties.ProductType != null)
+            {
+                zerodhaProductType = orderProperties.ProductType;
+            }
+            else if (string.IsNullOrEmpty(zerodhaProductType))
+            {
+                throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
             }
 
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
@@ -623,11 +636,6 @@ namespace QuantConnect.Brokerages.Zerodha
             var kiteOrderType = ConvertOrderType(order.Type);
 
             var orderFee = OrderFee.Zero;
-
-            if (orderProperties.ProductType != null)
-            {
-                _zerodhaProductType = orderProperties.ProductType;
-            }
             
             try
             {
@@ -638,7 +646,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 order.Direction.ToString().ToUpperInvariant(),
                 orderQuantity,
                 orderPrice,
-                _zerodhaProductType,
+                zerodhaProductType,
                 kiteOrderType,
                 null,
                 null,
