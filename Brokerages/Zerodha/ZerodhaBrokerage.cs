@@ -87,7 +87,6 @@ namespace QuantConnect.Brokerages.Zerodha
         protected DateTime LastHeartbeatUtcTime = DateTime.UtcNow;
 
         private readonly IAlgorithm _algorithm;
-        private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
 
         private readonly DataQueueHandlerSubscriptionManager SubscriptionManager;
@@ -110,7 +109,8 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly string _wssUrl = "wss://ws.kite.trade/";
 
         private readonly string _tradingSegment;
-        private string _zerodhaProductType;
+        private readonly BrokerageConcurrentMessageHandler<MessageData> _messageHandler;
+        private readonly string _zerodhaProductType;
 
         private DateTime _lastTradeTickTime;
         #endregion
@@ -138,6 +138,7 @@ namespace QuantConnect.Brokerages.Zerodha
             _apiKey = apiKey;
             _accessToken = apiSecret;
             _securityProvider = securityProvider;
+             _messageHandler = new BrokerageConcurrentMessageHandler<MessageData>(OnMessageImpl);
             WebSocket = new ZerodhaWebSocketClientWrapper();
             _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
             WebSocket.Initialize(_wssUrl);
@@ -357,32 +358,6 @@ namespace QuantConnect.Brokerages.Zerodha
         }
         
 
-        /// <summary>
-        /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
-        /// </summary>
-        public void LockStream()
-        {
-            Log.Trace("ZerodhaBrokerage.Messaging.LockStream(): Locking Stream");
-            _streamLocked = true;
-        }
-
-        /// <summary>
-        /// Unlock stream and process all backed up messages.
-        /// </summary>
-        public void UnlockStream()
-        {
-            Log.Trace("ZerodhaBrokerage.Messaging.UnlockStream(): Processing Backlog...");
-            while (_messageBuffer.Any())
-            {
-                MessageData e;
-                _messageBuffer.TryDequeue(out e);
-                OnMessageImpl(e);
-            }
-            Log.Trace("ZerodhaBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
-            // Once dequeued in order; unlock stream.
-            _streamLocked = false;
-        }
-
         #region IBrokerage
 
         /// <summary>
@@ -438,93 +413,92 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            LockStream();
+            var submitted = false;
 
-            uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
-            JObject orderResponse;
-
-            decimal? triggerPrice = GetOrderTriggerPrice(order);
-            decimal? orderPrice = GetOrderPrice(order);
-
-            var kiteOrderType = ConvertOrderType(order.Type);
-            var security = _securityProvider.GetSecurity(order.Symbol);
-            var orderFee = security.FeeModel.GetOrderFee(
-                        new OrderFeeParameters(security, order));
-            var orderProperties = order.Properties as ZerodhaOrderProperties;
-            var zerodhaProductType = _zerodhaProductType;
-            if (orderProperties == null || orderProperties.Exchange == null)
+            _messageHandler.WithLockedStream(() =>
             {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
+
+                uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
+                JObject orderResponse = new JObject();;
+
+                decimal? triggerPrice = GetOrderTriggerPrice(order);
+                decimal? orderPrice = GetOrderPrice(order);
+
+                var kiteOrderType = ConvertOrderType(order.Type);
+                var security = _securityProvider.GetSecurity(order.Symbol);
+                var orderFee = security.FeeModel.GetOrderFee(
+                            new OrderFeeParameters(security, order));
+                var orderProperties = order.Properties as ZerodhaOrderProperties;
+                var zerodhaProductType = _zerodhaProductType;
+                if (orderProperties == null || orderProperties.Exchange == null)
+                {
+                    var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+
+                    submitted = false;
+                }
+                if (orderProperties.ProductType != null)
+                {
+                    zerodhaProductType = orderProperties.ProductType;
+                }
+                else if (string.IsNullOrEmpty(zerodhaProductType))
+                {
+                    throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
+                }
+                try
+                {
+                    orderResponse = _kite.PlaceOrder(orderProperties.Exchange.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(),
+                        orderQuantity, orderPrice, zerodhaProductType, kiteOrderType, null, null, triggerPrice);
+                }
+                catch (Exception ex)
+                {
+
+                    var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+
+                    submitted = false;
+                }
+
+
+                if ((string)orderResponse["status"] == "success")
+                {
+                    if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
+                    {
+                        var errorMessage = $"Error parsing response from place order: {(string)orderResponse["status_message"]}";
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status_message"], errorMessage));
+
+                        submitted = false;
+                    }
+
+                    var brokerId = (string)orderResponse["data"]["order_id"];
+                    if (CachedOrderIDs.ContainsKey(order.Id))
+                    {
+                        CachedOrderIDs[order.Id].BrokerId.Clear();
+                        CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
+                    }
+                    else
+                    {
+                        order.BrokerId.Add(brokerId);
+                        CachedOrderIDs.TryAdd(order.Id, order);
+                    }
+
+                    // Generate submitted event
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Submitted });
+                    Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
+
+                    submitted = true;
+                }
+
+                var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["status_message"]}";
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-
-                UnlockStream();
-                return false;
-            }
-            if (orderProperties.ProductType != null)
-            {
-                zerodhaProductType = orderProperties.ProductType;
-            }
-            else if (string.IsNullOrEmpty(zerodhaProductType))
-            {
-                throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
-            }
-            try
-            {
-                orderResponse = _kite.PlaceOrder(orderProperties.Exchange.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(),
-                    orderQuantity, orderPrice, zerodhaProductType, kiteOrderType, null, null, triggerPrice);
-            }
-            catch (Exception ex)
-            {
-
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}";
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-
-                UnlockStream();
-                return false;
-            }
-
-
-            if ((string)orderResponse["status"] == "success")
-            {
-                if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
-                {
-                    var errorMessage = $"Error parsing response from place order: {(string)orderResponse["status_message"]}";
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status_message"], errorMessage));
-
-                    UnlockStream();
-                    return false;
-                }
-
-                var brokerId = (string)orderResponse["data"]["order_id"];
-                if (CachedOrderIDs.ContainsKey(order.Id))
-                {
-                    CachedOrderIDs[order.Id].BrokerId.Clear();
-                    CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
-                }
-                else
-                {
-                    order.BrokerId.Add(brokerId);
-                    CachedOrderIDs.TryAdd(order.Id, order);
-                }
-
-                // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Submitted });
-                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
-
-                UnlockStream();
-                return true;
-            }
-
-            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["status_message"]}";
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
-
-            UnlockStream();
-            return false;
-
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
+                
+                submitted = false;
+            });
+            return submitted;
         }
 
         /// <summary>
@@ -601,107 +575,105 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            LockStream();
+            var submitted = false;
 
-            if (!order.Status.IsOpen())
-            {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "error", "Order is already being processed"));
-                UnlockStream();
-                return false;
-            }
-
-            var orderProperties = order.Properties as ZerodhaOrderProperties;
-            var zerodhaProductType = _zerodhaProductType; 
-            if (orderProperties == null || orderProperties.Exchange == null)
-            {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-
-                UnlockStream();
-                return false;
-            }
-            if (orderProperties.ProductType != null)
-            {
-                zerodhaProductType = orderProperties.ProductType;
-            }
-            else if (string.IsNullOrEmpty(zerodhaProductType))
-            {
-                throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
-            }
-
-            uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
-            JObject orderResponse;
-            decimal? triggerPrice = GetOrderTriggerPrice(order);
-            decimal? orderPrice = GetOrderPrice(order);
-            var kiteOrderType = ConvertOrderType(order.Type);
-
-            var orderFee = OrderFee.Zero;
-            
-            try
-            {
-                orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
-                null,
-                orderProperties.Exchange.ToUpperInvariant(),
-                order.Symbol.ID.Symbol,
-                order.Direction.ToString().ToUpperInvariant(),
-                orderQuantity,
-                orderPrice,
-                zerodhaProductType,
-                kiteOrderType,
-                null,
-                null,
-                triggerPrice
-                );
-            }
-            catch (Exception ex)
+            _messageHandler.WithLockedStream(() =>
             {
 
+                if (!order.Status.IsOpen())
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "error", "Order is already being processed"));
+                    submitted = false;
+                }
+
+                var orderProperties = order.Properties as ZerodhaOrderProperties;
+                var zerodhaProductType = _zerodhaProductType; 
+                if (orderProperties == null || orderProperties.Exchange == null)
+                {
+                    var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+
+                    submitted = false;
+                }
+                if (orderProperties.ProductType != null)
+                {
+                    zerodhaProductType = orderProperties.ProductType;
+                }
+                else if (string.IsNullOrEmpty(zerodhaProductType))
+                {
+                    throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
+                }
+                uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
+                JObject orderResponse = new JObject();;
+                decimal? triggerPrice = GetOrderTriggerPrice(order);
+                decimal? orderPrice = GetOrderPrice(order);
+                var kiteOrderType = ConvertOrderType(order.Type);
+
+                var orderFee = OrderFee.Zero;
+                
+                try
+                {
+                    orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
+                    null,
+                    orderProperties.Exchange.ToUpperInvariant(),
+                    order.Symbol.ID.Symbol,
+                    order.Direction.ToString().ToUpperInvariant(),
+                    orderQuantity,
+                    orderPrice,
+                    zerodhaProductType,
+                    kiteOrderType,
+                    null,
+                    null,
+                    triggerPrice
+                    );
+                }
+                catch (Exception ex)
+                {
+
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}"));
+
+                    submitted = false;
+                }
+
+
+                if ((string)orderResponse["status"] == "success")
+                {
+                    if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
+                    {
+                        var errorMessage = $"Error parsing response from modify order: {orderResponse["status_message"]}";
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status"], errorMessage));
+
+                        submitted = true;
+                    }
+
+                    var brokerId = (string)orderResponse["data"]["order_id"];
+                    if (CachedOrderIDs.ContainsKey(order.Id))
+                    {
+                        CachedOrderIDs[order.Id].BrokerId.Clear();
+                        CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
+                    }
+                    else
+                    {
+                        order.BrokerId.Add(brokerId);
+                        CachedOrderIDs.TryAdd(order.Id, order);
+                    }
+
+                    // Generate submitted event
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.UpdateSubmitted });
+                    Log.Trace($"Order modified successfully - OrderId: {order.Id}");
+
+                    submitted = true;
+                }
+
+                var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["status_message"]}";
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}"));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
-                UnlockStream();
-                return false;
-            }
-
-
-            if ((string)orderResponse["status"] == "success")
-            {
-                if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
-                {
-                    var errorMessage = $"Error parsing response from modify order: {orderResponse["status_message"]}";
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status"], errorMessage));
-
-                    UnlockStream();
-                    return true;
-                }
-
-                var brokerId = (string)orderResponse["data"]["order_id"];
-                if (CachedOrderIDs.ContainsKey(order.Id))
-                {
-                    CachedOrderIDs[order.Id].BrokerId.Clear();
-                    CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
-                }
-                else
-                {
-                    order.BrokerId.Add(brokerId);
-                    CachedOrderIDs.TryAdd(order.Id, order);
-                }
-
-                // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.UpdateSubmitted });
-                Log.Trace($"Order modified successfully - OrderId: {order.Id}");
-
-                UnlockStream();
-                return true;
-            }
-
-            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["status_message"]}";
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
-
-            UnlockStream();
-            return false;
+                submitted = false;
+            });
+            return submitted;
         }
 
         /// <summary>
@@ -710,43 +682,43 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="order">The order to cancel</param>
         /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
         public override bool CancelOrder(Order order)
-        {
-            LockStream();
+        {   
+            var submitted = false;
 
-            JObject orderResponse = new JObject();
-            if (order.Status.IsOpen())
+            _messageHandler.WithLockedStream(() =>
             {
-                try
+
+                JObject orderResponse = new JObject();
+                if (order.Status.IsOpen())
                 {
-                    orderResponse = _kite.CancelOrder(order.BrokerId[0].ToStringInvariant());
+                    try
+                    {
+                        orderResponse = _kite.CancelOrder(order.BrokerId[0].ToStringInvariant());
+                    }
+                    catch (Exception)
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], $"Error cancelling order: {orderResponse["status_message"]}"));
+                        submitted = false;
+                    }
                 }
-                catch (Exception)
+                else
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], $"Error cancelling order: {orderResponse["status_message"]}"));
-                    UnlockStream();
-                    return false;
+                    //Verify this
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 500, $"Error cancelling open order"));
+                    submitted = false;
                 }
-            }
-            else
-            {
-                //Verify this
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 500, $"Error cancelling open order"));
-                UnlockStream();
-                return false;
-            }
 
-            if ((string)orderResponse["status"] == "success")
-            {
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Zerodha Order Cancelled Event") { Status = OrderStatus.Canceled });
-                UnlockStream();
-                return true;
-            }
-            var errorMessage = $"Error cancelling order: {orderResponse["status_message"]}";
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], errorMessage));
+                if ((string)orderResponse["status"] == "success")
+                {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Zerodha Order Cancelled Event") { Status = OrderStatus.Canceled });
+                    submitted = true;
+                }
+                var errorMessage = $"Error cancelling order: {orderResponse["status_message"]}";
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], errorMessage));
 
-            UnlockStream();
-            return false;
-
+                submitted = false;
+            });
+            return submitted;
 
         }
 
@@ -1043,24 +1015,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private void OnMessage(object sender, MessageData e)
         {
-            LastHeartbeatUtcTime = DateTime.UtcNow;
-
-            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
-            // stream processing a touch.
-            try
-            {
-                if (_streamLocked)
-                {
-                    _messageBuffer.Enqueue(e);
-                    return;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            OnMessageImpl(e);
+            _messageHandler.HandleNewMessage(e);
         }
 
         /// <summary>
