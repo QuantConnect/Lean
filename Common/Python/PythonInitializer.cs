@@ -40,25 +40,26 @@ namespace QuantConnect.Python
         /// </summary>
         public static void Initialize()
         {
-            var pathToVirtualEnv = Config.Get("python-venv", null);
-            if (pathToVirtualEnv != null)
-            {
-                // Stack these Python venv libraries on top of PythonNets PythonPath
-                string path;
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    path = $"{pathToVirtualEnv}/lib/python3.6/site-packages:{pathToVirtualEnv}/lib/python3.6:" + PythonEngine.PythonPath;
-                }
-                else
-                {
-                    path = $"{pathToVirtualEnv}\\Lib\\site-packages;{pathToVirtualEnv}\\Lib;" + PythonEngine.PythonPath;
-                }
-
-                PythonEngine.PythonPath = path;
-            }
-
             if (!_isInitialized)
             {
+                var pathToVirtualEnv = Config.Get("python-venv", null);
+                if (pathToVirtualEnv != null)
+                {
+                    // Stack these Python venv libraries on top of PythonNets PythonPath
+                    string path;
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    {
+                        path = $"{pathToVirtualEnv}/lib/python3.6/site-packages:{pathToVirtualEnv}/lib/python3.6:" + PythonEngine.PythonPath;
+                    }
+                    else
+                    {
+                        path = $"{pathToVirtualEnv}\\Lib\\site-packages;{pathToVirtualEnv}\\Lib;" + PythonEngine.PythonPath;
+                    }
+
+                    PythonEngine.PythonPath = path;
+                }
+
+                var test = Environment.GetEnvironmentVariables();
                 Log.Trace("PythonInitializer.Initialize(): start...");
                 PythonEngine.Initialize();
 
