@@ -857,7 +857,7 @@ namespace QuantConnect.Api
             // Make sure the link was successfully retrieved
             if (!dataLink.Success)
             {
-                Log.Error($"Api.DownloadData(): Failed to get link for {filePath}. " +
+                Log.Trace($"Api.DownloadData(): Failed to get link for {filePath}. " +
                     $"Errors: {string.Join(',', dataLink.Errors)}");
                 return false;
             }
