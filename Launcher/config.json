@@ -28,6 +28,9 @@
   "debugging": false,
   "debugging-method": "LocalCmdline",
 
+  // Optional param for venv Python libraries
+  //"python-venv": "/venv",
+
   // handlers
   "log-handler": "QuantConnect.Logging.CompositeLogHandler",
   "messaging-handler": "QuantConnect.Messaging.Messaging",
