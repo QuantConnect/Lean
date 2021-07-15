@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Python;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Launcher
@@ -76,6 +77,22 @@ namespace QuantConnect.Lean.Launcher
                 const string jobNullMessage = "Engine.Main(): Sorry we could not process this algorithm request.";
                 Log.Error(jobNullMessage);
                 throw new ArgumentException(jobNullMessage);
+            }
+
+            // Activate our PythonVirtualEnvironment if provided
+            if (job.PythonVirtualEnvironment != null)
+            {
+                PythonInitializer.ActivatePythonVirtualEnvironment(job.PythonVirtualEnvironment);
+            }
+
+            try
+            {
+                leanEngineAlgorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
+            }
+            catch (CompositionException compositionException)
+            {
+                Log.Error("Engine.Main(): Failed to load library: " + compositionException);
+                throw;
             }
 
             // if the job version doesn't match this instance version then we can't process it
