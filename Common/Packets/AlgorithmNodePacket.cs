@@ -112,9 +112,9 @@ namespace QuantConnect.Packets
         public string Version;
 
         /// <summary>
-        /// Virtual environment to use for PythonNet libraries
+        /// Virtual environment directory to use for PythonNet libraries
         /// </summary>
-        [JsonProperty(PropertyName = "PyVirtualEnv")]
+        [JsonProperty(PropertyName = "sPythonVirtualEnvironment")]
         public string PythonVirtualEnvironment;
 
         /// <summary>
