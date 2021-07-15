@@ -116,17 +116,18 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         {
             var symbolsRemoved = false;
 
-            var tickers = symbols.Select(symbol => TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol)).ToList();
+            var tickers = symbols.Select(symbol => TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol));
 
+            var symbolsToRemove = new List<string>();
             //Remove options too because the symbol will not come through
-            foreach (var ticker in tickers.ToArray())
+            foreach (var ticker in tickers)
             {
                 //add derivative symbols
-                tickers.AddRange(_subscribedTickers.Where(kvp => kvp.Key != kvp.Key && kvp.Key.Contains(ticker, StringComparison.InvariantCultureIgnoreCase))
+                symbolsToRemove.AddRange(_subscribedTickers.Where(kvp => kvp.Key.Contains(ticker, StringComparison.InvariantCultureIgnoreCase))
                                                     .Select(kvp => kvp.Key));
             }
 
-            foreach (var ticker in tickers)
+            foreach (var ticker in symbolsToRemove)
             {
                 if (_subscribedTickers.ContainsKey(ticker))
                 {
@@ -138,7 +139,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
             if (symbolsRemoved)
             {
-                tdClient.LiveMarketDataStreamer.UnsubscribeAsync(TDAmeritradeApi.Client.Models.Streamer.MarketDataType.LevelOneQuotes, tickers.ToArray()).Wait();
+                tdClient.LiveMarketDataStreamer.UnsubscribeAsync(TDAmeritradeApi.Client.Models.Streamer.MarketDataType.LevelOneQuotes, symbolsToRemove.ToArray()).Wait();
             }
 
             return true;
