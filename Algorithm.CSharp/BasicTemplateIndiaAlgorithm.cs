@@ -50,6 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
             
             //Set Order Prperties as per the requirements for order placement
             DefaultOrderProperties = new ZerodhaOrderProperties(exchange: "nse");
+            //override default productType value set in config.json if needed order specific productType value
+            //DefaultOrderProperties = new ZerodhaOrderProperties(exchange: "nse",ZerodhaOrderProperties.KiteProductType.MIS);
 
             // General Debug statement for acknowledgement
             Debug("Intialization Done");

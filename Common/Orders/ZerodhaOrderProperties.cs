@@ -28,7 +28,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Kite product type
         /// </summary>
-        public readonly string ProductType;
+        public string ProductType { get;}
 
         /// <summary>
         /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
@@ -43,7 +43,7 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="exchange">Exchange value, nse/bse etc</param>
         /// <param name="productType">Product type</param>
-        public ZerodhaOrderProperties(string exchange,KiteProductType productType) : this(exchange)
+        public ZerodhaOrderProperties(string exchange, KiteProductType productType) : this(exchange)
         {
             ProductType = productType.ToStringInvariant();
         }

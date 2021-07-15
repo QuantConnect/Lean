@@ -65,11 +65,6 @@ namespace QuantConnect.Brokerages.Zerodha
         public ConcurrentDictionary<int, Order> CachedOrderIDs = new ConcurrentDictionary<int, Order>();
 
         /// <summary>
-        /// A list of currently subscribed channels
-        /// </summary>
-        protected Dictionary<string, Channel> ChannelList = new Dictionary<string, Channel>();
-
-        /// <summary>
         /// The api secret
         /// </summary>
         protected string ApiSecret;
@@ -81,19 +76,12 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private readonly ISecurityProvider _securityProvider;
 
-        /// <summary>
-        /// Timestamp of most recent heartbeat message
-        /// </summary>
-        protected DateTime LastHeartbeatUtcTime = DateTime.UtcNow;
-
         private readonly IAlgorithm _algorithm;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
 
         private readonly DataQueueHandlerSubscriptionManager SubscriptionManager;
 
         private ConcurrentDictionary<string, Symbol> _subscriptionsById = new ConcurrentDictionary<string, Symbol>();
-
-        private readonly ConcurrentQueue<MessageData> _messageBuffer = new ConcurrentQueue<MessageData>();
 
         private readonly IDataAggregator _aggregator;
 
@@ -435,8 +423,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-
-                    submitted = false;
+                    return;
                 }
                 if (orderProperties.ProductType != null)
                 {
@@ -457,8 +444,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}";
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-
-                    submitted = false;
+                    return;
                 }
 
 
@@ -469,8 +455,7 @@ namespace QuantConnect.Brokerages.Zerodha
                         var errorMessage = $"Error parsing response from place order: {(string)orderResponse["status_message"]}";
                         OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status_message"], errorMessage));
-
-                        submitted = false;
+                        return;
                     }
 
                     var brokerId = (string)orderResponse["data"]["order_id"];
@@ -490,13 +475,13 @@ namespace QuantConnect.Brokerages.Zerodha
                     Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
                     submitted = true;
+                    return;
                 }
 
                 var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["status_message"]}";
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
-                
-                submitted = false;
+                return;
             });
             return submitted;
         }
@@ -583,7 +568,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 if (!order.Status.IsOpen())
                 {
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "error", "Order is already being processed"));
-                    submitted = false;
+                    return;
                 }
 
                 var orderProperties = order.Properties as ZerodhaOrderProperties;
@@ -592,8 +577,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-
-                    submitted = false;
+                    return;
                 }
                 if (orderProperties.ProductType != null)
                 {
@@ -632,8 +616,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}"));
-
-                    submitted = false;
+                    return;
                 }
 
 
@@ -646,6 +629,7 @@ namespace QuantConnect.Brokerages.Zerodha
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status"], errorMessage));
 
                         submitted = true;
+                        return;
                     }
 
                     var brokerId = (string)orderResponse["data"]["order_id"];
@@ -665,13 +649,13 @@ namespace QuantConnect.Brokerages.Zerodha
                     Log.Trace($"Order modified successfully - OrderId: {order.Id}");
 
                     submitted = true;
+                    return;
                 }
 
                 var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["status_message"]}";
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
-
-                submitted = false;
+                return;
             });
             return submitted;
         }
@@ -698,25 +682,25 @@ namespace QuantConnect.Brokerages.Zerodha
                     catch (Exception)
                     {
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], $"Error cancelling order: {orderResponse["status_message"]}"));
-                        submitted = false;
+                        return;
                     }
                 }
                 else
                 {
                     //Verify this
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 500, $"Error cancelling open order"));
-                    submitted = false;
+                    return;
                 }
 
                 if ((string)orderResponse["status"] == "success")
                 {
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Zerodha Order Cancelled Event") { Status = OrderStatus.Canceled });
                     submitted = true;
+                    return;
                 }
                 var errorMessage = $"Error cancelling order: {orderResponse["status_message"]}";
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], errorMessage));
-
-                submitted = false;
+                return;
             });
             return submitted;
 
@@ -822,8 +806,12 @@ namespace QuantConnect.Brokerages.Zerodha
         public override List<Holding> GetAccountHoldings()
         {
             var holdingsList = new List<Holding>();
+            var zerodhaProductTypeUpper = _zerodhaProductType.ToUpperInvariant();
+            var productTypeMIS = KiteProductType.MIS.ToString().ToUpperInvariant();
+            var productTypeNRML = KiteProductType.NRML.ToString().ToUpperInvariant();
+            var productTypeCNC = KiteProductType.CNC.ToString().ToUpperInvariant();
             // get MIS and NRML Positions
-            if (string.IsNullOrEmpty(_zerodhaProductType) || _zerodhaProductType.ToUpperInvariant() == KiteProductType.MIS.ToString().ToUpperInvariant() || _zerodhaProductType.ToUpperInvariant() == KiteProductType.NRML.ToString().ToUpperInvariant())
+            if (string.IsNullOrEmpty(_zerodhaProductType) || zerodhaProductTypeUpper == productTypeMIS  || zerodhaProductTypeUpper == productTypeNRML)
             {
                 var PositionsResponse = _kite.GetPositions();
                 if (PositionsResponse.Day.Count != 0)
@@ -848,7 +836,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
             }
             // get CNC Positions
-            if (string.IsNullOrEmpty(_zerodhaProductType) || _zerodhaProductType.ToUpperInvariant() == KiteProductType.CNC.ToString().ToUpperInvariant() )
+            if (string.IsNullOrEmpty(_zerodhaProductType) || zerodhaProductTypeUpper == productTypeCNC )
             {
                 var HoldingResponse = _kite.GetHoldings();
                 if (HoldingResponse != null)
