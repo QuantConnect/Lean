@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 var resolution = configs.GetHighestResolution();
                 var startTime = historyRequestFactory.GetStartTimeAlgoTz(
                     security.Symbol,
-                    10,
+                    60,
                     resolution,
                     hours,
                     configToUse.DataTimeZone);
@@ -117,7 +117,7 @@ namespace QuantConnect.Lean.Engine.Setup
             var unassignedCash = cashToUpdate.Where(x => x.ConversionRate == 0).ToList();
             if (unassignedCash.Any())
             {
-                Log.Error(
+                Log.Trace(
                     $"Failed to assign conversion rates for the following cash: {string.Join(",", unassignedCash.Select(x => x.Symbol))}." +
                     $" Attempting to request daily resolution history to resolve conversion rate");
 
