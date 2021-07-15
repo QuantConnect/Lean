@@ -20,7 +20,7 @@ using Python.Runtime;
 using QuantConnect.Logging;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using QuantConnect.Configuration;
+using QuantConnect.Util;
 
 namespace QuantConnect.Python
 {
@@ -33,7 +33,9 @@ namespace QuantConnect.Python
         private static bool _isInitialized;
 
         // Used to hold pending path additions before Initialize is called
-        private static List<string> _pendingPathAdditions = new List<string>();
+        private static List<string> _pendingStartOfPathAdditions = new List<string>();
+        private static List<string> _pendingEndOfPathAdditions = new List<string>();
+        private static List<string> pathCache = new List<string>();
 
         /// <summary>
         /// Initialize the Python.NET library
@@ -42,24 +44,6 @@ namespace QuantConnect.Python
         {
             if (!_isInitialized)
             {
-                var pathToVirtualEnv = Config.Get("python-venv", null);
-                if (pathToVirtualEnv != null)
-                {
-                    // Stack these Python venv libraries on top of PythonNets PythonPath
-                    string path;
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    {
-                        path = $"{pathToVirtualEnv}/lib/python3.6/site-packages:{pathToVirtualEnv}/lib/python3.6:" + PythonEngine.PythonPath;
-                    }
-                    else
-                    {
-                        path = $"{pathToVirtualEnv}\\Lib\\site-packages;{pathToVirtualEnv}\\Lib;" + PythonEngine.PythonPath;
-                    }
-
-                    PythonEngine.PythonPath = path;
-                }
-
-                var test = Environment.GetEnvironmentVariables();
                 Log.Trace("PythonInitializer.Initialize(): start...");
                 PythonEngine.Initialize();
 
@@ -76,31 +60,82 @@ namespace QuantConnect.Python
         /// <summary>
         /// Adds directories to the python path at runtime
         /// </summary>
-        public static void AddPythonPaths(IEnumerable<string> paths)
+        public static void AddPythonPaths(IEnumerable<string> paths, bool prepend = false)
         {
-            if (paths == null)
+            // Filter out any paths that are already on our Python path
+            paths = paths?.Where(x => !pathCache.Contains(x.Replace('\\', '/'))).ToList();
+            if (paths == null || !paths.Any())
             {
                 return;
+            }
+
+            // Add these paths to our pending additions
+            if (prepend)
+            {
+                _pendingStartOfPathAdditions.AddRange(paths);
+            }
+            else
+            {
+                _pendingEndOfPathAdditions.AddRange(paths);
             }
 
             if (_isInitialized)
             {
                 using (Py.GIL())
                 {
-                    _pendingPathAdditions.AddRange(paths);
+                    dynamic sys = Py.Import("sys");
+                    var locals = new PyDict();
+                    locals.SetItem("sys", sys);
 
-                    // Generate the python code to add these to our path and execute
-                    var code = string.Join(";", _pendingPathAdditions.Select(s => $"sys.path.append('{s}')"))
-                        .Replace('\\', '/');
+                    // Insert any pending start of path additions
+                    if (!_pendingStartOfPathAdditions.IsNullOrEmpty())
+                    {
+                        PythonEngine.Exec(string.Join(";", _pendingStartOfPathAdditions.Select(s => $"sys.path.insert(0, '{s}')"))
+                            .Replace('\\', '/'), null, locals.Handle);
 
-                    PythonEngine.Exec($"import sys;{code}");
-                    _pendingPathAdditions.Clear();
+                        _pendingStartOfPathAdditions.Clear();
+                    }
+
+                    // Append any end of path additions
+                    if (!_pendingEndOfPathAdditions.IsNullOrEmpty())
+                    {
+                        PythonEngine.Exec(string.Join(";", _pendingEndOfPathAdditions.Select(s => $"sys.path.append('{s}')"))
+                            .Replace('\\', '/'), null, locals.Handle);
+
+                        _pendingEndOfPathAdditions.Clear();
+                    }
+
+                    // Update our path cache
+                    pathCache = PythonEngine.Eval("sys.path", null, locals.Handle).As<List<string>>();
+                    locals.Dispose();
                 }
             }
-            else
+        }
+
+        /// <summary>
+        /// "Activate" a virtual Python environment by prepending its library storage to PythonNets
+        /// path. This allows the libraries in this venv to be selected prior to our base install.
+        /// Requires PYTHONNET_PYDLL to be set to base install.
+        /// </summary>
+        /// <remarks>If a module is already loaded, Python will use its cached version first
+        /// these modules must be reloaded by reload() from importlib library</remarks>
+        public static void ActivatePythonVirtualEnvironment(string pathToVirtualEnv)
+        {
+            if (pathToVirtualEnv != null)
             {
-                // Add these paths to our pending additions list
-                _pendingPathAdditions.AddRange(paths);
+                var pathsToPrepend = new List<string>();
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/python3.6");
+                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/python3.6/site-packages");
+                }
+                else
+                {
+                    pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib");
+                    pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib\\site-packages");
+                }
+
+                AddPythonPaths(pathsToPrepend, true);
             }
         }
     }
