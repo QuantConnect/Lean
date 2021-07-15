@@ -275,6 +275,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 ticket.SetOrder(order);
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _completeOrders.TryAdd(order.Id, order);
+
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    OrderFee.Zero,
+                    orderTag));
             }
             return ticket;
         }

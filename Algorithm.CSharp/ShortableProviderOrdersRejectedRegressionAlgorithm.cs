@@ -34,6 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly List<OrderTicket> _ordersAllowed = new List<OrderTicket>();
         private readonly List<OrderTicket> _ordersDenied = new List<OrderTicket>();
         private bool _initialize;
+        private OrderEvent _lastOrderEvent;
         private bool _invalidatedAllowedOrder;
         private bool _invalidatedNewOrderWithPortfolioHoldings;
 
@@ -125,10 +126,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            _lastOrderEvent = orderEvent;
+        }
+
         private void HandleOrder(OrderTicket orderTicket)
         {
             if (orderTicket.SubmitRequest.Status == OrderRequestStatus.Error)
             {
+                if (_lastOrderEvent == null || _lastOrderEvent.Status != OrderStatus.Invalid)
+                {
+                    throw new Exception($"Expected order event with invalid status for ticket {orderTicket}");
+                }
+
+                _lastOrderEvent = null;
                 _ordersDenied.Add(orderTicket);
                 return;
             }
