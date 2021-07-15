@@ -116,7 +116,15 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         {
             var symbolsRemoved = false;
 
-            var tickers = symbols.Select(symbol => TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol));
+            var tickers = symbols.Select(symbol => TDAmeritradeToLeanMapper.GetBrokerageSymbol(symbol)).ToList();
+
+            //Remove options too because the symbol will not come through
+            foreach (var ticker in tickers.ToArray())
+            {
+                //add derivative symbols
+                tickers.AddRange(_subscribedTickers.Where(kvp => kvp.Key != kvp.Key && kvp.Key.Contains(ticker, StringComparison.InvariantCultureIgnoreCase))
+                                                    .Select(kvp => kvp.Key));
+            }
 
             foreach (var ticker in tickers)
             {
@@ -178,14 +186,14 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                 var dataDictionary = tdClient.LiveMarketDataStreamer.MarketData[e].ToList()
                     .OrderBy(kvp =>
                     {
-                        //
-                        if (kvp.Value is EquityLevelOneQuote)
+                        var item = kvp.Value.IndividualItemType;
+                        if (item is EquityLevelOneQuote)
                             return 0;
-                        else if (kvp.Value is OptionLevelOneQuote)
+                        else if (item is OptionLevelOneQuote)
                             return 1;
-                        else if (kvp.Value is FutureMarketQuote)
+                        else if (item is FutureMarketQuote)
                             return 2;
-                        else if (kvp.Value is FutureOptionsMarketQuote)
+                        else if (item is FutureOptionsMarketQuote)
                             return 3;
                         else
                             return 4;
@@ -201,9 +209,9 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             }
         }
 
-        private void AddTickData(dynamic data)
+        private void AddTickData(StoredData data)
         {
-            ConcurrentQueue<LevelOneQuote> queue = data;
+            ConcurrentQueue<LevelOneQuote> queue = data.Data;
             while (queue.TryDequeue(out LevelOneQuote quote))
             {
                 if (quote.HasQuotes)
