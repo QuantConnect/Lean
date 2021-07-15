@@ -272,13 +272,18 @@ RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
 # Remove black-listed packages
 RUN pip uninstall -y s3transfer
 
-# Install a Python Virtual Environment to contain upgraded libraries for users to opt into (Pandas, Tensorflow)
-RUN python -m venv /venv && \
-    . /venv/bin/activate && \
+# Install a Python Virtual Environment with some updated libraries for advanced analysis
+# Selected in Lean with directory via JSON JobPacket "sPythonVirtualEnvironment" or config "python-venv" value
+RUN python -m venv /advancedAnalysisEnv && \
+    . /advancedAnalysisEnv/bin/activate && \
     pip install --upgrade pip && \
-    pip install \
+    pip install --no-cache-dir \
     pandas==1.1.5 \
-    tensorflow==2.5.0 && deactivate 
+    tensorflow==2.5.0 \
+    nbeats-keras==1.4.0 \
+    nbeats-pytorch==1.4.0 \
+    stellargraph==1.2.1 \
+    && deactivate 
 
 # List all packages
 RUN conda list
