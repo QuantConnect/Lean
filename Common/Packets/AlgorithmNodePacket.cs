@@ -112,6 +112,12 @@ namespace QuantConnect.Packets
         public string Version;
 
         /// <summary>
+        /// Virtual environment to use for PythonNet libraries
+        /// </summary>
+        [JsonProperty(PropertyName = "PyVirtualEnv")]
+        public string PythonVirtualEnvironment;
+
+        /// <summary>
         /// An algorithm packet which has already been run and is being redelivered on this node.
         /// In this event we don't want to relaunch the task as it may result in unexpected behaviour for user.
         /// </summary>
