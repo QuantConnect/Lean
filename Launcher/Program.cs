@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Launcher
             }
 
             // Activate our PythonVirtualEnvironment if provided
-            if (job.PythonVirtualEnvironment != null)
+            if (!string.IsNullOrEmpty(job.PythonVirtualEnvironment))
             {
                 PythonInitializer.ActivatePythonVirtualEnvironment(job.PythonVirtualEnvironment);
             }
