@@ -44,6 +44,11 @@ RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-p
     rm packages-microsoft-prod.deb && \
     apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
 
+# Install libffi7 for rpy2 package
+RUN wget http://es.archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi7_3.3-4_amd64.deb && \
+    dpkg -i libffi7_3.3-4_amd64.deb && \
+    rm libffi7_3.3-4_amd64.deb
+
 # Set PythonDLL variable for PythonNet
 ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.6m.so"
 
