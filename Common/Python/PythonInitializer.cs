@@ -113,7 +113,7 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// "Activate" a virtual Python environment by prepending its library storage to PythonNets
+        /// "Activate" a virtual Python environment by prepending its library storage to Pythons
         /// path. This allows the libraries in this venv to be selected prior to our base install.
         /// Requires PYTHONNET_PYDLL to be set to base install.
         /// </summary>
