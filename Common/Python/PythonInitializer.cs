@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -112,13 +112,15 @@ namespace QuantConnect.Python
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
                     // For linux we need to know the python version to determine the lib folder containing our packages
+                    // Compare our PyDLL to the directory names under the lib directory and get a match
                     var pyDll = Environment.GetEnvironmentVariable("PYTHONNET_PYDLL");
                     var version = Path.GetFileNameWithoutExtension(pyDll);
-                    var libDir = Directory.EnumerateDirectories($"{pathToVirtualEnv}/lib")
+                    var libDir = Directory.GetDirectories($"{pathToVirtualEnv}/lib")
+                        .Select(d => new DirectoryInfo(d).Name)
                         .First(x => version.Contains(x, StringComparison.InvariantCulture));
 
                     pathsToPrepend.Add($"{pathToVirtualEnv}/lib/{libDir}");
-                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/python3.6/{libDir}");
+                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/{libDir}/site-packages");
                 }
                 else
                 {
