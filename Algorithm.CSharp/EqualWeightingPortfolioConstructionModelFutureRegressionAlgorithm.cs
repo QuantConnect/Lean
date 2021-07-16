@@ -41,8 +41,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetAlpha(new ConstantFutureContractAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
-            // Order margin value has to have a minimum of 1% of Portfolio value, allows filtering out small trades
-            Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
+
+            // Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+            // Commented so regression algorithm is more sensitive
+            //Settings.MinimumOrderMarginPortfolioPercentage = 0.005m;
         }
 
         // future symbol universe selection function
