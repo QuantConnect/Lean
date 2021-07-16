@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns></returns>
         public override IBrokerage CreateBrokerage(Packets.LiveNodePacket job, IAlgorithm algorithm)
         {
-            var required = new[] { "zerodha-api-key", "zerodha-access-token", "zerodha-trading-segment", "zerodha-product-type" };
+            var required = new[] { "zerodha-api-key", "zerodha-access-token", "zerodha-trading-segment"};
 
             foreach (var item in required)
             {
