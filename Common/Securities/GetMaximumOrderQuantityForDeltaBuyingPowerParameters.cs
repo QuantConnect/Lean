@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -43,20 +43,29 @@ namespace QuantConnect.Securities
         public bool SilenceNonErrorReasons { get; }
 
         /// <summary>
+        /// Configurable minimum order margin portfolio percentage to ignore bad orders, orders with unrealistic small sizes
+        /// </summary>
+        /// <remarks>Default value is 0. This setting is useful to avoid small trading noise when using SetHoldings</remarks>
+        public decimal MinimumOrderMarginPortfolioPercentage { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForDeltaBuyingPowerParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
         /// <param name="deltaBuyingPower">The delta buying power to apply.
         /// Sign defines the position side to apply the delta</param>
+        /// <param name="minimumOrderMarginPortfolioPercentage">Configurable minimum order margin portfolio percentage to ignore orders with unrealistic small sizes</param>
         /// <param name="silenceNonErrorReasons">True will not return <see cref="GetMaximumOrderQuantityResult.Reason"/>
         /// set for non error situation, this is for performance</param>
-        public GetMaximumOrderQuantityForDeltaBuyingPowerParameters(SecurityPortfolioManager portfolio, Security security, decimal deltaBuyingPower, bool silenceNonErrorReasons = false)
+        public GetMaximumOrderQuantityForDeltaBuyingPowerParameters(SecurityPortfolioManager portfolio, Security security, decimal deltaBuyingPower,
+            decimal minimumOrderMarginPortfolioPercentage, bool silenceNonErrorReasons = false)
         {
             Portfolio = portfolio;
             Security = security;
             DeltaBuyingPower = deltaBuyingPower;
             SilenceNonErrorReasons = silenceNonErrorReasons;
+            MinimumOrderMarginPortfolioPercentage = minimumOrderMarginPortfolioPercentage;
         }
     }
 }

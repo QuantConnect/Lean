@@ -52,6 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(Resolution.Daily, PortfolioBias.Long));
             SetExecution(new ImmediateExecutionModel());
 
+            // Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades
+            Settings.MinimumOrderMarginPortfolioPercentage = 0.005m;
+
             // set algorithm framework models
             SetUniverseSelection(
                 new ManualUniverseSelectionModel(

@@ -22,6 +22,8 @@ class PortfolioRebalanceOnCustomFuncRegressionAlgorithm(QCAlgorithm):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         self.UniverseSettings.Resolution = Resolution.Daily
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades
+        self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
 
         self.SetStartDate(2015, 1, 1)
         self.SetEndDate(2018, 1, 1)

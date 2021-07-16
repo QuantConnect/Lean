@@ -40,6 +40,9 @@ class LongOnlyAlphaStreamAlgorithm(QCAlgorithm):
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(Resolution.Daily, PortfolioBias.Long))
         self.SetExecution(ImmediateExecutionModel())
 
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades
+        self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+
         # Set algorithm framework models
         self.SetUniverseSelection(ManualUniverseSelectionModel(
             [Symbol.Create(x, SecurityType.Equity, Market.USA) for x in ["SPY", "IBM"]]))

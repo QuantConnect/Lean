@@ -51,6 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             // set algorithm framework models except ALPHA
             SetUniverseSelection(new ManualUniverseSelectionModel(_symbol));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+            Settings.MinimumOrderMarginPortfolioPercentage = 0.001m;
         }
 
         /// <summary>

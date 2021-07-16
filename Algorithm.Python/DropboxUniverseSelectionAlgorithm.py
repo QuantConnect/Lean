@@ -32,6 +32,8 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
         self.current_universe = []
 
         self.UniverseSettings.Resolution = Resolution.Daily
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades
+        self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
         self.AddUniverse("my-dropbox-universe", self.selector)
 
     def selector(self, date):

@@ -347,6 +347,7 @@ namespace QuantConnect.Securities
                 new GetMaximumOrderQuantityForTargetBuyingPowerParameters(parameters.Portfolio,
                     parameters.Security,
                     target,
+                    parameters.MinimumOrderMarginPortfolioPercentage,
                     parameters.SilenceNonErrorReasons));
         }
 
@@ -391,17 +392,6 @@ namespace QuantConnect.Securities
                 return new GetMaximumOrderQuantityResult(0, parameters.Security.Symbol.GetZeroPriceMessage());
             }
 
-            var minimumValue = absUnitMargin * parameters.Security.SymbolProperties.LotSize;
-            if (minimumValue > absFinalOrderMargin)
-            {
-                string reason = null;
-                if (!parameters.SilenceNonErrorReasons)
-                {
-                    reason = $"The target order margin {absFinalOrderMargin} is less than the minimum {minimumValue}.";
-                }
-                return new GetMaximumOrderQuantityResult(0, reason, false);
-            }
-
             // compute the initial order quantity
             var absOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin,
                 parameters.Security.SymbolProperties.LotSize));
@@ -412,6 +402,19 @@ namespace QuantConnect.Securities
                 {
                     reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
                              "and has been rounded to zero.";
+                }
+                return new GetMaximumOrderQuantityResult(0, reason, false);
+            }
+
+            var minimumValue = totalPortfolioValue * parameters.MinimumOrderMarginPortfolioPercentage;
+            if (minimumValue > absFinalOrderMargin
+                // if margin remaining is negative allow the order to pass so we can reduce the position
+                && parameters.Portfolio.GetMarginRemaining(totalPortfolioValue) > 0)
+            {
+                string reason = null;
+                if (!parameters.SilenceNonErrorReasons)
+                {
+                    reason = $"The target order margin {absFinalOrderMargin} is less than the minimum {minimumValue}.";
                 }
                 return new GetMaximumOrderQuantityResult(0, reason, false);
             }
