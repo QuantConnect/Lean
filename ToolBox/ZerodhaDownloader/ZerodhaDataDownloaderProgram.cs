@@ -124,9 +124,7 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                             case Resolution.Daily:
                                 if ((end - start).Days > 400)
-                                {
                                     throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
-                                }
                                 foreach (var token in zerodhaTokenList) // get historical data for each token
                                 {
                                     var tempHistory = _kite.GetHistoricalData(token.ToStringInvariant(), start, end, "day");
