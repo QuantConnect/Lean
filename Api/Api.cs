@@ -47,7 +47,7 @@ namespace QuantConnect.Api
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
             ApiConnection = new ApiConnection(userId, token);
-            _dataFolder = dataFolder.Replace("\\", "/", StringComparison.InvariantCulture);
+            _dataFolder = dataFolder?.Replace("\\", "/", StringComparison.InvariantCulture);
 
             //Allow proper decoding of orders from the API.
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
