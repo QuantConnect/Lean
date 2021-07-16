@@ -19,6 +19,7 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Logging;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using QuantConnect.Util;
 
@@ -33,9 +34,7 @@ namespace QuantConnect.Python
         private static bool _isInitialized;
 
         // Used to hold pending path additions before Initialize is called
-        private static List<string> _pendingStartOfPathAdditions = new List<string>();
-        private static List<string> _pendingEndOfPathAdditions = new List<string>();
-        private static List<string> pathCache = new List<string>();
+        private static List<string> _pendingPathAdditions = new List<string>();
 
         /// <summary>
         /// Initialize the Python.NET library
@@ -60,24 +59,16 @@ namespace QuantConnect.Python
         /// <summary>
         /// Adds directories to the python path at runtime
         /// </summary>
-        public static void AddPythonPaths(IEnumerable<string> paths, bool prepend = false)
+        public static void AddPythonPaths(IEnumerable<string> paths)
         {
             // Filter out any paths that are already on our Python path
-            paths = paths?.Where(x => !pathCache.Contains(x.Replace('\\', '/'))).ToList();
-            if (paths == null || !paths.Any())
+            if (paths.IsNullOrEmpty())
             {
                 return;
             }
 
             // Add these paths to our pending additions
-            if (prepend)
-            {
-                _pendingStartOfPathAdditions.AddRange(paths);
-            }
-            else
-            {
-                _pendingEndOfPathAdditions.AddRange(paths);
-            }
+            _pendingPathAdditions.AddRange(paths);
 
             if (_isInitialized)
             {
@@ -87,26 +78,20 @@ namespace QuantConnect.Python
                     var locals = new PyDict();
                     locals.SetItem("sys", sys);
 
-                    // Insert any pending start of path additions
-                    if (!_pendingStartOfPathAdditions.IsNullOrEmpty())
-                    {
-                        PythonEngine.Exec(string.Join(";", _pendingStartOfPathAdditions.Select(s => $"sys.path.insert(0, '{s}')"))
-                            .Replace('\\', '/'), null, locals.Handle);
+                    // Filter out any already paths that already exist on our current PythonPath
+                    var currentPath = PythonEngine.Eval("sys.path", null, locals.Handle).As<List<string>>();
+                    _pendingPathAdditions = _pendingPathAdditions.Where(x => !currentPath.Contains(x.Replace('\\', '/'))).ToList();
 
-                        _pendingStartOfPathAdditions.Clear();
+                    // Insert any pending path additions
+                    if (!_pendingPathAdditions.IsNullOrEmpty())
+                    {
+                        var code = string.Join(";", _pendingPathAdditions
+                            .Select(s => $"sys.path.insert(0, '{s}')")).Replace('\\', '/');
+                        PythonEngine.Exec(code, null, locals.Handle);
+
+                        _pendingPathAdditions.Clear();
                     }
 
-                    // Append any end of path additions
-                    if (!_pendingEndOfPathAdditions.IsNullOrEmpty())
-                    {
-                        PythonEngine.Exec(string.Join(";", _pendingEndOfPathAdditions.Select(s => $"sys.path.append('{s}')"))
-                            .Replace('\\', '/'), null, locals.Handle);
-
-                        _pendingEndOfPathAdditions.Clear();
-                    }
-
-                    // Update our path cache
-                    pathCache = PythonEngine.Eval("sys.path", null, locals.Handle).As<List<string>>();
                     locals.Dispose();
                 }
             }
@@ -126,8 +111,14 @@ namespace QuantConnect.Python
                 var pathsToPrepend = new List<string>();
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/python3.6");
-                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/python3.6/site-packages");
+                    // For linux we need to know the python version to determine the lib folder containing our packages
+                    var pyDll = Environment.GetEnvironmentVariable("PYTHONNET_PYDLL");
+                    var version = Path.GetFileNameWithoutExtension(pyDll);
+                    var libDir = Directory.EnumerateDirectories($"{pathToVirtualEnv}/lib")
+                        .First(x => version.Contains(x, StringComparison.InvariantCulture));
+
+                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/{libDir}");
+                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/python3.6/{libDir}");
                 }
                 else
                 {
@@ -135,7 +126,7 @@ namespace QuantConnect.Python
                     pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib\\site-packages");
                 }
 
-                AddPythonPaths(pathsToPrepend, true);
+                AddPythonPaths(pathsToPrepend);
             }
         }
     }
