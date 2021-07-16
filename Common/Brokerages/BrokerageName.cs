@@ -82,6 +82,11 @@ namespace QuantConnect.Brokerages
         Zerodha,
 
         /// <summary>
+        /// Transaction and submit/execution rules will use Samco models
+        /// </summary>
+        Samco,
+        
+        /// <summary>
         /// Transaction and submit/execution rules will use atreyu models
         /// </summary>
         Atreyu,

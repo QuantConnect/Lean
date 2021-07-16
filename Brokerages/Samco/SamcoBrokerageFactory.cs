@@ -21,17 +21,17 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
-namespace QuantConnect.Brokerages.Zerodha
+namespace QuantConnect.Brokerages.Samco
 {
     /// <summary>
-    /// Factory method to create Zerodha Websockets brokerage
+    /// Factory method to create Samco Websockets brokerage
     /// </summary>
-    public class ZerodhaBrokerageFactory : BrokerageFactory
+    public class SamcoBrokerageFactory : BrokerageFactory
     {
         /// <summary>
         /// Factory constructor
         /// </summary>
-        public ZerodhaBrokerageFactory() : base(typeof(ZerodhaBrokerage))
+        public SamcoBrokerageFactory() : base(typeof(SamcoBrokerage))
         {
         }
 
@@ -47,17 +47,18 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            { "zerodha-api-key", Config.Get("zerodha-api-key")},
-            { "zerodha-access-token", Config.Get("zerodha-access-token")},
-            { "zerodha-trading-segment", Config.Get("zerodha-trading-segment")},
-            { "zerodha-product-type", Config.Get("zerodha-product-type")},
+            { "samco-api-key", Config.Get("samco.api-key")},
+            { "samco-api-secret", Config.Get("samco.api-secret")},
+            { "samco-api-yob", Config.Get("samco.year-of-birth")},
+            { "trading-segment" ,Config.Get("samco.trading-segment") },
+            { "product-type", Config.Get("samco.product-type") }
         };
 
         /// <summary>
         /// The brokerage model
         /// </summary>
         /// <param name="orderProvider">The order provider</param>
-        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new ZerodhaBrokerageModel();
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new SamcoBrokerageModel();
 
         /// <summary>
         /// Create the Brokerage instance
@@ -67,23 +68,22 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns></returns>
         public override IBrokerage CreateBrokerage(Packets.LiveNodePacket job, IAlgorithm algorithm)
         {
-            var required = new[] { "zerodha-api-key", "zerodha-access-token", "zerodha-trading-segment", "zerodha-product-type" };
+            var required = new[] {"samco-api-secret", "samco-api-key", "samco-api-yob" };
 
             foreach (var item in required)
             {
                 if (string.IsNullOrEmpty(job.BrokerageData[item]))
-                    throw new Exception($"ZerodhaBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
+                    throw new Exception($"SamcoBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
             }
 
-            var brokerage = new ZerodhaBrokerage(
-                job.BrokerageData["zerodha-trading-segment"],
-                job.BrokerageData["zerodha-product-type"],
-                job.BrokerageData["zerodha-api-key"],
-                job.BrokerageData["zerodha-access-token"],
+            var brokerage = new SamcoBrokerage(
+                job.BrokerageData["trading-segment"],
+                job.BrokerageData["product-type"],
+                job.BrokerageData["samco-api-key"],
+                job.BrokerageData["samco-api-secret"],
+                job.BrokerageData["samco-api-yob"],
                 algorithm,
-                algorithm.Portfolio,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"))
-               );
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
             //Add the brokerage to the composer to ensure its accessible to the live data feed.
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
             Composer.Instance.AddPart<IDataQueueUniverseProvider>(brokerage);

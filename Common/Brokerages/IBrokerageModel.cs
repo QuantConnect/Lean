@@ -215,7 +215,10 @@ namespace QuantConnect.Brokerages
 
                 case BrokerageName.Zerodha:
                     return new ZerodhaBrokerageModel(accountType);
-                
+
+                case BrokerageName.Samco:
+                    return new SamcoBrokerageModel(accountType);
+                    
                 case BrokerageName.Atreyu:
                     return new AtreyuBrokerageModel(accountType);
 

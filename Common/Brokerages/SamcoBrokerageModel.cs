@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
@@ -23,13 +24,9 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
-
 namespace QuantConnect.Brokerages
 {
-    /// <summary>
-    /// Brokerage Model implementation for Zerodha
-    /// </summary>
-    public class ZerodhaBrokerageModel : DefaultBrokerageModel
+    public class SamcoBrokerageModel : DefaultBrokerageModel
     {
         private readonly Type[] _supportedTimeInForces =
         {
@@ -41,15 +38,15 @@ namespace QuantConnect.Brokerages
         private const decimal _maxLeverage = 7m;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ZerodhaBrokerageModel"/> class
+        /// Initializes a new instance of the <see cref="SamcoBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Margin"/></param>
-        public ZerodhaBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
+        public SamcoBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
         }
 
-      
+
         public override AccountType AccountType => base.AccountType;
 
         public override decimal RequiredFreeBuyingPowerPercent => base.RequiredFreeBuyingPowerPercent;
@@ -80,7 +77,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-           
+
             // validate time in force
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
@@ -111,18 +108,18 @@ namespace QuantConnect.Brokerages
                 security.Type != SecurityType.Future)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(ZerodhaBrokerageModel)} does not support {security.Type} security type.")
+                    Invariant($"The {nameof(SamcoBrokerageModel)} does not support {security.Type} security type.")
                 );
 
                 return false;
             }
 
-           
+
             // validate time in force
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(ZerodhaBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
+                    Invariant($"The {nameof(SamcoBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
                 );
 
                 return false;
@@ -142,7 +139,7 @@ namespace QuantConnect.Brokerages
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = null;
-             return true;
+            return true;
         }
 
         /// <summary>
@@ -167,7 +164,7 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Zerodha global leverage rule
+        /// Samco global leverage rule
         /// </summary>
         /// <param name="security"></param>
         /// <returns></returns>
@@ -187,20 +184,21 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Provides Zerodha fee model
+        /// Provides Samco fee model
         /// </summary>
         /// <param name="security"></param>
         /// <returns></returns>
         public override IFeeModel GetFeeModel(Security security)
         {
-            return new ZerodhaFeeModel();
+            return new SamcoFeeModel();
         }
 
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
         {
             var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Equity] = Market.India;
-
+            map[SecurityType.Equity] = Market.NSE;
+            map[SecurityType.Future] = Market.NFO;
+            map[SecurityType.Option] = Market.NFO;
             return map.ToReadOnlyDictionary();
         }
     }

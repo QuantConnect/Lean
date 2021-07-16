@@ -35,8 +35,12 @@ namespace QuantConnect.Tests
         public static readonly Symbol LODE = CreateEquitySymbol("LODE");
         public static readonly Symbol IBM = CreateEquitySymbol("IBM");
         public static readonly Symbol GOOG = CreateEquitySymbol("GOOG");
-        public static readonly Symbol SBIN = CreateEquitySymbol("SBIN",Market.India);
-        public static readonly Symbol IDEA = CreateEquitySymbol("IDEA", Market.India);
+        //State Bank of India Ltd., listed on National Stock Exchange of India as SBIN
+        public static readonly Symbol SBIN = CreateEquitySymbol("SBIN",Market.NSE);
+        //Vodafone Idea Ltd., listed on National Stock Exchange of India as IDEA
+        public static readonly Symbol IDEA = CreateEquitySymbol("IDEA", Market.NSE);
+        //Indian Overseas Bank Ltd., list on National Stock Exchange of India as IOB
+        public static readonly Symbol IOB = CreateEquitySymbol("IOB", Market.NSE);
 
         public static readonly Symbol LOW = CreateEquitySymbol("LOW");
 

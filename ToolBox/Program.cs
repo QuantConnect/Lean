@@ -49,6 +49,7 @@ using QuantConnect.ToolBox.SmartInsider;
 using QuantConnect.ToolBox.TiingoNewsConverter;
 using QuantConnect.ToolBox.ZerodhaDownloader;
 using QuantConnect.ToolBox.AlphaVantageDownloader;
+using QuantConnect.ToolBox.SamcoDataDownloader;
 
 namespace QuantConnect.ToolBox
 {
@@ -79,6 +80,10 @@ namespace QuantConnect.ToolBox
                     : DateTime.UtcNow;
                 switch (targetApp)
                 {
+                    case "samcodl":
+                    case "samcodownloader":
+                        SamcoDataDownloaderProgram.SamcoDataDownloader(tickers, market, resolution, securityType, fromDate, toDate);
+                        break;
                     case "zdl":
                     case "zerodhadownloader":
                         ZerodhaDataDownloaderProgram.ZerodhaDataDownloader(tickers,market, resolution, securityType, fromDate, toDate);
