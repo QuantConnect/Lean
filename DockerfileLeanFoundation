@@ -274,16 +274,16 @@ RUN pip uninstall -y s3transfer
 
 # Install a Python Virtual Environment with some updated libraries for advanced analysis
 # Selected in Lean with directory via JSON JobPacket "sPythonVirtualEnvironment" or config "python-venv" value
-RUN python -m venv /advancedAnalysisEnv --system-site-packages && \
-    . /advancedAnalysisEnv/bin/activate && \
-    pip install --upgrade pip && \
+RUN python -m venv /customEnv --system-site-packages && \
+    . /customEnv/bin/activate && \
+    pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
     pandas==1.1.5 \
     tensorflow==2.5.0 \
     nbeats-keras==1.4.0 \
     nbeats-pytorch==1.4.0 \
     stellargraph==1.2.1 \
-    && python -m ipykernel install --name=PythonAdvancedAnalysis \
+    && python -m ipykernel install --name=CustomPython \
     && deactivate 
 
 # List all packages
