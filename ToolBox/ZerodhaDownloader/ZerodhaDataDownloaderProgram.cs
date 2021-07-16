@@ -31,6 +31,7 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
     {
         private static readonly string _apiKey = Config.Get("zerodha-api-key");
         private static readonly string _accessToken = Config.Get("zerodha-access-token");
+        private static readonly bool _isZerodhaHistorySubscriptionActive = Config.GetBool("zerodha-history-subscription");
 
         /// <summary>
         /// Zerodha Historical Data Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
@@ -38,6 +39,12 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
         /// </summary>
         public static void ZerodhaDataDownloader(IList<string> tickers, string market, string resolution, string securityType, DateTime startDate, DateTime endDate)
         {
+            if (!_isZerodhaHistorySubscriptionActive)
+            {
+                Console.WriteLine("ZerodhaDataDownloader ERROR: - You don't have zerodha historical API subscription according to your config.json settings");
+                Environment.Exit(1);
+            }
+
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
                 Console.WriteLine("ZerodhaDataDownloader ERROR: '--tickers=', --securityType, '--market' or '--resolution=' parameter is missing");
@@ -50,17 +57,16 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
             try
             {
                 var _kite = new Kite(_apiKey, _accessToken);
+                var _symbolMapper = new ZerodhaSymbolMapper(_kite);
                 var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var castSecurityType = (SecurityType)Enum.Parse(typeof(SecurityType), securityType);
 
                 // Load settings from config.json and create downloader
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = Config.Get("data-folder", "../../../Data");
 
                 foreach (var pair in tickers)
                 {
-                    var quoteTicker = market + ":" + pair;
-                    var instrumentQuotes = _kite.GetQuote(new string[] { quoteTicker });
-                    var quote = instrumentQuotes[quoteTicker];
+                    var zerodhaTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(pair);
 
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
@@ -95,21 +101,38 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                                 if ((end - start).Days > 60)
                                     throw new ArgumentOutOfRangeException("For minutes data Zerodha support 60 days data download");
-                                history = _kite.GetHistoricalData(quote.InstrumentToken.ToStringInvariant(), start, end, "minute").ToList();
+                                foreach (var token in zerodhaTokenList) // get historical data for each token
+                                {
+                                    var tempHistory = _kite.GetHistoricalData(token.ToStringInvariant(), start, end, "day");
+                                    history = (List<Historical>)history.Concat(tempHistory);
+                                }
+                                history = (List<Historical>)history.OrderBy(x=>x.TimeStamp);
                                 timeSpan = Time.OneMinute;
                                 break;
 
                             case Resolution.Hour:
                                 if ((end - start).Days > 400)
                                     throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
-                                history = _kite.GetHistoricalData(quote.InstrumentToken.ToStringInvariant(), start, end, "60minute").ToList();
+                                foreach (var token in zerodhaTokenList) // get historical data for each token
+                                {
+                                    var tempHistory = _kite.GetHistoricalData(token.ToStringInvariant(), start, end, "day");
+                                    history = (List<Historical>)history.Concat(tempHistory);
+                                }
+                                history = (List<Historical>)history.OrderBy(x=>x.TimeStamp);
                                 timeSpan = Time.OneHour;
                                 break;
 
                             case Resolution.Daily:
                                 if ((end - start).Days > 400)
+                                {
                                     throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
-                                history = _kite.GetHistoricalData(quote.InstrumentToken.ToStringInvariant(), start, end, "day").ToList();
+                                }
+                                foreach (var token in zerodhaTokenList) // get historical data for each token
+                                {
+                                    var tempHistory = _kite.GetHistoricalData(token.ToStringInvariant(), start, end, "day");
+                                    history = (List<Historical>)history.Concat(tempHistory);
+                                }
+                                history = (List<Historical>)history.OrderBy(x=>x.TimeStamp);
                                 timeSpan = Time.OneDay;
                                 break;
                         }
