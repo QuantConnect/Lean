@@ -50,6 +50,14 @@ namespace QuantConnect.Tests
             Directory.SetCurrentDirectory(dir);
             Config.Reset();
             Globals.Reset();
+
+            // Activate virtual environment if defined
+            var pythonVirtualEnvironment = Config.Get("python-venv");
+            if(!string.IsNullOrEmpty(pythonVirtualEnvironment)){
+                PythonInitializer.ActivatePythonVirtualEnvironment(pythonVirtualEnvironment);
+            }
+
+            // Initialize and add our Paths
             PythonInitializer.Initialize();
             PythonInitializer.AddPythonPaths(
                 new[]
