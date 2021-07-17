@@ -18,10 +18,12 @@ using System.Collections.Generic;
 using System.Linq;
 using QLNet;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fills
@@ -493,12 +495,56 @@ namespace QuantConnect.Orders.Fills
             // have large gaps, in which case the currentBar.EndTime will be in the past
             // ASUR  | | |      [order]        | | | | | | |
             //  SPY  | | | | | | | | | | | | | | | | | | | |
-            var currentBar = asset.GetLastData();
             var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
-            if (currentBar == null || localOrderTime >= currentBar.EndTime) return fill;
+            var endTime = DateTime.MinValue;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var primaryExchange = (byte) ((Equity) asset).PrimaryExchange;
+                var officialOpen = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OfficialOpen);
+                var openingPrints = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OpeningPrints);
+
+                // Get the first valid (non-zero) tick of trade type from an open market
+                var trade = asset.Cache.GetAll<Tick>()
+                    .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
+                    .FirstOrDefault(x =>
+                        x.TickType == TickType.Trade && x.Price > 0 && x.ExchangeCode == primaryExchange &&
+                        (x.ParsedSaleCondition == officialOpen || x.ParsedSaleCondition == openingPrints) &&
+                        asset.Exchange.DateTimeIsOpen(x.Time));
+
+                if (trade != null)
+                {
+                    endTime = trade.EndTime;
+                    fill.FillPrice = trade.Price;
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    // If the order was placed during the bar aggregation, we cannot use its open price
+                    if (tradeBar.Time < localOrderTime) return fill;
+
+                    // We need to verify whether the trade data is from the open market.
+                    if (tradeBar.Period < Resolution.Hour.ToTimeSpan() && !asset.Exchange.DateTimeIsOpen(tradeBar.Time))
+                    {
+                        return fill;
+                    }
+
+                    endTime = tradeBar.EndTime;
+                    fill.FillPrice = tradeBar.Open;
+                }
+            }
+
+            if (localOrderTime >= endTime) return fill;
 
             // if the MOO was submitted during market the previous day, wait for a day to turn over
-            if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == asset.LocalTime.Date)
+            // The date of the order and the trade data end time cannot be the same.
+            // Note that the security local time can be ahead of the data end time.
+            if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == endTime.Date)
             {
                 return fill;
             }
@@ -507,8 +553,10 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Open;
+            // assume the order completely filled
+            fill.FillQuantity = order.Quantity;
             fill.Status = OrderStatus.Filled;
+
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
@@ -517,13 +565,9 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     fill.FillPrice += slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
                 case OrderDirection.Sell:
                     fill.FillPrice -= slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
             }
 
