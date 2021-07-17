@@ -1885,9 +1885,6 @@ namespace QuantConnect.Algorithm
             // Clear cache
             security.Cache.Reset();
 
-            //Remove from data queue
-            SubscriptionManager.SubscriptionDataConfigService.Remove(symbol);
-
             // Mark security as not tradable
             security.IsTradable = false;
             if (symbol.IsCanonical())
