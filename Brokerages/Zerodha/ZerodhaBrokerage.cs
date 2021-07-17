@@ -79,16 +79,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// Timestamp of most recent heartbeat message
         /// </summary>
         protected DateTime LastHeartbeatUtcTime = DateTime.UtcNow;
-        private const int _heartbeatTimeout = 90;
-        private Thread _connectionMonitorThread;
-        private CancellationTokenSource _cancellationTokenSource;
-        private readonly object _lockerConnectionMonitor = new object();
-        private volatile bool _connectionLost;
-        private const int _connectionTimeout = 30000;
         private readonly IAlgorithm _algorithm;
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
-        //private ZerodhaSubscriptionManager _subscriptionManager;
         private readonly DataQueueHandlerSubscriptionManager SubscriptionManager;
 
         private ConcurrentDictionary<string, Symbol> _subscriptionsById = new ConcurrentDictionary<string, Symbol>();
@@ -311,10 +304,11 @@ namespace QuantConnect.Brokerages.Zerodha
                     var fillQuantity = orderUpdate.FilledQuantity;
                     var direction = orderUpdate.TransactionType == "SELL" ? OrderDirection.Sell : OrderDirection.Buy;
                     var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
-                    var orderFee = new OrderFee(new CashAmount(
-                                CalculateBrokerageOrderFee(orderUpdate.AveragePrice * orderUpdate.FilledQuantity),
-                            Currencies.INR
-                        ));
+
+                    var security = _securityProvider.GetSecurity(order.Symbol);
+                    var orderFee = security.FeeModel.GetOrderFee(
+                        new OrderFeeParameters(security, order));
+
                     if (direction == OrderDirection.Sell)
                     {
                         fillQuantity = -1 * fillQuantity;
@@ -357,38 +351,6 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
-        private decimal CalculateBrokerageOrderFee(decimal orderValue)
-        {
-            bool isSell = orderValue < 0;
-            orderValue = Math.Abs(orderValue);
-            var multiplied = orderValue * 0.0003M;
-            var brokerage = (multiplied > 20) ? 20 : Math.Round(multiplied, 2);
-
-            var turnover = Math.Round(orderValue, 2);
-
-            decimal stt_total = 0;
-            if (isSell)
-            {
-                stt_total = Math.Round(orderValue * 0.00025M, 2);
-            }
-
-            var exc_trans_charge = Math.Round(turnover * 0.0000325M, 2);
-            var cc = 0;
-
-
-            var stax = Math.Round(0.18M * (brokerage + exc_trans_charge), 2);
-
-            var sebi_charges = Math.Round((turnover * 0.000001M), 2);
-            decimal stamp_charges = 0;
-            if (!isSell)
-            {
-                stamp_charges = Math.Round(orderValue * 0.00003M, 2);
-            }
-
-            var total_tax = Math.Round(brokerage + stt_total + exc_trans_charge + stamp_charges + cc + stax + sebi_charges, 2);
-
-            return total_tax;
-        }
         /// <summary>
         /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
         /// </summary>

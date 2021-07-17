@@ -1,0 +1,10 @@
+--- QuantConnect.Brokerages.csproj
++++ QuantConnect.Brokerages.csproj
+@@ -32,7 +32,6 @@
+   </Target>
+   <ItemGroup>
+     <PackageReference Include="CsvHelper" Version="19.0.0" />
+-    <PackageReference Include="IKVM" Version="8.1.5717.0" />
+     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
+       <PrivateAssets>all</PrivateAssets>
+ 

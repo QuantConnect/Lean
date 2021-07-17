@@ -49,16 +49,6 @@ namespace QuantConnect.Brokerages
         {
         }
 
-      
-        public override AccountType AccountType => base.AccountType;
-
-        public override decimal RequiredFreeBuyingPowerPercent => base.RequiredFreeBuyingPowerPercent;
-
-        public override void ApplySplit(List<OrderTicket> tickets, Split split)
-        {
-            base.ApplySplit(tickets, split);
-        }
-
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
         /// market prices are sufficient for the fill to take place. This is used to emulate the

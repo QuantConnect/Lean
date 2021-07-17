@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,7 +21,6 @@ using System.Text;
 
 using System.IO;
 using System.Web;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Globalization;
@@ -137,23 +136,6 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             if (!String.IsNullOrEmpty(Value))
                 Params.Add(Key, Value);
-        }
-
-        /// <summary>
-        /// Generates SHA256 checksum for login.
-        /// </summary>
-        /// <param name="Data">Input data to generate checksum for.</param>
-        /// <returns>SHA256 checksum in hex format.</returns>
-        public static string SHA256(string Data)
-        {
-            SHA256Managed sha256 = new SHA256Managed();
-            StringBuilder hexhash = new StringBuilder();
-            byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(Data), 0, Encoding.UTF8.GetByteCount(Data));
-            foreach (byte b in hash)
-            {
-                hexhash.Append(b.ToStringInvariant("x2"));
-            }
-            return hexhash.ToString();
         }
 
         /// <summary>

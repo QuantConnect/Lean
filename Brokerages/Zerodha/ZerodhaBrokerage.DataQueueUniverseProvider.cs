@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -28,11 +28,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Method returns a collection of Symbols that are available at the broker.
         /// </summary>
-        /// <param name="lookupName">String representing the name to lookup</param>
-        /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
+        /// <param name="lookupSymbol">String representing the name to lookup</param>
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
-        /// <param name="securityExchange">Expected security exchange name(if any)</param>
         /// <returns></returns>
         public IEnumerable<Symbol> LookupSymbols(Symbol lookupSymbol, bool includeExpired, string securityCurrency = null)
         {
@@ -57,6 +55,7 @@ namespace QuantConnect.Brokerages.Zerodha
                                             (securityExchange == null || x.ID.Market == securityExchange))
                                          .ToList();
 
+            // TODO, this method is intended to return the symbol contract chain for the requested symbol
             return result.Select(x => x);
         }
 
