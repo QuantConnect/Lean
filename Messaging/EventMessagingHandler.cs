@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -121,7 +121,7 @@ namespace QuantConnect.Messaging
         public void SendNotification(Notification notification)
         {
             var type = notification.GetType();
-            if (type == typeof (NotificationEmail) || type == typeof (NotificationWeb) || type == typeof (NotificationSms))
+            if (type == typeof (NotificationEmail) || type == typeof (NotificationWeb) || type == typeof (NotificationSms) || type == typeof (NotificationTelegram))
             {
                 Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
                 return;

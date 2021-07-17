@@ -80,14 +80,7 @@ namespace QuantConnect.Brokerages.Zerodha
             // Include future options as a special case with no matching market, otherwise
             // our subscriptions are removed without any sort of notice.
             return
-                 (securityType == SecurityType.Equity) &&
-                    (market == Market.MCX ||
-                    market == Market.NSE ||
-                    market == Market.NFO ||
-                    market == Market.CDS ||
-                    market == Market.BCD ||
-                    market == Market.BSE ||
-                    market == Market.NCDEX);
+                (securityType == SecurityType.Equity) && (market == Market.India);
         }
         #endregion
     }

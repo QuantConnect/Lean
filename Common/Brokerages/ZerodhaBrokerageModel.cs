@@ -185,7 +185,7 @@ namespace QuantConnect.Brokerages
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
         {
             var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Equity] = Market.NSE;
+            map[SecurityType.Equity] = Market.India;
 
             return map.ToReadOnlyDictionary();
         }

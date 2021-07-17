@@ -992,22 +992,34 @@ namespace QuantConnect.Util
         public static bool TryParsePath(string filePath, out Symbol symbol, out DateTime date,
             out Resolution resolution, out TickType tickType, out Type dataType)
         {
-            if (!TryParsePath(filePath, out symbol, out date, out resolution))
-            {
-                tickType = TickType.Trade;
-                dataType = null;
-                return false;
-            }
+            symbol = default;
+            tickType = default;
+            dataType = default;
+            date = default;
+            resolution = default;
 
-            tickType = GetCommonTickType(symbol.SecurityType);
-            var fileName = Path.GetFileNameWithoutExtension(filePath);
-            if (fileName.Contains("_"))
+            try
             {
-                tickType = (TickType)Enum.Parse(typeof(TickType), fileName.Split('_')[1], true);
-            }
+                if (!TryParsePath(filePath, out symbol, out date, out resolution))
+                {
+                    return false;
+                }
 
-            dataType = GetDataType(resolution, tickType);
-            return true;
+                tickType = GetCommonTickType(symbol.SecurityType);
+                var fileName = Path.GetFileNameWithoutExtension(filePath);
+                if (fileName.Contains("_"))
+                {
+                    tickType = (TickType)Enum.Parse(typeof(TickType), fileName.Split('_')[1], true);
+                }
+
+                dataType = GetDataType(resolution, tickType);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"LeanData.TryParsePath(): Error encountered while parsing the path {filePath}. Error: {ex.GetBaseException()}");
+            }
+            return false;
         }
 
         /// <summary>
@@ -1083,7 +1095,7 @@ namespace QuantConnect.Util
             }
             catch (Exception ex)
             {
-                Log.Error($"LeanData.TryParsePath(): Error encountered while parsing the path {fileName}. Error: {ex.GetBaseException()}");
+                Log.Debug($"LeanData.TryParsePath(): Error encountered while parsing the path {fileName}. Error: {ex.GetBaseException()}");
                 return false;
             }
 

@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
     {
 
 
-        private static IOrderProperties orderProperties = new ZerodhaOrderProperties(ZerodhaOrderProperties.KiteProductType.MIS);
+        private static IOrderProperties orderProperties = new ZerodhaOrderProperties(exchange: "nse");
 
         private IBrokerage _brokerage;
         private OrderProvider _orderProvider;

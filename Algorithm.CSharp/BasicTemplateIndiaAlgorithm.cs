@@ -16,37 +16,46 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Brokerages;
-using QuantConnect.Data;
+using QuantConnect.Orders;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
+using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm which reproduce GH issue 3784, where *default* <see cref="IAlgorithm.UniverseSettings"/>
-    /// Leverage value took precedence over <see cref="IAlgorithm.BrokerageModel"/>
+    /// Basic template India algorithm simply initializes the date range and cash. This is a skeleton
+    /// framework you can use for designing an algorithm.
     /// </summary>
-    public class LeveragePrecedenceRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="using quantconnect" />
+    /// <meta name="tag" content="trading and orders" />
+    public class BasicTemplateIndiaAlgorithm : QCAlgorithm
     {
-        private Symbol _spy;
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
+            SetStartDate(2003, 10, 07);  //Set Start Date
+            SetEndDate(2003, 10, 11);    //Set End Date
+            SetCash(100000);             //Set Strategy Cash
 
-            SetBrokerageModel(new TestBrokerageModel());
+            // Find more symbols here: http://quantconnect.com/data
+            // Equities Resolutions: Tick, Second, Minute, Hour, Daily.
+            AddEquity("UNIONBANK", Resolution.Second, Market.India);
+            
+            //Set Order Prperties as per the requirements for order placement
+            DefaultOrderProperties = new ZerodhaOrderProperties(exchange: "nse");
+            //override default productType value set in config.json if needed - order specific productType value
+            //DefaultOrderProperties = new ZerodhaOrderProperties(exchange: "nse",ZerodhaOrderProperties.KiteProductType.CNC);
 
-            _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            SetUniverseSelection(new ManualUniverseSelectionModel(_spy));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+            // General Debug statement for acknowledgement
+            Debug("Intialization Done");
+
         }
 
         /// <summary>
@@ -57,20 +66,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings(_spy, 10);
-                Debug("Purchased Stock");
+                var marketTicket = MarketOrder("UNIONBANK", 1);
             }
+        }
 
-            if (Securities[_spy].Leverage != 10)
+    
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            if (orderEvent.Status.IsFill())
             {
-                throw new Exception($"Expecting leverage to be 10, was {Securities[_spy].Leverage}");
+                Debug($"Purchased Complete: {orderEvent.Symbol}");
             }
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public bool CanRunLocally { get; } = false;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
@@ -82,34 +94,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "3"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.12%"},
-            {"Compounding Annual Return", "239.838%"},
+            {"Average Loss", "-1.01%"},
+            {"Compounding Annual Return", "261.134%"},
             {"Drawdown", "2.200%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "1.576%"},
-            {"Sharpe Ratio", "8.895"},
-            {"Probabilistic Sharpe Ratio", "67.609%"},
+            {"Net Profit", "1.655%"},
+            {"Sharpe Ratio", "8.505"},
+            {"Probabilistic Sharpe Ratio", "66.840%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.003"},
-            {"Beta", "0.997"},
-            {"Annual Standard Deviation", "0.222"},
-            {"Annual Variance", "0.049"},
-            {"Information Ratio", "-14.544"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "1.979"},
-            {"Total Fees", "$65.43"},
-            {"Estimated Strategy Capacity", "$5600000.00"},
+            {"Alpha", "-0.091"},
+            {"Beta", "1.006"},
+            {"Annual Standard Deviation", "0.224"},
+            {"Annual Variance", "0.05"},
+            {"Information Ratio", "-33.445"},
+            {"Tracking Error", "0.002"},
+            {"Treynor Ratio", "1.893"},
+            {"Total Fees", "$10.32"},
+            {"Estimated Strategy Capacity", "$27000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.979"},
+            {"Fitness Score", "0.747"},
             {"Kelly Criterion Estimate", "38.796"},
             {"Kelly Criterion Probability Value", "0.228"},
-            {"Sortino Ratio", "7.443"},
-            {"Return Over Maximum Drawdown", "70.425"},
-            {"Portfolio Turnover", "4.74"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "85.095"},
+            {"Portfolio Turnover", "0.747"},
             {"Total Insights Generated", "100"},
             {"Total Insights Closed", "99"},
             {"Total Insights Analysis Completed", "99"},
@@ -123,15 +135,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "53.5354%"},
             {"Rolling Averaged Population Direction", "58.2788%"},
             {"Rolling Averaged Population Magnitude", "58.2788%"},
-            {"OrderListHash", "5058ddf4d396a288471e8954ded3bf7a"}
+            {"OrderListHash", "ad2216297c759d8e5aef48ff065f8919"}
         };
-
-        private class TestBrokerageModel : DefaultBrokerageModel
-        {
-            public override decimal GetLeverage(Security security)
-            {
-                return 10;
-            }
-        }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,6 +18,7 @@ using Python.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Research;
@@ -101,8 +102,16 @@ namespace QuantConnect.Tests.Research
 
                 // Verify the data value
                 var index = testRow.index[0];
-                var value = testRow.at[index].AsManagedObject(input[2].GetType());
-                Assert.AreEqual(input[2], value);
+                if (input.Length == 4)
+                {
+                    var fine = testRow.at[index].AsManagedObject(typeof(FineFundamental));
+                    Assert.AreEqual(input[2], input[3](fine));
+                }
+                else
+                {
+                    var value = testRow.at[index].AsManagedObject(input[2].GetType());
+                    Assert.AreEqual(input[2], value);
+                }
             }
         }
 
@@ -115,7 +124,14 @@ namespace QuantConnect.Tests.Research
             {
                 foreach (var value in day.Values)
                 {
-                    Assert.AreEqual(input[2], value);
+                    if (input.Length == 4)
+                    {
+                        Assert.AreEqual(input[2], input[3](value));
+                    }
+                    else
+                    {
+                        Assert.AreEqual(input[2], value);
+                    }
                     Assert.AreEqual(_startDate, day.Time);
                 }
             }
@@ -142,6 +158,7 @@ namespace QuantConnect.Tests.Research
         // Different requests and their expected values
         private static readonly object[] DataTestCases =
         {
+            new object[] {new List<string> {"AAPL"}, null, 13.2725m, new Func<FineFundamental, decimal>(fundamental => fundamental.ValuationRatios.PERatio) },
             new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 13.2725m},
             new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", 22.5177},
             new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements.NumberOfShareHolders", 36319}

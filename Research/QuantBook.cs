@@ -129,6 +129,15 @@ namespace QuantConnect.Research
                     new AlgorithmManager(false));
                 systemHandlers.LeanManager.SetAlgorithm(this);
 
+                algorithmHandlers.DataPermissionsManager.Initialize(new AlgorithmNodePacket(PacketType.BacktestNode)
+                {
+                    UserToken = Config.Get("api-access-token"),
+                    UserId = Config.GetInt("job-user-id"),
+                    ProjectId = Config.GetInt("project-id"),
+                    OrganizationId = Config.Get("job-organization-id"),
+                    Version = Globals.Version
+                });
+
                 algorithmHandlers.ObjectStore.Initialize("QuantBook",
                     Config.GetInt("job-user-id"),
                     Config.GetInt("project-id"),
@@ -198,14 +207,8 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>pandas DataFrame</returns>
-        public PyObject GetFundamental(PyObject input, string selector, DateTime? start = null, DateTime? end = null)
+        public PyObject GetFundamental(PyObject input, string selector = null, DateTime? start = null, DateTime? end = null)
         {
-            //Null selector is not allowed for Python DataFrame
-            if (string.IsNullOrWhiteSpace(selector))
-            {
-                throw new ArgumentException("Invalid selector. Cannot be None, empty or consist only of white-space characters");
-            }
-
             //Covert to symbols
             var symbols = PythonUtil.ConvertToSymbols(input);
 
@@ -236,7 +239,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data</returns>
-        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<Symbol> symbols, string selector, DateTime? start = null, DateTime? end = null)
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<Symbol> symbols, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             var data = GetAllFundamental(symbols, selector, start, end);
 
@@ -254,7 +257,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one Dictionary for each day there is data.</returns>
-        public IEnumerable<DataDictionary<dynamic>> GetFundamental(Symbol symbol, string selector, DateTime? start = null, DateTime? end = null)
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(Symbol symbol, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             var list = new List<Symbol>
             {
@@ -272,7 +275,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data.</returns>
-        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<string> tickers, string selector, DateTime? start = null, DateTime? end = null)
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<string> tickers, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             var list = new List<Symbol>();
             foreach (var ticker in tickers)
@@ -291,7 +294,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one Dictionary for each day there is data.</returns>
-        public dynamic GetFundamental(string ticker, string selector, DateTime? start = null, DateTime? end = null)
+        public dynamic GetFundamental(string ticker, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             //Check if its Python; PythonNet likes to convert the strings, but for python we want the DataFrame as the return object
             //So we must route the function call to the Python version.

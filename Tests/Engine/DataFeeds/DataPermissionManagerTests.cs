@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         public class TestDataPermissionManager : DataPermissionManager
         {
-            public override void AssertConfiguration(SubscriptionDataConfig subscriptionDataConfig)
+            public override void AssertConfiguration(SubscriptionDataConfig subscriptionDataConfig, DateTime startTimeLocal, DateTime endTimeLocal)
             {
                 throw new InvalidOperationException("Invalid configuration");
             }
