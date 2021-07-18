@@ -31,7 +31,6 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
     {
         private static readonly string _apiKey = Config.Get("zerodha-api-key");
         private static readonly string _accessToken = Config.Get("zerodha-access-token");
-        private static readonly bool _isZerodhaHistorySubscriptionActive = Config.GetBool("zerodha-history-subscription");
 
         /// <summary>
         /// Zerodha Historical Data Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
@@ -39,19 +38,14 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
         /// </summary>
         public static void ZerodhaDataDownloader(IList<string> tickers, string market, string resolution, string securityType, DateTime startDate, DateTime endDate)
         {
-            if (!_isZerodhaHistorySubscriptionActive)
-            {
-                Console.WriteLine("ZerodhaDataDownloader ERROR: - You don't have zerodha historical API subscription according to your config.json settings");
-                Environment.Exit(1);
-            }
 
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("ZerodhaDataDownloader ERROR: '--tickers=', --securityType, '--market' or '--resolution=' parameter is missing");
-                Console.WriteLine("--tickers=eg JSWSTEEL,TCS,INFY");
-                Console.WriteLine("--market=MCX/NSE/NFO/CDS/BSE");
-                Console.WriteLine("--security-type=Equity/Future/Option/Commodity");
-                Console.WriteLine("--resolution=Minute/Hour/Daily/Tick");
+                Log.Error("ZerodhaDataDownloader ERROR: '--tickers=', --securityType, '--market' or '--resolution=' parameter is missing");
+                Log.Error("--tickers=eg JSWSTEEL,TCS,INFY");
+                Log.Error("--market=MCX/NSE/NFO/CDS/BSE");
+                Log.Error("--security-type=Equity/Future/Option/Commodity");
+                Log.Error("--resolution=Minute/Hour/Daily/Tick");
                 Environment.Exit(1);
             }
             try
@@ -90,7 +84,7 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
                         // Write data
                         var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
                         IList<TradeBar> fileEnum = new List<TradeBar>();
-                        var history = new List<Historical>();
+                        IEnumerable<Historical> history = new List<Historical>();
                         var timeSpan = new TimeSpan();
                         switch (castResolution)
                         {
@@ -101,36 +95,21 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                                 if ((end - start).Days > 60)
                                     throw new ArgumentOutOfRangeException("For minutes data Zerodha support 60 days data download");
-                                foreach (var token in zerodhaTokenList) // get historical data for each token
-                                {
-                                    var tempHistory = _kite.GetHistoricalData(token.ToStringInvariant(), start, end, "day");
-                                    history = (List<Historical>)history.Concat(tempHistory);
-                                }
-                                history = (List<Historical>)history.OrderBy(x=>x.TimeStamp);
+                                history = GetHistoryFromZerodha(_kite, zerodhaTokenList, startDate, endDate, "minute");
                                 timeSpan = Time.OneMinute;
                                 break;
 
                             case Resolution.Hour:
                                 if ((end - start).Days > 400)
                                     throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
-                                foreach (var token in zerodhaTokenList) // get historical data for each token
-                                {
-                                    var tempHistory = _kite.GetHistoricalData(token.ToStringInvariant(), start, end, "day");
-                                    history = (List<Historical>)history.Concat(tempHistory);
-                                }
-                                history = (List<Historical>)history.OrderBy(x=>x.TimeStamp);
+                                history = GetHistoryFromZerodha(_kite, zerodhaTokenList, startDate, endDate, "60minute");
                                 timeSpan = Time.OneHour;
                                 break;
 
                             case Resolution.Daily:
                                 if ((end - start).Days > 400)
                                     throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
-                                foreach (var token in zerodhaTokenList) // get historical data for each token
-                                {
-                                    var tempHistory = _kite.GetHistoricalData(token.ToStringInvariant(), start, end, "day");
-                                    history = (List<Historical>)history.Concat(tempHistory);
-                                }
-                                history = (List<Historical>)history.OrderBy(x=>x.TimeStamp);
+                                history = GetHistoryFromZerodha(_kite, zerodhaTokenList, startDate, endDate, "day");
                                 timeSpan = Time.OneDay;
                                 break;
                         }
@@ -149,7 +128,18 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
             {
                 Log.Error($"ZerodhaDataDownloadManager.OnError(): Message: {err.Message} Exception: {err.InnerException}");
             }
+        }
 
+        private static IEnumerable<Historical> GetHistoryFromZerodha(Kite kite, List<uint> zerodhaTokenList, DateTime startDate, DateTime endDate, string resolutionInput)
+        {
+            IEnumerable<Historical> history = new List<Historical>();
+            foreach (var token in zerodhaTokenList)
+            {
+                var tempHistory = kite.GetHistoricalData(token.ToStringInvariant(), startDate, endDate, resolutionInput);
+                history = history.Concat(tempHistory);
+            }
+            history = history.OrderBy(x=>x.TimeStamp);
+            return history;
         }
     }
 }
