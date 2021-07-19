@@ -35,6 +35,7 @@ namespace QuantConnect.Brokerages
         private readonly Action<IWebSocket, Symbol, TickType> _subscribeFunc;
         private readonly Action<IWebSocket, Symbol, TickType> _unsubscribeFunc;
         private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
+        private readonly RateGate _connectionRateLimiter;
 
         private const int ConnectionTimeout = 30000;
 
@@ -47,6 +48,7 @@ namespace QuantConnect.Brokerages
         /// <param name="webSocketUrl">The URL for websocket connections</param>
         /// <param name="maximumSymbolsPerWebSocket">The maximum number of symbols per websocket connection</param>
         /// <param name="maximumWebSocketConnections">The maximum number of websocket connections allowed (if zero, symbol weighting is disabled)</param>
+        /// <param name="connectionRateLimiter">The rate limiter for creating new websocket connections</param>
         /// <param name="symbolWeights">A dictionary for the symbol weights</param>
         /// <param name="webSocketFactory">A function which returns a new websocket instance</param>
         /// <param name="subscribeFunc">A function which subscribes a symbol</param>
@@ -60,7 +62,8 @@ namespace QuantConnect.Brokerages
             Func<WebSocketClientWrapper> webSocketFactory,
             Action<IWebSocket, Symbol, TickType> subscribeFunc,
             Action<IWebSocket, Symbol, TickType> unsubscribeFunc,
-            BrokerageConcurrentMessageHandler<WebSocketMessage> messageHandler)
+            BrokerageConcurrentMessageHandler<WebSocketMessage> messageHandler,
+            RateGate connectionRateLimiter = null)
         {
             _webSocketUrl = webSocketUrl;
             _maximumSymbolsPerWebSocket = maximumSymbolsPerWebSocket;
@@ -69,6 +72,7 @@ namespace QuantConnect.Brokerages
             _subscribeFunc = subscribeFunc;
             _unsubscribeFunc = unsubscribeFunc;
             _messageHandler = messageHandler;
+            _connectionRateLimiter = connectionRateLimiter;
 
             if (_maximumWebSocketConnections > 0)
             {
@@ -189,6 +193,11 @@ namespace QuantConnect.Brokerages
             };
 
             webSocket.Open += onOpenAction;
+
+            if (_connectionRateLimiter != null && !_connectionRateLimiter.WaitToProceed(TimeSpan.Zero))
+            {
+                _connectionRateLimiter.WaitToProceed();
+            }
 
             try
             {
