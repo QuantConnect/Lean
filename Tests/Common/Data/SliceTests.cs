@@ -24,6 +24,7 @@ using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Python;
+using QuantConnect.Tests.Common.Data.Custom;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -419,9 +420,9 @@ def Test(slice):
         count += 1
     if count != 2:
         raise Exception('Unexpected value')").GetAttr("Test");
-                var quandlSpy = new TiingoNews { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var quandlSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-                var quandlAapl = new TiingoNews { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var quandlAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
                 var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, tradeBarAapl, quandlAapl });
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
@@ -1061,9 +1062,9 @@ def Test(slice, symbol):
         private Slice GetSlice()
         {
             SymbolCache.Clear();
-            var quandlSpy = new TiingoNews { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+            var quandlSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
             var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-            var quandlAapl = new TiingoNews { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+            var quandlAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
             return new Slice(DateTime.Now, new BaseData[] { quandlSpy, tradeBarAapl, quandlAapl });
         }
 
