@@ -21,16 +21,16 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class RelativeVolumeTests : CommonIndicatorTests<TradeBar>
+    public class RelativeDailyVolumeTests : CommonIndicatorTests<TradeBar>
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new RelativeVolume(14);
+            return new RelativeDailyVolume(14);
         }
 
-        protected override string TestFileName => "spy_rv.txt";
+        protected override string TestFileName => "spy_rdv.txt";
 
-        protected override string TestColumnName => "RVOL";
+        protected override string TestColumnName => "RDV";
 
         protected override Action<IndicatorBase<TradeBar>, double> Assertion
         {
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void ResetsProperly()
         {
-            var rvol = new RelativeVolume(2);
+            var rvol = new RelativeDailyVolume(2);
             var reference = System.DateTime.Today;
 
             rvol.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1) });

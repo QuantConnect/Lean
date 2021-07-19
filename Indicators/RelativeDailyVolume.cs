@@ -20,17 +20,19 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The Relative Volume indicator is an indicator that compares current 
+    /// The Relative Daily Volume indicator is an indicator that compares current 
     /// cumulative volume to the cumulative volume for a given 
-    /// time of day, measured as a ratio.
+    /// time of day over an x day period, measured as a ratio.
     /// 
     /// Current volume from open to current time of day / Average over the past x days from open to current time of day
     /// </summary>
-    public class RelativeVolume : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class RelativeDailyVolume : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly List<decimal> CurrentVolume = new List<decimal>();
-        private readonly Dictionary<DateTime, decimal> HistoricalVolumes = new Dictionary<DateTime, decimal>();
-        private DateTime _previousDay;
+        private readonly List<decimal> _currentVolume = new List<decimal>();
+        private readonly Dictionary<DateTime, decimal> _historicalVolumes = new Dictionary<DateTime, decimal>();
+        private readonly RollingWindow<DateTime> _rollingTime;
+        private readonly RollingWindow<decimal> _rollingData;
+        private int _previousDay;
 
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
@@ -46,8 +48,8 @@ namespace QuantConnect.Indicators
         /// Initializeds a new instance of the RelativeVolume class using the specified period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
-        public RelativeVolume(int period = 14)
-            : this($"RVOL({period})", period)
+        public RelativeDailyVolume(int period = 14)
+            : this($"RDV({period})", period)
         {
         }
         /// <summary>
@@ -55,11 +57,13 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of this indicator</param>
-        public RelativeVolume(string name, int period)
+        public RelativeDailyVolume(string name, int period)
             : base(name)
         {
-            _previousDay = default(DateTime);
+            _previousDay = -1;
             WarmUpPeriod = period;
+            _rollingTime = new RollingWindow<DateTime>(period * 2);
+            _rollingData = new RollingWindow<decimal>(period * 2);
         }
 
         /// <summary>
@@ -69,65 +73,46 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            if (input.Time.Day != _previousDay.Day)
+            if (input.Time.Day != _previousDay)
             {
-
-                CurrentVolume.Clear();
-                _previousDay = input.Time;
-
-                List<DateTime> allDates = new List<DateTime>();
-                allDates = HistoricalVolumes.Keys.ToList();
-                allDates.Sort((ps1, ps2) => DateTime.Compare(ps1, ps2));
-
-                if (IsReady && allDates.Count != WarmUpPeriod)
-                {
-                    var index = 0;
-                    var delta = allDates.Count - WarmUpPeriod;
-                    foreach (DateTime time in allDates)
-                    {
-                        if (index < delta)
-                        {
-                            HistoricalVolumes.Remove(time);
-                        }
-                        index += 1;
-                    }
-                }
+                _currentVolume.Clear();
+                _previousDay = input.Time.Day;
             }
 
-            if (!IsReady)
-            {
-                CurrentVolume.Add(input.Volume);
-                HistoricalVolumes.Add(input.Time, input.Volume);
-                return 0;
-            }
+            _currentVolume.Add(input.Volume);
+            _historicalVolumes.Add(input.Time, input.Volume);
+            _rollingTime.Add(input.Time);
+            _rollingData.Add(input.Volume);
 
-            CurrentVolume.Add(input.Volume);
-            HistoricalVolumes.Add(input.Time, input.Volume);
+            if (!IsReady) { return 0; }
 
-            var todaysTotal = CurrentVolume.Sum();
-            List<decimal> relativeValues = new List<decimal>();
-            var curDay = -1;
-            decimal curValue = 0;
-            foreach (KeyValuePair<DateTime, decimal> pair in HistoricalVolumes)
+            var todaysTotal = _currentVolume.Sum();
+            var timeList = _rollingTime.ToList();
+            var dataList = _rollingData.ToList();
+            int listCount = timeList.Count;
+            var currentDay = -1;
+            int listDifference = (listCount - WarmUpPeriod) - 1;
+            decimal cummulateValue = 0;
+            var relativeValues = new List<decimal>();
+
+            if (listDifference != -1) { timeList.Skip(listDifference); }
+            foreach (var pair in timeList)
             {
-                if (curDay != pair.Key.Day)
+                if (currentDay != pair.Day)
                 {
-                    if (curValue != 0)
-                    {
-                        relativeValues.Add(curValue);
-                    }
-                    curValue = 0;
+                    if (cummulateValue != 0) { relativeValues.Add(cummulateValue); }
+                    cummulateValue = 0;
                 }
 
-                var dayDelta = input.Time - pair.Key;
-                if ((dayDelta.Days >= 1) && (pair.Key.Hour <= input.Time.Hour) && (pair.Key.Minute <= input.Time.Minute) && (input.Time.Second <= pair.Key.Second))
+                var dayDelta = input.Time - pair;
+                if ((dayDelta.Days >= 1) && (pair.Hour <= input.Time.Hour) && (pair.Minute <= input.Time.Minute) && (input.Time.Second <= pair.Second))
                 {
-                    curValue += pair.Value;
+                    cummulateValue += dataList[timeList.IndexOf(pair)];
                 }
-                curDay = pair.Key.Day;
+                currentDay = pair.Day;
             }
 
-            if (curValue != 0) { relativeValues.Add(curValue); }
+            if (cummulateValue != 0) { relativeValues.Add(cummulateValue); }
 
             if (relativeValues.Count == 0)
             {
@@ -145,9 +130,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            CurrentVolume.Clear();
-            HistoricalVolumes.Clear();
-            _previousDay = default(DateTime);
+            _currentVolume.Clear();
+            _historicalVolumes.Clear();
+            _rollingTime.Reset();
+            _rollingData.Reset();
+            _previousDay = -1;
             base.Reset();
         }
     }
