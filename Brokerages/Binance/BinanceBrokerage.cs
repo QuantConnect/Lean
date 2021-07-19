@@ -73,7 +73,7 @@ namespace QuantConnect.Brokerages.Binance
             _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnMessageImpl);
 
             var maximumWebSocketConnections = Config.GetInt("binance-maximum-websocket-connections");
-            var symbolWeights = FetchSymbolWeights();
+            var symbolWeights = maximumWebSocketConnections > 0 ? FetchSymbolWeights() : null;
 
             var subscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
                 WebSocketBaseUrl,
@@ -500,19 +500,27 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         private static Dictionary<Symbol, int> FetchSymbolWeights()
         {
-            const string url = "https://api.binance.com/api/v3/ticker/24hr";
-            var json = url.DownloadData();
-
             var dict = new Dictionary<Symbol, int>();
 
-            foreach (var row in JArray.Parse(json))
+            try
             {
-                var ticker = row["symbol"].ToObject<string>();
-                var count = row["count"].ToObject<int>();
+                const string url = "https://api.binance.com/api/v3/ticker/24hr";
+                var json = url.DownloadData();
 
-                var symbol = Symbol.Create(ticker, SecurityType.Crypto, Market.Binance);
+                foreach (var row in JArray.Parse(json))
+                {
+                    var ticker = row["symbol"].ToObject<string>();
+                    var count = row["count"].ToObject<int>();
 
-                dict.Add(symbol, count);
+                    var symbol = Symbol.Create(ticker, SecurityType.Crypto, Market.Binance);
+
+                    dict.Add(symbol, count);
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+                throw;
             }
 
             return dict;
