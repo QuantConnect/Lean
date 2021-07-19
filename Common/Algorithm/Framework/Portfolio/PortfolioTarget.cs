@@ -14,9 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 using QuantConnect.Securities.Positions;
 using static QuantConnect.StringExtensions;
 
@@ -110,8 +110,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             var positionGroup = algorithm.Portfolio.Positions.GetOrCreateDefaultGroup(security);
             var result = positionGroup.BuyingPowerModel.GetMaximumLotsForTargetBuyingPower(
-                algorithm.Portfolio, positionGroup, targetFinalMarginPercentage
-            );
+                new GetMaximumLotsForTargetBuyingPowerParameters(algorithm.Portfolio, positionGroup,
+                    targetFinalMarginPercentage, algorithm.Settings.MinimumOrderMarginPortfolioPercentage));
 
             if (result.IsError)
             {

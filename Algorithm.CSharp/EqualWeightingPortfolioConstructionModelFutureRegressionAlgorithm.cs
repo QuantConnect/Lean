@@ -41,6 +41,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetAlpha(new ConstantFutureContractAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
+
+            // Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+            // Commented so regression algorithm is more sensitive
+            //Settings.MinimumOrderMarginPortfolioPercentage = 0.005m;
         }
 
         // future symbol universe selection function
@@ -128,34 +132,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "5"},
+            {"Total Trades", "7"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.82%"},
-            {"Compounding Annual Return", "-99.936%"},
+            {"Average Loss", "-1.40%"},
+            {"Compounding Annual Return", "-99.829%"},
             {"Drawdown", "29.500%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-9.054%"},
-            {"Sharpe Ratio", "-0.666"},
-            {"Probabilistic Sharpe Ratio", "30.662%"},
+            {"Net Profit", "-7.888%"},
+            {"Sharpe Ratio", "-0.612"},
+            {"Probabilistic Sharpe Ratio", "34.280%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-12.77"},
-            {"Beta", "5.937"},
-            {"Annual Standard Deviation", "1.497"},
-            {"Annual Variance", "2.242"},
-            {"Information Ratio", "-2.283"},
-            {"Tracking Error", "1.305"},
-            {"Treynor Ratio", "-0.168"},
-            {"Total Fees", "$37.00"},
-            {"Estimated Strategy Capacity", "$16000000.00"},
+            {"Alpha", "-13.93"},
+            {"Beta", "6.525"},
+            {"Annual Standard Deviation", "1.619"},
+            {"Annual Variance", "2.62"},
+            {"Information Ratio", "-2.091"},
+            {"Tracking Error", "1.422"},
+            {"Treynor Ratio", "-0.152"},
+            {"Total Fees", "$40.70"},
+            {"Estimated Strategy Capacity", "$4000000.00"},
             {"Lowest Capacity Asset", "GC VL5E74HP3EE5"},
             {"Fitness Score", "0.072"},
             {"Kelly Criterion Estimate", "-9.366"},
             {"Kelly Criterion Probability Value", "0.607"},
-            {"Sortino Ratio", "-5.173"},
+            {"Sortino Ratio", "-5.172"},
             {"Return Over Maximum Drawdown", "-5.25"},
-            {"Portfolio Turnover", "4.629"},
+            {"Portfolio Turnover", "4.987"},
             {"Total Insights Generated", "10"},
             {"Total Insights Closed", "8"},
             {"Total Insights Analysis Completed", "8"},
@@ -169,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "25.058%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "0f9f87f5c080b5ec0e48dac003a7e875"}
+            {"OrderListHash", "874fc945335aa8d93f2e3734641f9890"}
         };
     }
 }

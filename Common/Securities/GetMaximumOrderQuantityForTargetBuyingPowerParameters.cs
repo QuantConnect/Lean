@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -42,19 +42,28 @@ namespace QuantConnect.Securities
         public bool SilenceNonErrorReasons { get; }
 
         /// <summary>
+        /// Configurable minimum order margin portfolio percentage to ignore bad orders, orders with unrealistic small sizes
+        /// </summary>
+        /// <remarks>Default value is 0. This setting is useful to avoid small trading noise when using SetHoldings</remarks>
+        public decimal MinimumOrderMarginPortfolioPercentage { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetBuyingPowerParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
         /// <param name="targetBuyingPower">The target percentage buying power</param>
+        /// <param name="minimumOrderMarginPortfolioPercentage">Configurable minimum order margin portfolio percentage to ignore orders with unrealistic small sizes</param>
         /// <param name="silenceNonErrorReasons">True will not return <see cref="GetMaximumOrderQuantityResult.Reason"/>
         /// set for non error situation, this is for performance</param>
-        public GetMaximumOrderQuantityForTargetBuyingPowerParameters(SecurityPortfolioManager portfolio, Security security, decimal targetBuyingPower, bool silenceNonErrorReasons = false)
+        public GetMaximumOrderQuantityForTargetBuyingPowerParameters(SecurityPortfolioManager portfolio, Security security,
+            decimal targetBuyingPower, decimal minimumOrderMarginPortfolioPercentage, bool silenceNonErrorReasons = false)
         {
             Portfolio = portfolio;
             Security = security;
             TargetBuyingPower = targetBuyingPower;
             SilenceNonErrorReasons = silenceNonErrorReasons;
+            MinimumOrderMarginPortfolioPercentage = minimumOrderMarginPortfolioPercentage;
         }
     }
 }

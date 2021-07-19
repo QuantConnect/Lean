@@ -81,54 +81,6 @@ namespace QuantConnect.Securities.Positions
         }
 
         /// <summary>
-        /// Computes the change in reserved buying power we expect the portfolio to experience if the specified position
-        /// group is added to the algorithm's holdings
-        /// </summary>
-        public static decimal GetChangeInReservedBuyingPower(
-            this IPositionGroupBuyingPowerModel model,
-            SecurityPortfolioManager portfolio,
-            IPositionGroup positionGroup,
-            Order order
-            )
-        {
-            return model.GetReservedBuyingPowerImpact(
-                new ReservedBuyingPowerImpactParameters(portfolio, positionGroup, order)
-            ).Delta;
-        }
-
-        /// <summary>
-        /// Get the maximum position group order quantity to obtain a position with a given buying power
-        /// percentage. Will not take into account free buying power.
-        /// </summary>
-        public static GetMaximumLotsResult GetMaximumLotsForTargetBuyingPower(
-            this IPositionGroupBuyingPowerModel model,
-            SecurityPortfolioManager portfolio,
-            IPositionGroup positionGroup,
-            decimal targetBuyingPower
-            )
-        {
-            return model.GetMaximumLotsForTargetBuyingPower(new GetMaximumLotsForTargetBuyingPowerParameters(
-                portfolio, positionGroup, targetBuyingPower
-            ));
-        }
-
-        /// <summary>
-        /// Get the maximum market position group order quantity to obtain a delta in the buying power used by a position group.
-        /// The deltas sign defines the position side to apply it to, positive long, negative short.
-        /// </summary>
-        public static GetMaximumLotsResult GetMaximumLotsForDeltaBuyingPower(
-            this IPositionGroupBuyingPowerModel model,
-            SecurityPortfolioManager portfolio,
-            IPositionGroup positionGroup,
-            decimal deltaBuyingPower
-            )
-        {
-            return model.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
-                portfolio, positionGroup, deltaBuyingPower
-            ));
-        }
-
-        /// <summary>
         /// Check if there is sufficient buying power for the position group to execute this order.
         /// </summary>
         public static HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
