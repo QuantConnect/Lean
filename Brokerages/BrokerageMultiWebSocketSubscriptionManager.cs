@@ -91,9 +91,7 @@ namespace QuantConnect.Brokerages
 
             foreach (var symbol in symbols)
             {
-                var webSocket = _maximumWebSocketConnections > 0
-                    ? GetWeightedWebSocketForSymbol(symbol)
-                    : GetAvailableWebSocketForSymbol(symbol);
+                var webSocket = GetWebSocketForSymbol(symbol);
 
                 _subscribeFunc(webSocket, symbol, tickType);
             }
@@ -138,35 +136,22 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Adds a symbol to one of the predefined websocket connections using symbol weighting.
-        /// If all websocket connections are maxed out, an exception is thrown
+        /// Adds a symbol to an existing or new websocket connection
         /// </summary>
-        private IWebSocket GetWeightedWebSocketForSymbol(Symbol symbol)
+        private IWebSocket GetWebSocketForSymbol(Symbol symbol)
         {
-            // use any unused websocket first
-            BrokerageMultiWebSocketEntry entryUnused;
-            lock (_locker)
-            {
-                entryUnused = _webSocketEntries.FirstOrDefault(x => !x.WebSocket.IsOpen);
-            }
-
-            if (entryUnused != null)
-            {
-                var webSocket = entryUnused.WebSocket;
-                Connect(webSocket);
-
-                entryUnused.AddSymbol(symbol);
-
-                Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.GetWeightedWebSocketForSymbol(): added symbol: {symbol} to websocket: {entryUnused.WebSocket.GetHashCode()} - Count: {entryUnused.SymbolCount}");
-
-                return webSocket;
-            }
-
             lock (_locker)
             {
                 if (_webSocketEntries.All(x => x.SymbolCount >= _maximumSymbolsPerWebSocket))
                 {
-                    throw new NotSupportedException($"Maximum symbol count reached for the current configuration [MaxSymbolsPerWebSocket={_maximumSymbolsPerWebSocket}, MaxWebSocketConnections:{_maximumWebSocketConnections}]");
+                    if (_maximumWebSocketConnections > 0)
+                    {
+                        throw new NotSupportedException($"Maximum symbol count reached for the current configuration [MaxSymbolsPerWebSocket={_maximumSymbolsPerWebSocket}, MaxWebSocketConnections:{_maximumWebSocketConnections}]");
+                    }
+
+                    // symbol limit reached on all, create new websocket instance
+                    var webSocket = _webSocketFactory();
+                    _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(webSocket));
                 }
 
                 // sort by weight ascending, taking into account the symbol limit per websocket
@@ -178,55 +163,18 @@ namespace QuantConnect.Brokerages
                         : Math.Sign(x.TotalWeight - y.TotalWeight));
 
                 var entry = _webSocketEntries.First();
+
+                if (!entry.WebSocket.IsOpen)
+                {
+                    Connect(entry.WebSocket);
+                }
+
                 entry.AddSymbol(symbol);
 
                 Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.GetWeightedWebSocketForSymbol(): added symbol: {symbol} to websocket: {entry.WebSocket.GetHashCode()} - Count: {entry.SymbolCount}");
 
                 return entry.WebSocket;
             }
-        }
-
-        /// <summary>
-        /// Adds a symbol to an existing connection if the maximum limit is not reached,
-        /// otherwise creates a new websocket instance and adds the symbol to it
-        /// </summary>
-        private IWebSocket GetAvailableWebSocketForSymbol(Symbol symbol)
-        {
-            lock (_locker)
-            {
-                foreach (var entry in _webSocketEntries.Where(entry => entry.SymbolCount < _maximumSymbolsPerWebSocket))
-                {
-                    // free slot available, add to existing
-                    entry.AddSymbol(symbol);
-
-                    return entry.WebSocket;
-                }
-            }
-
-            // symbol limit reached on all, create new websocket instance
-            var webSocket = _webSocketFactory();
-
-            lock (_locker)
-            {
-                var entry = new BrokerageMultiWebSocketEntry(webSocket);
-                entry.AddSymbol(symbol);
-
-                _webSocketEntries.Add(entry);
-            }
-
-            Connect(webSocket);
-
-            int connections;
-            lock (_locker)
-            {
-                connections = _webSocketEntries.Count;
-            }
-
-            Log.Trace("BrokerageMultiWebSocketSubscriptionManager.GetAvailableWebSocketForSymbol(): New websocket added: " +
-                $"Hashcode: {webSocket.GetHashCode()}, " +
-                $"WebSocket connections: {connections}");
-
-            return webSocket;
         }
 
         private void Connect(IWebSocket webSocket)
