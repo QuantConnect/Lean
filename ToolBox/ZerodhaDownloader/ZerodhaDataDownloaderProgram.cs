@@ -130,12 +130,12 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
             }
         }
 
-        private static IEnumerable<Historical> GetHistoryFromZerodha(Kite kite, List<uint> zerodhaTokenList, DateTime startDate, DateTime endDate, string resolutionInput)
+        private static IEnumerable<Historical> GetHistoryFromZerodha(Kite kite, List<uint> zerodhaTokenList, DateTime startDate, DateTime endDate, string interval)
         {
             IEnumerable<Historical> history = new List<Historical>();
             foreach (var token in zerodhaTokenList)
             {
-                var tempHistory = kite.GetHistoricalData(token.ToStringInvariant(), startDate, endDate, resolutionInput);
+                var tempHistory = kite.GetHistoricalData(token.ToStringInvariant(), startDate, endDate, interval);
                 history = history.Concat(tempHistory);
             }
             history = history.OrderBy(x=>x.TimeStamp);
