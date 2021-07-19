@@ -14,71 +14,71 @@
 */
 
 using System;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework.Selection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm making sure that the added universe selection does not remove the option chain during it's daily refresh
+    /// Regression algorithm asserting the split is handled correctly. Specifically GH issue #5765, where cash
+    /// difference applied due to share count difference was using the split reference price instead of the new price,
+    /// increasing cash holdings by a higher amount than it should have
     /// </summary>
-    public class OptionChainedAndUniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SplitPartialShareRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _aaplOption;
-
+        private decimal _cash;
+        private SplitType? _splitType;
         public override void Initialize()
         {
-            UniverseSettings.Resolution = Resolution.Minute;
-
             SetStartDate(2014, 06, 05);
             SetEndDate(2014, 06, 09);
 
-            _aaplOption = AddOption("AAPL").Symbol;
-            AddUniverseSelection(new DailyUniverseSelectionModel("MyCustomSelectionModel", time => new[] { "AAPL" }, this));
+            UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
+
+            AddEquity("AAPL");
         }
 
         public override void OnData(Slice data)
         {
+            foreach (var dataSplit in data.Splits)
+            {
+                if (_splitType == null || _splitType < dataSplit.Value.Type)
+                {
+                    _splitType = dataSplit.Value.Type;
+
+                    if (_splitType == SplitType.Warning && _cash != Portfolio.CashBook[Currencies.USD].Amount)
+                    {
+                        throw new Exception("Unexpected cash amount change before split");
+                    }
+
+                    if (_splitType == SplitType.SplitOccurred)
+                    {
+                        var newCash = Portfolio.CashBook[Currencies.USD].Amount;
+                        if (_cash == newCash || newCash - _cash >= dataSplit.Value.SplitFactor * dataSplit.Value.ReferencePrice)
+                        {
+                            throw new Exception("Unexpected cash amount change after split");
+                        }
+                    }
+                }
+                else
+                {
+                    throw new Exception($"Unexpected split event {dataSplit.Value.Type}");
+                }
+            }
+
             if (!Portfolio.Invested)
             {
                 Buy("AAPL", 1);
+                _cash = Portfolio.CashBook[Currencies.USD].Amount;
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            var config = SubscriptionManager.Subscriptions.ToList();
-            if (config.All(dataConfig => dataConfig.Symbol != "AAPL"))
+            if (_splitType == null)
             {
-                throw new Exception("Was expecting configurations for AAPL");
-            }
-            if (config.All(dataConfig => dataConfig.Symbol.SecurityType != SecurityType.Option))
-            {
-                throw new Exception($"Was expecting configurations for {_aaplOption}");
-            }
-        }
-
-        private class DailyUniverseSelectionModel : CustomUniverseSelectionModel
-        {
-            private DateTime _lastRefresh;
-            private IAlgorithm _algorithm;
-
-            public DailyUniverseSelectionModel(string name, Func<DateTime, IEnumerable<string>> selector, IAlgorithm algorithm) : base(name, selector)
-            {
-                _algorithm = algorithm;
-            }
-
-            public override DateTime GetNextRefreshTimeUtc()
-            {
-                if (_lastRefresh != _algorithm.Time.Date)
-                {
-                    _lastRefresh = _algorithm.Time.Date;
-                    return DateTime.MinValue;
-                }
-                return DateTime.MaxValue;
+                throw new Exception("No split was emitted!");
             }
         }
 
