@@ -50,8 +50,8 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
             }
             try
             {
-                var _kite = new Kite(_apiKey, _accessToken);
-                var _symbolMapper = new ZerodhaSymbolMapper(_kite);
+                var kite = new Kite(_apiKey, _accessToken);
+                var symbolMapper = new ZerodhaSymbolMapper(kite);
                 var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var castSecurityType = (SecurityType)Enum.Parse(typeof(SecurityType), securityType);
 
@@ -60,7 +60,7 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                 foreach (var pair in tickers)
                 {
-                    var zerodhaTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(pair);
+                    var zerodhaTokenList = symbolMapper.GetZerodhaInstrumentTokenList(pair);
 
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
@@ -95,21 +95,21 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                                 if ((end - start).Days > 60)
                                     throw new ArgumentOutOfRangeException("For minutes data Zerodha support 60 days data download");
-                                history = GetHistoryFromZerodha(_kite, zerodhaTokenList, startDate, endDate, "minute");
+                                history = GetHistoryFromZerodha(kite, zerodhaTokenList, startDate, endDate, "minute");
                                 timeSpan = Time.OneMinute;
                                 break;
 
                             case Resolution.Hour:
                                 if ((end - start).Days > 400)
                                     throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
-                                history = GetHistoryFromZerodha(_kite, zerodhaTokenList, startDate, endDate, "60minute");
+                                history = GetHistoryFromZerodha(kite, zerodhaTokenList, startDate, endDate, "60minute");
                                 timeSpan = Time.OneHour;
                                 break;
 
                             case Resolution.Daily:
                                 if ((end - start).Days > 400)
                                     throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
-                                history = GetHistoryFromZerodha(_kite, zerodhaTokenList, startDate, endDate, "day");
+                                history = GetHistoryFromZerodha(kite, zerodhaTokenList, startDate, endDate, "day");
                                 timeSpan = Time.OneDay;
                                 break;
                         }
@@ -132,7 +132,7 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
         private static IEnumerable<Historical> GetHistoryFromZerodha(Kite kite, List<uint> zerodhaTokenList, DateTime startDate, DateTime endDate, string interval)
         {
-            IEnumerable<Historical> history = new List<Historical>();
+            var history = Enumerable.Empty<Historical>();
             foreach (var token in zerodhaTokenList)
             {
                 var tempHistory = kite.GetHistoricalData(token.ToStringInvariant(), startDate, endDate, interval);
