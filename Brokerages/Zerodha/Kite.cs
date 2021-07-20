@@ -41,6 +41,7 @@ namespace QuantConnect.Brokerages.Zerodha
         private int _timeout;
 
         private Action _sessionHook;
+        private int _requestRetryCount = 0;
 
         //private Cache cache = new Cache();
 
@@ -952,12 +953,6 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
             }
 
-            //if (!Params.ContainsKey("api_key"))
-            //    Params.Add("api_key", _apiKey);
-
-            //if (!Params.ContainsKey("access_token") && !String.IsNullOrEmpty(_accessToken))
-            //    Params.Add("access_token", _accessToken);
-
             HttpWebRequest request;
             string paramString = String.Join("&", Params.Select(x => Utils.BuildParam(x.Key, x.Value)));
 
@@ -991,6 +986,12 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 if (e.Response.Equals(null))
                 {
+                    if(_requestRetryCount<5)
+                    {
+                        _requestRetryCount +=1;
+                        System.Threading.Thread.Sleep(5);
+                        return Request(Route, Method, Params);
+                    }
                     throw;
                 }
 

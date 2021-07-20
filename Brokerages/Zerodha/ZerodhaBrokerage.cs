@@ -87,7 +87,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private readonly ZerodhaSymbolMapper _symbolMapper;
 
-
         private readonly List<string> subscribeInstrumentTokens = new List<string>();
         private readonly List<string> unSubscribeInstrumentTokens = new List<string>();
 
@@ -101,6 +100,9 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly string _zerodhaProductType;
 
         private DateTime _lastTradeTickTime;
+
+        private bool _historyDataTypeErrorFlag = false;
+
         #endregion
 
 
@@ -889,10 +891,11 @@ namespace QuantConnect.Brokerages.Zerodha
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
             
-            if (request.DataType != typeof(TradeBar))
+            if (request.DataType != typeof(TradeBar) && !_historyDataTypeErrorFlag)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidBarType",
                     $"{request.DataType} type not supported, no history returned"));
+                    _historyDataTypeErrorFlag = true;
                 yield break;
             }
             
@@ -986,7 +989,12 @@ namespace QuantConnect.Brokerages.Zerodha
 
             foreach (var candle in candles)
             {
-                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
+                TradeBar tradebar = new TradeBar(candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"--candle: {candle} --tradeBar: {tradebar}");
+                }
+                yield return tradebar;
             }
         }
 
