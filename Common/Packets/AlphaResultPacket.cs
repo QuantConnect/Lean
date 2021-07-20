@@ -16,8 +16,8 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Packets
