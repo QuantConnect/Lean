@@ -36,10 +36,8 @@ namespace QuantConnect.Algorithm.CSharp
             var types = new[]
             {
                 typeof(UnlinkedDataTradeBar),
-                typeof(UnlinkedData),
-                typeof(LinkedData),
-                typeof(IndexedLinkedData),
-                typeof(IndexedLinkedData2),
+                typeof(DailyUnlinkedData),
+                typeof(DailyLinkedData)
             };
 
             foreach (var type in types)
@@ -89,6 +87,22 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             Quit();
+        }
+
+        private class DailyUnlinkedData : UnlinkedData
+        {
+            public override List<Resolution> SupportedResolutions()
+            {
+                return DailyResolution;
+            }
+        }
+
+        private class DailyLinkedData : LinkedData
+        {
+            public override List<Resolution> SupportedResolutions()
+            {
+                return DailyResolution;
+            }
         }
 
         private class HourlyDefaultResolutionUnlinkedData : UnlinkedData
