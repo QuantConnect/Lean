@@ -175,7 +175,7 @@ namespace QuantConnect.Brokerages
 
                 entry.AddSymbol(symbol);
 
-                Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.GetWeightedWebSocketForSymbol(): added symbol: {symbol} to websocket: {entry.WebSocket.GetHashCode()} - Count: {entry.SymbolCount}");
+                Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.GetWebSocketForSymbol(): added symbol: {symbol} to websocket: {entry.WebSocket.GetHashCode()} - Count: {entry.SymbolCount}");
 
                 return entry.WebSocket;
             }

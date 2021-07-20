@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,6 +21,11 @@ namespace QuantConnect.Brokerages
     public class WebSocketMessage
     {
         /// <summary>
+        /// Gets the sender websocket instance
+        /// </summary>
+        public IWebSocket WebSocket { get; }
+
+        /// <summary>
         /// Gets the raw message data as text
         /// </summary>
         public string Message { get; }
@@ -28,9 +33,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="WebSocketMessage"/> class
         /// </summary>
+        /// <param name="webSocket">The sender websocket instance</param>
         /// <param name="message">The message</param>
-        public WebSocketMessage(string message)
+        public WebSocketMessage(IWebSocket webSocket, string message)
         {
+            WebSocket = webSocket;
             Message = message;
         }
     }
