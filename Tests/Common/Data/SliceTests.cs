@@ -20,11 +20,10 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
-using QuantConnect.Data.Custom.Tiingo;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Python;
-using QuantConnect.Tests.Common.Data.Custom;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -402,18 +401,18 @@ def Test(slice):
         }
 
         [Test]
-        public void PythonGetCustomData_Iterate_Tiingo()
+        public void PythonGetCustomData_Iterate_IndexedLinkedData()
         {
             using (Py.GIL())
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 from AlgorithmImports import *
-from QuantConnect.Data.Custom.Tiingo import *
+from QuantConnect.Data.Custom.IconicTypes import *
 from QuantConnect.Logging import *
 
 def Test(slice):
-    data = slice.Get(TiingoNews)
+    data = slice.Get(IndexedLinkedData)
     count = 0
     for singleData in data:
         Log.Trace(str(singleData))
@@ -430,22 +429,22 @@ def Test(slice):
         }
 
         [Test]
-        public void PythonGetCustomData_Iterate_Tiingo_Empty()
+        public void PythonGetCustomData_Iterate_IndexedLinkedData_Empty()
         {
             using (Py.GIL())
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 from AlgorithmImports import *
-from QuantConnect.Data.Custom.Tiingo import *
+from QuantConnect.Data.Custom.IconicTypes import *
 
 def Test(slice):
-    data = slice.Get(TiingoNews)
+    data = slice.Get(IndexedLinkedData)
     for singleData in data:
         raise Exception('Unexpected iteration')
     for singleData in data.Values:
         raise Exception('Unexpected iteration')
-    data = slice.Get(TiingoNews)
+    data = slice.Get(IndexedLinkedData)
     for singleData in data:
         raise Exception('Unexpected iteration')
     for singleData in data.Values:

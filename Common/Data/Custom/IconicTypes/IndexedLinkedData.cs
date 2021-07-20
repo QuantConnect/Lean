@@ -19,40 +19,73 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace QuantConnect.Tests.Common.Data.Custom
+namespace QuantConnect.Data.Custom.IconicTypes
 {
     /// <summary>
-    /// Data source that is unlinked (no mapping) and takes any ticker when calling AddData
+    /// Data type that is indexed, i.e. a file that points to another file containing the contents
+    /// we're looking for in a Symbol.
     /// </summary>
-    internal class UnlinkedData : BaseData
+    public class IndexedLinkedData : IndexedBaseData
     {
         /// <summary>
-        /// If true, we accept any ticker from the AddData call
+        /// Example data property
         /// </summary>
-        public static bool AnyTicker { get; set; }
+        public int Count { get; set; }
         
         /// <summary>
-        /// Example data
+        /// Determines the actual source from an index contained within a ticker folder
         /// </summary>
-        public string Ticker { get; set; }
+        /// <param name="config">Subscription configuration</param>
+        /// <param name="date">Date</param>
+        /// <param name="index">File to load data from</param>
+        /// <param name="isLiveMode">Is live mode</param>
+        /// <returns>SubscriptionDataSource pointing to the article</returns>
+        public override SubscriptionDataSource GetSourceForAnIndex(SubscriptionDataConfig config, DateTime date, string index, bool isLiveMode)
+        {
+            return new SubscriptionDataSource(
+                Path.Combine("TestData",
+                    "indexlinked",
+                    "content",
+                    $"{date.ToStringInvariant(DateFormat.EightCharacter)}.zip#{index}"
+                ),
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.Csv
+            );
+        }
 
+        /// <summary>
+        /// Gets the source of the index file
+        /// </summary>
+        /// <param name="config">Configuration object</param>
+        /// <param name="date">Date of this source file</param>
+        /// <param name="isLiveMode">Is live mode</param>
+        /// <returns>SubscriptionDataSource indicating where data is located and how it's stored</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             return new SubscriptionDataSource(
                 Path.Combine(
                     "TestData",
-                    "unlinked",
-                    AnyTicker ? "data.csv" : $"{config.Symbol.Value.ToLowerInvariant()}.csv"
+                    "indexlinked",
+                    config.Symbol.Value.ToLowerInvariant(),
+                    $"{date.ToStringInvariant(DateFormat.EightCharacter)}.csv"
                 ),
                 SubscriptionTransportMedium.LocalFile,
-                FileFormat.Csv);
+                FileFormat.Index
+            );
         }
 
+        /// <summary>
+        /// Creates an instance from a line of JSON containing article information read from the `content` directory
+        /// </summary>
+        /// <param name="config">Subscription configuration</param>
+        /// <param name="line">Line of data</param>
+        /// <param name="date">Date</param>
+        /// <param name="isLiveMode">Is live mode</param>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            return new UnlinkedData
+            return new IndexedLinkedData
             {
-                Ticker = AnyTicker ? "ANY" : $"{config.Symbol.Value}",
+                Count = 10,
                 Symbol = config.Symbol,
                 EndTime = date
             };
@@ -75,7 +108,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         /// <returns>true</returns>
         public override bool RequiresMapping()
         {
-            return false;
+            return true;
         }
 
         /// <summary>
@@ -102,7 +135,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         /// <returns>All resolutions</returns>
         public override List<Resolution> SupportedResolutions()
         {
-            return AllResolutions;
-        }
+            return DailyResolution;
+        } 
     }
 }

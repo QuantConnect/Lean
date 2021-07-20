@@ -12,14 +12,13 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from QuantConnect.Data.Custom.SEC import *
-from QuantConnect.Data.Custom.USTreasury import *
+from QuantConnect.Data.Custom.IconicTypes import *
 
 ### <summary>
 ### Regression algorithm checks that adding data via AddData
 ### works as expected
 ### </summary>
-class CustomDataAddDataRegressionAlgorithm(QCAlgorithm):
+class CustomDataIconicTypesAddDataRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2013, 10, 7)
@@ -32,28 +31,28 @@ class CustomDataAddDataRegressionAlgorithm(QCAlgorithm):
         self.googlEquity = self.AddEquity("GOOGL", Resolution.Daily).Symbol
         customGooglSymbol = self.AddData(SECReport10K, "GOOGL", Resolution.Daily).Symbol
 
-        usTreasury = self.AddData(USTreasuryYieldCurveRate, "GOOGL", Resolution.Daily).Symbol
-        usTreasuryUnderlyingEquity = Symbol.Create("MSFT", SecurityType.Equity, Market.USA)
-        usTreasuryUnderlying = self.AddData(USTreasuryYieldCurveRate, usTreasuryUnderlyingEquity, Resolution.Daily).Symbol
+        unlinkedDataSymbol = self.AddData(UnlinkedData, "GOOGL", Resolution.Daily).Symbol
+        unlinkedDataSymbolUnderlyingEquity = Symbol.Create("MSFT", SecurityType.Equity, Market.USA)
+        unlinkedDataSymbolUnderlying = self.AddData(UnlinkedData, unlinkedDataSymbolUnderlyingEquity, Resolution.Daily).Symbol
 
         optionSymbol = self.AddOption("TWX", Resolution.Minute).Symbol
-        customOptionSymbol = self.AddData(SECReport10K, optionSymbol, Resolution.Daily).Symbol
+        customOptionSymbol = self.AddData(LinkedData, optionSymbol, Resolution.Daily).Symbol
 
         if customTwxSymbol.Underlying != twxEquity:
             raise Exception(f"Underlying symbol for {customTwxSymbol} is not equal to TWX equity. Expected {twxEquity} got {customTwxSymbol.Underlying}")
         if customGooglSymbol.Underlying != self.googlEquity:
             raise Exception(f"Underlying symbol for {customGooglSymbol} is not equal to GOOGL equity. Expected {self.googlEquity} got {customGooglSymbol.Underlying}")
-        if usTreasury.HasUnderlying:
-            raise Exception(f"US Treasury yield curve (no underlying) has underlying when it shouldn't. Found {usTreasury.Underlying}")
-        if not usTreasuryUnderlying.HasUnderlying:
-            raise Exception("US Treasury yield curve (with underlying) has no underlying Symbol even though we added with Symbol")
-        if usTreasuryUnderlying.Underlying != usTreasuryUnderlyingEquity:
-            raise Exception(f"US Treasury yield curve underlying does not equal equity Symbol added. Expected {usTreasuryUnderlyingEquity} got {usTreasuryUnderlying.Underlying}")
+        if unlinkedDataSymbol.HasUnderlying:
+            raise Exception(f"Unlinked data type (no underlying) has underlying when it shouldn't. Found {unlinkedDataSymbol.Underlying}")
+        if not unlinkedDataSymbolUnderlying.HasUnderlying:
+            raise Exception("Unlinked data type (with underlying) has no underlying Symbol even though we added with Symbol")
+        if unlinkedDataSymbolUnderlying.Underlying != unlinkedDataSymbolUnderlyingEquity:
+            raise Exception(f"Unlinked data type underlying does not equal equity Symbol added. Expected {unlinkedDataSymbolUnderlyingEquity} got {unlinkedDataSymbolUnderlying.Underlying}")
         if customOptionSymbol.Underlying != optionSymbol:
             raise Exception("Option symbol not equal to custom underlying symbol. Expected {optionSymbol} got {customOptionSymbol.Underlying}")
 
         try:
-            customDataNoCache = self.AddData(SECReport10Q, "AAPL", Resolution.Daily)
+            customDataNoCache = self.AddData(LinkedData, "AAPL", Resolution.Daily)
             raise Exception("AAPL was found in the SymbolCache, though it should be missing")
         except InvalidOperationException as e:
             return
