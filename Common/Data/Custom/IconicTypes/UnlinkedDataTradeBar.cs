@@ -20,12 +20,12 @@ using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Tests.Common.Data.Custom
+namespace QuantConnect.Data.Custom.IconicTypes
 {
     /// <summary>
     /// Data source that is unlinked (no mapping) and takes any ticker when calling AddData
     /// </summary>
-    internal class UnlinkedDataTradeBar : TradeBar
+    public class UnlinkedDataTradeBar : TradeBar
     {
         /// <summary>
         /// If true, we accept any ticker from the AddData call
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         /// <returns>All resolutions</returns>
         public override List<Resolution> SupportedResolutions()
         {
-            return AllResolutions;
+            return DailyResolution;
         }
     }
 }
