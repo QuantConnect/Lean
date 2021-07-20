@@ -48,6 +48,12 @@ namespace QuantConnect.Brokerages
         public bool Contains(Symbol symbol) => _symbols.Contains(symbol);
 
         /// <summary>
+        /// Returns the list of subscribed symbols
+        /// </summary>
+        /// <returns></returns>
+        public IReadOnlyCollection<Symbol> Symbols => _symbols;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageMultiWebSocketEntry"/> class
         /// </summary>
         /// <param name="symbolWeights">A dictionary of symbol weights</param>

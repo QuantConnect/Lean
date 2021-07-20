@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -79,7 +80,10 @@ namespace QuantConnect.Brokerages
                 // symbol weighting enabled, create all websocket instances
                 for (var i = 0; i < _maximumWebSocketConnections; i++)
                 {
-                    _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(symbolWeights, _webSocketFactory()));
+                    var webSocket = _webSocketFactory();
+                    webSocket.Open += OnOpen;
+
+                    _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(symbolWeights, webSocket));
                 }
             }
         }
@@ -144,6 +148,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         private IWebSocket GetWebSocketForSymbol(Symbol symbol)
         {
+            BrokerageMultiWebSocketEntry entry;
+
             lock (_locker)
             {
                 if (_webSocketEntries.All(x => x.SymbolCount >= _maximumSymbolsPerWebSocket))
@@ -155,6 +161,8 @@ namespace QuantConnect.Brokerages
 
                     // symbol limit reached on all, create new websocket instance
                     var webSocket = _webSocketFactory();
+                    webSocket.Open += OnOpen;
+
                     _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(webSocket));
                 }
 
@@ -166,19 +174,19 @@ namespace QuantConnect.Brokerages
                         ? -1
                         : Math.Sign(x.TotalWeight - y.TotalWeight));
 
-                var entry = _webSocketEntries.First();
-
-                if (!entry.WebSocket.IsOpen)
-                {
-                    Connect(entry.WebSocket);
-                }
-
-                entry.AddSymbol(symbol);
-
-                Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.GetWebSocketForSymbol(): added symbol: {symbol} to websocket: {entry.WebSocket.GetHashCode()} - Count: {entry.SymbolCount}");
-
-                return entry.WebSocket;
+                entry = _webSocketEntries.First();
             }
+
+            if (!entry.WebSocket.IsOpen)
+            {
+                Connect(entry.WebSocket);
+            }
+
+            entry.AddSymbol(symbol);
+
+            Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.GetWebSocketForSymbol(): added symbol: {symbol} to websocket: {entry.WebSocket.GetHashCode()} - Count: {entry.SymbolCount}");
+
+            return entry.WebSocket;
         }
 
         private void Connect(IWebSocket webSocket)
@@ -205,7 +213,7 @@ namespace QuantConnect.Brokerages
 
                 if (!connectedEvent.WaitOne(ConnectionTimeout))
                 {
-                    throw new Exception("BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket connection timeout.");
+                    throw new TimeoutException("BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket connection timeout.");
                 }
             }
             finally
@@ -213,6 +221,30 @@ namespace QuantConnect.Brokerages
                 webSocket.Open -= onOpenAction;
 
                 connectedEvent.DisposeSafely();
+            }
+        }
+
+        private void OnOpen(object sender, EventArgs e)
+        {
+            var webSocket = (IWebSocket)sender;
+
+            lock (_locker)
+            {
+                foreach (var entry in _webSocketEntries)
+                {
+                    if (entry.WebSocket == webSocket && entry.Symbols.Count > 0)
+                    {
+                        Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket opened - Resubscribing existing symbols: {entry.Symbols.Count}");
+
+                        Task.Factory.StartNew(() =>
+                        {
+                            foreach (var symbol in entry.Symbols)
+                            {
+                                _subscribeFunc(webSocket, symbol, TickType.Trade);
+                            }
+                        });
+                    }
+                }
             }
         }
     }
