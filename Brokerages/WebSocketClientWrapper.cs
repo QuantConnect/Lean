@@ -212,6 +212,11 @@ namespace QuantConnect.Brokerages
                     }
                 }
                 catch (OperationCanceledException) { }
+                catch (WebSocketException ex)
+                {
+                    OnError(new WebSocketError(ex.Message, ex));
+                    Thread.Sleep(2000);
+                }
                 catch (Exception ex)
                 {
                     OnError(new WebSocketError(ex.Message, ex));
