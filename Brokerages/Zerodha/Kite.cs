@@ -24,6 +24,7 @@ using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using CsvHelper;
 using CsvHelper.Configuration;
+using System.Threading;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -989,7 +990,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     if(_requestRetryCount<5)
                     {
                         _requestRetryCount +=1;
-                        System.Threading.Thread.Sleep(5);
+                        Thread.Sleep(100);
                         return Request(Route, Method, Params);
                     }
                     throw;
