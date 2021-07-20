@@ -24,7 +24,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Snapshot of an algorithms portfolio state
     /// </summary>
-    public class SecurityPortfolioState
+    public class AlphaStreamsPortfolioState
     {
         /// <summary>
         /// Portfolio state id
