@@ -31,6 +31,12 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// If true, we accept any ticker from the AddData call
         /// </summary>
         public static bool AnyTicker { get; set; }
+
+        public UnlinkedDataTradeBar()
+        {
+            DataType = MarketDataType.Base;
+            Period = TimeSpan.FromDays(1);
+        }
         
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
