@@ -42,7 +42,6 @@ namespace QuantConnect.Brokerages.Zerodha
         private int _timeout;
 
         private Action _sessionHook;
-        private int _requestRetryCount = 0;
 
         //private Cache cache = new Cache();
 
@@ -978,25 +977,20 @@ namespace QuantConnect.Brokerages.Zerodha
                 AddExtraHeaders(ref request);
             }
 
+            int count = 0;
+            int maxTries = 5;
             WebResponse webResponse;
-            try
-            {
-                webResponse = request.GetResponse();
-            }
-            catch (WebException e)
-            {
-                if (e.Response.Equals(null))
+            while(true) {
+                try
                 {
-                    if(_requestRetryCount<5)
-                    {
-                        _requestRetryCount +=1;
-                        Thread.Sleep(100);
-                        return Request(Route, Method, Params);
-                    }
-                    throw;
+                    webResponse = request.GetResponse();
+                    break;
                 }
-
-                webResponse = e.Response;
+                catch (WebException e)
+                {
+                    if (++count == maxTries) throw e;
+                    Thread.Sleep(100);
+                }
             }
 
             using (Stream webStream = webResponse.GetResponseStream())
