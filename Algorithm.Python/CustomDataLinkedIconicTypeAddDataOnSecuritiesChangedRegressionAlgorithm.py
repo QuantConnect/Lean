@@ -12,9 +12,9 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from QuantConnect.Data.Custom.SEC import *
+from QuantConnect.Data.Custom.IconicTypes import *
 
-class CustomDataAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
+class CustomDataLinkedIconicTypeAddDataOnSecuritiesChangedRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2014, 3, 24)
@@ -26,7 +26,7 @@ class CustomDataAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         self.AddUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelector))
 
     def CoarseSelector(self, coarse):
-        symbols = [
+        return [
             Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
             Symbol.Create("BAC", SecurityType.Equity, Market.USA),
             Symbol.Create("FB", SecurityType.Equity, Market.USA),
@@ -34,13 +34,6 @@ class CustomDataAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
             Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
             Symbol.Create("IBM", SecurityType.Equity, Market.USA),
         ]
-
-        self.customSymbols = []
-
-        for symbol in symbols:
-            self.customSymbols.append(self.AddData(SECReport8K, symbol, Resolution.Daily).Symbol)
-
-        return symbols
 
     def OnData(self, data):
         if not self.Portfolio.Invested and len(self.Transactions.GetOpenOrders()) == 0:
@@ -50,3 +43,13 @@ class CustomDataAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         for customSymbol in self.customSymbols:
             if not self.ActiveSecurities.ContainsKey(customSymbol.Underlying):
                 raise Exception(f"Custom data undelrying ({customSymbol.Underlying}) Symbol was not found in active securities")
+
+    def OnSecuritiesChanged(self, changes):
+        iterated = False
+
+        for added in changes.AddedSecurities:
+            if not iterated:
+                self.customSymbols = []
+                iterated = True
+
+            self.customSymbols.append(self.AddData(LinkedData, added.Symbol, Resolution.Daily).Symbol)

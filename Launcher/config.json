@@ -145,10 +145,6 @@
   "tt-order-routing-port": "",
   "tt-log-fix-messages": false,
 
-  // Required to access data from Quiver Quantitative
-  // To get your access token go to https://api.quiverquant.com
-  "quiver-auth-token": "",
-
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api
   "quandl-auth-token": "",

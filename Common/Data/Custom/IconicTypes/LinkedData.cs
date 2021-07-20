@@ -19,72 +19,33 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace QuantConnect.Tests.Common.Data.Custom
+namespace QuantConnect.Data.Custom.IconicTypes
 {
     /// <summary>
-    /// Data type that is indexed, i.e. a file that points to another file containing the contents
-    /// we're looking for in a Symbol.
+    /// Data source that is unlinked (no mapping) and takes any ticker when calling AddData
     /// </summary>
-    internal class IndexedLinkedData : IndexedBaseData
+    public class LinkedData : BaseData
     {
         /// <summary>
-        /// Example data property
+        /// Example data
         /// </summary>
         public int Count { get; set; }
-        
-        /// <summary>
-        /// Determines the actual source from an index contained within a ticker folder
-        /// </summary>
-        /// <param name="config">Subscription configuration</param>
-        /// <param name="date">Date</param>
-        /// <param name="index">File to load data from</param>
-        /// <param name="isLiveMode">Is live mode</param>
-        /// <returns>SubscriptionDataSource pointing to the article</returns>
-        public override SubscriptionDataSource GetSourceForAnIndex(SubscriptionDataConfig config, DateTime date, string index, bool isLiveMode)
-        {
-            return new SubscriptionDataSource(
-                Path.Combine("TestData",
-                    "indexlinked",
-                    "content",
-                    $"{date.ToStringInvariant(DateFormat.EightCharacter)}.zip#{index}"
-                ),
-                SubscriptionTransportMedium.LocalFile,
-                FileFormat.Csv
-            );
-        }
 
-        /// <summary>
-        /// Gets the source of the index file
-        /// </summary>
-        /// <param name="config">Configuration object</param>
-        /// <param name="date">Date of this source file</param>
-        /// <param name="isLiveMode">Is live mode</param>
-        /// <returns>SubscriptionDataSource indicating where data is located and how it's stored</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             return new SubscriptionDataSource(
                 Path.Combine(
                     "TestData",
-                    "indexlinked",
-                    config.Symbol.Value.ToLowerInvariant(),
-                    $"{date.ToStringInvariant(DateFormat.EightCharacter)}.csv"
+                    "linked",
+                    $"{config.Symbol.Underlying.Value.ToLowerInvariant()}.csv"
                 ),
                 SubscriptionTransportMedium.LocalFile,
-                FileFormat.Index
-            );
+                FileFormat.Csv);
         }
 
-        /// <summary>
-        /// Creates an instance from a line of JSON containing article information read from the `content` directory
-        /// </summary>
-        /// <param name="config">Subscription configuration</param>
-        /// <param name="line">Line of data</param>
-        /// <param name="date">Date</param>
-        /// <param name="isLiveMode">Is live mode</param>
-        /// <returns>New instance of <see cref="BenzingaNews"/></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            return new IndexedLinkedData
+            return new LinkedData
             {
                 Count = 10,
                 Symbol = config.Symbol,
@@ -136,7 +97,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         /// <returns>All resolutions</returns>
         public override List<Resolution> SupportedResolutions()
         {
-            return AllResolutions;
-        } 
+            return DailyResolution;
+        }
     }
 }

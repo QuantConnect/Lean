@@ -25,6 +25,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -36,7 +37,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Data.Custom;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Util;
 
