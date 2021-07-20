@@ -26,10 +26,10 @@ class CustomDataIconicTypesAddDataRegressionAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         twxEquity = self.AddEquity("TWX", Resolution.Daily).Symbol
-        customTwxSymbol = self.AddData(SECReport8K, twxEquity, Resolution.Daily).Symbol
+        customTwxSymbol = self.AddData(LinkedData, twxEquity, Resolution.Daily).Symbol
 
         self.googlEquity = self.AddEquity("GOOGL", Resolution.Daily).Symbol
-        customGooglSymbol = self.AddData(SECReport10K, "GOOGL", Resolution.Daily).Symbol
+        customGooglSymbol = self.AddData(LinkedData, "GOOGL", Resolution.Daily).Symbol
 
         unlinkedDataSymbol = self.AddData(UnlinkedData, "GOOGL", Resolution.Daily).Symbol
         unlinkedDataSymbolUnderlyingEquity = Symbol.Create("MSFT", SecurityType.Equity, Market.USA)
