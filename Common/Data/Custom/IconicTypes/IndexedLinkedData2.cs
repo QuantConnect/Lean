@@ -62,6 +62,11 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// <returns>SubscriptionDataSource indicating where data is located and how it's stored</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            if (isLiveMode)
+            {
+                throw new NotImplementedException("Live mode not supported");
+            }
+
             return new SubscriptionDataSource(
                 Path.Combine(
                     "TestData",
