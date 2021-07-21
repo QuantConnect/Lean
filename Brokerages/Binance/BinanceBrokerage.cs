@@ -81,8 +81,8 @@ namespace QuantConnect.Brokerages.Binance
                 maximumWebSocketConnections,
                 symbolWeights,
                 () => new BinanceWebSocketWrapper(null),
-                (ws, s, _) => Subscribe(ws, s),
-                (ws, s, _) => Unsubscribe(ws, s),
+                Subscribe,
+                Unsubscribe,
                 _messageHandler);
 
             SubscriptionManager = subscriptionManager;

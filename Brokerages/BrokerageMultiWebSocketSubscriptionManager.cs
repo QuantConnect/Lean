@@ -33,8 +33,8 @@ namespace QuantConnect.Brokerages
         private readonly int _maximumSymbolsPerWebSocket;
         private readonly int _maximumWebSocketConnections;
         private readonly Func<WebSocketClientWrapper> _webSocketFactory;
-        private readonly Action<IWebSocket, Symbol, TickType> _subscribeFunc;
-        private readonly Action<IWebSocket, Symbol, TickType> _unsubscribeFunc;
+        private readonly Action<IWebSocket, Symbol> _subscribeFunc;
+        private readonly Action<IWebSocket, Symbol> _unsubscribeFunc;
         private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
         private readonly RateGate _connectionRateLimiter;
 
@@ -61,8 +61,8 @@ namespace QuantConnect.Brokerages
             int maximumWebSocketConnections,
             Dictionary<Symbol, int> symbolWeights,
             Func<WebSocketClientWrapper> webSocketFactory,
-            Action<IWebSocket, Symbol, TickType> subscribeFunc,
-            Action<IWebSocket, Symbol, TickType> unsubscribeFunc,
+            Action<IWebSocket, Symbol> subscribeFunc,
+            Action<IWebSocket, Symbol> unsubscribeFunc,
             BrokerageConcurrentMessageHandler<WebSocketMessage> messageHandler,
             RateGate connectionRateLimiter = null)
         {
@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages
             {
                 var webSocket = GetWebSocketForSymbol(symbol);
 
-                _subscribeFunc(webSocket, symbol, tickType);
+                _subscribeFunc(webSocket, symbol);
             }
 
             return true;
@@ -123,7 +123,7 @@ namespace QuantConnect.Brokerages
                 {
                     entry.RemoveSymbol(symbol);
 
-                    _unsubscribeFunc(entry.WebSocket, symbol, tickType);
+                    _unsubscribeFunc(entry.WebSocket, symbol);
                 }
             }
 
@@ -202,7 +202,7 @@ namespace QuantConnect.Brokerages
 
             webSocket.Open += onOpenAction;
 
-            if (_connectionRateLimiter != null && !_connectionRateLimiter.WaitToProceed(TimeSpan.Zero))
+            if (_connectionRateLimiter is { IsRateLimited: false })
             {
                 _connectionRateLimiter.WaitToProceed();
             }
@@ -213,7 +213,7 @@ namespace QuantConnect.Brokerages
 
                 if (!connectedEvent.WaitOne(ConnectionTimeout))
                 {
-                    throw new TimeoutException("BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket connection timeout.");
+                    throw new TimeoutException($"BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket connection timeout: {webSocket.GetHashCode()}");
                 }
             }
             finally
@@ -234,13 +234,13 @@ namespace QuantConnect.Brokerages
                 {
                     if (entry.WebSocket == webSocket && entry.Symbols.Count > 0)
                     {
-                        Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket opened - Resubscribing existing symbols: {entry.Symbols.Count}");
+                        Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket opened: {webSocket.GetHashCode()} - Resubscribing existing symbols: {entry.Symbols.Count}");
 
                         Task.Factory.StartNew(() =>
                         {
                             foreach (var symbol in entry.Symbols)
                             {
-                                _subscribeFunc(webSocket, symbol, TickType.Trade);
+                                _subscribeFunc(webSocket, symbol);
                             }
                         });
                     }
