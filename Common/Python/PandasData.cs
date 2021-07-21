@@ -66,7 +66,12 @@ namespace QuantConnect.Python
 from pandas.core.resample import Resampler, DatetimeIndexResampler, PeriodIndexResampler, TimedeltaIndexResampler
 from pandas.core.groupby.generic import DataFrameGroupBy, SeriesGroupBy
 from pandas.core.indexes.frozen import FrozenList as pdFrozenList
-from pandas.core.window import Expanding, EWM, Rolling, Window
+
+if int(pd.__version__.split('.')[0]) < 1:
+    from pandas.core.window import Expanding, EWM, Rolling, Window
+else: 
+    from pandas.core.window import Expanding, ExponentialMovingWindow as EWM, Rolling, Window
+
 from pandas.core.computation.ops import UndefinedVariableError
 from inspect import getmembers, isfunction, isgenerator
 from functools import partial
@@ -107,11 +112,12 @@ def try_wrap_as_index(obj):
         return True, Index(obj)
 
     if objType is pd.MultiIndex:
-        result = object.__new__(MultiIndex)
-        result._set_levels(obj.levels, copy=obj.copy, validate=False)
-        result._set_codes(obj.codes, copy=obj.copy, validate=False)
-        result._set_names(obj.names)
-        result.sortorder = obj.sortorder
+        result = MultiIndex(levels=obj.levels, 
+            codes=obj.codes, 
+            sortorder=obj.sortorder, 
+            names=obj.names, 
+            copy=obj.copy, 
+            verify_integrity=False)
         return True, result
 
     if objType is pdFrozenList:
@@ -242,11 +248,12 @@ def CreateWrapperClass(cls: type):
                 return pd.Index(obj)
 
             if objType is MultiIndex:
-                result = object.__new__(pd.MultiIndex)
-                result._set_levels(obj.levels, copy=obj.copy, validate=False)
-                result._set_codes(obj.codes, copy=obj.copy, validate=False)
-                result._set_names(obj.names)
-                result.sortorder = obj.sortorder
+                result = pd.MultiIndex(levels=obj.levels,
+                    codes=obj.codes,
+                    sortorder=obj.sortorder,
+                    names=obj.names, 
+                    copy=obj.copy, 
+                    verify_integrity=False)
                 return result
 
             if objType is FrozenList:
