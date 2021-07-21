@@ -20,9 +20,6 @@ using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
 using ProtoBuf;
-using QuantConnect.Data.Custom.Benzinga;
-using QuantConnect.Data.Custom.Estimize;
-using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
@@ -38,11 +35,6 @@ namespace QuantConnect.Data
     [ProtoInclude(200, typeof(QuoteBar))]
     [ProtoInclude(300, typeof(Dividend))]
     [ProtoInclude(400, typeof(Split))]
-    [ProtoInclude(500, typeof(TiingoNews))]
-    [ProtoInclude(600, typeof(BenzingaNews))]
-    [ProtoInclude(700, typeof(EstimizeEstimate))]
-    [ProtoInclude(800, typeof(EstimizeRelease))]
-    [ProtoInclude(900, typeof(EstimizeConsensus))]
     public abstract class BaseData : IBaseData
     {
         private decimal _value;

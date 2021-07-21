@@ -25,8 +25,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Custom.Benzinga;
-using QuantConnect.Data.Custom.Tiingo;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -57,8 +56,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private static readonly Dictionary<Type, BaseData> _instances = new Dictionary<Type, BaseData>
         {
             {typeof(BaseData), typeof(TradeBar).GetBaseDataInstance() },
-            {typeof(BenzingaNews), typeof(BenzingaNews).GetBaseDataInstance() },
-            {typeof(TiingoNews), typeof(TiingoNews).GetBaseDataInstance() },
+            {typeof(IndexedLinkedData), typeof(IndexedLinkedData).GetBaseDataInstance() },
+            {typeof(IndexedLinkedData2), typeof(IndexedLinkedData2).GetBaseDataInstance() },
         };
 
         [SetUp]
@@ -1445,14 +1444,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Custom data not supported
-            new TestCaseData(Symbol.CreateBase(typeof(BenzingaNews), Symbols.AAPL, Market.USA), Resolution.Hour, 1, 0, 0, 0, 0, 24 * 2, true, _instances[typeof(BenzingaNews)]),
-            new TestCaseData(Symbol.CreateBase(typeof(BenzingaNews), Symbols.AAPL, Market.USA), Resolution.Minute, 1, 0, 0, 0, 0, 60 * 2, true, _instances[typeof(BenzingaNews)]),
-            new TestCaseData(Symbol.CreateBase(typeof(BenzingaNews), Symbols.AAPL, Market.USA), Resolution.Tick, 1, 0, 0, 0, 0, 24, true, _instances[typeof(BenzingaNews)]),
+            new TestCaseData(Symbol.CreateBase(typeof(IndexedLinkedData2), Symbols.AAPL, Market.USA), Resolution.Hour, 1, 0, 0, 0, 0, 24 * 2, true, _instances[typeof(IndexedLinkedData2)]),
+            new TestCaseData(Symbol.CreateBase(typeof(IndexedLinkedData2), Symbols.AAPL, Market.USA), Resolution.Minute, 1, 0, 0, 0, 0, 60 * 2, true, _instances[typeof(IndexedLinkedData2)]),
+            new TestCaseData(Symbol.CreateBase(typeof(IndexedLinkedData2), Symbols.AAPL, Market.USA), Resolution.Tick, 1, 0, 0, 0, 0, 24, true, _instances[typeof(IndexedLinkedData2)]),
 
-            // Custom data streamed
-            new TestCaseData(Symbol.CreateBase(typeof(TiingoNews), Symbols.AAPL, Market.USA), Resolution.Hour, 1, 0, 0, 0, 0, 24 * 2, false, _instances[typeof(TiingoNews)]),
-            new TestCaseData(Symbol.CreateBase(typeof(TiingoNews), Symbols.AAPL, Market.USA), Resolution.Minute, 1, 0, 0, 0, 0, 60 * 2, false, _instances[typeof(TiingoNews)]),
-            new TestCaseData(Symbol.CreateBase(typeof(TiingoNews), Symbols.AAPL, Market.USA), Resolution.Tick, 1, 0, 0, 0, 0, 24, false, _instances[typeof(TiingoNews)])
+            //// Custom data streamed
+            new TestCaseData(Symbol.CreateBase(typeof(IndexedLinkedData), Symbols.AAPL, Market.USA), Resolution.Hour, 1, 0, 0, 0, 0, 24 * 2, false, _instances[typeof(IndexedLinkedData)]),
+            new TestCaseData(Symbol.CreateBase(typeof(IndexedLinkedData), Symbols.AAPL, Market.USA), Resolution.Minute, 1, 0, 0, 0, 0, 60 * 2, false, _instances[typeof(IndexedLinkedData)]),
+            new TestCaseData(Symbol.CreateBase(typeof(IndexedLinkedData), Symbols.AAPL, Market.USA), Resolution.Tick, 1, 0, 0, 0, 0, 24, false, _instances[typeof(IndexedLinkedData)])
         };
 
         [TestCaseSource(nameof(DataTypeTestCases))]
@@ -2350,7 +2349,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     {
         public override bool ShouldStreamSubscription(SubscriptionDataConfig config)
         {
-            if (config.Type == typeof(TiingoNews))
+            if (config.Type == typeof(IndexedLinkedData))
             {
                 return true;
             }

@@ -20,14 +20,12 @@ using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
-using QuantConnect.ToolBox.Benzinga;
 using QuantConnect.ToolBox.BinanceDownloader;
 using QuantConnect.ToolBox.BitfinexDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
-using QuantConnect.ToolBox.EstimizeDataDownloader;
 using QuantConnect.ToolBox.GDAXDownloader;
 using QuantConnect.ToolBox.IBDownloader;
 using QuantConnect.ToolBox.IEX;
@@ -41,12 +39,8 @@ using QuantConnect.ToolBox.Polygon;
 using QuantConnect.ToolBox.QuandlBitfinexDownloader;
 using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
-using QuantConnect.ToolBox.SECDataDownloader;
-using QuantConnect.ToolBox.USTreasuryYieldCurve;
 using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
-using QuantConnect.ToolBox.SmartInsider;
-using QuantConnect.ToolBox.TiingoNewsConverter;
 using QuantConnect.ToolBox.ZerodhaDownloader;
 using QuantConnect.ToolBox.AlphaVantageDownloader;
 
@@ -130,50 +124,6 @@ namespace QuantConnect.ToolBox
                     case "mbxdl":
                     case "binancedownloader":
                         BinanceDownloaderProgram.DataDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-                    case "secdl":
-                    case "secdownloader":
-                        SECDataDownloaderProgram.SECDataDownloader(
-                            GetParameterOrExit(optionsObject, "destination-dir"),
-                            fromDate,
-                            toDate
-                        );
-                        break;
-                    case "ecdl":
-                    case "estimizeconsensusdownloader":
-                        EstimizeConsensusDataDownloaderProgram.EstimizeConsensusDataDownloader();
-                        break;
-                    case "eedl":
-                    case "estimizeestimatedownloader":
-                        EstimizeEstimateDataDownloaderProgram.EstimizeEstimateDataDownloader();
-                        break;
-                    case "erdl":
-                    case "estimizereleasedownloader":
-                        EstimizeReleaseDataDownloaderProgram.EstimizeReleaseDataDownloader();
-                        break;
-
-                    case "ustycdl":
-                    case "ustreasuryyieldcurvedownloader":
-                        USTreasuryYieldCurveProgram.USTreasuryYieldCurveRateDownloader(
-                            fromDate,
-                            toDate,
-                            GetParameterOrExit(optionsObject, "destination-dir")
-                        );
-                        break;
-
-                    case "bzndl":
-                    case "benzinganewsdownloader":
-                        BenzingaProgram.BenzingaNewsDataDownloader(
-                            fromDate,
-                            toDate,
-                            GetParameterOrExit(optionsObject, "destination-dir"),
-                            GetParameterOrDefault(optionsObject, "api-key", string.Empty)
-                        );
-                        break;
-
-                    case "tecdl":
-                    case "tradingeconomicscalendardownloader":
-                        TradingEconomicsDataDownloader.TradingEconomicsCalendarDownloaderProgram.TradingEconomicsCalendarDownloader();
                         break;
 
                     case "pdl":
@@ -280,44 +230,6 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "dividends-percentage", "60.0"),
                             GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0")
                         );
-                        break;
-                    case "seccv":
-                    case "secconverter":
-                        var start = Parse.DateTimeExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd");
-                        SECDataDownloaderProgram.SECDataConverter(
-                            GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrDefault(optionsObject, "destination-dir", Globals.DataFolder),
-                            start);
-                        break;
-                    case "ustyccv":
-                    case "ustreasuryyieldcurveconverter":
-                        USTreasuryYieldCurveProgram.USTreasuryYieldCurveConverter(
-                            GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrExit(optionsObject, "destination-dir"));
-                        break;
-                    case "sidc":
-                    case "smartinsiderconverter":
-                        SmartInsiderProgram.SmartInsiderConverter(
-                            DateTime.ParseExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd", CultureInfo.InvariantCulture),
-                            GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrExit(optionsObject, "destination-dir"),
-                            GetParameterOrDefault(optionsObject, "source-meta-dir", null));
-                        break;
-                    case "tiinc":
-                    case "tiingonewsconverter":
-                        var date = GetParameterOrDefault(optionsObject, "date", null);
-                        TiingoNewsConverterProgram.TiingoNewsConverter(
-                            GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrExit(optionsObject, "destination-dir"),
-                            date != null ? DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture) : (DateTime?) null);
-                        break;
-                    case "bzncv":
-                    case "benzinganewsconverter":
-                        BenzingaProgram.BenzingaNewsDataConverter(
-                            GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrExit(optionsObject, "destination-dir"),
-                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(Globals.DataFolder, "alternative", "benzinga")),
-                            GetParameterOrExit(optionsObject, "date"));
                         break;
 
                     default:

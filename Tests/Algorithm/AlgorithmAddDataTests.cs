@@ -27,8 +27,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom;
-using QuantConnect.Data.Custom.Tiingo;
-using QuantConnect.Data.Custom.TradingEconomics;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -190,16 +189,16 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(data.Price, 2);
         }
 
-        [TestCase("EURUSD", typeof(TiingoNews), SecurityType.Cfd, false, true)]
-        [TestCase("BTCUSD", typeof(TiingoNews), SecurityType.Crypto, false, true)]
-        [TestCase("CL", typeof(TiingoNews), SecurityType.Future, false, true)]
-        [TestCase("EURUSD", typeof(TiingoNews), SecurityType.Forex, false, true)]
-        [TestCase("AAPL", typeof(TiingoNews), SecurityType.Equity, true, true)]
-        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Cfd, false, false)]
-        [TestCase("BTCUSD", typeof(TradingEconomicsCalendar), SecurityType.Crypto, false, false)]
-        [TestCase("CL", typeof(TradingEconomicsCalendar), SecurityType.Future, false, false)]
-        [TestCase("AAPL", typeof(TradingEconomicsCalendar), SecurityType.Equity, true, false)]
-        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Forex, false, false)]
+        [TestCase("EURUSD", typeof(IndexedLinkedData), SecurityType.Cfd, false, true)]
+        [TestCase("BTCUSD", typeof(IndexedLinkedData), SecurityType.Crypto, false, true)]
+        [TestCase("CL", typeof(IndexedLinkedData), SecurityType.Future, false, true)]
+        [TestCase("EURUSD", typeof(IndexedLinkedData), SecurityType.Forex, false, true)]
+        [TestCase("AAPL", typeof(IndexedLinkedData), SecurityType.Equity, true, true)]
+        [TestCase("EURUSD", typeof(UnlinkedData), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(UnlinkedData), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(UnlinkedData), SecurityType.Future, false, false)]
+        [TestCase("AAPL", typeof(UnlinkedData), SecurityType.Equity, true, false)]
+        [TestCase("EURUSD", typeof(UnlinkedData), SecurityType.Forex, false, false)]
         public void AddDataSecuritySymbolWithUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
         {
             SymbolCache.Clear();
@@ -256,11 +255,11 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        [TestCase("EURUSD", typeof(TiingoNews), SecurityType.Cfd, false, false)]
-        [TestCase("BTCUSD", typeof(TiingoNews), SecurityType.Crypto, false, false)]
-        [TestCase("CL", typeof(TiingoNews), SecurityType.Future, false, false)]
-        [TestCase("EURUSD", typeof(TiingoNews), SecurityType.Forex, false, false)]
-        [TestCase("AAPL", typeof(TiingoNews), SecurityType.Equity, true, true)]
+        [TestCase("EURUSD", typeof(IndexedLinkedData), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(IndexedLinkedData), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(IndexedLinkedData), SecurityType.Future, false, false)]
+        [TestCase("EURUSD", typeof(IndexedLinkedData), SecurityType.Forex, false, false)]
+        [TestCase("AAPL", typeof(IndexedLinkedData), SecurityType.Equity, true, true)]
         public void AddDataSecurityTickerWithUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
         {
             SymbolCache.Clear();
@@ -327,11 +326,11 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Cfd, false, false)]
-        [TestCase("BTCUSD", typeof(TradingEconomicsCalendar), SecurityType.Crypto, false, false)]
-        [TestCase("CL", typeof(TradingEconomicsCalendar), SecurityType.Future, false, false)]
-        [TestCase("AAPL", typeof(TradingEconomicsCalendar), SecurityType.Equity, true, false)]
-        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Forex, false, false)]
+        [TestCase("EURUSD", typeof(UnlinkedData), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(UnlinkedData), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(UnlinkedData), SecurityType.Future, false, false)]
+        [TestCase("AAPL", typeof(UnlinkedData), SecurityType.Equity, true, false)]
+        [TestCase("EURUSD", typeof(UnlinkedData), SecurityType.Forex, false, false)]
         public void AddDataSecurityTickerNoUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
         {
             SymbolCache.Clear();
@@ -453,12 +452,12 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(algo.UniverseSelection is OptionChainedUniverseSelectionModel);
         }
 
-        [TestCase("AAPL", typeof(TiingoNews), true)]
-        [TestCase("TWX", typeof(TiingoNews), true)]
-        [TestCase("FB", typeof(TiingoNews), true)]
-        [TestCase("NFLX", typeof(TiingoNews), true)]
-        [TestCase("TWX", typeof(TradingEconomicsCalendar), false)]
-        [TestCase("AAPL", typeof(TradingEconomicsCalendar), false)]
+        [TestCase("AAPL", typeof(IndexedLinkedData), true)]
+        [TestCase("TWX", typeof(IndexedLinkedData), true)]
+        [TestCase("FB", typeof(IndexedLinkedData), true)]
+        [TestCase("NFLX", typeof(IndexedLinkedData), true)]
+        [TestCase("TWX", typeof(UnlinkedData), false)]
+        [TestCase("AAPL", typeof(UnlinkedData), false)]
         public void AddDataOptionsSymbolHasChainedUnderlyingSymbols(string ticker, Type customDataType, bool customDataShouldBeMapped)
         {
             SymbolCache.Clear();
@@ -488,10 +487,10 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual($"?{assetSubscription.MappedSymbol}", customDataSubscription.MappedSymbol);
         }
 
-        [TestCase("AAPL", typeof(TiingoNews))]
-        [TestCase("TWX", typeof(TiingoNews))]
-        [TestCase("FB", typeof(TiingoNews))]
-        [TestCase("NFLX", typeof(TiingoNews))]
+        [TestCase("AAPL", typeof(IndexedLinkedData))]
+        [TestCase("TWX", typeof(IndexedLinkedData))]
+        [TestCase("FB", typeof(IndexedLinkedData))]
+        [TestCase("NFLX", typeof(IndexedLinkedData))]
         public void AddDataOptionsTickerHasChainedUnderlyingSymbol(string ticker, Type customDataType)
         {
             SymbolCache.Clear();
@@ -521,8 +520,8 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(assetSubscription.MappedSymbol, customDataSubscription.MappedSymbol);
         }
 
-        [TestCase("AAPL", typeof(TradingEconomicsCalendar))]
-        [TestCase("FDTR", typeof(TradingEconomicsCalendar))]
+        [TestCase("AAPL", typeof(UnlinkedData))]
+        [TestCase("FDTR", typeof(UnlinkedData))]
         public void AddDataOptionsTickerHasNoChainedUnderlyingSymbols(string ticker, Type customDataType)
         {
             SymbolCache.Clear();
