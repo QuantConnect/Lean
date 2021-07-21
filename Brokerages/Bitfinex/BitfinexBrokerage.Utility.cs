@@ -114,8 +114,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         private Func<Wallet, bool> WalletFilter(AccountType accountType)
         {
             return wallet =>
-                wallet.Type.Equals("exchange") && accountType == AccountType.Cash ||
-                wallet.Type.Equals("margin") && accountType == AccountType.Margin;
+                !wallet.Currency.EndsWith("F0") &&
+                (wallet.Type.Equals("exchange") && accountType == AccountType.Cash ||
+                    wallet.Type.Equals("margin") && accountType == AccountType.Margin);
         }
 
         /// <summary>
