@@ -989,12 +989,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             foreach (var candle in candles)
             {
-                TradeBar tradebar = new TradeBar(candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
-                if (Log.DebuggingEnabled)
-                {
-                    Log.Debug($"--candle: {candle} --tradeBar: {tradebar}");
-                }
-                yield return tradebar;
+                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan()); 
             }
         }
 

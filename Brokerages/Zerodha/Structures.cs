@@ -81,7 +81,7 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     {
         public Historical(dynamic data)
         {
-            TimeStamp = Convert.ToDateTime(data[0], CultureInfo.InvariantCulture);
+            TimeStamp =  DateTime.Parse(data[0].ToString(), CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal); 
             Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
             High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
             Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
