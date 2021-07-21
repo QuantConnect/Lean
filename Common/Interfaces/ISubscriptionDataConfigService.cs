@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -77,5 +77,12 @@ namespace QuantConnect.Interfaces
         /// Gets the available data types
         /// </summary>
         Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
+
+        /// <summary>
+        /// Removes the <see cref="Symbol"/>, if it exists
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/> of the subscription to remove</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        bool Remove(Symbol symbol);
     }
 }

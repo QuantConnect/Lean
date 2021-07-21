@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
-        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
+        protected readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
         private readonly object _sync = new object();
         private readonly IDataAggregator _aggregator;
         private readonly MarketHoursDatabase _marketHoursDatabase;

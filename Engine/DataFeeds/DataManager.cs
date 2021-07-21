@@ -215,6 +215,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Removes the <see cref="Symbol"/>, if it exists
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/> of the subscription to remove</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        public bool Remove(Symbol symbol)
+        {
+            var subscriptions = GetSubscriptionDataConfigs(symbol);
+
+            foreach (var subscription in subscriptions)
+            {
+                if (!RemoveSubscription(subscription))
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Removes the <see cref="Subscription"/>, if it exists
         /// </summary>
         /// <param name="configuration">The <see cref="SubscriptionDataConfig"/> of the subscription to remove</param>

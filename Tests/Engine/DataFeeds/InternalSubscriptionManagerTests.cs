@@ -224,6 +224,62 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreNotEqual(0, internalDataCount);
         }
 
+        [Test]
+        public void RemoveSecurities()
+        {
+            var dataQueueTest = new FakeDataQueueTest();
+            dataQueueTest.ManualTimeProvider.SetCurrentTimeUtc(new DateTime(2020, 09, 03, 10, 0, 0));
+            TearDown();
+            var liveSynchronizer = new TestableLiveSynchronizer(dataQueueTest.ManualTimeProvider);
+            var dataAggregator = new TestAggregationManager(dataQueueTest.ManualTimeProvider);
+            SetupImpl(dataQueueTest, liveSynchronizer, dataAggregator);
+
+            _algorithm.SetDateTime(dataQueueTest.ManualTimeProvider.GetUtcNow());
+            _algorithm.SetLiveMode(true);
+
+            var added = false;
+            var shouldRemoved = false;
+            var count = 0;
+            var tokenSource = new CancellationTokenSource();
+            var qqq = Symbol.CreateOption("QQQ", Market.USA, OptionStyle.American, OptionRight.Call, 100, DateTime.Now);
+
+            foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
+            {
+                if (!added)
+                {
+                    added = true;
+                    _algorithm.AddSecurity(qqq, Resolution.Second);
+                }
+                else if (!timeSlice.IsTimePulse && !shouldRemoved)
+                {
+                    Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
+                            .GetSubscriptionDataConfigs(qqq, includeInternalConfigs: true).Any());
+
+                    _algorithm.RemoveSecurity(qqq);
+                    shouldRemoved = true;
+                }
+                else if (!timeSlice.IsTimePulse && shouldRemoved)
+                {
+                    var result = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(qqq, includeInternalConfigs: true).Any(config => config.IsInternalFeed);
+                    // can take some extra loop till the base exchange thread picks up the data point that will trigger the universe selection
+                    if (!result || count++ > 5)
+                    {
+                        Assert.IsFalse(result);
+                    }
+                    break;
+                }
+                _algorithm.OnEndOfTimeStep();
+                // give time for the base exchange to pick up the data point that will trigger the universe selection
+                // so next step we assert the internal config is there
+                Thread.Sleep(100);
+            }
+
+            Assert.AreEqual(shouldRemoved, !dataQueueTest.GetSubscribedSymbols().Contains(qqq));
+
+            Assert.IsFalse(tokenSource.IsCancellationRequested);
+        }
+
         [Test, Category("TravisExclude")]
         public void UniverseSelectionAddAndRemove()
         {
@@ -320,6 +376,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public ManualTimeProvider ManualTimeProvider { get; } = new ManualTimeProvider();
 
             protected override ITimeProvider TimeProvider => ManualTimeProvider;
+
+            internal IEnumerable<Symbol> GetSubscribedSymbols()
+            {
+                return _subscriptionManager.GetSubscribedSymbols();
+            }
         }
 
         private void SetupImpl(IDataQueueHandler dataQueueHandler, Synchronizer synchronizer, IDataAggregator dataAggregator)
