@@ -24,6 +24,7 @@ namespace QuantConnect.Brokerages
     {
         private readonly Dictionary<Symbol, int> _symbolWeights;
         private readonly List<Symbol> _symbols;
+        private readonly object _locker = new();
 
         /// <summary>
         /// Gets the web socket instance
@@ -38,20 +39,44 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets the number of symbols subscribed
         /// </summary>
-        public int SymbolCount => _symbols.Count;
+        public int SymbolCount
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _symbols.Count;
+                }
+            }
+        }
 
         /// <summary>
         /// Returns whether the symbol is subscribed
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns></returns>
-        public bool Contains(Symbol symbol) => _symbols.Contains(symbol);
+        public bool Contains(Symbol symbol)
+        {
+            lock (_locker)
+            {
+                return _symbols.Contains(symbol);
+            }
+        }
 
         /// <summary>
         /// Returns the list of subscribed symbols
         /// </summary>
         /// <returns></returns>
-        public IReadOnlyCollection<Symbol> Symbols => _symbols;
+        public IReadOnlyCollection<Symbol> Symbols
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _symbols.AsReadOnly();
+                }
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageMultiWebSocketEntry"/> class
@@ -81,7 +106,10 @@ namespace QuantConnect.Brokerages
         /// <param name="symbol">The symbol to add</param>
         public void AddSymbol(Symbol symbol)
         {
-            _symbols.Add(symbol);
+            lock (_locker)
+            {
+                _symbols.Add(symbol);
+            }
 
             if (_symbolWeights != null && _symbolWeights.TryGetValue(symbol, out var weight))
             {
@@ -95,7 +123,10 @@ namespace QuantConnect.Brokerages
         /// <param name="symbol">The symbol to remove</param>
         public void RemoveSymbol(Symbol symbol)
         {
-            _symbols.Remove(symbol);
+            lock (_locker)
+            {
+                _symbols.Remove(symbol);
+            }
 
             if (_symbolWeights != null && _symbolWeights.TryGetValue(symbol, out var weight))
             {
