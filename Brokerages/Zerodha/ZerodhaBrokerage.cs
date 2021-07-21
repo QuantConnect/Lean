@@ -100,8 +100,7 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly string _zerodhaProductType;
 
         private DateTime _lastTradeTickTime;
-
-        private bool _historyDataTypeErrorFlag = false;
+        private bool _historyDataTypeErrorFlag;
 
         #endregion
 
@@ -890,12 +889,11 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-            
             if (request.DataType != typeof(TradeBar) && !_historyDataTypeErrorFlag)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidBarType",
                     $"{request.DataType} type not supported, no history returned"));
-                    _historyDataTypeErrorFlag = true;
+                _historyDataTypeErrorFlag = true;
                 yield break;
             }
             
@@ -985,11 +983,9 @@ namespace QuantConnect.Brokerages.Zerodha
                     $"from {start:s} to {end:s}"));
             }
 
-            var period = resolution.ToTimeSpan();
-
             foreach (var candle in candles)
             {
-                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan()); 
+                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
             }
         }
 

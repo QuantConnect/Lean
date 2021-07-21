@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -977,18 +977,22 @@ namespace QuantConnect.Brokerages.Zerodha
                 AddExtraHeaders(ref request);
             }
 
-            int count = 0;
-            int maxTries = 5;
+            var count = 0;
+            var maxTries = 5;
             WebResponse webResponse;
-            while(true) {
+            while(true)
+            {
                 try
                 {
                     webResponse = request.GetResponse();
                     break;
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
-                    if (++count == maxTries) throw e;
+                    if (++count > maxTries)
+                    {
+                        throw;
+                    }
                     Thread.Sleep(100);
                 }
             }
