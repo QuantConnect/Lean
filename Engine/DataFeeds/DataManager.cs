@@ -466,10 +466,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var baseInstance = dataTypes.Single().Item1.GetBaseDataInstance();
                     baseInstance.Symbol = symbol;
-                    _marketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, null, SecurityType.Base, baseInstance.DataTimeZone());
+                    symbol.TryGetCustomDataType(out var type);
+                    marketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, type != null ? $"TYPE.{type}" : null, SecurityType.Base, baseInstance.DataTimeZone());
                 }
-
-                marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+                else
+                {
+                    marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+                }
             }
 
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
