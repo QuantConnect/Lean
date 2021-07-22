@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -142,7 +143,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             else
                             {
                                 // read a line and pass it to the base data factory
-                                line = reader.ReadLine();
+                                var readlineTask = Task.Run(() => reader.ReadLine());
+
+                                if (!readlineTask.Wait(source.TimeoutInMilliseconds))
+                                    throw new TimeoutException($"{source.Source} did not return after {source.TimeoutInMilliseconds} milliseconds.");
+
+                                line = readlineTask.Result;
                                 instance = _factory.Reader(_config, line, _date, IsLiveMode);
                             }
                         }

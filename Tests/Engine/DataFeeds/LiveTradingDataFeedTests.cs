@@ -2445,9 +2445,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return new SubscriptionDataSource("localhost:1232/fake",
-                SubscriptionTransportMedium.Rest,
-                FileFormat);
+            return new RestSubscriptionDataSource("localhost:1232/fake",
+                isLiveMode,
+                returnsACollection: FileFormat == FileFormat.Collection);
         }
     }
 }

@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource("NonExistingFile", SubscriptionTransportMedium.LocalFile);
+                return new LocalFileSubscriptionDataSource("NonExistingFile");
             }
         }
 

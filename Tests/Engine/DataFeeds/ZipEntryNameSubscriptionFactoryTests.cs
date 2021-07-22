@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Put, 37m, new DateTime(2016, 08, 19)),
             };
 
-            var actual = factory.Read(new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName)).ToList();
+            var actual = factory.Read(new LocalFileSubscriptionDataSource(source, FileFormat.ZipEntryName)).ToList();
 
             // we only really care about the symbols
             CollectionAssert.AreEqual(expected, actual.Select(x => x.Symbol));

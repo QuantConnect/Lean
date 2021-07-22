@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,7 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using RestSharp;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Transport
+namespace QuantConnect.Data.Transport
 {
     /// <summary>
     /// Represents a stream reader capable of polling a rest client
@@ -66,11 +66,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         }
 
         /// <summary>
-        /// Gets <see cref="SubscriptionTransportMedium.Rest"/>
+        /// Gets <see cref="SubscriptionTransportMedium.Web"/>
         /// </summary>
         public SubscriptionTransportMedium TransportMedium
         {
-            get { return SubscriptionTransportMedium.Rest; }
+            get { return SubscriptionTransportMedium.Web; }
         }
 
         /// <summary>

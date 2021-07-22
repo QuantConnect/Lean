@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -66,7 +66,7 @@ namespace QuantConnect.Data.Custom.SEC
             // SubscriptionDataReader to load our file all at once so long as we store
             // the file in a single line. Then, we can deserialize the whole file in Reader.
             // FineFundamental uses the same technique to read a JSON file.
-            return new SubscriptionDataSource(
+            return new LocalFileSubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,
                     "alternative",
@@ -74,7 +74,6 @@ namespace QuantConnect.Data.Custom.SEC
                     config.Symbol.Value.ToLowerInvariant(),
                     Invariant($"{date:yyyyMMdd}_8K.zip#8K.json")
                 ),
-                SubscriptionTransportMedium.LocalFile,
                 FileFormat.Collection
             );
         }

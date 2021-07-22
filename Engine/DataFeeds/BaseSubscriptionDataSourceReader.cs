@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -66,52 +65,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A new instance of <see cref="IStreamReader"/> to read the source, or null if there was an error</returns>
         protected IStreamReader CreateStreamReader(SubscriptionDataSource subscriptionDataSource)
         {
-            IStreamReader reader;
-            switch (subscriptionDataSource.TransportMedium)
-            {
-                case SubscriptionTransportMedium.LocalFile:
-                    reader = HandleLocalFileSource(subscriptionDataSource);
-                    break;
-
-                case SubscriptionTransportMedium.RemoteFile:
-                    reader = HandleRemoteSourceFile(subscriptionDataSource);
-                    break;
-
-                case SubscriptionTransportMedium.Rest:
-                    reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source, subscriptionDataSource.Headers, IsLiveMode);
-                    break;
-
-                default:
-                    throw new InvalidEnumArgumentException("Unexpected SubscriptionTransportMedium specified: " + subscriptionDataSource.TransportMedium);
-            }
+            IStreamReader reader = subscriptionDataSource.GetStreamReader(DataCacheProvider);
+            
             return reader;
-        }
-
-        /// <summary>
-        /// Opens up an IStreamReader for a local file source
-        /// </summary>
-        protected IStreamReader HandleLocalFileSource(SubscriptionDataSource source)
-        {
-            // handles zip or text files
-            return new LocalFileSubscriptionStreamReader(DataCacheProvider, source.Source);
-        }
-
-        /// <summary>
-        /// Opens up an IStreamReader for a remote file source
-        /// </summary>
-        protected IStreamReader HandleRemoteSourceFile(SubscriptionDataSource source)
-        {
-            SubscriptionDataSourceReader.CheckRemoteFileCache();
-
-            try
-            {
-                // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(DataCacheProvider, source.Source, Globals.Cache, source.Headers);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
         }
     }
 }

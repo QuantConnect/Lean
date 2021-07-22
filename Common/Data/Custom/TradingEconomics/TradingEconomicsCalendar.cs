@@ -205,12 +205,12 @@ namespace QuantConnect.Data.Custom.TradingEconomics
             if (isLiveMode)
             {
                 var liveSource = $"{_baseUrl}/calendar/country/{country.Replace("-", "%20")}/{date:yyyy-MM-dd}/{date.AddDays(1):yyyy-MM-dd}?c={AuthCode}&format=json";
-                return new SubscriptionDataSource(liveSource, SubscriptionTransportMedium.RemoteFile, FileFormat.Collection);
+                return new RemoteFileSubscriptionDataSource(liveSource, null, FileFormat.Collection);
             }
 
             country = country.Replace("-", "");
             var source = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "calendar", $"{country}.csv");
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            return new LocalFileSubscriptionDataSource(source, FileFormat.Csv);
         }
 
         /// <summary>

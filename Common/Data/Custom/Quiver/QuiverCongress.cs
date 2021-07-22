@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -123,7 +123,7 @@ namespace QuantConnect.Data.Custom.Quiver
                 "congresstrading",
                 $"{config.Symbol.Value.ToLowerInvariant()}.csv"
             );
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            return new LocalFileSubscriptionDataSource(source, FileFormat.Csv);
         }
 
         /// <summary>

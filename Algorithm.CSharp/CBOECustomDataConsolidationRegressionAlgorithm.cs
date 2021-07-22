@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <returns>Source of subscription</returns>
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource(Path.Combine(Globals.DataFolder, "equity", "usa", "minute", "spy", $"{date:yyyyMMdd}_trade.zip#{date:yyyyMMdd}_spy_minute_trade.csv"), SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+                return new LocalFileSubscriptionDataSource(Path.Combine(Globals.DataFolder, "equity", "usa", "minute", "spy", $"{date:yyyyMMdd}_trade.zip#{date:yyyyMMdd}_spy_minute_trade.csv"), FileFormat.Csv);
             }
 
             /// <summary>

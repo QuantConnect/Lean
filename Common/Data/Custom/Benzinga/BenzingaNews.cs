@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -170,7 +170,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>SubscriptionDataSource pointing to the article</returns>
         public override SubscriptionDataSource GetSourceForAnIndex(SubscriptionDataConfig config, DateTime date, string index, bool isLiveMode)
         {
-            return new SubscriptionDataSource(
+            return new LocalFileSubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,
                     "alternative",
@@ -178,7 +178,6 @@ namespace QuantConnect.Data.Custom.Benzinga
                     "content",
                     $"{date.ToStringInvariant(DateFormat.EightCharacter)}.zip#{index}"
                 ),
-                SubscriptionTransportMedium.LocalFile,
                 FileFormat.Csv
             );
         }
@@ -197,7 +196,7 @@ namespace QuantConnect.Data.Custom.Benzinga
                 throw new NotImplementedException("BenzingaNews currently does not support live trading mode."); 
             }
             
-            return new SubscriptionDataSource(
+            return new LocalFileSubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,
                     "alternative",
@@ -205,7 +204,6 @@ namespace QuantConnect.Data.Custom.Benzinga
                     config.Symbol.Value.ToLowerInvariant(),
                     $"{date.ToStringInvariant(DateFormat.EightCharacter)}.csv"
                 ),
-                SubscriptionTransportMedium.LocalFile,
                 FileFormat.Index
             );
         }

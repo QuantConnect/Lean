@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,7 +38,7 @@ namespace QuantConnect.Data.Custom
         /// <returns>String URL of localhost</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return new SubscriptionDataSource("http://localhost/", SubscriptionTransportMedium.Rest);
+            return new RestSubscriptionDataSource("http://localhost/", isLiveMode);
         }
 
         /// <summary>

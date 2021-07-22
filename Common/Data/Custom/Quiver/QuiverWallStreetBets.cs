@@ -85,7 +85,7 @@ namespace QuantConnect.Data.Custom.Quiver
                 "wallstreetbets",
                 $"{config.Symbol.Value.ToLowerInvariant()}.csv"
             );
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            return new LocalFileSubscriptionDataSource(source, FileFormat.Csv);
         }
 
         /// <summary>

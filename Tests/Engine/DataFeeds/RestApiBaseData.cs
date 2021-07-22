@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var remoteFileSource = @"https://www.quantconnect.com/live-test?type=rest&symbols=" + config.Symbol.Value;
             //remoteFileSource = @"http://beta.quantconnect.com/live-test?type=rest&symbols=" + config.Symbol.Value;
-            return new SubscriptionDataSource(remoteFileSource, SubscriptionTransportMedium.Rest, FileFormat.Csv);
+            return new RestSubscriptionDataSource(remoteFileSource, isLiveMode);
         }
 
         private class JsonSerialization

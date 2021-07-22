@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,10 +14,11 @@
 */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -76,19 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    switch (source.TransportMedium)
-                    {
-                        default:
-                        case SubscriptionTransportMedium.Rest:
-                            reader = new RestSubscriptionStreamReader(source.Source, source.Headers, _isLiveMode);
-                            break;
-                        case SubscriptionTransportMedium.LocalFile:
-                            reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
-                            break;
-                        case SubscriptionTransportMedium.RemoteFile:
-                            reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers);
-                            break;
-                    }
+                    reader = source.GetStreamReader(_dataCacheProvider);
                 }
                 catch (Exception e)
                 {
@@ -108,7 +97,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     BaseDataCollection instances = null;
                     try
                     {
-                        raw = reader.ReadLine();
+                        var readlineTask = Task.Run(() => reader.ReadLine());
+
+                        if (!readlineTask.Wait(source.TimeoutInMilliseconds))
+                            throw new TimeoutException($"{source.Source} did not return after {source.TimeoutInMilliseconds} milliseconds.");
+
+                        raw = readlineTask.Result;
                         var result = _factory.Reader(_config, raw, _date, _isLiveMode);
                         instances = result as BaseDataCollection;
                         if (instances == null && !reader.ShouldBeRateLimited)
