@@ -419,7 +419,7 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="webSocket">The websocket instance</param>
         /// <param name="symbol">The symbol to subscribe</param>
-        private void Subscribe(IWebSocket webSocket, Symbol symbol)
+        private bool Subscribe(IWebSocket webSocket, Symbol symbol)
         {
             Send(webSocket,
                 new
@@ -433,6 +433,8 @@ namespace QuantConnect.Brokerages.Binance
                     id = GetNextRequestId()
                 }
             );
+
+            return true;
         }
 
         /// <summary>
@@ -440,7 +442,7 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="webSocket">The websocket instance</param>
         /// <param name="symbol">The symbol to unsubscribe</param>
-        private void Unsubscribe(IWebSocket webSocket, Symbol symbol)
+        private bool Unsubscribe(IWebSocket webSocket, Symbol symbol)
         {
             Send(webSocket,
                 new
@@ -454,6 +456,8 @@ namespace QuantConnect.Brokerages.Binance
                     id = GetNextRequestId()
                 }
             );
+
+            return true;
         }
 
         private void Send(IWebSocket webSocket, object obj)

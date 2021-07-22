@@ -33,8 +33,8 @@ namespace QuantConnect.Brokerages
         private readonly int _maximumSymbolsPerWebSocket;
         private readonly int _maximumWebSocketConnections;
         private readonly Func<WebSocketClientWrapper> _webSocketFactory;
-        private readonly Action<IWebSocket, Symbol> _subscribeFunc;
-        private readonly Action<IWebSocket, Symbol> _unsubscribeFunc;
+        private readonly Func<IWebSocket, Symbol, bool> _subscribeFunc;
+        private readonly Func<IWebSocket, Symbol, bool> _unsubscribeFunc;
         private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
         private readonly RateGate _connectionRateLimiter;
 
@@ -61,8 +61,8 @@ namespace QuantConnect.Brokerages
             int maximumWebSocketConnections,
             Dictionary<Symbol, int> symbolWeights,
             Func<WebSocketClientWrapper> webSocketFactory,
-            Action<IWebSocket, Symbol> subscribeFunc,
-            Action<IWebSocket, Symbol> unsubscribeFunc,
+            Func<IWebSocket, Symbol, bool> subscribeFunc,
+            Func<IWebSocket, Symbol, bool> unsubscribeFunc,
             BrokerageConcurrentMessageHandler<WebSocketMessage> messageHandler,
             RateGate connectionRateLimiter = null)
         {
@@ -97,14 +97,16 @@ namespace QuantConnect.Brokerages
         {
             Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.Subscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
 
+            var success = true;
+
             foreach (var symbol in symbols)
             {
                 var webSocket = GetWebSocketForSymbol(symbol);
 
-                _subscribeFunc(webSocket, symbol);
+                success &= _subscribeFunc(webSocket, symbol);
             }
 
-            return true;
+            return success;
         }
 
         /// <summary>
@@ -116,6 +118,8 @@ namespace QuantConnect.Brokerages
         {
             Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.Unsubscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
 
+            var success = true;
+
             foreach (var symbol in symbols)
             {
                 var entry = GetWebSocketEntryBySymbol(symbol);
@@ -123,11 +127,11 @@ namespace QuantConnect.Brokerages
                 {
                     entry.RemoveSymbol(symbol);
 
-                    _unsubscribeFunc(entry.WebSocket, symbol);
+                    success &= _unsubscribeFunc(entry.WebSocket, symbol);
                 }
             }
 
-            return true;
+            return success;
         }
 
         private BrokerageMultiWebSocketEntry GetWebSocketEntryBySymbol(Symbol symbol)
