@@ -109,20 +109,6 @@ namespace QuantConnect
         /// Tries to fetch the custom data type associated with a symbol
         /// </summary>
         /// <remarks>Custom data type <see cref="SecurityIdentifier"/> symbol value holds their data type</remarks>
-        public static bool TryGetCustomDataType(this Symbol symbol, out string type)
-        {
-            type = null;
-            if (symbol != null && symbol.ID.SecurityType == SecurityType.Base)
-            {
-                return symbol.ID.Symbol.TryGetCustomDataType(out type);
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Tries to fetch the custom data type associated with a symbol
-        /// </summary>
-        /// <remarks>Custom data type <see cref="SecurityIdentifier"/> symbol value holds their data type</remarks>
         public static bool TryGetCustomDataType(this string symbol, out string type)
         {
             type = null;
@@ -136,6 +122,31 @@ namespace QuantConnect
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Helper method to get a market hours entry
+        /// </summary>
+        /// <param name="marketHoursDatabase">The market hours data base instance</param>
+        /// <param name="symbol">The symbol to get the entry for</param>
+        /// <param name="dataTypes">For custom data types can optionally provide data type so that a new entry is added</param>
+        public static MarketHoursDatabase.Entry GetEntry(this MarketHoursDatabase marketHoursDatabase, Symbol symbol, IEnumerable<Type> dataTypes)
+        {
+            if (symbol.SecurityType == SecurityType.Base)
+            {
+                if (!marketHoursDatabase.TryGetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType, out var entry))
+                {
+                    var type = dataTypes.Single();
+                    var baseInstance = type.GetBaseDataInstance();
+                    baseInstance.Symbol = symbol;
+                    symbol.ID.Symbol.TryGetCustomDataType(out var customType);
+                    // for custom types we will add an entry for that type
+                    entry = marketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, customType != null ? $"TYPE.{customType}" : null, SecurityType.Base, baseInstance.DataTimeZone());
+                }
+                return entry;
+            }
+
+            return marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
         }
 
         /// <summary>
