@@ -14,6 +14,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Brokerages
 {
@@ -73,7 +74,7 @@ namespace QuantConnect.Brokerages
             {
                 lock (_locker)
                 {
-                    return _symbols.AsReadOnly();
+                    return _symbols.ToList();
                 }
             }
         }
