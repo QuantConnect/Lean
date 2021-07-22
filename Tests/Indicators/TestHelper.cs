@@ -249,11 +249,9 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename">The external CSV file name</param>
         public static void TestIndicatorReset(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename)
         {
-            var date = DateTime.Today;
-
             foreach (var data in GetTradeBarStream(externalDataFilename, false))
             {
-                indicator.Update(date, data.Close);
+                indicator.Update(data.EndTime, data.Close);
             }
 
             Assert.IsTrue(indicator.IsReady);

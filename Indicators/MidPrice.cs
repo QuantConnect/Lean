@@ -67,10 +67,20 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            _maximum.Update(new IndicatorDataPoint { Value = input.High });
-            _minimum.Update(new IndicatorDataPoint { Value = input.Low });
+            _maximum.Update(input.EndTime, input.High);
+            _minimum.Update(input.EndTime, input.Low);
 
             return (_maximum.Current.Value + _minimum.Current.Value) / 2;
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _maximum.Reset();
+            _minimum.Reset();
+            base.Reset();
         }
     }
 }

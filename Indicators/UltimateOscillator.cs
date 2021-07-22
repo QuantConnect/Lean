@@ -91,7 +91,7 @@ namespace QuantConnect.Indicators
                 return 50m;
             }
 
-            var buyingPressure = new IndicatorDataPoint { Value = input.Close - Math.Min(input.Low, _previousInput.Close) };
+            var buyingPressure = new IndicatorDataPoint(input.EndTime, input.Close - Math.Min(input.Low, _previousInput.Close));
 
             _sumBuyingPressure1.Update(buyingPressure);
             _sumBuyingPressure2.Update(buyingPressure);

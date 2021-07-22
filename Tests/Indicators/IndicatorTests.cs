@@ -93,6 +93,30 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void PassesOnDuplicateTimesWithDifferentObjects()
+        {
+            // This unit tests reproduces the case of two trade bars updating the indicators
+            // when the second bar has the same information of the first, but they are not the
+            // same object (different reference)
+
+            var target = new TestIndicator();
+
+            var time = new DateTime(2021, 4, 6);
+
+            const decimal value1 = 1m;
+            const decimal value2 = 2m;
+            var data1 = new IndicatorDataPoint(time, value1);
+            var data2 = new IndicatorDataPoint(time, value2);
+            target.Update(data1);
+            Assert.AreEqual(value1, target.Current.Value);
+
+            // this won't update because we told it to ignore duplicate
+            // data based on time
+            target.Update(data2);
+            Assert.AreEqual(value1, target.Current.Value);
+        }
+
+        [Test]
         public void SortsTheSameAsDecimalDescending()
         {
             int count = 100;

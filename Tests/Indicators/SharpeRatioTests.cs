@@ -14,67 +14,69 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
 
-namespace QuantConnect.Tests.Indicators 
+namespace QuantConnect.Tests.Indicators
 {
-	[TestFixture]
-	public class SharpeRatioTests : CommonIndicatorTests<IndicatorDataPoint>
-    {   
-    	protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-    	{
+    [TestFixture]
+    public class SharpeRatioTests : CommonIndicatorTests<IndicatorDataPoint>
+    {
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
             return new SharpeRatio("SR", 10);
-    	}
+        }
 
         protected override string TestFileName => "spy_sr.txt";
 
         protected override string TestColumnName => "SR_10";
 
         [Test]
-        public void TestTradeBarsWithSameValue() 
+        public void TestTradeBarsWithSameValue()
         {
-    		// With the value not changing, the indicator should return default value 0m.
-    		var sr = new SharpeRatio("SR", 10);
-    		
-    		// push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
-    		for(int i = 0; i < 20; i++) {
-    			IndicatorDataPoint point = new IndicatorDataPoint(new DateTime(), 100000m);
-    			sr.Update(point);
-    		}
-    		
-    		Assert.AreEqual(sr.Current.Value, 0m);
+            // With the value not changing, the indicator should return default value 0m.
+            var sharpeRatio = new SharpeRatio("SR", 10);
+            var reference = new DateTime(2021, 4, 6);
+
+            // push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
+            for (var i = 0; i < 20; i++)
+            {
+                sharpeRatio.Update(reference.AddDays(i), 100000m);
+            }
+
+            Assert.AreEqual(sharpeRatio.Current.Value, 0m);
         }
-        
+
         [Test]
-        public void TestTradeBarsWithDifferingValue() 
+        public void TestTradeBarsWithDifferingValue()
         {
-        	// With the value changing, the indicator should return a value that is not the default 0m.
-        	var sr = new SharpeRatio("SR", 10);
-    		
-    		// push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
-    		for(int i = 0; i < 20; i++) {
-    			IndicatorDataPoint point = new IndicatorDataPoint(new DateTime(), 100000m + i);
-    			sr.Update(point);
-    		}
-    		
-    		Assert.AreNotEqual(sr.Current.Value, 0m);
+            // With the value changing, the indicator should return a value that is not the default 0m.
+            var sharpeRatio = new SharpeRatio("SR", 10);
+            var reference = new DateTime(2021, 4, 6);
+
+            // push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
+            for (var i = 0; i < 20; i++)
+            {
+                sharpeRatio.Update(reference.AddDays(i), 100000m + i);
+            }
+
+            Assert.AreNotEqual(sharpeRatio.Current.Value, 0m);
         }
-        
+
         [Test]
         public void TestDivByZero()
         {
-        	// With the value changing, the indicator should return a value that is not the default 0m.
-        	var sr = new SharpeRatio("SR", 10);
-    		
-    		// push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
-    		for(int i = 0; i < 20; i++) {
-    			IndicatorDataPoint point = new IndicatorDataPoint(new DateTime(), 0);
-    			sr.Update(point);
-    		}
-    		
-    		Assert.AreEqual(sr.Current.Value, 0m);
+            // With the value changing, the indicator should return a value that is not the default 0m.
+            var sharpeRatio = new SharpeRatio("SR", 10);
+            var reference = new DateTime(2021, 4, 6);
+
+            // push the value 100000 into the indicator 20 times (sharpeRatioPeriod + movingAveragePeriod)
+            for (var i = 0; i < 20; i++)
+            {
+                sharpeRatio.Update(reference.AddDays(i), 0);
+            }
+
+            Assert.AreEqual(sharpeRatio.Current.Value, 0m);
         }
     }
 }
