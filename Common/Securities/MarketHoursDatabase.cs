@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -206,8 +206,9 @@ namespace QuantConnect.Securities
             // Some FOPs have the same symbol properties as their futures counterparts.
             // So, to save ourselves some space, we can fall back on the existing entries
             // so that we don't duplicate the information.
-            if (!TryGetEntry(market, symbol, securityType, out entry) &&
-                !(securityType == SecurityType.FutureOption && TryGetEntry(market, FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)))
+            if (!TryGetEntry(market, symbol, securityType, out entry)
+                && !(securityType == SecurityType.FutureOption && TryGetEntry(market, FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry))
+                && !(securityType == SecurityType.Base && symbol.TryGetCustomDataType(out var customType) && TryGetEntry(market, $"TYPE.{customType}", SecurityType.Base, out entry)))
             {
                 var key = new SecurityDatabaseKey(market, symbol, securityType);
                 var keys = string.Join(", ", _entries.Keys);
