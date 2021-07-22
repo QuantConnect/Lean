@@ -934,22 +934,22 @@ namespace QuantConnect.Brokerages.Zerodha
             var start = request.StartTimeLocal;
             var end = request.EndTimeLocal;
             var resolution = request.Resolution;
-            var dataTimeZone = request.DataTimeZone;
+            var exchangeTimeZone = request.ExchangeHours.TimeZone;
 
             if (Config.GetBool("zerodha-history-subscription"))
             {
                 switch (resolution)
                 {
                     case Resolution.Minute:
-                        history = GetHistoryForPeriod(symbol, start, end, dataTimeZone, resolution, "minute");
+                        history = GetHistoryForPeriod(symbol, start, end, exchangeTimeZone, resolution, "minute");
                         break;
 
                     case Resolution.Hour:
-                        history = GetHistoryForPeriod(symbol, start, end, dataTimeZone, resolution, "60minute");
+                        history = GetHistoryForPeriod(symbol, start, end, exchangeTimeZone, resolution, "60minute");
                         break;
 
                     case Resolution.Daily:
-                        history = GetHistoryForPeriod(symbol, start, end, dataTimeZone, resolution, "day");
+                        history = GetHistoryForPeriod(symbol, start, end, exchangeTimeZone, resolution, "day");
                         break;
                 }
             }
@@ -960,7 +960,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
-        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, DateTimeZone dataTimeZone, Resolution resolution, string zerodhaResolution)
+        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, DateTimeZone exchangeTimeZone, Resolution resolution, string zerodhaResolution)
         {
             Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
             var scripSymbolTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.Value);
@@ -980,7 +980,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             foreach (var candle in candles)
             {
-                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(dataTimeZone),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
+                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(exchangeTimeZone),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
             }
         }
 

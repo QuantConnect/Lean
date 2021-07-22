@@ -66,9 +66,10 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
-
+                    
+                    var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, pairObject, castSecurityType).TimeZone;
                     var dataTimeZone = marketHoursDatabase.GetDataTimeZone(market, pairObject, castSecurityType);
-
+                
                     if (pairObject.ID.SecurityType != SecurityType.Forex || pairObject.ID.SecurityType != SecurityType.Cfd || pairObject.ID.SecurityType != SecurityType.Crypto || pairObject.ID.SecurityType == SecurityType.Base)
                     {
 
@@ -82,8 +83,8 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
                             throw new ArgumentException("Invalid date range specified");
                         }
 
-                        var start = startDate.ConvertTo(DateTimeZone.Utc, dataTimeZone);
-                        var end = endDate.ConvertTo(DateTimeZone.Utc, dataTimeZone);
+                        var start = startDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
+                        var end = endDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
 
                         // Write data
                         var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
