@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Securities.Cfd;
@@ -23,7 +24,7 @@ using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
-using System;
+using QuantConnect.Data.Custom.AlphaStreams;
 using Index = QuantConnect.Securities.Index.Index;
 
 namespace QuantConnect.Tests.Algorithm
@@ -108,6 +109,7 @@ namespace QuantConnect.Tests.Algorithm
                     new TestCaseData(Symbols.SPY_Option_Chain),
                     new TestCaseData(Symbols.SPY_C_192_Feb19_2016),
                     new TestCaseData(Symbols.SPY_P_192_Feb19_2016),
+                    new TestCaseData(Symbol.CreateBase(typeof(AlphaStreamsPortfolioState), Symbols.SPY, Market.USA)),
                     new TestCaseData(Symbol.Create("CustomData", SecurityType.Base, Market.Binance)),
                     new TestCaseData(Symbol.Create("CustomData2", SecurityType.Base, Market.COMEX))
                 };
