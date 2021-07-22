@@ -67,7 +67,6 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
 
-                    var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, pairObject, castSecurityType).TimeZone;
                     var dataTimeZone = marketHoursDatabase.GetDataTimeZone(market, pairObject, castSecurityType);
 
                     if (pairObject.ID.SecurityType != SecurityType.Forex || pairObject.ID.SecurityType != SecurityType.Cfd || pairObject.ID.SecurityType != SecurityType.Crypto || pairObject.ID.SecurityType == SecurityType.Base)
@@ -121,8 +120,7 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                         foreach (var bar in history)
                         {
-                            var linedata = new TradeBar(bar.TimeStamp, pairObject, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, timeSpan);
-                            linedata.Time = linedata.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+                            var linedata = new TradeBar(bar.TimeStamp.ConvertFromUtc(dataTimeZone), pairObject, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, timeSpan);
                             fileEnum.Add(linedata);
                         }
 
