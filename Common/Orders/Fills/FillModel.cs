@@ -162,6 +162,10 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        /// There's no way to know if the price has "gapped" past the stop price within a single OHLC bar. 
+        /// So we have to assume a fluid, high volume market, where every price between the high and low has been touched.
+        /// </remarks>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
@@ -193,10 +197,19 @@ namespace QuantConnect.Orders.Fills
                     if (prices.Low < order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
-                        fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip);
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
+
+                        // if bar opens below stop price, fill at open price
+                        if (prices.Open < order.StopPrice)
+                        {
+                            fill.FillPrice = prices.Open - slip;
+                        }
+                        // otherwise, assume price moved through the stop price
+                        else
+                        {
+                            fill.FillPrice = order.StopPrice - slip;
+                        }
                     }
                     break;
 
@@ -205,10 +218,19 @@ namespace QuantConnect.Orders.Fills
                     if (prices.High > order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at highest of the stop & asset price.
-                        fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
+
+                        // if bar opens above stop price, fill at open price
+                        if (prices.Open > order.StopPrice)
+                        {
+                            fill.FillPrice = prices.Open + slip;
+                        }
+                        // otherwise, assume price moved through the stop price
+                        else
+                        {
+                            fill.FillPrice = order.StopPrice + slip;
+                        }                        
                     }
                     break;
             }
