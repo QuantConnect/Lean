@@ -82,8 +82,8 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
                             throw new ArgumentException("Invalid date range specified");
                         }
 
-                        var start = startDate.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
-                        var end = endDate.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
+                        var start = startDate.ConvertTo(DateTimeZone.Utc, dataTimeZone);
+                        var end = endDate.ConvertTo(DateTimeZone.Utc, dataTimeZone);
 
                         // Write data
                         var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);

@@ -918,54 +918,49 @@ namespace QuantConnect.Brokerages.Zerodha
                 yield break;
             }
 
-
-            DateTime latestTime = request.StartTimeUtc;
-            var requests = new List<HistoryRequest>();
-            requests.Add(request);
-
-            foreach (var historyRequest in requests)
+            if (request.Symbol.ID.SecurityType != SecurityType.Equity && request.Symbol.ID.SecurityType != SecurityType.Future && request.Symbol.ID.SecurityType != SecurityType.Option)
             {
-                if (historyRequest.Symbol.ID.SecurityType != SecurityType.Equity && historyRequest.Symbol.ID.SecurityType != SecurityType.Future && historyRequest.Symbol.ID.SecurityType != SecurityType.Option)
+                throw new ArgumentException("Zerodha does not support this security type: " + request.Symbol.ID.SecurityType);
+            }
+
+            if (request.StartTimeUtc >= request.EndTimeUtc)
+            {
+                throw new ArgumentException("Invalid date range specified");
+            }
+
+            var history = Enumerable.Empty<BaseData>();
+            
+            var symbol = request.Symbol;
+            var start = request.StartTimeLocal;
+            var end = request.EndTimeLocal;
+            var resolution = request.Resolution;
+            var dataTimeZone = request.DataTimeZone;
+
+            if (Config.GetBool("zerodha-history-subscription"))
+            {
+                switch (resolution)
                 {
-                    throw new ArgumentException("Zerodha does not support this security type: " + historyRequest.Symbol.ID.SecurityType);
+                    case Resolution.Minute:
+                        history = GetHistoryForPeriod(symbol, start, end, dataTimeZone, resolution, "minute");
+                        break;
+
+                    case Resolution.Hour:
+                        history = GetHistoryForPeriod(symbol, start, end, dataTimeZone, resolution, "60minute");
+                        break;
+
+                    case Resolution.Daily:
+                        history = GetHistoryForPeriod(symbol, start, end, dataTimeZone, resolution, "day");
+                        break;
                 }
+            }
 
-                if (historyRequest.StartTimeUtc >= historyRequest.EndTimeUtc)
-                {
-                    throw new ArgumentException("Invalid date range specified");
-                }
-
-                var start = historyRequest.StartTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
-                var end = historyRequest.EndTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
-
-                var history = Enumerable.Empty<BaseData>();
-
-                if (Config.GetBool("zerodha-history-subscription"))
-                {
-                    switch (historyRequest.Resolution)
-                    {
-                        case Resolution.Minute:
-                            history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "minute");
-                            break;
-
-                        case Resolution.Hour:
-                            history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "60minute");
-                            break;
-
-                        case Resolution.Daily:
-                            history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "day");
-                            break;
-                    }
-                }
-
-                foreach (var baseData in history)
-                {
-                    yield return baseData;
-                }
+            foreach (var baseData in history)
+            {
+                yield return baseData;
             }
         }
 
-        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution, string zerodhaResolution)
+        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, DateTimeZone dataTimeZone, Resolution resolution, string zerodhaResolution)
         {
             Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
             var scripSymbolTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.Value);
@@ -985,7 +980,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             foreach (var candle in candles)
             {
-                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
+                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(dataTimeZone),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
             }
         }
 
