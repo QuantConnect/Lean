@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Python;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Launcher
@@ -98,6 +99,12 @@ namespace QuantConnect.Lean.Launcher
                 const string jobNullMessage = "Engine.Main(): Sorry we could not process this algorithm request.";
                 Log.Error(jobNullMessage);
                 throw new ArgumentException(jobNullMessage);
+            }
+
+            // Activate our PythonVirtualEnvironment if provided
+            if (!string.IsNullOrEmpty(job.PythonVirtualEnvironment))
+            {
+                PythonInitializer.ActivatePythonVirtualEnvironment(job.PythonVirtualEnvironment);
             }
 
             try

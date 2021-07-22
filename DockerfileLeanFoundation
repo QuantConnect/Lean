@@ -43,6 +43,11 @@ RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-p
     rm packages-microsoft-prod.deb && \
     apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
 
+# Install libffi7 for rpy2 package
+RUN wget http://es.archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi7_3.3-4_amd64.deb && \
+    dpkg -i libffi7_3.3-4_amd64.deb && \
+    rm libffi7_3.3-4_amd64.deb
+
 # Set PythonDLL variable for PythonNet
 ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.6m.so"
 
@@ -264,6 +269,20 @@ RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
 
 # Remove black-listed packages
 RUN pip uninstall -y s3transfer
+
+# Install a Python Virtual Environment with some updated libraries for advanced analysis
+# Selected in Lean with directory via JSON JobPacket "sPythonVirtualEnvironment" or config "python-venv" value
+RUN python -m venv /customEnv --system-site-packages && \
+    . /customEnv/bin/activate && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    pandas==1.1.5 \
+    tensorflow==2.5.0 \
+    nbeats-keras==1.4.0 \
+    nbeats-pytorch==1.4.0 \
+    stellargraph==1.2.1 \
+    && python -m ipykernel install --name=CustomPython \
+    && deactivate 
 
 # List all packages
 RUN conda list
