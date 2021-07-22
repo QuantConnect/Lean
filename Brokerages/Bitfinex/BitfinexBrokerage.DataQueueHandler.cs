@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         /// <param name="webSocket">The websocket instance</param>
         /// <param name="symbol">The symbol to subscribe</param>
-        private void Subscribe(IWebSocket webSocket, Symbol symbol)
+        private bool Subscribe(IWebSocket webSocket, Symbol symbol)
         {
             lock (_locker)
             {
@@ -54,8 +54,10 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
             }
 
-            SubscribeChannel(webSocket, "trades", symbol);
-            SubscribeChannel(webSocket, "book", symbol);
+            var success = SubscribeChannel(webSocket, "trades", symbol);
+            success &= SubscribeChannel(webSocket, "book", symbol);
+
+            return success;
         }
 
         /// <summary>
@@ -63,7 +65,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         /// <param name="webSocket">The websocket instance</param>
         /// <param name="symbol">The symbol to unsubscribe</param>
-        private void Unsubscribe(IWebSocket webSocket, Symbol symbol)
+        private bool Unsubscribe(IWebSocket webSocket, Symbol symbol)
         {
             BitfinexWebSocketChannels channels;
 
@@ -71,15 +73,17 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
                 {
-                    return;
+                    return true;
                 }
             }
 
-            UnsubscribeChannel(webSocket, channels, new Channel("trades", symbol));
-            UnsubscribeChannel(webSocket, channels, new Channel("book", symbol));
+            var success = UnsubscribeChannel(webSocket, channels, new Channel("trades", symbol));
+            success &= UnsubscribeChannel(webSocket, channels, new Channel("book", symbol));
+
+            return success;
         }
 
-        private void SubscribeChannel(IWebSocket webSocket, string channelName, Symbol symbol)
+        private bool SubscribeChannel(IWebSocket webSocket, string channelName, Symbol symbol)
         {
             _onSubscribeEvent.Reset();
 
@@ -93,10 +97,13 @@ namespace QuantConnect.Brokerages.Bitfinex
             if (!_onSubscribeEvent.WaitOne(TimeSpan.FromSeconds(30)))
             {
                 Log.Error($"BitfinexBrokerage.Unsubscribe(): Could not subscribe to {symbol.Value}/{channelName}.");
+                return false;
             }
+
+            return true;
         }
 
-        private void UnsubscribeChannel(IWebSocket webSocket, BitfinexWebSocketChannels channels, Channel channel)
+        private bool UnsubscribeChannel(IWebSocket webSocket, BitfinexWebSocketChannels channels, Channel channel)
         {
             if (channels.Contains(channel))
             {
@@ -113,8 +120,11 @@ namespace QuantConnect.Brokerages.Bitfinex
                 if (!_onUnsubscribeEvent.WaitOne(TimeSpan.FromSeconds(30)))
                 {
                     Log.Error($"BitfinexBrokerage.Unsubscribe(): Could not unsubscribe from {channel.Symbol.Value}/{channel.Name}.");
+                    return false;
                 }
             }
+
+            return true;
         }
 
         private void OnDataMessage(WebSocketMessage e)
