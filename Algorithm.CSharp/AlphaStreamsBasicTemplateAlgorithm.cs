@@ -13,16 +13,13 @@
  * limitations under the License.
 */
 
-using System;
+using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Util;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Custom.AlphaStreams;
-using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 
@@ -33,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AlphaStreamsBasicTemplateAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private List<Symbol> _currentSymbols;
+        private Dictionary<Symbol, HashSet<Symbol>> _symbolsPerAlpha;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -43,11 +40,16 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2018, 04, 04);
             SetEndDate(2018, 04, 06);
 
-            _currentSymbols = new List<Symbol>();
             SetExecution(new ImmediateExecutionModel());
             Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
-            SetPortfolioConstruction(new SecurityTargetPortfolioConstructionModel());
-            var alpha = AddData<AlphaStreamsPortfolioState>("623b06b231eb1cc1aa3643a46");
+            _symbolsPerAlpha = new Dictionary<Symbol, HashSet<Symbol>>();
+            SetPortfolioConstruction(new EqualWeightingAlphaStreamsPortfolioConstructionModel());
+
+            foreach (var alphaId in new [] { "623b06b231eb1cc1aa3643a46", "9fc8ef73792331b11dbd5429a" })
+            {
+                var alpha = AddData<AlphaStreamsPortfolioState>(alphaId);
+                _symbolsPerAlpha[alpha.Symbol] = new HashSet<Symbol>();
+            }
         }
 
         /// <summary>
@@ -56,33 +58,26 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (data.ContainsKey("623b06b231eb1cc1aa3643a46"))
+            foreach (var portfolioState in data.Get<AlphaStreamsPortfolioState>().Values)
             {
-                var portfolioState = (AlphaStreamsPortfolioState)data["623b06b231eb1cc1aa3643a46"];
-                var newSymbols = new List<Symbol>();
-                if (!portfolioState.PositionGroups.IsNullOrEmpty())
+                var alphaId = portfolioState.Symbol;
+                var currentSymbols = _symbolsPerAlpha[alphaId];
+
+                var newSymbols = new HashSet<Symbol>(currentSymbols.Count);
+                foreach (var symbol in portfolioState.PositionGroups?.SelectMany(positionGroup => positionGroup.Positions).Select(state => state.Symbol) ?? Enumerable.Empty<Symbol>())
                 {
-                    var portfolioValueFactor = Portfolio.TotalPortfolioValue / portfolioState.TotalPortfolioValue * 1;
-                    foreach (var positionGroup in portfolioState.PositionGroups)
+                    // only add it if it's not used by any alpha (already added check)
+                    if (newSymbols.Add(symbol) && !UsedBySomeAlpha(symbol))
                     {
-                        foreach (var position in positionGroup.Positions)
-                        {
-                            var security = AddSecurity(position.Symbol, Resolution.Minute);
-                            security.Holdings.Target = new PortfolioTarget(position.Symbol, position.Quantity * portfolioValueFactor);
-                            newSymbols.Add(position.Symbol);
-                            _currentSymbols.Remove(position.Symbol);
-                        }
+                        AddSecurity(symbol);
                     }
                 }
+                _symbolsPerAlpha[alphaId] = newSymbols;
 
-                foreach (var symbol in _currentSymbols)
+                foreach (var symbol in currentSymbols.Where(symbol => !UsedBySomeAlpha(symbol)))
                 {
-                    Securities[symbol].Holdings.Target = null;
-                    Liquidate(symbol);
                     RemoveSecurity(symbol);
                 }
-
-                _currentSymbols = newSymbols;
             }
         }
 
@@ -91,37 +86,14 @@ namespace QuantConnect.Algorithm.CSharp
             Debug($"OnOrderEvent: {orderEvent}");
         }
 
-        public override void OnEndOfAlgorithm()
+        public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            if (Portfolio.Invested)
-            {
-                throw new Exception("Should not be invested at end of algorithm");
-            }
+            Debug($"OnSecuritiesChanged: {changes}");
         }
 
-        private class SecurityTargetPortfolioConstructionModel : IPortfolioConstructionModel
+        private bool UsedBySomeAlpha(Symbol asset)
         {
-            public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
-            {
-                foreach (var symbol in algorithm.Securities.Keys.Where(symbol => symbol.SecurityType == SecurityType.Base))
-                {
-                    if (algorithm.CurrentSlice.ContainsKey(symbol))
-                    {
-                        var portfolioState = (AlphaStreamsPortfolioState)algorithm.CurrentSlice["623b06b231eb1cc1aa3643a46"];
-                    }
-                }
-
-                foreach (var security in algorithm.Securities.Values)
-                {
-                    if (security.Holdings.Target != null && security.Holdings.Target.Quantity != security.Holdings.Quantity)
-                    {
-                        yield return security.Holdings.Target;
-                    }
-                }
-            }
-            public void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
-            {
-            }
+            return _symbolsPerAlpha.Any(pair => pair.Value.Contains(asset));
         }
 
         /// <summary>
