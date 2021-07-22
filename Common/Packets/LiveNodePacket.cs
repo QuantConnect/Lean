@@ -74,6 +74,12 @@ namespace QuantConnect.Packets
         public List<Notification> NotificationTargets;
 
         /// <summary>
+        /// List of real time data types available in the live trading environment
+        /// </summary>
+        [JsonProperty(PropertyName = "aLiveDataTypes")]
+        public HashSet<string> LiveDataTypes;
+
+        /// <summary>
         /// Default constructor for JSON of the Live Task Packet
         /// </summary>
         public LiveNodePacket()
