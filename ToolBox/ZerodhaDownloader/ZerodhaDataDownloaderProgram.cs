@@ -24,6 +24,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Util;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.ZerodhaDownloader
 {
@@ -57,6 +58,7 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                 // Load settings from config.json and create downloader
                 var dataDirectory = Config.Get("data-folder", "../../../Data");
+                var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
                 foreach (var pair in tickers)
                 {
@@ -64,7 +66,10 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
-
+                    
+                    var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, pairObject, castSecurityType).TimeZone;
+                    var dataTimeZone = marketHoursDatabase.GetDataTimeZone(market, pairObject, castSecurityType);
+                
                     if (pairObject.ID.SecurityType != SecurityType.Forex || pairObject.ID.SecurityType != SecurityType.Cfd || pairObject.ID.SecurityType != SecurityType.Crypto || pairObject.ID.SecurityType == SecurityType.Base)
                     {
 
@@ -78,8 +83,8 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
                             throw new ArgumentException("Invalid date range specified");
                         }
 
-                        var start = startDate.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
-                        var end = endDate.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
+                        var start = startDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
+                        var end = endDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
 
                         // Write data
                         var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
@@ -116,7 +121,7 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                         foreach (var bar in history)
                         {
-                            var linedata = new TradeBar(bar.TimeStamp, pairObject, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, timeSpan);
+                            var linedata = new TradeBar(bar.TimeStamp.ConvertFromUtc(dataTimeZone), pairObject, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, timeSpan);
                             fileEnum.Add(linedata);
                         }
 
