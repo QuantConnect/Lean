@@ -70,7 +70,7 @@ namespace QuantConnect.Brokerages.Binance
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;
-            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnMessageImpl);
+            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnUserMessage);
 
             var maximumWebSocketConnections = Config.GetInt("binance-maximum-websocket-connections");
             var symbolWeights = maximumWebSocketConnections > 0 ? FetchSymbolWeights() : null;
@@ -83,7 +83,7 @@ namespace QuantConnect.Brokerages.Binance
                 () => new BinanceWebSocketWrapper(null),
                 Subscribe,
                 Unsubscribe,
-                _messageHandler);
+                OnDataMessage);
 
             SubscriptionManager = subscriptionManager;
 
