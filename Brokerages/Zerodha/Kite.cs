@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,6 +24,7 @@ using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using CsvHelper;
 using CsvHelper.Configuration;
+using System.Threading;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -952,12 +953,6 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
             }
 
-            //if (!Params.ContainsKey("api_key"))
-            //    Params.Add("api_key", _apiKey);
-
-            //if (!Params.ContainsKey("access_token") && !String.IsNullOrEmpty(_accessToken))
-            //    Params.Add("access_token", _accessToken);
-
             HttpWebRequest request;
             string paramString = String.Join("&", Params.Select(x => Utils.BuildParam(x.Key, x.Value)));
 
@@ -982,19 +977,24 @@ namespace QuantConnect.Brokerages.Zerodha
                 AddExtraHeaders(ref request);
             }
 
+            var count = 0;
+            var maxTries = 5;
             WebResponse webResponse;
-            try
+            while(true)
             {
-                webResponse = request.GetResponse();
-            }
-            catch (WebException e)
-            {
-                if (e.Response.Equals(null))
+                try
                 {
-                    throw;
+                    webResponse = request.GetResponse();
+                    break;
                 }
-
-                webResponse = e.Response;
+                catch (WebException)
+                {
+                    if (++count > maxTries)
+                    {
+                        throw;
+                    }
+                    Thread.Sleep(100);
+                }
             }
 
             using (Stream webStream = webResponse.GetResponseStream())
