@@ -21,7 +21,7 @@ using QuantConnect.Brokerages.Zerodha.Messages;
 namespace QuantConnect.Tests.Brokerages.Zerodha
 {
     [TestFixture]
-    class KiteTests
+    public class KiteTests
     {
         [Test]
         public void HistoricalCandleData()
