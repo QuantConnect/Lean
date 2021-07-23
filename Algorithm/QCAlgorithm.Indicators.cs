@@ -1489,18 +1489,18 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates an RelativeVolume indicator for the symbol. The indicator will be automatically
+        /// Creates an RelativeDailyVolume indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
-        /// <param name="symbol">The symbol whose RV we want</param>
-        /// <param name="period">The period of the RV</param>
+        /// <param name="symbol">The symbol whose RDV we want</param>
+        /// <param name="period">The period of the RDV</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The Relative Volume indicator for the given parameters</returns>
-        public RelativeDailyVolume RDV(Symbol symbol, int period = 1, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public RelativeDailyVolume RDV(Symbol symbol, int period = 2, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"RDV({period})", resolution);
-            var relativeDailyVolume = new RelativeDailyVolume(name, period);
+            var relativeDailyVolume = new RelativeDailyVolume(name, period, resolution);
             RegisterIndicator(symbol, relativeDailyVolume, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)
