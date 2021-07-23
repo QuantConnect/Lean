@@ -18,6 +18,7 @@ using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ProtoBuf;
 
 namespace QuantConnect.Data.Custom.IconicTypes 
 {
@@ -25,11 +26,13 @@ namespace QuantConnect.Data.Custom.IconicTypes
     /// Data type that is indexed, i.e. a file that points to another file containing the contents
     /// we're looking for in a Symbol.
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class IndexedLinkedData2 : IndexedBaseData
     {
         /// <summary>
         /// Example data property
         /// </summary>
+        [ProtoMember(55)]
         public int Count { get; set; }
         
         /// <summary>
