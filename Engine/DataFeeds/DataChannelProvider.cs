@@ -27,6 +27,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DataChannelProvider : IDataChannelProvider
     {
         /// <summary>
+        /// Initializes the instance with an algorithm node packet
+        /// </summary>
+        /// <param name="packet">Algorithm node packet</param>
+        public virtual void Initialize(AlgorithmNodePacket packet)
+        {
+        }
+
+        /// <summary>
         /// True if this subscription request should be streamed
         /// </summary>
         public virtual bool ShouldStreamSubscription(SubscriptionDataConfig config)

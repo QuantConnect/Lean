@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataCacheProvider _dataCacheProvider;
-        private IDataPermissionManager _dataPermissionManager;
+        protected IDataPermissionManager _dataPermissionManager;
         private bool _parallelHistoryRequestsEnabled;
         private bool _initialized;
 
@@ -94,20 +94,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var startTimeLocal = startUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
             var endTimeLocal = endUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
 
-            var config = new SubscriptionDataConfig(request.DataType,
-                request.Symbol,
-                request.Resolution,
-                request.DataTimeZone,
-                request.ExchangeHours.TimeZone,
-                request.FillForwardResolution.HasValue,
-                request.IncludeExtendedMarketHours,
-                false,
-                request.IsCustomData,
-                request.TickType,
-                true,
-                request.DataNormalizationMode
-                );
-
+            var config = request.ToSubscriptionDataConfig();
             _dataPermissionManager.AssertConfiguration(config, startTimeLocal, endTimeLocal);
 
             var security = new Security(

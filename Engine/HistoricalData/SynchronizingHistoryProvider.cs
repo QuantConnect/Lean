@@ -108,20 +108,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// </summary>
         protected Subscription CreateSubscription(HistoryRequest request, IEnumerable<BaseData> history)
         {
-            var config = new SubscriptionDataConfig(request.DataType,
-                request.Symbol,
-                request.Resolution,
-                request.DataTimeZone,
-                request.ExchangeHours.TimeZone,
-                request.FillForwardResolution.HasValue,
-                request.IncludeExtendedMarketHours,
-                false,
-                request.IsCustomData,
-                request.TickType,
-                true,
-                request.DataNormalizationMode
-            );
-
+            var config = request.ToSubscriptionDataConfig();
             var security = new Security(
                 request.ExchangeHours,
                 config,
