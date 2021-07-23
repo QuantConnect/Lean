@@ -87,7 +87,7 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
             Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
             Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
             Volume = Convert.ToUInt32(data[5], CultureInfo.InvariantCulture);
-            OI = data.Count > 6 ? Convert.ToUInt32(data[6], CultureInfo.InvariantCulture) : Convert.ToUInt32(0, CultureInfo.InvariantCulture); ;
+            OI = data.Count > 6 ? Convert.ToUInt32(data[6], CultureInfo.InvariantCulture) : Convert.ToUInt32(0, CultureInfo.InvariantCulture);
         }
 
         public DateTime TimeStamp { get; }
