@@ -94,8 +94,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             _job = job;
 
-            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnDataMessage);
-
             SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
                 WebSocketUrl,
                 MaximumSymbolsPerConnection,
@@ -104,7 +102,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 () => new BitfinexWebSocketWrapper(null),
                 Subscribe,
                 Unsubscribe,
-                _messageHandler,
+                OnDataMessage,
                 _connectionRateLimiter);
 
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();

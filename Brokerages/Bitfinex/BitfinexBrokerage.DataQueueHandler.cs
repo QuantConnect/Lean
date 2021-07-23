@@ -29,7 +29,6 @@ namespace QuantConnect.Brokerages.Bitfinex
 {
     public partial class BitfinexBrokerage
     {
-        private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
         private readonly RateGate _connectionRateLimiter = new(5, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<IWebSocket, BitfinexWebSocketChannels> _channelsByWebSocket = new();
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new();
