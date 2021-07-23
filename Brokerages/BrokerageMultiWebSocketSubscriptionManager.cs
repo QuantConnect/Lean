@@ -35,7 +35,7 @@ namespace QuantConnect.Brokerages
         private readonly Func<WebSocketClientWrapper> _webSocketFactory;
         private readonly Func<IWebSocket, Symbol, bool> _subscribeFunc;
         private readonly Func<IWebSocket, Symbol, bool> _unsubscribeFunc;
-        private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
+        private readonly Action<WebSocketMessage> _messageHandler;
         private readonly RateGate _connectionRateLimiter;
 
         private const int ConnectionTimeout = 30000;
@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages
             Func<WebSocketClientWrapper> webSocketFactory,
             Func<IWebSocket, Symbol, bool> subscribeFunc,
             Func<IWebSocket, Symbol, bool> unsubscribeFunc,
-            BrokerageConcurrentMessageHandler<WebSocketMessage> messageHandler,
+            Action<WebSocketMessage> messageHandler,
             RateGate connectionRateLimiter = null)
         {
             _webSocketUrl = webSocketUrl;
@@ -196,7 +196,7 @@ namespace QuantConnect.Brokerages
         private void Connect(IWebSocket webSocket)
         {
             webSocket.Initialize(_webSocketUrl);
-            webSocket.Message += (s, e) => _messageHandler.HandleNewMessage(e);
+            webSocket.Message += (s, e) => _messageHandler(e);
 
             var connectedEvent = new ManualResetEvent(false);
             EventHandler onOpenAction = (_, _) =>
