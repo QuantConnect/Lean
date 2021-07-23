@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         public static WebSocketMessage GetArgs(string json)
         {
-            return new WebSocketMessage(json);
+            return new WebSocketMessage(null, json);
         }
     }
 }
