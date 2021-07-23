@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using ProtoBuf;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -31,6 +32,40 @@ namespace QuantConnect.Tests.Common
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class ProtobufSerializationTests
     {
+        private static readonly Dictionary<Type, BaseData> _iconicInstances = new Dictionary<Type, BaseData>
+        {
+            { typeof(IndexedLinkedData), new IndexedLinkedData { Count = 1024 } },
+            { typeof(IndexedLinkedData2), new IndexedLinkedData2 { Count = 2048 } },
+            { typeof(LinkedData), new LinkedData { Count = 4096 } },
+            { typeof(UnlinkedData), new UnlinkedData { Ticker = "ABCDEF" } },
+            { typeof(UnlinkedDataTradeBar), new UnlinkedDataTradeBar
+                {
+                    Open = 10m,
+                    High = 11m,
+                    Low = 9m,
+                    Close = 10.99m,
+                    Volume = 9999m
+                }
+            }
+        };
+        
+        [TestCase(typeof(IndexedLinkedData), true)]
+        [TestCase(typeof(IndexedLinkedData2), true)]
+        [TestCase(typeof(LinkedData), true)]
+        [TestCase(typeof(UnlinkedData), false)]
+        [TestCase(typeof(UnlinkedDataTradeBar), false)]
+        public void SerializeRoundTripIconicDataTypes(Type baseDataType, bool hasUnderlyingSymbol)
+        {
+            var item = CreateNewInstance(baseDataType, hasUnderlyingSymbol);
+            var serialized = item.ProtobufSerialize();
+            
+            using (var stream = new MemoryStream(serialized))
+            {
+                var deserialized = Serializer.Deserialize<IEnumerable<BaseData>>(stream).Single();
+                AssertAreEqual(item, deserialized);
+            }
+        }
+        
         [Test]
         public void SymbolRoundTrip()
         {
@@ -369,6 +404,35 @@ namespace QuantConnect.Tests.Common
                 var end = DateTime.UtcNow;
 
                 Log.Trace($"JSON TOOK {end - start}");
+            }
+        }
+
+        private static BaseData CreateNewInstance(Type baseDataType, bool hasUnderlyingSymbol)
+        {
+            var instance = _iconicInstances[baseDataType];
+            
+            instance.Symbol = hasUnderlyingSymbol
+                ? Symbol.CreateBase(baseDataType, Symbols.AAPL, QuantConnect.Market.USA)
+                : Symbol.Create("ABCDEF", SecurityType.Base, Market.USA, baseDataType: baseDataType);
+            
+            instance.Time = new DateTime(2021, 6, 5);
+            
+            return instance;
+        }
+
+        private void AssertAreEqual(object expected, object result)
+        {
+            foreach (var propertyInfo in expected.GetType().GetProperties())
+            {
+                // we skip Symbol which isn't protobuffed
+                if (propertyInfo.CustomAttributes.Any())
+                {
+                    Assert.AreEqual(propertyInfo.GetValue(expected), propertyInfo.GetValue(result));
+                }
+            }
+            foreach (var fieldInfo in expected.GetType().GetFields())
+            {
+                Assert.AreEqual(fieldInfo.GetValue(expected), fieldInfo.GetValue(result));
             }
         }
     }

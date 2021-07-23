@@ -18,6 +18,7 @@ using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ProtoBuf;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Custom.IconicTypes
@@ -25,6 +26,7 @@ namespace QuantConnect.Data.Custom.IconicTypes
     /// <summary>
     /// Data source that is unlinked (no mapping) and takes any ticker when calling AddData
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class UnlinkedDataTradeBar : TradeBar
     {
         /// <summary>

@@ -18,12 +18,14 @@ using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ProtoBuf;
 
 namespace QuantConnect.Data.Custom.IconicTypes
 {
     /// <summary>
     /// Data source that is unlinked (no mapping) and takes any ticker when calling AddData
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class UnlinkedData : BaseData
     {
         /// <summary>
@@ -34,6 +36,7 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// <summary>
         /// Example data
         /// </summary>
+        [ProtoMember(55)]
         public string Ticker { get; set; }
 
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
