@@ -32,6 +32,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Analysis" Version="0.18.0" />
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.5" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
@@ -39,6 +40,7 @@
     </PackageReference>
     <PackageReference Include="NodaTime" Version="3.0.5" />
     <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
+    <PackageReference Include="XPlot.Plotly" Version="4.0.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj" />
