@@ -50,6 +50,7 @@ namespace QuantConnect.Brokerages.Binance
         private readonly Timer _keepAliveTimer;
         private readonly Timer _reconnectTimer;
         private readonly BinanceRestApiClient _apiClient;
+        private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
 
         /// <summary>
         /// Constructor for brokerage
@@ -65,6 +66,7 @@ namespace QuantConnect.Brokerages.Binance
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;
+            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnMessageImpl);
 
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             subscriptionManager.SubscribeImpl += (s, t) =>
@@ -243,7 +245,7 @@ namespace QuantConnect.Brokerages.Binance
         {
             var submitted = false;
 
-            WithLockedStream(() =>
+            _messageHandler.WithLockedStream(() =>
             {
                 submitted = _apiClient.PlaceOrder(order);
             });
@@ -270,7 +272,7 @@ namespace QuantConnect.Brokerages.Binance
         {
             var submitted = false;
 
-            WithLockedStream(() =>
+            _messageHandler.WithLockedStream(() =>
             {
                 submitted = _apiClient.CancelOrder(order);
             });
@@ -327,20 +329,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="e"></param>
         public override void OnMessage(object sender, WebSocketMessage e)
         {
-            try
-            {
-                if (_streamLocked)
-                {
-                    _messageBuffer.Enqueue(e);
-                    return;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            OnMessageImpl(e);
+            _messageHandler.HandleNewMessage(e);
         }
 
         #endregion

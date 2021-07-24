@@ -116,7 +116,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (filePath == null
                 || filePath.Contains("fine", StringComparison.InvariantCultureIgnoreCase) && filePath.Contains("fundamental", StringComparison.InvariantCultureIgnoreCase)
                 || filePath.Contains("map_files", StringComparison.InvariantCultureIgnoreCase)
-                || filePath.Contains("factor_files", StringComparison.InvariantCultureIgnoreCase))
+                || filePath.Contains("factor_files", StringComparison.InvariantCultureIgnoreCase)
+                || filePath.Contains("margins", StringComparison.InvariantCultureIgnoreCase) && filePath.Contains("future", StringComparison.InvariantCultureIgnoreCase))
             {
                 return false;
             }

@@ -20,8 +20,8 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Positions;
 
@@ -86,9 +86,9 @@ namespace QuantConnect.Tests.Common.Securities
         public void VerifyOpenMarketLeverage()
         {
             // Market is Open on Tuesday, Feb, 16th 2016 at Noon
-
+            // SPY @ $100 * 100 Shares / Leverage (4) = 2500
             var leverage = 4m;
-            var expected = 100 * 100m / leverage + 1;
+            var expected = 100 * 100m / leverage;
 
             var model = GetModel();
             var security = CreateSecurity(model.SecurityModel, Noon);
@@ -103,9 +103,9 @@ namespace QuantConnect.Tests.Common.Securities
         public void VerifyOpenMarketLeverageAltVersion()
         {
             // Market is Open on Tuesday, Feb, 16th 2016 at Noon
-
+            // SPY @ $100 * 100 Shares / Leverage (5) = 2000
             var leverage = 5m;
-            var expected = 100 * 100m / leverage + 1;
+            var expected = 100 * 100m / leverage;
 
             var model = GetModel(2m, leverage);
             var security = CreateSecurity(model.SecurityModel, Noon);
@@ -119,8 +119,9 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void VerifyClosedMarketLeverage()
         {
+            // SPY @ $100 * 100 Shares / Leverage (2) = 5000
             var leverage = 2m;
-            var expected = 100 * 100m / leverage + 1;
+            var expected = 100 * 100m / leverage;
 
             var model = GetModel();
 
@@ -152,8 +153,9 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void VerifyClosedMarketLeverageAltVersion()
         {
+            // SPY @ $100 * 100 Shares / Leverage (3) = 3333.33
             var leverage = 3m;
-            var expected = 100 * 100m / leverage + 1;
+            var expected = 100 * 100m / leverage;
 
             var model = GetModel(leverage, 4m);
 
@@ -357,6 +359,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.Exchange.SetLocalDateTimeFrontier(newLocalTime);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, newLocalTime, 100m));
+            security.FeeModel = new ConstantFeeModel(0);
             return security;
         }
 

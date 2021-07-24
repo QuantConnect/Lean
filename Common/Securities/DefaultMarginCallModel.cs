@@ -160,7 +160,11 @@ namespace QuantConnect.Securities
             // we want a reduction so we send the inverse side of our position
             var deltaBuyingPower = (currentlyUsedBuyingPower - buyingPowerToKeep) * (security.Holdings.IsLong ? -1 : 1);
 
-            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(Portfolio, positionGroup, deltaBuyingPower);
+            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
+                Portfolio, positionGroup, deltaBuyingPower,
+                // margin is negative, we need to reduce positions, no minimum
+                minimumOrderMarginPortfolioPercentage: 0
+            ));
 
             var quantity = result.NumberOfLots * security.SymbolProperties.LotSize;
 

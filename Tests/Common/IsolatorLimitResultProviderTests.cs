@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -45,7 +45,6 @@ namespace QuantConnect.Tests.Common
         public void ConsumeRequestsAdditionalTimeAfterOneMinute()
         {
             var minuteElapsed = new ManualResetEvent(false);
-            var consumeCompleted = new ManualResetEvent(false);
             var consumeStarted = new ManualResetEvent(false);
 
             Action code = () =>
@@ -58,12 +57,12 @@ namespace QuantConnect.Tests.Common
             var provider = new FakeIsolatorLimitResultProvider();
             var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
 
-            Task.Run(() =>
+            var consumeCompleted = Task.Run(() =>
             {
                 consumeStarted.Set();
                 provider.Consume(timeProvider, code, _timeMonitor);
-                consumeCompleted.Set();
             });
+
             if (!consumeStarted.WaitOne(50))
             {
                 Assert.Fail("Consume should have started.");
@@ -75,10 +74,15 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(0, provider.Invocations.Count);
 
             timeProvider.Advance(TimeSpan.FromSeconds(15));
-            Thread.Sleep(15);
+
+            int i = 0;
+            while (provider.Invocations.Count == 0 && i++ < 3)
+            {
+                Thread.Sleep(15);
+            }
 
             minuteElapsed.Set();
-            if (!consumeCompleted.WaitOne(50))
+            if (!consumeCompleted.Wait(50))
             {
                 Assert.Fail("Consume should have returned.");
             }

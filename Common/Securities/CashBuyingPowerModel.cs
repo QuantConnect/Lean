@@ -135,7 +135,7 @@ namespace QuantConnect.Securities
                 // maximum quantity that can be bought (in quote currency)
                 var maximumQuantity =
                     GetMaximumOrderQuantityForTargetBuyingPower(
-                        new GetMaximumOrderQuantityForTargetBuyingPowerParameters(parameters.Portfolio, parameters.Security, targetPercent)).Quantity * GetOrderPrice(parameters.Security, parameters.Order);
+                        new GetMaximumOrderQuantityForTargetBuyingPowerParameters(parameters.Portfolio, parameters.Security, targetPercent, 0)).Quantity * GetOrderPrice(parameters.Security, parameters.Order);
 
                 if (orderQuantity <= Math.Abs(maximumQuantity))
                 {

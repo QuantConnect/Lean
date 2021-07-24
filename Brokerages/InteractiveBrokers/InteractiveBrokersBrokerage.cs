@@ -270,7 +270,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
 
             // start IB Gateway
-            _ibAutomater = new IBAutomater.IBAutomater(ibDirectory, ibVersion, userName, password, tradingMode, port);
+            var exportIbGatewayLogs = Config.GetBool("ib-export-ibgateway-logs");
+            _ibAutomater = new IBAutomater.IBAutomater(ibDirectory, ibVersion, userName, password, tradingMode, port, exportIbGatewayLogs);
             _ibAutomater.OutputDataReceived += OnIbAutomaterOutputDataReceived;
             _ibAutomater.ErrorDataReceived += OnIbAutomaterErrorDataReceived;
             _ibAutomater.Exited += OnIbAutomaterExited;
@@ -810,8 +811,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         }
                     }
 
-                    // enable logging at info level
-                    _client.ClientSocket.setServerLogLevel(4);
+                    // enable logging at Warning level
+                    _client.ClientSocket.setServerLogLevel(3);
 
                     break;
                 }
@@ -3429,5 +3430,4 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158, 10197
         };
     }
-
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -303,6 +303,29 @@ namespace QuantConnect.Algorithm
             }
 
             return averageTrueRange;
+        }
+
+        /// <summary>
+        /// Creates an AugenPriceSpike indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose APS we want</param>
+        /// <param name="period">The period of the APS</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The AugenPriceSpike indicator for the given parameters</returns>
+        public AugenPriceSpike APS(Symbol symbol, int period = 3, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"APS({period})", resolution);
+            var augenPriceSpike = new AugenPriceSpike(name, period);
+            RegisterIndicator(symbol, augenPriceSpike, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, augenPriceSpike, resolution);
+            }
+
+            return augenPriceSpike;
         }
 
         /// <summary>

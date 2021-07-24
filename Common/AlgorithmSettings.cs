@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,8 +15,8 @@
 
 using System;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
+using QuantConnect.Orders.Fills;
 
 namespace QuantConnect
 {
@@ -50,6 +50,12 @@ namespace QuantConnect
         /// caused by the IPortfolioConstructionModel implementation being used.
         /// For example rounding errors, math operations</remarks>
         public decimal MinAbsolutePortfolioTargetPercentage { get; set; }
+
+        /// <summary>
+        /// Configurable minimum order margin portfolio percentage to ignore bad orders, orders with unrealistic small sizes
+        /// </summary>
+        /// <remarks>Default value is 0. This setting is useful to avoid small trading noise when using SetHoldings</remarks>
+        public decimal MinimumOrderMarginPortfolioPercentage { get; set; }
 
         /// <summary>
         /// Gets/sets the maximum number of concurrent market data subscriptions available

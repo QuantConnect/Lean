@@ -13,9 +13,10 @@
  * limitations under the License.
 */
 
+using System;
+using System.IO;
 using NUnit.Framework;
 using QuantConnect.Api;
-using System.IO;
 
 namespace QuantConnect.Tests.API
 {
@@ -23,13 +24,13 @@ namespace QuantConnect.Tests.API
     /// API Object tests
     /// Tests APIs ability to connect to Web API
     /// </summary>
-    [TestFixture, Explicit("Requires configured api access")]
+    [TestFixture]
     public class ApiTest : ApiTestBase
     {
         /// <summary>
         /// Test successfully authenticating with the ApiConnection using valid credentials.
         /// </summary>
-        [Test]
+        [Test, Explicit("Requires configured api access")]
         public void ApiConnectionWillAuthenticate_ValidCredentials_Successfully()
         {
             var connection = new ApiConnection(TestAccount, TestToken);
@@ -39,7 +40,7 @@ namespace QuantConnect.Tests.API
         /// <summary>
         /// Test successfully authenticating with the API using valid credentials.
         /// </summary>
-        [Test]
+        [Test, Explicit("Requires configured api access")]
         public void ApiWillAuthenticate_ValidCredentials_Successfully()
         {
             var api = new Api.Api();
@@ -68,20 +69,30 @@ namespace QuantConnect.Tests.API
             Assert.IsFalse(api.Connected);
         }
 
-        [TestCase("C:\\Data")]
-        [TestCase("C:\\Data\\")]
-        [TestCase("C:/Data/")]
-        [TestCase("C:/Data")]
-        public void FormattingPathForDataRequestsAreCorrect(string dataFolder)
+        [Test]
+        public void NullDataFolder()
+        {
+            var api = new Api.Api();
+            Assert.DoesNotThrow(() => api.Initialize(TestAccount, "", null));
+        }
+
+        [TestCase("C:\\Data", "forex/oanda/daily/eurusd.zip")]
+        [TestCase("C:\\Data\\", "forex/oanda/daily/eurusd.zip")]
+        [TestCase("C:/Data/", "forex/oanda/daily/eurusd.zip")]
+        [TestCase("C:/Data", "forex/oanda/daily/eurusd.zip")]
+        [TestCase("C:/Data", "forex\\oanda\\daily\\eurusd.zip")]
+        [TestCase("C:/Data/", "forex\\oanda\\daily\\eurusd.zip")]
+        [TestCase("C:\\Data\\", "forex\\oanda\\daily\\eurusd.zip")]
+        [TestCase("C:\\Data", "forex\\oanda\\daily\\eurusd.zip")]
+        public void FormattingPathForDataRequestsAreCorrect(string dataFolder, string dataToDownload)
         {
             var api = new Api.Api();
             api.Initialize(TestAccount, TestToken, dataFolder);
 
-            var dataToDownload = "forex/oanda/daily/eurusd.zip";
             var path = Path.Combine(dataFolder, dataToDownload);
 
             var result = api.FormatPathForDataRequest(path);
-            Assert.AreEqual(dataToDownload, result);
+            Assert.AreEqual(dataToDownload.Replace("\\", "/", StringComparison.InvariantCulture), result);
         }
     }
 }

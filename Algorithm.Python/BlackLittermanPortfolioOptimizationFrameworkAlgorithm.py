@@ -34,6 +34,10 @@ class BlackLittermanPortfolioOptimizationFrameworkAlgorithm(QCAlgorithm):
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Minute
 
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+        # Commented so regression algorithm is more sensitive
+        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
