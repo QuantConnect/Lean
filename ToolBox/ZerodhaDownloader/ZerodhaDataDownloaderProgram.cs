@@ -24,6 +24,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Util;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.ZerodhaDownloader
 {
@@ -38,33 +39,37 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
         /// </summary>
         public static void ZerodhaDataDownloader(IList<string> tickers, string market, string resolution, string securityType, DateTime startDate, DateTime endDate)
         {
+
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("ZerodhaDataDownloader ERROR: '--tickers=', --securityType, '--market' or '--resolution=' parameter is missing");
-                Console.WriteLine("--tickers=eg JSWSTEEL,TCS,INFY");
-                Console.WriteLine("--market=MCX/NSE/NFO/CDS/BSE");
-                Console.WriteLine("--security-type=Equity/Future/Option/Commodity");
-                Console.WriteLine("--resolution=Minute/Hour/Daily/Tick");
+                Log.Error("ZerodhaDataDownloader ERROR: '--tickers=', --securityType, '--market' or '--resolution=' parameter is missing");
+                Log.Error("--tickers=eg JSWSTEEL,TCS,INFY");
+                Log.Error("--market=MCX/NSE/NFO/CDS/BSE");
+                Log.Error("--security-type=Equity/Future/Option/Commodity");
+                Log.Error("--resolution=Minute/Hour/Daily/Tick");
                 Environment.Exit(1);
             }
             try
             {
-                var _kite = new Kite(_apiKey, _accessToken);
+                var kite = new Kite(_apiKey, _accessToken);
+                var symbolMapper = new ZerodhaSymbolMapper(kite);
                 var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var castSecurityType = (SecurityType)Enum.Parse(typeof(SecurityType), securityType);
 
                 // Load settings from config.json and create downloader
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = Config.Get("data-folder", "../../../Data");
+                var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
                 foreach (var pair in tickers)
                 {
-                    var quoteTicker = market + ":" + pair;
-                    var instrumentQuotes = _kite.GetQuote(new string[] { quoteTicker });
-                    var quote = instrumentQuotes[quoteTicker];
+                    var zerodhaTokenList = symbolMapper.GetZerodhaInstrumentTokenList(pair);
 
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
-
+                    
+                    var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, pairObject, castSecurityType).TimeZone;
+                    var dataTimeZone = marketHoursDatabase.GetDataTimeZone(market, pairObject, castSecurityType);
+                
                     if (pairObject.ID.SecurityType != SecurityType.Forex || pairObject.ID.SecurityType != SecurityType.Cfd || pairObject.ID.SecurityType != SecurityType.Crypto || pairObject.ID.SecurityType == SecurityType.Base)
                     {
 
@@ -78,13 +83,13 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
                             throw new ArgumentException("Invalid date range specified");
                         }
 
-                        var start = startDate.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
-                        var end = endDate.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
+                        var start = startDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
+                        var end = endDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
 
                         // Write data
                         var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
                         IList<TradeBar> fileEnum = new List<TradeBar>();
-                        var history = new List<Historical>();
+                        IEnumerable<Historical> history = new List<Historical>();
                         var timeSpan = new TimeSpan();
                         switch (castResolution)
                         {
@@ -95,28 +100,28 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                                 if ((end - start).Days > 60)
                                     throw new ArgumentOutOfRangeException("For minutes data Zerodha support 60 days data download");
-                                history = _kite.GetHistoricalData(quote.InstrumentToken.ToStringInvariant(), start, end, "minute").ToList();
+                                history = GetHistoryFromZerodha(kite, zerodhaTokenList, startDate, endDate, "minute");
                                 timeSpan = Time.OneMinute;
                                 break;
 
                             case Resolution.Hour:
                                 if ((end - start).Days > 400)
                                     throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
-                                history = _kite.GetHistoricalData(quote.InstrumentToken.ToStringInvariant(), start, end, "60minute").ToList();
+                                history = GetHistoryFromZerodha(kite, zerodhaTokenList, startDate, endDate, "60minute");
                                 timeSpan = Time.OneHour;
                                 break;
 
                             case Resolution.Daily:
                                 if ((end - start).Days > 400)
                                     throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
-                                history = _kite.GetHistoricalData(quote.InstrumentToken.ToStringInvariant(), start, end, "day").ToList();
+                                history = GetHistoryFromZerodha(kite, zerodhaTokenList, startDate, endDate, "day");
                                 timeSpan = Time.OneDay;
                                 break;
                         }
 
                         foreach (var bar in history)
                         {
-                            var linedata = new TradeBar(bar.TimeStamp, pairObject, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, timeSpan);
+                            var linedata = new TradeBar(bar.TimeStamp.ConvertFromUtc(dataTimeZone), pairObject, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, timeSpan);
                             fileEnum.Add(linedata);
                         }
 
@@ -128,7 +133,18 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
             {
                 Log.Error($"ZerodhaDataDownloadManager.OnError(): Message: {err.Message} Exception: {err.InnerException}");
             }
+        }
 
+        private static IEnumerable<Historical> GetHistoryFromZerodha(Kite kite, List<uint> zerodhaTokenList, DateTime startDate, DateTime endDate, string interval)
+        {
+            var history = Enumerable.Empty<Historical>();
+            foreach (var token in zerodhaTokenList)
+            {
+                var tempHistory = kite.GetHistoricalData(token.ToStringInvariant(), startDate, endDate, interval);
+                history = history.Concat(tempHistory);
+            }
+            history = history.OrderBy(x=>x.TimeStamp);
+            return history;
         }
     }
 }

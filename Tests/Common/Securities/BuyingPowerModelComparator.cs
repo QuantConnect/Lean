@@ -188,6 +188,7 @@ namespace QuantConnect.Tests.Common.Securities
                     parameters.Portfolio,
                     positionGroup,
                     parameters.TargetBuyingPower,
+                    parameters.MinimumOrderMarginPortfolioPercentage,
                     parameters.SilenceNonErrorReasons
                 )
             );
@@ -252,6 +253,7 @@ namespace QuantConnect.Tests.Common.Securities
                     parameters.Portfolio,
                     positionGroup,
                     parameters.DeltaBuyingPower,
+                    parameters.MinimumOrderMarginPortfolioPercentage,
                     parameters.SilenceNonErrorReasons
                 )
             );

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -689,8 +689,8 @@ namespace QuantConnect.Tests.Common.Securities
             // *** Binance ***
             // USDC Cases
             new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
-            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("BNBUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBEUR", SecurityType.Crypto, Market.Binance) } }, // No USDCEUR, but indirect conversion exists
-            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("BNBUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBGBP", SecurityType.Crypto, Market.Binance) } }, // No USDCGBP, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("ADAUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("ADAEUR", SecurityType.Crypto, Market.Binance) } }, // No USDCEUR, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("ADAUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("ADAGBP", SecurityType.Crypto, Market.Binance) } }, // No USDCGBP, but indirect conversion exists
 
             // BGBP Cases
             new object[] { new BinanceBrokerageModel(), Currencies.USD, "BGBP", true, null }, // No BGBPUSD and no indirect conversion, does throw!

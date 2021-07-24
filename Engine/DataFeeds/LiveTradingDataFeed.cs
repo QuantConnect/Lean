@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -132,7 +132,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = subscription.Configuration.Symbol;
 
             // remove the subscriptions
-            if (!_channelProvider.ShouldStreamSubscription(_job, subscription.Configuration))
+            if (!_channelProvider.ShouldStreamSubscription(subscription.Configuration))
             {
                 _customExchange.RemoveEnumerator(symbol);
                 _customExchange.RemoveDataHandler(symbol);
@@ -189,7 +189,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
                 IEnumerator<BaseData> enumerator;
-                if (!_channelProvider.ShouldStreamSubscription(_job, request.Configuration))
+                if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
                 {
                     if (!Quandl.IsAuthCodeSet)
                     {
@@ -407,7 +407,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
 
             // send the subscription for the new symbol through to the data queuehandler
-            if (_channelProvider.ShouldStreamSubscription(_job, subscription.Configuration))
+            if (_channelProvider.ShouldStreamSubscription(subscription.Configuration))
             {
                 _dataQueueHandler.Subscribe(request.Configuration, (sender, args) => subscription.OnNewDataAvailable());
             }

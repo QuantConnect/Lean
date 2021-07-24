@@ -131,7 +131,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var dailyPricesByTicker = new ConcurrentDictionary<string, List<TradeBar>>();
             var outputCoarseContent = new ConcurrentDictionary<DateTime, List<string>>();
 
-            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount / 2 };
+            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2) };
 
             try
             {

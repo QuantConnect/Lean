@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,6 +27,6 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// True if this subscription configuration should be streamed
         /// </summary>
-        bool ShouldStreamSubscription(LiveNodePacket job, SubscriptionDataConfig config);
+        bool ShouldStreamSubscription(SubscriptionDataConfig config);
     }
 }

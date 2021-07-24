@@ -403,7 +403,7 @@ namespace QuantConnect.Securities.Positions
                 : 0;
 
             return GetMaximumLotsForTargetBuyingPower(new GetMaximumLotsForTargetBuyingPowerParameters(
-                parameters.Portfolio, parameters.PositionGroup, targetBuyingPowerPercent
+                parameters.Portfolio, parameters.PositionGroup, targetBuyingPowerPercent, parameters.MinimumOrderMarginPortfolioPercentage
             ));
         }
 

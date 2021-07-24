@@ -242,7 +242,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             // For the meantime, let's only process .nc files, and deal with correction files later.
             Parallel.ForEach(
                 Compression.UnTar(localRawData.OpenRead(), isTarGz: true).Where(kvp => kvp.Key.EndsWith(".nc")),
-                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount / 2},
+                new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2) },
                 rawReportFilePath =>
                 {
                     var factory = new SECReportFactory();

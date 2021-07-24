@@ -470,7 +470,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                         return;
                     }
 
-                    channels.TryAdd(data.ChannelId, channel);
+                    // we need to update the channel on re subscription
+                    channels.AddOrUpdate(data.ChannelId, channel);
 
                     Log.Trace($"BitfinexSubscriptionManager.OnSubscribe(): Channel subscribed: Id:{data.ChannelId} {channel.Symbol}/{channel.Name}");
 

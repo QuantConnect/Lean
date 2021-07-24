@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,11 +14,12 @@
  *
 */
 
+using System;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Util;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -50,17 +51,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Will assert the requested configuration is valid for the current job
         /// </summary>
         /// <param name="subscriptionDataConfig">The data subscription configuration to assert</param>
-        public virtual void AssertConfiguration(SubscriptionDataConfig subscriptionDataConfig)
+        /// <param name="startTimeLocal">The start time of this request</param>
+        /// <param name="endTimeLocal">The end time of this request</param>
+        public virtual void AssertConfiguration(SubscriptionDataConfig subscriptionDataConfig, DateTime startTimeLocal, DateTime endTimeLocal)
         {
-        }
-
-        /// <summary>
-        /// Gets a valid resolution to use for internal subscriptions
-        /// </summary>
-        /// <returns>A permitted resolution for internal subscriptions</returns>
-        public virtual Resolution GetResolution(Resolution preferredResolution)
-        {
-            return preferredResolution;
         }
     }
 }

@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using System;
 
 namespace QuantConnect.Orders
 {
@@ -23,16 +24,26 @@ namespace QuantConnect.Orders
     /// </summary>
     public class ZerodhaOrderProperties : OrderProperties
     {
+
         /// <summary>
         /// Kite product type
         /// </summary>
-        public readonly string ProductType;
+        public string ProductType { get;}
 
         /// <summary>
         /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
         /// </summary>
+        /// <param name="exchange">Exchange value, nse/bse etc</param>
+        public ZerodhaOrderProperties(string exchange) : base(exchange)
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
+        /// </summary>
+        /// <param name="exchange">Exchange value, nse/bse etc</param>
         /// <param name="productType">Product type</param>
-        public ZerodhaOrderProperties(KiteProductType productType)
+        public ZerodhaOrderProperties(string exchange, KiteProductType productType) : this(exchange)
         {
             ProductType = productType.ToStringInvariant();
         }
@@ -57,7 +68,7 @@ namespace QuantConnect.Orders
             /// </summary>
             NRML
         }
-
+        
         /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>

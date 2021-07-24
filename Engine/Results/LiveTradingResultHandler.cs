@@ -149,7 +149,8 @@ namespace QuantConnect.Lean.Engine.Results
             //Error checks if the algorithm & threads have not loaded yet, or are closing down.
             if (Algorithm?.Transactions == null || TransactionHandler.Orders == null || !Algorithm.GetLocked())
             {
-                Log.Error("LiveTradingResultHandler.Update(): Algorithm not yet initialized.");
+                Log.Debug("LiveTradingResultHandler.Update(): Algorithm not yet initialized.");
+                ExitEvent.WaitOne(1000);
                 return;
             }
 

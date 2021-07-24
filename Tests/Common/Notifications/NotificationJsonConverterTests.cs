@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -75,6 +75,23 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.Address, result.Address);
             Assert.AreEqual(expected.Data, result.Data);
             Assert.AreEqual(expected.Headers, result.Headers);
+        }
+
+        [TestCase(true, true)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(false, false)]
+        public void TelegramRoundTrip(bool nullMessage, bool nullToken)
+        {
+            var expected = new NotificationTelegram("pepe", nullMessage ? null : "ImAMessage", nullToken ? null : "botToken");
+
+            var serialized = JsonConvert.SerializeObject(expected);
+
+            var result = (NotificationTelegram)JsonConvert.DeserializeObject<Notification>(serialized);
+
+            Assert.AreEqual(expected.Id, result.Id);
+            Assert.AreEqual(expected.Message, result.Message);
+            Assert.AreEqual(expected.Token, result.Token);
         }
 
         [Test]
