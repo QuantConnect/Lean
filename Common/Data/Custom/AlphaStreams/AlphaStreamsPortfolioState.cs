@@ -16,6 +16,7 @@
 
 using System;
 using NodaTime;
+using ProtoBuf;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.Securities;
@@ -27,61 +28,72 @@ namespace QuantConnect.Data.Custom.AlphaStreams
     /// <summary>
     /// Snapshot of an algorithms portfolio state
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class AlphaStreamsPortfolioState : BaseData
     {
         /// <summary>
         /// The deployed alpha id. This is the id generated upon submission to the alpha marketplace
         /// </summary>
         [JsonProperty("alphaId", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(10)]
         public string AlphaId { get; set; }
 
         /// <summary>
         /// The algorithm's unique deploy identifier
         /// </summary>
         [JsonProperty("algorithmId", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(11)]
         public string AlgorithmId { get; set; }
 
         /// <summary>
         /// The source of this data point, 'live trading' or in sample
         /// </summary>
+        [ProtoMember(12)]
         public string Source { get; set; }
 
         /// <summary>
         /// Portfolio state id
         /// </summary>
+        [ProtoMember(13)]
         public int Id { get; set; }
 
         /// <summary>
         /// Algorithms account currency
         /// </summary>
+        [ProtoMember(14)]
         public string AccountCurrency { get; set; }
 
         /// <summary>
         /// The current total portfolio value
         /// </summary>
+        [ProtoMember(15)]
         public decimal TotalPortfolioValue { get; set; }
 
         /// <summary>
         /// The margin used
         /// </summary>
+        [ProtoMember(16)]
         public decimal TotalMarginUsed { get; set; }
 
         /// <summary>
         /// The different positions groups
         /// </summary>
         [JsonProperty("positionGroups", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(17)]
         public List<PositionGroupState> PositionGroups { get; set; }
 
         /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only settled cash)
         /// </summary>
         [JsonProperty("cashBook", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(18)]
         public Dictionary<string, Cash> CashBook { get; set; }
 
         /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only unsettled cash)
         /// </summary>
         [JsonProperty("unsettledCashBook", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(19)]
         public Dictionary<string, Cash> UnsettledCashBook { get; set; }
 
         /// <summary>
@@ -165,43 +177,51 @@ namespace QuantConnect.Data.Custom.AlphaStreams
     /// <summary>
     /// Snapshot of a position group state
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class PositionGroupState
     {
         /// <summary>
         /// Currently margin used
         /// </summary>
+        [ProtoMember(1)]
         public decimal MarginUsed { get; set; }
 
         /// <summary>
         /// The margin used by this position in relation to the total portfolio value
         /// </summary>
+        [ProtoMember(2)]
         public decimal PortfolioValuePercentage { get; set; }
 
         /// <summary>
         /// THe positions which compose this group
         /// </summary>
+        [ProtoMember(3)]
         public List<PositionState> Positions { get; set; }
     }
 
     /// <summary>
     /// Snapshot of a position state
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class PositionState : IPosition
     {
         /// <summary>
         /// The symbol
         /// </summary>
+        [ProtoMember(1)]
         public Symbol Symbol { get; set; }
 
         /// <summary>
         /// The quantity
         /// </summary>
+        [ProtoMember(2)]
         public decimal Quantity { get; set; }
 
         /// <summary>
         /// The unit quantity. The unit quantities of a group define the group. For example, a covered
         /// call has 100 units of stock and -1 units of call contracts.
         /// </summary>
+        [ProtoMember(3)]
         public decimal UnitQuantity { get; set; }
 
         /// <summary>
