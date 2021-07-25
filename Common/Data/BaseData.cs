@@ -20,6 +20,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
 using ProtoBuf;
+using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Data.Custom.Benzinga;
 using QuantConnect.Data.Custom.Estimize;
 using QuantConnect.Data.Custom.Tiingo;
@@ -43,6 +44,7 @@ namespace QuantConnect.Data
     [ProtoInclude(700, typeof(EstimizeEstimate))]
     [ProtoInclude(800, typeof(EstimizeRelease))]
     [ProtoInclude(900, typeof(EstimizeConsensus))]
+    [ProtoInclude(555, typeof(AlphaStreamsPortfolioState))]
     public abstract class BaseData : IBaseData
     {
         private decimal _value;
