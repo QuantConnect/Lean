@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -22,6 +23,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using ProtoBuf;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Data.Custom.Benzinga;
 using QuantConnect.Data.Custom.Estimize;
 using QuantConnect.Data.Custom.Tiingo;
@@ -626,6 +628,60 @@ namespace QuantConnect.Tests.Common
             }
         }
 
+        [Test]
+        public void AlphaStreamsPortfolioStateRoundTrip()
+        {
+            var symbol = Symbol.CreateBase(typeof(AlphaStreamsPortfolioState),
+                Symbol.Create("9fc8ef73792331b11dbd5429a", SecurityType.Base, Market.USA),
+                Market.USA);
+
+            var state = new AlphaStreamsPortfolioState
+            {
+                Id = 1000,
+                Time = DateTime.UtcNow,
+                Symbol = symbol,
+                Source = "Live trading",
+                AccountCurrency = Currencies.EUR,
+                AlgorithmId = "BasicTemplateAlgorithm",
+                AlphaId = "9fc8ef73792331b11dbd5429a",
+                CashBook = new Dictionary<string, Cash>
+                {
+                    { Currencies.EUR, new Cash(Currencies.EUR, 1, 1)}
+                },
+                UnsettledCashBook = new Dictionary<string, Cash>
+                {
+                    { Currencies.USD, new Cash(Currencies.USD, 1, 1.2m)}
+                },
+                PositionGroups = new List<PositionGroupState>
+                {
+                    new PositionGroupState
+                    {
+                        MarginUsed = 10,
+                        PortfolioValuePercentage = 0.001m,
+                        Positions = new List<PositionState>
+                        {
+                            new PositionState
+                            {
+                                Quantity = 1,
+                                UnitQuantity = 1,
+                                Symbol = Symbols.SPY
+                            }
+                        }
+                    }
+                },
+                TotalMarginUsed = 1000,
+                TotalPortfolioValue = 100000,
+            };
+
+            var serializedState = state.ProtobufSerialize();
+            using (var stream = new MemoryStream(serializedState))
+            {
+                var result = (AlphaStreamsPortfolioState)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+                AssertAreEqual(state, result);
+            }
+        }
+
         [Test, Ignore("Performance test")]
         public void SpeedTest()
         {
@@ -696,6 +752,48 @@ namespace QuantConnect.Tests.Common
                 var end = DateTime.UtcNow;
 
                 Log.Trace($"JSON TOOK {end - start}");
+            }
+        }
+
+        private void AssertAreEqual(object expected, object result)
+        {
+            foreach (var propertyInfo in expected.GetType().GetProperties())
+            {
+                if (propertyInfo.CustomAttributes.Any(data => data.AttributeType == typeof(ProtoMemberAttribute)))
+                {
+                    var expectedValue = propertyInfo.GetValue(expected);
+                    var resultValue = propertyInfo.GetValue(result);
+                    if (expectedValue is IList)
+                    {
+                        var expectedValueList = (IList) expectedValue;
+                        var resultValueList = (IList) resultValue;
+                        for (var i = 0; i < expectedValueList.Count; i++)
+                        {
+                            AssertAreEqual(expectedValueList[i], resultValueList[i]);
+                        }
+                    }
+                    else if (expectedValue is IDictionary)
+                    {
+                        var expectedValueDictionary = (IDictionary) expectedValue;
+                        var resultValueDictionary = (IDictionary) resultValue;
+                        foreach (dynamic kvp in expectedValueDictionary)
+                        {
+                            AssertAreEqual(kvp.Key, resultValueDictionary.Contains(kvp.Key));
+                            AssertAreEqual(kvp.Value, resultValueDictionary[kvp.Key]);
+                        }
+                    }
+                    else
+                    {
+                        Assert.AreEqual(expectedValue, resultValue);
+                    }
+                }
+            }
+            foreach (var fieldInfo in expected.GetType().GetFields())
+            {
+                if (fieldInfo.CustomAttributes.Any(data => data.AttributeType == typeof(ProtoMemberAttribute)))
+                {
+                    Assert.AreEqual(fieldInfo.GetValue(expected), fieldInfo.GetValue(result));
+                }
             }
         }
     }
