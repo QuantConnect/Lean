@@ -143,18 +143,27 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(0, targets.Count);
         }
 
-        [TestCase(Language.CSharp)]
-        public void MultipleAlphaPositionAggregation(Language language)
+        [TestCase(Language.CSharp, 1000000, 10000)]
+        [TestCase(Language.CSharp, 10000, 1000000)]
+        [TestCase(Language.CSharp, 10000, 10000)]
+        [TestCase(Language.CSharp, 100000, 100000)]
+        [TestCase(Language.CSharp, 1000000, 1000000)]
+        public void MultipleAlphaPositionAggregation(Language language, decimal totalPortfolioValueAlpha1, decimal totalPortfolioValueAlpha2)
         {
             SetPortfolioConstruction(language);
 
-            var symbol = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a").Symbol;
-            var symbol2 = _algorithm.AddData<AlphaStreamsPortfolioState>("623b06b231eb1cc1aa3643a46").Symbol;
+            var alpha1 = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a");
+            var alpha2 = _algorithm.AddData<AlphaStreamsPortfolioState>("623b06b231eb1cc1aa3643a46");
+            _algorithm.OnFrameworkSecuritiesChanged(SecurityChanges.Added(alpha1, alpha2));
+            var symbol = alpha1.Symbol;
+            var symbol2 = alpha2.Symbol;
             var data = _algorithm.History<AlphaStreamsPortfolioState>(symbol, TimeSpan.FromDays(1)).Last();
+            data.TotalPortfolioValue = totalPortfolioValueAlpha1;
             var position = data.PositionGroups.Single().Positions.Single();
 
             var data2 = (AlphaStreamsPortfolioState)data.Clone();
             data2.Symbol = symbol2;
+            data2.TotalPortfolioValue = totalPortfolioValueAlpha2;
             data2.PositionGroups =
                 new List<PositionGroupState>
                 {
@@ -164,7 +173,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                             new PositionState
                             {
                                 Quantity = position.Quantity * -10,
-                                Symbol = position.Symbol
+                                Symbol = position.Symbol,
+                                UnitQuantity = 1
                             }
                         }}
                 };
@@ -173,10 +183,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, Array.Empty<Insight>()).ToList();
             Assert.AreEqual(1, targets.Count);
-            Assert.AreEqual(targets.Single().Symbol, position.Symbol);
+            Assert.AreEqual(position.Symbol, targets.Single().Symbol);
 
-            // each alpha gets 50% of allocation => all have the same TPV
-            Assert.AreEqual(targets.Single().Quantity, (position.Quantity * 0.5m + position.Quantity * -10m * 0.5m).DiscretelyRoundBy(1, MidpointRounding.ToZero));
+            var tvpPerAlpha = _algorithm.Portfolio.TotalPortfolioValue * 0.5m;
+            var alpha1Weight =  tvpPerAlpha / data.TotalPortfolioValue;
+            var alpha2Weight =  tvpPerAlpha / data2.TotalPortfolioValue;
+
+            Assert.AreEqual((position.Quantity * alpha1Weight).DiscretelyRoundBy(1, MidpointRounding.ToZero)
+                + (position.Quantity * -10m * alpha2Weight).DiscretelyRoundBy(1, MidpointRounding.ToZero),
+                targets.Single().Quantity);
         }
 
         private void SetUtcTime(DateTime dateTime) => _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
