@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -250,6 +251,14 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
 
                     // we need to update the channel on re subscription
+                    var channelsToRemove = channels
+                        .Where(x => x.Value.Equals(channel))
+                        .Select(x => x.Key)
+                        .ToList();
+                    foreach (var channelId in channelsToRemove)
+                    {
+                        channels.TryRemove(channelId, out _);
+                    }
                     channels.AddOrUpdate(data.ChannelId, channel);
 
                     Log.Trace($"BitfinexBrokerage.OnSubscribe(): Channel subscribed: Id:{data.ChannelId} {channel.Symbol}/{channel.Name}");
