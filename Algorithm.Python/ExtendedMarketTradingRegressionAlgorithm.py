@@ -39,7 +39,7 @@ class ExtendedMarketTradingRegressionAlgorithm(QCAlgorithm):
         spyBar = data.Bars['SPY']
 
         if not self.InMarketHours():
-            self.LimitOrder("SPY", 10, spyBar.Low);
+            self.LimitOrder("SPY", 10, spyBar.Low)
             self._lastAction = self.Time
 
     def OnOrderEvent(self, orderEvent):

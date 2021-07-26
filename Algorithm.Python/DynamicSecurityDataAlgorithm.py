@@ -20,7 +20,7 @@ from QuantConnect.Data.Custom.SEC import *
 class DynamicSecurityDataAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.Ticker = "GOOGL";
+        self.Ticker = "GOOGL"
 
         self.SetStartDate(2015, 10, 22)
         self.SetEndDate(2015, 10, 30)

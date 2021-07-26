@@ -63,11 +63,11 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         # liquidate removed securities
         for security in self._changes.RemovedSecurities:
             if security.Invested:
-                self.Liquidate(security.Symbol);
+                self.Liquidate(security.Symbol)
 
         for security in self._changes.AddedSecurities:
             if not security.Symbol.HasUnderlying:
-                self._lastEquityAdded = security.Symbol;
+                self._lastEquityAdded = security.Symbol
             else:
                 # options added should all match prev added security
                 if security.Symbol.Underlying != self._lastEquityAdded:

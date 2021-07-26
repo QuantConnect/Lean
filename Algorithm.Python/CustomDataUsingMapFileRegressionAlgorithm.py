@@ -72,7 +72,7 @@ class CustomDataUsingMapping(PythonData):
             # create a new symbol as equity so we find the existing data files
             Symbol.Create(config.MappedSymbol, SecurityType.Equity, config.Market)),
             date,
-            isLiveMode);
+            isLiveMode)
 
     def Reader(self, config, line, date, isLiveMode):
         return TradeBar.ParseEquity(config, line, date)

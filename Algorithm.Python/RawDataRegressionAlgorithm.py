@@ -15,7 +15,7 @@ from AlgorithmImports import *
 from QuantConnect.Data.Auxiliary import *
 from QuantConnect.Lean.Engine.DataFeeds import DefaultDataProvider
 
-_ticker = "GOOGL";
+_ticker = "GOOGL"
 _expectedRawPrices = [ 1157.93, 1158.72,
 1131.97, 1114.28, 1120.15, 1114.51, 1134.89, 567.55, 571.50, 545.25, 540.63 ]
 

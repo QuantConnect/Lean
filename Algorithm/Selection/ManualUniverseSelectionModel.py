@@ -46,7 +46,7 @@ class ManualUniverseSelectionModel(UniverseSelectionModel):
             if self.universeSettings is not None else algorithm.UniverseSettings
 
         resolution = universeSettings.Resolution
-        type = typeof(Tick) if resolution == Resolution.Tick else typeof(TradeBar);
+        type = typeof(Tick) if resolution == Resolution.Tick else typeof(TradeBar)
 
         universes = list()
 

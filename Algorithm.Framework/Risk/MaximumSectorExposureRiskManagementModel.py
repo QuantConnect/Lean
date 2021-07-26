@@ -92,7 +92,7 @@ class MaximumSectorExposureRiskManagementModel(RiskManagementModel):
         anyFundamentalData = any([
             kvp.Value.Fundamentals is not None and 
             kvp.Value.Fundamentals.HasFundamentalData for kvp in algorithm.ActiveSecurities
-            ]);
+            ])
 
         if not anyFundamentalData:
             raise Exception("MaximumSectorExposureRiskManagementModel.OnSecuritiesChanged: Please select a portfolio selection model that selects securities with fundamental data.")

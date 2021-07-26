@@ -21,7 +21,7 @@ class TradingEconomicsAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2013, 11, 1)
-        self.SetEndDate(2019, 10, 3);
+        self.SetEndDate(2019, 10, 3)
         self.SetCash(100000)
 
         self.AddEquity("AGG", Resolution.Hour)

@@ -33,7 +33,7 @@ class VIXDualThrustAlpha(QCAlgorithm):
         # Settings
         self.SetStartDate(2018, 10, 1)
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-        self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
+        self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin)
 
         # Universe Selection
         self.UniverseSettings.Resolution = Resolution.Minute   # it's minute by default, but lets leave this param here
@@ -149,7 +149,7 @@ class DualThrustAlphaModel(AlphaModel):
 
             self.Symbol = symbol
             self.rangeWindow = RollingWindow[TradeBar](rangePeriod)
-            self.consolidator = TradeBarConsolidator(consolidatorResolution);
+            self.consolidator = TradeBarConsolidator(consolidatorResolution)
 
             def onDataConsolidated(sender, consolidated):
                 # add new tradebar to
