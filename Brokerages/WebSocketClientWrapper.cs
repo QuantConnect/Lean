@@ -95,7 +95,7 @@ namespace QuantConnect.Brokerages
 
                             Log.Trace($"WebSocketClientWrapper connection task ended: {_url}");
                         },
-                        _cts.Token);
+                        _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
                     var count = 0;
                     do
