@@ -361,19 +361,17 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public void StopSession()
         {
-            if (string.IsNullOrEmpty(SessionId))
+            if (!string.IsNullOrEmpty(SessionId))
             {
-                throw new Exception("BinanceBrokerage:UserStream. listenKey wasn't allocated or has been refused.");
+                var request = new RestRequest(UserDataStreamEndpoint, Method.DELETE);
+                request.AddHeader(KeyHeader, ApiKey);
+                request.AddParameter(
+                    "application/x-www-form-urlencoded",
+                    Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
+                    ParameterType.RequestBody
+                );
+                ExecuteRestRequest(request);
             }
-
-            var request = new RestRequest(UserDataStreamEndpoint, Method.DELETE);
-            request.AddHeader(KeyHeader, ApiKey);
-            request.AddParameter(
-                "application/x-www-form-urlencoded",
-                Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
-                ParameterType.RequestBody
-            );
-            ExecuteRestRequest(request);
         }
 
         /// <summary>

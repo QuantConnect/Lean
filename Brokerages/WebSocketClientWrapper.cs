@@ -136,7 +136,10 @@ namespace QuantConnect.Brokerages
                 _cts = null;
             }
 
-            OnClose(new WebSocketCloseData(0, string.Empty, true));
+            if (_client != null)
+            {
+                OnClose(new WebSocketCloseData(0, string.Empty, true));
+            }
         }
 
         /// <summary>
