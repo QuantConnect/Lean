@@ -1921,8 +1921,10 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                var universe = UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
-                universe?.Remove(symbol);
+                foreach (var universe in UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().Where(x => x.Members.ContainsKey(symbol)))
+                {
+                    universe.Remove(symbol);
+                }
             }
 
             return true;
