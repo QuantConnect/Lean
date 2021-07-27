@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -81,13 +81,13 @@ namespace QuantConnect.Brokerages.Samco
             return
                 (securityType == SecurityType.Equity ||
                 securityType == SecurityType.Option ||
-                securityType == SecurityType.Future) && (market == Market.MCX ||
-                market == Market.NSE ||
-                market == Market.NFO ||
-                market == Market.CDS ||
-                market == Market.BCD ||
-                market == Market.BSE ||
-                market == Market.NCDEX
+                securityType == SecurityType.Future) && (market == Market.India ||
+                market == Market.India ||
+                market == Market.India ||
+                market == Market.India ||
+                market == Market.India ||
+                market == Market.India ||
+                market == Market.India
                 );
         }
         #endregion

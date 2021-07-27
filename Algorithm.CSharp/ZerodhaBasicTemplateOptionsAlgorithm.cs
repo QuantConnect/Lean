@@ -49,8 +49,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetBrokerageModel(BrokerageName.Samco, AccountType.Margin);
             SetAccountCurrency(Currencies.INR);
 
-            var equity = AddEquity(UnderlyingTicker,market:Market.NSE);
-            var option = AddOption(equity.Symbol,market:Market.CDS,optionStyle:OptionStyle.European);
+            var equity = AddEquity(UnderlyingTicker,market:Market.India);
+            var option = AddOption(equity.Symbol,market:Market.India, optionStyle:OptionStyle.European);
             OptionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain

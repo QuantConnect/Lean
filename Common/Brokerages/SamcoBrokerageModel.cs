@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -186,9 +186,9 @@ namespace QuantConnect.Brokerages
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
         {
             var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Equity] = Market.NSE;
-            map[SecurityType.Future] = Market.NFO;
-            map[SecurityType.Option] = Market.NFO;
+            map[SecurityType.Equity] = Market.India;
+            map[SecurityType.Future] = Market.India;
+            map[SecurityType.Option] = Market.India;
             return map.ToReadOnlyDictionary();
         }
     }
