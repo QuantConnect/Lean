@@ -1500,7 +1500,7 @@ namespace QuantConnect.Algorithm
         public RelativeDailyVolume RDV(Symbol symbol, int period = 2, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"RDV({period})", resolution);
-            var relativeDailyVolume = new RelativeDailyVolume(name, period, resolution);
+            var relativeDailyVolume = new RelativeDailyVolume(name, period);
             RegisterIndicator(symbol, relativeDailyVolume, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)

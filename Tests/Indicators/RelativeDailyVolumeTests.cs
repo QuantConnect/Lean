@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new RelativeDailyVolume(14, Resolution.Hour);
+            return new RelativeDailyVolume(2, Resolution.Hour);
         }
 
         protected override string TestFileName => "spy_rdv.txt";
@@ -53,12 +53,63 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(rdv);
         }
 
-        [Test]
-        public void ResolutionTest()
+        public void AddTradeBarData(ref RelativeDailyVolume rdv, int iterations, Resolution resolution, DateTime reference)
         {
-            Assert.Throws<ArgumentException>(() => new RelativeDailyVolume(6, Resolution.Hour));
-            Assert.Throws<ArgumentException>(() => new RelativeDailyVolume(20, Resolution.Minute));
-            Assert.Throws<ArgumentException>(() => new RelativeDailyVolume(2000, Resolution.Second));
+            for (int i = 0; i < iterations; i++)
+            {
+                if (resolution == Resolution.Daily)
+                {
+                    rdv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
+                }
+                else if (resolution == Resolution.Hour)
+                {
+                    rdv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddHours(1 + i) });
+                }
+                else if (resolution == Resolution.Minute)
+                {
+                    rdv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddMinutes(1 + i) });
+                }
+                else if (resolution == Resolution.Second)
+                {
+                    rdv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddSeconds(1 + i) });
+                }
+                else
+                {
+                    rdv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddSeconds(1 + i) });
+                }
+            }
+        }
+
+        [Test]
+        public override void WarmsUpProperly()
+        {
+            var rdv1 = new RelativeDailyVolume(2, Resolution.Daily);
+            var rdv2 = new RelativeDailyVolume(2, Resolution.Hour);
+            var rdv3 = new RelativeDailyVolume(2, Resolution.Minute);
+            var rdv4 = new RelativeDailyVolume(2, Resolution.Second);
+            var rdv5 = new RelativeDailyVolume(2, Resolution.Daily);
+            var rdv6 = new RelativeDailyVolume(2, Resolution.Hour);
+            var rdv7 = new RelativeDailyVolume(2, Resolution.Minute);
+            var rdv8 = new RelativeDailyVolume(2, Resolution.Second);
+            var reference = new DateTime(2000, 1, 1, 0, 0, 0);
+
+            AddTradeBarData(ref rdv1, 2 + 1, Resolution.Daily, reference); /// Needs one more datapoint after x days to be ready
+            AddTradeBarData(ref rdv2, 48, Resolution.Hour, reference);
+            AddTradeBarData(ref rdv3, (1440 * 2), Resolution.Minute, reference);
+            AddTradeBarData(ref rdv4, (86400 * 2), Resolution.Second, reference);
+            AddTradeBarData(ref rdv5, 2, Resolution.Daily, reference);
+            AddTradeBarData(ref rdv6, 47, Resolution.Hour, reference);
+            AddTradeBarData(ref rdv7, (1440 * 2) - 1, Resolution.Minute, reference);
+            AddTradeBarData(ref rdv8, (86400 * 2) - 1, Resolution.Second, reference);
+
+            Assert.IsTrue(rdv1.IsReady);
+            Assert.IsTrue(rdv2.IsReady);
+            Assert.IsTrue(rdv3.IsReady);
+            Assert.IsTrue(rdv4.IsReady);
+            Assert.IsFalse(rdv5.IsReady);
+            Assert.IsFalse(rdv6.IsReady);
+            Assert.IsFalse(rdv7.IsReady);
+            Assert.IsFalse(rdv8.IsReady);
         }
     }
 }
