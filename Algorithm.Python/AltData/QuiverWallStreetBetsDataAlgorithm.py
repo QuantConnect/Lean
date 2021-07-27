@@ -28,7 +28,7 @@ class QuiverWallStreetBetsDataAlgorithm(QCAlgorithm):
         quiverWSBSymbol = self.AddData(QuiverWallStreetBets, aapl).Symbol
         history = self.History(QuiverWallStreetBets, quiverWSBSymbol, 60, Resolution.Daily)
 
-        self.Debug(f"We got {len(history)} items from our history request");
+        self.Debug(f"We got {len(history)} items from our history request")
 
     def OnData(self, data):
         points = data.Get(QuiverWallStreetBets)

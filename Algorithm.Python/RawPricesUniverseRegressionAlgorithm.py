@@ -30,7 +30,7 @@ class RawPricesUniverseRegressionAlgorithm(QCAlgorithm):
         self.UniverseSettings.Resolution = Resolution.Daily
 
         # Use raw prices
-        self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
+        self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw
 
         self.SetStartDate(2014,3,24)    #Set Start Date
         self.SetEndDate(2014,4,7)      #Set End Date
@@ -39,7 +39,7 @@ class RawPricesUniverseRegressionAlgorithm(QCAlgorithm):
         # Set the security initializer with zero fees
         self.SetSecurityInitializer(lambda x: x.SetFeeModel(ConstantFeeModel(0)))
 
-        self.AddUniverse("MyUniverse", Resolution.Daily, self.SelectionFunction);
+        self.AddUniverse("MyUniverse", Resolution.Daily, self.SelectionFunction)
 
 
     def SelectionFunction(self, dateTime):

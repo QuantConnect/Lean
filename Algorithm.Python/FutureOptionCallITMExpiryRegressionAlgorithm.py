@@ -90,7 +90,7 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
             # We expect the contract to have been liquidated immediately
             raise AssertionError(f"Did not liquidate existing holdings for Symbol {future.Symbol}")
         if orderEvent.Direction == OrderDirection.Sell and orderEvent.UtcTime.replace(tzinfo=None) != expectedLiquidationTimeUtc:
-            raise AssertionError(f"Liquidated future contract, but not at the expected time. Expected: {expectedLiquidationTimeUtc} - found {orderEvent.UtcTime.replace(tzinfo=None)}");
+            raise AssertionError(f"Liquidated future contract, but not at the expected time. Expected: {expectedLiquidationTimeUtc} - found {orderEvent.UtcTime.replace(tzinfo=None)}")
 
         # No way to detect option exercise orders or any other kind of special orders
         # other than matching strings, for now.

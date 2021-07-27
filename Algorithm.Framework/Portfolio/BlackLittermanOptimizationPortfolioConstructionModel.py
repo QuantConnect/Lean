@@ -133,7 +133,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                         if self.portfolioBias != PortfolioBias.LongShort and self.sign(weight) != self.portfolioBias:
                             weight = 0
                         targets[insight] = weight
-                        break;
+                        break
 
         return targets
 
@@ -304,7 +304,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
 
         def Add(self, time, value):
             if self.window.Samples > 0 and self.window[0].EndTime == time:
-                return;
+                return
 
             item = IndicatorDataPoint(self.symbol, time, value)
             self.window.Add(item)

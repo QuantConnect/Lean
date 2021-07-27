@@ -26,11 +26,11 @@ class CoarseTiingoNewsUniverseSelectionAlgorithm(QCAlgorithm):
         self.SetStartDate(2014,3,24)
         self.SetEndDate(2014,4,7)
         
-        self.UniverseSettings.FillForward = False;
+        self.UniverseSettings.FillForward = False
 
         self.__numberOfSymbols = 3
         
-        self.AddUniverse(CustomDataCoarseFundamentalUniverse(self.UniverseSettings, self.CoarseSelectionFunction));
+        self.AddUniverse(CustomDataCoarseFundamentalUniverse(self.UniverseSettings, self.CoarseSelectionFunction))
 
         self._symbols = []
 

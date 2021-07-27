@@ -24,7 +24,7 @@ class AddAlphaModelAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
 
-        self.UniverseSettings.Resolution = Resolution.Daily;
+        self.UniverseSettings.Resolution = Resolution.Daily
 
         spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
         fb = Symbol.Create("FB", SecurityType.Equity, Market.USA)
@@ -47,7 +47,7 @@ class OneTimeAlphaModel(AlphaModel):
     def Update(self, algorithm, data):
         insights = []
         if not self.triggered:
-            self.triggered = True;
+            self.triggered = True
             insights.append(Insight.Price(
                 self.symbol,
                 Resolution.Daily,

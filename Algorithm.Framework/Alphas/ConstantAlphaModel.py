@@ -50,7 +50,7 @@ class ConstantAlphaModel(AlphaModel):
         if confidence is not None:
             self.Name += ',{}'.format(confidence)
 
-        self.Name += ')';
+        self.Name += ')'
 
 
     def Update(self, algorithm, data):

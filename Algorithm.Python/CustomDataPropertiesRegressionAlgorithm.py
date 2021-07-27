@@ -46,7 +46,7 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
 
         # For regression purposes on AddData overloads, this call is simply to ensure Lean can accept this
         # with default params and is not routed to a breaking function.
-        self.AddData(Bitcoin, "BTCUSD");
+        self.AddData(Bitcoin, "BTCUSD")
 
 
     def OnData(self, data):
@@ -57,7 +57,7 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
     def OnEndOfAlgorithm(self):
         #Reset our Symbol property value, for testing purposes.
         self.SymbolPropertiesDatabase.SetEntry(Market.USA, self.MarketHoursDatabase.GetDatabaseSymbolKey(self.bitcoin.Symbol), SecurityType.Base,
-            SymbolProperties.GetDefault("USD"));
+            SymbolProperties.GetDefault("USD"))
 
 
 

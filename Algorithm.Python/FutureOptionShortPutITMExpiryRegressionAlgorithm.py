@@ -48,7 +48,7 @@ class FutureOptionShortPutITMExpiryRegressionAlgorithm(QCAlgorithm):
 
         self.expectedContract = Symbol.CreateOption(self.es19m20, Market.CME, OptionStyle.American, OptionRight.Put, 3400.0, datetime(2020, 6, 19))
         if self.esOption != self.expectedContract:
-            raise AssertionError(f"Contract {self.expectedContract} was not found in the chain");
+            raise AssertionError(f"Contract {self.expectedContract} was not found in the chain")
 
         self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1), self.ScheduledMarketOrder)
 
@@ -61,11 +61,11 @@ class FutureOptionShortPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         for delisting in data.Delistings.Values:
             if delisting.Type == DelistingType.Warning:
                 if delisting.Time != datetime(2020, 6, 19):
-                    raise AssertionError(f"Delisting warning issued at unexpected date: {delisting.Time}");
+                    raise AssertionError(f"Delisting warning issued at unexpected date: {delisting.Time}")
 
             if delisting.Type == DelistingType.Delisted:
                 if delisting.Time != datetime(2020, 6, 20):
-                    raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}");
+                    raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}")
         
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
@@ -86,7 +86,7 @@ class FutureOptionShortPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         else:
             raise AssertionError(f"Received order event for unknown Symbol: {orderEvent.Symbol}")
 
-        self.Log(f"{orderEvent}");
+        self.Log(f"{orderEvent}")
 
     def AssertFutureOptionOrderExercise(self, orderEvent: OrderEvent, future: Security, optionContract: Security):
         if "Assignment" in orderEvent.Message:
@@ -104,7 +104,7 @@ class FutureOptionShortPutITMExpiryRegressionAlgorithm(QCAlgorithm):
 
     def AssertFutureOptionContractOrder(self, orderEvent: OrderEvent, option: Security):
         if orderEvent.Direction == OrderDirection.Sell and option.Holdings.Quantity != -1:
-            raise AssertionError(f"No holdings were created for option contract {option.Symbol}");
+            raise AssertionError(f"No holdings were created for option contract {option.Symbol}")
 
         if orderEvent.IsAssignment and option.Holdings.Quantity != 0:
             raise AssertionError(f"Holdings were found after option contract was assigned: {option.Symbol}")

@@ -26,7 +26,7 @@ from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 
 class SpreadExecutionModel(ExecutionModel):
-    '''Execution model that submits orders while the current pread is tight.
+    '''Execution model that submits orders while the current spread is tight.
        Note this execution model will not work using Resolution.Daily since Exchange.ExchangeOpen will be false, suggested resolution is Minute
     '''
 
