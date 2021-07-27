@@ -86,7 +86,6 @@ namespace QuantConnect.Brokerages.Samco
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
             //Add the brokerage to the composer to ensure its accessible to the live data feed.
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
-            Composer.Instance.AddPart<IDataQueueUniverseProvider>(brokerage);
             return brokerage;
         }
     }
