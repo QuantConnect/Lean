@@ -950,6 +950,7 @@ namespace QuantConnect.Algorithm
 
             // the time rules need to know the default time zone as well
             TimeRules.SetDefaultTimeZone(timeZone);
+            DateRules.SetDefaultTimeZone(timeZone);
 
             // In BackTest mode we reset the Algorithm time to reflect the new timezone
             // startDate is set by the user so we expect it to be for their timezone already
