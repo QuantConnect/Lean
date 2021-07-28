@@ -76,23 +76,17 @@ namespace QuantConnect.Indicators
         {
             if (input.Time.Day != _previousDay)
             {
-                var cummulativeVolume = 0.0m;
+                var cumulativeVolume = 0.0m;
                 foreach (var pair in _currentData)
                 {
-                    // Arbitrary year, month, day
                     var timeBar = pair.Key.TimeOfDay;
                     SimpleMovingAverage daysAverage;
-                    cummulativeVolume += pair.Value;
-                    if (_relativeData.TryGetValue(timeBar, out daysAverage))
+                    cumulativeVolume += pair.Value;
+                    if (!_relativeData.TryGetValue(timeBar, out daysAverage))
                     {
-                        daysAverage.Update(pair.Key, cummulativeVolume);
+                        daysAverage = _relativeData[timeBar] = new SimpleMovingAverage(WarmUpPeriod);
                     }
-                    else
-                    {
-                        daysAverage = new SimpleMovingAverage(WarmUpPeriod);
-                        daysAverage.Update(pair.Key, cummulativeVolume);
-                        _relativeData[timeBar] = daysAverage;
-                    }
+                    daysAverage.Update(pair.Key, cumulativeVolume);
                 }
                 _currentData.Clear();
                 _previousDay = input.Time.Day;
@@ -106,7 +100,6 @@ namespace QuantConnect.Indicators
                 return 0;
             }
 
-            // Arbitrary year, month, day
             var currentTimeBar = input.Time.TimeOfDay;
             var denominator = 0.0m;
 
@@ -127,6 +120,10 @@ namespace QuantConnect.Indicators
                         denominator = _relativeData[relativeDataKeys[i - 1]].Current.Value;
                     }
                 }
+            }
+            if (denominator == 0)
+            {
+                return 0;
             }
             var relativeDailyVolume = _currentData.Values.Sum() / denominator;
             return relativeDailyVolume;
