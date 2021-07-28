@@ -740,87 +740,87 @@ namespace QuantConnect.Brokerages.Samco
         public override List<Holding> GetAccountHoldings()
         {
             var holdingsList = new List<Holding>();
-            if (_samcoProductType.ToUpperInvariant() == "MIS")
+            var samcoProductTypeUpper = _samcoProductType.ToUpperInvariant();
+            var productTypeMIS = "MIS";
+            var productTypeCNC = "CNC";
+            var productTypeNRML = "NRML";
+            // get MIS and NRML Positions
+            if (string.IsNullOrEmpty(samcoProductTypeUpper) || samcoProductTypeUpper == productTypeMIS)
             {
                 var positions = _samcoAPI.GetPositions("DAY");
-                if (positions.Status == "Failure")
+                if (positions.Status != "Failure")
                 {
-                    return holdingsList;
+                    foreach (var position in positions.PositionDetails)
+                    {
+                        //We only need Intraday positions here, Not carryforward postions
+                        if (position.ProductCode.ToUpperInvariant() == productTypeMIS && position.PositionType.ToUpperInvariant() == "DAY")
+                        {
+                            Holding holding = new Holding
+                            {
+                                AveragePrice = Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture),
+                                Symbol = _symbolMapper.GetLeanSymbol(position.TradingSymbol, _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol)),
+                                MarketPrice = Convert.ToDecimal(position.LastTradedPrice, CultureInfo.InvariantCulture),
+                                Quantity = position.NetQuantity,
+                                UnrealizedPnL = (Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture) - Convert.ToDecimal(position.LastTradedPrice,
+                                CultureInfo.InvariantCulture)) * position.NetQuantity,
+                                CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
+                                MarketValue = Convert.ToDecimal(position.LastTradedPrice,
+                                CultureInfo.InvariantCulture) * position.NetQuantity
+
+                            };
+                            holdingsList.Add(holding);
+                        }
+                    }
                 }
-                foreach (var position in positions.PositionDetails)
+            }
+            // get CNC Positions
+            if (string.IsNullOrEmpty(samcoProductTypeUpper) || samcoProductTypeUpper == productTypeCNC )
+            {
+                var holdingResponse = _samcoAPI.GetHoldings();
+                if (holdingResponse.status != "Failure" && holdingResponse.holdingDetails != null)
                 {
-                    //We only need Intraday positions here, Not carryforward postions
-                    if (position.ProductCode.ToUpperInvariant() == "MIS" && position.PositionType.ToUpperInvariant() == "DAY")
+                    foreach (var item in holdingResponse.holdingDetails)
                     {
                         Holding holding = new Holding
                         {
-                            AveragePrice = Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture),
-                            Symbol = _symbolMapper.GetLeanSymbol(position.TradingSymbol, _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol)),
-                            MarketPrice = Convert.ToDecimal(position.LastTradedPrice, CultureInfo.InvariantCulture),
-                            Quantity = position.NetQuantity,
-                            UnrealizedPnL = (Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture) - Convert.ToDecimal(position.LastTradedPrice,
-                            CultureInfo.InvariantCulture)) * position.NetQuantity,
+                            AveragePrice = item.averagePrice,
+                            Symbol = _symbolMapper.GetLeanSymbol(item.tradingSymbol, _symbolMapper.GetBrokerageSecurityType(item.tradingSymbol)),
+                            MarketPrice = item.lastTradedPrice,
+                            Quantity = item.holdingsQuantity,
+                            UnrealizedPnL = (item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
                             CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
-                            MarketValue = Convert.ToDecimal(position.LastTradedPrice,
-                            CultureInfo.InvariantCulture) * position.NetQuantity
-
+                            MarketValue = item.lastTradedPrice * item.holdingsQuantity
                         };
                         holdingsList.Add(holding);
                     }
                 }
             }
-            else if (_samcoProductType.ToUpperInvariant() == "CNC")
-            {
-                var holdingResponse = _samcoAPI.GetHoldings();
-                if (holdingResponse.status == "Failure")
-                {
-                    return holdingsList;
-                }
-                if (holdingResponse.holdingDetails == null)
-                {
-                    return holdingsList;
-                }
-                foreach (var item in holdingResponse.holdingDetails)
-                {
-                    Holding holding = new Holding
-                    {
-                        AveragePrice = item.averagePrice,
-                        Symbol = _symbolMapper.GetLeanSymbol(item.tradingSymbol, _symbolMapper.GetBrokerageSecurityType(item.tradingSymbol)),
-                        MarketPrice = item.lastTradedPrice,
-                        Quantity = item.holdingsQuantity,
-                        UnrealizedPnL = (item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
-                        CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
-                        MarketValue = item.lastTradedPrice * item.holdingsQuantity
-                    };
-                    holdingsList.Add(holding);
-                }
-            }
-            else
+            // get NRML Positions
+            if (string.IsNullOrEmpty(samcoProductTypeUpper) || samcoProductTypeUpper == productTypeNRML)
             {
                 var positions = _samcoAPI.GetPositions("NET");
                 if (positions.Status == "Failure")
                 {
-                    return holdingsList;
-                }
-                foreach (var position in positions.PositionDetails)
-                {
-                    //We only need carry forward NRML positions here, Not intraday postions.
-                    if (position.ProductCode.ToUpperInvariant() == "NRML" && position.PositionType.ToUpperInvariant() == "NET")
+                    foreach (var position in positions.PositionDetails)
                     {
-                        Holding holding = new Holding
+                        //We only need carry forward NRML positions here, Not intraday postions.
+                        if (position.ProductCode.ToUpperInvariant() == productTypeNRML && position.PositionType.ToUpperInvariant() == "NET")
                         {
-                            AveragePrice = Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture),
-                            Symbol = _symbolMapper.GetLeanSymbol(position.TradingSymbol, _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol)),
-                            MarketPrice = Convert.ToDecimal(position.LastTradedPrice, CultureInfo.InvariantCulture),
-                            Quantity = position.NetQuantity,
-                            UnrealizedPnL = (Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture) - Convert.ToDecimal(position.LastTradedPrice,
-                            CultureInfo.InvariantCulture)) * position.NetQuantity,
-                            CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
-                            MarketValue = Convert.ToDecimal(position.LastTradedPrice,
-                            CultureInfo.InvariantCulture) * position.NetQuantity
+                            Holding holding = new Holding
+                            {
+                                AveragePrice = Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture),
+                                Symbol = _symbolMapper.GetLeanSymbol(position.TradingSymbol, _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol)),
+                                MarketPrice = Convert.ToDecimal(position.LastTradedPrice, CultureInfo.InvariantCulture),
+                                Quantity = position.NetQuantity,
+                                UnrealizedPnL = (Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture) - Convert.ToDecimal(position.LastTradedPrice,
+                                CultureInfo.InvariantCulture)) * position.NetQuantity,
+                                CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
+                                MarketValue = Convert.ToDecimal(position.LastTradedPrice,
+                                CultureInfo.InvariantCulture) * position.NetQuantity
 
-                        };
-                        holdingsList.Add(holding);
+                            };
+                            holdingsList.Add(holding);
+                        }
                     }
                 }
             }
