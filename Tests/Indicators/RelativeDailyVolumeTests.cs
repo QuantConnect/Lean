@@ -94,13 +94,13 @@ namespace QuantConnect.Tests.Indicators
             var reference = new DateTime(2000, 1, 1, 0, 0, 0);
 
             AddTradeBarData(ref rdv1, 2 + 1, Resolution.Daily, reference); /// Needs one more datapoint after x days to be ready
-            AddTradeBarData(ref rdv2, 48, Resolution.Hour, reference);
-            AddTradeBarData(ref rdv3, (1440 * 2), Resolution.Minute, reference);
-            AddTradeBarData(ref rdv4, (86400 * 2), Resolution.Second, reference);
-            AddTradeBarData(ref rdv5, 2, Resolution.Daily, reference);
-            AddTradeBarData(ref rdv6, 47, Resolution.Hour, reference);
-            AddTradeBarData(ref rdv7, (1440 * 2) - 1, Resolution.Minute, reference);
-            AddTradeBarData(ref rdv8, (86400 * 2) - 1, Resolution.Second, reference);
+            AddTradeBarData(ref rdv2, 48, Resolution.Hour, reference); /// 2 full days
+            AddTradeBarData(ref rdv3, (1440 * 2), Resolution.Minute, reference); /// 2 full days
+            AddTradeBarData(ref rdv4, (86400 * 2), Resolution.Second, reference); /// 2 full days
+            AddTradeBarData(ref rdv5, 2, Resolution.Daily, reference); /// 3 full days - 1 day
+            AddTradeBarData(ref rdv6, 47, Resolution.Hour, reference); /// 2 full days - 1 hour
+            AddTradeBarData(ref rdv7, (1440 * 2) - 1, Resolution.Minute, reference); /// 2 full days - 1 minute
+            AddTradeBarData(ref rdv8, (86400 * 2) - 1, Resolution.Second, reference); /// 2 full days - 1 second
 
             Assert.IsTrue(rdv1.IsReady);
             Assert.IsTrue(rdv2.IsReady);
