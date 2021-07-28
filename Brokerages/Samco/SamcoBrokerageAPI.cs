@@ -322,12 +322,12 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         /// 
         /// <returns>List of Order Details  </returns>
-        public SamcoOrderResponse PlaceOrder(Order order, string symbol, string productType)
+        public SamcoOrderResponse PlaceOrder(Order order, string symbol, string exchange, string productType)
         {
 
             var payload = new JsonObject
             {
-                { "exchange", order.Symbol.ID.Market.ToUpperInvariant() },
+                { "exchange", exchange },
                 //{ "priceType", "LTP" },
                 { "orderValidity", GetOrderValidity(order.TimeInForce) },
                 { "afterMarketOrderFlag", "NO" },

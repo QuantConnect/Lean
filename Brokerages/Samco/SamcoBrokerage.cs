@@ -496,9 +496,26 @@ namespace QuantConnect.Brokerages.Samco
         public override bool PlaceOrder(Order order)
         {
             LockStream();
-            SamcoOrderResponse orderResponse = _samcoAPI.PlaceOrder(order, order.Symbol.Value, _samcoProductType);
-
             var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(order.Quantity * order.Price, order.Direction), Currencies.INR));
+            var orderProperties = order.Properties as SamcoOrderProperties;
+            var samcoProductType = _samcoProductType;
+            if (orderProperties == null || orderProperties.Exchange == null)
+            {
+                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid });
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+                return false;
+            }
+            if (orderProperties.ProductType != null)
+            {
+                samcoProductType = orderProperties.ProductType;
+            }
+            else if (string.IsNullOrEmpty(samcoProductType))
+            {
+                throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
+            }
+
+            SamcoOrderResponse orderResponse = _samcoAPI.PlaceOrder(order, order.Symbol.Value, orderProperties.Exchange.ToUpperInvariant(), samcoProductType);
 
             if (orderResponse.validationErrors != null)
             {
