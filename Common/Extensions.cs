@@ -2685,6 +2685,16 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Safely blocks until the specified task has completed executing
+        /// </summary>
+        /// <param name="task">The task to be awaited</param>
+        /// <returns>The result of the task</returns>
+        public static T SynchronouslyAwaitTask<T>(this Task<T> task)
+        {
+            return task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
         /// Convert dictionary to query string
         /// </summary>
         /// <param name="pairs"></param>
