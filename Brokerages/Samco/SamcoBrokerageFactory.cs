@@ -47,8 +47,8 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            { "samco-api-key", Config.Get("samco.api-key")},
-            { "samco-api-secret", Config.Get("samco.api-secret")},
+            { "samco-api-key", Config.Get("samco.client-id")},
+            { "samco-api-secret", Config.Get("samco.client-password")},
             { "samco-api-yob", Config.Get("samco.year-of-birth")},
             { "trading-segment" ,Config.Get("samco.trading-segment") },
             { "product-type", Config.Get("samco.product-type") }
