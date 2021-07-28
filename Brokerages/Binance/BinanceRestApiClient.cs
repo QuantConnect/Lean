@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -317,12 +317,18 @@ namespace QuantConnect.Brokerages.Binance
                 var klines = JsonConvert.DeserializeObject<object[][]>(response.Content)
                     .Select(entries => new Messages.Kline(entries))
                     .ToList();
-
-                startMs = klines.Last().OpenTime + resolutionInMs;
-
-                foreach (var kline in klines)
+                if (klines.Count > 0)
                 {
-                    yield return kline;
+                    startMs = klines.Last().OpenTime + resolutionInMs;
+
+                    foreach (var kline in klines)
+                    {
+                        yield return kline;
+                    }
+                }
+                else
+                {
+                    startMs += resolutionInMs;
                 }
             }
         }
@@ -355,19 +361,17 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public void StopSession()
         {
-            if (string.IsNullOrEmpty(SessionId))
+            if (!string.IsNullOrEmpty(SessionId))
             {
-                throw new Exception("BinanceBrokerage:UserStream. listenKey wasn't allocated or has been refused.");
+                var request = new RestRequest(UserDataStreamEndpoint, Method.DELETE);
+                request.AddHeader(KeyHeader, ApiKey);
+                request.AddParameter(
+                    "application/x-www-form-urlencoded",
+                    Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
+                    ParameterType.RequestBody
+                );
+                ExecuteRestRequest(request);
             }
-
-            var request = new RestRequest(UserDataStreamEndpoint, Method.DELETE);
-            request.AddHeader(KeyHeader, ApiKey);
-            request.AddParameter(
-                "application/x-www-form-urlencoded",
-                Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
-                ParameterType.RequestBody
-            );
-            ExecuteRestRequest(request);
         }
 
         /// <summary>

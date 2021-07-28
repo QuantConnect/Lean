@@ -488,6 +488,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             _aggregator.Dispose();
             _restRateLimiter.Dispose();
+            _connectionRateLimiter.Dispose();
+            _onSubscribeEvent.Dispose();
+            _onUnsubscribeEvent.Dispose();
         }
     }
 }

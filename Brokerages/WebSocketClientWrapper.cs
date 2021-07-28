@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -70,6 +70,8 @@ namespace QuantConnect.Brokerages
                 {
                     _cts = new CancellationTokenSource();
 
+                    _client = null;
+
                     _taskConnect = Task.Factory.StartNew(
                         () =>
                         {
@@ -93,7 +95,18 @@ namespace QuantConnect.Brokerages
 
                             Log.Trace($"WebSocketClientWrapper connection task ended: {_url}");
                         },
-                        _cts.Token);
+                        _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+                    var count = 0;
+                    do
+                    {
+                        // wait for _client to be not null
+                        if (_client != null || _cts.Token.WaitHandle.WaitOne(50))
+                        {
+                            break;
+                        }
+                    }
+                    while (++count < 100);
                 }
             }
         }
@@ -103,24 +116,30 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Close()
         {
-            try
+            lock (_locker)
             {
-                _client?.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", _cts.Token).SynchronouslyAwaitTask();
+                try
+                {
+                    _client?.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", _cts.Token).SynchronouslyAwaitTask();
 
-                _cts?.Cancel();
+                    _cts?.Cancel();
 
-                _taskConnect?.Wait(TimeSpan.FromSeconds(5));
+                    _taskConnect?.Wait(TimeSpan.FromSeconds(5));
 
-                _cts.DisposeSafely();
+                    _cts.DisposeSafely();
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"WebSocketClientWrapper.Close({_url}): {e}");
+                }
+
+                _cts = null;
             }
-            catch (Exception e)
+
+            if (_client != null)
             {
-                Log.Error($"WebSocketClientWrapper.Close({_url}): {e}");
+                OnClose(new WebSocketCloseData(0, string.Empty, true));
             }
-
-            _cts = null;
-
-            OnClose(new WebSocketCloseData(0, string.Empty, true));
         }
 
         /// <summary>
@@ -196,22 +215,35 @@ namespace QuantConnect.Brokerages
                     await _client.ConnectAsync(new Uri(_url), connectionCts.Token);
                     OnOpen();
 
+                    var receiveBuffer = new byte[ReceiveBufferSize];
+
                     while ((_client.State == WebSocketState.Open || _client.State == WebSocketState.CloseSent) &&
                         !connectionCts.IsCancellationRequested)
                     {
-                        var messageData = await ReceiveMessage(_client, connectionCts.Token);
+                        var messageData = await ReceiveMessage(_client, connectionCts.Token, receiveBuffer);
 
                         if (messageData.MessageType == WebSocketMessageType.Close)
                         {
-                            Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close");
+                            var data = string.Empty;
+                            if (messageData.Data != null)
+                            {
+                                data = Encoding.UTF8.GetString(messageData.Data);
+                            }
+
+                            Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {data}");
                             return;
                         }
 
                         var message = Encoding.UTF8.GetString(messageData.Data);
-                        OnMessage(new WebSocketMessage(message));
+                        OnMessage(new WebSocketMessage(this, message));
                     }
                 }
                 catch (OperationCanceledException) { }
+                catch (WebSocketException ex)
+                {
+                    OnError(new WebSocketError(ex.Message, ex));
+                    connectionCts.Token.WaitHandle.WaitOne(2000);
+                }
                 catch (Exception ex)
                 {
                     OnError(new WebSocketError(ex.Message, ex));
@@ -222,9 +254,10 @@ namespace QuantConnect.Brokerages
         private async Task<MessageData> ReceiveMessage(
             WebSocket webSocket,
             CancellationToken ct,
+            byte[] receiveBuffer,
             long maxSize = long.MaxValue)
         {
-            var buffer = new ArraySegment<byte>(new byte[ReceiveBufferSize]);
+            var buffer = new ArraySegment<byte>(receiveBuffer);
 
             using (var ms = new MemoryStream())
             {
