@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 {
                     _removedSymbols.Enqueue(security.Symbol);
                 }
-                else if (IsAlphaStreamsPortfolioState(security.Symbol))
+                else if (security.Symbol.IsCustomDataType<AlphaStreamsPortfolioState>())
                 {
                     _rebalance = true;
                     _targetsPerSymbolPerAlpha.Remove(security.Symbol);
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
             foreach (var security in changes.AddedSecurities)
             {
-                if (security.Type == SecurityType.Base && IsAlphaStreamsPortfolioState(security.Symbol))
+                if (security.Symbol.IsCustomDataType<AlphaStreamsPortfolioState>())
                 {
                     _rebalance = true;
                     _targetsPerSymbolPerAlpha[security.Symbol] = new Dictionary<Symbol, PortfolioTarget>();
@@ -118,14 +118,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Determines the portfolio weight to give a specific alpha. Default implementation just returns equal weighting
         /// </summary>
-        protected virtual decimal GetAlphaWeight(AlphaStreamsPortfolioState portfolioState, QCAlgorithm algorithm)
+        /// <param name="portfolioState">The alphas portfolio state to get the weight for</param>
+        /// <param name="totalUsablePortfolioValue">This algorithms usable total portfolio value</param>
+        /// <returns>The weight to use on this alphas positions</returns>
+        protected virtual decimal GetAlphaWeight(AlphaStreamsPortfolioState portfolioState, decimal totalUsablePortfolioValue)
         {
             if (portfolioState.TotalPortfolioValue == 0)
             {
                 return 0;
             }
             var equalWeightFactor = 1m / _targetsPerSymbolPerAlpha.Count;
-            return (algorithm.Portfolio.TotalPortfolioValue * equalWeightFactor) / portfolioState.TotalPortfolioValue;
+            return totalUsablePortfolioValue * equalWeightFactor / portfolioState.TotalPortfolioValue;
         }
 
         private IEnumerable<IPortfolioTarget> ProcessPortfolioState(AlphaStreamsPortfolioState portfolioState, QCAlgorithm algorithm)
@@ -137,7 +140,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 _targetsPerSymbolPerAlpha[alphaId] = ourExistingTargets = new Dictionary<Symbol, PortfolioTarget>();
             }
 
-            var alphaWeightFactor = GetAlphaWeight(portfolioState, algorithm);
+            var totalUsablePortfolioValue = algorithm.Portfolio.TotalPortfolioValue - algorithm.Settings.FreePortfolioValue;
+            var alphaWeightFactor = GetAlphaWeight(portfolioState, totalUsablePortfolioValue);
             // first we create all the new aggregated targets for the provided portfolio state
             var newTargets = new Dictionary<Symbol, PortfolioTarget>();
             foreach (var positionGroup in portfolioState.PositionGroups ?? Enumerable.Empty<PositionGroupState>())
@@ -196,11 +200,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
                 yield return newAggregatedTarget;
             }
-        }
-
-        private static bool IsAlphaStreamsPortfolioState(Symbol symbol)
-        {
-            return symbol.ID.Symbol.TryGetCustomDataType(out var type) && type.Equals(nameof(AlphaStreamsPortfolioState), StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }
