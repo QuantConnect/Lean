@@ -28,7 +28,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class RelativeDailyVolume : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly Dictionary<DateTime, SimpleMovingAverage> _relativeData;
+        private readonly SortedDictionary<TimeSpan, SimpleMovingAverage> _relativeData;
         private readonly Dictionary<DateTime, decimal> _currentData;
         private int _previousDay;
         private int _days;
@@ -47,8 +47,7 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the RelativeDailyVolume class using the specified period
         /// </summary>
         /// <param name="period">The period over which to perform the computation</param>
-        /// /// <param name="resolution">The resolution over which to perform to computation</param>
-        public RelativeDailyVolume(int period = 2, Resolution resolution = Resolution.Daily)
+        public RelativeDailyVolume(int period = 2)
             : this($"RDV({period})", period)
         {
         }
@@ -61,11 +60,11 @@ namespace QuantConnect.Indicators
         public RelativeDailyVolume(string name, int period)
             : base(name)
         {
-            _relativeData = new Dictionary<DateTime, SimpleMovingAverage>();
+            _relativeData = new SortedDictionary<TimeSpan, SimpleMovingAverage>();
             _currentData = new Dictionary<DateTime, decimal>();
             WarmUpPeriod = period;
-            _previousDay = -1; /// No calendar day can be -1, thus default is not a calendar day
-            _days = -1; /// Will increment by one after first TradeBar, then will increment by one every new day
+            _previousDay = -1; // No calendar day can be -1, thus default is not a calendar day
+            _days = -1; // Will increment by one after first TradeBar, then will increment by one every new day
         }
 
         /// <summary>
@@ -77,42 +76,50 @@ namespace QuantConnect.Indicators
         {
             if (input.Time.Day != _previousDay)
             {
-                var cummulativeVolume = 0;
+                var cummulativeVolume = 0.0m;
                 foreach (var pair in _currentData)
                 {
-                    /// Arbitrary year, month, day
-                    DateTime timeBar = new DateTime(1, 1, 1, pair.Key.Hour, pair.Key.Minute, pair.Key.Second);
-                    if (!_relativeData.ContainsKey(timeBar))
+                    // Arbitrary year, month, day
+                    var timeBar = pair.Key.TimeOfDay;
+                    SimpleMovingAverage daysAverage;
+                    cummulativeVolume += pair.Value;
+                    if (_relativeData.TryGetValue(timeBar, out daysAverage))
                     {
-                        _relativeData[timeBar] = new SimpleMovingAverage(WarmUpPeriod);
+                        daysAverage.Update(pair.Key, cummulativeVolume);
                     }
-                    cummulativeVolume += (int)pair.Value;
-                    _relativeData[timeBar].Update(pair.Key, cummulativeVolume);
+                    else
+                    {
+                        daysAverage = new SimpleMovingAverage(WarmUpPeriod);
+                        daysAverage.Update(pair.Key, cummulativeVolume);
+                        _relativeData[timeBar] = daysAverage;
+                    }
                 }
                 _currentData.Clear();
                 _previousDay = input.Time.Day;
-                _days += 1;
+                _days += 1; // _days is starting from -1, to reach IsReady => _days == WarmUpPeriod; also means WarmUpPeriod+1
             }
 
-            if (!_currentData.ContainsKey(input.Time))
-            {
-                _currentData[input.Time] = input.Volume;
-            }
+            _currentData[input.Time] = input.Volume;
 
             if (!IsReady)
             {
                 return 0;
             }
 
-            /// Arbitrary year, month, day
-            DateTime currentTimeBar = new DateTime(1, 1, 1, input.Time.Hour, input.Time.Minute, input.Time.Second);
+            // Arbitrary year, month, day
+            var currentTimeBar = input.Time.TimeOfDay;
             var denominator = 0.0m;
-            if (!_relativeData.ContainsKey(currentTimeBar))
+
+            SimpleMovingAverage currentAverage;
+            if (_relativeData.TryGetValue(currentTimeBar, out currentAverage))
             {
-                /// If there is no historical data for the current time, get most recent historical data
-                /// This may come into play for crypto assets or a circuit breaker event
+                denominator = currentAverage.Current.Value;
+            }
+            else
+            {
+                // If there is no historical data for the current time, get most recent historical data
+                // This may come into play for crypto assets or a circuit breaker event
                 var relativeDataKeys = _relativeData.Keys.ToList();
-                relativeDataKeys.Sort((x, y) => DateTime.Compare(x, y));
                 for (int i = 1; i < relativeDataKeys.Count; i++)
                 {
                     if (relativeDataKeys[i] > currentTimeBar)
@@ -121,11 +128,6 @@ namespace QuantConnect.Indicators
                     }
                 }
             }
-            else
-            {
-                denominator = _relativeData[currentTimeBar].Current.Value;
-            }
-
             var relativeDailyVolume = _currentData.Values.Sum() / denominator;
             return relativeDailyVolume;
         }
