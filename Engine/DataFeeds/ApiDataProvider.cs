@@ -116,7 +116,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return DownloadOnce(key, s =>
             {
                 // Verify we have enough credit to handle this
-                var pricePath = _api.FormatPathForDataRequest(key);
+                var pricePath = Api.Api.FormatPathForDataRequest(key);
                 var price = _dataPrices.GetPrice(pricePath);
 
                 // No price found

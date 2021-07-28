@@ -2821,6 +2821,16 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to determine if a given symbol is of custom data
+        /// </summary>
+        public static bool IsCustomDataType<T>(this Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Base
+                && symbol.ID.Symbol.TryGetCustomDataType(out var type)
+                && type.Equals(nameof(T), StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        /// <summary>
         /// Returns the delisted liquidation time for a given delisting warning and exchange hours
         /// </summary>
         /// <param name="delisting">The delisting warning event</param>

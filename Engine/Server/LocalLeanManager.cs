@@ -13,9 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Packets;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.Server
 {
@@ -68,6 +69,14 @@ namespace QuantConnect.Lean.Engine.Server
         /// This method is called before algorithm termination
         /// </summary>
         public void OnAlgorithmEnd()
+        {
+            // NOP
+        }
+
+        /// <summary>
+        /// Callback fired each time that we add/remove securities from the data feed
+        /// </summary>
+        public void OnSecuritiesChanged(SecurityChanges changes)
         {
             // NOP
         }
