@@ -179,11 +179,11 @@
 
   //samco configuration
   "samco": {
-    "trading-segment": "EQUITY",
-    "product-type": "MIS",
-    "api-key": "",
-    "api-secret": "",
-    "year-of-birth": ""
+    "client-id": "",
+    "client-password": "",
+    "year-of-birth": "",
+    "product-type": "MIS", //MIS(Intraday) or CNC(Delivery) or NRML(Carry Forward)
+    "trading-segment": "EQUITY" // EQUITY(NSE,BSE) or COMMODITY (MCX)
   },
 
   // parameters to set in the algorithm (the below are just samples)
