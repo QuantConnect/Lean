@@ -43,10 +43,9 @@ namespace QuantConnect.Brokerages.Samco
     public partial class SamcoBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         private readonly IAlgorithm _algorithm;
-        private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
         private readonly DataQueueHandlerSubscriptionManager _subscriptionManager;
-        private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
+        private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
         private const int ConnectionTimeout = 30000;
         /// <summary>
         /// The websockets client instance
@@ -60,11 +59,6 @@ namespace QuantConnect.Brokerages.Samco
         private readonly ConcurrentDictionary<string, Symbol> _subscriptionsById = new ConcurrentDictionary<string, Symbol>();
         private readonly SamcoBrokerageAPI _samcoAPI;
         private readonly IDataAggregator _aggregator;
-
-        /// <summary>
-        /// Timestamp of most recent heartbeat message
-        /// </summary>
-        protected DateTime LastHeartbeatUtcTime = DateTime.UtcNow;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -108,6 +102,8 @@ namespace QuantConnect.Brokerages.Samco
             _samcoAPI = new SamcoBrokerageAPI();
             _samcoAPI.Authorize(apiKey, apiSecret, yob);
             _symbolMapper = new SamcoSymbolMapper();
+            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnMessageImpl);
+
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _algorithm.SetOptionChainProvider(new SamcoLiveOptionChainProvider(_symbolMapper));
 
@@ -419,33 +415,6 @@ namespace QuantConnect.Brokerages.Samco
         }
 
         /// <summary>
-        /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
-        /// </summary>
-        public void LockStream()
-        {
-            Log.Trace("SamcoBrokerage.LockStream(): Locking Stream");
-            _streamLocked = true;
-        }
-
-        /// <summary>
-        /// Unlock stream and process all backed up messages.
-        /// </summary>
-        public void UnlockStream()
-        {
-            Log.Trace("SamcoBrokerage.UnlockStream(): Stream Unlocked.");
-            Log.Trace("SamcoBrokerage.UnlockStream(): Processing Backlog...");
-            while (_messageBuffer.Any())
-            {
-                WebSocketMessage e;
-                _messageBuffer.TryDequeue(out e);
-                OnMessageImpl(e);
-            }
-            Log.Trace("SamcoBrokerage.UnlockStream(): Stream Unlocked.");
-            // Once dequeued in order; unlock stream.
-            _streamLocked = false;
-        }
-
-        /// <summary>
         /// Returns the brokerage account's base currency
         /// </summary>
         public override string AccountBaseCurrency => Currencies.INR;
@@ -495,80 +464,86 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            LockStream();
-            var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(order.Quantity * order.Price, order.Direction), Currencies.INR));
-            var orderProperties = order.Properties as SamcoOrderProperties;
-            var samcoProductType = _samcoProductType;
-            if (orderProperties == null || orderProperties.Exchange == null)
+            var submitted = false;
+
+            _messageHandler.WithLockedStream(() =>
             {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
+                var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(order.Quantity * order.Price, order.Direction), Currencies.INR));
+                var orderProperties = order.Properties as SamcoOrderProperties;
+                var samcoProductType = _samcoProductType;
+                if (orderProperties == null || orderProperties.Exchange == null)
+                {
+                    var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+                    return;
+                }
+                if (orderProperties.ProductType != null)
+                {
+                    samcoProductType = orderProperties.ProductType;
+                }
+                else if (string.IsNullOrEmpty(samcoProductType))
+                {
+                    throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
+                }
+
+                SamcoOrderResponse orderResponse = _samcoAPI.PlaceOrder(order, order.Symbol.Value, orderProperties.Exchange.ToUpperInvariant(), samcoProductType);
+
+                if (orderResponse.validationErrors != null)
+                {
+                    var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse.validationErrors.ToString()}";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+
+                    submitted = true;
+                    return;
+                }
+
+                if (orderResponse.status == "Success")
+                {
+
+                    if (string.IsNullOrEmpty(orderResponse.orderNumber))
+                    {
+                        var errorMessage = $"Error parsing response from place order: {orderResponse.statusMessage}";
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, orderResponse.statusMessage, errorMessage));
+
+                        submitted = true;
+                        return;
+                    }
+
+                    var brokerId = orderResponse.orderNumber;
+                    if (CachedOrderIDs.ContainsKey(order.Id))
+                    {
+                        CachedOrderIDs[order.Id].BrokerId.Clear();
+                        CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
+                    }
+                    else
+                    {
+                        order.BrokerId.Add(brokerId);
+                        CachedOrderIDs.TryAdd(order.Id, order);
+                    }
+
+                    // Generate submitted event
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Submitted });
+                    Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
+
+                    _pendingOrders.TryAdd(brokerId, order);
+                    _fillMonitorResetEvent.Set();
+
+                    submitted = true;
+                    return;
+                }
+
+                var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse.statusMessage}";
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid });
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-                return false;
-            }
-            if (orderProperties.ProductType != null)
-            {
-                samcoProductType = orderProperties.ProductType;
-            }
-            else if (string.IsNullOrEmpty(samcoProductType))
-            {
-                throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
-            }
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
-            SamcoOrderResponse orderResponse = _samcoAPI.PlaceOrder(order, order.Symbol.Value, orderProperties.Exchange.ToUpperInvariant(), samcoProductType);
+                submitted = true;
+                return;
 
-            if (orderResponse.validationErrors != null)
-            {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse.validationErrors.ToString()}";
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid });
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
-
-                UnlockStream();
-                return true;
-            }
-
-            if (orderResponse.status == "Success")
-            {
-
-                if (string.IsNullOrEmpty(orderResponse.orderNumber))
-                {
-                    var errorMessage = $"Error parsing response from place order: {orderResponse.statusMessage}";
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, orderResponse.statusMessage, errorMessage));
-
-                    UnlockStream();
-                    return true;
-                }
-
-                var brokerId = orderResponse.orderNumber;
-                if (CachedOrderIDs.ContainsKey(order.Id))
-                {
-                    CachedOrderIDs[order.Id].BrokerId.Clear();
-                    CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
-                }
-                else
-                {
-                    order.BrokerId.Add(brokerId);
-                    CachedOrderIDs.TryAdd(order.Id, order);
-                }
-
-                // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Submitted });
-                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
-
-                _pendingOrders.TryAdd(brokerId, order);
-                _fillMonitorResetEvent.Set();
-
-                UnlockStream();
-                return true;
-            }
-
-            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse.statusMessage}";
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid });
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
-
-            UnlockStream();
-            return true;
+            });
+            return submitted;
 
         }
 
@@ -579,47 +554,52 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            LockStream();
-            var orderResponse = _samcoAPI.ModifyOrder(order);
-            var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(order.Quantity * order.Price, order.Direction), Currencies.INR));
-            if (orderResponse.status == "Success")
+            var submitted = false;
+
+            _messageHandler.WithLockedStream(() =>
             {
-                if (string.IsNullOrEmpty(orderResponse.orderNumber))
+                var orderResponse = _samcoAPI.ModifyOrder(order);
+                var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(order.Quantity * order.Price, order.Direction), Currencies.INR));
+                if (orderResponse.status == "Success")
                 {
-                    var errorMessage = $"Error parsing response from place order: {orderResponse.statusMessage}";
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, orderResponse.status, errorMessage));
+                    if (string.IsNullOrEmpty(orderResponse.orderNumber))
+                    {
+                        var errorMessage = $"Error parsing response from place order: {orderResponse.statusMessage}";
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, orderResponse.status, errorMessage));
 
-                    UnlockStream();
-                    return true;
+                        submitted = true;
+                        return;
+                    }
+
+                    var brokerId = orderResponse.orderNumber;
+                    if (CachedOrderIDs.ContainsKey(order.Id))
+                    {
+                        CachedOrderIDs[order.Id].BrokerId.Clear();
+                        CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
+                    }
+                    else
+                    {
+                        order.BrokerId.Add(brokerId);
+                        CachedOrderIDs.TryAdd(order.Id, order);
+                    }
+
+                    // Generate submitted event
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.UpdateSubmitted });
+                    Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
+
+                    submitted = true;
+                    return;
                 }
 
-                var brokerId = orderResponse.orderNumber;
-                if (CachedOrderIDs.ContainsKey(order.Id))
-                {
-                    CachedOrderIDs[order.Id].BrokerId.Clear();
-                    CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
-                }
-                else
-                {
-                    order.BrokerId.Add(brokerId);
-                    CachedOrderIDs.TryAdd(order.Id, order);
-                }
+                var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse.statusMessage}";
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid });
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
-                // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.UpdateSubmitted });
-                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
-
-                UnlockStream();
-                return true;
-            }
-
-            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse.statusMessage}";
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Samco Order Event") { Status = OrderStatus.Invalid });
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
-
-            UnlockStream();
-            return true;
+                submitted = true;
+                return;
+            });
+            return submitted;
         }
 
         /// <summary>
@@ -630,17 +610,22 @@ namespace QuantConnect.Brokerages.Samco
         public override bool CancelOrder(Order order)
         {
             var brokerId = order.BrokerId[0].ToStringInvariant();
-            LockStream();
-            SamcoOrderResponse orderResponse = _samcoAPI.CancelOrder(brokerId);
-            if (orderResponse.status == "Success")
+            var submitted = false;
+
+            _messageHandler.WithLockedStream(() =>
             {
-                Order orderRemoved;
-                _pendingOrders.TryRemove(brokerId, out orderRemoved);
-                UnlockStream();
-                return true;
-            }
-            UnlockStream();
-            return false;
+                SamcoOrderResponse orderResponse = _samcoAPI.CancelOrder(brokerId);
+                if (orderResponse.status == "Success")
+                {
+                    Order orderRemoved;
+                    _pendingOrders.TryRemove(brokerId, out orderRemoved);
+                    
+                    submitted = true;
+                    return;
+                }
+                return;
+            });
+            return submitted;
         }
 
 
@@ -972,24 +957,7 @@ namespace QuantConnect.Brokerages.Samco
 
         public void OnMessage(object sender, WebSocketMessage e)
         {
-            LastHeartbeatUtcTime = DateTime.UtcNow;
-
-            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
-            // stream processing a touch.
-            try
-            {
-                if (_streamLocked)
-                {
-                    _messageBuffer.Enqueue(e);
-                    return;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            OnMessageImpl(e);
+             _messageHandler.HandleNewMessage(e);
         }
 
         /// <summary>
