@@ -260,6 +260,7 @@ namespace QuantConnect.Lean.Engine
                         }
                     }
 
+                    leanManager.OnSecuritiesChanged(timeSlice.SecurityChanges);
                     realtime.OnSecuritiesChanged(timeSlice.SecurityChanges);
                     results.OnSecuritiesChanged(timeSlice.SecurityChanges);
                 }
