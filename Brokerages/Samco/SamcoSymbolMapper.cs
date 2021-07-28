@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -8,7 +8,6 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using QuantConnect.Brokerages.Samco.SamcoMessages;
 using QuantConnect.Util;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.Samco
 {
@@ -64,13 +63,13 @@ namespace QuantConnect.Brokerages.Samco
 
         }
 
-        public Symbol getSymbolfromList(ScripMaster scrip)
+        public Symbol createLeanSymbol(ScripMaster scrip)
         {
 
             char[] sep = { '-' };
 
             var securityType = SecurityType.Equity;
-            var market = Market.NSE;
+            var market = Market.India;
             OptionRight optionRight = 0;
             switch (scrip.Instrument)
             {
@@ -98,72 +97,36 @@ namespace QuantConnect.Brokerages.Samco
                 case "OPTCOM":
                     securityType = SecurityType.Option;
                     break;
-
                 //Bullion Options
                 case "OPTBLN":
-
                     securityType = SecurityType.Option;
                     break;
-
                 //Energy Futures
                 case "FUTENR":
-
                     securityType = SecurityType.Future;
                     break;
-
                 //Currenty Options
                 case "OPTCUR":
-
                     securityType = SecurityType.Option;
                     break;
-
                 //Currency Futures
                 case "FUTCUR":
-
                     securityType = SecurityType.Option;
                     break;
-
                 //Bond Futures
                 case "FUTIRC":
-
                     securityType = SecurityType.Future;
                     break;
-
                 //Bond Futures
                 case "FUTIRT":
-
                     securityType = SecurityType.Future;
                     break;
-
                 //Bond Option
                 case "OPTIRC":
                     securityType = SecurityType.Option;
                     break;
                 default:
                     securityType = SecurityType.Base;
-                    break;
-            }
-
-
-            switch (scrip.Exchange)
-            {
-                case "NSE":
-                    market = Market.NSE;
-                    break;
-                case "NFO":
-                    market = Market.NFO;
-                    break;
-                case "CDS":
-                    market = Market.CDS;
-                    break;
-                case "BSE":
-                    market = Market.BSE;
-                    break;
-                case "MFO":
-                    market = Market.MCX;
-                    break;
-                default:
-                    market = Market.NSE;
                     break;
             }
 
@@ -239,14 +202,28 @@ namespace QuantConnect.Brokerages.Samco
 
             if (!Market.Encode(market.ToLowerInvariant()).HasValue)
                 throw new ArgumentException($"Invalid market: {market}");
-            var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol && s.Exchange == market).First();
+            var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol).First();
 
             if(scrip == null)
             {
                 throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
             }
+            return createLeanSymbol(scrip);
+        }
 
-            return getSymbolfromList(scrip);
+        /// <summary>
+        /// Converts an Samco symbol to a Lean symbol instance
+        /// </summary>
+        /// <param name="brokerageSymbol">The Samco symbol</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="expirationDate">Expiration date of the security(if applicable)</param>
+        /// <param name="strike">The strike of the security (if applicable)</param>
+        /// <param name="optionRight">The option right of the security (if applicable)</param>
+        /// <returns>A new Lean Symbol instance</returns>
+        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = OptionRight.Call)
+        {
+            var market = Market.India;
+            return GetLeanSymbol(brokerageSymbol, securityType, market, expirationDate, strike, optionRight);
         }
 
         /// <summary>
@@ -254,7 +231,7 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         /// <param name="brokerageSymbol">The Samco symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetBrokerageSecurityType(string brokerageSymbol, string exchange)
+        public SecurityType GetBrokerageSecurityType(string brokerageSymbol)
         {
             if (brokerageSymbol.Contains('-'))
             {
@@ -263,8 +240,8 @@ namespace QuantConnect.Brokerages.Samco
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
 
-            var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol && s.Exchange.ToUpperInvariant() == exchange.ToUpperInvariant()).FirstOrDefault();
-            var symbol=getSymbolfromList(scrip);
+            var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol).FirstOrDefault();
+            var symbol=createLeanSymbol(scrip);
             return symbol.SecurityType;
         }
 
@@ -273,37 +250,9 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         /// <param name="leanSymbol">The Lean symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetLeanSecurityType(string leanSymbol, string exchange)
+        public SecurityType GetLeanSecurityType(string leanSymbol)
         {
-            return GetBrokerageSecurityType(ConvertLeanSymbolToSamcoSymbol(leanSymbol), exchange);
-        }
-
-        /// <summary>
-        /// Checks if the symbol is supported by Samco
-        /// </summary>
-        /// <param name="brokerageSymbol">The Samco symbol</param>
-        /// <returns>True if Samco supports the symbol</returns>
-        public bool IsKnownBrokerageSymbol(string brokerageSymbol, string exchange)
-        {
-            if (string.IsNullOrWhiteSpace(brokerageSymbol))
-                return false;
-
-            return samcoTradableSymbolList.Where(x => x.TradingSymbol.Contains(brokerageSymbol) && x.Exchange.ToUpperInvariant() == exchange.ToUpperInvariant()).IsNullOrEmpty();
-        }
-
-        /// <summary>
-        /// Checks if the symbol is supported by Samco
-        /// </summary>
-        /// <param name="symbol">The Lean symbol</param>
-        /// <returns>True if Samco supports the symbol</returns>
-        public bool IsKnownLeanSymbol(Symbol symbol)
-        {
-            if (string.IsNullOrWhiteSpace(symbol?.Value) || symbol.Value.Length <= 3)
-                return false;
-
-            var samcoSymbol = ConvertLeanSymbolToSamcoSymbol(symbol.Value);
-
-            return IsKnownBrokerageSymbol(samcoSymbol, symbol.ID.Market) && GetBrokerageSecurityType(samcoSymbol, symbol.ID.Market) == symbol.ID.SecurityType;
+            return GetBrokerageSecurityType(ConvertLeanSymbolToSamcoSymbol(leanSymbol));
         }
 
         /// <summary>

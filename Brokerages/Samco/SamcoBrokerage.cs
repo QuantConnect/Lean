@@ -364,10 +364,11 @@ namespace QuantConnect.Brokerages.Samco
                     {
                         // not our order, nothing else to do here
                         return;
-                    }
+                    } 
                 }
 
-                var symbol = _symbolMapper.GetLeanSymbol(orderDetails.tradingSymbol, _symbolMapper.GetBrokerageSecurityType(orderDetails.tradingSymbol, orderDetails.exchange), orderDetails.exchange);
+                var brokerageSecurityType =  _symbolMapper.GetBrokerageSecurityType(orderDetails.tradingSymbol);
+                var symbol = _symbolMapper.GetLeanSymbol(orderDetails.tradingSymbol, brokerageSecurityType);
                 var fillPrice = decimal.Parse(orderDetails.filledPrice, NumberStyles.Float, CultureInfo.InvariantCulture);
                 var fillQuantity = decimal.Parse(orderDetails.filledQuantity, NumberStyles.Float, CultureInfo.InvariantCulture);
                 var updTime = DateTime.UtcNow;
@@ -661,11 +662,12 @@ namespace QuantConnect.Brokerages.Samco
                         continue;
                     }
 
+                    var brokerageSecurityType =  _symbolMapper.GetBrokerageSecurityType(item.tradingSymbol);
                     var itemTotalQty = Convert.ToInt32(item.totalQuantity, CultureInfo.InvariantCulture);
                     var originalQty = Convert.ToInt32(item.quantity, CultureInfo.InvariantCulture);
                     order.Quantity = item.transactionType.ToLowerInvariant() == "sell" ? -itemTotalQty : originalQty;
                     order.BrokerId = new List<string> { item.orderNumber };
-                    order.Symbol = _symbolMapper.GetLeanSymbol(item.tradingSymbol, _symbolMapper.GetBrokerageSecurityType(item.tradingSymbol, item.exchange), item.exchange);
+                    order.Symbol = _symbolMapper.GetLeanSymbol(item.tradingSymbol, brokerageSecurityType);
                     order.Time = Convert.ToDateTime(item.orderTime, CultureInfo.InvariantCulture);
                     order.Status = ConvertOrderStatus(item);
                     order.Price = Convert.ToDecimal(item.orderPrice, CultureInfo.InvariantCulture);
@@ -735,10 +737,9 @@ namespace QuantConnect.Brokerages.Samco
                         Holding holding = new Holding
                         {
                             AveragePrice = Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture),
-                            Symbol = _symbolMapper.GetLeanSymbol(position.TradingSymbol, _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol, position.Exchange), position.Exchange),
+                            Symbol = _symbolMapper.GetLeanSymbol(position.TradingSymbol, _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol)),
                             MarketPrice = Convert.ToDecimal(position.LastTradedPrice, CultureInfo.InvariantCulture),
                             Quantity = position.NetQuantity,
-                            Type = _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol, position.Exchange),
                             UnrealizedPnL = (Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture) - Convert.ToDecimal(position.LastTradedPrice,
                             CultureInfo.InvariantCulture)) * position.NetQuantity,
                             CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
@@ -766,10 +767,9 @@ namespace QuantConnect.Brokerages.Samco
                     Holding holding = new Holding
                     {
                         AveragePrice = item.averagePrice,
-                        Symbol = _symbolMapper.GetLeanSymbol(item.tradingSymbol, _symbolMapper.GetBrokerageSecurityType(item.tradingSymbol, item.exchange), item.exchange),
+                        Symbol = _symbolMapper.GetLeanSymbol(item.tradingSymbol, _symbolMapper.GetBrokerageSecurityType(item.tradingSymbol)),
                         MarketPrice = item.lastTradedPrice,
                         Quantity = item.holdingsQuantity,
-                        Type = _symbolMapper.GetBrokerageSecurityType(item.tradingSymbol, item.exchange),
                         UnrealizedPnL = (item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
                         CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
                         MarketValue = item.lastTradedPrice * item.holdingsQuantity
@@ -792,10 +792,9 @@ namespace QuantConnect.Brokerages.Samco
                         Holding holding = new Holding
                         {
                             AveragePrice = Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture),
-                            Symbol = _symbolMapper.GetLeanSymbol(position.TradingSymbol, _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol, position.Exchange), position.Exchange),
+                            Symbol = _symbolMapper.GetLeanSymbol(position.TradingSymbol, _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol)),
                             MarketPrice = Convert.ToDecimal(position.LastTradedPrice, CultureInfo.InvariantCulture),
                             Quantity = position.NetQuantity,
-                            Type = _symbolMapper.GetBrokerageSecurityType(position.TradingSymbol, position.Exchange),
                             UnrealizedPnL = (Convert.ToDecimal(position.AveragePrice, CultureInfo.InvariantCulture) - Convert.ToDecimal(position.LastTradedPrice,
                             CultureInfo.InvariantCulture)) * position.NetQuantity,
                             CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
@@ -1103,12 +1102,11 @@ namespace QuantConnect.Brokerages.Samco
         {
             var holding = new Holding
             {
-                Symbol = _symbolMapper.GetLeanSymbol(detail.tradingSymbol, _symbolMapper.GetLeanSecurityType(detail.tradingSymbol,detail.exchange), detail.exchange),
+                Symbol = _symbolMapper.GetLeanSymbol(detail.tradingSymbol, _symbolMapper.GetLeanSecurityType(detail.tradingSymbol)),
                 AveragePrice = detail.averagePrice,
                 Quantity = detail.holdingsQuantity,
                 UnrealizedPnL = (detail.lastTradedPrice - detail.averagePrice) * detail.holdingsQuantity,
                 CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
-                Type = SecurityType.Equity
             };
 
             try

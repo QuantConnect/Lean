@@ -1,4 +1,4 @@
-﻿using QuantConnect.Configuration;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -33,7 +33,7 @@ namespace QuantConnect.Brokerages.Samco
             var symbols = new List<Symbol>();
             foreach (var scripMaster in _symbolMapper.samcoTradableSymbolList)
             {
-                symbols.Add(_symbolMapper.getSymbolfromList(scripMaster));
+                symbols.Add(_symbolMapper.createLeanSymbol(scripMaster));
             }
             return symbols.Where(s => s.SecurityType == SecurityType.Option && s.ID.Symbol == underlyingSymbol.Value);
         }
