@@ -227,6 +227,19 @@ namespace QuantConnect.Brokerages.Samco
         }
 
         /// <summary>
+        /// Gets exchange of a given Lean Symbol
+        /// </summary>
+        /// <param name="symbol">A Lean symbol instance</param>
+        /// <returns>exchnage</returns>
+        public string GetDefaultExchange(Symbol symbol)
+        {
+            var brokerageSymbol = ConvertLeanSymbolToSamcoSymbol(symbol.Value);
+            var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol).FirstOrDefault();
+            var exchange = scrip.Exchange.ToUpperInvariant();
+            return exchange;
+        }
+
+        /// <summary>
         /// Returns the security type for an Samco symbol
         /// </summary>
         /// <param name="brokerageSymbol">The Samco symbol</param>

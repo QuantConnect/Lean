@@ -231,7 +231,8 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns> Quote Response</returns>
         public QuoteResponse GetQuote(Symbol symbol)
         {
-            return _samcoAPI.GetQuote(symbol.ID.Symbol, symbol.ID.Market);
+            var exchange = _symbolMapper.GetDefaultExchange(symbol);
+            return _samcoAPI.GetQuote(symbol.ID.Symbol, exchange);
         }
 
 
