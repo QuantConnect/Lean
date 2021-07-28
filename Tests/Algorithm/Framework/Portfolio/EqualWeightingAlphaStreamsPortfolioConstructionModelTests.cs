@@ -54,6 +54,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 null, true, new DataPermissionManager()));
             _algorithm.SetHistoryProvider(historyProvider);
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.Settings.FreePortfolioValue = 0;
         }
 
         [TearDown]
@@ -143,15 +144,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(0, targets.Count);
         }
 
-        [TestCase(Language.CSharp, 1000000, 10000)]
-        [TestCase(Language.CSharp, 10000, 1000000)]
-        [TestCase(Language.CSharp, 10000, 10000)]
-        [TestCase(Language.CSharp, 100000, 100000)]
-        [TestCase(Language.CSharp, 1000000, 1000000)]
-        public void MultipleAlphaPositionAggregation(Language language, decimal totalPortfolioValueAlpha1, decimal totalPortfolioValueAlpha2)
+        [TestCase(Language.CSharp, 1000000, 10000, 0)]
+        [TestCase(Language.CSharp, 10000, 1000000, 0)]
+        [TestCase(Language.CSharp, 10000, 10000, 0)]
+        [TestCase(Language.CSharp, 100000, 100000, 0)]
+        [TestCase(Language.CSharp, 1000000, 1000000, 0)]
+        [TestCase(Language.CSharp, 1000000, 10000, 5000)]
+        [TestCase(Language.CSharp, 10000, 1000000, 5000)]
+        [TestCase(Language.CSharp, 10000, 10000, 5000)]
+        [TestCase(Language.CSharp, 100000, 100000, 5000)]
+        [TestCase(Language.CSharp, 1000000, 1000000, 5000)]
+        public void MultipleAlphaPositionAggregation(Language language, decimal totalPortfolioValueAlpha1, decimal totalPortfolioValueAlpha2, decimal freePortfolioValue)
         {
             SetPortfolioConstruction(language);
 
+            _algorithm.Settings.FreePortfolioValue = freePortfolioValue;
             var alpha1 = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a");
             var alpha2 = _algorithm.AddData<AlphaStreamsPortfolioState>("623b06b231eb1cc1aa3643a46");
             _algorithm.OnFrameworkSecuritiesChanged(SecurityChanges.Added(alpha1, alpha2));
@@ -185,7 +192,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(1, targets.Count);
             Assert.AreEqual(position.Symbol, targets.Single().Symbol);
 
-            var tvpPerAlpha = _algorithm.Portfolio.TotalPortfolioValue * 0.5m;
+            var tvpPerAlpha = (_algorithm.Portfolio.TotalPortfolioValue - freePortfolioValue) * 0.5m;
             var alpha1Weight =  tvpPerAlpha / data.TotalPortfolioValue;
             var alpha2Weight =  tvpPerAlpha / data2.TotalPortfolioValue;
 

@@ -154,6 +154,10 @@ namespace QuantConnect.Tests.Engine
             public void OnAlgorithmEnd()
             {
             }
+
+            public void OnSecuritiesChanged(SecurityChanges changes)
+            {
+            }
         }
 
         class NullResultHandler : IResultHandler
