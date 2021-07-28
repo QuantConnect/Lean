@@ -36,7 +36,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _days == WarmUpPeriod;
+        public override bool IsReady => _days >= WarmUpPeriod;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
