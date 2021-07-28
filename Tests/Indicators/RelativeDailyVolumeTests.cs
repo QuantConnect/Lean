@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new RelativeDailyVolume(2, Resolution.Hour);
+            return new RelativeDailyVolume(2);
         }
 
         protected override string TestFileName => "spy_rdv.txt";
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void ResetsProperly()
         {
-            var rdv = new RelativeDailyVolume(2); /// Default resolution is daily
+            var rdv = new RelativeDailyVolume(2); // Default resolution is daily
             var reference = System.DateTime.Today;
 
             rdv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1) });
@@ -83,24 +83,24 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WarmsUpProperly()
         {
-            var rdv1 = new RelativeDailyVolume(2, Resolution.Daily);
-            var rdv2 = new RelativeDailyVolume(2, Resolution.Hour);
-            var rdv3 = new RelativeDailyVolume(2, Resolution.Minute);
-            var rdv4 = new RelativeDailyVolume(2, Resolution.Second);
-            var rdv5 = new RelativeDailyVolume(2, Resolution.Daily);
-            var rdv6 = new RelativeDailyVolume(2, Resolution.Hour);
-            var rdv7 = new RelativeDailyVolume(2, Resolution.Minute);
-            var rdv8 = new RelativeDailyVolume(2, Resolution.Second);
+            var rdv1 = new RelativeDailyVolume(2);
+            var rdv2 = new RelativeDailyVolume(2);
+            var rdv3 = new RelativeDailyVolume(2);
+            var rdv4 = new RelativeDailyVolume(2);
+            var rdv5 = new RelativeDailyVolume(2);
+            var rdv6 = new RelativeDailyVolume(2);
+            var rdv7 = new RelativeDailyVolume(2);
+            var rdv8 = new RelativeDailyVolume(2);
             var reference = new DateTime(2000, 1, 1, 0, 0, 0);
 
-            AddTradeBarData(ref rdv1, 2 + 1, Resolution.Daily, reference); /// Needs one more datapoint after x days to be ready
-            AddTradeBarData(ref rdv2, 48, Resolution.Hour, reference); /// 2 full days
-            AddTradeBarData(ref rdv3, (1440 * 2), Resolution.Minute, reference); /// 2 full days
-            AddTradeBarData(ref rdv4, (86400 * 2), Resolution.Second, reference); /// 2 full days
-            AddTradeBarData(ref rdv5, 2, Resolution.Daily, reference); /// 3 full days - 1 day
-            AddTradeBarData(ref rdv6, 47, Resolution.Hour, reference); /// 2 full days - 1 hour
-            AddTradeBarData(ref rdv7, (1440 * 2) - 1, Resolution.Minute, reference); /// 2 full days - 1 minute
-            AddTradeBarData(ref rdv8, (86400 * 2) - 1, Resolution.Second, reference); /// 2 full days - 1 second
+            AddTradeBarData(ref rdv1, 2 + 1, Resolution.Daily, reference); // Needs one more datapoint after x days to be ready
+            AddTradeBarData(ref rdv2, 48, Resolution.Hour, reference);
+            AddTradeBarData(ref rdv3, (1440 * 2), Resolution.Minute, reference);
+            AddTradeBarData(ref rdv4, (86400 * 2), Resolution.Second, reference);
+            AddTradeBarData(ref rdv5, 2, Resolution.Daily, reference);
+            AddTradeBarData(ref rdv6, 47, Resolution.Hour, reference);
+            AddTradeBarData(ref rdv7, (1440 * 2) - 1, Resolution.Minute, reference);
+            AddTradeBarData(ref rdv8, (86400 * 2) - 1, Resolution.Second, reference);
 
             Assert.IsTrue(rdv1.IsReady);
             Assert.IsTrue(rdv2.IsReady);
