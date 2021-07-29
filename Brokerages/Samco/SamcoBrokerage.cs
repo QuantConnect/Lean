@@ -866,8 +866,8 @@ namespace QuantConnect.Brokerages.Samco
             do
             {
                 latestTime = latestTime.AddDays(29);
-                var start = request.StartTimeUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-                var end = latestTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                var start = request.StartTimeUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                var end = latestTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
                 var scrip=_symbolMapper.samcoTradableSymbolList.Where(x => x.Name.ToUpperInvariant() == symbol).First();
                 string endpoint = $"/history/candleData?symbolName={symbol}&fromDate={start}&toDate={end}";
@@ -889,7 +889,7 @@ namespace QuantConnect.Brokerages.Samco
                 var candles = JsonConvert.DeserializeObject<CandleResponse>(response.Content);
 
 
-                if (!candles.intradayCandleData.Any())
+                if (candles.intradayCandleData?.Any() ?? true)
                 {
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "NoHistoricalData",
                         $"Exchange returned no data for {symbol} on history request " +
