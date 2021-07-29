@@ -120,11 +120,13 @@ def wrap_function(f):
     wrapped_function.__name__ = f.__name__
     return wrapped_function
 
+# Wrap all core __getItem__ and loc functions that are shared, yet still throw key errors if index not found
 pd.core.indexing._LocationIndexer.__getitem__ = wrap_function(pd.core.indexing._LocationIndexer.__getitem__)
 pd.core.indexing._ScalarAccessIndexer.__getitem__ = wrap_function(pd.core.indexing._ScalarAccessIndexer.__getitem__)
 pd.core.indexes.base.Index.get_loc = wrap_function(pd.core.indexes.base.Index.get_loc)
+
+# Wrap __contains__ to support Python syntax like 'SPY' in DataFrame 
 pd.core.indexes.base.Index.__contains__ = wrap_function(pd.core.indexes.base.Index.__contains__)
-pd.core.series.Series.__getitem__ = wrap_function(pd.core.series.Series.__getitem__)
 
 # For older version of pandas we may need to wrap extra functions
 if (int(pd.__version__.split('.')[0]) < 1):
