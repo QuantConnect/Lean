@@ -42,9 +42,13 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataCacheProvider _dataCacheProvider;
-        protected IDataPermissionManager _dataPermissionManager;
         private bool _parallelHistoryRequestsEnabled;
         private bool _initialized;
+
+        /// <summary>
+        /// Manager used to allow or deny access to a requested datasource for specific users
+        /// </summary>
+        protected IDataPermissionManager DataPermissionManager;
 
         /// <summary>
         /// Initializes this history provider to work for the specified job
@@ -62,7 +66,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             _mapFileProvider = parameters.MapFileProvider;
             _dataCacheProvider = parameters.DataCacheProvider;
             _factorFileProvider = parameters.FactorFileProvider;
-            _dataPermissionManager = parameters.DataPermissionManager;
+            DataPermissionManager = parameters.DataPermissionManager;
             _parallelHistoryRequestsEnabled = parameters.ParallelHistoryRequestsEnabled;
         }
 
@@ -95,7 +99,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var endTimeLocal = endUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
 
             var config = request.ToSubscriptionDataConfig();
-            _dataPermissionManager.AssertConfiguration(config, startTimeLocal, endTimeLocal);
+            DataPermissionManager.AssertConfiguration(config, startTimeLocal, endTimeLocal);
 
             var security = new Security(
                 request.ExchangeHours,

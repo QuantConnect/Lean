@@ -23,7 +23,7 @@ using ProtoBuf;
 namespace QuantConnect.Data.Custom.IconicTypes
 {
     /// <summary>
-    /// Data source that is unlinked (no mapping) and takes any ticker when calling AddData
+    /// Data source that is linked (tickers that can have renames or be delisted)
     /// </summary>
     [ProtoContract(SkipConstructor = true)]
     public class LinkedData : BaseData
