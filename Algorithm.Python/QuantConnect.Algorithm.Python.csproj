@@ -88,6 +88,7 @@
     <None Include="CustomBuyingPowerModelAlgorithm.py" />
     <Content Include="CustomDataPropertiesRegressionAlgorithm.py" />
     <Content Include="ConfidenceWeightedFrameworkAlgorithm.py" />
+    <Content Include="DynamicSecurityDataRegressionAlgorithm.py" />
     <Content Include="ExtendedMarketTradingRegressionAlgorithm.py" />
     <Content Include="FilterUniverseRegressionAlgorithm.py" />
     <Content Include="FineFundamentalFilteredUniverseRegressionAlgorithm.py" />
