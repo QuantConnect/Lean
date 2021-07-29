@@ -28,7 +28,7 @@
   "debugging": false,
   "debugging-method": "LocalCmdline",
 
-  // Optional param for venv Python libraries
+  // location of a python virtual env to use libraries from
   //"python-venv": "/venv",
 
   // handlers
