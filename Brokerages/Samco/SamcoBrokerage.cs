@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -132,36 +132,6 @@ namespace QuantConnect.Brokerages.Samco
             Log.Trace("Start Samco Brokerage");
         }
 
-        private decimal CalculateBrokerageOrderFee(decimal orderValue, OrderDirection orderDirection)
-        {
-            bool isSell = orderDirection == OrderDirection.Sell ? true : false;
-            orderValue = Math.Abs(orderValue);
-            var multiplied = orderValue * 0.0003M;
-            var brokerage = (multiplied > 20) ? 20 : Math.Round(multiplied, 2);
-
-            var turnover = Math.Round(orderValue, 2);
-
-            decimal sttTotal = 0;
-            if (isSell)
-            {
-                sttTotal = Math.Round(orderValue * 0.00025M, 2);
-            }
-
-            var exchangeTxncharge = Math.Round(turnover * 0.0000325M, 2);
-            var cc = 0;
-
-            var stax = Math.Round(0.18M * (brokerage + exchangeTxncharge), 2);
-
-            var sebiCharges = Math.Round((turnover * 0.000001M), 2);
-            decimal stampDutyCharges = 0;
-            if (!isSell)
-            {
-                stampDutyCharges = Math.Round(orderValue * 0.00003M, 2);
-            }
-
-            return Math.Round(brokerage + sttTotal + exchangeTxncharge + stampDutyCharges + cc + stax + sebiCharges, 2);
-        }
-
         private void FillMonitorAction()
         {
             Log.Trace("SamcoBrokerage.FillMonitorAction(): task started");
@@ -220,7 +190,6 @@ namespace QuantConnect.Brokerages.Samco
             }
 
             Log.Trace("SamcoBrokerage.FillMonitorAction(): task ended");
-
         }
 
         /// <summary>
@@ -371,7 +340,8 @@ namespace QuantConnect.Brokerages.Samco
                 var fillPrice = decimal.Parse(orderDetails.filledPrice, NumberStyles.Float, CultureInfo.InvariantCulture);
                 var fillQuantity = decimal.Parse(orderDetails.filledQuantity, NumberStyles.Float, CultureInfo.InvariantCulture);
                 var updTime = DateTime.UtcNow;
-                var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(fillPrice * fillQuantity, order.Direction), Currencies.INR));
+                var security = _securityProvider.GetSecurity(order.Symbol);
+                var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
 
                 if (order.Direction == OrderDirection.Sell)
                 {
@@ -562,7 +532,8 @@ namespace QuantConnect.Brokerages.Samco
             _messageHandler.WithLockedStream(() =>
             {
                 var orderResponse = _samcoAPI.ModifyOrder(order);
-                var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(order.Quantity * order.Price, order.Direction), Currencies.INR));
+                var security = _securityProvider.GetSecurity(order.Symbol);
+                var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
                 if (orderResponse.status == "Success")
                 {
                     if (string.IsNullOrEmpty(orderResponse.orderNumber))
