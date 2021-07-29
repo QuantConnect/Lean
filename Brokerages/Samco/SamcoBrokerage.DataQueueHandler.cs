@@ -59,6 +59,10 @@ namespace QuantConnect.Brokerages.Samco
             return enumerator;
         }
 
+        /// <summary>
+        /// UnSubscribe to the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             _subscriptionManager.Unsubscribe(dataConfig);

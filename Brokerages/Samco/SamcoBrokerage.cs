@@ -929,7 +929,7 @@ namespace QuantConnect.Brokerages.Samco
             Log.Error($"SamcoBrokerage.OnError(): Message: {e.Message} Exception: {e.Exception}");
         }
 
-        public void OnMessage(object sender, WebSocketMessage e)
+        private void OnMessage(object sender, WebSocketMessage e)
         {
              _messageHandler.HandleNewMessage(e);
         }

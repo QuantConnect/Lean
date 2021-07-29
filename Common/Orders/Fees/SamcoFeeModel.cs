@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,6 +24,11 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class SamcoFeeModel : IFeeModel
     {
+        /// <summary>
+        /// Gets the order fee associated with the specified order.
+        /// </summary>
+        /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
+        /// containing the security and order</param>
         public OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             if (parameters.Security == null)
