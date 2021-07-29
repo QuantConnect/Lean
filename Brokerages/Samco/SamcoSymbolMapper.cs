@@ -16,9 +16,12 @@ namespace QuantConnect.Brokerages.Samco
     /// </summary>
     public class SamcoSymbolMapper : ISymbolMapper
     {
+        /// <summary>
+        /// The list of known Samco symbols.
+        /// </summary>
         public List<ScripMaster> samcoTradableSymbolList = new List<ScripMaster>();
 
-        private void SaveStreamAsFile(string filePath, Stream inputStream, string fileName)
+        private static void SaveStreamAsFile(string filePath, Stream inputStream, string fileName)
         {
             DirectoryInfo info = new DirectoryInfo(filePath);
             if (!info.Exists)
@@ -33,7 +36,9 @@ namespace QuantConnect.Brokerages.Samco
             }
         }
 
-
+        /// <summary>
+        /// Constructs default instance of the Samco Sybol Mapper
+        /// </summary>
         public SamcoSymbolMapper()
         {
 
@@ -63,9 +68,17 @@ namespace QuantConnect.Brokerages.Samco
 
         }
 
+        /// <summary>
+        /// Converts an Samco symbol to a Lean symbol instance
+        /// </summary>
+        /// <param name="scrip">A Lean symbol instance</param>
+        /// <returns>A new Lean Symbol instance</returns>
         public Symbol createLeanSymbol(ScripMaster scrip)
         {
-
+            if (scrip == null)
+            {
+                throw new ArgumentNullException(nameof(scrip));
+            }
             char[] sep = { '-' };
 
             var securityType = SecurityType.Equity;
@@ -162,6 +175,7 @@ namespace QuantConnect.Brokerages.Samco
 
             return symbol;
         }
+
         /// <summary>
         /// Converts a Lean symbol instance to an Samco symbol
         /// </summary>
@@ -233,6 +247,10 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>exchnage</returns>
         public string GetDefaultExchange(Symbol symbol)
         {
+            if (symbol==null)
+            {
+                throw new ArgumentNullException(nameof(symbol));
+            }
             var exchange = "NSE";
             var brokerageSymbol = ConvertLeanSymbolToSamcoSymbol(symbol.Value);
             var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol).FirstOrDefault();

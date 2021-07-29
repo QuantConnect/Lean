@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages.Samco
         /// <summary>
         /// Method returns a collection of Symbols that are available at the broker.
         /// </summary>
-        /// <param name="lookupName">String representing the name to lookup</param>
+        /// <param name="lookupSymbol">String representing the name to lookup</param>
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <returns></returns>
