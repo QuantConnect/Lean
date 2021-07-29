@@ -43,6 +43,7 @@ namespace QuantConnect.Brokerages.Samco
     public partial class SamcoBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         private readonly IAlgorithm _algorithm;
+        private readonly ISecurityProvider _securityProvider;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
         private readonly DataQueueHandlerSubscriptionManager _subscriptionManager;
         private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
@@ -98,6 +99,7 @@ namespace QuantConnect.Brokerages.Samco
             _tradingSegment = tradingSegment;
             _samcoProductType = productType;
             _algorithm = algorithm;
+            _securityProvider = algorithm.Portfolio;
             _aggregator = aggregator;
             _samcoAPI = new SamcoBrokerageAPI();
             _samcoAPI.Authorize(apiKey, apiSecret, yob);
@@ -468,7 +470,8 @@ namespace QuantConnect.Brokerages.Samco
 
             _messageHandler.WithLockedStream(() =>
             {
-                var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(order.Quantity * order.Price, order.Direction), Currencies.INR));
+                var security = _securityProvider.GetSecurity(order.Symbol);
+                var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
                 var orderProperties = order.Properties as SamcoOrderProperties;
                 var samcoProductType = _samcoProductType;
                 if (orderProperties == null || orderProperties.Exchange == null)
@@ -784,7 +787,7 @@ namespace QuantConnect.Brokerages.Samco
             if (string.IsNullOrEmpty(samcoProductTypeUpper) || samcoProductTypeUpper == productTypeNRML)
             {
                 var positions = _samcoAPI.GetPositions("NET");
-                if (positions.Status == "Failure")
+                if (positions.Status != "Failure")
                 {
                     foreach (var position in positions.PositionDetails)
                     {
