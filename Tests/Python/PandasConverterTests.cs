@@ -659,11 +659,6 @@ def Test(dataFrame, other, symbol):
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
-            // IX deprecated in newer pandas
-            if(_newerPandas){
-                return;
-            }
-
             using (Py.GIL())
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
@@ -671,7 +666,7 @@ def Test(dataFrame, other, symbol):
 import pandas as pd
 def Test(dataFrame, dataFrame2, symbol):
     newDataFrame = pd.concat([dataFrame, dataFrame2])
-    data = newDataFrame['lastprice'].unstack(level=0).ix[-1][{index}]
+    data = newDataFrame['lastprice'].unstack(level=0).iloc[-1][{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
 
@@ -897,7 +892,7 @@ def Test(dataFrame, symbol):
         [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_ftypes(string index, bool cache = false)
         {
-            // ftypes not supported in newer pandas
+            // ftypes deprecated in newer pandas; use dtypes instead
             if(_newerPandas){
                 return;
             }
@@ -961,7 +956,7 @@ def Test(dataFrame, symbol):
         [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_get_value_index(string index, bool cache = false)
         {
-            // get_value deprecated in new Pandas
+            // get_value deprecated in new Pandas; Syntax also deprecated; Use .at[] or .iat[] instead
             if(_newerPandas){
                 return;
             }
@@ -986,7 +981,7 @@ def Test(dataFrame, symbol):
         [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_get_value_column(string index, bool cache = false)
         {
-            // get_value deprecated in new Pandas
+            // get_value deprecated in new Pandas; use at[] or iat[] instead
             if(_newerPandas){
                 return;
             }
@@ -1143,7 +1138,7 @@ def Test(dataFrame, symbol):
         [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_ix(string index, bool cache = false)
         {
-            // ix not supported in newer pandas
+            // ix deprecated in newer pandas; use loc and iloc instead
             if(_newerPandas){
                 return;
             }
@@ -1168,11 +1163,6 @@ def Test(dataFrame, symbol):
         [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_join(string index, bool cache = false)
         {
-            // ix deprecated in newer pandas
-            if(_newerPandas){
-                return;
-            }
-
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
@@ -1181,7 +1171,7 @@ def Test(dataFrame, symbol):
                     $@"
 def Test(dataFrame, dataFrame2, symbol):
     newDataFrame = dataFrame.join(dataFrame2, lsuffix='_')
-    data = newDataFrame['lastprice'].unstack(level=0).ix[-1][{index}]
+    data = newDataFrame['lastprice_'].unstack(level=0).iloc[-1][{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
 
@@ -1627,7 +1617,7 @@ def Test(dataFrame, symbol):
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
-            // set_value deprecated in newer pandas
+            // set_value deprecated in newer pandas; use .at[] or .iat instead
             if(_newerPandas) {
                 return;
             }
@@ -2396,8 +2386,8 @@ def Test(dataFrame, symbol):
         [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilitySeries_get_value(string index, bool cache = false)
         {
-            // get_value deprecated in new Pandas
-            if(_newerPandas){
+            // get_value deprecated in new Pandas; Use .at[] or .iat[] instead
+            if (_newerPandas){
                 return;
             }
 
@@ -2710,12 +2700,13 @@ def Test(dataFrame, symbol):
         [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilitySeries_set_value(string index, bool cache = false)
         {
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
-
-            // set_value deprecated in newer pandas
-            if(_newerPandas) {
+            // set_value deprecated in newer pandas; Use .at[] or .iat[] instead
+            if (_newerPandas)
+            {
                 return;
             }
+
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
             {
