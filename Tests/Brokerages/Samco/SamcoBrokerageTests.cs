@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Samco;
@@ -216,10 +216,10 @@ namespace QuantConnect.Tests.Brokerages.Samco
         {
             return new[]
             {
-                new TestCaseData(new MarketOrderTestParameters(Symbols.IOB)).SetName("MarketOrder"),
-                new TestCaseData(new LimitOrderTestParameters(Symbols.IOB, 9.00m, 9.30m)).SetName("LimitOrder"),
-                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IOB, 10.50m,  9.50m)).SetName("StopMarketOrder"),
-                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IOB,  9.00m, 10.50m)).SetName("StopLimitOrder")
+                new TestCaseData(new MarketOrderTestParameters(Symbols.SBIN)).SetName("MarketOrder"),
+                new TestCaseData(new LimitOrderTestParameters(Symbols.SBIN, 9.00m, 9.30m)).SetName("LimitOrder"),
+                new TestCaseData(new StopMarketOrderTestParameters(Symbols.SBIN, 10.50m,  9.50m)).SetName("StopMarketOrder"),
+                new TestCaseData(new StopLimitOrderTestParameters(Symbols.SBIN,  9.00m, 10.50m)).SetName("StopLimitOrder")
             };
         }
 
@@ -256,7 +256,7 @@ namespace QuantConnect.Tests.Brokerages.Samco
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected Symbol Symbol => Symbols.IOB;
+        protected Symbol Symbol => Symbols.SBIN;
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol"/>
@@ -293,7 +293,7 @@ namespace QuantConnect.Tests.Brokerages.Samco
         [Test]
         public void ShortIOB()
         {
-            PlaceSamcoOrderWaitForStatus(new MarketOrder(Symbols.IOB, -1, DateTime.Now), OrderStatus.Submitted, allowFailedSubmission: true);
+            PlaceSamcoOrderWaitForStatus(new MarketOrder(Symbols.SBIN, -1, DateTime.Now), OrderStatus.Submitted, allowFailedSubmission: true);
 
             // wait for output to be generated
             Thread.Sleep(20 * 1000);
@@ -483,7 +483,7 @@ namespace QuantConnect.Tests.Brokerages.Samco
             };
 
             // pick a security with low, but some, volume
-            var symbol = Symbols.IOB;
+            var symbol = Symbols.SBIN;
             var order = new MarketOrder(symbol, qty, DateTime.UtcNow) { Id = 1 };
             OrderProvider.Add(order);
             Brokerage.PlaceOrder(order);
