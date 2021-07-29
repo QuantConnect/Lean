@@ -233,9 +233,13 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>exchnage</returns>
         public string GetDefaultExchange(Symbol symbol)
         {
+            var exchange = "NSE";
             var brokerageSymbol = ConvertLeanSymbolToSamcoSymbol(symbol.Value);
             var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol).FirstOrDefault();
-            var exchange = scrip.Exchange.ToUpperInvariant();
+            if (scrip != null)
+            {
+                exchange = scrip.Exchange.ToUpperInvariant();
+            }
             return exchange;
         }
 
