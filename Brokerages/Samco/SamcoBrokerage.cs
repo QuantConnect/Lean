@@ -842,18 +842,6 @@ namespace QuantConnect.Brokerages.Samco
                 yield break;
             }
 
-            // if the end time cannot be rounded to resolution without a remainder
-            //TODO Fix this 
-            //if (request.EndTimeUtc.Ticks % request.Resolution.ToTimeSpan().Ticks > 0)
-            //{
-            //    // give a warning and return
-            //    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidEndTime",
-            //        "The history request's end date is not a full multiple of a resolution. " +
-            //        "Samco API only allows to support trade bar history requests. The start and end dates " +
-            //        "of a such request are expected to match exactly with the beginning of the first bar and ending of the last"));
-            //    yield break;
-            //}
-
             if (request.Resolution != Resolution.Minute)
             {
                 throw new ArgumentException($"SamcoBrokerage.ConvertResolution: Unsupported resolution type: {request.Resolution}");
@@ -897,8 +885,15 @@ namespace QuantConnect.Brokerages.Samco
                     yield break;
                 }
 
+                var lastCandleTime = new TimeSpan(15, 29, 0);
+                var firstCandleTime = new TimeSpan(9, 15, 0);
+
                 foreach (var candle in candles.intradayCandleData)
                 {
+                    if ((candle.dateTime.TimeOfDay < firstCandleTime|| candle.dateTime.TimeOfDay > lastCandleTime) && !request.IncludeExtendedMarketHours)
+                    {
+                        continue;
+                    }
                     yield return new TradeBar()
                     {
                         Time = candle.dateTime,
