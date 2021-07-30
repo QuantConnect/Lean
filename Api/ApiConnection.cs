@@ -108,7 +108,7 @@ namespace QuantConnect.Api
 
                 if (!restsharpResponse.IsSuccessful)
                 {
-                    Log.Error($"ApiConnect.TryRequest(): Content: {restsharpResponse.Content}");
+                    Log.Error($"ApiConnect.TryRequest(): ErrorMessage {restsharpResponse.ErrorMessage}. StatusCode: {restsharpResponse.StatusCode}. Content: {restsharpResponse.Content}");
                 }
 
                 responseContent = restsharpResponse.Content;
