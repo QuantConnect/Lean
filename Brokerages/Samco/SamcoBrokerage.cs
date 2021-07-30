@@ -866,14 +866,14 @@ namespace QuantConnect.Brokerages.Samco
             do
             {
                 latestTime = latestTime.AddDays(29);
-                var start = request.StartTimeUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                var end = latestTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                var start = request.StartTimeUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                var end = latestTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
                 var scrip=_symbolMapper.samcoTradableSymbolList.Where(x => x.Name.ToUpperInvariant() == symbol).First();
-                string endpoint = $"/history/candleData?symbolName={symbol}&fromDate={start}&toDate={end}";
+                string endpoint = $"/intraday/candleData?symbolName={symbol}&fromDate={start}&toDate={end}";
                 if (scrip.Instrument == "INDEX")
                 {
-                    endpoint= $"/history/indexCandleData?symbolName={symbol}&fromDate={start}&toDate={end}";
+                    endpoint= $"/intraday/indexCandleData?symbolName={symbol}&fromDate={start}&toDate={end}";
                 }
                 var restRequest = new RestRequest(endpoint, Method.GET);
                 var response = _samcoAPI.ExecuteRestRequest(restRequest);
@@ -889,7 +889,7 @@ namespace QuantConnect.Brokerages.Samco
                 var candles = JsonConvert.DeserializeObject<CandleResponse>(response.Content);
 
 
-                if (candles.intradayCandleData?.Any() ?? true)
+                if (candles.intradayCandleData?.Any() == null)
                 {
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "NoHistoricalData",
                         $"Exchange returned no data for {symbol} on history request " +
