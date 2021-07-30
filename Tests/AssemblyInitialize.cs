@@ -56,6 +56,7 @@ namespace QuantConnect.Tests
                 "./Selection",
                 "./RegressionAlgorithms",
                 "./Research/RegressionScripts",
+                "./Python/PandasTests",
                 "../../../Algorithm",
                 "../../../Algorithm/Selection",
                 "../../../Algorithm.Framework",
