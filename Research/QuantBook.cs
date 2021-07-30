@@ -52,9 +52,6 @@ namespace QuantConnect.Research
 
         static QuantBook()
         {
-            Logging.Log.LogHandler =
-                Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
-
             //Determine if we are in a Python Notebook
             try
             {

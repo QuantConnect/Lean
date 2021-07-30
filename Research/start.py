@@ -29,10 +29,10 @@ set_runtime(clr_loader.get_coreclr(os.path.join(os.path.dirname(os.path.realpath
 
 from AlgorithmImports import *
 
-# Start an instance of an API class
-api = Api()
-api.Initialize(Config.GetInt("job-user-id", 1),
-    Config.Get("api-access-token", "default"),
-    Config.Get("data-folder"))
+# Used by pythonNet
+AddReference("Fasterflect")
+
+Initializer.Start()
+api = Initializer.LeanEngineSystemHandlers.Api
 
 get_ipython().run_line_magic('matplotlib', 'inline')
