@@ -71,6 +71,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ISecurityProvider _securityProvider;
         private readonly IDataAggregator _aggregator;
         private readonly IB.InteractiveBrokersClient _client;
+        private readonly int _ibVersion;
         private readonly string _agentDescription;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
@@ -259,6 +260,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _account = account;
             _host = host;
             _port = port;
+            _ibVersion = Convert.ToInt32(ibVersion, CultureInfo.InvariantCulture);
             _agentDescription = agentDescription;
 
             _symbolMapper = new InteractiveBrokersSymbolMapper(mapFileProvider);
@@ -2736,12 +2738,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Modifies the quantity received from IB based on the security type
         /// </summary>
-        public static int AdjustQuantity(SecurityType type, int size)
+        public int AdjustQuantity(SecurityType type, int size)
         {
             switch (type)
             {
                 case SecurityType.Equity:
-                    return size * 100;
+                    // Effective in TWS version 985 and later, for US stocks the bid, ask, and last size quotes are shown in shares (not in lots).
+                    return _ibVersion < 985 ? size * 100 : size;
                 default:
                     return size;
             }
