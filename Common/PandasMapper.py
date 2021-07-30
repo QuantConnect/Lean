@@ -76,10 +76,14 @@ def wrap_function(f):
     wrapped_function.__name__ = f.__name__
     return wrapped_function
 
-# Wrap all core __getItem__ and loc functions that are shared, yet still throw key errors if index not found
+# Wrap all core indexing functions that are shared, yet still throw key errors if index not found
 pd.core.indexing._LocationIndexer.__getitem__ = wrap_function(pd.core.indexing._LocationIndexer.__getitem__)
 pd.core.indexing._ScalarAccessIndexer.__getitem__ = wrap_function(pd.core.indexing._ScalarAccessIndexer.__getitem__)
 pd.core.indexes.base.Index.get_loc = wrap_function(pd.core.indexes.base.Index.get_loc)
+
+# Wrap our DF _getitem__ as well, even though most pathways go through the above functions
+# There are cases like indexing with an array that need to be mapped earlier to stop KeyError from arising 
+pd.core.frame.DataFrame.__getitem__ = wrap_function(pd.core.frame.DataFrame.__getitem__)
 
 # Wrap __contains__ to support Python syntax like 'SPY' in DataFrame 
 pd.core.indexes.base.Index.__contains__ = wrap_function(pd.core.indexes.base.Index.__contains__)
