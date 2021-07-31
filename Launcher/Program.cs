@@ -63,12 +63,13 @@ namespace QuantConnect.Lean.Launcher
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
 
             Initializer.Start();
-            leanEngineSystemHandlers = Initializer.LeanEngineSystemHandlers;
-            leanEngineAlgorithmHandlers = Initializer.LeanEngineAlgorithmHandlers;
+            leanEngineSystemHandlers = Initializer.GetSystemHandlers();
 
             //-> Pull job from QuantConnect job queue, or, pull local build:
             string assemblyPath;
             job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
+
+            leanEngineAlgorithmHandlers = Initializer.GetAlgorithmHandlers();
 
             if (job == null)
             {

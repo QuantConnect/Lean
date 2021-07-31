@@ -33,6 +33,7 @@ from AlgorithmImports import *
 AddReference("Fasterflect")
 
 Initializer.Start()
-api = Initializer.LeanEngineSystemHandlers.Api
+api = Initializer.GetSystemHandlers().Api
+algorithmHandlers = Initializer.GetAlgorithmHandlers()
 
 get_ipython().run_line_magic('matplotlib', 'inline')
