@@ -83,4 +83,5 @@ using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 
 Initializer.Start();
-Api api = (Api)Initializer.LeanEngineSystemHandlers.Api;
+Api api = (Api)Initializer.GetSystemHandlers().Api;
+var algorithmHandlers = Initializer.GetAlgorithmHandlers();
