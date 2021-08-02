@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Brokerages.Samco;
 using QuantConnect.Data;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.SamcoDataDownloader
 {
@@ -36,17 +37,17 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
         {
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("SamcoDataDownloader ERROR: '--tickers=', --securityType, '--market' or '--resolution=' parameter is missing");
-                Console.WriteLine("--tickers=eg JSWSTEEL,TCS,INFY");
-                Console.WriteLine("--market=MCX/NSE/NFO/CDS/BSE");
-                Console.WriteLine("--security-type=Equity/Future/Option");
-                Console.WriteLine("--resolution=Minute/Hour/Daily/Tick");
+                Log.Error("SamcoDataDownloader ERROR: '--tickers=', --securityType, '--market' or '--resolution=' parameter is missing");
+                Log.Error("--tickers=eg JSWSTEEL,TCS,INFY");
+                Log.Error("--market=MCX/NSE/NFO/CDS/BSE");
+                Log.Error("--security-type=Equity/Future/Option");
+                Log.Error("--resolution=Minute/Hour/Daily/Tick");
                 Environment.Exit(1);
             }
             try
             {
                 var _samcoAPI = new SamcoBrokerageAPI();
-                _samcoAPI.Authorize(Config.Get("samco.api-key"), Config.Get("samco.api-secret"), Config.Get("samco.year-of-birth"));
+                _samcoAPI.Authorize(Config.Get("samco.client-id"), Config.Get("samco.client-password"), Config.Get("samco.year-of-birth"));
 
                 var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var castSecurityType = (SecurityType)Enum.Parse(typeof(SecurityType), securityType);
@@ -56,21 +57,26 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
                     throw new ArgumentException("Invalid security type: " + castSecurityType);
                 }
 
+                if (startDate >= endDate)
+                {
+                    throw new ArgumentException("Invalid date range specified");
+                }
+
                 // Load settings from config.json and create downloader
-                var dataDirectory = Config.Get("data-directory", "D:\\SourceCode\\AlgoTrading\\Lean-1\\Data");
+                var dataDirectory = Globals.DataFolder;
+                var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+                var symbolMapper = new SamcoSymbolMapper();
 
                 foreach (var pair in tickers)
                 {
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
 
-                    if (startDate >= endDate)
-                    {
-                        throw new ArgumentException("Invalid date range specified");
-                    }
+                    var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, pairObject, castSecurityType).TimeZone;
+                    var exchange = symbolMapper.GetDefaultExchange(pairObject);
 
-                    var start = startDate.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
-                    var end = endDate.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
+                    var start = startDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
+                    var end = endDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
 
                     // Write data
                     var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
@@ -83,17 +89,17 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
                             throw new ArgumentException("Samco Doesn't support tick resolution");
 
                         case Resolution.Minute:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end).ToList();
+                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, exchange, start, end).ToList();
                             timeSpan = Time.OneMinute;
                             break;
 
                         case Resolution.Hour:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end).ToList();
+                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, exchange, start, end).ToList();
                             timeSpan = Time.OneHour;
                             break;
 
                         case Resolution.Daily:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end).ToList();
+                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, exchange, start, end).ToList();
                             timeSpan = Time.OneDay;
                             break;
                     }
