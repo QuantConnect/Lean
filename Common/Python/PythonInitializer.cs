@@ -108,6 +108,7 @@ namespace QuantConnect.Python
         {
             if (pathToVirtualEnv != null)
             {
+                pathToVirtualEnv = pathToVirtualEnv.TrimEnd('/').TrimEnd('\\');
                 var pathsToPrepend = new List<string>();
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
