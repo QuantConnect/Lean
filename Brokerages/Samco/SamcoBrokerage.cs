@@ -82,7 +82,15 @@ namespace QuantConnect.Brokerages.Samco
 
         private DateTime _lastTradeTickTime;
 
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => Currencies.INR;
 
+        /// <summary>
+        /// Checks if the websocket connection is connected or in the process of connecting
+        /// </summary>
+        public override bool IsConnected => WebSocket.IsOpen;
 
         /// <summary>
         /// Constructor for brokerage
@@ -132,65 +140,6 @@ namespace QuantConnect.Brokerages.Samco
             Log.Trace("Start Samco Brokerage");
         }
 
-        private void FillMonitorAction()
-        {
-            Log.Trace("SamcoBrokerage.FillMonitorAction(): task started");
-
-            try
-            {
-                foreach (var order in GetOpenOrders())
-                {
-                    _pendingOrders.TryAdd(order.BrokerId.First(), order);
-                }
-
-                while (!_ctsFillMonitor.IsCancellationRequested)
-                {
-                    _fillMonitorResetEvent.WaitOne(TimeSpan.FromMilliseconds(_fillMonitorTimeout), _ctsFillMonitor.Token);
-
-                    foreach (var kvp in _pendingOrders)
-                    {
-                        var orderId = kvp.Key;
-                        var order = kvp.Value;
-
-                        var response = _samcoAPI.GetOrderDetails(orderId);
-
-                        if (response.status!= null)
-                        {
-                            if (response.status.ToUpperInvariant() == "FAILURE")
-                            {
-                                OnMessage(new BrokerageMessageEvent(
-                                    BrokerageMessageType.Warning,
-                                    -1,
-                                    $"SamcoBrokerage.FillMonitorAction(): request failed: [{response.status}] {response.statusMessage}, Content: {response.ToString()}, ErrorMessage: {response.validationErrors}"));
-
-                                continue;
-                            }
-                        }
-
-                        //Process cancelled orders here.
-                        if (response.orderStatus == "CANCELLED")
-                        {
-                            OnOrderClose(response.orderDetails);
-                        }
-
-                        if (response.orderStatus == "EXECUTED")
-                        {
-                            // Process rest of the orders here.
-                            EmitFillOrder(response);
-                        }
-
-                        
-                        
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, exception.Message));
-            }
-
-            Log.Trace("SamcoBrokerage.FillMonitorAction(): task ended");
-        }
 
         /// <summary>
         /// Gets Quote using Samco API
@@ -242,159 +191,6 @@ namespace QuantConnect.Brokerages.Samco
 
         }
 
-        private IEnumerable<Symbol> GetSubscribed()
-        {
-            return _subscriptionManager.GetSubscribedSymbols() ?? Enumerable.Empty<Symbol>();
-        }
-
-        /// <summary>
-        /// Ends current subscriptions
-        /// </summary>
-        private bool Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            if (WebSocket.IsOpen)
-            {
-                var sub = new Subscription();
-                sub.request.request_type = "unsubcribe";
-
-                foreach (var symbol in symbols)
-                {
-                    try
-                    {
-                        var quote = GetQuote(symbol);
-                        sub.request.data.symbols.Add(new Subscription.Symbol { symbol = quote.listingId });
-                        if (!unSubscribeInstrumentTokens.Contains(quote.listingId))
-                        {
-                            unSubscribeInstrumentTokens.Add(quote.listingId);
-                            subscribeInstrumentTokens.Remove(quote.listingId);
-                            Symbol unSubscribeSymbol;
-                            _subscriptionsById.TryRemove(quote.listingId, out unSubscribeSymbol);
-                        }
-
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
-                        throw;
-                    }
-
-                }
-                var request = JsonConvert.SerializeObject(sub);
-                WebSocket.Send(request);
-                WebSocket.Send("\n");
-                return true;
-            }
-            return false;
-        }
-
-        private void OnOrderClose(OrderDetails orderDetails)
-        {
-            var brokerId = orderDetails.orderNumber;
-            if (orderDetails.orderStatus == "CANCELLED")
-            {
-                var order = CachedOrderIDs
-                    .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
-                    .Value;
-                if (order == null)
-                {
-                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
-                    if (order == null)
-                    {
-                        // not our order, nothing else to do here
-                        return;
-                    }
-                }
-                Order outOrder;
-                if (CachedOrderIDs.TryRemove(order.Id, out outOrder))
-                {
-                    OnOrderEvent(new OrderEvent(order,
-                        DateTime.UtcNow,
-                        OrderFee.Zero,
-                        "Samco Order Event")
-                    { Status = OrderStatus.Canceled });
-                }
-            }
-        }
-
-        private void EmitFillOrder(SamcoOrderResponse orderResponse)
-        {
-            try
-            {
-                var brokerId = orderResponse.orderNumber;
-                var orderDetails = orderResponse.orderDetails;
-                var order = CachedOrderIDs
-                    .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
-                    .Value;
-                if (order == null)
-                {
-                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
-                    if (order == null)
-                    {
-                        // not our order, nothing else to do here
-                        return;
-                    } 
-                }
-
-                var brokerageSecurityType =  _symbolMapper.GetBrokerageSecurityType(orderDetails.tradingSymbol);
-                var symbol = _symbolMapper.GetLeanSymbol(orderDetails.tradingSymbol, brokerageSecurityType);
-                var fillPrice = decimal.Parse(orderDetails.filledPrice, NumberStyles.Float, CultureInfo.InvariantCulture);
-                var fillQuantity = decimal.Parse(orderDetails.filledQuantity, NumberStyles.Float, CultureInfo.InvariantCulture);
-                var updTime = DateTime.UtcNow;
-                var security = _securityProvider.GetSecurity(order.Symbol);
-                var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-                if (order.Direction == OrderDirection.Sell)
-                {
-                    fillQuantity = -1 * fillQuantity;
-                }
-                var status = OrderStatus.Filled;
-                if (fillQuantity != order.Quantity)
-                {
-                    decimal totalFillQuantity;
-                    _fills.TryGetValue(order.Id, out totalFillQuantity);
-                    totalFillQuantity += fillQuantity;
-                    _fills[order.Id] = totalFillQuantity;
-
-                    status = totalFillQuantity == order.Quantity
-                        ? OrderStatus.Filled
-                        : OrderStatus.PartiallyFilled;
-                }
-
-                var orderEvent = new OrderEvent
-                (
-                    order.Id, symbol, updTime, status,
-                    order.Direction, fillPrice, fillQuantity,
-                    orderFee, $"Samco Order Event {order.Direction}"
-                );
-
-                // if the order is closed, we no longer need it in the active order list
-                if (status == OrderStatus.Filled)
-                {
-                    Order outOrder;
-                    CachedOrderIDs.TryRemove(order.Id, out outOrder);
-                    decimal ignored;
-                    _fills.TryRemove(order.Id, out ignored);
-                    _pendingOrders.TryRemove(brokerId, out outOrder);
-                }
-
-                OnOrderEvent(orderEvent);
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Returns the brokerage account's base currency
-        /// </summary>
-        public override string AccountBaseCurrency => Currencies.INR;
-
-        /// <summary>
-        /// Checks if the websocket connection is connected or in the process of connecting
-        /// </summary>
-        public override bool IsConnected => WebSocket.IsOpen;
 
         /// <summary>
         /// Connects to Samco Websocket
@@ -667,30 +463,6 @@ namespace QuantConnect.Brokerages.Samco
             return list;
         }
 
-        private OrderStatus ConvertOrderStatus(OrderDetails orderDetails)
-        {
-            var filledQty = Convert.ToInt32(orderDetails.filledQuantity, CultureInfo.InvariantCulture);
-            var pendingQty = Convert.ToInt32(orderDetails.pendingQuantity, CultureInfo.InvariantCulture);
-            var orderDetail = _samcoAPI.GetOrderDetails(orderDetails.orderNumber);
-            if (orderDetails.orderStatus != "complete" && filledQty == 0)
-            {
-                return OrderStatus.Submitted;
-            }
-            else if (filledQty > 0 && pendingQty > 0)
-            {
-                return OrderStatus.PartiallyFilled;
-            }
-            else if (pendingQty == 0)
-            {
-                return OrderStatus.Filled;
-            }
-            else if (orderDetail.orderStatus.ToUpperInvariant() == "CANCELLED")
-            {
-                return OrderStatus.Canceled;
-            }
-
-            return OrderStatus.None;
-        }
 
         /// <summary>
         /// Gets all open positions
@@ -919,6 +691,232 @@ namespace QuantConnect.Brokerages.Samco
         {
         }
 
+        private void FillMonitorAction()
+        {
+            Log.Trace("SamcoBrokerage.FillMonitorAction(): task started");
+
+            try
+            {
+                foreach (var order in GetOpenOrders())
+                {
+                    _pendingOrders.TryAdd(order.BrokerId.First(), order);
+                }
+
+                while (!_ctsFillMonitor.IsCancellationRequested)
+                {
+                    _fillMonitorResetEvent.WaitOne(TimeSpan.FromMilliseconds(_fillMonitorTimeout), _ctsFillMonitor.Token);
+
+                    foreach (var kvp in _pendingOrders)
+                    {
+                        var orderId = kvp.Key;
+                        var order = kvp.Value;
+
+                        var response = _samcoAPI.GetOrderDetails(orderId);
+
+                        if (response.status != null)
+                        {
+                            if (response.status.ToUpperInvariant() == "FAILURE")
+                            {
+                                OnMessage(new BrokerageMessageEvent(
+                                    BrokerageMessageType.Warning,
+                                    -1,
+                                    $"SamcoBrokerage.FillMonitorAction(): request failed: [{response.status}] {response.statusMessage}, Content: {response.ToString()}, ErrorMessage: {response.validationErrors}"));
+
+                                continue;
+                            }
+                        }
+
+                        //Process cancelled orders here.
+                        if (response.orderStatus == "CANCELLED")
+                        {
+                            OnOrderClose(response.orderDetails);
+                        }
+
+                        if (response.orderStatus == "EXECUTED")
+                        {
+                            // Process rest of the orders here.
+                            EmitFillOrder(response);
+                        }
+
+
+
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, exception.Message));
+            }
+
+            Log.Trace("SamcoBrokerage.FillMonitorAction(): task ended");
+        }
+
+        private IEnumerable<Symbol> GetSubscribed()
+        {
+            return _subscriptionManager.GetSubscribedSymbols() ?? Enumerable.Empty<Symbol>();
+        }
+
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
+        {
+            if (WebSocket.IsOpen)
+            {
+                var sub = new Subscription();
+                sub.request.request_type = "unsubcribe";
+
+                foreach (var symbol in symbols)
+                {
+                    try
+                    {
+                        var quote = GetQuote(symbol);
+                        sub.request.data.symbols.Add(new Subscription.Symbol { symbol = quote.listingId });
+                        if (!unSubscribeInstrumentTokens.Contains(quote.listingId))
+                        {
+                            unSubscribeInstrumentTokens.Add(quote.listingId);
+                            subscribeInstrumentTokens.Remove(quote.listingId);
+                            Symbol unSubscribeSymbol;
+                            _subscriptionsById.TryRemove(quote.listingId, out unSubscribeSymbol);
+                        }
+
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception);
+                        throw;
+                    }
+
+                }
+                var request = JsonConvert.SerializeObject(sub);
+                WebSocket.Send(request);
+                WebSocket.Send("\n");
+                return true;
+            }
+            return false;
+        }
+
+        private void OnOrderClose(OrderDetails orderDetails)
+        {
+            var brokerId = orderDetails.orderNumber;
+            if (orderDetails.orderStatus == "CANCELLED")
+            {
+                var order = CachedOrderIDs
+                    .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
+                    .Value;
+                if (order == null)
+                {
+                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
+                    if (order == null)
+                    {
+                        // not our order, nothing else to do here
+                        return;
+                    }
+                }
+                Order outOrder;
+                if (CachedOrderIDs.TryRemove(order.Id, out outOrder))
+                {
+                    OnOrderEvent(new OrderEvent(order,
+                        DateTime.UtcNow,
+                        OrderFee.Zero,
+                        "Samco Order Event")
+                    { Status = OrderStatus.Canceled });
+                }
+            }
+        }
+
+        private void EmitFillOrder(SamcoOrderResponse orderResponse)
+        {
+            try
+            {
+                var brokerId = orderResponse.orderNumber;
+                var orderDetails = orderResponse.orderDetails;
+                var order = CachedOrderIDs
+                    .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
+                    .Value;
+                if (order == null)
+                {
+                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
+                    if (order == null)
+                    {
+                        // not our order, nothing else to do here
+                        return;
+                    }
+                }
+
+                var brokerageSecurityType = _symbolMapper.GetBrokerageSecurityType(orderDetails.tradingSymbol);
+                var symbol = _symbolMapper.GetLeanSymbol(orderDetails.tradingSymbol, brokerageSecurityType);
+                var fillPrice = decimal.Parse(orderDetails.filledPrice, NumberStyles.Float, CultureInfo.InvariantCulture);
+                var fillQuantity = decimal.Parse(orderDetails.filledQuantity, NumberStyles.Float, CultureInfo.InvariantCulture);
+                var updTime = DateTime.UtcNow;
+                var security = _securityProvider.GetSecurity(order.Symbol);
+                var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
+
+                if (order.Direction == OrderDirection.Sell)
+                {
+                    fillQuantity = -1 * fillQuantity;
+                }
+                var status = OrderStatus.Filled;
+                if (fillQuantity != order.Quantity)
+                {
+                    decimal totalFillQuantity;
+                    _fills.TryGetValue(order.Id, out totalFillQuantity);
+                    totalFillQuantity += fillQuantity;
+                    _fills[order.Id] = totalFillQuantity;
+
+                    status = totalFillQuantity == order.Quantity
+                        ? OrderStatus.Filled
+                        : OrderStatus.PartiallyFilled;
+                }
+
+                var orderEvent = new OrderEvent
+                (
+                    order.Id, symbol, updTime, status,
+                    order.Direction, fillPrice, fillQuantity,
+                    orderFee, $"Samco Order Event {order.Direction}"
+                );
+
+                // if the order is closed, we no longer need it in the active order list
+                if (status == OrderStatus.Filled)
+                {
+                    Order outOrder;
+                    CachedOrderIDs.TryRemove(order.Id, out outOrder);
+                    decimal ignored;
+                    _fills.TryRemove(order.Id, out ignored);
+                    _pendingOrders.TryRemove(brokerId, out outOrder);
+                }
+
+                OnOrderEvent(orderEvent);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
+        }
+
+        private OrderStatus ConvertOrderStatus(OrderDetails orderDetails)
+        {
+            var filledQty = Convert.ToInt32(orderDetails.filledQuantity, CultureInfo.InvariantCulture);
+            var pendingQty = Convert.ToInt32(orderDetails.pendingQuantity, CultureInfo.InvariantCulture);
+            var orderDetail = _samcoAPI.GetOrderDetails(orderDetails.orderNumber);
+            if (orderDetails.orderStatus != "complete" && filledQty == 0)
+            {
+                return OrderStatus.Submitted;
+            }
+            else if (filledQty > 0 && pendingQty > 0)
+            {
+                return OrderStatus.PartiallyFilled;
+            }
+            else if (pendingQty == 0)
+            {
+                return OrderStatus.Filled;
+            }
+            else if (orderDetail.orderStatus.ToUpperInvariant() == "CANCELLED")
+            {
+                return OrderStatus.Canceled;
+            }
+
+            return OrderStatus.None;
+        }
+
         private void OnError(object sender, WebSocketError e)
         {
             Log.Error($"SamcoBrokerage.OnError(): Message: {e.Message} Exception: {e.Exception}");
@@ -929,10 +927,6 @@ namespace QuantConnect.Brokerages.Samco
              _messageHandler.HandleNewMessage(e);
         }
 
-        /// <summary>
-        /// Implementation of the OnMessage event
-        /// </summary>
-        /// <param name="e"></param>
         private void OnMessageImpl(WebSocketMessage e)
         {
             try
