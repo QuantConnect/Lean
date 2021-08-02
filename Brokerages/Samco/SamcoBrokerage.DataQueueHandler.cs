@@ -85,14 +85,8 @@ namespace QuantConnect.Brokerages.Samco
             return
                 (securityType == SecurityType.Equity ||
                 securityType == SecurityType.Option ||
-                securityType == SecurityType.Future) && (market == Market.India ||
-                market == Market.India ||
-                market == Market.India ||
-                market == Market.India ||
-                market == Market.India ||
-                market == Market.India ||
-                market == Market.India
-                );
+                securityType == SecurityType.Future) && 
+                market == Market.India;
         }
         #endregion
     }
