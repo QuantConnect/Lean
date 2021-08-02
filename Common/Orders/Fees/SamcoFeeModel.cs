@@ -62,7 +62,7 @@ namespace QuantConnect.Orders.Fees
 
             var stax = Math.Round(0.18M * (brokerage + exc_trans_charge), 2);
 
-            var sebi_charges = Math.Round((turnover * 0.000001M), 2);
+            var sebi_charges = Math.Round((turnover * 0.000002M), 2);
             decimal stamp_charges = 0;
             if (!isSell)
             {
