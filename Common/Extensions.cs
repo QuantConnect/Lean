@@ -3077,6 +3077,33 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts a <see cref="Data.HistoryRequest" /> instance to a <see cref="SubscriptionDataConfig"/> instance
+        /// </summary>
+        /// <param name="request">History request</param>
+        /// <param name="isInternalFeed">
+        /// Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
+        /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods
+        /// </param>
+        /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
+        /// <returns>Subscription data configuration</returns>
+        public static SubscriptionDataConfig ToSubscriptionDataConfig(this Data.HistoryRequest request, bool isInternalFeed = false, bool isFilteredSubscription = true)
+        {
+            return new SubscriptionDataConfig(request.DataType,
+                request.Symbol,
+                request.Resolution,
+                request.DataTimeZone,
+                request.ExchangeHours.TimeZone,
+                request.FillForwardResolution.HasValue,
+                request.IncludeExtendedMarketHours,
+                isInternalFeed,
+                request.IsCustomData,
+                request.TickType,
+                isFilteredSubscription,
+                request.DataNormalizationMode
+            );
+        }
+
+        /// <summary>
         /// Centralized logic used at the top of the subscription enumerator stacks to determine if we should emit base data points
         /// based on the configuration for this subscription and the type of data we are handling.
         /// 

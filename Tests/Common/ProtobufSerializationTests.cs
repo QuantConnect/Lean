@@ -22,9 +22,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using ProtoBuf;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom.Benzinga;
-using QuantConnect.Data.Custom.Estimize;
-using QuantConnect.Data.Custom.Tiingo;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -34,117 +32,40 @@ namespace QuantConnect.Tests.Common
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class ProtobufSerializationTests
     {
-        [Test]
-        public void SerializeRoundTripEstimizeRelease()
+        private static readonly Dictionary<Type, BaseData> _iconicInstances = new Dictionary<Type, BaseData>
         {
-            var time = new DateTime(2020, 3, 19, 10, 0, 0);
-            var underlyingSymbol = Symbols.AAPL;
-            var symbol = Symbol.CreateBase(typeof(EstimizeRelease), underlyingSymbol, QuantConnect.Market.USA);
-
-            var item = new EstimizeRelease
+            { typeof(IndexedLinkedData), new IndexedLinkedData { Count = 1024 } },
+            { typeof(IndexedLinkedData2), new IndexedLinkedData2 { Count = 2048 } },
+            { typeof(LinkedData), new LinkedData { Count = 4096 } },
+            { typeof(UnlinkedData), new UnlinkedData { Ticker = "ABCDEF" } },
+            { typeof(UnlinkedDataTradeBar), new UnlinkedDataTradeBar
+                {
+                    Open = 10m,
+                    High = 11m,
+                    Low = 9m,
+                    Close = 10.99m,
+                    Volume = 9999m
+                }
+            }
+        };
+        
+        [TestCase(typeof(IndexedLinkedData), true)]
+        [TestCase(typeof(IndexedLinkedData2), true)]
+        [TestCase(typeof(LinkedData), true)]
+        [TestCase(typeof(UnlinkedData), false)]
+        [TestCase(typeof(UnlinkedDataTradeBar), false)]
+        public void SerializeRoundTripIconicDataTypes(Type baseDataType, bool hasUnderlyingSymbol)
+        {
+            var item = CreateNewInstance(baseDataType, hasUnderlyingSymbol);
+            var serialized = item.ProtobufSerialize();
+            
+            using (var stream = new MemoryStream(serialized))
             {
-                Id = "123",
-                Symbol = symbol,
-                FiscalYear = 2020,
-                FiscalQuarter = 1,
-                Eps = 2,
-                Revenue = null,
-                ReleaseDate = time
-            };
-
-            using (var stream = new MemoryStream())
-            {
-                Serializer.Serialize(stream, item);
-                stream.Position = 0;
-
-                var deserialized = Serializer.Deserialize<EstimizeRelease>(stream);
-
-                Assert.AreEqual("123", deserialized.Id);
-                Assert.AreEqual(2020, deserialized.FiscalYear);
-                Assert.AreEqual(1, deserialized.FiscalQuarter);
-                Assert.AreEqual(2, deserialized.Eps);
-                Assert.AreEqual(null, deserialized.Revenue);
-                Assert.AreEqual(time, deserialized.ReleaseDate);
-                Assert.AreEqual(time, deserialized.Time);
-                Assert.AreEqual(time, deserialized.EndTime);
+                var deserialized = Serializer.Deserialize<IEnumerable<BaseData>>(stream).Single();
+                AssertAreEqual(item, deserialized);
             }
         }
-
-        [Test]
-        public void SerializeRoundTripEstimizeConsensus()
-        {
-            var time = new DateTime(2020, 3, 19, 10, 0, 0);
-            var underlyingSymbol = Symbols.AAPL;
-            var symbol = Symbol.CreateBase(typeof(EstimizeConsensus), underlyingSymbol, QuantConnect.Market.USA);
-
-            var item = new EstimizeConsensus
-            {
-                Id = "123",
-                Symbol = symbol,
-                FiscalYear = 2020,
-                FiscalQuarter = 1,
-                Source = Source.WallStreet,
-                Type = QuantConnect.Data.Custom.Estimize.Type.Eps,
-                Count = 3,
-                Mean = 2,
-                UpdatedAt = time
-            };
-
-            using (var stream = new MemoryStream())
-            {
-                Serializer.Serialize(stream, item);
-                stream.Position = 0;
-
-                var deserialized = Serializer.Deserialize<EstimizeConsensus>(stream);
-
-                Assert.AreEqual("123", deserialized.Id);
-                Assert.AreEqual(2020, deserialized.FiscalYear);
-                Assert.AreEqual(1, deserialized.FiscalQuarter);
-                Assert.AreEqual(Source.WallStreet, deserialized.Source);
-                Assert.AreEqual(QuantConnect.Data.Custom.Estimize.Type.Eps, deserialized.Type);
-                Assert.AreEqual(3, deserialized.Count);
-                Assert.AreEqual(2, deserialized.Mean);
-                Assert.AreEqual(time, deserialized.UpdatedAt);
-                Assert.AreEqual(time, deserialized.Time);
-                Assert.AreEqual(time, deserialized.EndTime);
-            }
-        }
-
-        [Test]
-        public void SerializeRoundTripEstimizeEstimate()
-        {
-            var time = new DateTime(2020, 3, 19, 10, 0, 0);
-            var underlyingSymbol = Symbols.AAPL;
-            var symbol = Symbol.CreateBase(typeof(EstimizeEstimate), underlyingSymbol, QuantConnect.Market.USA);
-
-            var item = new EstimizeEstimate
-            {
-                Id = "123",
-                Symbol = symbol,
-                FiscalYear = 2020,
-                FiscalQuarter = 1,
-                Eps = 2,
-                Revenue = null,
-                CreatedAt = time
-            };
-
-            using (var stream = new MemoryStream())
-            {
-                Serializer.Serialize(stream, item);
-                stream.Position = 0;
-
-                var deserialized = Serializer.Deserialize<EstimizeEstimate>(stream);
-                Assert.AreEqual("123", deserialized.Id);
-                Assert.AreEqual(2020, deserialized.FiscalYear);
-                Assert.AreEqual(1, deserialized.FiscalQuarter);
-                Assert.AreEqual(2, deserialized.Eps);
-                Assert.AreEqual(null, deserialized.Revenue);
-                Assert.AreEqual(time, deserialized.CreatedAt);
-                Assert.AreEqual(time, deserialized.Time);
-                Assert.AreEqual(time, deserialized.EndTime);
-            }
-        }
-
+        
         [Test]
         public void SymbolRoundTrip()
         {
@@ -413,219 +334,6 @@ namespace QuantConnect.Tests.Common
             }
         }
 
-        [Test]
-        public void TiingoNewsRoundTrip()
-        {
-            var symbol = Symbol.CreateBase(
-                typeof(TiingoNews),
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-                Market.USA);
-
-            var news = new TiingoNews
-            {
-                ArticleID = "1000",
-                CrawlDate = DateTime.UtcNow.AddDays(-1),
-                DataType = MarketDataType.Base,
-                Description = "Round trip to planet Protobuf is successful, ushering us into a new era for mining",
-                PublishedDate = DateTime.UtcNow.Date,
-                Source = "News Corp.",
-                Symbols = new List<Symbol>
-                {
-                    Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
-                    Symbol.Create("CBS", SecurityType.Equity, Market.USA),
-                    Symbol.Create("GLD", SecurityType.Equity, Market.USA)
-                },
-                Tags = new List<string>
-                {
-                    "mining",
-                    "space",
-                    "aero-space",
-                    "technology"
-                },
-                Title = "Round Trip To Planet Protobuf Successful",
-                Url = "https://tiingo.com",
-
-                Time = DateTime.UtcNow,
-                Symbol = symbol
-            };
-
-            var serializedNews = news.ProtobufSerialize();
-            using (var stream = new MemoryStream(serializedNews))
-            {
-                var result = (TiingoNews)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
-                Assert.AreEqual(news.ArticleID, result.ArticleID);
-                Assert.AreEqual(news.CrawlDate, result.CrawlDate);
-                Assert.AreEqual(news.DataType, result.DataType);
-                Assert.AreEqual(news.Description, result.Description);
-                Assert.AreEqual(news.PublishedDate, result.PublishedDate);
-                Assert.AreEqual(news.Source, result.Source);
-                Assert.IsTrue(news.Symbols.SequenceEqual(result.Symbols));
-                Assert.IsTrue(news.Tags.SequenceEqual(result.Tags));
-                Assert.AreEqual(news.Title, result.Title);
-                Assert.AreEqual(news.Url, result.Url);
-                Assert.AreEqual(news.Time, result.Time);
-                Assert.AreEqual(news.EndTime, result.EndTime);
-            }
-        }
-
-        [Test]
-        public void TiingoNewsEmptySymbolsTagsRoundTrip()
-        {
-            var symbol = Symbol.CreateBase(
-                typeof(TiingoNews),
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-                Market.USA);
-
-            var news = new TiingoNews
-            {
-                ArticleID = "1000",
-                CrawlDate = DateTime.UtcNow.AddDays(-1),
-                DataType = MarketDataType.Base,
-                Description = "Round trip to planet Protobuf is successful, ushering us into a new era for mining",
-                PublishedDate = DateTime.UtcNow.Date,
-                Source = "News Corp.",
-                Symbols = new List<Symbol>(),
-                Tags = new List<string>(),
-                Title = "Round Trip To Planet Protobuf Successful",
-                Url = "https://tiingo.com",
-
-                Time = DateTime.UtcNow,
-                Symbol = symbol
-            };
-
-            var serializedNews = news.ProtobufSerialize();
-            using (var stream = new MemoryStream(serializedNews))
-            {
-                var result = (TiingoNews)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
-
-                Assert.AreEqual(news.ArticleID, result.ArticleID);
-                Assert.AreEqual(news.CrawlDate, result.CrawlDate);
-                Assert.AreEqual(news.DataType, result.DataType);
-                Assert.AreEqual(news.Description, result.Description);
-                Assert.AreEqual(news.PublishedDate, result.PublishedDate);
-                Assert.AreEqual(news.Source, result.Source);
-                Assert.IsTrue(news.Symbols.SequenceEqual(result.Symbols));
-                Assert.IsTrue(news.Tags.SequenceEqual(result.Tags));
-                Assert.AreEqual(news.Title, result.Title);
-                Assert.AreEqual(news.Url, result.Url);
-                Assert.AreEqual(news.Time, result.Time);
-                Assert.AreEqual(news.EndTime, result.EndTime);
-            }
-        }
-
-        [Test]
-        public void BenzingaNewsRoundTrip()
-        {
-            var symbol = Symbol.CreateBase(
-                typeof(BenzingaNews),
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-                Market.USA);
-
-            var news = new BenzingaNews
-            {
-                Id = 1000,
-                Author = "Benzinga",
-                DataType = MarketDataType.Base,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                Title = "Round Trip To Planet Protobuf Successful",
-                Teaser = "Round trip to planet Protobuf is successful, ushering us into a new era for mining",
-                Contents = "Round trip to planet Protobuf is successful, ushering us into a new era for mining",
-                Categories = new List<string>
-                {
-                    "aerospace",
-                    "technology"
-                },
-                Symbols = new List<Symbol>
-                {
-                    Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
-                    Symbol.Create("CBS", SecurityType.Equity, Market.USA),
-                    Symbol.Create("GLD", SecurityType.Equity, Market.USA)
-                },
-                Tags = new List<string>
-                {
-                    "mining",
-                    "space",
-                    "aero-space",
-                    "technology"
-                },
-
-                Time = DateTime.UtcNow,
-                Symbol = symbol
-            };
-
-            var serializedNews = news.ProtobufSerialize();
-            using (var stream = new MemoryStream(serializedNews))
-            {
-                var result = (BenzingaNews)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
-
-                Assert.AreEqual(news.Id, result.Id);
-                Assert.AreEqual(news.Author, result.Author);
-                Assert.AreEqual(news.DataType, result.DataType);
-                Assert.AreEqual(news.CreatedAt, result.CreatedAt);
-                Assert.AreEqual(news.UpdatedAt, result.UpdatedAt);
-                Assert.AreEqual(news.Title, result.Title);
-                Assert.AreEqual(news.Teaser, result.Teaser);
-                Assert.AreEqual(news.Contents, result.Contents);
-                Assert.IsTrue(news.Categories.SequenceEqual(result.Categories));
-                Assert.IsTrue(news.Symbols.SequenceEqual(result.Symbols));
-                Assert.IsTrue(news.Tags.SequenceEqual(result.Tags));
-                Assert.AreEqual(news.Time, result.Time);
-                Assert.AreEqual(news.EndTime, result.EndTime);
-            }
-        }
-
-        [Test]
-        public void BenzingaNewsEmptyTagsSymbolsRoundTrip()
-        {
-            var symbol = Symbol.CreateBase(
-                typeof(BenzingaNews),
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-                Market.USA);
-
-            var news = new BenzingaNews
-            {
-                Id = 1000,
-                Author = "Benzinga",
-                DataType = MarketDataType.Base,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                Title = "Round Trip To Planet Protobuf Successful",
-                Teaser = "Round trip to planet Protobuf is successful, ushering us into a new era for mining",
-                Contents = "Round trip to planet Protobuf is successful, ushering us into a new era for mining",
-                Categories = new List<string>
-                {
-                    "aerospace",
-                    "technology"
-                },
-                Symbols = new List<Symbol>(),
-                Tags = new List<string>(),
-
-                Time = DateTime.UtcNow,
-                Symbol = symbol
-            };
-
-            var serializedNews = news.ProtobufSerialize();
-            using (var stream = new MemoryStream(serializedNews))
-            {
-                var result = (BenzingaNews)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
-
-                Assert.AreEqual(news.Id, result.Id);
-                Assert.AreEqual(news.Author, result.Author);
-                Assert.AreEqual(news.DataType, result.DataType);
-                Assert.AreEqual(news.CreatedAt, result.CreatedAt);
-                Assert.AreEqual(news.UpdatedAt, result.UpdatedAt);
-                Assert.AreEqual(news.Title, result.Title);
-                Assert.AreEqual(news.Teaser, result.Teaser);
-                Assert.AreEqual(news.Contents, result.Contents);
-                Assert.IsTrue(news.Categories.SequenceEqual(result.Categories));
-                Assert.IsTrue(news.Symbols.SequenceEqual(result.Symbols));
-                Assert.IsTrue(news.Tags.SequenceEqual(result.Tags));
-                Assert.AreEqual(news.Time, result.Time);
-                Assert.AreEqual(news.EndTime, result.EndTime);
-            }
-        }
-
         [Test, Ignore("Performance test")]
         public void SpeedTest()
         {
@@ -696,6 +404,35 @@ namespace QuantConnect.Tests.Common
                 var end = DateTime.UtcNow;
 
                 Log.Trace($"JSON TOOK {end - start}");
+            }
+        }
+
+        private static BaseData CreateNewInstance(Type baseDataType, bool hasUnderlyingSymbol)
+        {
+            var instance = _iconicInstances[baseDataType];
+            
+            instance.Symbol = hasUnderlyingSymbol
+                ? Symbol.CreateBase(baseDataType, Symbols.AAPL, QuantConnect.Market.USA)
+                : Symbol.Create("ABCDEF", SecurityType.Base, Market.USA, baseDataType: baseDataType);
+            
+            instance.Time = new DateTime(2021, 6, 5);
+            
+            return instance;
+        }
+
+        private void AssertAreEqual(object expected, object result)
+        {
+            foreach (var propertyInfo in expected.GetType().GetProperties())
+            {
+                // we skip Symbol which isn't protobuffed
+                if (propertyInfo.CustomAttributes.Any())
+                {
+                    Assert.AreEqual(propertyInfo.GetValue(expected), propertyInfo.GetValue(result));
+                }
+            }
+            foreach (var fieldInfo in expected.GetType().GetFields())
+            {
+                Assert.AreEqual(fieldInfo.GetValue(expected), fieldInfo.GetValue(result));
             }
         }
     }
