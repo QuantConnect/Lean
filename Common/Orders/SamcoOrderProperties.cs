@@ -17,16 +17,11 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
 {
-
     /// <summary>
     /// Contains additional properties and settings for an order submitted to Zerodha Brokerage
     /// </summary>
     public class SamcoOrderProperties : ZerodhaOrderProperties
     {
-        /// <summary>
-        /// Kite product type
-        /// </summary>
-        public string ProductType { get;}
         
         /// <summary>
         /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
