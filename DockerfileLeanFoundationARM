@@ -16,7 +16,7 @@ RUN env TZ=UTC
 # Misc tools for running Python.NET and IB inside a headless container.
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test && apt-get update
 RUN add-apt-repository ppa:apt-fast/stable && apt-get update && apt-get -y install apt-fast
-RUN apt-fast install -y git libgtk2.0.0 cmake bzip2 curl unzip wget python3-pip python-opengl zlib1g-dev \
+RUN apt-get update && apt-fast install -y git libgtk2.0.0 cmake bzip2 curl unzip wget python3-pip python-opengl zlib1g-dev \
     xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
     r-base pandoc libcurl4-openssl-dev \
     openjdk-8-jdk openjdk-8-jre bbe \
