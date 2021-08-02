@@ -27,7 +27,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Kite product type
         /// </summary>
-        public string ProductType { get;}
+        public string ProductType { get; set; }
 
         /// <summary>
         /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
