@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="options" />
     /// <meta name="tag" content="filter selection" />
-    public class ZerodhaBasicTemplateOptionsAlgorithm : QCAlgorithm
+    public class SamcoBasicTemplateOptionsAlgorithm : QCAlgorithm
     {
         private const string UnderlyingTicker = "NIFTY";
         public Symbol OptionSymbol;
@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetAccountCurrency(Currencies.INR);
 
             var equity = AddEquity(UnderlyingTicker,market:Market.India);
-            var option = AddOption(equity.Symbol,market:Market.India, optionStyle:OptionStyle.European);
+            var option = AddOption(equity.Symbol,market:Market.India);
             OptionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
@@ -105,12 +105,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public bool CanRunLocally { get; } = false;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
