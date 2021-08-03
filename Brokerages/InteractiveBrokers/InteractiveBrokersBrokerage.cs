@@ -52,6 +52,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     [BrokerageFactory(typeof(InteractiveBrokersBrokerageFactory))]
     public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
+        /// <summary>
+        /// The default gateway version to use
+        /// </summary>
+        public static string DefaultVersion { get; } = "985";
+
         private readonly IBAutomater.IBAutomater _ibAutomater;
 
         // Existing orders created in TWS can *only* be cancelled/modified when connected with ClientId = 0
@@ -168,22 +173,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="aggregator">consolidate ticks</param>
         /// <param name="mapFileProvider">representing all the map files</param>
         public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, IMapFileProvider mapFileProvider)
-            : this(
-                algorithm,
-                orderProvider,
-                securityProvider,
-                aggregator,
-                mapFileProvider,
-                Config.Get("ib-account"),
-                Config.Get("ib-host", "LOCALHOST"),
-                Config.GetInt("ib-port", 4001),
-                Config.Get("ib-tws-dir"),
-                Config.Get("ib-version", "974"),
-                Config.Get("ib-user-name"),
-                Config.Get("ib-password"),
-                Config.Get("ib-trading-mode"),
-                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual)
-                )
+            : this(algorithm, orderProvider, securityProvider, aggregator, mapFileProvider, Config.Get("ib-account"))
         {
         }
 
@@ -207,7 +197,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
                 Config.Get("ib-tws-dir"),
-                Config.Get("ib-version", "974"),
+                Config.Get("ib-version", DefaultVersion),
                 Config.Get("ib-user-name"),
                 Config.Get("ib-password"),
                 Config.Get("ib-trading-mode"),
