@@ -38,7 +38,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         private static readonly HashSet<string> SupportedMarkets = new[]
         {
             Market.GDAX,
-            Market.Bitfinex
+            Market.Bitfinex,
+            Market.Binance
         }.ToHashSet();
 
         private readonly DirectoryInfo _rawDataFolder;
