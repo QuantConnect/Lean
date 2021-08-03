@@ -45,6 +45,7 @@ from QuantConnect.Securities import *
 from QuantConnect.Indicators import *
 from QuantConnect.Interfaces import *
 from QuantConnect.Scheduling import *
+from QuantConnect.DataSource import *
 from QuantConnect.Orders.Fees import *
 from QuantConnect.Data.Custom import *
 from QuantConnect.Data.Market import *
