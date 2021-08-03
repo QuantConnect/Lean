@@ -189,5 +189,11 @@ RUN wget https://cdn.quantconnect.com/h2o/h2o-3.34.0.7.zip && \
 # Remove black-listed packages
 RUN pip uninstall -y s3transfer
 
+# Install a shell Python Virtual Environment
+# Selected in Lean with directory via JSON JobPacket "sPythonVirtualEnvironment" or config "python-venv" value
+RUN python -m venv /venv --system-site-packages && . /venv/bin/activate \
+    && python -m ipykernel install --name=venv \
+    && deactivate 
+
 # List all packages
 RUN conda list
