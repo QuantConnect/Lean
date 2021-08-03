@@ -13,54 +13,14 @@
  * limitations under the License.
 */
 
-using System;
+using QuantConnect.Data;
 
-namespace QuantConnect.Data.Custom
+namespace QuantConnect.DataSource
 {
     /// <summary>
-    /// Represents a custom data type that works as a heartbeat of data in live mode
+    /// Represents a custom data type place holder
     /// </summary>
     public class NullData : BaseData
     {
-        /// <summary>
-        /// The end time of this data. Some data covers spans (trade bars)
-        /// and as such we want to know the entire time span covered
-        /// </summary>
-        public override DateTime EndTime { get; set; }
-
-        /// <summary>
-        /// Return the URL string source of localhost as placeholder,
-        /// since this custom data class does not use any data.
-        /// </summary>
-        /// <param name="config">Configuration object</param>
-        /// <param name="date">Date of this source file</param>
-        /// <param name="isLiveMode">True if we're in live mode</param>
-        /// <returns>String URL of localhost</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
-        {
-            return new SubscriptionDataSource("http://localhost/", SubscriptionTransportMedium.Rest);
-        }
-
-        /// <summary>
-        /// Returns a new instance of the <see cref="NullData"/>. Its Value property is always 1
-        /// and the Time property is the current date/time of the exchange.
-        /// </summary>
-        /// <param name="config">Subscription data config setup object</param>
-        /// <param name="line">Line of the source document.</param>
-        /// <param name="date">Date of the requested data</param>
-        /// <param name="isLiveMode">True if we're in live mode</param>
-        /// <returns>Instance of <see cref="NullData"/></returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
-        {
-            var nullData = new NullData
-            {
-                Symbol = config.Symbol,
-                Time = DateTime.UtcNow.ConvertFromUtc(config.ExchangeTimeZone),
-                Value = 1
-            };
-
-            nullData.EndTime = nullData.Time + config.Resolution.ToTimeSpan();
-            return nullData;
-        }
     }
 }
