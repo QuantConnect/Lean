@@ -62,22 +62,22 @@ namespace QuantConnect.Algorithm.Framework.Risk
 
                 var profitPercent = security.Holdings.UnrealizedProfitPercent;
 
-                // Add newly invested securities
-                if (!_trailing.ContainsKey(symbol))
+                decimal value;
+                if (!_trailing.TryGetValue(symbol, out value))
                 {
-                    _trailing.Add(symbol, profitPercent); 
+                    _trailing.Add(symbol, 0);
                     continue;
                 }
 
                 // Check for new high and update
-                if (_trailing[symbol] < profitPercent)
+                if (value < profitPercent)
                 {
                     _trailing[symbol] = profitPercent;
                     continue;
                 }
 
                 // If unrealized profit percent deviates from local max for more than affordable percentage
-                if (profitPercent < _trailing[symbol] - _maximumDrawdownPercent)
+                if (profitPercent < value - _maximumDrawdownPercent)
                 {
                     // liquidate
                     yield return new PortfolioTarget(security.Symbol, 0);
