@@ -127,9 +127,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             return true;
         }
 
-        private void OnDataMessage(WebSocketMessage e)
+        private void OnDataMessage(WebSocketMessage webSocketMessage)
         {
-            var webSocket = (BitfinexWebSocketWrapper)e.WebSocket;
+            var webSocket = (BitfinexWebSocketWrapper)webSocketMessage.WebSocket;
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
 
             try
             {

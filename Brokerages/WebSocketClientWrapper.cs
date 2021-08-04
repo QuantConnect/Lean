@@ -222,13 +222,12 @@ namespace QuantConnect.Brokerages
                         {
                             var messageData = ReceiveMessage(_client, connectionCts.Token, receiveBuffer);
 
-                            if (messageData.MessageType == WebSocketMessageType.Close)
+                            if (messageData == null)
                             {
-                                Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {messageData.Data}");
                                 break;
                             }
 
-                            OnMessage(new WebSocketMessage(this, messageData.Data));
+                            OnMessage(new WebSocketMessage(this, messageData));
                         }
                     }
                     catch (OperationCanceledException) { }
@@ -269,17 +268,56 @@ namespace QuantConnect.Brokerages
                 }
                 while (!result.EndOfMessage);
 
-                return new MessageData
+                if (result.MessageType == WebSocketMessageType.Binary)
                 {
-                    Data = Encoding.UTF8.GetString(ms.GetBuffer(), 0 , (int)ms.Length),
-                    MessageType = result.MessageType
-                };
+                    return new BinaryMessage
+                    {
+                        Data = ms.ToArray(),
+                        Count = result.Count,
+                        MessageType = result.MessageType,
+                    };
+                }
+                else if (result.MessageType == WebSocketMessageType.Text)
+                {
+                    return new TextMessage
+                    {
+                        Message = Encoding.UTF8.GetString(ms.GetBuffer(), 0 , (int)ms.Length),
+                        MessageType = result.MessageType
+                    };
+                }
+                else if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {Encoding.UTF8.GetString(ms.GetBuffer(), 0 , (int)ms.Length)}");
+                    return null;
+                }
             }
+            return null;
         }
 
-        private class MessageData
+        /// <summary>
+        /// Defines a message of websocket data
+        /// </summary>
+        public class MessageData
         {
-            public string Data { get; set; }
+            public WebSocketMessageType MessageType { get; set; }
+        }
+
+        /// <summary>
+        /// Defines a text-Type message of websocket data
+        /// </summary>
+        public class TextMessage : MessageData
+        {
+            public string Message { get; set; }
+            public WebSocketMessageType MessageType { get; set; }
+        }
+
+        /// <summary>
+        /// Defines a byte-Type message of websocket data
+        /// </summary>
+        public class BinaryMessage : MessageData
+        {
+            public byte[] Data { get; set; }
+            public int Count { get; set; }
             public WebSocketMessageType MessageType { get; set; }
         }
     }

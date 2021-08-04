@@ -53,9 +53,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             unit.FillSplit.TryAdd(id, new GDAXFill(order));
         }
 
-        public static WebSocketMessage GetArgs(string json)
+        public static WebSocketMessage GetArgs(WebSocketClientWrapper.MessageData data)
         {
-            return new WebSocketMessage(null, json);
+            return new WebSocketMessage(null, data);
         }
     }
 }
