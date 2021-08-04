@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -523,10 +523,10 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void PerformsMarketOnOpenUsingOpenPriceWithMinuteSubscription(int quantity)
         {
             var reference = new DateTime(2015, 06, 05, 9, 0, 0); // before market open
-            var model = new EquityFillModel();
-            var order = new MarketOnOpenOrder(Symbols.SPY, quantity, reference);
             var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
             var equity = CreateEquity(configTradeBar);
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOnOpenOrder(Symbols.SPY, quantity, reference);
             var time = reference;
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             equity.SetMarketPrice(new TradeBar(time, Symbols.SPY, 1m, 2m, 0.5m, 1.33m, 100));
@@ -583,10 +583,10 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 Symbols.SPY, o, 2m, 0.5m, 1.33m, 100, Time.OneDay);
 
             var reference = new DateTime(2015, 06, 05, 12, 0, 0); // market is open
-            var model = new EquityFillModel();
-            var order = new MarketOnOpenOrder(Symbols.SPY, quantity, reference);
             var config = CreateTradeBarConfig(Symbols.SPY, Resolution.Daily);
             var equity = CreateEquity(config);
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOnOpenOrder(Symbols.SPY, quantity, reference);
             var time = reference;
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             equity.SetMarketPrice(getTradeBar(time, 2m));
@@ -621,10 +621,10 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void PerformsMarketOnOpenUsingOpenPriceWithTickSubscription(int quantity)
         {
             var reference = new DateTime(2015, 06, 05, 9, 0, 0); // before market open
-            var model = new EquityFillModel();
-            var order = new MarketOnOpenOrder(Symbols.SPY, quantity, reference);
             var config = CreateTickConfig(Symbols.SPY);
             var equity = CreateEquity(config);
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOnOpenOrder(Symbols.SPY, quantity, reference);
             var time = reference;
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
@@ -691,26 +691,28 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         [TestCase(Resolution.Minute, 4, 0, 0, 9, 29)]
         [TestCase(Resolution.Minute, 4, 8, 0, 9, 29)]
         [TestCase(Resolution.Minute, 4, 9, 30, 9, 29, true)]
+        [TestCase(Resolution.Minute, 4, 9, 30, 9, 31, true)]
         [TestCase(Resolution.Hour, 3, 17, 0, 8, 29)]
         [TestCase(Resolution.Hour, 4, 0, 0, 8, 0)]
         [TestCase(Resolution.Hour, 4, 8, 0, 8, 0)]
         [TestCase(Resolution.Hour, 4, 9, 30, 8, 0, true)]
+        [TestCase(Resolution.Hour, 4, 9, 30, 11, 0, true)]
         [TestCase(Resolution.Daily, 3, 17, 0, 8, 0)]
         [TestCase(Resolution.Daily, 4, 0, 0, 8, 0)]
         [TestCase(Resolution.Daily, 4, 8, 0, 8, 0)]
         [TestCase(Resolution.Daily, 4, 9, 30, 8, 0)]
         public void PerformsMarketOnOpenUsingOpenPriceWithDifferentOrderSubmissionDateTime(Resolution resolution, int day, int hour, int minute, int ref_hour, int ref_minute, bool nextDay = false)
         {
-            var model = new EquityFillModel();
-
             var period = resolution.ToTimeSpan();
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY, resolution);
+            var equity = CreateEquity(configTradeBar);
+            var model = (EquityFillModel)equity.FillModel;
+
             var orderTime = new DateTime(2015, 6, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork);
             var order = new MarketOnOpenOrder(Symbols.SPY, 100, orderTime);
 
             var reference = new DateTime(2015, 6, 4, ref_hour, ref_minute, 0).RoundDown(period);
 
-            var configTradeBar = CreateTradeBarConfig(Symbols.SPY, resolution);
-            var equity = CreateEquity(configTradeBar);
             var time = reference;
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             equity.SetMarketPrice(new TradeBar(time, Symbols.SPY, 1m, 2m, 0.5m, 1.33m, 100, period));
