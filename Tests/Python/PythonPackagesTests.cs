@@ -872,16 +872,16 @@ def RunTest():
         [TestCase("pywt", "1.1.1", "__version__")]
         [TestCase("umap", "0.4.1", "__version__")]
         [TestCase("dtw", "1.0.5", "__version__")]
-        [TestCase("mplfinance", "0.12.3a3", "__version__")]
+        [TestCase("mplfinance", "0.12.4a0", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
         [TestCase("ipywidgets", "7.5.1", "__version__")]
         [TestCase("astropy", "4.0.1.post1", "__version__")]
         [TestCase("gluonts", "0.4.3", "__version__")]
         [TestCase("gplearn", "0.4.1", "__version__")]
-        [TestCase("h2o", "3.30.0.1", "__version__")]
+        [TestCase("h2o", "3.30.0.3", "__version__")]
         [TestCase("cntk", "2.7", "__version__")]
-        [TestCase("featuretools", "0.13.4", "__version__")]
-        [TestCase("pennylane", "0.8.1", "version()")]
+        [TestCase("featuretools", "0.14.0", "__version__")]
+        [TestCase("pennylane", "0.9.0", "version()")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssetCode(
