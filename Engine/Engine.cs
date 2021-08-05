@@ -49,7 +49,6 @@ namespace QuantConnect.Lean.Engine
         private bool _historyStartDateLimitedWarningEmitted;
         private bool _historyNumericalPrecisionLimitedWarningEmitted;
         private readonly bool _liveMode;
-        private readonly Lazy<StackExceptionInterpreter> _exceptionInterpreter;
 
         /// <summary>
         /// Gets the configured system handlers for this engine instance
@@ -72,9 +71,6 @@ namespace QuantConnect.Lean.Engine
             _liveMode = liveMode;
             SystemHandlers = systemHandlers;
             AlgorithmHandlers = algorithmHandlers;
-            // this is slow, so we will do it on demand
-            _exceptionInterpreter = new Lazy<StackExceptionInterpreter>(() =>
-                    StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
         }
 
         /// <summary>
@@ -248,8 +244,10 @@ namespace QuantConnect.Lean.Engine
                             var message = e.Message;
                             if (e.InnerException != null)
                             {
-                                var err = _exceptionInterpreter.Value.Interpret(e.InnerException, _exceptionInterpreter.Value);
-                                message += _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
+                                var interpreter = StackExceptionInterpreter.Instance.Value;
+                                var err = interpreter.Interpret(e.InnerException);
+                                Log.Error(err);
+                                message += interpreter.GetExceptionMessageHeader(err);
                             }
                             return message;
                         }));
@@ -347,7 +345,6 @@ namespace QuantConnect.Lean.Engine
                             catch (Exception err)
                             {
                                 //Debugging at this level is difficult, stack trace needed.
-                                Log.Error(err);
                                 algorithm.RunTimeError = err;
                                 algorithmManager.SetStatus(AlgorithmStatus.RuntimeError);
                                 return;
@@ -371,6 +368,8 @@ namespace QuantConnect.Lean.Engine
                     }
                     catch (Exception err)
                     {
+                        // perform exception interpretation
+                        err = StackExceptionInterpreter.Instance.Value.Interpret(err);
                         //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
                         algorithm.RunTimeError = err;
                         algorithm.SetStatus(AlgorithmStatus.RuntimeError);
@@ -478,10 +477,7 @@ namespace QuantConnect.Lean.Engine
             if (AlgorithmHandlers.DataFeed != null) AlgorithmHandlers.DataFeed.Exit();
             if (AlgorithmHandlers.Results != null)
             {
-                // perform exception interpretation
-                err = _exceptionInterpreter.Value.Interpret(err, _exceptionInterpreter.Value);
-
-                var message = "Runtime Error: " + _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
+                var message = "Runtime Error: " + StackExceptionInterpreter.Instance.Value.GetExceptionMessageHeader(err);
                 Log.Trace("Engine.Run(): Sending runtime error to user...");
                 AlgorithmHandlers.Results.LogMessage(message);
 
