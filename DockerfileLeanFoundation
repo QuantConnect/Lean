@@ -28,10 +28,10 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test \
    && rm -rf /var/lib/apt/lists/*
 
 # Install IB Gateway: Installs to /usr/local/ibgateway
-RUN wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v985.1h.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64.v985.1h.sh && \
-    ./ibgateway-latest-standalone-linux-x64.v985.1h.sh -q && \
-    rm ibgateway-latest-standalone-linux-x64.v985.1h.sh
+RUN wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
+    chmod 777 ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
+    ./ibgateway-latest-standalone-linux-x64.v985.1j.sh -q && \
+    rm ibgateway-latest-standalone-linux-x64.v985.1j.sh
 
 # Install dotnet 5 sdk & runtime
 RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \

@@ -26,12 +26,12 @@ RUN apt-get update && apt-fast install -y git libgtk2.0.0 cmake bzip2 curl unzip
 # Install IB Gateway: Installs to /usr/local/ibgateway
 # We update the install script so it doesn't use the bundled JVM
 # The bundled JVM doesn't work on ARM64, so we update it to use the JVM installed in the previous command
-RUN wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v985.1h.sh && \
+RUN wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
     java_patch_version=$(java -version 2>&1 | head -n 1 | cut -d'_' -f2 | cut -d'"' -f1) && \
-    bbe -e 's|# INSTALL4J_JAVA_HOME_OVERRIDE=|INSTALL4J_JAVA_HOME_OVERRIDE="/usr/lib/jvm/java-1.8.0-openjdk-arm64"|' -e "s|-lt \"152\"|-lt \"$java_patch_version\"|" -e "s|-gt \"152\"|-gt \"$java_patch_version\"|" ibgateway-latest-standalone-linux-x64.v985.1h.sh > ibgateway-stable-standalone-linux-custom-jvm.sh && \
+    bbe -e 's|# INSTALL4J_JAVA_HOME_OVERRIDE=|INSTALL4J_JAVA_HOME_OVERRIDE="/usr/lib/jvm/java-1.8.0-openjdk-arm64"|' -e "s|-lt \"152\"|-lt \"$java_patch_version\"|" -e "s|-gt \"152\"|-gt \"$java_patch_version\"|" ibgateway-latest-standalone-linux-x64.v985.1j.sh > ibgateway-stable-standalone-linux-custom-jvm.sh && \
     chmod 777 ibgateway-stable-standalone-linux-custom-jvm.sh && \
     ./ibgateway-stable-standalone-linux-custom-jvm.sh -q && \
-    rm ibgateway-latest-standalone-linux-x64.v985.1h.sh ibgateway-stable-standalone-linux-custom-jvm.sh
+    rm ibgateway-latest-standalone-linux-x64.v985.1j.sh ibgateway-stable-standalone-linux-custom-jvm.sh
 
 # Install dotnet 5 sdk & runtime
 # The .deb packages don't support ARM, the install script does
