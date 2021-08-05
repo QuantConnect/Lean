@@ -128,8 +128,7 @@ RUN pip install --no-cache-dir      \
     pandas_market_calendars==1.7    \
     ruptures==1.1.3                 \
     simpy==4.0.1                    \
-    scikit-learn-extra==0.2.0       \
-    ray==1.5.1
+    scikit-learn-extra==0.2.0
 
 # feature_selector has overly strict dependency version ranges
 # We already installed close-enough versions of all of its dependencies above
