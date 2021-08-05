@@ -103,6 +103,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 Subscribe,
                 Unsubscribe,
                 OnDataMessage,
+                TimeSpan.Zero,
                 _connectionRateLimiter);
 
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();

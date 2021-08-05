@@ -83,7 +83,8 @@ namespace QuantConnect.Brokerages.Binance
                 () => new BinanceWebSocketWrapper(null),
                 Subscribe,
                 Unsubscribe,
-                OnDataMessage);
+                OnDataMessage,
+                new TimeSpan(23, 45, 0));
 
             SubscriptionManager = subscriptionManager;
 

@@ -27,7 +27,7 @@ namespace QuantConnect.Brokerages
     /// <summary>
     /// Handles brokerage data subscriptions with multiple websocket connections, with optional symbol weighting
     /// </summary>
-    public class BrokerageMultiWebSocketSubscriptionManager : EventBasedDataQueueHandlerSubscriptionManager
+    public class BrokerageMultiWebSocketSubscriptionManager : EventBasedDataQueueHandlerSubscriptionManager, IDisposable
     {
         private readonly string _webSocketUrl;
         private readonly int _maximumSymbolsPerWebSocket;
@@ -37,6 +37,7 @@ namespace QuantConnect.Brokerages
         private readonly Func<IWebSocket, Symbol, bool> _unsubscribeFunc;
         private readonly Action<WebSocketMessage> _messageHandler;
         private readonly RateGate _connectionRateLimiter;
+        private readonly System.Timers.Timer _reconnectTimer;
 
         private const int ConnectionTimeout = 30000;
 
@@ -49,12 +50,13 @@ namespace QuantConnect.Brokerages
         /// <param name="webSocketUrl">The URL for websocket connections</param>
         /// <param name="maximumSymbolsPerWebSocket">The maximum number of symbols per websocket connection</param>
         /// <param name="maximumWebSocketConnections">The maximum number of websocket connections allowed (if zero, symbol weighting is disabled)</param>
-        /// <param name="connectionRateLimiter">The rate limiter for creating new websocket connections</param>
         /// <param name="symbolWeights">A dictionary for the symbol weights</param>
         /// <param name="webSocketFactory">A function which returns a new websocket instance</param>
         /// <param name="subscribeFunc">A function which subscribes a symbol</param>
         /// <param name="unsubscribeFunc">A function which unsubscribes a symbol</param>
         /// <param name="messageHandler">The websocket message handler</param>
+        /// <param name="webSocketConnectionDuration">The maximum duration of the websocket connection, TimeSpan.Zero for no duration limit</param>
+        /// <param name="connectionRateLimiter">The rate limiter for creating new websocket connections</param>
         public BrokerageMultiWebSocketSubscriptionManager(
             string webSocketUrl,
             int maximumSymbolsPerWebSocket,
@@ -64,6 +66,7 @@ namespace QuantConnect.Brokerages
             Func<IWebSocket, Symbol, bool> subscribeFunc,
             Func<IWebSocket, Symbol, bool> unsubscribeFunc,
             Action<WebSocketMessage> messageHandler,
+            TimeSpan webSocketConnectionDuration,
             RateGate connectionRateLimiter = null)
         {
             _webSocketUrl = webSocketUrl;
@@ -85,6 +88,40 @@ namespace QuantConnect.Brokerages
 
                     _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(symbolWeights, webSocket));
                 }
+            }
+
+            // Some exchanges (e.g. Binance) require a daily restart for websocket connections
+            if (webSocketConnectionDuration != TimeSpan.Zero)
+            {
+                _reconnectTimer = new System.Timers.Timer
+                {
+                    Interval = webSocketConnectionDuration.TotalMilliseconds
+                };
+                _reconnectTimer.Elapsed += (_, _) =>
+                {
+                    Log.Trace("BrokerageMultiWebSocketSubscriptionManager(): Restarting websocket connections");
+
+                    lock (_locker)
+                    {
+                        foreach (var entry in _webSocketEntries)
+                        {
+                            if (entry.WebSocket.IsOpen)
+                            {
+                                Task.Factory.StartNew(() =>
+                                {
+                                    Log.Trace($"BrokerageMultiWebSocketSubscriptionManager(): Websocket restart - disconnect: ({entry.WebSocket.GetHashCode()})");
+                                    Disconnect(entry.WebSocket);
+
+                                    Log.Trace($"BrokerageMultiWebSocketSubscriptionManager(): Websocket restart - connect: ({entry.WebSocket.GetHashCode()})");
+                                    Connect(entry.WebSocket);
+                                });
+                            }
+                        }
+                    }
+                };
+                _reconnectTimer.Start();
+
+                Log.Trace($"BrokerageMultiWebSocketSubscriptionManager(): WebSocket connections will be restarted every: {webSocketConnectionDuration}");
             }
         }
 
@@ -132,6 +169,15 @@ namespace QuantConnect.Brokerages
             }
 
             return success;
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _reconnectTimer?.Stop();
+            _reconnectTimer.DisposeSafely();
         }
 
         private BrokerageMultiWebSocketEntry GetWebSocketEntryBySymbol(Symbol symbol)
@@ -226,6 +272,11 @@ namespace QuantConnect.Brokerages
 
                 connectedEvent.DisposeSafely();
             }
+        }
+
+        private void Disconnect(IWebSocket webSocket)
+        {
+            webSocket.Close();
         }
 
         private void OnOpen(object sender, EventArgs e)
