@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -74,7 +74,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The benchmark for this brokerage</returns>
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
-            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Binance);
+            var symbol = Symbol.Create("BTCUSDC", SecurityType.Crypto, Market.Binance);
             return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
