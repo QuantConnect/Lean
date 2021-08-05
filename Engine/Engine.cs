@@ -249,6 +249,7 @@ namespace QuantConnect.Lean.Engine
                             if (e.InnerException != null)
                             {
                                 var err = _exceptionInterpreter.Value.Interpret(e.InnerException, _exceptionInterpreter.Value);
+                                Log.Error(err);
                                 message += _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
                             }
                             return message;
@@ -474,13 +475,13 @@ namespace QuantConnect.Lean.Engine
         /// <param name="err">Error from algorithm stack</param>
         private void HandleAlgorithmError(AlgorithmNodePacket job, Exception err)
         {
+            // perform exception interpretation
+            err = _exceptionInterpreter.Value.Interpret(err, _exceptionInterpreter.Value);
+
             Log.Error(err, "Breaking out of parent try catch:");
             if (AlgorithmHandlers.DataFeed != null) AlgorithmHandlers.DataFeed.Exit();
             if (AlgorithmHandlers.Results != null)
             {
-                // perform exception interpretation
-                err = _exceptionInterpreter.Value.Interpret(err, _exceptionInterpreter.Value);
-
                 var message = "Runtime Error: " + _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
                 Log.Trace("Engine.Run(): Sending runtime error to user...");
                 AlgorithmHandlers.Results.LogMessage(message);
