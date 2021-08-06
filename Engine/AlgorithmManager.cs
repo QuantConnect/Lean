@@ -24,7 +24,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Exceptions;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -324,7 +323,7 @@ namespace QuantConnect.Lean.Engine
                 }
                 if (algorithm.RunTimeError != null)
                 {
-                    SetRuntimeError(algorithm, algorithm.RunTimeError, "Encountered a runtime error");
+                    Log.Error($"AlgorithmManager.Run(): Stopping, encountered a runtime error at {algorithm.UtcTime} UTC.");
                     return;
                 }
 
@@ -355,7 +354,7 @@ namespace QuantConnect.Lean.Engine
                         }
                         catch (Exception err)
                         {
-                            SetRuntimeError(algorithm, err, executingMarginCall ? "Portfolio.MarginCallModel.ExecuteMarginCall" : "OnMarginCall");
+                            algorithm.SetRuntimeError(err, executingMarginCall ? "Portfolio.MarginCallModel.ExecuteMarginCall" : "OnMarginCall");
                             return;
                         }
                     }
@@ -368,7 +367,7 @@ namespace QuantConnect.Lean.Engine
                         }
                         catch (Exception err)
                         {
-                            SetRuntimeError(algorithm, err, "OnMarginCallWarning");
+                            algorithm.SetRuntimeError(err, "OnMarginCallWarning");
                             return;
                         }
                     }
@@ -400,7 +399,7 @@ namespace QuantConnect.Lean.Engine
                     }
                     catch (Exception err)
                     {
-                        SetRuntimeError(algorithm, err, "OnSecuritiesChanged");
+                        algorithm.SetRuntimeError(err, "OnSecuritiesChanged");
                         return;
                     }
                 }
@@ -474,7 +473,7 @@ namespace QuantConnect.Lean.Engine
                     }
                     catch (Exception err)
                     {
-                        SetRuntimeError(algorithm, err, "Split event");
+                        algorithm.SetRuntimeError(err, "Split event");
                         return;
                     }
                 }
@@ -508,7 +507,7 @@ namespace QuantConnect.Lean.Engine
                 }
                 catch (Exception err)
                 {
-                    SetRuntimeError(algorithm, err, "Consolidators update");
+                    algorithm.SetRuntimeError(err, "Consolidators update");
                     return;
                 }
 
@@ -533,7 +532,7 @@ namespace QuantConnect.Lean.Engine
                     }
                     catch (Exception err)
                     {
-                        SetRuntimeError(algorithm, err, "Custom Data");
+                        algorithm.SetRuntimeError(err, "Custom Data");
                         return;
                     }
                 }
@@ -556,7 +555,7 @@ namespace QuantConnect.Lean.Engine
                 }
                 catch (Exception err)
                 {
-                    SetRuntimeError(algorithm, err, "Dividends/Splits/Delistings");
+                    algorithm.SetRuntimeError(err, "Dividends/Splits/Delistings");
                     return;
                 }
 
@@ -576,7 +575,7 @@ namespace QuantConnect.Lean.Engine
                 }
                 catch (Exception err)
                 {
-                    SetRuntimeError(algorithm, err, "methodInvokers");
+                    algorithm.SetRuntimeError(err, "methodInvokers");
                     return;
                 }
 
@@ -593,7 +592,7 @@ namespace QuantConnect.Lean.Engine
                 }
                 catch (Exception err)
                 {
-                    SetRuntimeError(algorithm, err, "OnData");
+                    algorithm.SetRuntimeError(err, "OnData");
                     return;
                 }
 
@@ -627,7 +626,7 @@ namespace QuantConnect.Lean.Engine
             }
             catch (Exception err)
             {
-                SetRuntimeError(algorithm, err, "OnEndOfAlgorithm");
+                algorithm.SetRuntimeError(err, "OnEndOfAlgorithm");
                 return;
             }
 
@@ -689,17 +688,6 @@ namespace QuantConnect.Lean.Engine
                     _algorithm.Status = state;
                 }
             }
-        }
-
-        /// <summary>
-        /// Helper method to set an algorithm runtime exception in a normalized fashion
-        /// </summary>
-        private void SetRuntimeError(IAlgorithm algorithm, Exception exception, string context)
-        {
-            exception = StackExceptionInterpreter.Instance.Value.Interpret(exception);
-            algorithm.RunTimeError = exception;
-            _algorithm.Status = AlgorithmStatus.RuntimeError;
-            Log.Error($"AlgorithmManager(): RuntimeError at {algorithm.UtcTime} UTC. Context: {context}");
         }
 
         private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, ISynchronizer synchronizer, IResultHandler results, CancellationToken cancellationToken)
@@ -805,8 +793,7 @@ namespace QuantConnect.Lean.Engine
                     }
                     catch (Exception err)
                     {
-                        Log.Error(err);
-                        algorithm.RunTimeError = err;
+                        algorithm.SetRuntimeError(err, $"Warmup history request. Slice.Time {slice.Time}");
                         yield break;
                     }
 

@@ -107,10 +107,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err);
                     // notify the algorithm about the error, so it can be reported to the user
-                    Algorithm.RunTimeError = err;
-                    Algorithm.Status = AlgorithmStatus.RuntimeError;
+                    Algorithm.SetRuntimeError(err, "Synchronizer");
                     break;
                 }
 

@@ -544,9 +544,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             catch (Exception err)
             {
                 // unexpected error, we need to close down shop
-                Log.Error(err);
-                // quit the algorithm due to error
-                _algorithm.RunTimeError = err;
+                _algorithm.SetRuntimeError(err, "HandleOrderRequest");
             }
 
             if (_processingThread != null)
@@ -1084,9 +1082,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 catch (Exception err)
                 {
-                    _algorithm.Error("Order Event Handler Error: " + err.Message);
-                    // kill the algorithm
-                    _algorithm.RunTimeError = err;
+                    // unexpected error, we need to close down shop
+                    _algorithm.SetRuntimeError(err, "Order Event Handler");
                 }
             }
         }
