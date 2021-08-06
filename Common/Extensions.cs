@@ -54,6 +54,7 @@ using Microsoft.IO;
 using NodaTime.TimeZones;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Exceptions;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
@@ -2980,6 +2981,17 @@ namespace QuantConnect
                         $"The skies are falling and the oceans are rising! Math.Sign({quantity}) returned {sign} :/"
                     );
             }
+        }
+
+        /// <summary>
+        /// Helper method to set an algorithm runtime exception in a normalized fashion
+        /// </summary>
+        public static void SetRuntimeError(this IAlgorithm algorithm, Exception exception, string context)
+        {
+            Log.Error(exception, $"Extensions.SetRuntimeError(): RuntimeError at {algorithm.UtcTime} UTC. Context: {context}");
+            exception = StackExceptionInterpreter.Instance.Value.Interpret(exception);
+            algorithm.RunTimeError = exception;
+            algorithm.SetStatus(AlgorithmStatus.RuntimeError);
         }
 
         /// <summary>

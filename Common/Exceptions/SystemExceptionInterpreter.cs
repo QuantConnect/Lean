@@ -14,27 +14,28 @@
 */
 
 using System;
-using Python.Runtime;
-using QuantConnect.Util;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect.Exceptions
 {
     /// <summary>
-    /// Interprets <see cref="PythonExceptionInterpreter"/> instances
+    /// Base handler that will try get an exception file and line
     /// </summary>
-    public class PythonExceptionInterpreter : IExceptionInterpreter
+    public class SystemExceptionInterpreter : IExceptionInterpreter
     {
+        private static Regex FileAndLineRegex = new Regex("(\\w+.cs:line \\d+)", RegexOptions.Compiled);
+
         /// <summary>
         /// Determines the order that an instance of this class should be called
         /// </summary>
-        public virtual int Order => int.MaxValue - 1;
+        public int Order => int.MaxValue;
 
         /// <summary>
         /// Determines if this interpreter should be applied to the specified exception. f
         /// </summary>
         /// <param name="exception">The exception to check</param>
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
-        public virtual bool CanInterpret(Exception exception) => exception?.GetType() == typeof(PythonException);
+        public bool CanInterpret(Exception exception) => true;
 
         /// <summary>
         /// Interprets the specified exception into a new exception
@@ -42,11 +43,34 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public virtual Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
-            var pe = (PythonException)exception;
+            if (!TryGetLineAndFile(exception.StackTrace, out var fileAndLine))
+            {
+                return exception;
+            }
+            return new Exception(exception.Message + fileAndLine, exception);
+        }
 
-            return new Exception(PythonUtil.PythonExceptionParser(pe), pe);
+        /// <summary>
+        /// Helper method to get the file and line from a C# stacktrace
+        /// </summary>
+        public static bool TryGetLineAndFile(string stackTrace, out string fileAndLine)
+        {
+            fileAndLine = null;
+            if (stackTrace != null)
+            {
+                var match = FileAndLineRegex.Match(stackTrace);
+                if (match.Success)
+                {
+                    foreach (Match lineCapture in match.Captures)
+                    {
+                        fileAndLine = $" in {lineCapture.Groups[1].Value}" ;
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }

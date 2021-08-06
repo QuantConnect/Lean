@@ -130,9 +130,7 @@ namespace QuantConnect.Lean.Engine.Results
             catch (Exception err)
             {
                 // unexpected error, we need to close down shop
-                Log.Error(err);
-                // quit the algorithm due to error
-                Algorithm.RunTimeError = err;
+                Algorithm.SetRuntimeError(err, "ResultHandler");
             }
 
             Log.Trace("BacktestingResultHandler.Run(): Ending Thread...");

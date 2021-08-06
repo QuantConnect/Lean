@@ -113,7 +113,15 @@ namespace QuantConnect.Lean.Engine.RealTime
             // the first element is always the next
             while (scheduledEvents.Count > 0 && scheduledEvents[0].NextEventUtcTime <= time)
             {
-                _isolatorLimitProvider.Consume(scheduledEvents[0], time, _timeMonitor);
+                try
+                {
+                    _isolatorLimitProvider.Consume(scheduledEvents[0], time, _timeMonitor);
+                }
+                catch (Exception exception)
+                {
+                    Algorithm.SetRuntimeError(exception, $"Scheduled event: '{scheduledEvents[0].Name}' at {time}");
+                    break;
+                }
 
                 SortFirstElement(scheduledEvents);
             }
@@ -139,17 +147,10 @@ namespace QuantConnect.Lean.Engine.RealTime
                 {
                     _isolatorLimitProvider.Consume(scheduledEvent, nextEventUtcTime, _timeMonitor);
                 }
-                catch (ScheduledEventException scheduledEventException)
+                catch (Exception exception)
                 {
-                    var errorMessage = $"BacktestingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Name}. The error was {scheduledEventException.Message}";
-
-                    Log.Error(scheduledEventException, errorMessage);
-
-                    ResultHandler.RuntimeError(errorMessage);
-
-                    // Errors in scheduled event should be treated as runtime error
-                    // Runtime errors should end Lean execution
-                    Algorithm.RunTimeError = scheduledEventException;
+                    Algorithm.SetRuntimeError(exception, $"Scheduled event: '{scheduledEvent.Name}' at {nextEventUtcTime}");
+                    break;
                 }
 
                 SortFirstElement(scheduledEvents);
