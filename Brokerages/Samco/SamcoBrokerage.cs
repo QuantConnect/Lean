@@ -51,7 +51,7 @@ namespace QuantConnect.Brokerages.Samco
         /// <summary>
         /// The websockets client instance
         /// </summary>
-        protected SamcoWebSocketClientWrapper WebSocket;
+        protected WebSocketClientWrapper WebSocket;
         private readonly SamcoSymbolMapper _symbolMapper;
         /// <summary>
         /// A list of currently active orders
@@ -117,9 +117,8 @@ namespace QuantConnect.Brokerages.Samco
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _algorithm.SetOptionChainProvider(new SamcoLiveOptionChainProvider(_symbolMapper));
 
-            WebSocket = new SamcoWebSocketClientWrapper();
-            WebSocket.Initialize("");
-            WebSocket.SetAuthTokenHeader(_samcoAPI.token);
+            WebSocket = new WebSocketClientWrapper();
+            WebSocket.Initialize("wss://stream.stocknote.com", _samcoAPI.token);
             WebSocket.Message += OnMessage;
             WebSocket.Open += (sender, args) =>
             {
@@ -926,8 +925,9 @@ namespace QuantConnect.Brokerages.Samco
              _messageHandler.HandleNewMessage(e);
         }
 
-        private void OnMessageImpl(WebSocketMessage e)
+        private void OnMessageImpl(WebSocketMessage webSocketMessage)
         {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
             try
             {
                 var token = JToken.Parse(e.Message);
