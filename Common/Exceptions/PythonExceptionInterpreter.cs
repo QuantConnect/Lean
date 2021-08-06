@@ -46,7 +46,7 @@ namespace QuantConnect.Exceptions
         {
             var pe = (PythonException)exception;
 
-            return new Exception(PythonUtil.PythonExceptionParser(pe));
+            return new Exception(PythonUtil.PythonExceptionParser(pe), pe);
         }
     }
 }
