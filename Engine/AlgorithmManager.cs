@@ -173,7 +173,7 @@ namespace QuantConnect.Lean.Engine
                 TimeLimit.StartNewTimeStep();
 
                 //Check this backtest is still running:
-                if (_algorithm.Status != AlgorithmStatus.Running)
+                if (_algorithm.Status == AlgorithmStatus.Stopped)
                 {
                     Log.Error($"AlgorithmManager.Run(): Algorithm state changed to {_algorithm.Status} at {timeSlice.Time.ToStringInvariant()}");
                     break;
@@ -685,7 +685,7 @@ namespace QuantConnect.Lean.Engine
                 //Algorithm could be null after it's initialized and they call Run on us
                 if (state != AlgorithmStatus.Running && _algorithm != null)
                 {
-                    _algorithm.Status = state;
+                    _algorithm.SetStatus(state);
                 }
             }
         }

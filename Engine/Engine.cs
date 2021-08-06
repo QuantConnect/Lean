@@ -246,7 +246,6 @@ namespace QuantConnect.Lean.Engine
                             {
                                 var interpreter = StackExceptionInterpreter.Instance.Value;
                                 var err = interpreter.Interpret(e.InnerException);
-                                Log.Error(err);
                                 message += interpreter.GetExceptionMessageHeader(err);
                             }
                             return message;
@@ -467,11 +466,10 @@ namespace QuantConnect.Lean.Engine
         /// <param name="err">Error from algorithm stack</param>
         private void HandleAlgorithmError(AlgorithmNodePacket job, Exception err)
         {
-            Log.Error(err, "HandleAlgorithmError");
-            if (AlgorithmHandlers.DataFeed != null) AlgorithmHandlers.DataFeed.Exit();
+            AlgorithmHandlers.DataFeed?.Exit();
             if (AlgorithmHandlers.Results != null)
             {
-                var message = "Runtime Error: " + StackExceptionInterpreter.Instance.Value.GetExceptionMessageHeader(err);
+                var message = $"Runtime Error: {err.Message}";
                 Log.Trace("Engine.Run(): Sending runtime error to user...");
                 AlgorithmHandlers.Results.LogMessage(message);
 
