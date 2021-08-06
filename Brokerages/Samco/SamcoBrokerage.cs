@@ -619,7 +619,9 @@ namespace QuantConnect.Brokerages.Samco
                 throw new ArgumentException($"SamcoBrokerage.ConvertResolution: Unsupported resolution type: {request.Resolution}");
             }
 
-            string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
+            var leanSymbol = request.Symbol;
+            var exchange = _securityProvider.GetSecurity(leanSymbol).Exchange;
+            string symbol = _symbolMapper.GetBrokerageSymbol(leanSymbol);
             var period = request.Resolution.ToTimeSpan();
             DateTime latestTime = request.StartTimeUtc;
 
@@ -657,12 +659,9 @@ namespace QuantConnect.Brokerages.Samco
                     yield break;
                 }
 
-                var lastCandleTime = new TimeSpan(15, 29, 0);
-                var firstCandleTime = new TimeSpan(9, 15, 0);
-
                 foreach (var candle in candles.intradayCandleData)
                 {
-                    if ((candle.dateTime.TimeOfDay < firstCandleTime|| candle.dateTime.TimeOfDay > lastCandleTime) && !request.IncludeExtendedMarketHours)
+                    if (!exchange.DateTimeIsOpen(candle.dateTime) && !request.IncludeExtendedMarketHours)
                     {
                         continue;
                     }
