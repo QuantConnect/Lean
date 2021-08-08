@@ -1578,7 +1578,7 @@ namespace QuantConnect.Algorithm
 
             if (EnableAutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(symbol, relativeDailyVolume, resolution);
+                WarmUpIndicator(symbol, relativeDailyVolume, Resolution.Daily); // Fixed WarmUp Resolution because this indicator is based on days
             }
 
             return relativeDailyVolume;
