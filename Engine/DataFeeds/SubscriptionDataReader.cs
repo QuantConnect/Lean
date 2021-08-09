@@ -353,33 +353,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // if we move past our current 'date' then we need to do daily things, such
                     // as updating factors and symbol mapping
-                    if (instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
+                    var shouldSkip = false;
+                    while (!_config.IsInternalFeed && instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
                     {
-                        // this is fairly hacky and could be solved by removing the aux data from this class
-                        // the case is with coarse data files which have many daily sized data points for the
-                        // same date,
-                        if (!_config.IsInternalFeed)
-                        {
-                            // lets keep this, it will be advanced by 'ResolveDataEnumerator'
-                            var currentTradeableDate = _tradeableDates.Current;
+                        // lets keep this, it will be advanced by 'ResolveDataEnumerator'
+                        var currentTradeableDate = _tradeableDates.Current;
 
-                            if (UpdateDataEnumerator(false))
+                        if (UpdateDataEnumerator(false))
+                        {
+                            shouldSkip = instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > currentTradeableDate;
+                            if (shouldSkip)
                             {
-                                if (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > currentTradeableDate)
+                                if (_subscriptionFactoryEnumerator == null)
                                 {
-                                    if (_subscriptionFactoryEnumerator == null)
-                                    {
-                                        // the end
-                                        break;
-                                    }
-                                    // Skip current 'instance' if its start time is beyond the current date, fixes GH issue 3912
-                                    continue;
+                                    // the end, no new enumerator and current instance is beyond current date
+                                    _endOfStream = true;
+                                    return false;
                                 }
-                                // its not beyond 'currentTradeableDate' lets use current instance
                             }
-                            // if we DO NOT get a new enumerator we use current instance, means its a valid source
-                            // even if after 'currentTradeableDate'
+                            // its not beyond 'currentTradeableDate' lets use current instance
+                            break;
                         }
+
+                        if (currentTradeableDate == _tradeableDates.Current)
+                        {
+                            // if tradeable dates did not advanced let's not check again
+                            break;
+                        }
+                    }
+
+                    if(shouldSkip)
+                    {
+                        // Skip current 'instance' if its start time is beyond the current date, fixes GH issue 3912
+                        continue;
                     }
 
                     // We have to perform this check after refreshing the enumerator, if appropriate
