@@ -38,8 +38,8 @@ namespace QuantConnect.Brokerages.Exante
         private bool _isConnected;
         private readonly ExanteClientWrapper _client;
         private readonly string _accountId;
-        private readonly IDataAggregator Aggregator;
         private readonly ConcurrentDictionary<Guid, Order> _orderMap = new ConcurrentDictionary<Guid, Order>();
+        private readonly IDataAggregator _aggregator;
         private readonly ExanteSymbolMapper _symbolMapper;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
@@ -80,7 +80,7 @@ namespace QuantConnect.Brokerages.Exante
             _client = new ExanteClientWrapper(client);
             _symbolMapper = new ExanteSymbolMapper(ComposeTickerToExchangeDictionary());
             _accountId = accountId;
-            Aggregator = aggregator;
+            _aggregator = aggregator;
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += Subscribe;
             _subscriptionManager.UnsubscribeImpl += Unsubscribe;

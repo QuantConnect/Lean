@@ -51,7 +51,7 @@ namespace QuantConnect.Brokerages.Exante
                 return Enumerable.Empty<BaseData>().GetEnumerator();
             }
 
-            var enumerator = Aggregator.Add(dataConfig, newDataAvailableHandler);
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
@@ -92,7 +92,7 @@ namespace QuantConnect.Brokerages.Exante
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             _subscriptionManager.Unsubscribe(dataConfig);
-            Aggregator.Remove(dataConfig);
+            _aggregator.Remove(dataConfig);
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace QuantConnect.Brokerages.Exante
         /// </summary>
         public override void Dispose()
         {
-            Aggregator.DisposeSafely();
+            _aggregator.DisposeSafely();
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace QuantConnect.Brokerages.Exante
                                 var tick = CreateTick(tickShort);
                                 if (tick != null)
                                 {
-                                    Aggregator.Update(tick);
+                                    _aggregator.Update(tick);
                                 }
                             },
                             level: ExanteQuoteLevel.BestPrice).SynchronouslyAwaitTaskResult();
@@ -152,7 +152,7 @@ namespace QuantConnect.Brokerages.Exante
                                 var tick = CreateTick(feedTrade);
                                 if (tick != null)
                                 {
-                                    Aggregator.Update(tick);
+                                    _aggregator.Update(tick);
                                 }
                             }).SynchronouslyAwaitTaskResult();
                         if (!feedTradesStream.Success)
