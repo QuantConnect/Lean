@@ -308,7 +308,6 @@ namespace QuantConnect.Brokerages
         public class TextMessage : MessageData
         {
             public string Message { get; set; }
-            public WebSocketMessageType MessageType { get; set; }
         }
 
         /// <summary>
@@ -318,7 +317,6 @@ namespace QuantConnect.Brokerages
         {
             public byte[] Data { get; set; }
             public int Count { get; set; }
-            public WebSocketMessageType MessageType { get; set; }
         }
     }
 }
