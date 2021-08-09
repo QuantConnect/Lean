@@ -2270,10 +2270,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case Resolution.Tick:
                 case Resolution.Second:
                     return IB.BarSize.OneSecond;
+
                 case Resolution.Minute:
                     return IB.BarSize.OneMinute;
+
                 case Resolution.Hour:
                     return IB.BarSize.OneHour;
+
                 case Resolution.Daily:
                 default:
                     return IB.BarSize.OneDay;
@@ -2291,11 +2294,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 case Resolution.Tick:
                 case Resolution.Second:
-                    return "60 S";
+                    return "1800 S";
+
                 case Resolution.Minute:
                     return "1 D";
+
                 case Resolution.Hour:
                     return "1 M";
+
                 case Resolution.Daily:
                 default:
                     return "1 Y";
@@ -3094,7 +3100,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             foreach (var bar in history.Where(bar => bar.Time >= requestStartTime && bar.EndTime <= requestEndTime))
             {
-                yield return bar;
+                if (request.Symbol.SecurityType == SecurityType.Equity ||
+                    request.ExchangeHours.IsOpen(bar.Time, bar.EndTime, request.IncludeExtendedMarketHours))
+                {
+                    yield return bar;
+                }
             }
 
             Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Download completed: {request.Symbol.Value} ({GetContractDescription(contract)})");
@@ -3116,7 +3126,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var dataDownloading = new AutoResetEvent(false);
             var dataDownloaded = new AutoResetEvent(false);
 
-            var useRegularTradingHours = Convert.ToInt32(!request.IncludeExtendedMarketHours);
+            // This is needed because when useRTH is set to 1, IB will return data only
+            // during Equity regular trading hours (for any asset type, not only for equities)
+            var useRegularTradingHours = request.Symbol.SecurityType == SecurityType.Equity
+                ? Convert.ToInt32(!request.IncludeExtendedMarketHours)
+                : 0;
 
             // making multiple requests if needed in order to download the history
             while (endTime >= startTime)
@@ -3209,7 +3223,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 history.InsertRange(0, filteredPiece);
 
                 // moving endTime to the new position to proceed with next request (if needed)
-                endTime = filteredPiece.First().Time;
+                endTime = filteredPiece.First().Time.ConvertToUtc(exchangeTimeZone);
             }
 
             return history;
