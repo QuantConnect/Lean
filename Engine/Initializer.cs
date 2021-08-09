@@ -39,7 +39,12 @@ namespace QuantConnect.Lean.Engine
                 #endif
 
                 Log.DebuggingEnabled = Config.GetBool("debug-mode");
-                Log.FilePath = Path.Combine(Config.Get("results-destination-folder"), "log.txt");
+                var destinationDir = Config.Get("results-destination-folder");
+                if (!string.IsNullOrEmpty(destinationDir))
+                {
+                    Directory.CreateDirectory(destinationDir);
+                    Log.FilePath = Path.Combine(destinationDir, "log.txt");
+                }
                 Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
                 Log.Trace($"Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v{Globals.Version} Mode: {mode} ({(Environment.Is64BitProcess ? "64" : "32")}bit) Host: {Environment.MachineName}");
