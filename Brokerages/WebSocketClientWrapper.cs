@@ -32,7 +32,6 @@ namespace QuantConnect.Brokerages
         private const int ReceiveBufferSize = 8192;
 
         private string _url;
-        private string _sessionToken;
         private CancellationTokenSource _cts;
         private ClientWebSocket _client;
         private Task _taskConnect;
@@ -42,11 +41,9 @@ namespace QuantConnect.Brokerages
         /// Wraps constructor
         /// </summary>
         /// <param name="url"></param>
-        /// <param name="sessionToken"></param>
-        public void Initialize(string url, string sessionToken = null)
+        public void Initialize(string url)
         {
             _url = url;
-            _sessionToken = sessionToken;
         }
 
         /// <summary>
@@ -212,14 +209,10 @@ namespace QuantConnect.Brokerages
                 {
                     try
                     {
-                        lock (_locker)
+                        lock(_locker)
                         {
                             _client.DisposeSafely();
                             _client = new ClientWebSocket();
-                            if (_sessionToken != null)
-                            {
-                                _client.Options.SetRequestHeader("x-session-token", _sessionToken);
-                            }
                             _client.ConnectAsync(new Uri(_url), connectionCts.Token).SynchronouslyAwaitTask();
                         }
                         OnOpen();
