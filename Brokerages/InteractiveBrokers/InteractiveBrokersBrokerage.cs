@@ -3100,7 +3100,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             foreach (var bar in history.Where(bar => bar.Time >= requestStartTime && bar.EndTime <= requestEndTime))
             {
-                yield return bar;
+                if (request.Symbol.SecurityType == SecurityType.Equity ||
+                    request.ExchangeHours.IsOpen(bar.Time, bar.EndTime, request.IncludeExtendedMarketHours))
+                {
+                    yield return bar;
+                }
             }
 
             Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Download completed: {request.Symbol.Value} ({GetContractDescription(contract)})");
@@ -3122,6 +3126,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var dataDownloading = new AutoResetEvent(false);
             var dataDownloaded = new AutoResetEvent(false);
 
+            // This is needed because when useRTH is set to 1, IB will return data only
+            // during Equity regular trading hours (for any asset type, not only for equities)
             var useRegularTradingHours = request.Symbol.SecurityType == SecurityType.Equity
                 ? Convert.ToInt32(!request.IncludeExtendedMarketHours)
                 : 0;
