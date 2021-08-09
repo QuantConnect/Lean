@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Exante
 {
@@ -22,6 +23,13 @@ namespace QuantConnect.Brokerages.Exante
     /// </summary>
     public class ExanteSymbolMapper : ISymbolMapper
     {
+        private readonly Dictionary<string, string> _tickerToExchange;
+
+        public ExanteSymbolMapper(Dictionary<string, string> tickerToExchange)
+        {
+            _tickerToExchange = tickerToExchange;
+        }
+
         /// <summary>
         /// Converts a Lean symbol instance to a brokerage symbol
         /// </summary>
@@ -50,23 +58,38 @@ namespace QuantConnect.Brokerages.Exante
             if (symbol.ID.SecurityType == SecurityType.Forex && ticker.Length != 6)
                 throw new ArgumentException($"Forex symbol length must be equal to 6: {symbol.Value}");
 
+            string symbolId;
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Option:
-                    return symbol.Underlying;
+                    symbolId = symbol.Underlying;
+                    break;
 
                 case SecurityType.Future:
-                    return symbol.ID.Symbol;
+                    symbolId = symbol.ID.Symbol;
+                    break;
 
                 case SecurityType.Equity:
-                    return $"{ticker.LazyToUpper()}.{symbol.ID.Market.LazyToUpper()}";
+                    symbolId = symbol.ID.Symbol;
+                    break;
 
                 case SecurityType.Index:
-                    return ticker;
+                    symbolId = ticker;
+                    break;
 
                 default:
-                    return $"{ticker.LazyToUpper()}.{symbol.ID.Market.LazyToUpper()}";
+                    symbolId = ticker;
+                    break;
             }
+
+            symbolId = symbolId.LazyToUpper();
+
+            if (!_tickerToExchange.TryGetValue(symbolId, out var exchange))
+            {
+                throw new ArgumentException($"Unknown exchange for symbol '{symbolId}'");
+            }
+
+            return $"{symbolId}.{exchange}";
         }
 
         /// <summary>

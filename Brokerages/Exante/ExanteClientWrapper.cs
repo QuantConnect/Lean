@@ -228,5 +228,22 @@ namespace QuantConnect.Brokerages.Exante
             CheckIfResponseOk(response);
             return response;
         }
+
+        /// <summary>
+        /// Get instruments by exchange
+        /// </summary>
+        /// <param name="exchangeId">Exchange ID</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns>Exchange financial instruments</returns>
+        public WebCallResult<IEnumerable<ExanteSymbol>> GetSymbolsByExchange(
+            string exchangeId,
+            CancellationToken ct = default (CancellationToken)
+            )
+        {
+            var response =
+                _client.GetSymbolsByExchangeAsync(exchangeId, ct).SynchronouslyAwaitTaskResult();
+            CheckIfResponseOk(response);
+            return response;
+        }
     }
 }

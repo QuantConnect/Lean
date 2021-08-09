@@ -39,8 +39,8 @@ namespace QuantConnect.Brokerages.Exante
         private readonly ExanteClientWrapper _client;
         private readonly string _accountId;
         private readonly IDataAggregator Aggregator;
-        private readonly ExanteSymbolMapper _symbolMapper = new ExanteSymbolMapper();
         private readonly ConcurrentDictionary<Guid, Order> _orderMap = new ConcurrentDictionary<Guid, Order>();
+        private readonly ExanteSymbolMapper _symbolMapper;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         /// <summary>
@@ -78,6 +78,7 @@ namespace QuantConnect.Brokerages.Exante
             : base("Exante Brokerage")
         {
             _client = new ExanteClientWrapper(client);
+            _symbolMapper = new ExanteSymbolMapper(ComposeTickerToExchangeDictionary());
             _accountId = accountId;
             Aggregator = aggregator;
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
@@ -101,6 +102,46 @@ namespace QuantConnect.Brokerages.Exante
         /// Returns true if we're currently connected to the broker
         /// </summary>
         public override bool IsConnected => _isConnected;
+
+        private Dictionary<string, string> ComposeTickerToExchangeDictionary()
+        {
+            var tickerToExchange = new Dictionary<string, string>();
+
+            void AddMarketSymbols(string market, Func<string, List<string>> tickersByMarket)
+            {
+                market = market.LazyToUpper();
+                var symbols = tickersByMarket(market);
+                foreach (var sym in symbols)
+                {
+                    if (tickerToExchange.ContainsKey(sym))
+                    {
+                        if (market != tickerToExchange[sym])
+                        {
+                            Log.Error($"Symbol {sym} occurs on two exchanges: {tickerToExchange[sym]} {market}");
+                        }
+                    }
+                    else
+                    {
+                        tickerToExchange.Add(sym, market);
+                    }
+                }
+            }
+
+            foreach (var market in new[]
+            {
+                "NASDAQ", "ARCA", "AMEX",
+                "USD", "USCORP", "EUR", "GBP", "ASN", "CAD", "AUD", "ARG", "CAD",
+                Market.CBOE, Market.CME, "OTCMKTS", Market.NYMEX, Market.CBOT, Market.COMEX, Market.ICE,
+            })
+            {
+                AddMarketSymbols(market,
+                    m => _client.GetSymbolsByExchange(m).Data.Select(x => x.Ticker).ToList());
+            }
+
+            AddMarketSymbols("USD", m => SupportedCryptoCurrencies.ToList());
+
+            return tickerToExchange;
+        }
 
         /// <summary>
         /// Gets all open orders on the account.

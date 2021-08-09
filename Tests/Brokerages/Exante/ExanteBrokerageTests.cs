@@ -30,11 +30,7 @@ namespace QuantConnect.Tests.Brokerages.Exante
 
         public ExanteBrokerageTests()
         {
-            var securityType = SecurityType.Equity;
-            var market = "ARCA";
-            Market.Add(market, 999);
-            SecurityType = securityType;
-            Symbol = Symbol.Create("SPY", securityType, market);
+            Symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
             var clientId = Config.Get("exante-client-id");
             var applicationId = Config.Get("exante-application-id");
