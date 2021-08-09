@@ -173,7 +173,7 @@ namespace QuantConnect.Lean.Engine
                 TimeLimit.StartNewTimeStep();
 
                 //Check this backtest is still running:
-                if (_algorithm.Status == AlgorithmStatus.Stopped)
+                if (_algorithm.Status != AlgorithmStatus.Running && _algorithm.RunTimeError == null)
                 {
                     Log.Error($"AlgorithmManager.Run(): Algorithm state changed to {_algorithm.Status} at {timeSlice.Time.ToStringInvariant()}");
                     break;
@@ -316,9 +316,9 @@ namespace QuantConnect.Lean.Engine
                 ProcessSplitSymbols(algorithm, splitWarnings, delistings);
 
                 //Check if the user's signalled Quit: loop over data until day changes.
-                if (algorithm.Status == AlgorithmStatus.Stopped)
+                if (_algorithm.Status != AlgorithmStatus.Running && _algorithm.RunTimeError == null)
                 {
-                    Log.Trace("AlgorithmManager.Run(): Algorithm quit requested.");
+                    Log.Error($"AlgorithmManager.Run(): Algorithm state changed to {_algorithm.Status} at {timeSlice.Time.ToStringInvariant()}");
                     break;
                 }
                 if (algorithm.RunTimeError != null)
