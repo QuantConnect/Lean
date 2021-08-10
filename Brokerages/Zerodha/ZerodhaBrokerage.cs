@@ -52,7 +52,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// The websockets client instance
         /// </summary>
-        protected ZerodhaWebSocketClientWrapper WebSocket;
+        protected WebSocketClientWrapper WebSocket;
 
         /// <summary>
         /// standard json parsing settings
@@ -96,7 +96,7 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly string _wssUrl = "wss://ws.kite.trade/";
 
         private readonly string _tradingSegment;
-        private readonly BrokerageConcurrentMessageHandler<MessageData> _messageHandler;
+        private readonly BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData> _messageHandler;
         private readonly string _zerodhaProductType;
 
         private DateTime _lastTradeTickTime;
@@ -127,8 +127,8 @@ namespace QuantConnect.Brokerages.Zerodha
             _apiKey = apiKey;
             _accessToken = apiSecret;
             _securityProvider = securityProvider;
-             _messageHandler = new BrokerageConcurrentMessageHandler<MessageData>(OnMessageImpl);
-            WebSocket = new ZerodhaWebSocketClientWrapper();
+             _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData>(OnMessageImpl);
+            WebSocket = new WebSocketClientWrapper();
             _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
             WebSocket.Initialize(_wssUrl);
             WebSocket.Message += OnMessage;
@@ -1001,21 +1001,22 @@ namespace QuantConnect.Brokerages.Zerodha
             Log.Error($"ZerodhaBrokerage.OnError(): Message: {e.Message} Exception: {e.Exception}");
         }
 
-        private void OnMessage(object sender, MessageData e)
+        private void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
-            _messageHandler.HandleNewMessage(e);
+            _messageHandler.HandleNewMessage(webSocketMessage.Data);
         }
 
         /// <summary>
         /// Implementation of the OnMessage event
         /// </summary>
         /// <param name="e"></param>
-        private void OnMessageImpl(MessageData e)
+        private void OnMessageImpl(WebSocketClientWrapper.MessageData message)
         {
             try
             {
-                if (e.MessageType == WebSocketMessageType.Binary)
+                if (message.MessageType == WebSocketMessageType.Binary)
                 {
+                    var e = (WebSocketClientWrapper.BinaryMessage)message;
                     if (e.Count > 1)
                     {
                         int offset = 0;
@@ -1058,30 +1059,35 @@ namespace QuantConnect.Brokerages.Zerodha
                         }
                     }
                 }
-                else if (e.MessageType == WebSocketMessageType.Text)
+                else if (message.MessageType == WebSocketMessageType.Text)
                 {
-                    string message = Encoding.UTF8.GetString(e.Data.Take(e.Count).ToArray());
+                    var e = (WebSocketClientWrapper.TextMessage)message;
 
-                    JObject messageDict = Utils.JsonDeserialize(message);
+                    JObject messageDict = Utils.JsonDeserialize(e.Message);
                     if ((string)messageDict["type"] == "order")
                     {
                         OnOrderUpdate(new Messages.Order(messageDict["data"]));
                     }
                     else if ((string)messageDict["type"] == "error")
                     {
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Zerodha WSS Error. Data: {e.Data} Exception: {messageDict["data"]}"));
-
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Zerodha WSS Error. Data: {e.Message} Exception: {messageDict["data"]}"));
                     }
-                }
-                else if (e.MessageType == WebSocketMessageType.Close)
-                {
-                    WebSocket.Close();
                 }
             }
             catch (Exception exception)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Data} Exception: {exception}"));
-                throw;
+                if (message.MessageType == WebSocketMessageType.Binary)
+                {
+                    var e = (WebSocketClientWrapper.BinaryMessage)message;
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Data} Exception: {exception}"));
+                    throw;
+                }
+                else
+                {
+                    var e = (WebSocketClientWrapper.TextMessage)message;
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
+                    throw;
+                }
             }
         }
 

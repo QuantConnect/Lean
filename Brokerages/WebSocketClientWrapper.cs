@@ -222,13 +222,12 @@ namespace QuantConnect.Brokerages
                         {
                             var messageData = ReceiveMessage(_client, connectionCts.Token, receiveBuffer);
 
-                            if (messageData.MessageType == WebSocketMessageType.Close)
+                            if (messageData == null)
                             {
-                                Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {messageData.Data}");
                                 break;
                             }
 
-                            OnMessage(new WebSocketMessage(this, messageData.Data));
+                            OnMessage(new WebSocketMessage(this, messageData));
                         }
                     }
                     catch (OperationCanceledException) { }
@@ -269,18 +268,82 @@ namespace QuantConnect.Brokerages
                 }
                 while (!result.EndOfMessage);
 
-                return new MessageData
+                if (result.MessageType == WebSocketMessageType.Binary)
                 {
-                    Data = Encoding.UTF8.GetString(ms.GetBuffer(), 0 , (int)ms.Length),
-                    MessageType = result.MessageType
-                };
+                    return new BinaryMessage
+                    {
+                        Data = ms.ToArray(),
+                        Count = result.Count,
+                    };
+                }
+                else if (result.MessageType == WebSocketMessageType.Text)
+                {
+                    return new TextMessage
+                    {
+                        Message = Encoding.UTF8.GetString(ms.GetBuffer(), 0 , (int)ms.Length),
+                    };
+                }
+                else if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {Encoding.UTF8.GetString(ms.GetBuffer(), 0 , (int)ms.Length)}");
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Defines a message of websocket data
+        /// </summary>
+        public abstract class MessageData
+        {
+            /// <summary>
+            /// Type of message
+            /// </summary>
+            public WebSocketMessageType MessageType { get; set; }
+        }
+
+        /// <summary>
+        /// Defines a text-Type message of websocket data
+        /// </summary>
+        public class TextMessage : MessageData
+        {
+            /// <summary>
+            /// Data contained in message
+            /// </summary>
+            public string Message { get; set; }
+
+            /// <summary>
+            /// Constructs default instance of the TextMessage
+            /// </summary>
+            public TextMessage()
+            {
+                MessageType = WebSocketMessageType.Text;
             }
         }
 
-        private class MessageData
+        /// <summary>
+        /// Defines a byte-Type message of websocket data
+        /// </summary>
+        public class BinaryMessage : MessageData
         {
-            public string Data { get; set; }
-            public WebSocketMessageType MessageType { get; set; }
+            /// <summary>
+            /// Data contained in message
+            /// </summary>
+            public byte[] Data { get; set; }
+
+            /// <summary>
+            /// Count of message
+            /// </summary>
+            public int Count { get; set; }
+
+            /// <summary>
+            /// Constructs default instance of the BinaryMessage
+            /// </summary>
+            public BinaryMessage()
+            {
+                MessageType = WebSocketMessageType.Binary;
+            }
         }
     }
 }

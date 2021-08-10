@@ -35,8 +35,10 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         protected readonly object TickLocker = new object();
 
-        private void OnUserMessage(WebSocketMessage e)
+        private void OnUserMessage(WebSocketMessage webSocketMessage)
         {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
+
             try
             {
                 var obj = JObject.Parse(e.Message);
@@ -75,8 +77,10 @@ namespace QuantConnect.Brokerages.Binance
             }
         }
 
-        private void OnDataMessage(WebSocketMessage e)
+        private void OnDataMessage(WebSocketMessage webSocketMessage)
         {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
+
             try
             {
                 var obj = JObject.Parse(e.Message);
