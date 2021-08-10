@@ -319,6 +319,11 @@ namespace QuantConnect.Brokerages.Binance
                 var klines = JsonConvert.DeserializeObject<object[][]>(response.Content)
                     .Select(entries => new Messages.Kline(entries))
                     .ToList();
+
+                var windowStartTime = (new DateTime(1970, 1, 1)).AddMilliseconds(klines.First().OpenTime);
+                var windowEndTime = (new DateTime(1970, 1, 1)).AddMilliseconds(klines.Last().OpenTime + resolutionInMs);
+                Log.Trace($"Received [{symbol}] data for timeperiod from {windowStartTime.ToStringInvariant()} to {windowEndTime.ToStringInvariant()}..");
+
                 if (klines.Count > 0)
                 {
                     startMs = klines.Last().OpenTime + resolutionInMs;
