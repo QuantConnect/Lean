@@ -47,15 +47,13 @@ def mapper(key):
         return { k: mapper(v) for k, v in key.items()}
     return key
 
-def wrap_function(f):
-    '''Wraps function f with g.
-    Function g converts the args / kwargs to use alternative index keys
-      and then calls original function with the mapped args
+def wrap_keyerror_function(f):
+    '''Wraps function f with wrapped_function, used for functions that throw KeyError when not found.
+    wrapped_function converts the args / kwargs to use alternative index keys and then calls the function. 
+    If this fails we fall back to the original key and try it as well, if they both fail we throw our error.
     '''
     def wrapped_function(*args, **kwargs):
-
-        # Map args & kwargs, if wrapped function fails because key, execute with original
-        # Allows for df, Series, etc indexing for keys like 'SPY' if they exist
+        # Map args & kwargs and execute function
         try:
             newargs = args
             newkwargs = kwargs
@@ -65,32 +63,64 @@ def wrap_function(f):
             if len(kwargs) > 0:
                 newkwargs = mapper(kwargs)
 
-            result = f(*newargs, **newkwargs)
-            return result
-        except KeyError:
-            pass
+            return f(*newargs, **newkwargs)
+        except KeyError as e:
+            mKey = [arg for arg in newargs if isinstance(arg, str)]
 
-        result = f(*args, **kwargs)
-        return result
+        # Execute original
+        # Allows for df, Series, etc indexing for keys like 'SPY' if they exist
+        try:
+            return f(*args, **kwargs)
+        except KeyError as e:
+            oKey = [arg for arg in args if isinstance(arg, str)]
+            raise KeyError(f"No key found for either mapped or original key. Mapped Key: {mKey}; Original Key: {oKey}")
 
     wrapped_function.__name__ = f.__name__
     return wrapped_function
 
+def wrap_bool_function(f):
+    '''Wraps function f with wrapped_function, used for functions that reply true/false if key is found.
+    wrapped_function attempts with the original args, if its false, it converts the args / kwargs to use
+    alternative index keys and then attempts with the mapped args.
+    '''
+    def wrapped_function(*args, **kwargs):
+
+        # Try the original args; if true just return true
+        originalResult = f(*args, **kwargs)
+        if originalResult:
+            return originalResult
+
+        # Try our mapped args; return this result regardless
+        newargs = args
+        newkwargs = kwargs
+
+        if len(args) > 1:
+            newargs = mapper(args)
+        if len(kwargs) > 0:
+            newkwargs = mapper(kwargs)
+
+        return f(*newargs, **newkwargs)
+
+    wrapped_function.__name__ = f.__name__
+    return wrapped_function
+
+
 # Wrap all core indexing functions that are shared, yet still throw key errors if index not found
-pd.core.indexing._LocationIndexer.__getitem__ = wrap_function(pd.core.indexing._LocationIndexer.__getitem__)
-pd.core.indexing._ScalarAccessIndexer.__getitem__ = wrap_function(pd.core.indexing._ScalarAccessIndexer.__getitem__)
-pd.core.indexes.base.Index.get_loc = wrap_function(pd.core.indexes.base.Index.get_loc)
+pd.core.indexing._LocationIndexer.__getitem__ = wrap_keyerror_function(pd.core.indexing._LocationIndexer.__getitem__)
+pd.core.indexing._ScalarAccessIndexer.__getitem__ = wrap_keyerror_function(pd.core.indexing._ScalarAccessIndexer.__getitem__)
+pd.core.indexes.base.Index.get_loc = wrap_keyerror_function(pd.core.indexes.base.Index.get_loc)
 
 # Wrap our DF _getitem__ as well, even though most pathways go through the above functions
 # There are cases like indexing with an array that need to be mapped earlier to stop KeyError from arising 
-pd.core.frame.DataFrame.__getitem__ = wrap_function(pd.core.frame.DataFrame.__getitem__)
-
-# Wrap __contains__ to support Python syntax like 'SPY' in DataFrame 
-pd.core.indexes.base.Index.__contains__ = wrap_function(pd.core.indexes.base.Index.__contains__)
+pd.core.frame.DataFrame.__getitem__ = wrap_keyerror_function(pd.core.frame.DataFrame.__getitem__)
 
 # For older version of pandas we may need to wrap extra functions
 if (int(pd.__version__.split('.')[0]) < 1):
-    pd.core.indexes.base.Index.get_value = wrap_function(pd.core.indexes.base.Index.get_value)
+    pd.core.indexes.base.Index.get_value = wrap_keyerror_function(pd.core.indexes.base.Index.get_value)
+
+# Special cases where we need to wrap a function that won't throw a keyerror when not found but instead returns true or false
+# Wrap __contains__ to support Python syntax like 'SPY' in DataFrame 
+pd.core.indexes.base.Index.__contains__ = wrap_bool_function(pd.core.indexes.base.Index.__contains__)
 
 # For compatibility with PandasData.cs usage of this module (Previously wrapped classes)
 FrozenList = pdFrozenList

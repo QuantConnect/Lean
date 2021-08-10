@@ -14,16 +14,19 @@
  *
 */
 
+using System;
 using NUnit.Framework;
 using Python.Runtime;
 
 namespace QuantConnect.Tests.Python
 {
     [TestFixture]
-    class PandasIndexingTests
+    // TODO: Rename to PandasPythonTests, dedicate class to python tests under ./PandasTests directory
+    public class PandasIndexingTests
     {
         private dynamic _module;
         private dynamic _pandasIndexingTests;
+        private dynamic _pandasDataFrameTests;
 
         [SetUp]
         public void Setup()
@@ -32,15 +35,40 @@ namespace QuantConnect.Tests.Python
             {
                 _module = Py.Import("PandasIndexingTests");
                 _pandasIndexingTests = _module.PandasIndexingTests();
+                _pandasDataFrameTests = _module.PandasDataFrameTests();
             }
         }
 
         [Test]
-        public void TestIndexingDataFrameWithList()
+        public void IndexingDataFrameWithList()
         {
             using (Py.GIL())
             {
                 Assert.DoesNotThrow((() => _pandasIndexingTests.test_indexing_dataframe_with_list()));
+            }
+        }
+
+        [Test]
+        public void ContainsUserMappedTickers()
+        {
+            using (Py.GIL())
+            { 
+                PyObject result = _pandasDataFrameTests.test_contains_user_mapped_ticker();
+                var test = result.As<bool>();
+
+                Assert.IsTrue(test);
+            }
+        }
+
+        [Test]
+        public void ExpectedException()
+        {
+            using (Py.GIL())
+            {
+                PyObject result = _pandasDataFrameTests.test_expected_exception();
+                var exception = result.As<string>();
+
+                Assert.IsTrue(exception.Contains("No key found for either mapped or original key. Mapped Key: ['AAPL R735QTJ8XC9X']; Original Key: ['aapl']", StringComparison.InvariantCulture));
             }
         }
     }
