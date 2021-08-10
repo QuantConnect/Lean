@@ -16,28 +16,25 @@
 using System;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing GH issue #5232, where we expect SPWR to be mapped to SPWRA
+    /// Regression algorithm reproducing an issue with sparse data which would cause auxiliary data to be emitted out of order
     /// </summary>
-    public class HourResolutionMappingEventRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SparseDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private DateTime _dateTime;
-        private SymbolChangedEvent _changedEvent;
+        private bool _gotDividend;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2008, 08, 20);
-            SetEndDate(2008, 10, 1);
-
-            AddEquity("SPWR", Resolution.Hour, fillDataForward:false);
+            SetStartDate(2010, 2, 22);
+            SetEndDate(2010, 2, 27);
+            AddEquity("TAPA", Resolution.Hour);
         }
 
         /// <summary>
@@ -46,28 +43,26 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            _dateTime = Time.Date;
-            if (!Portfolio.Invested)
+            foreach (var dividend in data.Dividends)
             {
-                SetHoldings("SPWR", 1);
+                Debug($"{Time}. {dividend.Value}");
+                _gotDividend = true;
+                if (Time != dividend.Value.Time || Time.Day != 24)
+                {
+                    throw new Exception("Got a dividend at an unexpected point in time");
+                }
             }
-
-            foreach (var symbolChangedEvent in data.SymbolChangedEvents.Values)
+            foreach (var tradeBar in data.Bars)
             {
-                _changedEvent = symbolChangedEvent;
-                Log($"{Time}: {symbolChangedEvent.OldSymbol} -> {symbolChangedEvent.NewSymbol}");
+                Debug($"{Time}. {tradeBar.Value}");
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_dateTime != EndDate.Date)
+            if (!_gotDividend)
             {
-                throw new Exception($"Last day was {_dateTime}, should be algorithm end date: {EndDate.Date}");
-            }
-            if (_changedEvent == null)
-            {
-                throw new Exception("We got not symbol change event! 'SPWR' should of been mapped");
+                throw new Exception("Never got a dividend!");
             }
         }
 
@@ -86,34 +81,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-78.316%"},
-            {"Drawdown", "31.700%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-16.363%"},
-            {"Sharpe Ratio", "-0.506"},
-            {"Probabilistic Sharpe Ratio", "27.578%"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.45"},
-            {"Beta", "2.007"},
-            {"Annual Standard Deviation", "1.118"},
-            {"Annual Variance", "1.25"},
-            {"Information Ratio", "-0.069"},
-            {"Tracking Error", "0.869"},
-            {"Treynor Ratio", "-0.282"},
-            {"Total Fees", "$5.40"},
-            {"Estimated Strategy Capacity", "$2400000.00"},
-            {"Lowest Capacity Asset", "SPWR TDQZFPKOZ5UT"},
-            {"Fitness Score", "0.008"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "1.376"},
+            {"Tracking Error", "0.14"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.038"},
-            {"Return Over Maximum Drawdown", "-2.536"},
-            {"Portfolio Turnover", "0.033"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -127,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "8d5c6263fbdfa4b2338fc725e27b93e9"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }
