@@ -354,7 +354,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the unrealized profit as a percenage of holdings cost
         /// </summary>
-        public decimal UnrealizedProfitPercent
+        public virtual decimal UnrealizedProfitPercent
         {
             get
             {
