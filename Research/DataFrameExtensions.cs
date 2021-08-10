@@ -1,23 +1,28 @@
-using Microsoft.Data.Analysis;
+using Deedle;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Python;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XPlot.Plotly;
+using XChart = XPlot.Plotly.Chart;
+using Graph = XPlot.Plotly;
 
 namespace QuantConnect.Research
 {
     public static class DataFrameExtensions
     {
-        public static DataFrame ToDataFrame<T>(this IEnumerable<Slice> slices, Func<DataDictionary<T>> getDataDictionary)
+
+        public static Frame<DateTime, string> ToDataFrame<T>(this IEnumerable<Slice> slices, Func<Slice, DataDictionary<T>> getDataDictionary)
             where T : IBar
         {
             if (getDataDictionary is null)
                 return null;
 
-            DataFrame dataFrame = null;
+            Frame<DateTime, string> dataFrame = null;
             foreach (var slice in slices)
             {
                 var df = ToDataFrame(slice, getDataDictionary);
@@ -27,59 +32,148 @@ namespace QuantConnect.Research
                 else
                 {
                     //concat
-                    foreach (var row in df.Rows)
-                    {
-                        dataFrame.Append(row, true);
-                    }
+                    dataFrame = dataFrame.Merge(df);
                 }
             }
+
+            dataFrame = dataFrame.IndexRows<DateTime>("Time").SortRowsByKey();
 
             return dataFrame;
         }
 
-        public static DataFrame ToDataFrame<T>(this Slice slice, Func<DataDictionary<T>> getDataDictionary)
-            where T : IBar
+        public static Frame<DateTime, string> ToDataFrame<T>(this Slice slice, Func<Slice, DataDictionary<T>> getDataDictionary)
         {
             if (getDataDictionary is null)
                 return null;
 
-            DataDictionary<T> dataDictionary = getDataDictionary();
+            DataDictionary<T> dataDictionary = getDataDictionary(slice);
 
             var enumerator = dataDictionary.GetEnumerator();
 
-            var dataFrame = new DataFrame();
-            while (!enumerator.MoveNext())
+            List<KeyValuePair<DateTime, Series<string, object>>> rows = new List<KeyValuePair<DateTime, Series<string, object>>>();
+            while (enumerator.MoveNext())
             {
                 var symbolToData = enumerator.Current;
 
-                var dataFrameRow = ToDataFrameRow(slice, () => symbolToData);
+                var builder = new SeriesBuilder<string>();
+                builder.Add(nameof(slice.Time), slice.Time);
 
-                dataFrame.Append(dataFrameRow, true);
+                builder.Add(nameof(Symbol), symbolToData.Key.Value);
+
+                if (symbolToData.Value is IBar bar)
+                {
+                    builder.Add(nameof(bar.Open), bar.Open);
+                    builder.Add(nameof(bar.High), bar.High);
+                    builder.Add(nameof(bar.Low), bar.Low);
+                    builder.Add(nameof(bar.Close), bar.Close);
+                }
+
+                if (symbolToData.Value is TradeBar tradeBar)
+                {
+                    builder.Add(nameof(tradeBar.Volume), tradeBar.Volume);
+                }
+
+                rows.Add(new KeyValuePair<DateTime, Series<string, object>>(slice.Time, builder.Series));
             }
 
-            return dataFrame;
+            return Frame.FromRows(rows);
         }
 
-        public static DataFrameRow ToDataFrameRow<T>(this Slice slice, Func<KeyValuePair<Symbol, T>> getSymbolToBar)
-            where T : IBar
+        public static void Show(this IEnumerable<PlotlyChart> charts)
         {
-            if (getSymbolToBar is null)
+            XChart.ShowAll(charts);
+        }
+
+        public static IEnumerable<PlotlyChart> ToOhlcvChart(this Frame<DateTime, string> dataFrame)
+        {
+            var charts = new List<PlotlyChart>();
+
+            var ohlc = ToOhlcChart(dataFrame);
+
+            if (ohlc != null)
+                charts.Add(ohlc);
+
+            var volume = ToVolumeChart(dataFrame);
+
+            if (volume != null)
+                charts.Add(volume);
+
+            return charts;
+        }
+
+        public static PlotlyChart ToOhlcChart(this Frame<DateTime, string> dataFrame)
+        {
+            if (dataFrame is null)
+            {
+                throw new ArgumentNullException(nameof(dataFrame));
+            }
+
+            IBar bar;
+            IEnumerable<Tuple<DateTime, decimal, decimal, decimal, decimal>> chartData = dataFrame.Rows.Observations.Select(indexToRow => new Tuple<DateTime, decimal, decimal, decimal, decimal>(
+            indexToRow.Key,
+            (decimal)indexToRow.Value[nameof(bar.Open)],
+            (decimal)indexToRow.Value[nameof(bar.High)],
+            (decimal)indexToRow.Value[nameof(bar.Low)],
+            (decimal)indexToRow.Value[nameof(bar.Close)]
+            ));
+
+            var chart = XChart.Candlestick(chartData);
+            chart.WithLayout(new Layout.Layout
+            {
+                title = "OHLC",
+                xaxis = new Xaxis
+                {
+                    title = "Date"
+                },
+                yaxis = new Yaxis
+                {
+                    title = "Price (USD)"
+                }
+            });
+            return chart;
+        }
+
+        public static PlotlyChart ToVolumeChart(this Frame<DateTime, string> dataFrame)
+        {
+            TradeBar bar;
+            if (dataFrame is null)
+            {
+                throw new ArgumentNullException(nameof(dataFrame));
+            }
+            else if (!dataFrame.ColumnKeys.Contains(nameof(bar.Volume)))
+            {
                 return null;
+            }
 
-            PrimitiveDataFrameColumn<DateTime> time = new PrimitiveDataFrameColumn<DateTime>(nameof(slice.Time), new List<DateTime> { slice.Time });
+            IEnumerable<Tuple<DateTime, decimal>> chartData = dataFrame.Rows.Observations.Select(indexToRow => new Tuple<DateTime, decimal>(
+            indexToRow.Key,
+            (decimal)indexToRow.Value[nameof(bar.Volume)]
+            ));
 
-            KeyValuePair<Symbol, T> symbolToData = getSymbolToBar();
-            IBar bar = symbolToData.Value;
+            var barTrace = new Graph.Bar()
+            {
+                x = dataFrame.RowIndex.KeySequence,
 
-            StringDataFrameColumn symbol = new StringDataFrameColumn(nameof(Symbol), new List<string> { symbolToData.Key.Value });
-            PrimitiveDataFrameColumn<decimal> open = new PrimitiveDataFrameColumn<decimal>(nameof(bar.Open), new List<decimal> { bar.Open });
-            PrimitiveDataFrameColumn<decimal> high = new PrimitiveDataFrameColumn<decimal>(nameof(bar.High), new List<decimal> { bar.High });
-            PrimitiveDataFrameColumn<decimal> low = new PrimitiveDataFrameColumn<decimal>(nameof(bar.Low), new List<decimal> { bar.Low });
-            PrimitiveDataFrameColumn<decimal> close = new PrimitiveDataFrameColumn<decimal>(nameof(bar.Close), new List<decimal> { bar.Close });
+                y = dataFrame.Columns[nameof(bar.Volume)].Values,
 
-            var dataframe = new DataFrame(time, symbol, open, high, low, close);
+                //marker = new Graph.Marker { color = "rgb(0, 0, 109)" }
 
-            return dataframe.Rows[0];
+            };
+
+            var chart = XChart.Plot(barTrace);
+            chart.WithLayout(new Layout.Layout
+            {
+                title = "Volume",
+                xaxis = new Xaxis
+                {
+                    title = "Date"
+                },
+                yaxis = new Yaxis
+                {
+                    title = "Volume"
+                },
+            });
+            return chart;
         }
     }
 }
