@@ -54,7 +54,8 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
             # Add newly invested securities
             value = self.trailing.get(symbol)
             if value == None:
-                self.trailing[symbol] = profitPercent   # Set to unrealized profit percent
+                newValue = profitPercent if profitPercent > 0 else 0
+                self.trailing[symbol] = newValue
                 continue
 
             # Check for new high and update

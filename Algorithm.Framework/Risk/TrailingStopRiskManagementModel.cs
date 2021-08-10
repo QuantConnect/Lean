@@ -65,7 +65,8 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 decimal value;
                 if (!_trailing.TryGetValue(symbol, out value))
                 {
-                    _trailing.Add(symbol, profitPercent);
+                    var newValue = profitPercent > 0 ? profitPercent : 0;
+                    _trailing.Add(symbol, newValue);
                     continue;
                 }
 
