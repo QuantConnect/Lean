@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
-        public void TestIndexingDataFrameWithList()
+        public void IndexingDataFrameWithList()
         {
             using (Py.GIL())
             {
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
-        public void TestContainsUserMappedTickers()
+        public void ContainsUserMappedTickers()
         {
             using (Py.GIL())
             { 
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
-        public void TestExpectedException()
+        public void ExpectedException()
         {
             using (Py.GIL())
             {

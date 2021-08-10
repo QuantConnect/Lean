@@ -11,15 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Research")
-AddReference("QuantConnect.Tests")
-
-from QuantConnect.Tests import Symbols
-from QuantConnect.Tests.Python import PythonTestingUtils
-
 from AlgorithmImports import *
+from QuantConnect.Tests import *
+from QuantConnect.Tests.Python import *
 
 # TODO: Rename to PandasResearchTests and keep this class for QB related tests; rename py module to PandasTests
 class PandasIndexingTests():
@@ -50,7 +44,6 @@ class PandasDataFrameTests():
 
         # Create our dataframes
         self.spydf = pdConverter.GetDataFrame(PythonTestingUtils.GetSlices(self.spy))
-        self.aapldf = pdConverter.GetDataFrame(PythonTestingUtils.GetSlices(self.aapl))
 
     def test_contains_user_mapped_ticker(self):
         # Create a new DF that has a plain ticker, test that our mapper doesn't break
