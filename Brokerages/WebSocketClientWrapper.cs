@@ -274,7 +274,6 @@ namespace QuantConnect.Brokerages
                     {
                         Data = ms.ToArray(),
                         Count = result.Count,
-                        MessageType = result.MessageType,
                     };
                 }
                 else if (result.MessageType == WebSocketMessageType.Text)
@@ -282,7 +281,6 @@ namespace QuantConnect.Brokerages
                     return new TextMessage
                     {
                         Message = Encoding.UTF8.GetString(ms.GetBuffer(), 0 , (int)ms.Length),
-                        MessageType = result.MessageType
                     };
                 }
                 else if (result.MessageType == WebSocketMessageType.Close)
@@ -297,8 +295,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Defines a message of websocket data
         /// </summary>
-        public class MessageData
+        public abstract class MessageData
         {
+            /// <summary>
+            /// Type of message
+            /// </summary>
             public WebSocketMessageType MessageType { get; set; }
         }
 
@@ -307,7 +308,18 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public class TextMessage : MessageData
         {
+            /// <summary>
+            /// Data contained in message
+            /// </summary>
             public string Message { get; set; }
+
+            /// <summary>
+            /// Constructs default instance of the TextMessage
+            /// </summary>
+            public TextMessage()
+            {
+                MessageType = WebSocketMessageType.Text;
+            }
         }
 
         /// <summary>
@@ -315,8 +327,23 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public class BinaryMessage : MessageData
         {
+            /// <summary>
+            /// Data contained in message
+            /// </summary>
             public byte[] Data { get; set; }
+
+            /// <summary>
+            /// Count of message
+            /// </summary>
             public int Count { get; set; }
+
+            /// <summary>
+            /// Constructs default instance of the BinaryMessage
+            /// </summary>
+            public BinaryMessage()
+            {
+                MessageType = WebSocketMessageType.Binary;
+            }
         }
     }
 }
