@@ -14,10 +14,14 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Research")
-AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Tests")
+
+from QuantConnect.Tests import Symbols
+from QuantConnect.Tests.Python import PythonTestingUtils
 
 from AlgorithmImports import *
 
+# TODO: Rename to PandasResearchTests and keep this class for QB related tests; rename py module to PandasTests
 class PandasIndexingTests():
     def __init__(self):
         self.qb = QuantBook()
@@ -31,4 +35,33 @@ class PandasIndexingTests():
         self.history = self.history['close'].unstack(level=0).dropna()
         test = self.history[[self.symbol]]
         return True
+
+# Test class that sets up two dataframes to test on
+class PandasDataFrameTests():
+    def __init__(self):
+        self.spy = Symbols.SPY
+        self.aapl = Symbols.AAPL
+
+        # Set our symbol cache
+        SymbolCache.Set("SPY", self.spy)
+        SymbolCache.Set("AAPL", self.aapl)
+
+        pdConverter = PandasConverter()
+
+        # Create our dataframes
+        self.spydf = pdConverter.GetDataFrame(PythonTestingUtils.GetSlices(self.spy))
+        self.aapldf = pdConverter.GetDataFrame(PythonTestingUtils.GetSlices(self.aapl))
+
+    def test_contains_user_mapped_ticker(self):
+        # Create a new DF that has a plain ticker, test that our mapper doesn't break
+        # searching for it.
+        df = pd.DataFrame({'spy': [2, 5, 8, 10]})
+        return 'spy' in df
+
+    def test_expected_exception(self):
+        # Try indexing a ticker that doesn't exist in this frame, but is still in our cache
+        try:
+            self.spydf['aapl']
+        except KeyError as e:
+            return str(e)
 
