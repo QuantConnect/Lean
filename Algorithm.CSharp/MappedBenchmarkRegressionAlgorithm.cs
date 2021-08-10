@@ -13,22 +13,17 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing GH issue #5232, where we expect SPWR to be mapped to SPWRA
+    /// Regression algorithm using a benchmark security which should be mapped from SPWR to SPWRA during the backtest
     /// </summary>
-    public class HourResolutionMappingEventRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MappedBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private DateTime _dateTime;
-        private SymbolChangedEvent _changedEvent;
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -37,7 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2008, 08, 20);
             SetEndDate(2008, 10, 1);
 
-            AddEquity("SPWR", Resolution.Hour, fillDataForward:false);
+            SetBenchmark("SPWR");
+            AddEquity("SPY", Resolution.Hour);
         }
 
         /// <summary>
@@ -46,28 +42,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            _dateTime = Time.Date;
             if (!Portfolio.Invested)
             {
-                SetHoldings("SPWR", 1);
-            }
-
-            foreach (var symbolChangedEvent in data.SymbolChangedEvents.Values)
-            {
-                _changedEvent = symbolChangedEvent;
-                Log($"{Time}: {symbolChangedEvent.OldSymbol} -> {symbolChangedEvent.NewSymbol}");
-            }
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (_dateTime != EndDate.Date)
-            {
-                throw new Exception($"Last day was {_dateTime}, should be algorithm end date: {EndDate.Date}");
-            }
-            if (_changedEvent == null)
-            {
-                throw new Exception("We got not symbol change event! 'SPWR' should of been mapped");
+                SetHoldings("SPY", 1);
             }
         }
 
@@ -89,31 +66,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-78.316%"},
-            {"Drawdown", "31.700%"},
+            {"Compounding Annual Return", "-50.371%"},
+            {"Drawdown", "12.700%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-16.363%"},
-            {"Sharpe Ratio", "-0.506"},
-            {"Probabilistic Sharpe Ratio", "27.578%"},
+            {"Net Profit", "-7.863%"},
+            {"Sharpe Ratio", "-1.25"},
+            {"Probabilistic Sharpe Ratio", "17.179%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.45"},
-            {"Beta", "2.007"},
-            {"Annual Standard Deviation", "1.118"},
-            {"Annual Variance", "1.25"},
-            {"Information Ratio", "-0.069"},
-            {"Tracking Error", "0.869"},
-            {"Treynor Ratio", "-0.282"},
-            {"Total Fees", "$5.40"},
-            {"Estimated Strategy Capacity", "$2400000.00"},
-            {"Lowest Capacity Asset", "SPWR TDQZFPKOZ5UT"},
-            {"Fitness Score", "0.008"},
+            {"Alpha", "-0.357"},
+            {"Beta", "0.262"},
+            {"Annual Standard Deviation", "0.404"},
+            {"Annual Variance", "0.163"},
+            {"Information Ratio", "0.07"},
+            {"Tracking Error", "0.873"},
+            {"Treynor Ratio", "-1.927"},
+            {"Total Fees", "$5.10"},
+            {"Estimated Strategy Capacity", "$180000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Fitness Score", "0.003"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.038"},
-            {"Return Over Maximum Drawdown", "-2.536"},
-            {"Portfolio Turnover", "0.033"},
+            {"Sortino Ratio", "-3.681"},
+            {"Return Over Maximum Drawdown", "-4.174"},
+            {"Portfolio Turnover", "0.034"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -127,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "8d5c6263fbdfa4b2338fc725e27b93e9"}
+            {"OrderListHash", "88a9d602347e5fee24345674d9d25100"}
         };
     }
 }

@@ -354,24 +354,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // if we move past our current 'date' then we need to do daily things, such
                     // as updating factors and symbol mapping
                     var shouldSkip = false;
-                    while (!_config.IsInternalFeed && instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
+                    while (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
                     {
-                        // lets keep this, it will be advanced by 'ResolveDataEnumerator'
                         var currentTradeableDate = _tradeableDates.Current;
-
                         if (UpdateDataEnumerator(false))
                         {
-                            shouldSkip = instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > currentTradeableDate;
-                            if (shouldSkip)
+                            shouldSkip = true;
+                            if (_subscriptionFactoryEnumerator == null)
                             {
-                                if (_subscriptionFactoryEnumerator == null)
+                                // if null enumerator we have not been mapped into something new, we just ended,
+                                // let's double check this data point should be skipped or not based on current tradeable date
+                                shouldSkip = instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current;
+                                if (shouldSkip)
                                 {
                                     // the end, no new enumerator and current instance is beyond current date
                                     _endOfStream = true;
                                     return false;
                                 }
                             }
-                            // its not beyond 'currentTradeableDate' lets use current instance
                             break;
                         }
 
@@ -381,7 +381,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             break;
                         }
                     }
-
                     if(shouldSkip)
                     {
                         // Skip current 'instance' if its start time is beyond the current date, fixes GH issue 3912
