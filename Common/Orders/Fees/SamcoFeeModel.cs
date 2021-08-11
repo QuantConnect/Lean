@@ -66,7 +66,7 @@ namespace QuantConnect.Orders.Fees
             decimal stamp_charges = 0;
             if (!isSell)
             {
-                stamp_charges = Math.Round(value * 0.00003M, 2);
+                stamp_charges = Math.Round((turnover * 0.00002M), 2);
             }
 
             var total_tax = Math.Round(brokerage + stt_total + exc_trans_charge + stamp_charges + cc + stax + sebi_charges, 2);
