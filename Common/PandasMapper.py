@@ -49,10 +49,23 @@ def mapper(key):
 
 def wrap_keyerror_function(f):
     '''Wraps function f with wrapped_function, used for functions that throw KeyError when not found.
-    wrapped_function converts the args / kwargs to use alternative index keys and then calls the function. 
-    If this fails we fall back to the original key and try it as well, if they both fail we throw our error.
+    wrapped_function calls the original with standard args, if they recieve a KeyError we go ahead and
+    convert the args / kwargs to use alternative index keys and then call the function again. 
+    If this fails we know neither the original or mapped key function exists and throw the error.
+
+    The order is important because some of the shared functions will call this multiple times in a call stack,
+    keep original first to reduce branch off if original args are working or already mapped.
     '''
     def wrapped_function(*args, **kwargs):
+
+        # Execute original
+        # Allows for df, Series, etc indexing for keys like 'SPY' if they exist
+        # Also good if args may have been mapped previously
+        try:
+            return f(*args, **kwargs)
+        except (KeyError, TypeError) as e:
+            oKey = [arg for arg in args if isinstance(arg, str)]
+
         # Map args & kwargs and execute function
         try:
             newargs = args
@@ -66,13 +79,6 @@ def wrap_keyerror_function(f):
             return f(*newargs, **newkwargs)
         except KeyError as e:
             mKey = [arg for arg in newargs if isinstance(arg, str)]
-
-        # Execute original
-        # Allows for df, Series, etc indexing for keys like 'SPY' if they exist
-        try:
-            return f(*args, **kwargs)
-        except KeyError as e:
-            oKey = [arg for arg in args if isinstance(arg, str)]
             raise KeyError(f"No key found for either mapped or original key. Mapped Key: {mKey}; Original Key: {oKey}")
 
     wrapped_function.__name__ = f.__name__
