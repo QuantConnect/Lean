@@ -367,6 +367,11 @@ namespace QuantConnect.Brokerages.Exante
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
+            if (order == null)
+            {
+                throw new ArgumentNullException(nameof(order));
+            }
+
             var updateResult = true;
             foreach (var bi in order.BrokerId.Skip(1))
             {
