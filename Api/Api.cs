@@ -1200,6 +1200,7 @@ namespace QuantConnect.Api
 
             dataFolder ??= Globals.DataFolder;
             // Normalize windows paths to linux format
+            dataFolder = dataFolder.Replace("\\", "/", StringComparison.InvariantCulture);
             filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
 
             // First remove data root directory from path for request if included
