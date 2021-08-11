@@ -38,9 +38,9 @@ namespace QuantConnect.Brokerages.Exante
         private bool _isConnected;
         private readonly ExanteClientWrapper _client;
         private readonly string _accountId;
-        private readonly ConcurrentDictionary<Guid, Order> _orderMap = new ConcurrentDictionary<Guid, Order>();
         private readonly IDataAggregator _aggregator;
         private readonly ExanteSymbolMapper _symbolMapper;
+        private readonly ConcurrentDictionary<Guid, Order> _orderMap = new();
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace QuantConnect.Brokerages.Exante
                             throw new ArgumentNullException(nameof(item.OrderParameters.LimitPrice));
                         }
 
-                        order = new LimitOrder {LimitPrice = item.OrderParameters.LimitPrice.Value};
+                        order = new LimitOrder { LimitPrice = item.OrderParameters.LimitPrice.Value };
                         break;
                     case ExanteOrderType.Stop:
                         if (item.OrderParameters.StopPrice == null)
@@ -174,7 +174,7 @@ namespace QuantConnect.Brokerages.Exante
                             throw new ArgumentNullException(nameof(item.OrderParameters.StopPrice));
                         }
 
-                        order = new StopMarketOrder {StopPrice = item.OrderParameters.StopPrice.Value};
+                        order = new StopMarketOrder { StopPrice = item.OrderParameters.StopPrice.Value };
                         break;
                     case ExanteOrderType.StopLimit:
                         if (item.OrderParameters.LimitPrice == null)
@@ -214,7 +214,7 @@ namespace QuantConnect.Brokerages.Exante
                         throw new ArgumentOutOfRangeException();
                 }
 
-                order.BrokerId = new List<string> {item.OrderId.ToString()};
+                order.BrokerId = new List<string> { item.OrderId.ToString() };
                 order.Symbol = ConvertSymbol(symbol);
                 order.Time = item.Date;
                 order.Status = ConvertOrderStatus(item.OrderState.Status);
@@ -298,7 +298,7 @@ namespace QuantConnect.Brokerages.Exante
                     break;
 
                 case OrderType.Limit:
-                    var limitOrder = (LimitOrder) order;
+                    var limitOrder = (LimitOrder)order;
                     orderPlacement = _client.PlaceOrder(
                         _accountId,
                         _symbolMapper.GetBrokerageSymbol(order.Symbol),
@@ -312,7 +312,7 @@ namespace QuantConnect.Brokerages.Exante
                     break;
 
                 case OrderType.StopMarket:
-                    var stopMarketOrder = (StopMarketOrder) order;
+                    var stopMarketOrder = (StopMarketOrder)order;
                     orderPlacement = _client.PlaceOrder(
                         _accountId,
                         _symbolMapper.GetBrokerageSymbol(order.Symbol),
@@ -326,7 +326,7 @@ namespace QuantConnect.Brokerages.Exante
                     break;
 
                 case OrderType.StopLimit:
-                    var stopLimitOrder = (StopLimitOrder) order;
+                    var stopLimitOrder = (StopLimitOrder)order;
                     orderPlacement = _client.PlaceOrder(
                         _accountId,
                         _symbolMapper.GetBrokerageSymbol(order.Symbol),
@@ -390,7 +390,7 @@ namespace QuantConnect.Brokerages.Exante
                     break;
 
                 case OrderType.Limit:
-                    var limitOrder = (LimitOrder) order;
+                    var limitOrder = (LimitOrder)order;
                     exanteOrder = _client.ModifyOrder(
                         Guid.Parse(order.BrokerId.First()),
                         ExanteOrderAction.Replace,
@@ -399,7 +399,7 @@ namespace QuantConnect.Brokerages.Exante
                     break;
 
                 case OrderType.StopMarket:
-                    var stopMarketOrder = (StopMarketOrder) order;
+                    var stopMarketOrder = (StopMarketOrder)order;
                     exanteOrder = _client.ModifyOrder(
                         Guid.Parse(order.BrokerId.First()),
                         ExanteOrderAction.Replace,
@@ -408,7 +408,7 @@ namespace QuantConnect.Brokerages.Exante
                     break;
 
                 case OrderType.StopLimit:
-                    var stopLimitOrder = (StopLimitOrder) order;
+                    var stopLimitOrder = (StopLimitOrder)order;
                     exanteOrder = _client.ModifyOrder(
                         Guid.Parse(order.BrokerId.First()),
                         ExanteOrderAction.Replace,

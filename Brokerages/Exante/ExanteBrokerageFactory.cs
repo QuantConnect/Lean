@@ -57,11 +57,11 @@ namespace QuantConnect.Brokerages.Exante
         /// </remarks>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            {"exante-client-id", Config.Get("exante-client-id")},
-            {"exante-application-id", Config.Get("exante-application-id")},
-            {"exante-shared-key", Config.Get("exante-shared-key")},
-            {"exante-account-id", Config.Get("exante-account-id")},
-            {"exante-platform-type", Config.Get("exante-platform-type")},
+            { "exante-client-id", Config.Get("exante-client-id") },
+            { "exante-application-id", Config.Get("exante-application-id") },
+            { "exante-shared-key", Config.Get("exante-shared-key") },
+            { "exante-account-id", Config.Get("exante-account-id") },
+            { "exante-platform-type", Config.Get("exante-platform-type") },
         };
 
         /// <summary>

@@ -30,7 +30,7 @@ namespace QuantConnect.Brokerages.Exante
     public class ExanteClientWrapper
     {
         private readonly ExanteClient _client;
-        
+
         /// <summary>Get Exante client for stream data</summary>
         public ExanteStreamClient StreamClient { get; private set; }
 
@@ -43,7 +43,10 @@ namespace QuantConnect.Brokerages.Exante
             StreamClient = new ExanteStreamClient(clientOptions);
         }
 
-        private static void CheckIfResponseOk<T>(WebCallResult<T> response, HttpStatusCode statusCode = HttpStatusCode.OK)
+        private static void CheckIfResponseOk<T>(
+            WebCallResult<T> response,
+            HttpStatusCode statusCode = HttpStatusCode.OK
+            )
         {
             if (!(response.ResponseStatusCode == statusCode && response.Success))
             {
@@ -237,7 +240,7 @@ namespace QuantConnect.Brokerages.Exante
         /// <returns>Exchange financial instruments</returns>
         public WebCallResult<IEnumerable<ExanteSymbol>> GetSymbolsByExchange(
             string exchangeId,
-            CancellationToken ct = default (CancellationToken)
+            CancellationToken ct = default(CancellationToken)
             )
         {
             var response =

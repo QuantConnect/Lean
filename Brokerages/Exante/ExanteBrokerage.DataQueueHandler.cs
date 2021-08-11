@@ -127,7 +127,7 @@ namespace QuantConnect.Brokerages.Exante
                     {
                         _subscribedTickers.TryAdd(ticker, symbol);
                         var feedQuoteStream = _client.StreamClient.GetFeedQuoteStreamAsync(
-                            new[] {ticker},
+                            new[] { ticker },
                             tickShort =>
                             {
                                 var tick = CreateTick(tickShort);
@@ -146,7 +146,7 @@ namespace QuantConnect.Brokerages.Exante
                         }
 
                         var feedTradesStream = _client.StreamClient.GetFeedTradesStreamAsync(
-                            new[] {ticker},
+                            new[] { ticker },
                             feedTrade =>
                             {
                                 var tick = CreateTick(feedTrade);
