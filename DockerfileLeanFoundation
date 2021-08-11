@@ -87,9 +87,7 @@ RUN pip install --no-cache-dir      \
     numba==0.46                     \
     setuptools-git==1.2             \
     xarray==0.15.1                  \
-    plotly==4.7.1                   \
     jupyterlab==2.1.2               \
-    tensorflow==1.15.2              \
     docutils==0.14                  \
     cvxopt==1.2.0                   \
     gensim==3.8.0                   \
@@ -99,7 +97,6 @@ RUN pip install --no-cache-dir      \
     nltk==3.4.5                     \
     pomegranate==0.11.1             \
     graphviz==0.8.4                 \
-    cmdstanpy==0.4                  \
     copulae==0.3.1                  \
     featuretools==0.14.0            \
     PuLP==1.6.8                     \
@@ -115,12 +112,10 @@ RUN pip install --no-cache-dir      \
     PyWavelets==1.1.1               \
     umap-learn==0.4.3               \
     nvidia-ml-py3==7.352.0          \
-    fastai==1.0.61                  \
     arch==4.14                      \
     copulalib==1.1.0                \
     copulas==0.3.3                  \
     creme==0.5.1                    \
-    cufflinks==0.17.3               \
     gym==0.17.2                     \
     ipywidgets==7.5.1               \
     deap==1.3.1                     \
@@ -128,18 +123,13 @@ RUN pip install --no-cache-dir      \
     pykalman==0.9.5                 \
     pyportfolioopt==1.2.2           \
     pyramid-arima==0.9.0            \
-    pyro-ppl==1.3.1                 \
     riskparityportfolio==0.2        \
     sklearn-json==0.1.0             \
     stable-baselines==2.10.0        \
     statistics==1.0.3.5             \
     statsmodels==0.11.1             \
-    tensorforce==0.5.5              \
     QuantLib-Python==1.18           \
-    xgboost==1.1.0                  \
     dtw-python==1.0.5               \
-    cntk==2.7                       \
-    mxnet==1.6                      \
     gluonts==0.4.3                  \
     gplearn==0.4.1                  \
     jax==0.1.68                     \
@@ -149,8 +139,6 @@ RUN pip install --no-cache-dir      \
     neural-tangents==0.2.1          \
     mplfinance==0.12.4a0            \
     hmmlearn==0.2.3                 \
-    catboost==0.23.2                \
-    fastai2==0.0.17                 \
     ppscore==0.0.2                  \
     scikit-tda==0.0.3               \
     ta==0.5.25                      \
@@ -159,7 +147,6 @@ RUN pip install --no-cache-dir      \
     optuna==2.3.0                   \
     findiff==0.8.5                  \
     sktime==0.3.0                   \
-    sktime-dl==0.1.0                \
     hyperopt==0.2.5                 \
     bayesian-optimization==1.2.0    \
     rpy2==3.3.6                     \
@@ -171,8 +158,7 @@ RUN pip install --no-cache-dir      \
     dgl==0.6.1                      \
     ruptures==1.1.3                 \
     simpy==4.0.1                    \
-    scikit-learn-extra==0.2.0       \
-    ray==1.5.1
+    scikit-learn-extra==0.2.0
 
 # feature_selector has overly strict dependency version ranges
 # We already installed close-enough versions of all of its dependencies above
@@ -195,20 +181,7 @@ RUN conda install -y -c conda-forge \
 # Install non-math packages
 RUN conda install -y                \
     blaze=0.11.3                    \
-    tensorflow-base=1.15.0          \
     && conda clean -y --all
-
-# Install math/ML from pytorch
-RUN conda install -y -c pytorch     \
-    pytorch=1.5.0                   \
-    torchvision=0.6.0               \
-    && conda clean -y --all
-
-# Install PyTorch Geometric
-RUN TORCH=$(python -c "import torch; print(torch.__version__)") && \
-    CUDA=$(python -c "import torch; print('cu' + torch.version.cuda.replace('.', ''))") && \
-    pip install --no-cache-dir -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html \
-    torch-scatter==2.0.5 torch-sparse==0.6.7 torch-cluster==1.5.7 torch-spline-conv==1.2.0 torch-geometric==1.7.0
 
 RUN python -m nltk.downloader -d /usr/share/nltk_data punkt && \
     python -m nltk.downloader -d /usr/share/nltk_data vader_lexicon && \
@@ -263,11 +236,6 @@ RUN wget https://cdn.quantconnect.com/tigramite/tigramite-4.1.zip && \
     unzip -q tigramite-4.1.zip && cd tigramite-4.1 && \
     python setup.py install && cd .. && rm -rf tigramite-4.1 && rm tigramite-4.1.zip
 
-# Install H2O: https://www.h2o.ai/download/
-RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
-    unzip -q h2o-3.30.0.3.zip && \
-    pip install h2o-3.30.0.3/python/h2o-3.30.0.3-py2.py3-none-any.whl && \
-    rm -rf h2o-3.30.0.3 && rm h2o-3.30.0.3.zip
 
 # Remove black-listed packages
 RUN pip uninstall -y s3transfer
