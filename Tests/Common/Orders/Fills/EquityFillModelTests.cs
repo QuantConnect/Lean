@@ -36,80 +36,90 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         private static readonly DateTime Noon = new DateTime(2014, 6, 24, 12, 0, 0);
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
 
-        [Test]
-        public void PerformsMarketFillBuy()
+        [TestCase(11, 11,  11, "")]
+        [TestCase(12, 11, 11,"")]
+        [TestCase(12, 10, 11, "Warning: No quote information")]
+        [TestCase(12, 10, 10, "Warning: fill at stale price")]
+        public void PerformsMarketFillBuy(int orderHour, int quoteBarHour, int tradeBarHour, string message)
         {
-            var model = new EquityFillModel();
-            var order = new MarketOrder(Symbols.SPY, 100, Noon);
-            var config = CreateQuoteBarConfig(Symbols.SPY);
-            var security = new Security(
-                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
-                config,
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
+            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
+            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
+            configProvider.SubscriptionDataConfigs.Add(configTradeBar);
+            var equity = CreateEquity(configTradeBar);
 
-            var parameters = new FillModelParameters(
-                security,
-                order,
-                new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour);
+            var orderTime = new DateTime(2014, 6, 24, orderHour, 0, 0).ConvertToUtc(equity.Exchange.TimeZone);
+            var quoteBarTime = new DateTime(2014, 6, 24, quoteBarHour, 0, 0).AddMinutes(-1);
+            var tradeBarTime = new DateTime(2014, 6, 24, tradeBarHour, 0, 0).AddMinutes(-1);
+
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOrder(Symbols.SPY, 100, orderTime);
+
+            var parameters = new FillModelParameters(equity, order, configProvider, Time.OneHour);
+
+            // Sets price at time zero
+            equity.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            equity.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
 
             // IndicatorDataPoint is not market data
             Assert.Throws<InvalidOperationException>(() => model.Fill(parameters),
-                $"Cannot get ask price to perform fill for {security.Symbol} because no market data subscription were found.");
+                $"Cannot get ask price to perform fill for {equity.Symbol} because no market data subscription were found.");
 
+            const decimal close = 101.234m;
             var bidBar = new Bar(101.123m, 101.123m, 101.123m, 101.123m);
-            var askBar = new Bar(101.234m, 101.234m, 101.234m, 101.234m);
-            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, bidBar, 0, askBar, 0));
+            var askBar = new Bar(101.234m, 101.234m, 101.234m, close);
+            var tradeBar = new TradeBar(tradeBarTime, Symbols.SPY, 101.123m, 101.123m, 101.123m, close, 100);
+            equity.SetMarketPrice(new QuoteBar(quoteBarTime, Symbols.SPY, bidBar, 0, askBar, 0));
+            equity.SetMarketPrice(tradeBar);
 
             var fill = model.Fill(parameters).OrderEvent;
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(askBar.Close, fill.FillPrice);
+            Assert.AreEqual(close, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.IsTrue(fill.Message.StartsWith(message, StringComparison.InvariantCultureIgnoreCase));
         }
 
-        [Test]
-        public void PerformsMarketFillSell()
+        [TestCase(11, 11, 11, "")]
+        [TestCase(12, 11, 11, "")]
+        [TestCase(12, 10, 11, "Warning: No quote information")]
+        [TestCase(12, 10, 10, "Warning: fill at stale price")]
+        public void PerformsMarketFillSell(int orderHour, int quoteBarHour, int tradeBarHour, string message)
         {
-            var model = new EquityFillModel();
-            var order = new MarketOrder(Symbols.SPY, -100, Noon);
-            var config = CreateQuoteBarConfig(Symbols.SPY);
-            var security = new Security(
-                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
-                config,
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
+            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
+            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
+            configProvider.SubscriptionDataConfigs.Add(configTradeBar);
+            var equity = CreateEquity(configTradeBar);
 
-            var parameters = new FillModelParameters(
-                security,
-                order,
-                new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour);
+            var orderTime = new DateTime(2014, 6, 24, orderHour, 0, 0).ConvertToUtc(equity.Exchange.TimeZone);
+            var quoteBarTime = new DateTime(2014, 6, 24, quoteBarHour, 0, 0).AddMinutes(-1);
+            var tradeBarTime = new DateTime(2014, 6, 24, tradeBarHour, 0, 0).AddMinutes(-1);
+
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOrder(Symbols.SPY, -100, orderTime);
+
+            var parameters = new FillModelParameters(equity, order, configProvider, Time.OneHour);
+
+            // Sets price at time zero
+            equity.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            equity.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
 
             // IndicatorDataPoint is not market data
             Assert.Throws<InvalidOperationException>(() => model.Fill(parameters),
-                $"Cannot get bid price to perform fill for {security.Symbol} because no market data subscription were found.");
+                $"Cannot get bid price to perform fill for {equity.Symbol} because no market data subscription were found.");
 
-            var bidBar = new Bar(101.123m, 101.123m, 101.123m, 101.123m);
+            const decimal close = 101.123m;
+            var bidBar = new Bar(101.123m, 101.123m, 101.123m, close);
             var askBar = new Bar(101.234m, 101.234m, 101.234m, 101.234m);
-            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, bidBar, 0, askBar, 0));
+            var tradeBar = new TradeBar(tradeBarTime, Symbols.SPY, 101.234m, 101.234m, 101.234m, close, 100);
+            equity.SetMarketPrice(new QuoteBar(quoteBarTime, Symbols.SPY, bidBar, 0, askBar, 0));
+            equity.SetMarketPrice(tradeBar);
 
             var fill = model.Fill(parameters).OrderEvent;
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(bidBar.Close, fill.FillPrice);
+            Assert.AreEqual(close, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.IsTrue(fill.Message.StartsWith(message, StringComparison.InvariantCultureIgnoreCase));
         }
 
         [Test]
