@@ -2827,7 +2827,7 @@ namespace QuantConnect
         {
             return symbol.SecurityType == SecurityType.Base
                 && symbol.ID.Symbol.TryGetCustomDataType(out var type)
-                && type.Equals(nameof(T), StringComparison.InvariantCultureIgnoreCase);
+                && type.Equals(typeof(T).Name, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>
