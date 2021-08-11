@@ -64,6 +64,7 @@ def wrap_keyerror_function(f):
         try:
             return f(*args, **kwargs)
         except (KeyError, TypeError) as e:
+            error = e
             oKey = [arg for arg in args if isinstance(arg, str)]
 
         # Map args & kwargs and execute function
@@ -75,6 +76,10 @@ def wrap_keyerror_function(f):
                 newargs = mapper(args)
             if len(kwargs) > 0:
                 newkwargs = mapper(kwargs)
+
+            # Compare our args, if these are the same we know it will throw, so don't waste time executing again
+            if(str(args) == str(newargs) and str(kwargs) == str(newkwargs)):
+                raise error
 
             return f(*newargs, **newkwargs)
         except KeyError as e:
