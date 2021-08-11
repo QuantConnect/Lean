@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Samco.SamcoMessages
 {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public class HoldingsResponse
     {
         public class HoldingDetail
@@ -468,5 +469,6 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
 
         public static readonly ParseStringConverter Singleton = new ParseStringConverter();
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
 
