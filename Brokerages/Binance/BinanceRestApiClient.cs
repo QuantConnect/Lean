@@ -322,7 +322,7 @@ namespace QuantConnect.Brokerages.Binance
 
                 var windowStartTime = (new DateTime(1970, 1, 1)).AddMilliseconds(klines.First().OpenTime);
                 var windowEndTime = (new DateTime(1970, 1, 1)).AddMilliseconds(klines.Last().OpenTime + resolutionInMs);
-                Log.Trace($"Received [{symbol}] data for timeperiod from {windowStartTime.ToStringInvariant()} to {windowEndTime.ToStringInvariant()}..");
+                Log.Debug($"Received [{symbol}] data for timeperiod from {windowStartTime.ToStringInvariant()} to {windowEndTime.ToStringInvariant()}..");
 
                 if (klines.Count > 0)
                 {
