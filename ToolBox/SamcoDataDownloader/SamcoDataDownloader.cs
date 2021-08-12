@@ -47,7 +47,7 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
             try
             {
                 var _samcoAPI = new SamcoBrokerageAPI();
-                _samcoAPI.Authorize(Config.Get("samco.client-id"), Config.Get("samco.client-password"), Config.Get("samco.year-of-birth"));
+                _samcoAPI.Authorize(Config.Get("samco-client-id"), Config.Get("samco-client-password"), Config.Get("samco-year-of-birth"));
 
                 var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var castSecurityType = (SecurityType)Enum.Parse(typeof(SecurityType), securityType);

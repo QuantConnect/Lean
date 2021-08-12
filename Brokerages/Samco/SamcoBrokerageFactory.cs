@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -47,11 +47,11 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            { "samco-api-key", Config.Get("samco.client-id")},
-            { "samco-api-secret", Config.Get("samco.client-password")},
-            { "samco-api-yob", Config.Get("samco.year-of-birth")},
-            { "trading-segment" ,Config.Get("samco.trading-segment") },
-            { "product-type", Config.Get("samco.product-type") }
+            { "samco-client-id", Config.Get("samco-client-id") },
+            { "samco-client-password", Config.Get("samco-client-password") },
+            { "samco-year-of-birth", Config.Get("samco-year-of-birth") },
+            { "samco-trading-segment" ,Config.Get("samco-trading-segment") },
+            { "samco-product-type", Config.Get("samco-product-type") }
         };
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns></returns>
         public override IBrokerage CreateBrokerage(Packets.LiveNodePacket job, IAlgorithm algorithm)
         {
-            var required = new[] {"samco-api-secret", "samco-api-key", "samco-api-yob" };
+            var required = new[] { "samco-client-id", "samco-client-password", "samco-year-of-birth", "samco-trading-segment" };
 
             foreach (var item in required)
             {
@@ -77,11 +77,11 @@ namespace QuantConnect.Brokerages.Samco
             }
 
             var brokerage = new SamcoBrokerage(
-                job.BrokerageData["trading-segment"],
-                job.BrokerageData["product-type"],
-                job.BrokerageData["samco-api-key"],
-                job.BrokerageData["samco-api-secret"],
-                job.BrokerageData["samco-api-yob"],
+                job.BrokerageData["samco-trading-segment"],
+                job.BrokerageData["samco-product-type"],
+                job.BrokerageData["samco-client-id"],
+                job.BrokerageData["samco-client-password"],
+                job.BrokerageData["samco-year-of-birth"],
                 algorithm,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
             //Add the brokerage to the composer to ensure its accessible to the live data feed.

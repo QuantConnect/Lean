@@ -50,11 +50,11 @@ namespace QuantConnect.Tests.Brokerages.Samco
             {
                 TestDelegate test = () =>
                 {
-                    var apiSecret = Config.Get("samco.api-secret");
-                    var apiKey = Config.Get("samco.api-key");
-                    var yob = Config.Get("samco.year-of-birth");
-                    var tradingSegment = Config.Get("samco.trading-segment","Equity");
-                    var productType = Config.Get("samco.product-type","MIS");
+                    var apiSecret = Config.Get("samco-client-id");
+                    var apiKey = Config.Get("samco-client-password");
+                    var yob = Config.Get("samco-year-of-birth");
+                    var tradingSegment = Config.Get("samco-trading-segment");
+                    var productType = Config.Get("samco-product-type");
                     var brokerage = new SamcoBrokerage(tradingSegment, productType, apiKey, apiSecret, yob, null,null);
 
                     var now = DateTime.UtcNow;
