@@ -35,25 +35,25 @@ namespace QuantConnect.Orders.Fees
             {
                 return OrderFee.Zero;
             }
-            var val = parameters.Order.GetValue(parameters.Security);
+            var orderValue = parameters.Order.GetValue(parameters.Security);
 
-            var fee = GetFee(val);
+            var fee = GetFee(orderValue);
             return new OrderFee(new CashAmount(fee, Currencies.INR));
         }
 
-        private static decimal GetFee(decimal value)
+        private static decimal GetFee(decimal orderValue)
         {
-            bool isSell = value < 0;
-            value = Math.Abs(value);
-            var multiplied = value * 0.0003M;
+            bool isSell = orderValue < 0;
+            orderValue = Math.Abs(orderValue);
+            var multiplied = orderValue * 0.0003M;
             var brokerage = (multiplied > 20) ? 20 : Math.Round(multiplied, 2);
 
-            var turnover = Math.Round(value, 2);
+            var turnover = Math.Round(orderValue, 2);
 
             decimal stt_total = 0;
             if (isSell)
             {
-                stt_total = Math.Round(value * 0.00025M, 2);
+                stt_total = Math.Round(orderValue * 0.00025M, 2);
             }
 
             var exc_trans_charge = Math.Round(turnover * 0.0000325M, 2);
