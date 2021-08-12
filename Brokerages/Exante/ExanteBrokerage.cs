@@ -462,5 +462,23 @@ namespace QuantConnect.Brokerages.Exante
         {
             _isConnected = false;
         }
+
+        /// <summary>
+        /// Dispose of the brokerage instance
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _client?.Dispose();
+                _aggregator?.Dispose();
+            }
+        }
+
+        public sealed override void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

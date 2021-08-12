@@ -104,14 +104,6 @@ namespace QuantConnect.Brokerages.Exante
         }
 
         /// <summary>
-        /// Dispose of the brokerage instance
-        /// </summary>
-        public override void Dispose()
-        {
-            _aggregator.DisposeSafely();
-        }
-
-        /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>

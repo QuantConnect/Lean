@@ -27,7 +27,7 @@ namespace QuantConnect.Brokerages.Exante
     /// <summary>
     /// Wrapper class for a Exante REST API client
     /// </summary>
-    public class ExanteClientWrapper
+    public class ExanteClientWrapper : IDisposable
     {
         private readonly ExanteClient _client;
 
@@ -247,6 +247,12 @@ namespace QuantConnect.Brokerages.Exante
                 _client.GetSymbolsByExchangeAsync(exchangeId, ct).SynchronouslyAwaitTaskResult();
             CheckIfResponseOk(response);
             return response;
+        }
+
+        public void Dispose()
+        {
+            _client?.Dispose();
+            StreamClient?.Dispose();
         }
     }
 }
