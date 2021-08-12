@@ -73,7 +73,10 @@ namespace QuantConnect.Brokerages.Samco
             foreach (var item in required)
             {
                 if (string.IsNullOrEmpty(job.BrokerageData[item]))
+                {
                     throw new Exception($"SamcoBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
+                }
+                    
             }
 
             var brokerage = new SamcoBrokerage(
