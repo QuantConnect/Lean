@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -48,9 +48,8 @@ namespace QuantConnect.ToolBox.BinanceDownloader
 
                 foreach (var symbol in exchangeInfo.Symbols.OrderBy(x => x.Name))
                 {
-                    if (!symbol.IsSpotTradingAllowed && !symbol.IsMarginTradingAllowed)
+                    if (!symbol.IsSpotTradingAllowed && !symbol.IsMarginTradingAllowed || symbol.Status == "BREAK")
                     {
-                        // exclude derivatives
                         continue;
                     }
 

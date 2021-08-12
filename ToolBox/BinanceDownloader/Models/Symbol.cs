@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,10 +27,14 @@ namespace QuantConnect.ToolBox.BinanceDownloader.Models
         [JsonProperty(PropertyName = "symbol")]
         public string Name { get; set; }
 
+        public string Status { get; set; }
+
         public string BaseAsset { get; set; }
+
         public string QuoteAsset { get; set; }
 
         public bool IsSpotTradingAllowed { get; set; }
+
         public bool IsMarginTradingAllowed { get; set; }
 
         /// <summary>
