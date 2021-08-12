@@ -4,11 +4,7 @@ using QuantConnect.Data;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TDAmeritradeApi.Client;
-using TDAmeritradeApi.Client.Models.MarketData;
 
 namespace QuantConnect.ToolBox.TDAmeritradeDownloader
 {
@@ -27,7 +23,7 @@ namespace QuantConnect.ToolBox.TDAmeritradeDownloader
 
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            return TDAmeritradeBrokerage.GetPriceHistory(tdClient, symbol, resolution, startUtc, endUtc);
+            return TDAmeritradeBrokerage.GetPriceHistory(tdClient, symbol, resolution, startUtc, endUtc, TimeZones.NewYork);
         }
     }
 }
