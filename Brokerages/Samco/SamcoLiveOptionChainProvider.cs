@@ -47,7 +47,7 @@ namespace QuantConnect.Brokerages.Samco
             var symbols = new List<Symbol>();
             foreach (var scripMaster in _symbolMapper.samcoTradableSymbolList)
             {
-                symbols.Add(_symbolMapper.createLeanSymbol(scripMaster));
+                symbols.Add(_symbolMapper.CreateLeanSymbol(scripMaster));
             }
             return symbols.Where(s => s.SecurityType == SecurityType.Option && s.ID.Symbol == underlyingSymbol.Value);
         }
