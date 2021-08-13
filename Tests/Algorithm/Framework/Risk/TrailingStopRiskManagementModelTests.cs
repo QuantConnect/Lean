@@ -29,19 +29,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
     public class TrailingStopRiskManagementModelTests
     {
         [Test]
-        [TestCase(Language.CSharp, 0.1, new[] { false, true, true }, new[] { 0, 0.1, -0.01 }, new[] { false, false, true })]
-        [TestCase(Language.Python, 0.1, new[] { false, true, true }, new[] { 0, 0.1, -0.01 }, new[] { false, false, true })]
-        [TestCase(Language.CSharp, 0.1, new[] { false, false, false}, new[] { 0, 0.1, -0.01 }, new[] { false, false, false })]
-        [TestCase(Language.Python, 0.1, new[] { false, false, false }, new[] { 0, 0.1, -0.01 }, new[] { false, false, false })]
-        [TestCase(Language.CSharp, 0.1, new[] { true, true, true, true }, new[] { 0.1, 0.2, 0.1, -0.01 }, new[] { false, false, false, true })]
-        [TestCase(Language.Python, 0.1, new[] { true, true, true, true }, new[] { 0.1, 0.2, 0.1, -0.01 }, new[] { false, false, false, true })]
+        [TestCase(Language.CSharp, 0.1, new[] { false, true, true }, new[] { 0d, 0.1d, -0.01d }, new[] { false, false, true })]
+        [TestCase(Language.Python, 0.1, new[] { false, true, true }, new[] { 0d, 0.1d, -0.01d }, new[] { false, false, true })]
+        [TestCase(Language.CSharp, 0.1, new[] { false, false, false}, new[] { 0d, 0.1d, -0.01d }, new[] { false, false, false })]
+        [TestCase(Language.Python, 0.1, new[] { false, false, false }, new[] { 0d, 0.1d, -0.01d }, new[] { false, false, false })]
+        [TestCase(Language.CSharp, 0.1, new[] { true, true, true, true }, new[] { 0.1d, 0.2d, 0.1d, -0.01d }, new[] { false, false, false, true })]
+        [TestCase(Language.Python, 0.1, new[] { true, true, true, true }, new[] { 0.1d, 0.2d, 0.1d, -0.01d }, new[] { false, false, false, true })]
         public void ReturnsExpectedPortfolioTarget(
             Language language,
             decimal maxDrawdownPercent,
             bool[] investedArray,
-            double[] unrealizedProfitPercentArray,
+            double[] uppInputsDouble,
             bool[] shouldLiquidateArray)
         {
+            var unrealizedProfitPercentArray = System.Array.ConvertAll(uppInputsDouble, x => (decimal) x);
             var security = new Mock<Equity>(
                 Symbols.AAPL,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -79,7 +80,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             for (int i = 0; i < investedArray.Length; i++)
             {
                 var invested = investedArray[i];
-                var unrealizedProfitPercent = (decimal)unrealizedProfitPercentArray[i];
+                var unrealizedProfitPercent = unrealizedProfitPercentArray[i];
                 var shouldLiquidate = shouldLiquidateArray[i];
 
                 security.Setup(m => m.Invested).Returns(invested);
