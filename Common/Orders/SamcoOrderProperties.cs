@@ -22,7 +22,6 @@ namespace QuantConnect.Orders
     /// </summary>
     public class SamcoOrderProperties : ZerodhaOrderProperties
     {
-        
         /// <summary>
         /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
         /// </summary>
@@ -41,7 +40,6 @@ namespace QuantConnect.Orders
             ProductType = productType.ToStringInvariant();
         }
 
-        
         /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>

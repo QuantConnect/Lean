@@ -13,14 +13,15 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using CsvHelper.Configuration.Attributes;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Samco.SamcoMessages
 {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
     public class HoldingsResponse
     {
         public class HoldingDetail
@@ -48,6 +49,7 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
         public string status { get; set; }
         public IList<HoldingDetail> holdingDetails { get; set; }
     }
+
     public class CandleResponse
     {
         public class IntradayCandleData
@@ -74,7 +76,6 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
         public string msgId { get; set; }
         public IList<IntradayCandleData> intradayCandleData { get; set; }
         public IList<HistoricalCandleData> historicalCandleData { get; set; }
-
     }
 
     public class SamcoOrderResponse
@@ -147,8 +148,6 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
         public string getoIChangePer { get; set; }
     }
 
-
-
     public class AuthRequest
     {
         public string userId { get; set; }
@@ -175,10 +174,9 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
             public string request_type { get; set; } = "subscribe";
             public string response_format { get; set; } = "json";
         }
+
         public Request request { get; set; } = new Request();
     }
-
-
 
     public class QuoteUpdate
     {
@@ -278,15 +276,12 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
         public string GrossAvailableMargin { get; set; }
 
         [JsonProperty("payInToday")]
-
         public long PayInToday { get; set; }
 
         [JsonProperty("notionalCash")]
-
         public long NotionalCash { get; set; }
 
         [JsonProperty("collateralMarginAgainstShares")]
-
         public long CollateralMarginAgainstShares { get; set; }
 
         [JsonProperty("marginUsed")]
@@ -300,24 +295,34 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
     {
         [Name("exchange")]
         public string Exchange { get; set; }
+
         [Name("exchangeSegment")]
         public string ExchangeSegment { get; set; }
+
         [Name("symbolCode")]
         public string SymbolCode { get; set; }
+
         [Name("tradingSymbol")]
         public string TradingSymbol { get; set; }
+
         [Name("name")]
         public string Name { get; set; }
+
         [Name("lastPrice")]
         public decimal LastPrice { get; set; }
+
         [Name("instrument")]
         public string Instrument { get; set; }
+
         [Name("lotSize")]
         public string LotSize { get; set; }
+
         [Name("strikePrice")]
         public string StrikePrice { get; set; }
+
         [Name("expiryDate")]
         public string ExpiryDate { get; set; }
+
         [Name("tickSize")]
         public string TickSize { get; set; }
     }
@@ -469,6 +474,6 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
 
         public static readonly ParseStringConverter Singleton = new ParseStringConverter();
     }
+
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
-

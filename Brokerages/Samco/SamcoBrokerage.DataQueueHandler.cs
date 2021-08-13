@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
+using QuantConnect.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
-using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages.Samco
 {
@@ -29,7 +29,6 @@ namespace QuantConnect.Brokerages.Samco
         #region IDataQueueHandler implementation
 
         private IEnumerable<Symbol> Subscriptions => _subscriptionManager.GetSubscribedSymbols();
-
 
         /// <summary>
         /// Sets the job we're subscribing for
@@ -69,7 +68,6 @@ namespace QuantConnect.Brokerages.Samco
             _aggregator.Remove(dataConfig);
         }
 
-
         /// <summary>
         /// Returns true if this data provide can handle the specified symbol
         /// </summary>
@@ -80,14 +78,15 @@ namespace QuantConnect.Brokerages.Samco
             var market = symbol.ID.Market;
             var securityType = symbol.ID.SecurityType;
             if (symbol.Value.IndexOfInvariant("universe", true) != -1) return false;
-            // Include future options as a special case with no matching market, otherwise
-            // our subscriptions are removed without any sort of notice.
+            // Include future options as a special case with no matching market, otherwise our
+            // subscriptions are removed without any sort of notice.
             return
                 (securityType == SecurityType.Equity ||
                 securityType == SecurityType.Option ||
-                securityType == SecurityType.Future) && 
+                securityType == SecurityType.Future) &&
                 market == Market.India;
         }
-        #endregion
+
+        #endregion IDataQueueHandler implementation
     }
 }

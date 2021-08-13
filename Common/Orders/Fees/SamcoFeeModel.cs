@@ -13,22 +13,22 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Securities;
+using System;
 
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides the default implementation of <see cref="IFeeModel"/>
-    /// Refer to https://www.samco.in/technology/brokerage_calculator
+    /// Provides the default implementation of <see cref="IFeeModel"/> Refer to https://www.samco.in/technology/brokerage_calculator
     /// </summary>
     public class SamcoFeeModel : IFeeModel
     {
         /// <summary>
         /// Gets the order fee associated with the specified order.
         /// </summary>
-        /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
-        /// containing the security and order</param>
+        /// <param name="parameters">
+        /// A <see cref="OrderFeeParameters"/> object containing the security and order
+        /// </param>
         public OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             if (parameters.Security == null)
@@ -50,29 +50,27 @@ namespace QuantConnect.Orders.Fees
 
             var turnover = Math.Round(orderValue, 2);
 
-            decimal stt_total = 0;
+            decimal securitiesTransactionTaxTotal = 0;
             if (isSell)
             {
-                stt_total = Math.Round(orderValue * 0.00025M, 2);
+                securitiesTransactionTaxTotal = Math.Round(orderValue * 0.00025M, 2);
             }
 
-            var exc_trans_charge = Math.Round(turnover * 0.0000325M, 2);
+            var exchangeTransactionCharge = Math.Round(turnover * 0.0000325M, 2);
             var cc = 0;
 
+            var sTax = Math.Round(0.18M * (brokerage + exchangeTransactionCharge), 2);
 
-            var stax = Math.Round(0.18M * (brokerage + exc_trans_charge), 2);
-
-            var sebi_charges = Math.Round((turnover * 0.000002M), 2);
-            decimal stamp_charges = 0;
+            var sebiCharges = Math.Round((turnover * 0.000002M), 2);
+            decimal stampCharges = 0;
             if (!isSell)
             {
-                stamp_charges = Math.Round((turnover * 0.00002M), 2);
+                stampCharges = Math.Round((turnover * 0.00002M), 2);
             }
 
-            var total_tax = Math.Round(brokerage + stt_total + exc_trans_charge + stamp_charges + cc + stax + sebi_charges, 2);
+            var totalTax = Math.Round(brokerage + securitiesTransactionTaxTotal + exchangeTransactionCharge + stampCharges + cc + sTax + sebiCharges, 2);
 
-            return total_tax;
+            return totalTax;
         }
-
     }
 }
