@@ -29,12 +29,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
     public class TrailingStopRiskManagementModelTests
     {
         [Test]
-        [TestCase(Language.CSharp, 0.1, new[] { false, true, true }, new[] { 0d, 0.1d, -0.01d }, new[] { false, false, true })]
-        [TestCase(Language.Python, 0.1, new[] { false, true, true }, new[] { 0d, 0.1d, -0.01d }, new[] { false, false, true })]
-        [TestCase(Language.CSharp, 0.1, new[] { false, false, false}, new[] { 0d, 0.1d, -0.01d }, new[] { false, false, false })]
-        [TestCase(Language.Python, 0.1, new[] { false, false, false }, new[] { 0d, 0.1d, -0.01d }, new[] { false, false, false })]
-        [TestCase(Language.CSharp, 0.1, new[] { true, true, true, true }, new[] { 0.1d, 0.2d, 0.1d, -0.01d }, new[] { false, false, false, true })]
-        [TestCase(Language.Python, 0.1, new[] { true, true, true, true }, new[] { 0.1d, 0.2d, 0.1d, -0.01d }, new[] { false, false, false, true })]
+        [TestCase(Language.CSharp, 10, new[] { false, true, true }, new[] { 0d, 10d, -1d }, new[] { false, false, true })]
+        [TestCase(Language.Python, 10, new[] { false, true, true }, new[] { 0d, 10d, -1d }, new[] { false, false, true })]
+        [TestCase(Language.CSharp, 10, new[] { false, false, false}, new[] { 0d, 10d, -1d }, new[] { false, false, false })]
+        [TestCase(Language.Python, 10, new[] { false, false, false }, new[] { 0d, 10d, -1d }, new[] { false, false, false })]
+        [TestCase(Language.CSharp, 10, new[] { true, true, true, true }, new[] { 10d, 20d, 10d, 9d }, new[] { false, false, false, true })]
+        [TestCase(Language.Python, 10, new[] { true, true, true, true }, new[] { 10d, 20d, 10d, 9d }, new[] { false, false, false, true })]
         public void ReturnsExpectedPortfolioTarget(
             Language language,
             decimal maxDrawdownPercent,
