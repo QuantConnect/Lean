@@ -24,6 +24,7 @@ using System.Linq;
 namespace QuantConnect.Tests.Brokerages.Exante
 {
     [TestFixture]
+    [Explicit("This test requires a configured and active Exante account")]
     public partial class ExanteBrokerageTests : BrokerageTests
     {
         private readonly ExanteBrokerage _brokerage;
