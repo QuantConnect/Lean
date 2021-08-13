@@ -35,9 +35,8 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="exchange">Exchange value, nse/bse etc</param>
         /// <param name="productType">Product type</param>
-        public SamcoOrderProperties(string exchange, KiteProductType productType) : this(exchange)
+        public SamcoOrderProperties(string exchange, KiteProductType productType) : base(exchange, productType)
         {
-            ProductType = productType.ToStringInvariant();
         }
 
         /// <summary>
