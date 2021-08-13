@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data.Market;
+using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
@@ -40,8 +40,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="SamcoBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="AccountType.Margin"/></param>
+        /// <param name="accountType">The type of account to be modelled, defaults to <see cref="AccountType.Margin"/></param>
         public SamcoBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
         }
@@ -49,16 +48,15 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
         /// market prices are sufficient for the fill to take place. This is used to emulate the
-        /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
-        /// executions during extended market hours. This is not intended to be checking whether or not
-        /// the exchange is open, that is handled in the Security.Exchange property.
+        /// brokerage fills in backtesting and paper trading. For example some brokerages may not
+        /// perform executions during extended market hours. This is not intended to be checking
+        /// whether or not the exchange is open, that is handled in the Security.Exchange property.
         /// </summary>
         /// <param name="security"></param>
         /// <param name="order">The order to test for execution</param>
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public override bool CanExecuteOrder(Security security, Order order)
         {
-
             // validate security type
             if (security.Type != SecurityType.Equity &&
                 security.Type != SecurityType.Option &&
@@ -66,7 +64,6 @@ namespace QuantConnect.Brokerages
             {
                 return false;
             }
-
 
             // validate time in force
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
@@ -78,15 +75,18 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Returns true if the brokerage could accept this order. This takes into account
-        /// order type, security type, and order size limits.
+        /// Returns true if the brokerage could accept this order. This takes into account order
+        /// type, security type, and order size limits.
         /// </summary>
         /// <remarks>
-        /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
+        /// For example, a brokerage may have no connectivity at certain times, or an order
+        /// rate/size limit
         /// </remarks>
         /// <param name="security">The security being ordered</param>
         /// <param name="order">The order to be processed</param>
-        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <param name="message">
+        /// If this function returns false, a brokerage message detailing why the order may not be submitted
+        /// </param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
@@ -103,7 +103,6 @@ namespace QuantConnect.Brokerages
 
                 return false;
             }
-
 
             // validate time in force
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
@@ -124,7 +123,9 @@ namespace QuantConnect.Brokerages
         /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be updated</param>
         /// <param name="request">The requested update to be made to the order</param>
-        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <param name="message">
+        /// If this function returns false, a brokerage message detailing why the order may not be updated
+        /// </param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
@@ -137,12 +138,10 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
 
-
-
         /// <summary>
-        /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
-        /// For cash accounts, leverage = 1 is used.
-        /// For margin trading, max leverage = 7
+        /// Gets a new buying power model for the security, returning the default model with the
+        /// security's configured leverage. For cash accounts, leverage = 1 is used. For margin
+        /// trading, max leverage = 7
         /// </summary>
         /// <param name="security">The security to get a buying power model for</param>
         /// <returns>The buying power model for this brokerage/security</returns>
@@ -171,6 +170,17 @@ namespace QuantConnect.Brokerages
             }
 
             throw new ArgumentException($"Invalid security type: {security.Type}", nameof(security));
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public override IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("SBIN", SecurityType.Equity, Market.India);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>
