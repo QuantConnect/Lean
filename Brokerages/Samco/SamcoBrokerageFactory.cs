@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Samco
 {
@@ -36,13 +36,6 @@ namespace QuantConnect.Brokerages.Samco
         }
 
         /// <summary>
-        /// Not required
-        /// </summary>
-        public override void Dispose()
-        {
-        }
-
-        /// <summary>
         /// provides brokerage connection data
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
@@ -53,12 +46,6 @@ namespace QuantConnect.Brokerages.Samco
             { "samco-trading-segment" ,Config.Get("samco-trading-segment") },
             { "samco-product-type", Config.Get("samco-product-type") }
         };
-
-        /// <summary>
-        /// The brokerage model
-        /// </summary>
-        /// <param name="orderProvider">The order provider</param>
-        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new SamcoBrokerageModel();
 
         /// <summary>
         /// Create the Brokerage instance
@@ -76,7 +63,6 @@ namespace QuantConnect.Brokerages.Samco
                 {
                     throw new Exception($"SamcoBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
                 }
-                    
             }
 
             var brokerage = new SamcoBrokerage(
@@ -91,5 +77,18 @@ namespace QuantConnect.Brokerages.Samco
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
             return brokerage;
         }
+
+        /// <summary>
+        /// Not required
+        /// </summary>
+        public override void Dispose()
+        {
+        }
+
+        /// <summary>
+        /// The brokerage model
+        /// </summary>
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new SamcoBrokerageModel();
     }
 }

@@ -14,25 +14,24 @@
  *
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Brokerages;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This example demonstrates how to add options for a given underlying equity security.
-    /// It also shows how you can prefilter contracts easily based on strikes and expirations, and how you
+    /// This example demonstrates how to add options for a given underlying equity security. It also
+    /// shows how you can prefilter contracts easily based on strikes and expirations, and how you
     /// can inspect the option chain to pick a specific option contract to trade.
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="options" />
-    /// <meta name="tag" content="filter selection" />
+    /// <meta name="tag" content="using data"/>
+    /// <meta name="tag" content="options"/>
+    /// <meta name="tag" content="filter selection"/>
     public class SamcoBasicTemplateOptionsAlgorithm : QCAlgorithm
     {
         private const string UnderlyingTicker = "NIFTY";
@@ -40,32 +39,29 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            //SetStartDate(2015, 12, 24);
-            //SetEndDate(2015, 12, 24);
-            //SetCash(100000);
-
             SetTimeZone(TimeZones.Kolkata);
             SetBenchmark(t => 0);
             SetBrokerageModel(BrokerageName.Samco, AccountType.Margin);
             SetAccountCurrency(Currencies.INR);
 
-            var equity = AddEquity(UnderlyingTicker,market:Market.India);
-            var option = AddOption(equity.Symbol,market:Market.India);
+            var equity = AddEquity(UnderlyingTicker, market: Market.India);
+            var option = AddOption(equity.Symbol, market: Market.India);
             OptionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
             option.SetFilter(u => u.Strikes(-2, +2)
-                                   // Expiration method accepts TimeSpan objects or integer for days.
-                                   // The following statements yield the same filtering criteria
+                                   // Expiration method accepts TimeSpan objects or integer for
+                                   // days. The following statements yield the same filtering criteria
                                    .Expiration(0, 180));
-                                   // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
+            // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
 
             // use the underlying equity as the benchmark
-            SetBenchmark(t=>0);
+            SetBenchmark(t => 0);
         }
 
         /// <summary>
-        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
+        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for
+        /// receiving all subscription data in a single event
         /// </summary>
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
@@ -93,27 +89,34 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Order fill event handler. On an order fill update the resulting information is passed to this method.
+        /// Order fill event handler. On an order fill update the resulting information is passed to
+        /// this method.
         /// </summary>
         /// <param name="orderEvent">Order event details containing details of the evemts</param>
-        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
+        /// <remarks>
+        /// This method can be called asynchronously and so should only be used by seasoned C#
+        /// experts. Ensure you use proper locks on thread-unsafe objects
+        /// </remarks>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Log(orderEvent.ToString());
         }
 
         /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// This is used by the regression test system to indicate if the open source Lean
+        /// repository has the required data to run this algorithm.
         /// </summary>
         public bool CanRunLocally { get; } = false;
 
         /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// This is used by the regression test system to indicate which languages this algorithm is
+        /// written in.
         /// </summary>
         public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
-        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// This is used by the regression test system to indicate what the expected statistics are
+        /// from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
