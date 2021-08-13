@@ -40,7 +40,6 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetTimeZone(TimeZones.Kolkata);
-            SetBenchmark(t => 0);
             SetBrokerageModel(BrokerageName.Samco, AccountType.Margin);
             SetAccountCurrency(Currencies.INR);
 
