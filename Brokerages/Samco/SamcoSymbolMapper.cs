@@ -71,7 +71,7 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         /// <param name="scrip">A Lean symbol instance</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol createLeanSymbol(ScripMaster scrip)
+        public Symbol CreateLeanSymbol(ScripMaster scrip)
         {
             if (scrip == null)
             {
@@ -190,7 +190,7 @@ namespace QuantConnect.Brokerages.Samco
                 throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
 
             var scrip = samcoTradableSymbolList.Where(s => s.TradingSymbol == brokerageSymbol).FirstOrDefault();
-            var symbol = createLeanSymbol(scrip);
+            var symbol = CreateLeanSymbol(scrip);
             return symbol.SecurityType;
         }
 
@@ -271,7 +271,7 @@ namespace QuantConnect.Brokerages.Samco
             {
                 throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
             }
-            return createLeanSymbol(scrip);
+            return CreateLeanSymbol(scrip);
         }
 
         /// <summary>
