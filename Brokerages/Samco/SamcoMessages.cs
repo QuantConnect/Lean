@@ -327,7 +327,7 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
         public string TickSize { get; set; }
     }
 
-    public partial class PositionsResponse
+    public class PositionsResponse
     {
         [JsonProperty("serverTime")]
         public string ServerTime { get; set; }
@@ -348,7 +348,7 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
         public PositionDetail[] PositionDetails { get; set; }
     }
 
-    public partial class PositionDetail
+    public class PositionDetail
     {
         [JsonProperty("averagePrice")]
         public string AveragePrice { get; set; }
@@ -429,7 +429,7 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
         public string CompanyName { get; set; }
     }
 
-    public partial class PositionSummary
+    public class PositionSummary
     {
         [JsonProperty("gainingTodayCount")]
         public long GainingTodayCount { get; set; }
