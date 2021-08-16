@@ -1574,7 +1574,7 @@ namespace QuantConnect.Algorithm
         {
             if (resolution == Resolution.Daily)
             {
-                throw new ArgumentException("RelativeDailyVolume Indicator must have a resolution less than Resolution.Dailh", nameof(resolution));
+                throw new ArgumentException("RelativeDailyVolume Indicator must have a resolution less than Resolution.Daily", nameof(resolution));
             }
             var name = CreateIndicatorName(symbol, $"RDV({period})", resolution);
             var relativeDailyVolume = new RelativeDailyVolume(name, period);
