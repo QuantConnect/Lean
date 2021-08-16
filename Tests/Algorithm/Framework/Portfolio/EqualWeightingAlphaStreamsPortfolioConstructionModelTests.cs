@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             SetPortfolioConstruction(language);
 
             var alpha = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a").Symbol;
-            var data = _algorithm.History<AlphaStreamsPortfolioState>(alpha, TimeSpan.FromDays(2)).ToList()[0];
+            var data = _algorithm.History<AlphaStreamsPortfolioState>(alpha, TimeSpan.FromDays(1)).ToList()[0];
             _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }));
 
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, Array.Empty<Insight>()).ToList();

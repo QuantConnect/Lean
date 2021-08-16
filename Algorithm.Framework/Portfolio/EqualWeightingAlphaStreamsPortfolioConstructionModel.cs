@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Custom.AlphaStreams;
@@ -30,9 +31,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class EqualWeightingAlphaStreamsPortfolioConstructionModel : IPortfolioConstructionModel
     {
         private bool _rebalance;
+        private Dictionary<Symbol, PortfolioTarget> _targetsPerSymbol;
         private readonly Queue<Symbol> _removedSymbols = new Queue<Symbol>();
         private Dictionary<Symbol, decimal> _unitQuantity = new Dictionary<Symbol, decimal>();
-        private Dictionary<Symbol, PortfolioTarget> _targetsPerSymbol = new Dictionary<Symbol, PortfolioTarget>();
         private Dictionary<Symbol, Dictionary<Symbol, PortfolioTarget>> _targetsPerSymbolPerAlpha = new Dictionary<Symbol, Dictionary<Symbol, PortfolioTarget>>();
 
         /// <summary>
@@ -48,20 +49,27 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
         public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
+            if (_targetsPerSymbol == null)
+            {
+                _targetsPerSymbol = new Dictionary<Symbol, PortfolioTarget>();
+                foreach (var securityHolding in algorithm.Portfolio.Values.Where(holding => holding.HoldStock))
+                {
+                    // we need to liquidate any holdings we have for security which are not hold by any alpha
+                    _targetsPerSymbol[securityHolding.Symbol] = new PortfolioTarget(securityHolding.Symbol, 0);
+                }
+            }
+
             while (_removedSymbols.TryDequeue(out var removedSymbol))
             {
                 yield return new PortfolioTarget(removedSymbol, 0);
             }
 
-            var updatedTargets = new Dictionary<Symbol, IPortfolioTarget>();
+            var updated = false;
             foreach (var portfolioState in algorithm.CurrentSlice?.Get<AlphaStreamsPortfolioState>().Values ?? Enumerable.Empty<AlphaStreamsPortfolioState>())
             {
                 if (!_rebalance)
                 {
-                    foreach (var portfolioTarget in ProcessPortfolioState(portfolioState, algorithm))
-                    {
-                        updatedTargets[portfolioTarget.Symbol] = portfolioTarget;
-                    }
+                    updated |= ProcessPortfolioState(portfolioState, algorithm);
                 }
                 // keep the last state per alpha
                 LastPortfolioPerAlpha[portfolioState.Symbol] = portfolioState;
@@ -70,16 +78,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // if an alpha is removed or added we just rebalance all the targets because the weight changes of each alpha
             if (_rebalance)
             {
-                foreach (var portfolioTarget in LastPortfolioPerAlpha.Values.SelectMany(portfolioState => ProcessPortfolioState(portfolioState, algorithm)))
+                foreach (var portfolioState in LastPortfolioPerAlpha.Values)
                 {
-                    updatedTargets[portfolioTarget.Symbol] = portfolioTarget;
+                    updated |= ProcessPortfolioState(portfolioState, algorithm);
                 }
                 _rebalance = false;
             }
 
-            foreach (var portfolioTarget in updatedTargets.Values)
+            if (updated)
             {
-                yield return portfolioTarget;
+                foreach (var portfolioTarget in _targetsPerSymbol.Values)
+                {
+                    yield return portfolioTarget;
+                }
             }
         }
 
@@ -111,6 +122,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 {
                     _rebalance = true;
                     _targetsPerSymbolPerAlpha[security.Symbol] = new Dictionary<Symbol, PortfolioTarget>();
+
+                    var lastState = algorithm.History<AlphaStreamsPortfolioState>(security.Symbol, TimeSpan.FromDays(1)).LastOrDefault();
+                    if (lastState != null)
+                    {
+                        // keep the last state per alpha
+                        LastPortfolioPerAlpha[security.Symbol] = lastState;
+                        if(!algorithm.Portfolio.CashBook.ContainsKey(lastState.AccountCurrency))
+                        {
+                            // ensure we have conversion rates if the alpha has another account currency
+                            algorithm.SetCash(lastState.AccountCurrency, 0);
+                        }
+                    }
                 }
             }
         }
@@ -120,18 +143,25 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="portfolioState">The alphas portfolio state to get the weight for</param>
         /// <param name="totalUsablePortfolioValue">This algorithms usable total portfolio value</param>
+        /// <param name="cashBook">This algorithms cash book</param>
         /// <returns>The weight to use on this alphas positions</returns>
-        protected virtual decimal GetAlphaWeight(AlphaStreamsPortfolioState portfolioState, decimal totalUsablePortfolioValue)
+        protected virtual decimal GetAlphaWeight(AlphaStreamsPortfolioState portfolioState,
+            decimal totalUsablePortfolioValue,
+            CashBook cashBook)
         {
-            if (portfolioState.TotalPortfolioValue == 0)
+            var alphaPortfolioValueInOurAccountCurrency =
+                cashBook.ConvertToAccountCurrency(portfolioState.TotalPortfolioValue, portfolioState.AccountCurrency);
+
+            if (alphaPortfolioValueInOurAccountCurrency == 0)
             {
                 return 0;
             }
+
             var equalWeightFactor = 1m / _targetsPerSymbolPerAlpha.Count;
-            return totalUsablePortfolioValue * equalWeightFactor / portfolioState.TotalPortfolioValue;
+            return totalUsablePortfolioValue * equalWeightFactor / alphaPortfolioValueInOurAccountCurrency;
         }
 
-        private IEnumerable<IPortfolioTarget> ProcessPortfolioState(AlphaStreamsPortfolioState portfolioState, QCAlgorithm algorithm)
+        private bool ProcessPortfolioState(AlphaStreamsPortfolioState portfolioState, QCAlgorithm algorithm)
         {
             var alphaId = portfolioState.Symbol;
 
@@ -141,7 +171,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             var totalUsablePortfolioValue = algorithm.Portfolio.TotalPortfolioValue - algorithm.Settings.FreePortfolioValue;
-            var alphaWeightFactor = GetAlphaWeight(portfolioState, totalUsablePortfolioValue);
+            var alphaWeightFactor = GetAlphaWeight(portfolioState, totalUsablePortfolioValue, algorithm.Portfolio.CashBook);
+
             // first we create all the new aggregated targets for the provided portfolio state
             var newTargets = new Dictionary<Symbol, PortfolioTarget>();
             foreach (var positionGroup in portfolioState.PositionGroups ?? Enumerable.Empty<PositionGroupState>())
@@ -157,6 +188,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
             }
 
+            var updatedTargets = false;
+
             // We adjust the new targets based on what we already have:
             // - We add any existing targets if any -> other alphas
             //    - But we deduct our own existing target from it if any (previous state)
@@ -171,10 +204,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     var quantity = existingAggregatedTarget.Quantity + ourNewTarget.Quantity - (ourExistingTarget?.Quantity ?? 0);
                     newAggregatedTarget = new PortfolioTarget(symbol, quantity.DiscretelyRoundBy(_unitQuantity[symbol], MidpointRounding.ToZero));
                 }
-
                 ourExistingTargets[symbol] = ourNewTarget;
-                _targetsPerSymbol[symbol] = newAggregatedTarget;
-                yield return newAggregatedTarget;
+
+                if (existingAggregatedTarget == null || existingAggregatedTarget.Quantity != newAggregatedTarget.Quantity)
+                {
+                    updatedTargets = true;
+                    _targetsPerSymbol[symbol] = newAggregatedTarget;
+                }
             }
 
             // We adjust existing targets for symbols that got removed from this alpha
@@ -189,17 +225,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
 
                 ourExistingTargets.Remove(symbol);
-                if (newAggregatedTarget.Quantity != 0)
+                if (existingAggregatedTarget == null || existingAggregatedTarget.Quantity != newAggregatedTarget.Quantity)
                 {
+                    updatedTargets = true;
                     _targetsPerSymbol[symbol] = newAggregatedTarget;
                 }
-                else
-                {
-                    _targetsPerSymbol.Remove(symbol);
-                }
-
-                yield return newAggregatedTarget;
             }
+
+            return updatedTargets;
         }
     }
 }

@@ -17,6 +17,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Equity;
@@ -24,7 +25,6 @@ using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Data.Custom.AlphaStreams;
 using Index = QuantConnect.Securities.Index.Index;
 
 namespace QuantConnect.Tests.Algorithm
@@ -46,9 +46,9 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestAddSecurityWithSymbol))]
-        public void AddSecurityWithSymbol(Symbol symbol)
+        public void AddSecurityWithSymbol(Symbol symbol, Type type = null)
         {
-            var security = _algo.AddSecurity(symbol);
+            var security = type != null ? _algo.AddData(type, symbol.Underlying) : _algo.AddSecurity(symbol);
             Assert.AreEqual(security.Symbol, symbol);
             Assert.IsTrue(_algo.Securities.ContainsKey(symbol));
 
@@ -100,18 +100,18 @@ namespace QuantConnect.Tests.Algorithm
             {
                 return new[]
                 {
-                    new TestCaseData(Symbols.SPY),
-                    new TestCaseData(Symbols.EURUSD),
-                    new TestCaseData(Symbols.DE30EUR),
-                    new TestCaseData(Symbols.BTCUSD),
-                    new TestCaseData(Symbols.ES_Future_Chain),
-                    new TestCaseData(Symbols.Future_ESZ18_Dec2018),
-                    new TestCaseData(Symbols.SPY_Option_Chain),
-                    new TestCaseData(Symbols.SPY_C_192_Feb19_2016),
-                    new TestCaseData(Symbols.SPY_P_192_Feb19_2016),
-                    new TestCaseData(Symbol.CreateBase(typeof(AlphaStreamsPortfolioState), Symbols.SPY, Market.USA)),
-                    new TestCaseData(Symbol.Create("CustomData", SecurityType.Base, Market.Binance)),
-                    new TestCaseData(Symbol.Create("CustomData2", SecurityType.Base, Market.COMEX))
+                    new TestCaseData(Symbols.SPY, null),
+                    new TestCaseData(Symbols.EURUSD, null),
+                    new TestCaseData(Symbols.DE30EUR, null),
+                    new TestCaseData(Symbols.BTCUSD, null),
+                    new TestCaseData(Symbols.ES_Future_Chain, null),
+                    new TestCaseData(Symbols.Future_ESZ18_Dec2018, null),
+                    new TestCaseData(Symbols.SPY_Option_Chain, null),
+                    new TestCaseData(Symbols.SPY_C_192_Feb19_2016, null),
+                    new TestCaseData(Symbols.SPY_P_192_Feb19_2016, null),
+                    new TestCaseData(Symbol.CreateBase(typeof(AlphaStreamsPortfolioState), Symbols.SPY, Market.USA), typeof(AlphaStreamsPortfolioState)),
+                    new TestCaseData(Symbol.Create("CustomData", SecurityType.Base, Market.Binance), null),
+                    new TestCaseData(Symbol.Create("CustomData2", SecurityType.Base, Market.COMEX), null)
                 };
             }
         }

@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AlphaStreamsBasicTemplateAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Dictionary<Symbol, HashSet<Symbol>> _symbolsPerAlpha;
+        private Dictionary<Symbol, HashSet<Symbol>> _symbolsPerAlpha = new Dictionary<Symbol, HashSet<Symbol>>();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -42,13 +42,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetExecution(new ImmediateExecutionModel());
             Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
-            _symbolsPerAlpha = new Dictionary<Symbol, HashSet<Symbol>>();
             SetPortfolioConstruction(new EqualWeightingAlphaStreamsPortfolioConstructionModel());
 
             foreach (var alphaId in new [] { "623b06b231eb1cc1aa3643a46", "9fc8ef73792331b11dbd5429a" })
             {
-                var alpha = AddData<AlphaStreamsPortfolioState>(alphaId);
-                _symbolsPerAlpha[alpha.Symbol] = new HashSet<Symbol>();
+                AddData<AlphaStreamsPortfolioState>(alphaId);
             }
         }
 
@@ -69,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // only add it if it's not used by any alpha (already added check)
                     if (newSymbols.Add(symbol) && !UsedBySomeAlpha(symbol))
                     {
-                        AddSecurity(symbol);
+                        AddSecurity(symbol, resolution: UniverseSettings.Resolution);
                     }
                 }
                 _symbolsPerAlpha[alphaId] = newSymbols;
@@ -83,12 +81,21 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug($"OnOrderEvent: {orderEvent}");
+            Log($"OnOrderEvent: {orderEvent}");
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            Debug($"OnSecuritiesChanged: {changes}");
+            changes.FilterCustomSecurities = false;
+            foreach (var addedSecurity in changes.AddedSecurities)
+            {
+                if (addedSecurity.Symbol.IsCustomDataType<AlphaStreamsPortfolioState>())
+                {
+                    _symbolsPerAlpha[addedSecurity.Symbol] = new HashSet<Symbol>();
+                }
+            }
+
+            Log($"OnSecuritiesChanged: {changes}");
         }
 
         private bool UsedBySomeAlpha(Symbol asset)
@@ -109,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
