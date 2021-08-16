@@ -27,7 +27,7 @@ from QuantConnect.Orders import *
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
 class RelativeDailyVOlumeAlgorithm(QCAlgorithm):
-    '''Basic template framework algorithm uses framework components to define the algorithm.'''
+    '''RelativeDailyVolumeAlgorithm uses the RDV indicator to trade an asset '''
 
     def Initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
@@ -36,7 +36,7 @@ class RelativeDailyVOlumeAlgorithm(QCAlgorithm):
         self.UniverseSettings.Resolution = Resolution.Hour
 
         self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
+        self.SetEndDate(2013,10,20)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
 
         self.EnableAutomaticIndicatorWarmUp = True;
@@ -44,9 +44,10 @@ class RelativeDailyVOlumeAlgorithm(QCAlgorithm):
         self.rdv = self.RDV(2);
 
     def OnData(self):
-        if self.rdv.IsReady:
+        if self.rdv.Current.Value > 1 and not self.Portfolio[self.spy].Invested:
             self.SetHoldings(self.spy, 1)
-            self.Debug(self.rdv.Current.Value)
+        elif self.rdv.Current.Value <= 1 and self.Portfolio[self.spy].Invested:
+            self.Liquidate(symbol)
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
