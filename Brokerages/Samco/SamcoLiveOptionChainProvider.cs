@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages.Samco
         public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
         {
             var symbols = new List<Symbol>();
-            foreach (var scripMaster in _symbolMapper.samcoTradableSymbolList)
+            foreach (var scripMaster in _symbolMapper.SamcoSymbols)
             {
                 symbols.Add(_symbolMapper.CreateLeanSymbol(scripMaster));
             }

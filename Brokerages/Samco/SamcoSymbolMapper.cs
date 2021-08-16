@@ -34,7 +34,19 @@ namespace QuantConnect.Brokerages.Samco
         /// <summary>
         /// The list of known Samco symbols.
         /// </summary>
-        public List<ScripMaster> samcoTradableSymbolList = new List<ScripMaster>();
+        private List<ScripMaster> samcoTradableSymbolList = new List<ScripMaster>();
+
+        /// <summary>
+        /// List of Samco Symbols that are Tradable
+        /// </summary>
+        /// <returns>A List of Samco Symbols</returns>
+        public List<ScripMaster> SamcoSymbols
+        {
+            get
+            {
+                return samcoTradableSymbolList;
+            }
+        }
 
         /// <summary>
         /// Constructs default instance of the Samco Sybol Mapper
