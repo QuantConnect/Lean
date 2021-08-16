@@ -354,7 +354,7 @@ namespace QuantConnect.Brokerages.Samco
         /// Return a relevant price for order depending on order type Price must be positive
         /// </summary>
         /// <param name="order"></param>
-        /// <returns></returns>
+        /// <returns>A price for order</returns>
         private static decimal GetOrderPrice(Order order)
         {
             switch (order.Type)
@@ -377,7 +377,7 @@ namespace QuantConnect.Brokerages.Samco
         /// Return a relevant price for order depending on order type Price must be positive
         /// </summary>
         /// <param name="order"></param>
-        /// <returns></returns>
+        /// <returns>A trigger price for order</returns>
         private static decimal GetOrderTriggerPrice(Order order)
         {
             switch (order.Type)
@@ -396,10 +396,13 @@ namespace QuantConnect.Brokerages.Samco
             throw new NotSupportedException($"SamcoBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
         }
 
-        //TODO: handle this in a better way
         private string GetOrderValidity(TimeInForce orderTimeforce)
         {
-            return "DAY";
+            if( orderTimeforce == TimeInForce.GoodTilCanceled || orderTimeforce == TimeInForce.Day)
+            {
+                return "DAY";
+            }
+            throw new NotSupportedException($"SamcoBrokerage.GetOrderValidity: Unsupported orderTimeforce: {orderTimeforce}");
         }
 
         private void SignRequest(IRestRequest request)
