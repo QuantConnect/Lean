@@ -111,7 +111,7 @@ namespace QuantConnect.Brokerages.Samco
             _algorithm.SetOptionChainProvider(new SamcoLiveOptionChainProvider(_symbolMapper));
 
             WebSocket = new WebSocketClientWrapper();
-            WebSocket.Initialize("wss://stream.stocknote.com", _samcoAPI.token);
+            WebSocket.Initialize("wss://stream.stocknote.com", _samcoAPI.SamcoToken);
             WebSocket.Message += OnMessage;
             WebSocket.Open += (sender, args) =>
             {
@@ -373,7 +373,7 @@ namespace QuantConnect.Brokerages.Samco
                 var start = request.StartTimeUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                 var end = latestTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
-                var scrip = _symbolMapper.samcoTradableSymbolList.Where(x => x.Name.ToUpperInvariant() == symbol).First();
+                var scrip = _symbolMapper.SamcoSymbols.Where(x => x.Name.ToUpperInvariant() == symbol).First();
                 string endpoint = $"/intraday/candleData?symbolName={symbol}&fromDate={start}&toDate={end}";
                 if (scrip.Instrument == "INDEX")
                 {
