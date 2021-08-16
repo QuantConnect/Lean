@@ -27,6 +27,8 @@ using Newtonsoft.Json.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
+using Log = QuantConnect.Logging.Log;
+
 
 namespace QuantConnect.Brokerages.Exante
 {
