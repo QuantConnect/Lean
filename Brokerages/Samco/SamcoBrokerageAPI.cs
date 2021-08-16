@@ -22,7 +22,6 @@ using QuantConnect.Orders;
 using QuantConnect.Util;
 using RestSharp;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -37,16 +36,30 @@ namespace QuantConnect.Brokerages.Samco
     public class SamcoBrokerageAPI : IDisposable
     {
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
-        public readonly string tokenHeader = "x-session-token";
-        public ConcurrentDictionary<int, Order> CachedOrderIDs = new ConcurrentDictionary<int, Order>();
-        public string token = "";
+        private readonly string tokenHeader = "x-session-token";
+        private string token = "";
 
+        /// <summary>
+        /// Constructor for Samco API
+        /// </summary>
         public SamcoBrokerageAPI()
         {
             RestClient = new RestClient("https://api.stocknote.com");
         }
 
         public IRestClient RestClient { get; }
+
+        /// <summary>
+        /// Samco API Token
+        /// </summary>
+        /// <returns>A Samco API Token</returns>
+        public string SamcoToken
+        {
+            get
+            {
+                return token;
+            }
+        }
 
         public void Authorize(string login, string password, string yearOfBirth)
         {
@@ -119,50 +132,6 @@ namespace QuantConnect.Brokerages.Samco
                 // 429 status code: Too Many Requests
             } while (++attempts < maxAttempts && (int)response.StatusCode == 429);
             return response;
-        }
-
-        public IEnumerable<TradeBar> GetHistoricalDailyCandles(string symbol, string exchange, DateTime startDateTime, DateTime endDateTime, Resolution resolution = Resolution.Daily)
-        {
-            var start = startDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-            var end = endDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-            string endpoint = $"/history/candleData?symbolName={HttpUtility.UrlEncode(symbol)}&fromDate={start}&toDate={end}&exchange={exchange}";
-
-            var restRequest = new RestRequest(endpoint, Method.GET);
-            var response = ExecuteRestRequest(restRequest);
-
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception(
-                    $"SamcoBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, " +
-                    $"Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
-            }
-
-            // we need to drop the last bar provided by the exchange as its open time is a history
-            // request's end time
-            var candles = JsonConvert.DeserializeObject<CandleResponse>(response.Content);
-
-            if (!candles.historicalCandleData.Any())
-            {
-                yield break;
-            }
-
-            foreach (var candle in candles.historicalCandleData)
-            {
-                yield return new TradeBar()
-                {
-                    Time = candle.date.AddMinutes(555),
-                    Symbol = symbol,
-                    Low = candle.low,
-                    High = candle.high,
-                    Open = candle.open,
-                    Close = candle.close,
-                    Volume = candle.volume,
-                    Value = candle.close,
-                    DataType = MarketDataType.TradeBar,
-                    Period = Resolution.Minute.ToTimeSpan(),
-                    EndTime = candle.date.AddMinutes(1)
-                };
-            }
         }
 
         /// <summary>
@@ -323,7 +292,6 @@ namespace QuantConnect.Brokerages.Samco
             var payload = new JsonObject
             {
                 { "exchange", exchange },
-                //{ "priceType", "LTP" },
                 { "orderValidity", GetOrderValidity(order.TimeInForce) },
                 { "afterMarketOrderFlag", "NO" },
                 { "productType", productType },
@@ -337,10 +305,6 @@ namespace QuantConnect.Brokerages.Samco
             if (order.Type == OrderType.Market || order.Type == OrderType.StopMarket)
             {
                 payload.Add("marketProtection", "2");
-            }
-            else
-            {
-                //payload.Add("marketProtection", "--" );
             }
 
             if (order.Type == OrderType.StopLimit || order.Type == OrderType.StopMarket || order.Type == OrderType.Limit)
