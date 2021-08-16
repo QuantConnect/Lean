@@ -13,25 +13,24 @@
  * limitations under the License.
 */
 
-using QuantConnect.Logging;
-using NodaTime;
+using QuantConnect.Brokerages.Samco;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Brokerages.Samco;
-using QuantConnect.Data;
-using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.SamcoDataDownloader
 {
     public class SamcoDataDownloaderProgram
     {
         /// <summary>
-        /// Samco Data Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
-        /// By Balamurali Pandranki a.k.a @itsbalamurali
+        /// Samco Data Downloader Toolbox Project For LEAN Algorithmic Trading Engine. By Balamurali
+        /// Pandranki a.k.a @itsbalamurali
         /// </summary>
         public static void SamcoDataDownloader(IList<string> tickers, string market, string resolution, string securityType, DateTime startDate, DateTime endDate)
         {
@@ -72,42 +71,22 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
 
-                    var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, pairObject, castSecurityType).TimeZone;
                     var exchange = symbolMapper.GetDefaultExchange(pairObject);
-
-                    var start = startDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
-                    var end = endDate.ConvertTo(DateTimeZone.Utc, exchangeTimeZone);
 
                     // Write data
                     var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
                     IList<TradeBar> fileEnum = new List<TradeBar>();
                     var history = new List<TradeBar>();
-                    var timeSpan = new TimeSpan();
-                    switch (castResolution)
+                    if (castResolution == Resolution.Tick)
                     {
-                        case Resolution.Tick:
-                            throw new ArgumentException("Samco Doesn't support tick resolution");
-
-                        case Resolution.Minute:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, exchange, start, end).ToList();
-                            timeSpan = Time.OneMinute;
-                            break;
-
-                        case Resolution.Hour:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, exchange, start, end).ToList();
-                            timeSpan = Time.OneHour;
-                            break;
-
-                        case Resolution.Daily:
-                            history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, exchange, start, end).ToList();
-                            timeSpan = Time.OneDay;
-                            break;
+                        throw new ArgumentException("Samco Doesn't support tick resolution");
                     }
+
+                    history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, exchange, startDate, endDate).ToList();
 
                     foreach (var bar in history)
                     {
-                        var linedata = new TradeBar(bar.Time, pairObject, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, timeSpan);
-                        fileEnum.Add(linedata);
+                        fileEnum.Add(bar);
                     }
                     writer.Write(fileEnum);
                 }

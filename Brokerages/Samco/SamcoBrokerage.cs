@@ -335,6 +335,14 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
+            // Samco API only allows us to support history requests for TickType.Trade
+            if (request.TickType != TickType.Trade)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidTickType",
+                    $"{request.TickType} TickType not supported, no history returned"));
+                yield break;
+            }
+
             if (request.Symbol.SecurityType != SecurityType.Equity && request.Symbol.SecurityType != SecurityType.Future && request.Symbol.SecurityType != SecurityType.Option)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidSecurityType",
