@@ -28,6 +28,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected virtual bool AddETFSubscription { get; set; } = true;
+
         private Symbol _gdvd;
         private Symbol _aapl;
         private DateTime _delistingDate;
@@ -49,7 +51,16 @@ namespace QuantConnect.Algorithm.CSharp
             _delistingDate = new DateTime(2021, 1, 21);
 
             _aapl = AddEquity("AAPL", Resolution.Hour).Symbol;
-            _gdvd = AddEquity("GDVD", Resolution.Hour).Symbol;
+            if (AddETFSubscription)
+            {
+                Log("Adding ETF constituent universe Symbol by using AddEquity(...)");
+                _gdvd = AddEquity("GDVD", Resolution.Hour).Symbol;
+            }
+            else
+            {
+                Log("Adding ETF constituent universe Symbol by using Symbol.Create(...)");
+                _gdvd = QuantConnect.Symbol.Create("GDVD", SecurityType.Equity, Market.USA);
+            }
             
             AddUniverse(new ETFConstituentsUniverse(_gdvd, UniverseSettings, FilterETFs));
         }
@@ -92,7 +103,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             _universeAdded |= changes.AddedSecurities.Count >= _universeSymbolCount;
-            _universeRemoved |= changes.RemovedSecurities.Count >= _universeSymbolCount;
+            // Subtract 1 from universe Symbol count for AAPL, since it was manually added to the algorithm
+            _universeRemoved |= changes.RemovedSecurities.Count == _universeSymbolCount - 1 && UtcTime.Date >= _delistingDate && UtcTime.Date < EndDate;
         }
 
         public override void OnEndOfAlgorithm()

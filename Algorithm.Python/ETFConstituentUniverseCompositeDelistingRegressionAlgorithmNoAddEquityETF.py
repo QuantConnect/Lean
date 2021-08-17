@@ -15,9 +15,9 @@ from AlgorithmImports import *
 
 ### <summary>
 ### Tests the delisting of the composite Symbol (ETF symbol) and the removal of
-### the universe and the symbol from the algorithm.
+### the universe and the symbol from the algorithm, without adding a subscription via AddEquity
 ### </summary>
-class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
+class ETFConstituentUniverseCompositeDelistingRegressionAlgorithmNoAddEquityETF(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2020, 12, 1)
         self.SetEndDate(2021, 1, 31)
@@ -31,7 +31,7 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
         self.delistingDate = date(2021, 1, 21)
 
         self.aapl = self.AddEquity("AAPL", Resolution.Hour).Symbol
-        self.gdvd = self.AddEquity("GDVD", Resolution.Hour).Symbol
+        self.gdvd = Symbol.Create("GDVD", SecurityType.Equity, Market.USA)
 
         self.AddUniverse(ETFConstituentsUniverse(self.gdvd, self.UniverseSettings, self.FilterETFs))
 
