@@ -27,6 +27,8 @@ using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common
@@ -337,6 +339,33 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void AlphaStreamsOrderEventRoundTrip()
+        {
+            var symbol = Symbol.CreateBase(typeof(AlphaStreamsOrderEvent),
+                Symbol.Create("9fc8ef73792331b11dbd5429a", SecurityType.Base, Market.USA),
+                Market.USA);
+
+            var orderEvent = new AlphaStreamsOrderEvent
+            {
+                Time = DateTime.UtcNow,
+                Symbol = symbol,
+                Source = "Live trading",
+                AlgorithmId = "BasicTemplateAlgorithm",
+                AlphaId = "9fc8ef73792331b11dbd5429a",
+                OrderEvent = new OrderEvent(1, Symbols.SPY, DateTime.UtcNow, OrderStatus.Filled,
+                    OrderDirection.Buy, 1, 10, OrderFee.Zero, message:"crazy message")
+            };
+
+            var serializedOrderEvent = orderEvent.ProtobufSerialize();
+            using (var stream = new MemoryStream(serializedOrderEvent))
+            {
+                var result = (AlphaStreamsOrderEvent)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+                AssertAreEqual(orderEvent, result);
+            }
+        }
+
+        [Test]
         public void AlphaStreamsPortfolioStateRoundTrip()
         {
             var symbol = Symbol.CreateBase(typeof(AlphaStreamsPortfolioState),
@@ -505,7 +534,14 @@ namespace QuantConnect.Tests.Common
                     }
                     else
                     {
-                        Assert.AreEqual(expectedValue, resultValue);
+                        if (expectedValue is OrderEvent || expectedValue is OrderFee)
+                        {
+                            AssertAreEqual(expectedValue, resultValue);
+                        }
+                        else
+                        {
+                            Assert.AreEqual(expectedValue, resultValue);
+                        }
                     }
                 }
             }
