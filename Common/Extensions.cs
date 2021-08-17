@@ -3131,7 +3131,7 @@ namespace QuantConnect
         /// dependency with the FF enumerators requiring that they receive aux data to properly handle delistings.
         /// Otherwise we would have issues with delisted symbols continuing to fill forward after expiry/delisting.
         /// Reference PR #5485 and related issues for more.</remarks>
-        public static bool ShouldEmitData(this SubscriptionDataConfig config, BaseData data)
+        public static bool ShouldEmitData(this SubscriptionDataConfig config, BaseData data, bool isUniverse = false)
         {
             // For now we are only filtering Auxiliary data; so if its another type just return true
             if (data.DataType != MarketDataType.Auxiliary)
@@ -3150,6 +3150,18 @@ namespace QuantConnect
 
             // This filter does not apply to auxiliary data outside of delisting/splits/dividends so lets those emit
             var type = data.GetType();
+
+            // We don't want to pump in any data to `Universe.SelectSymbols(...)` if the
+            // type is not configured to be consumed by the universe. This change fixes
+            // a case where a `SymbolChangedEvent` was being passed to an ETF constituent universe
+            // for filtering/selection, and would result in either a runtime error
+            // if casting into the expected type explicitly, or call the filter function with
+            // no data being provided, resulting in all universe Symbols being de-selected.
+            if (isUniverse && !type.IsAssignableFrom(config.Type))
+            {
+                return (data as Delisting)?.Type == DelistingType.Delisted;
+            }
+            
             if (!(type == typeof(Delisting) || type == typeof(Split) || type == typeof(Dividend)))
             {
                 return true;

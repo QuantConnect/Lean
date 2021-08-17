@@ -499,5 +499,54 @@ namespace QuantConnect.Tests.Common
                 });
             }
         }
+
+ 
+        [TestCase("SPY", "SPY", "SPY 2T")]
+        [TestCase("NWSA", "FOXA", "NWSA 2T")]
+        [TestCase("NWSA", "FOXA", "NWSA 2S|NWSA 2T")]
+        [TestCase("QQQQ", "QQQ", "QQQQ 2S|QQQQ 31|QQQQ 2T")]
+        public void SymbolAndUnderlyingSymbolsMapped(string ticker, string mappedTicker, string sid)
+        {
+            var symbol = new Symbol(SecurityIdentifier.Parse(sid), ticker);
+            var symbolChain = symbol;
+
+            do
+            {
+                Assert.AreEqual(symbolChain.Value, ticker);
+                symbolChain = symbolChain.Underlying;
+            }
+            while (symbolChain != null);
+
+            symbol = symbol.UpdateMappedSymbol(mappedTicker);
+            symbolChain = symbol;
+
+            do
+            {
+                Console.WriteLine(symbolChain.ToString() + "; Value: " + symbolChain.Value);
+                if (symbolChain.SecurityType == SecurityType.Base || symbolChain.SecurityType.RequiresMapping())
+                {
+                    Assert.AreEqual(mappedTicker, symbolChain.Value);
+                }
+                else 
+                {
+                    Assert.AreNotEqual(mappedTicker, symbolChain.Value);   
+                }
+                symbolChain = symbolChain.Underlying;
+            }
+            while (symbolChain != null);
+        }
+
+        [Test]
+        public void SymbolReferenceNotMappedOnUpdate()
+        {
+            var symbol = Symbol.Create("NWSA", SecurityType.Equity, Market.USA);
+            var customSymbol = Symbol.CreateBase(typeof(BaseData), symbol, Market.USA);
+
+            var mappedSymbol = customSymbol.UpdateMappedSymbol("FOXA");
+            
+            Assert.AreNotEqual(customSymbol.Value, mappedSymbol.Value);
+            Assert.AreNotEqual(customSymbol.Underlying.Value, mappedSymbol.Underlying.Value);
+            Assert.AreNotEqual(symbol.Value, mappedSymbol.Underlying.Value);
+        }
     }
 }
