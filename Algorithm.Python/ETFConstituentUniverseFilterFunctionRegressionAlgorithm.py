@@ -25,6 +25,10 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
         self.filtered = False
         self.securitiesChanged = False
         self.receivedData = False
+        self.etfConstituentData = {}
+        self.etfRebalanced = False
+        self.rebalanceCount = 0
+        self.rebalanceAssetCount = 0
 
         self.UniverseSettings.Resolution = Resolution.Hour
 
@@ -36,6 +40,8 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
     def FilterETFs(self, constituents):
         constituentsData = list(constituents)
         constituentsSymbols = [i.Symbol for i in constituentsData]
+        self.etfConstituentData = {i.Symbol: i for i in constituentsData}
+
         if len(constituentsData) == 0:
             raise Exception(f"Constituents collection is empty on {self.UtcTime.strftime('%Y-%m-%d %H:%M:%S.%f')}")
         if self.aapl not in constituentsSymbols:
@@ -46,6 +52,8 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
             raise Exception("AAPL weight is expected to be a non-zero value")
 
         self.filtered = True
+        self.etfRebalanced = True
+
         return constituentsSymbols
 
     def OnData(self, data):
@@ -58,10 +66,27 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
         if len(data.Bars) != 0 and self.aapl not in data.Bars:
             raise Exception(f"Expected AAPL TradeBar data on {self.UtcTime.strftime('%Y-%m-%d %H:%M:%S.%f')}")
 
-        if not self.Portfolio.Invested:
-            self.SetHoldings(self.aapl, 0.5)
-
         self.receivedData = True
+
+        if not self.etfRebalanced:
+            return
+
+        for bar in data.Bars.Values:
+            constituentData = self.etfConstituentData.get(bar.Symbol)
+            if constituentData is not None and constituentData.Weight is not None and constituentData.Weight >= 0.0001:
+                # If the weight of the constituent is less than 1%, then it will be set to 1%
+                # If the weight of the constituent exceeds more than 5%, then it will be capped to 5%
+                # Otherwise, if the weight falls in between, then we use that value.
+                boundedWeight = max(0.01, min(constituentData.Weight, 0.05))
+
+                self.SetHoldings(bar.Symbol, boundedWeight)
+
+                if self.etfRebalanced:
+                    self.rebalanceCount += 1
+
+                self.etfRebalanced = False
+                self.rebalanceAssetCount += 1
+
 
     def OnSecuritiesChanged(self, changes):
         if self.filtered and not self.securitiesChanged and len(changes.AddedSecurities) < 500:
@@ -70,6 +95,12 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
         self.securitiesChanged = True
 
     def OnEndOfAlgorithm(self):
+        if self.rebalanceCount != 1:
+            raise Exception(f"Expected 1 rebalance, instead rebalanced: {self.rebalanceCount}")
+
+        if self.rebalanceAssetCount != 4:
+            raise Exception(f"Invested in {self.rebalanceAssetCount} assets (expected 4)")
+
         if not self.filtered:
             raise Exception("Universe selection was never triggered")
 

@@ -33,6 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Dictionary<DateTime, int> _filterDateConstituentSymbolCount = new Dictionary<DateTime, int>();
         private Dictionary<DateTime, bool> _constituentDataEncountered = new Dictionary<DateTime, bool>();
         private HashSet<Symbol> _constituentSymbols = new HashSet<Symbol>();
+        private bool _mappingEventOccurred;
         
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -73,6 +74,27 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            if (data.SymbolChangedEvents.Count != 0)
+            {
+                foreach (var symbolChanged in data.SymbolChangedEvents.Values)
+                {
+                    if (symbolChanged.Symbol != _qqq)
+                    {
+                        throw new Exception($"Mapped symbol is not QQQ. Instead, found: {symbolChanged.Symbol}");
+                    }
+                    if (symbolChanged.OldSymbol != "QQQQ")
+                    {
+                        throw new Exception($"Old QQQ Symbol is not QQQQ. Instead, found: {symbolChanged.OldSymbol}");
+                    }
+                    if (symbolChanged.NewSymbol != "QQQ")
+                    {
+                        throw new Exception($"New QQQ Symbol is not QQQ. Instead, found: {symbolChanged.NewSymbol}");
+                    }
+                    
+                    _mappingEventOccurred = true;
+                }
+            }
+            
             if (data.Keys.Count == 1 && data.ContainsKey(_qqq))
             {
                 return;
@@ -99,6 +121,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (_filterDateConstituentSymbolCount.Count != 2)
             {
                 throw new Exception($"ETF constituent filtering function was not called 2 times (actual: {_filterDateConstituentSymbolCount.Count}");
+            }
+            if (!_mappingEventOccurred)
+            {
+                throw new Exception("No mapping/SymbolChangedEvent occurred. Expected for QQQ to be mapped from QQQQ -> QQQ");
             }
 
             foreach (var kvp in _filterDateConstituentSymbolCount)

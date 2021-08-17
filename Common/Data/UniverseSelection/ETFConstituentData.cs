@@ -133,9 +133,6 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>True indicates mapping should be used</returns>
         public override bool RequiresMapping()
         {
-            // We already have mapped tickers from the data itself. No need to map
-            // the universe Symbol, otherwise SymbolChangedEvent instances will
-            // be pumped into the universe selection functions
             return true;
         }
 
@@ -172,8 +169,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the default resolution for this data and security type
         /// </summary>
-        /// <remarks>This is a method and not a property so that python
-        /// custom data types can override it</remarks
+        /// <remarks>
+        /// This is a method and not a property so that python
+        /// custom data types can override it.
+        /// </remarks>
         public override Resolution DefaultResolution()
         {
             return Resolution.Daily;

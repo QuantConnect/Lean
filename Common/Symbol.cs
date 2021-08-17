@@ -351,6 +351,10 @@ namespace QuantConnect
                 underlyingSymbol = Underlying.UpdateMappedSymbol(mappedSymbol);
             }
 
+            // If this Symbol is not a custom data type, and the security type does not support mapping,
+            // then we know for a fact that this Symbol should not be mapped.
+            // Custom data types should be mapped, especially if this method is called on them because
+            // they can have an underlying that is also mapped.
             if (SecurityType != SecurityType.Base && !SecurityType.RequiresMapping())
             {
                 return new Symbol(ID, Value, underlyingSymbol);

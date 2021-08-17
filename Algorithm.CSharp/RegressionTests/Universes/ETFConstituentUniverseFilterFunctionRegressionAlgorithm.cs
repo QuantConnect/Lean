@@ -27,11 +27,16 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ETFConstituentUniverseFilterFunctionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Dictionary<Symbol, ETFConstituentData> _etfConstituentData = new Dictionary<Symbol, ETFConstituentData>();
+        
         private Symbol _aapl;
         private Symbol _spy;
         private bool _filtered;
         private bool _securitiesChanged;
         private bool _receivedData;
+        private bool _etfRebalanced;
+        private int _rebalanceCount;
+        private int _rebalanceAssetCount;
         
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -58,7 +63,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <exception cref="ArgumentException">Constituents collection was not structured as expected</exception>
         private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentData> constituents)
         {
-            var constituentsData = constituents.ToHashSet();
+            var constituentsData = constituents.ToList();
+            _etfConstituentData = constituentsData.ToDictionary(x => x.Symbol, x => x);
+            
             var constituentsSymbols = constituentsData.Select(x => x.Symbol).ToList();
             if (constituentsData.Count == 0)
             {
@@ -76,6 +83,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             _filtered = true;
+            _etfRebalanced = true;
+            
             return constituentsSymbols;
         }
 
@@ -100,12 +109,33 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Expected AAPL TradeBar data in OnData on {UtcTime:yyyy-MM-dd HH:mm:ss}");
             }
 
-            if (!Portfolio.Invested)
+            _receivedData = true;
+            // If the ETF hasn't changed its weights, then let's not update our holdings
+            if (!_etfRebalanced)
             {
-                SetHoldings(_aapl, 0.5m);
+                return;
             }
 
-            _receivedData = true;
+            foreach (var bar in data.Bars.Values)
+            {
+                if (_etfConstituentData.TryGetValue(bar.Symbol, out var constituentData) && 
+                    constituentData.Weight != null && 
+                    constituentData.Weight >= 0.0001m)
+                {
+                    // If the weight of the constituent is less than 1%, then it will be set to 1%
+                    // If the weight of the constituent exceeds more than 5%, then it will be capped to 5%
+                    // Otherwise, if the weight falls in between, then we use that value.
+                    var boundedWeight = Math.Max(0.01m, Math.Min(constituentData.Weight.Value, 0.05m));
+                    SetHoldings(bar.Symbol, boundedWeight);
+                    
+                    if (_etfRebalanced)
+                    {
+                        _rebalanceCount++;
+                    }
+                    _etfRebalanced = false;
+                    _rebalanceAssetCount++;
+                }
+            }
         }
 
         /// <summary>
@@ -129,6 +159,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// <exception cref="Exception">An expected event didn't happen</exception>
         public override void OnEndOfAlgorithm()
         {
+            if (_rebalanceCount != 1)
+            {
+                throw new Exception($"Expected 1 rebalance, instead rebalanced: {_rebalanceCount}");
+            }
+            if (_rebalanceAssetCount != 4)
+            {
+                throw new Exception($"Invested in {_rebalanceAssetCount} assets (expected 4)");
+            }
             if (!_filtered)
             {
                 throw new Exception("Universe selection was never triggered");
@@ -158,34 +196,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "27.575%"},
-            {"Drawdown", "5.400%"},
+            {"Compounding Annual Return", "2.118%"},
+            {"Drawdown", "0.600%"},
             {"Expectancy", "0"},
-            {"Net Profit", "4.061%"},
-            {"Sharpe Ratio", "1.788"},
-            {"Probabilistic Sharpe Ratio", "58.837%"},
+            {"Net Profit", "0.343%"},
+            {"Sharpe Ratio", "1.251"},
+            {"Probabilistic Sharpe Ratio", "53.741%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.226"},
-            {"Beta", "0.698"},
-            {"Annual Standard Deviation", "0.17"},
-            {"Annual Variance", "0.029"},
-            {"Information Ratio", "1.297"},
-            {"Tracking Error", "0.149"},
-            {"Treynor Ratio", "0.434"},
-            {"Total Fees", "$2.05"},
-            {"Estimated Strategy Capacity", "$180000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Fitness Score", "0.011"},
+            {"Alpha", "0.011"},
+            {"Beta", "0.098"},
+            {"Annual Standard Deviation", "0.018"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-0.754"},
+            {"Tracking Error", "0.116"},
+            {"Treynor Ratio", "0.223"},
+            {"Total Fees", "$4.00"},
+            {"Estimated Strategy Capacity", "$100000000.00"},
+            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
+            {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "5.042"},
-            {"Return Over Maximum Drawdown", "10.294"},
-            {"Portfolio Turnover", "0.012"},
+            {"Sortino Ratio", "4.028"},
+            {"Return Over Maximum Drawdown", "7.694"},
+            {"Portfolio Turnover", "0.001"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -199,7 +237,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "da16cdc1a6a1260a20db0f10607fd913"}
+            {"OrderListHash", "12bc2f33ccf788ffb2c0a57a68199485"}
         };
     }
 }

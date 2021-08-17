@@ -26,6 +26,7 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
         self.filterDateConstituentSymbolCount = {}
         self.constituentDataEncountered = {}
         self.constituentSymbols = []
+        self.mappingEventOccurred = False
 
         self.UniverseSettings.Resolution = Resolution.Hour
 
@@ -48,6 +49,17 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
         return constituentSymbols
 
     def OnData(self, data):
+        if len(data.SymbolChangedEvents) != 0:
+            for symbolChanged in data.SymbolChangedEvents.Values:
+                if symbolChanged.Symbol != self.qqq:
+                    raise Exception(f"Mapped symbol is not QQQ. Instead, found: {symbolChanged.Symbol}")
+                if symbolChanged.OldSymbol != "QQQQ":
+                    raise Exception(f"Old QQQ Symbol is not QQQQ. Instead, found: {symbolChanged.OldSymbol}")
+                if symbolChanged.NewSymbol != "QQQ":
+                    raise Exception(f"New QQQ Symbol is not QQQ. Instead, found: {symbolChanged.NewSymbol}")
+
+                self.mappingEventOccurred = True
+
         if self.qqq in data and len([i for i in data.Keys]) == 1:
             return
 
@@ -63,6 +75,9 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
     def OnEndOfAlgorithm(self):
         if len(self.filterDateConstituentSymbolCount) != 2:
             raise Exception(f"ETF constituent filtering function was not called 2 times (actual: {len(self.filterDateConstituentSymbolCount)}")
+
+        if not self.mappingEventOccurred:
+            raise Exception("No mapping/SymbolChangedEvent occurred. Expected for QQQ to be mapped from QQQQ -> QQQ");
 
         for constituentDate, constituentsCount in self.filterDateConstituentSymbolCount.items():
             if constituentsCount < 25:
