@@ -41,7 +41,7 @@ class RelativeDailyVOlumeAlgorithm(QCAlgorithm):
         self.spy = self.AddEquity("SPY", Resolution.Hour).Symbol;
         self.rdv = self.RDV(self.spy, 2);
 
-    def OnData(self):
+    def OnData(self, data):
         if self.rdv.Current.Value > 1 and not self.Portfolio[self.spy].Invested:
             self.SetHoldings(self.spy, 1)
         elif self.rdv.Current.Value <= 1 and self.Portfolio[self.spy].Invested:
