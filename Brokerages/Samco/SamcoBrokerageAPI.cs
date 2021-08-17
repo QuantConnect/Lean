@@ -36,8 +36,8 @@ namespace QuantConnect.Brokerages.Samco
     public class SamcoBrokerageAPI : IDisposable
     {
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
-        private readonly string tokenHeader = "x-session-token";
-        private string token = "";
+        private readonly string _tokenHeader = "x-session-token";
+        private string _token = "";
 
         /// <summary>
         /// Constructor for Samco API
@@ -53,13 +53,7 @@ namespace QuantConnect.Brokerages.Samco
         /// Samco API Token
         /// </summary>
         /// <returns>A Samco API Token</returns>
-        public string SamcoToken
-        {
-            get
-            {
-                return token;
-            }
-        }
+        public string SamcoToken => _token;
 
         public void Authorize(string login, string password, string yearOfBirth)
         {
@@ -81,7 +75,7 @@ namespace QuantConnect.Brokerages.Samco
                 );
             }
             var obj = JsonConvert.DeserializeObject<JObject>(response.Content);
-            token = obj["sessionToken"].Value<string>();
+            _token = obj["sessionToken"].Value<string>();
         }
 
         /// <summary>
@@ -407,7 +401,7 @@ namespace QuantConnect.Brokerages.Samco
 
         private void SignRequest(IRestRequest request)
         {
-            request.AddHeader(tokenHeader, token);
+            request.AddHeader(_tokenHeader, _token);
         }
     }
 }
