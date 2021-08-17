@@ -108,7 +108,6 @@ namespace QuantConnect.Brokerages.Samco
             _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnMessageImpl);
 
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _algorithm.SetOptionChainProvider(new SamcoLiveOptionChainProvider(_symbolMapper));
 
             WebSocket = new WebSocketClientWrapper();
             WebSocket.Initialize("wss://stream.stocknote.com", _samcoAPI.SamcoToken);
@@ -206,6 +205,11 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         public override void Dispose()
         {
+            _aggregator.Dispose();
+            _samcoAPI.Dispose();
+            _ctsFillMonitor.Cancel();
+            _fillMonitorTask.Wait(TimeSpan.FromSeconds(5));
+            _fillMonitorResetEvent.Dispose();
         }
 
         /// <summary>
@@ -516,8 +520,7 @@ namespace QuantConnect.Brokerages.Samco
 
             _messageHandler.WithLockedStream(() =>
             {
-                var security = _securityProvider.GetSecurity(order.Symbol);
-                var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
+                var orderFee = OrderFee.Zero;
                 var orderProperties = order.Properties as SamcoOrderProperties;
                 var samcoProductType = _samcoProductType;
                 if (orderProperties == null || orderProperties.Exchange == null)
@@ -588,7 +591,6 @@ namespace QuantConnect.Brokerages.Samco
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
                 submitted = true;
-                return;
             });
             return submitted;
         }
@@ -627,7 +629,6 @@ namespace QuantConnect.Brokerages.Samco
             }
             var request = JsonConvert.SerializeObject(sub);
             WebSocket.Send(request);
-            WebSocket.Send("\n");
         }
 
         /// <summary>
@@ -642,8 +643,7 @@ namespace QuantConnect.Brokerages.Samco
             _messageHandler.WithLockedStream(() =>
             {
                 var orderResponse = _samcoAPI.ModifyOrder(order);
-                var security = _securityProvider.GetSecurity(order.Symbol);
-                var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
+                var orderFee = OrderFee.Zero;
                 if (orderResponse.status == "Success")
                 {
                     if (string.IsNullOrEmpty(orderResponse.orderNumber))
@@ -1053,7 +1053,6 @@ namespace QuantConnect.Brokerages.Samco
                 }
                 var request = JsonConvert.SerializeObject(sub);
                 WebSocket.Send(request);
-                WebSocket.Send("\n");
                 return true;
             }
             return false;
