@@ -38,7 +38,7 @@ class RelativeDailyVOlumeAlgorithm(QCAlgorithm):
         self.SetCash(100000)           #Set Strategy Cash
 
         self.EnableAutomaticIndicatorWarmUp = True;
-        self.spy = self.AddEquity("SPY", Resolution.Hour);
+        self.spy = self.AddEquity("SPY", Resolution.Hour).Symbol;
         self.rdv = self.RDV(self.spy, 2);
 
     def OnData(self):
