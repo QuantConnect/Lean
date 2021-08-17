@@ -36,6 +36,8 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         private List<ScripMaster> samcoTradableSymbolList = new List<ScripMaster>();
 
+        private string _getSymbolsEndpoint = "https://developers.stocknote.com/doc/ScripMaster.csv";
+
         /// <summary>
         /// List of Samco Symbols that are Tradable
         /// </summary>
@@ -53,27 +55,13 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         public SamcoSymbolMapper()
         {
-            StreamReader streamReader;
-            var csvFile = "SamcoInstruments-" + DateTime.Now.Date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture).Replace(" ", "-").Replace("/", "-") + ".csv";
-            var path = Path.Combine(Globals.DataFolder, csvFile);
-
-            if (File.Exists(path))
-            {
-                streamReader = new StreamReader(path);
-            }
-            else
-            {
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create("https://developers.stocknote.com/doc/ScripMaster.csv");
-                req.KeepAlive = false;
-                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-                streamReader = new StreamReader(resp.GetResponseStream());
-                SaveStreamAsFile(Globals.DataFolder, resp.GetResponseStream(), csvFile);
-            }
+            var csvString = _getSymbolsEndpoint.DownloadData();
+            TextReader sr = new StringReader(csvString);
             CsvConfiguration configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = true,
             };
-            var csv = new CsvReader(streamReader, configuration);
+            var csv = new CsvReader(sr, configuration);
             var scrips = csv.GetRecords<ScripMaster>();
             samcoTradableSymbolList = scrips.ToList();
         }
