@@ -13,64 +13,46 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities;
-using System;
-
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
     /// Provides the default implementation of <see cref="IFeeModel"/> Refer to https://www.samco.in/technology/brokerage_calculator
     /// </summary>
-    public class SamcoFeeModel : IFeeModel
+    public class SamcoFeeModel : IndiaFeeModel
     {
         /// <summary>
-        /// Gets the order fee associated with the specified order.
+        /// Brokerage calculation Factor
         /// </summary>
-        /// <param name="parameters">
-        /// A <see cref="OrderFeeParameters"/> object containing the security and order
-        /// </param>
-        public OrderFee GetOrderFee(OrderFeeParameters parameters)
-        {
-            if (parameters.Security == null)
-            {
-                return OrderFee.Zero;
-            }
-            var orderValue = parameters.Order.GetValue(parameters.Security);
+        protected override decimal BrokerageMultiplier => 0.0003M;
 
-            var fee = GetFee(orderValue);
-            return new OrderFee(new CashAmount(fee, Currencies.INR));
-        }
+        /// <summary>
+        /// Maximum brokerage per order
+        /// </summary>
+        protected override decimal MaxBrokerage => 20;
 
-        private static decimal GetFee(decimal orderValue)
-        {
-            bool isSell = orderValue < 0;
-            orderValue = Math.Abs(orderValue);
-            var multiplied = orderValue * 0.0003M;
-            var brokerage = (multiplied > 20) ? 20 : Math.Round(multiplied, 2);
+        /// <summary>
+        /// Securities Transaction Tax calculation Factor
+        /// </summary>
+        protected override decimal SecuritiesTransactionTaxTotalMultiplier => 0.00025M;
 
-            var turnover = Math.Round(orderValue, 2);
+        /// <summary>
+        /// Exchange Transaction Charge calculation Factor
+        /// </summary>
+        protected override decimal ExchangeTransactionChargeMultiplier => 0.0000325M;
 
-            decimal securitiesTransactionTaxTotal = 0;
-            if (isSell)
-            {
-                securitiesTransactionTaxTotal = Math.Round(orderValue * 0.00025M, 2);
-            }
+        /// <summary>
+        /// State Tax calculation Factor
+        /// </summary>
+        protected override decimal StateTaxMultiplier => 0.18M;
 
-            var exchangeTransactionCharge = Math.Round(turnover * 0.0000325M, 2);
-            var cc = 0;
+        /// <summary>
+        /// Sebi Charges calculation Factor
+        /// </summary>
+        protected override decimal SebiChargesMultiplier => 0.000002M;
 
-            var sTax = Math.Round(0.18M * (brokerage + exchangeTransactionCharge), 2);
-
-            var sebiCharges = Math.Round((turnover * 0.000002M), 2);
-            decimal stampCharges = 0;
-            if (!isSell)
-            {
-                stampCharges = Math.Round((turnover * 0.00002M), 2);
-            }
-
-            var totalTax = Math.Round(brokerage + securitiesTransactionTaxTotal + exchangeTransactionCharge + stampCharges + cc + sTax + sebiCharges, 2);
-
-            return totalTax;
-        }
+        /// <summary>
+        /// Stamp Charges calculation Factor
+        /// </summary>
+        protected override decimal StampChargesMultiplier => 0.00002M;
     }
 }
