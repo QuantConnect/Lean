@@ -13,12 +13,7 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Data;
-using QuantConnect.Indicators;
+from AlgorithmImports import *
 
 namespace QuantConnect.Algorithm.CSharp
 {

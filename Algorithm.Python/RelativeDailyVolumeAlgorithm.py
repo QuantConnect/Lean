@@ -16,9 +16,7 @@ AddReference("System")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Orders import *
+from AlgorithmImports import *
 
 ### <summary>
 ### Relative Daily Volume Algorithm that uses EnableAutomaticIndicatorWarmUp
