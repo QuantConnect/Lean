@@ -45,7 +45,7 @@ class RelativeDailyVOlumeAlgorithm(QCAlgorithm):
         if self.rdv.Current.Value > 1 and not self.Portfolio[self.spy].Invested:
             self.SetHoldings(self.spy, 1)
         elif self.rdv.Current.Value <= 1 and self.Portfolio[self.spy].Invested:
-            self.Liquidate(symbol)
+            self.Liquidate(self.spy)
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
