@@ -37,6 +37,7 @@ namespace QuantConnect.Data
     [ProtoInclude(300, typeof(Dividend))]
     [ProtoInclude(400, typeof(Split))]
     [ProtoInclude(555, typeof(AlphaStreamsPortfolioState))]
+    [ProtoInclude(556, typeof(AlphaStreamsOrderEvent))]
     public abstract class BaseData : IBaseData
     {
         private decimal _value;

@@ -16,6 +16,7 @@
 using System;
 using System.ComponentModel;
 using Newtonsoft.Json;
+using ProtoBuf;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Securities;
@@ -26,6 +27,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Order Event - Messaging class signifying a change in an order state and record the change in the user's algorithm portfolio
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class OrderEvent
     {
         private decimal _fillPrice;
@@ -38,36 +40,43 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Id of the order this event comes from.
         /// </summary>
+        [ProtoMember(1)]
         public int OrderId { get; set; }
 
         /// <summary>
         /// The unique order event id for each order
         /// </summary>
+        [ProtoMember(2)]
         public int Id { get; set; }
 
         /// <summary>
         /// Easy access to the order symbol associated with this event.
         /// </summary>
+        [ProtoMember(3)]
         public Symbol Symbol { get; set; }
 
         /// <summary>
         /// The date and time of this event (UTC).
         /// </summary>
+        [ProtoMember(4)]
         public DateTime UtcTime { get; set; }
 
         /// <summary>
         /// Status message of the order.
         /// </summary>
+        [ProtoMember(5)]
         public OrderStatus Status { get; set; }
 
         /// <summary>
         /// The fee associated with the order
         /// </summary>
+        [ProtoMember(6)]
         public OrderFee OrderFee { get; set; }
 
         /// <summary>
         /// Fill price information about the order
         /// </summary>
+        [ProtoMember(7)]
         public decimal FillPrice
         {
             get { return _fillPrice; }
@@ -77,11 +86,13 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Currency for the fill price
         /// </summary>
+        [ProtoMember(8)]
         public string FillPriceCurrency { get; set; }
 
         /// <summary>
         /// Number of shares of the order that was filled in this event.
         /// </summary>
+        [ProtoMember(9)]
         public decimal FillQuantity
         {
             get { return _fillQuantity; }
@@ -97,23 +108,27 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order direction.
         /// </summary>
+        [ProtoMember(10)]
         public OrderDirection Direction { get; set; }
 
         /// <summary>
         /// Any message from the exchange.
         /// </summary>
         [DefaultValue(""), JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(11)]
         public string Message { get; set; }
 
         /// <summary>
         /// True if the order event is an assignment
         /// </summary>
+        [ProtoMember(12)]
         public bool IsAssignment { get; set; }
 
         /// <summary>
         /// The current stop price
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(13)]
         public decimal? StopPrice
         {
             get { return _stopPrice; }
@@ -130,6 +145,7 @@ namespace QuantConnect.Orders
         /// The current trigger price
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(14)]
         public decimal? TriggerPrice
         {
             get { return _triggerPrice; }
@@ -146,6 +162,7 @@ namespace QuantConnect.Orders
         /// The current limit price
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(15)]
         public decimal? LimitPrice
         {
             get { return _limitPrice; }
@@ -161,6 +178,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The current order quantity
         /// </summary>
+        [ProtoMember(16)]
         public decimal Quantity
         {
             get { return _quantity; }
