@@ -418,7 +418,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 var security = _securityProvider.GetSecurity(order.Symbol);
                 var orderFee = security.FeeModel.GetOrderFee(
                             new OrderFeeParameters(security, order));
-                var orderProperties = order.Properties as ZerodhaOrderProperties;
+                var orderProperties = order.Properties as IndiaOrderProperties;
                 var zerodhaProductType = _zerodhaProductType;
                 if (orderProperties == null || orderProperties.Exchange == null)
                 {
@@ -573,7 +573,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     return;
                 }
 
-                var orderProperties = order.Properties as ZerodhaOrderProperties;
+                var orderProperties = order.Properties as IndiaOrderProperties;
                 var zerodhaProductType = _zerodhaProductType; 
                 if (orderProperties == null || orderProperties.Exchange == null)
                 {
