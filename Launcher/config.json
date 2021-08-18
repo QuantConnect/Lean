@@ -117,6 +117,8 @@
   // binance configuration
   "binance-api-secret": "",
   "binance-api-key": "",
+  "binance-api-url": "https://api.binance.com",
+  "binance-websocket-url" :"wss://stream.binance.com:9443/ws",
 
   // arteyu configuration
   "atreyu-host": "",

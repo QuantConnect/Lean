@@ -38,7 +38,6 @@ namespace QuantConnect.Brokerages.Binance
     [BrokerageFactory(typeof(BinanceBrokerageFactory))]
     public partial class BinanceBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
-        private const string WebSocketBaseUrl = "wss://stream.binance.com:9443/ws";
 
         private readonly IAlgorithm _algorithm;
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Binance);
@@ -49,6 +48,7 @@ namespace QuantConnect.Brokerages.Binance
         private long _lastRequestId;
 
         private LiveNodePacket _job;
+        private string _webSocketBaseUrl;
         private readonly Timer _keepAliveTimer;
         private readonly Timer _reconnectTimer;
         private readonly BinanceRestApiClient _apiClient;
@@ -61,22 +61,25 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
+        /// <param name="restApiUrl">The rest api url</param>
+        /// <param name="webSocketBaseUrl">The web socket base url</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        public BinanceBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
-            : base(WebSocketBaseUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, "Binance")
+        public BinanceBrokerage(string apiKey, string apiSecret, string restApiUrl, string webSocketBaseUrl, IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
+            : base(webSocketBaseUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, "Binance")
         {
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;
+            _webSocketBaseUrl = webSocketBaseUrl;
             _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnUserMessage);
 
             var maximumWebSocketConnections = Config.GetInt("binance-maximum-websocket-connections");
             var symbolWeights = maximumWebSocketConnections > 0 ? FetchSymbolWeights() : null;
 
             var subscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
-                WebSocketBaseUrl,
+                webSocketBaseUrl,
                 MaximumSymbolsPerConnection,
                 maximumWebSocketConnections,
                 symbolWeights,
@@ -88,11 +91,11 @@ namespace QuantConnect.Brokerages.Binance
 
             SubscriptionManager = subscriptionManager;
 
-            _apiClient = new BinanceRestApiClient(
-                _symbolMapper,
+            _apiClient = new BinanceRestApiClient(_symbolMapper,
                 algorithm?.Portfolio,
                 apiKey,
-                apiSecret);
+                apiSecret,
+                restApiUrl);
 
             _apiClient.OrderSubmit += (s, e) => OnOrderSubmit(e);
             _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
@@ -145,7 +148,7 @@ namespace QuantConnect.Brokerages.Binance
             _apiClient.CreateListenKey();
             _reconnectTimer.Start();
 
-            WebSocket.Initialize($"{WebSocketBaseUrl}/{_apiClient.SessionId}");
+            WebSocket.Initialize($"{_webSocketBaseUrl}/{_apiClient.SessionId}");
 
             base.Connect();
         }
