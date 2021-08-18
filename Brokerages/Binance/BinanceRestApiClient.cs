@@ -320,13 +320,16 @@ namespace QuantConnect.Brokerages.Binance
                     .Select(entries => new Messages.Kline(entries))
                     .ToList();
 
-                var windowStartTime = (new DateTime(1970, 1, 1)).AddMilliseconds(klines.First().OpenTime);
-                var windowEndTime = (new DateTime(1970, 1, 1)).AddMilliseconds(klines.Last().OpenTime + resolutionInMs);
-                Log.Debug($"Received [{symbol}] data for timeperiod from {windowStartTime.ToStringInvariant()} to {windowEndTime.ToStringInvariant()}..");
-
                 if (klines.Count > 0)
                 {
-                    startMs = klines.Last().OpenTime + resolutionInMs;
+                    var lastValue = klines[klines.Count - 1];
+                    if (Log.DebuggingEnabled)
+                    {
+                        var windowStartTime = Time.UnixMillisecondTimeStampToDateTime(klines[0].OpenTime);
+                        var windowEndTime = Time.UnixMillisecondTimeStampToDateTime(lastValue.OpenTime + resolutionInMs);
+                        Log.Debug($"BinanceRestApiClient.GetHistory(): Received [{symbol}] data for timeperiod from {windowStartTime.ToStringInvariant()} to {windowEndTime.ToStringInvariant()}..");
+                    }
+                    startMs = lastValue.OpenTime + resolutionInMs;
 
                     foreach (var kline in klines)
                     {
