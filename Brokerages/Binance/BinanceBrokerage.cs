@@ -329,8 +329,7 @@ namespace QuantConnect.Brokerages.Binance
                     Volume = kline.Volume,
                     Value = kline.Close,
                     DataType = MarketDataType.TradeBar,
-                    Period = period,
-                    EndTime = Time.UnixMillisecondTimeStampToDateTime(kline.OpenTime + (long)period.TotalMilliseconds)
+                    Period = period
                 };
             }
         }
