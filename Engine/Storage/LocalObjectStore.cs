@@ -88,7 +88,7 @@ namespace QuantConnect.Lean.Engine.Storage
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
 
-            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimitMB {controls.StorageLimitMB}");
 
             Controls = controls;
 
