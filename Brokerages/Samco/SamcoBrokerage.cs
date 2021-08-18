@@ -521,7 +521,7 @@ namespace QuantConnect.Brokerages.Samco
             _messageHandler.WithLockedStream(() =>
             {
                 var orderFee = OrderFee.Zero;
-                var orderProperties = order.Properties as SamcoOrderProperties;
+                var orderProperties = order.Properties as IndiaOrderProperties;
                 var samcoProductType = _samcoProductType;
                 if (orderProperties == null || orderProperties.Exchange == null)
                 {
