@@ -692,7 +692,7 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                var entry = MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+                var entry = MarketHoursDatabase.GetEntry(symbol, new []{ type });
                 resolution = GetResolution(symbol, resolution);
 
                 return SubscriptionManager

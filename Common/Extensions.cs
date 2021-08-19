@@ -107,6 +107,50 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Tries to fetch the custom data type associated with a symbol
+        /// </summary>
+        /// <remarks>Custom data type <see cref="SecurityIdentifier"/> symbol value holds their data type</remarks>
+        public static bool TryGetCustomDataType(this string symbol, out string type)
+        {
+            type = null;
+            if (symbol != null)
+            {
+                var index = symbol.LastIndexOf('.');
+                if (index != -1 && symbol.Length > index + 1)
+                {
+                    type = symbol.Substring(index + 1);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Helper method to get a market hours entry
+        /// </summary>
+        /// <param name="marketHoursDatabase">The market hours data base instance</param>
+        /// <param name="symbol">The symbol to get the entry for</param>
+        /// <param name="dataTypes">For custom data types can optionally provide data type so that a new entry is added</param>
+        public static MarketHoursDatabase.Entry GetEntry(this MarketHoursDatabase marketHoursDatabase, Symbol symbol, IEnumerable<Type> dataTypes)
+        {
+            if (symbol.SecurityType == SecurityType.Base)
+            {
+                if (!marketHoursDatabase.TryGetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType, out var entry))
+                {
+                    var type = dataTypes.Single();
+                    var baseInstance = type.GetBaseDataInstance();
+                    baseInstance.Symbol = symbol;
+                    symbol.ID.Symbol.TryGetCustomDataType(out var customType);
+                    // for custom types we will add an entry for that type
+                    entry = marketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, customType != null ? $"TYPE.{customType}" : null, SecurityType.Base, baseInstance.DataTimeZone());
+                }
+                return entry;
+            }
+
+            return marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+        }
+
+        /// <summary>
         /// Helper method to download a provided url as a string
         /// </summary>
         /// <param name="url">The url to download data from</param>
@@ -342,6 +386,12 @@ namespace QuantConnect
                         // this way we only keep the most updated version
                         resultPacket.Orders = resultPacket.Orders.GroupBy(order => order.Id)
                             .Select(ordersGroup => ordersGroup.Last()).ToList();
+                    }
+
+                    if (newerPacket.Portfolio != null)
+                    {
+                        // we just keep the newest state if not null
+                        resultPacket.Portfolio = newerPacket.Portfolio;
                     }
                 }
             }
@@ -2768,6 +2818,16 @@ namespace QuantConnect
                 default:
                     return mapFile?.DelistingDate ?? SecurityIdentifier.DefaultDate;
             }
+        }
+
+        /// <summary>
+        /// Helper method to determine if a given symbol is of custom data
+        /// </summary>
+        public static bool IsCustomDataType<T>(this Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Base
+                && symbol.ID.Symbol.TryGetCustomDataType(out var type)
+                && type.Equals(typeof(T).Name, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>

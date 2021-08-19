@@ -499,7 +499,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     universeSettings.Resolution,
                     universeSettings.FillForward,
                     universeSettings.ExtendedMarketHours,
-                    dataNormalizationMode: universeSettings.DataNormalizationMode);
+                    dataNormalizationMode: universeSettings.DataNormalizationMode,
+                    subscriptionDataTypes: universeSettings.SubscriptionDataTypes);
 
                 security = _securityService.CreateSecurity(symbol, configs, universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
 

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using ProtoBuf;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
@@ -20,11 +21,13 @@ namespace QuantConnect.Orders.Fees
     /// <summary>
     /// Defines the result for <see cref="IFeeModel.GetOrderFee"/>
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class OrderFee
     {
         /// <summary>
         /// Gets the order fee
         /// </summary>
+        [ProtoMember(1)]
         public CashAmount Value { get; set; }
 
         /// <summary>

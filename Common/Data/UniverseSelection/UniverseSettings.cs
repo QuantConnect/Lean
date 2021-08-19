@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -57,6 +58,11 @@ namespace QuantConnect.Data.UniverseSelection
         public DataNormalizationMode DataNormalizationMode;
 
         /// <summary>
+        /// Allows a universe to specify which data types to add for a selected symbol
+        /// </summary>
+        public List<Tuple<Type, TickType>> SubscriptionDataTypes;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSettings"/> class
         /// </summary>
         /// <param name="resolution">The resolution</param>
@@ -86,6 +92,7 @@ namespace QuantConnect.Data.UniverseSelection
             ExtendedMarketHours = universeSettings.ExtendedMarketHours;
             MinimumTimeInUniverse = universeSettings.MinimumTimeInUniverse;
             DataNormalizationMode = universeSettings.DataNormalizationMode;
+            SubscriptionDataTypes = universeSettings.SubscriptionDataTypes;
         }
     }
 }
