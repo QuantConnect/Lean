@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
     public class RelativeDailyVolume : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly SortedDictionary<TimeSpan, SimpleMovingAverage> _relativeData;
-        private readonly Dictionary<DateTime, decimal> _currentData;
+        private readonly SortedDictionary<DateTime, decimal> _currentData;
         private int _previousDay;
         private int _days;
 
@@ -61,7 +61,7 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _relativeData = new SortedDictionary<TimeSpan, SimpleMovingAverage>();
-            _currentData = new Dictionary<DateTime, decimal>();
+            _currentData = new SortedDictionary<DateTime, decimal>();
             WarmUpPeriod = period;
             _previousDay = -1; // No calendar day can be -1, thus default is not a calendar day
             _days = -1; // Will increment by one after first TradeBar, then will increment by one every new day
