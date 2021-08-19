@@ -69,8 +69,8 @@ namespace QuantConnect.Tests.Brokerages.Samco
             algorithm.Setup(a => a.BrokerageModel).Returns(new SamcoBrokerageModel());
             algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
 
-            var apiSecret = Config.Get("samco-client-id");
-            var apiKey = Config.Get("samco-client-password");
+            var apiSecret = Config.Get("samco-client-password");
+            var apiKey = Config.Get("samco-client-id");
             var yob = Config.Get("samco-year-of-birth");
             var tradingSegment = Config.Get("samco-trading-segment");
             var productType = Config.Get("samco-product-type");
