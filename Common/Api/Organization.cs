@@ -96,6 +96,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Current licensed alphas
         /// </summary>
+        [JsonProperty(PropertyName = "licenses")]
         public List<AlphaLicense> AlphaLicenses { get; set; }
     }
 
