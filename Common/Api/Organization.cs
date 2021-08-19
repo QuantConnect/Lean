@@ -96,7 +96,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Current licensed alphas
         /// </summary>
-        public List<AlphaLicense> AlphaLicenses { get; set; }
+        public List<AlphaLicense> Licenses { get; set; }
     }
 
     /// <summary>
