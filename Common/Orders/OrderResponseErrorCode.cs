@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -179,5 +179,10 @@ namespace QuantConnect.Orders
         /// The order's quantity exceeds the max shortable quantity set by the brokerage
         /// </summary>
         ExceedsShortableQuantity = -31,
+
+        /// <summary>
+        /// Cannot update/cancel orders with OrderStatus.New
+        /// </summary>
+        InvalidNewOrderStatus = -32
     }
 }
