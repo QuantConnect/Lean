@@ -295,7 +295,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(orderUpdate.InstrumentToken);
                     var fillPrice = orderUpdate.AveragePrice;
-                    var fillQuantity = orderUpdate.FilledQuantity;
+                    decimal fillQuantity = orderUpdate.FilledQuantity;
                     var direction = orderUpdate.TransactionType == "SELL" ? OrderDirection.Sell : OrderDirection.Buy;
                     var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
 
@@ -303,22 +303,27 @@ namespace QuantConnect.Brokerages.Zerodha
                     var orderFee = security.FeeModel.GetOrderFee(
                         new OrderFeeParameters(security, order));
 
-                    
                     if (direction == OrderDirection.Sell)
                     {
                         fillQuantity = -1 * fillQuantity;
                     }
+
                     var status = OrderStatus.Filled;
                     if (fillQuantity != order.Quantity)
                     {
-                        decimal totalFillQuantity;
-                        _fills.TryGetValue(order.Id, out totalFillQuantity);
-                        totalFillQuantity += fillQuantity;
-                        _fills[order.Id] = totalFillQuantity;
-                        status = totalFillQuantity == order.Quantity
-                            ? OrderStatus.Filled
-                            : OrderStatus.PartiallyFilled;
+                        status = OrderStatus.PartiallyFilled;
                     }
+
+                    decimal totalRegisteredFillQuantity;
+                    _fills.TryGetValue(order.Id, out totalRegisteredFillQuantity);
+                    //async events received from zerodha: https://kite.trade/forum/discussion/comment/34752/#Comment_34752
+                    if ( fillQuantity <= totalRegisteredFillQuantity)
+                    {
+                        // already filled more quantity
+                        return;
+                    }
+                    _fills[order.Id] = fillQuantity;
+                    fillQuantity = _fills[order.Id] - totalRegisteredFillQuantity;
 
                     var orderEvent = new OrderEvent
                     (
