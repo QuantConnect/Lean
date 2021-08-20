@@ -16,14 +16,18 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using Newtonsoft.Json;
 using QuantConnect.Brokerages;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Serialization;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Util;
@@ -58,7 +62,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private Thread _processingThread;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
+        private List<SerializedOrder> _openOrdersCache = new List<SerializedOrder>();
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
 
         /// <summary>
@@ -71,7 +75,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// The orders dictionary holds orders which are open. Status: New, Submitted, PartiallyFilled, None, CancelPending
         /// Once the transaction thread has worked on them they get put here while witing for fill updates.
         /// </summary>
-        private readonly ConcurrentDictionary<int, Order> _openOrders = new ConcurrentDictionary<int, Order>();
+        private readonly NotifyingConcurrentDictionary<int, Order> _openOrders = new NotifyingConcurrentDictionary<int, Order>();
 
         /// <summary>
         /// The _openOrderTickets dictionary holds open order tickets that the algorithm can use to reference a specific order. This
@@ -91,6 +95,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// The _cancelPendingOrders instance will help to keep track of CancelPending orders and their Status
         /// </summary>
         protected readonly CancelPendingOrders _cancelPendingOrders = new CancelPendingOrders();
+
+        /// <summary>
+        /// Path to json file where open orders replication is stored
+        /// </summary>
+        protected string OpenOrdersFilePath;
 
         private IResultHandler _resultHandler;
 
@@ -170,6 +179,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _algorithm = algorithm;
             InitializeTransactionThread();
+
+            OpenOrdersFilePath = Path.Combine(Config.Get("results-destination-folder", Directory.GetCurrentDirectory()),
+                $"{algorithm?.AlgorithmId}-open-orders.json");
+            
+            RefreshOpenOrdersCache();
+
+            _openOrders.OnDictionaryChanged += (sender, args) =>
+            {
+                var serialized = _openOrders.Values.Select(x => new SerializedOrder(x, _algorithm.AlgorithmId));
+                File.WriteAllText(OpenOrdersFilePath, JsonConvert.SerializeObject(serialized, Formatting.Indented));
+            };
         }
 
         /// <summary>
@@ -638,6 +658,29 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _completeOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _openOrderTickets.AddOrUpdate(order.Id, orderTicket);
             _completeOrderTickets.AddOrUpdate(order.Id, orderTicket);
+
+            // Restore the tag
+            if (order.Type == OrderType.Limit && !_openOrdersCache.IsNullOrEmpty())
+            {
+                var limOrder = (LimitOrder) order;
+
+                // Must be also limit order and have same values for general fields
+                var match = _openOrdersCache.FirstOrDefault(x =>
+                {
+                    var cached = Order.FromSerialized(x) as LimitOrder;
+                    if (cached != null)
+                    {
+                        return cached.Symbol.Value == order.Symbol.Value && cached.Direction == order.Direction &&
+                               cached.LimitPrice == limOrder.LimitPrice && cached.Quantity == limOrder.Quantity;
+                    }
+                    return false;
+                });
+
+                if (match != null)
+                {
+                    limOrder.ApplyUpdateOrderRequest(new UpdateOrderRequest(DateTime.Now, limOrder.Id, new UpdateOrderFields() {Tag = match.Tag }));
+                }
+            }
         }
 
 
@@ -685,6 +728,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // mark request as processed
             request.SetResponse(response, OrderRequestStatus.Processed);
+        }
+
+        /// <summary>
+        /// Loads in cache information of existing orders stored in json file
+        /// </summary>
+        protected void RefreshOpenOrdersCache()
+        {
+            if (File.Exists(OpenOrdersFilePath))
+            {
+                _openOrdersCache = JsonConvert.DeserializeObject<List<SerializedOrder>>(File.ReadAllText(OpenOrdersFilePath));
+            }
         }
 
         /// <summary>
