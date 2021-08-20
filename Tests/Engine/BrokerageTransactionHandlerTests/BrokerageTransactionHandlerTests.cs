@@ -15,23 +15,31 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Moq;
+using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Brokerages.InteractiveBrokers;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
+using QuantConnect.Tests.Brokerages;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.Setup;
 using QuantConnect.Util;
@@ -55,6 +63,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _algorithm.SetCash(100000);
             _symbol = _algorithm.AddSecurity(SecurityType.Forex, Ticker).Symbol;
             _algorithm.SetFinishedWarmingUp();
+            _algorithm.SetAlgorithmId("Test-Algorithm");
         }
 
         [Test]
@@ -1234,6 +1243,126 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Invalid), 1);
         }
 
+        [Test]
+        public void ReplicatesOpenOrdersInJsonFileAndUpdatesAsCollectionChanges()
+        {
+            Config.Set("results-destination-folder", Directory.GetCurrentDirectory());
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using (var brokerage = new BacktestingBrokerage(_algorithm))
+            {
+                transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+                _algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+                // Creates limit order
+                var security = _algorithm.Securities[_symbol];
+                var price = 1.12m;
+                var lmtPrice = 1.11m;
+                var qnt = 1000;
+
+                security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price));
+
+                // Process submission request and assert
+                var submitRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, qnt, 0, lmtPrice, DateTime.UtcNow, "");
+                var orderTicket = transactionHandler.Process(submitRequest);
+                transactionHandler.HandleOrderRequest(submitRequest);
+                Assert.IsTrue(File.Exists(transactionHandler.OpenOrdersFilePath));
+                Assert.AreEqual(1, JsonConvert.DeserializeObject<List<SerializedOrder>>(File.ReadAllText(transactionHandler.OpenOrdersFilePath)).Count);
+
+                // Process cancellation request and assert
+                var cancelRequest = new CancelOrderRequest(DateTime.Now, orderTicket.OrderId, "");
+                transactionHandler.Process(cancelRequest);
+                transactionHandler.HandleOrderRequest(cancelRequest);
+                Assert.IsTrue(File.Exists(transactionHandler.OpenOrdersFilePath));
+                Assert.AreEqual(0, JsonConvert.DeserializeObject<List<SerializedOrder>>(File.ReadAllText(transactionHandler.OpenOrdersFilePath)).Count);
+            }
+        }
+
+        [Test]
+        [Explicit]
+        public void RestoresExistingLimitOrdersTags()
+        {
+            const string tag = "{'one': 1, 'two':2, 'three':3}";
+            var security = _algorithm.Securities[_symbol];
+            var qnt = 1000;
+            var price = 1.12m;
+            var lmtPrice = 1m;
+
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            Config.Set("results-destination-folder", Directory.GetCurrentDirectory());
+            security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price));
+
+            using (var ib = GetLiveBrokerage())
+            {
+                transactionHandler.Initialize(_algorithm, ib, new BacktestingResultHandler());
+                _algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+                ib.Connect();
+                ib.GetOpenOrders().DoForEach(x => ib.CancelOrder(x));  // Make sure no hanging orders on start
+
+                // Place an order
+                var submitRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, qnt, 0, lmtPrice, DateTime.UtcNow, tag);
+                transactionHandler.Process(submitRequest);
+                transactionHandler.HandleOrderRequest(submitRequest);
+
+                var orderEventFired = new ManualResetEvent(false);
+                ib.OrderStatusChanged += (sender, args) =>
+                {
+                    if (args.Status == OrderStatus.Submitted)
+                    {
+                        orderEventFired.Set();
+                    }
+                };
+
+                var lmtOrder = new LimitOrder(_symbol, qnt, lmtPrice, DateTime.Now, tag);
+                ib.PlaceOrder(lmtOrder);
+
+                orderEventFired.WaitOne(1500);
+                Thread.Sleep(250);
+
+                transactionHandler.RefreshOpenOrdersCache();  // Make sure to refresh cache
+
+                var ibOpenOrders = ib.GetOpenOrders();
+                foreach (var order in ibOpenOrders)
+                {
+                    transactionHandler.AddOpenOrder(order, null);
+                }
+
+                Assert.AreEqual(tag, transactionHandler.GetOpenOrders().FirstOrDefault()?.Tag);
+            }
+
+        }
+
+        private InteractiveBrokersBrokerage GetLiveBrokerage()
+        {
+            // grabs account info from configuration
+            var securityProvider = new SecurityProvider();
+            securityProvider[Symbols.USDJPY] = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.USDJPY,
+                    Resolution.Minute,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    false,
+                    false,
+                    false
+                ),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+
+            return new InteractiveBrokersBrokerage(
+                new QCAlgorithm(),
+                new OrderProvider(new List<Order>()),
+                securityProvider,
+                new AggregationManager(),
+                new LocalDiskMapFileProvider());
+        }
+
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
         {
             public static readonly Dictionary<int, int> OrderEventIds = new Dictionary<int, int>();
@@ -1330,7 +1459,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             private IBrokerageCashSynchronizer _brokerage;
 
             public int CancelPendingOrdersSize => _cancelPendingOrders.GetCancelPendingOrdersSize;
-
+            public new string OpenOrdersFilePath => base.OpenOrdersFilePath;
             public TimeSpan TestTimeSinceLastFill = TimeSpan.FromDays(1);
             public DateTime TestCurrentTimeUtc = new DateTime(13, 1, 13, 13, 13, 13);
 
@@ -1359,6 +1488,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public new void RoundOrderPrices(Order order, Security security)
             {
                 base.RoundOrderPrices(order, security);
+            }
+
+            public new void RefreshOpenOrdersCache()
+            {
+                base.RefreshOpenOrdersCache();
             }
         }
         private class TestNonShortableProvider : IShortableProvider
