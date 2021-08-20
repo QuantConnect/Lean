@@ -179,7 +179,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The benchmark for this brokerage</returns>
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
-            var symbol = Symbol.Create("SBIN", SecurityType.Equity, Market.India);
+            var symbol = Symbol.Create("NIFTYBEES", SecurityType.Equity, Market.India);
             return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
