@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         [TestCase(Language.Python, 10, new[] { false, false, false }, new[] { 0d, 10d, -1d }, new[] { false, false, false })]
         [TestCase(Language.CSharp, 10, new[] { true, true, true, true }, new[] { 10d, 20d, 10d, 9d }, new[] { false, false, false, true })]
         [TestCase(Language.Python, 10, new[] { true, true, true, true }, new[] { 10d, 20d, 10d, 9d }, new[] { false, false, false, true })]
-        public void CalculatesCorrectPortfolioTargets(
+        public void ReturnsExpectedPortfolioTarget(
             Language language,
             decimal maxDrawdownPercent,
             bool[] investedArray,

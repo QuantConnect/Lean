@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,9 +32,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         [TestCase(Language.CSharp, 0.1, false, 0, 0, false)]
         [TestCase(Language.CSharp, 0.1, true, -50, 1000, false)]
         [TestCase(Language.CSharp, 0.1, true, -100, 1000, false)]
+        [TestCase(Language.CSharp, 0.1, true, -150, 1000, true)]
         [TestCase(Language.Python, 0.1, false, 0, 0, false)]
         [TestCase(Language.Python, 0.1, true, -50, 1000, false)]
         [TestCase(Language.Python, 0.1, true, -100, 1000, false)]
+        [TestCase(Language.Python, 0.1, true, -150, 1000, true)]
         public void ReturnsExpectedPortfolioTarget(
             Language language,
             decimal maxDrawdownPercent,
