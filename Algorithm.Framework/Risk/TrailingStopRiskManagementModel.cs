@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
     public class TrailingStopRiskManagementModel : RiskManagementModel
     {
         private readonly decimal _maximumDrawdownPercent;
-        private Dictionary<Symbol, decimal> _trailingHighs = new Dictionary<Symbol, decimal>();
+        private readonly Dictionary<Symbol, decimal> _trailing = new Dictionary<Symbol, decimal>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TrailingStopRiskManagementModel"/> class
@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <param name="maximumDrawdownPercent">The maximum percentage relative drawdown allowed for algorithm portfolio compared with the highest unrealized profit, defaults to 5% drawdown per security</param>
         public TrailingStopRiskManagementModel(decimal maximumDrawdownPercent = 0.05m)
         {
-            _maximumDrawdownPercent = -Math.Abs(maximumDrawdownPercent);
+            _maximumDrawdownPercent = Math.Abs(maximumDrawdownPercent);
         }
 
         /// <summary>
@@ -53,32 +53,32 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 // Remove if not invested
                 if (!security.Invested)
                 {
-                    if (_trailingHighs.ContainsKey(symbol))
+                    if (_trailing.ContainsKey(symbol))
                     {
-                        _trailingHighs.Remove(symbol);
+                        _trailing.Remove(symbol);
                     }
                     continue;
                 }
 
-                // Add newly invested securities
-                if (!_trailingHighs.ContainsKey(symbol))
+                var profitPercent = security.Holdings.UnrealizedProfitPercent;
+
+                decimal value;
+                if (!_trailing.TryGetValue(symbol, out value))
                 {
-                    _trailingHighs.Add(symbol, security.Holdings.AveragePrice); // Set to average holding cost
+                    var newValue = profitPercent > 0 ? profitPercent : 0;
+                    _trailing.Add(symbol, newValue);
                     continue;
                 }
 
-                // Check for new highs and update - set to tradebar high
-                if (_trailingHighs[symbol] < security.High)
+                // Check for new high and update
+                if (value < profitPercent)
                 {
-                    _trailingHighs[symbol] = security.High;
+                    _trailing[symbol] = profitPercent;
                     continue;
                 }
 
-                // Check for securities past the drawdown limit
-                var securityHigh = _trailingHighs[symbol];
-                var drawdown = (security.Low / securityHigh) - 1m;
-
-                if (drawdown < _maximumDrawdownPercent)
+                // If unrealized profit percent deviates from local max for more than affordable percentage
+                if (profitPercent < value - _maximumDrawdownPercent)
                 {
                     // liquidate
                     yield return new PortfolioTarget(security.Symbol, 0);

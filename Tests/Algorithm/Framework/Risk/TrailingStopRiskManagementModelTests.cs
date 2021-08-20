@@ -26,25 +26,23 @@ using QuantConnect.Securities.Equity;
 namespace QuantConnect.Tests.Algorithm.Framework.Risk
 {
     [TestFixture]
-    public class MaximumDrawdownPercentPerSecurityTests
+    public class TrailingStopRiskManagementModelTests
     {
         [Test]
-        [TestCase(Language.CSharp, 0.1, false, 0, 0, false)]
-        [TestCase(Language.CSharp, 0.1, true, -50, 1000, false)]
-        [TestCase(Language.CSharp, 0.1, true, -100, 1000, false)]
-        [TestCase(Language.CSharp, 0.1, true, -150, 1000, true)]
-        [TestCase(Language.Python, 0.1, false, 0, 0, false)]
-        [TestCase(Language.Python, 0.1, true, -50, 1000, false)]
-        [TestCase(Language.Python, 0.1, true, -100, 1000, false)]
-        [TestCase(Language.Python, 0.1, true, -150, 1000, true)]
+        [TestCase(Language.CSharp, 10, new[] { false, true, true }, new[] { 0d, 10d, -1d }, new[] { false, false, true })]
+        [TestCase(Language.Python, 10, new[] { false, true, true }, new[] { 0d, 10d, -1d }, new[] { false, false, true })]
+        [TestCase(Language.CSharp, 10, new[] { false, false, false}, new[] { 0d, 10d, -1d }, new[] { false, false, false })]
+        [TestCase(Language.Python, 10, new[] { false, false, false }, new[] { 0d, 10d, -1d }, new[] { false, false, false })]
+        [TestCase(Language.CSharp, 10, new[] { true, true, true, true }, new[] { 10d, 20d, 10d, 9d }, new[] { false, false, false, true })]
+        [TestCase(Language.Python, 10, new[] { true, true, true, true }, new[] { 10d, 20d, 10d, 9d }, new[] { false, false, false, true })]
         public void ReturnsExpectedPortfolioTarget(
             Language language,
             decimal maxDrawdownPercent,
-            bool invested,
-            decimal unrealizedProfit,
-            decimal absoluteHoldingsCost,
-            bool shouldLiquidate)
+            bool[] investedArray,
+            double[] uppInputsDouble,
+            bool[] shouldLiquidateArray)
         {
+            var unrealizedProfitPercentArray = System.Array.ConvertAll(uppInputsDouble, x => (decimal) x);
             var security = new Mock<Equity>(
                 Symbols.AAPL,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -55,15 +53,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 new SecurityCache(),
                 PrimaryExchange.UNKNOWN
             );
-            security.Setup(m => m.Invested).Returns(invested);
 
             var holding = new Mock<EquityHolding>(security.Object,
                 new IdentityCurrencyConverter(Currencies.USD));
-            holding.Setup(m => m.UnrealizedProfit).Returns(unrealizedProfit);
-            holding.Setup(m => m.AbsoluteHoldingsCost).Returns(absoluteHoldingsCost);
-            holding.Setup(m => m.UnrealizedProfitPercent).Returns(absoluteHoldingsCost == 0m? 0m : unrealizedProfit / absoluteHoldingsCost);
-
-            security.Object.Holdings = holding.Object;
 
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
@@ -73,7 +65,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             {
                 using (Py.GIL())
                 {
-                    const string name = nameof(MaximumDrawdownPercentPerSecurity);
+                    const string name = nameof(TrailingStopRiskManagementModel);
                     var instance = Py.Import(name).GetAttr(name).Invoke(maxDrawdownPercent.ToPython());
                     var model = new RiskManagementModelPythonWrapper(instance);
                     algorithm.SetRiskManagement(model);
@@ -81,21 +73,32 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             }
             else
             {
-                var model = new MaximumDrawdownPercentPerSecurity(maxDrawdownPercent);
+                var model = new TrailingStopRiskManagementModel(maxDrawdownPercent);
                 algorithm.SetRiskManagement(model);
             }
 
-            var targets = algorithm.RiskManagement.ManageRisk(algorithm, null).ToList();
+            for (int i = 0; i < investedArray.Length; i++)
+            {
+                var invested = investedArray[i];
+                var unrealizedProfitPercent = unrealizedProfitPercentArray[i];
+                var shouldLiquidate = shouldLiquidateArray[i];
 
-            if (shouldLiquidate)
-            {
-                Assert.AreEqual(1, targets.Count);
-                Assert.AreEqual(Symbols.AAPL, targets[0].Symbol);
-                Assert.AreEqual(0, targets[0].Quantity);
-            }
-            else
-            {
-                Assert.AreEqual(0, targets.Count);
+                security.Setup(m => m.Invested).Returns(invested);
+                holding.Setup(m => m.UnrealizedProfitPercent).Returns(unrealizedProfitPercent);
+                security.Object.Holdings = holding.Object;
+
+                var targets = algorithm.RiskManagement.ManageRisk(algorithm, null).ToList();
+
+                if (shouldLiquidate)
+                {
+                    Assert.AreEqual(1, targets.Count);
+                    Assert.AreEqual(Symbols.AAPL, targets[0].Symbol);
+                    Assert.AreEqual(0, targets[0].Quantity);
+                }
+                else
+                {
+                    Assert.AreEqual(0, targets.Count);
+                }
             }
         }
     }
