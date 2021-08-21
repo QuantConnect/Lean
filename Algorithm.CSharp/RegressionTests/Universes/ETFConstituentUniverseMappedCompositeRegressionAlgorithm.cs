@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             _qqq = AddEquity("QQQ", Resolution.Daily).Symbol;
-            AddUniverse(new ETFConstituentsUniverse(_qqq, UniverseSettings, FilterETFs));
+            AddUniverse(Universe.ETF(_qqq, universeFilterFunc: FilterETFs));
         }
 
         private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentData> constituents)

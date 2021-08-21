@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _gdvd = QuantConnect.Symbol.Create("GDVD", SecurityType.Equity, Market.USA);
             }
             
-            AddUniverse(new ETFConstituentsUniverse(_gdvd, UniverseSettings, FilterETFs));
+            AddUniverse(Universe.ETF(_gdvd, universeFilterFunc: FilterETFs));
         }
 
         private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentData> constituents)

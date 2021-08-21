@@ -45,7 +45,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="constituentsFilter">The filter function used to filter out ETF constituents from the universe</param>
         public ETFConstituentsUniverse(Symbol symbol, UniverseSettings universeSettings, PyObject constituentsFilter = null)
-            : this(symbol, universeSettings, ConvertPythonUniverseFilterFunction(constituentsFilter))
+            : this(symbol, universeSettings, constituentsFilter.ConvertPythonUniverseFilterFunction<ETFConstituentData>())
         {
         }
 

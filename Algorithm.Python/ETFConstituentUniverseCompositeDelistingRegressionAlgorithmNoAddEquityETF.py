@@ -33,7 +33,7 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithmNoAddEquityETF(
         self.aapl = self.AddEquity("AAPL", Resolution.Hour).Symbol
         self.gdvd = Symbol.Create("GDVD", SecurityType.Equity, Market.USA)
 
-        self.AddUniverse(ETFConstituentsUniverse(self.gdvd, self.UniverseSettings, self.FilterETFs))
+        self.AddUniverse(self.Universe.ETF(self.gdvd, self.UniverseSettings, self.FilterETFs))
 
     def FilterETFs(self, constituents):
         if self.UtcTime.date() > self.delistingDate:

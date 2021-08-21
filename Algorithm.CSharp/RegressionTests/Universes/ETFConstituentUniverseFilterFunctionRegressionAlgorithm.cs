@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
             _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             
-            AddUniverse(new ETFConstituentsUniverse(_spy, UniverseSettings, FilterETFs));
+            AddUniverse(Universe.ETF(_spy, universeFilterFunc: FilterETFs));
         }
 
         /// <summary>
