@@ -210,6 +210,28 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
+        /// <summary>
+        /// Reproduce QC Slack Issue https://quantconnect.slack.com/archives/G51920EN4/p1625782914057900
+        /// Original Algorithm: https://www.quantconnect.com/terminal/processCache?request=embedded_backtest_e35c58ed9304f452bb43c4fbf76fe153.html
+        ///
+        /// Test to see that in the event of a precision error we still adjust the quantity to reach our target
+        /// </summary>
+        [Test]
+        public void PrecisionFailureAdjustment()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 2, 0);
+            Update(msft, 66.5m);
+
+            algo.Portfolio.SetCash(112302.5m);
+            algo.Settings.FreePortfolioValue = 0;
+            algo.Portfolio[Symbols.MSFT].SetHoldings(66.5m, -190);
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.4987458298843655153385005142m * 2);
+
+            Assert.AreEqual(1684, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
+        }
+
         [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongerToLong_SmallConstantFeeStructure(decimal leverage)
         {

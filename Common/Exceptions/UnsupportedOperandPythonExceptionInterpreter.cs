@@ -22,22 +22,21 @@ namespace QuantConnect.Exceptions
     /// <summary>
     /// Interprets <see cref="UnsupportedOperandPythonExceptionInterpreter"/> instances
     /// </summary>
-    public class UnsupportedOperandPythonExceptionInterpreter : IExceptionInterpreter
+    public class UnsupportedOperandPythonExceptionInterpreter : PythonExceptionInterpreter
     {
         /// <summary>
         /// Determines the order that an instance of this class should be called
         /// </summary>
-        public int Order => 0;
+        public override int Order => 0;
 
         /// <summary>
         /// Determines if this interpreter should be applied to the specified exception.
         /// </summary>
         /// <param name="exception">The exception to check</param>
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
-        public bool CanInterpret(Exception exception)
+        public override bool CanInterpret(Exception exception)
         {
-            return 
-                exception?.GetType() == typeof(PythonException) &&
+            return base.CanInterpret(exception) &&
                 exception.Message.Contains("TypeError") &&
                 exception.Message.Contains("unsupported operand type");
         }
@@ -48,7 +47,7 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public override Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
             var pe = (PythonException)exception;
 

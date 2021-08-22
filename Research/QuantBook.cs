@@ -52,9 +52,6 @@ namespace QuantConnect.Research
 
         static QuantBook()
         {
-            Logging.Log.LogHandler =
-                Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
-
             //Determine if we are in a Python Notebook
             try
             {
@@ -128,6 +125,15 @@ namespace QuantConnect.Research
                     new BacktestNodePacket(),
                     new AlgorithmManager(false));
                 systemHandlers.LeanManager.SetAlgorithm(this);
+
+                algorithmHandlers.DataPermissionsManager.Initialize(new AlgorithmNodePacket(PacketType.BacktestNode)
+                {
+                    UserToken = Config.Get("api-access-token"),
+                    UserId = Config.GetInt("job-user-id"),
+                    ProjectId = Config.GetInt("project-id"),
+                    OrganizationId = Config.Get("job-organization-id"),
+                    Version = Globals.Version
+                });
 
                 algorithmHandlers.ObjectStore.Initialize("QuantBook",
                     Config.GetInt("job-user-id"),

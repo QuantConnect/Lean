@@ -162,7 +162,7 @@ namespace QuantConnect.Messaging
                 return;
             }
 
-            var algorithmSource = $"../../../Algorithm.CSharp/{_job.AlgorithmId}.cs";
+            var algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"*{_job.AlgorithmId}.cs", SearchOption.AllDirectories).Single();
             var file = File.ReadAllLines(algorithmSource).ToList().GetEnumerator();
             var lines = new List<string>();
             while (file.MoveNext())
@@ -174,7 +174,8 @@ namespace QuantConnect.Messaging
                 }
 
                 if (line.Contains("public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
-                    || line.Contains("public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>"))
+                    || line.Contains("public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
+                    || line.Contains("public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>"))
                 {
                     lines.Add(line);
                     lines.Add("        {");

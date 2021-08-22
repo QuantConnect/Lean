@@ -32,6 +32,8 @@ namespace QuantConnect.Tests.Common.Scheduling
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class DateRulesTests
     {
+        private static DateTime _utcNow = new DateTime(2021, 07, 27, 1, 10, 10, 500);
+
         [Test]
         public void EveryDayDateRuleEmitsEveryDay()
         {
@@ -586,9 +588,23 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual("SPY: WeekStart+3", rule.Name);
         }
 
+        [Test]
+        public void SetTimeZone()
+        {
+            var rules = GetDateRules();
+            var nowNewYork = rules.Today.GetDates(_utcNow, _utcNow).Single();
+
+            rules.SetDefaultTimeZone(TimeZones.Utc);
+
+            var nowUtc = rules.Today.GetDates(_utcNow, _utcNow).Single();
+
+            Assert.AreEqual(_utcNow.Date, nowUtc);
+            Assert.AreEqual(nowUtc.Date, nowNewYork.AddDays(1));
+        }
+
         private static DateRules GetDateRules()
         {
-            var timeKeeper = new TimeKeeper(DateTime.Today, new List<DateTimeZone>());
+            var timeKeeper = new TimeKeeper(_utcNow, new List<DateTimeZone>());
             var manager = new SecurityManager(timeKeeper);
 
             // Add SPY for Equity testing

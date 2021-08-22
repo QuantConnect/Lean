@@ -20,6 +20,10 @@ class UniverseUnchangedRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.UniverseSettings.Resolution = Resolution.Daily
+
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+        # Commented so regression algorithm is more sensitive
+        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
         self.SetStartDate(2014,3,25)
         self.SetEndDate(2014,4,7)
 

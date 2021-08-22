@@ -48,12 +48,12 @@ class AddOptionContractExpiresRegressionAlgorithm(QCAlgorithm):
 
             option = next((option for option in options if option.ID.Date == self._expiration and option.ID.OptionRight == OptionRight.Call and option.ID.OptionStyle == OptionStyle.American), None)
             if option != None:
-                self._option = self.AddOptionContract(option).Symbol;
+                self._option = self.AddOptionContract(option).Symbol
 
         if self._option != None and self.Securities[self._option].Price != 0 and not self._traded:
-            self._traded = True;
-            self.Buy(self._option, 1);
+            self._traded = True
+            self.Buy(self._option, 1)
 
         if self.Time > self._expiration and self.Securities[self._twx].Invested:
                 # we liquidate the option exercised position
-                self.Liquidate(self._twx);
+                self.Liquidate(self._twx)

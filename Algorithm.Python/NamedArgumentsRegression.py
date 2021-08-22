@@ -31,13 +31,13 @@ class NamedArgumentsRegression(QCAlgorithm):
 
         #Check our values
         if self.StartDate.year != 2013 or self.StartDate.month != 10 or self.StartDate.day != 8:
-            raise AssertionError(f"Start date was incorrect! Expected 10/8/2013 Recieved {self.StartDate}");
+            raise AssertionError(f"Start date was incorrect! Expected 10/8/2013 Recieved {self.StartDate}")
 
         if self.EndDate.year != 2013 or self.EndDate.month != 10 or self.EndDate.day != 17:
-            raise AssertionError(f"End date was incorrect! Expected 10/17/2013 Recieved {self.EndDate}");
+            raise AssertionError(f"End date was incorrect! Expected 10/17/2013 Recieved {self.EndDate}")
 
         if self.Portfolio.Cash != 100000:
-            raise AssertionError(f"Portfolio cash was incorrect! Expected 100000 Recieved {self.Portfolio.Cash}");
+            raise AssertionError(f"Portfolio cash was incorrect! Expected 100000 Recieved {self.Portfolio.Cash}")
 
         # Use named args for addition of this security to our algorithm
         symbol = self.AddEquity(resolution=Resolution.Daily, ticker="SPY").Symbol
@@ -45,7 +45,7 @@ class NamedArgumentsRegression(QCAlgorithm):
         # Check our subscriptions for the symbol and check its resolution
         for config in self.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol):
             if config.Resolution != Resolution.Daily:
-                raise AssertionError(f"Resolution was not correct on security");
+                raise AssertionError(f"Resolution was not correct on security")
 
 
     def OnData(self, data):

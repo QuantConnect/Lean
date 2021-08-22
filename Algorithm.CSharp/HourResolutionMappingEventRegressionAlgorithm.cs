@@ -14,15 +14,15 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing GH issue #5232
+    /// Regression algorithm reproducing GH issue #5232, where we expect SPWR to be mapped to SPWRA
     /// </summary>
     public class HourResolutionMappingEventRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -127,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "8d5c6263fbdfa4b2338fc725e27b93e9"}
+            {"OrderListHash", "4bf8a2d15c6c6ac98e55d7c6ea10f54e"}
         };
     }
 }

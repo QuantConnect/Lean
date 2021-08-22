@@ -23,14 +23,18 @@ class PortfolioRebalanceOnCustomFuncRegressionAlgorithm(QCAlgorithm):
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+        # Commented so regression algorithm is more sensitive
+        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+
         self.SetStartDate(2015, 1, 1)
         self.SetEndDate(2018, 1, 1)
 
-        self.Settings.RebalancePortfolioOnInsightChanges = False;
-        self.Settings.RebalancePortfolioOnSecurityChanges = False;
+        self.Settings.RebalancePortfolioOnInsightChanges = False
+        self.Settings.RebalancePortfolioOnSecurityChanges = False
 
         self.SetUniverseSelection(CustomUniverseSelectionModel("CustomUniverseSelectionModel", lambda time: [ "AAPL", "IBM", "FB", "SPY", "AIG", "BAC", "BNO" ]))
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, None));
+        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, None))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(self.RebalanceFunction))
         self.SetExecution(ImmediateExecutionModel())
         self.lastRebalanceTime = self.StartDate
@@ -42,14 +46,14 @@ class PortfolioRebalanceOnCustomFuncRegressionAlgorithm(QCAlgorithm):
 
         if self.lastRebalanceTime == self.StartDate:
             # initial rebalance
-            self.lastRebalanceTime = time;
-            return time;
+            self.lastRebalanceTime = time
+            return time
 
-        deviation = 0;
+        deviation = 0
         count = sum(1 for security in self.Securities.Values if security.Invested)
         if count > 0:
-            self.lastRebalanceTime = time;
-            portfolioValuePerSecurity = self.Portfolio.TotalPortfolioValue / count;
+            self.lastRebalanceTime = time
+            portfolioValuePerSecurity = self.Portfolio.TotalPortfolioValue / count
             for security in self.Securities.Values:
                 if not security.Invested:
                     continue
@@ -57,7 +61,7 @@ class PortfolioRebalanceOnCustomFuncRegressionAlgorithm(QCAlgorithm):
                     ReservedBuyingPowerForPositionParameters(security)).AbsoluteUsedBuyingPower
                                                          * security.BuyingPowerModel.GetLeverage(security)) # see GH issue 4107
                 # we sum up deviation for each security
-                deviation += (portfolioValuePerSecurity - reservedBuyingPowerForCurrentPosition) / portfolioValuePerSecurity;
+                deviation += (portfolioValuePerSecurity - reservedBuyingPowerForCurrentPosition) / portfolioValuePerSecurity
 
             # if securities are deviated 1.5% from their theoretical share of TotalPortfolioValue we rebalance
             if deviation >= 0.015:

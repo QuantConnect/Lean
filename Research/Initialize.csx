@@ -10,9 +10,9 @@ var parentDirectory = Directory.GetParent(currentDirectory).FullName;
 // In cloud and CLI research cases we expect the parent directory to contain the Dlls; but locally it may be cwd
 var directoryToLoad = Directory.GetFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
 
-// Load in all dll's from this directory
+// Load in all QC dll's from this directory
 Console.WriteLine($"Initialize.csx: Loading assemblies from {directoryToLoad}");
-foreach (var file in Directory.GetFiles(directoryToLoad, "*.dll"))
+foreach (var file in Directory.GetFiles(directoryToLoad, "QuantConnect.*.dll"))
 {
     try
     {
@@ -20,6 +20,6 @@ foreach (var file in Directory.GetFiles(directoryToLoad, "*.dll"))
     }
     catch (Exception e)
     {
-        Console.WriteLine(e);
+        Console.WriteLine($"File: {file}. Exception: {e}");
     }
 }

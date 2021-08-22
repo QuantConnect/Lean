@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
 using Python.Runtime;
+using NUnit.Framework;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -58,6 +58,63 @@ namespace QuantConnect.Tests.Common.Util
                 Assert.IsTrue(typeof(List<Symbol>) == test4.GetType());
                 Assert.IsTrue(test4.SequenceEqual(expected));
             }
+        }
+
+        [TestCase("SyntaxError : invalid syntax (BasicTemplateAlgorithm.py, line 33)", "SyntaxError : invalid syntax (BasicTemplateAlgorithm.py, line 32)", 1)]
+        [TestCase("SyntaxError : invalid syntax (BasicTemplateAlgorithm.py, line 1)", "SyntaxError : invalid syntax (BasicTemplateAlgorithm.py, line 32)", -31)]
+        [TestCase("NameError : name 's' is not defined", "NameError : name 's' is not defined", -31)]
+        public void ParsesPythonExceptionMessage(string expected, string original, int shift)
+        {
+            var originalShiftValue = PythonUtil.ExceptionLineShift;
+            PythonUtil.ExceptionLineShift = shift;
+            var result = PythonUtil.PythonExceptionMessageParser(original);
+
+            PythonUtil.ExceptionLineShift = originalShiftValue;
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestCase(@"
+  at Initialize
+    s
+===
+   at Python.Runtime.PyObject.Invoke(PyTuple args in BasicTemplateAlgorithm.py: line 20
+",
+            @"   File ""D:/QuantConnect/MyLean/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 30, in Initialize
+    s
+===
+   at Python.Runtime.PyObject.Invoke(PyTuple args, PyDict kw)
+   at Python.Runtime.PyObject.InvokeMethod(String name, PyTuple args, PyDict kw)
+   at Python.Runtime.PyObject.TryInvokeMember(InvokeMemberBinder binder, Object[] args, Object& result)
+   at CallSite.Target(Closure , CallSite , Object )
+   at System.Dynamic.UpdateDelegates.UpdateAndExecuteVoid1[T0](CallSite site, T0 arg0)
+   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.Initialize() in D:\QuantConnect\MyLean\Lean\AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 528
+   at QuantConnect.Lean.Engine.Setup.BacktestingSetupHandler.<>c__DisplayClass27_0.<Setup>b__0() in D:\QuantConnect\MyLean\Lean\Engine\Setup\BacktestingSetupHandler.cs:line 186",
+            -10)]
+        [TestCase(@"
+  at Initialize
+    self.SetEndDate(201)
+===
+   at Python.Runtime.PyObject.Invoke(PyTuple args in BasicTemplateAlgorithm.py: line 40
+",
+            @"  File ""D:/QuantConnect/MyLean/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 30, in Initialize
+    self.SetEndDate(201)
+===
+   at Python.Runtime.PyObject.Invoke(PyTuple args, PyDict kw)
+   at Python.Runtime.PyObject.InvokeMethod(String name, PyTuple args, PyDict kw)
+   at Python.Runtime.PyObject.TryInvokeMember(InvokeMemberBinder binder, Object[] args, Object& result)
+   at CallSite.Target(Closure , CallSite , Object )
+   at System.Dynamic.UpdateDelegates.UpdateAndExecuteVoid1[T0](CallSite site, T0 arg0)
+   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.Initialize() in D:\QuantConnect\MyLean\Lean\AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 528
+   at QuantConnect.Lean.Engine.Setup.BacktestingSetupHandler.<>c__DisplayClass27_0.<Setup>b__0() in D:\QuantConnect\MyLean\Lean\Engine\Setup\BacktestingSetupHandler.cs:line 186",
+            10)]
+        public void ParsesPythonExceptionStackTrace(string expected, string original, int shift)
+        {
+            var originalShiftValue = PythonUtil.ExceptionLineShift;
+            PythonUtil.ExceptionLineShift = shift;
+            var result = PythonUtil.PythonExceptionStackParser(original);
+
+            PythonUtil.ExceptionLineShift = originalShiftValue;
+            Assert.AreEqual(expected, result);
         }
     }
 }

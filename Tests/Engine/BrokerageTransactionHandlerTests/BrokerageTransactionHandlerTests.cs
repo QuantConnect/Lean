@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -597,6 +597,78 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
+        public void UpdateOrderRequestShouldFailForNewOrderStatus()
+        {
+            // Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            // Creates a limit order
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Submit and process a limit order
+            var orderTicket = transactionHandler.Process(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.New);
+
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderTicket.OrderId, new UpdateOrderFields());
+            transactionHandler.Process(updateRequest);
+            Assert.AreEqual(updateRequest.Status, OrderRequestStatus.Error);
+            Assert.IsTrue(updateRequest.Response.IsError);
+            Assert.AreEqual(updateRequest.Response.ErrorCode, OrderResponseErrorCode.InvalidNewOrderStatus);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.New);
+
+            Assert.AreEqual(_algorithm.OrderEvents.Count, 0);
+        }
+
+        [Test]
+        public void CancelOrderRequestShouldFailForNewOrderStatus()
+        {
+            // Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            // Creates a limit order
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Submit and process a limit order
+            var orderTicket = transactionHandler.Process(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.New);
+
+            var cancelRequest = new CancelOrderRequest(DateTime.Now, orderTicket.OrderId, "");
+            transactionHandler.Process(cancelRequest);
+            Assert.AreEqual(cancelRequest.Status, OrderRequestStatus.Error);
+            Assert.IsTrue(cancelRequest.Response.IsError);
+            Assert.AreEqual(cancelRequest.Response.ErrorCode, OrderResponseErrorCode.InvalidNewOrderStatus);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.New);
+
+            Assert.AreEqual(_algorithm.OrderEvents.Count, 0);
+        }
+
+        [Test]
         public void CancelOrderRequestShouldFailForFilledOrder()
         {
             // Initializes the transaction handler
@@ -1136,6 +1208,32 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(10, TestIncrementalOrderIdAlgorithm.OrderEventIds.Count);
         }
 
+        [Test]
+        public void InvalidOrderEventDueToNonShortableAsset()
+        {
+            // Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            var broker = new TestBroker(_algorithm, false);
+            _algorithm.SetBrokerageModel(new TestShortableBrokerageModel());
+            transactionHandler.Initialize(_algorithm, broker, new BacktestingResultHandler());
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -1000, 0, 1.11m, DateTime.UtcNow, "");
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            var orderTicket = transactionHandler.Process(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.Invalid);
+            Assert.AreEqual(_algorithm.OrderEvents.Count, 1);
+            Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Invalid), 1);
+        }
+
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
         {
             public static readonly Dictionary<int, int> OrderEventIds = new Dictionary<int, int>();
@@ -1203,6 +1301,17 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
+        public class NoSubmitTestBrokerage : BacktestingBrokerage
+        {
+            public NoSubmitTestBrokerage(IAlgorithm algorithm) : base(algorithm)
+            {
+            }
+            public override bool PlaceOrder(Order order)
+            {
+                return true;
+            }
+        }
+
         public class TestBroker : BacktestingBrokerage
         {
             private readonly bool _cancelOrderResult;
@@ -1250,6 +1359,25 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public new void RoundOrderPrices(Order order, Security security)
             {
                 base.RoundOrderPrices(order, security);
+            }
+        }
+        private class TestNonShortableProvider : IShortableProvider
+        {
+            public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
+            {
+                return new Dictionary<Symbol, long>();
+            }
+            public long? ShortableQuantity(Symbol symbol, DateTime localTime)
+            {
+                return 0;
+            }
+        }
+
+        private class TestShortableBrokerageModel : DefaultBrokerageModel
+        {
+            public TestShortableBrokerageModel()
+            {
+                ShortableProvider = new TestNonShortableProvider();
             }
         }
     }

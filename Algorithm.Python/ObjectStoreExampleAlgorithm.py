@@ -83,10 +83,10 @@ class ObjectStoreExampleAlgorithm(QCAlgorithm):
             self.SetHoldings(self.SPY, 1)
 
         elif ema10 < close and ema10 < ema50:
-            self.SetHoldings(self.SPY, -1);
+            self.SetHoldings(self.SPY, -1)
 
         elif ema10 < ema50 and self.Portfolio[self.SPY].IsLong:
-            self.Liquidate(self.SPY);
+            self.Liquidate(self.SPY)
 
         elif ema10 > ema50 and self.Portfolio[self.SPY].IsShort:
             self.Liquidate(self.SPY)

@@ -54,6 +54,7 @@ using Microsoft.IO;
 using NodaTime.TimeZones;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Exceptions;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
@@ -103,6 +104,50 @@ namespace QuantConnect
             var fileName = Path.GetFileName(filepath);
             // helper to determine if file is date based using regex, matches a 8 digit value because we expect YYYYMMDD
             return !DateCheck.IsMatch(fileName) && DateTime.Now - TimeSpan.FromDays(DataUpdatePeriod) > File.GetLastWriteTime(filepath);
+        }
+
+        /// <summary>
+        /// Tries to fetch the custom data type associated with a symbol
+        /// </summary>
+        /// <remarks>Custom data type <see cref="SecurityIdentifier"/> symbol value holds their data type</remarks>
+        public static bool TryGetCustomDataType(this string symbol, out string type)
+        {
+            type = null;
+            if (symbol != null)
+            {
+                var index = symbol.LastIndexOf('.');
+                if (index != -1 && symbol.Length > index + 1)
+                {
+                    type = symbol.Substring(index + 1);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Helper method to get a market hours entry
+        /// </summary>
+        /// <param name="marketHoursDatabase">The market hours data base instance</param>
+        /// <param name="symbol">The symbol to get the entry for</param>
+        /// <param name="dataTypes">For custom data types can optionally provide data type so that a new entry is added</param>
+        public static MarketHoursDatabase.Entry GetEntry(this MarketHoursDatabase marketHoursDatabase, Symbol symbol, IEnumerable<Type> dataTypes)
+        {
+            if (symbol.SecurityType == SecurityType.Base)
+            {
+                if (!marketHoursDatabase.TryGetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType, out var entry))
+                {
+                    var type = dataTypes.Single();
+                    var baseInstance = type.GetBaseDataInstance();
+                    baseInstance.Symbol = symbol;
+                    symbol.ID.Symbol.TryGetCustomDataType(out var customType);
+                    // for custom types we will add an entry for that type
+                    entry = marketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, customType != null ? $"TYPE.{customType}" : null, SecurityType.Base, baseInstance.DataTimeZone());
+                }
+                return entry;
+            }
+
+            return marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
         }
 
         /// <summary>
@@ -341,6 +386,12 @@ namespace QuantConnect
                         // this way we only keep the most updated version
                         resultPacket.Orders = resultPacket.Orders.GroupBy(order => order.Id)
                             .Select(ordersGroup => ordersGroup.Last()).ToList();
+                    }
+
+                    if (newerPacket.Portfolio != null)
+                    {
+                        // we just keep the newest state if not null
+                        resultPacket.Portfolio = newerPacket.Portfolio;
                     }
                 }
             }
@@ -2685,6 +2736,16 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Safely blocks until the specified task has completed executing
+        /// </summary>
+        /// <param name="task">The task to be awaited</param>
+        /// <returns>The result of the task</returns>
+        public static T SynchronouslyAwaitTask<T>(this Task<T> task)
+        {
+            return task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
         /// Convert dictionary to query string
         /// </summary>
         /// <param name="pairs"></param>
@@ -2757,6 +2818,16 @@ namespace QuantConnect
                 default:
                     return mapFile?.DelistingDate ?? SecurityIdentifier.DefaultDate;
             }
+        }
+
+        /// <summary>
+        /// Helper method to determine if a given symbol is of custom data
+        /// </summary>
+        public static bool IsCustomDataType<T>(this Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Base
+                && symbol.ID.Symbol.TryGetCustomDataType(out var type)
+                && type.Equals(typeof(T).Name, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>
@@ -2973,6 +3044,17 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to set an algorithm runtime exception in a normalized fashion
+        /// </summary>
+        public static void SetRuntimeError(this IAlgorithm algorithm, Exception exception, string context)
+        {
+            Log.Error(exception, $"Extensions.SetRuntimeError(): RuntimeError at {algorithm.UtcTime} UTC. Context: {context}");
+            exception = StackExceptionInterpreter.Instance.Value.Interpret(exception);
+            algorithm.RunTimeError = exception;
+            algorithm.SetStatus(AlgorithmStatus.RuntimeError);
+        }
+
+        /// <summary>
         /// Creates a <see cref="OptionChainUniverse"/> for a given symbol
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
@@ -3067,6 +3149,33 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts a <see cref="Data.HistoryRequest" /> instance to a <see cref="SubscriptionDataConfig"/> instance
+        /// </summary>
+        /// <param name="request">History request</param>
+        /// <param name="isInternalFeed">
+        /// Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
+        /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods
+        /// </param>
+        /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
+        /// <returns>Subscription data configuration</returns>
+        public static SubscriptionDataConfig ToSubscriptionDataConfig(this Data.HistoryRequest request, bool isInternalFeed = false, bool isFilteredSubscription = true)
+        {
+            return new SubscriptionDataConfig(request.DataType,
+                request.Symbol,
+                request.Resolution,
+                request.DataTimeZone,
+                request.ExchangeHours.TimeZone,
+                request.FillForwardResolution.HasValue,
+                request.IncludeExtendedMarketHours,
+                isInternalFeed,
+                request.IsCustomData,
+                request.TickType,
+                isFilteredSubscription,
+                request.DataNormalizationMode
+            );
+        }
+
+        /// <summary>
         /// Centralized logic used at the top of the subscription enumerator stacks to determine if we should emit base data points
         /// based on the configuration for this subscription and the type of data we are handling.
         /// 
@@ -3082,7 +3191,7 @@ namespace QuantConnect
         /// dependency with the FF enumerators requiring that they receive aux data to properly handle delistings.
         /// Otherwise we would have issues with delisted symbols continuing to fill forward after expiry/delisting.
         /// Reference PR #5485 and related issues for more.</remarks>
-        public static bool ShouldEmitData(this SubscriptionDataConfig config, BaseData data)
+        public static bool ShouldEmitData(this SubscriptionDataConfig config, BaseData data, bool isUniverse = false)
         {
             // For now we are only filtering Auxiliary data; so if its another type just return true
             if (data.DataType != MarketDataType.Auxiliary)
@@ -3101,6 +3210,18 @@ namespace QuantConnect
 
             // This filter does not apply to auxiliary data outside of delisting/splits/dividends so lets those emit
             var type = data.GetType();
+
+            // We don't want to pump in any data to `Universe.SelectSymbols(...)` if the
+            // type is not configured to be consumed by the universe. This change fixes
+            // a case where a `SymbolChangedEvent` was being passed to an ETF constituent universe
+            // for filtering/selection, and would result in either a runtime error
+            // if casting into the expected type explicitly, or call the filter function with
+            // no data being provided, resulting in all universe Symbols being de-selected.
+            if (isUniverse && !type.IsAssignableFrom(config.Type))
+            {
+                return (data as Delisting)?.Type == DelistingType.Delisted;
+            }
+            
             if (!(type == typeof(Delisting) || type == typeof(Split) || type == typeof(Dividend)))
             {
                 return true;

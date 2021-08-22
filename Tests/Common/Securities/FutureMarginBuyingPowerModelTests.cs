@@ -392,7 +392,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.Throws<InvalidOperationException>(() => futureSecurity.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
                 new GetMaximumOrderQuantityForTargetBuyingPowerParameters(algorithm.Portfolio,
                     futureSecurity,
-                    target)));
+                    target,
+                    0)));
         }
 
         [TestCase(1)]

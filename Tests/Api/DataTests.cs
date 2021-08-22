@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.API
             var setPrice = 10;
             var dataList = new DataPricesList
             {
-                Prices = new List<PriceEntry>() { new PriceEntry() { Price = setPrice, RegEx = matchingRegex } }
+                Prices = new List<PriceEntry>() { new PriceEntry() { Price = setPrice, RawRegEx = matchingRegex } }
             };
 
             int price = dataList.GetPrice(dataFile);

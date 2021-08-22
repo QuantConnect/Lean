@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,9 +27,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DataChannelProvider : IDataChannelProvider
     {
         /// <summary>
+        /// Initializes the instance with an algorithm node packet
+        /// </summary>
+        /// <param name="packet">Algorithm node packet</param>
+        public virtual void Initialize(AlgorithmNodePacket packet)
+        {
+        }
+
+        /// <summary>
         /// True if this subscription request should be streamed
         /// </summary>
-        public virtual bool ShouldStreamSubscription(LiveNodePacket job, SubscriptionDataConfig config)
+        public virtual bool ShouldStreamSubscription(SubscriptionDataConfig config)
         {
             return IsStreamingType(config) || !config.IsCustomData && config.Type != typeof(CoarseFundamental);
         }

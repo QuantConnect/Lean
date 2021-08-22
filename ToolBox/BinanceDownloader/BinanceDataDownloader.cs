@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Brokerages;
+using QuantConnect.Configuration;
 using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.BinanceDownloader
@@ -39,7 +40,9 @@ namespace QuantConnect.ToolBox.BinanceDownloader
         /// </summary>
         public BinanceDataDownloader()
         {
-            _brokerage = new BinanceBrokerage(null, null,null, null, null);
+            var apiUrl = Config.Get("binance-api-url", "https://api.binance.com");
+            var websocketUrl = Config.Get("binance-websocket-url", "wss://stream.binance.com:9443/ws");
+            _brokerage = new BinanceBrokerage(null, null, apiUrl, websocketUrl, null, null, null);
         }
 
         /// <summary>

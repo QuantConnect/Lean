@@ -93,7 +93,19 @@ namespace QuantConnect.Brokerages.Bitfinex
             : base(WebSocketUrl, websocket, restClient, apiKey, apiSecret, "Bitfinex")
         {
             _job = job;
-            SubscriptionManager = new BitfinexSubscriptionManager(this, WebSocketUrl, _symbolMapper);
+
+            SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
+                WebSocketUrl,
+                MaximumSymbolsPerConnection,
+                0,
+                null,
+                () => new BitfinexWebSocketWrapper(null),
+                Subscribe,
+                Unsubscribe,
+                OnDataMessage,
+                TimeSpan.Zero,
+                _connectionRateLimiter);
+
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
             _aggregator = aggregator;
@@ -147,7 +159,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Should be empty, Bitfinex brokerage manages his public channels including subscribe/unsubscribe/reconnect methods using <see cref="BitfinexSubscriptionManager"/>
+        /// Should be empty, Bitfinex brokerage manages his public channels including subscribe/unsubscribe/reconnect methods using <see cref="BrokerageMultiWebSocketSubscriptionManager"/>
         /// Not used in master
         /// </summary>
         /// <param name="symbols"></param>
@@ -177,8 +189,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Implementation of the OnMessage event
         /// </summary>
         /// <param name="e"></param>
-        private void OnMessageImpl(WebSocketMessage e)
+        private void OnMessageImpl(WebSocketMessage webSocketMessage)
         {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
+
             try
             {
                 var token = JToken.Parse(e.Message);
@@ -248,8 +262,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     {
                         case "auth":
                             var auth = token.ToObject<AuthResponseMessage>();
-                            var result = string.Equals(auth.Status, "OK", StringComparison.OrdinalIgnoreCase) ? "succeed" : "failed";
-                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Subscribing to authenticated channels {result}");
+                            var result = string.Equals(auth.Status, "OK", StringComparison.OrdinalIgnoreCase) ? "successful" : "failed";
+                            Log.Trace($"BitfinexBrokerage.OnMessage: Subscribing to authenticated channels {result}");
                             return;
 
                         case "info":
@@ -258,11 +272,11 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                         case "error":
                             var error = token.ToObject<ErrorMessage>();
-                            Log.Error($"BitfinexWebsocketsBrokerage.OnMessage: {error.Level}: {error.Message}");
+                            Log.Error($"BitfinexBrokerage.OnMessage: {error.Level}: {error.Message}");
                             return;
 
                         default:
-                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Unexpected message format: {e.Message}");
+                            Log.Error($"BitfinexBrokerage.OnMessage: Unexpected message format: {e.Message}");
                             break;
                     }
                 }
@@ -479,7 +493,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Should be empty. <see cref="BitfinexSubscriptionManager"/> manages each <see cref="BitfinexWebSocketWrapper"/> individually
+        /// Should be empty. <see cref="BrokerageMultiWebSocketSubscriptionManager"/> manages each <see cref="BitfinexWebSocketWrapper"/> individually
         /// </summary>
         /// <returns></returns>
         protected override IEnumerable<Symbol> GetSubscribed() => new List<Symbol>();

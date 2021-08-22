@@ -35,7 +35,7 @@ class MaximumDrawdownPercentPortfolio(RiskManagementModel):
         self.maximumDrawdownPercent = -abs(maximumDrawdownPercent)
         self.isTrailing = isTrailing
         self.initialised = False
-        self.portfolioHigh = 0;
+        self.portfolioHigh = 0
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step

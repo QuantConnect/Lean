@@ -29,6 +29,10 @@ class SetHoldingsMultipleTargetsRegressionAlgorithm(QCAlgorithm):
         self._spy = self.AddEquity("SPY", Resolution.Minute, Market.USA, False, 1).Symbol
         self._ibm = self.AddEquity("IBM", Resolution.Minute, Market.USA, False, 1).Symbol
 
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+        # Commented so regression algorithm is more sensitive
+        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 

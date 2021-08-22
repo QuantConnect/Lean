@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 algorithm.Securities,
                 algorithm.SubscriptionManager,
                 _securityService,
-                dataPermissionManager.GetResolution(Resolution.Minute));
+                Resolution.Minute);
             // TODO: next step is to merge currency internal subscriptions under the same 'internal manager' instance and we could move this directly into the DataManager class
             _internalSubscriptionManager = new InternalSubscriptionManager(_algorithm, internalConfigResolution);
         }
@@ -392,7 +392,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
                         securityBenchmark.Security.Symbol,
-                        _dataPermissionManager.GetResolution(_algorithm.LiveMode ? Resolution.Minute : Resolution.Hour),
+                        _algorithm.LiveMode ? Resolution.Minute : Resolution.Hour,
                         isInternalFeed: true,
                         fillForward: false).First();
 
@@ -499,7 +499,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     universeSettings.Resolution,
                     universeSettings.FillForward,
                     universeSettings.ExtendedMarketHours,
-                    dataNormalizationMode: universeSettings.DataNormalizationMode);
+                    dataNormalizationMode: universeSettings.DataNormalizationMode,
+                    subscriptionDataTypes: universeSettings.SubscriptionDataTypes);
 
                 security = _securityService.CreateSecurity(symbol, configs, universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
 

@@ -26,7 +26,7 @@ class EmaCrossFuturesFrontMonthAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 10)
         self.SetCash(1000000)
 
-        future = self.AddFuture(Futures.Metals.Gold);
+        future = self.AddFuture(Futures.Metals.Gold)
 
         # Only consider the front month contract
         # Update the universe once per day to improve performance

@@ -43,17 +43,25 @@ namespace QuantConnect.Securities.Positions
         public bool SilenceNonErrorReasons { get; }
 
         /// <summary>
+        /// Configurable minimum order margin portfolio percentage to ignore bad orders, orders with unrealistic small sizes
+        /// </summary>
+        /// <remarks>Default value is 0. This setting is useful to avoid small trading noise when using SetHoldings</remarks>
+        public decimal MinimumOrderMarginPortfolioPercentage { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="GetMaximumLotsForTargetBuyingPowerParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio manager</param>
         /// <param name="positionGroup">The position group</param>
         /// <param name="targetBuyingPower">The target buying power</param>
+        /// <param name="minimumOrderMarginPortfolioPercentage">Configurable minimum order margin portfolio percentage to ignore orders with unrealistic small sizes</param>
         /// <param name="silenceNonErrorReasons">True will not return <see cref="GetMaximumLotsResult.Reason"/>
         /// set for non error situation, this is for performance</param>
         public GetMaximumLotsForTargetBuyingPowerParameters(
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
             decimal targetBuyingPower,
+            decimal minimumOrderMarginPortfolioPercentage,
             bool silenceNonErrorReasons = false
             )
         {
@@ -61,6 +69,7 @@ namespace QuantConnect.Securities.Positions
             PositionGroup = positionGroup;
             TargetBuyingPower = targetBuyingPower;
             SilenceNonErrorReasons = silenceNonErrorReasons;
+            MinimumOrderMarginPortfolioPercentage = minimumOrderMarginPortfolioPercentage;
         }
 
         /// <summary>

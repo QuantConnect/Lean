@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,8 +25,14 @@ namespace QuantConnect.Interfaces
     public interface IDataChannelProvider
     {
         /// <summary>
+        /// Initializes the class with an algorithm node packet
+        /// </summary>
+        /// <param name="packet">Algorithm node packet</param>
+        void Initialize(AlgorithmNodePacket packet);
+
+        /// <summary>
         /// True if this subscription configuration should be streamed
         /// </summary>
-        bool ShouldStreamSubscription(LiveNodePacket job, SubscriptionDataConfig config);
+        bool ShouldStreamSubscription(SubscriptionDataConfig config);
     }
 }

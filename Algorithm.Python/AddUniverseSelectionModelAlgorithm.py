@@ -24,7 +24,7 @@ class AddUniverseSelectionModelAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
 
-        self.UniverseSettings.Resolution = Resolution.Daily;
+        self.UniverseSettings.Resolution = Resolution.Daily
 
         # set algorithm framework models
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None))

@@ -47,7 +47,7 @@ namespace QuantConnect.Api
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
             ApiConnection = new ApiConnection(userId, token);
-            _dataFolder = dataFolder;
+            _dataFolder = dataFolder?.Replace("\\", "/", StringComparison.InvariantCulture);
 
             //Allow proper decoding of orders from the API.
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -857,7 +857,7 @@ namespace QuantConnect.Api
             // Make sure the link was successfully retrieved
             if (!dataLink.Success)
             {
-                Log.Error($"Api.DownloadData(): Failed to get link for {filePath}. " +
+                Log.Trace($"Api.DownloadData(): Failed to get link for {filePath}. " +
                     $"Errors: {string.Join(',', dataLink.Errors)}");
                 return false;
             }
@@ -1188,8 +1188,9 @@ namespace QuantConnect.Api
         /// Helper method to normalize path for api data requests
         /// </summary>
         /// <param name="filePath">Filepath to format</param>
+        /// <param name="dataFolder">The data folder to use</param>
         /// <returns>Normalized path</returns>
-        public string FormatPathForDataRequest(string filePath)
+        public static string FormatPathForDataRequest(string filePath, string dataFolder = null)
         {
             if (filePath == null)
             {
@@ -1197,15 +1198,19 @@ namespace QuantConnect.Api
                 return null;
             }
 
+            dataFolder ??= Globals.DataFolder;
+            // Normalize windows paths to linux format
+            dataFolder = dataFolder.Replace("\\", "/", StringComparison.InvariantCulture);
+            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
+
             // First remove data root directory from path for request if included
-            if (filePath.StartsWith(_dataFolder, StringComparison.InvariantCulture))
+            if (filePath.StartsWith(dataFolder, StringComparison.InvariantCulture))
             {
-                filePath = filePath.Substring(_dataFolder.Length);
+                filePath = filePath.Substring(dataFolder.Length);
             }
 
-            // Normalize windows paths to linux format
-            // Also trim '/' from start, this can cause issues for _dataFolders without final directory separator in the config
-            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture).TrimStart('/');
+            // Trim '/' from start, this can cause issues for _dataFolders without final directory separator in the config
+            filePath = filePath.TrimStart('/');
             return filePath;
         }
     }

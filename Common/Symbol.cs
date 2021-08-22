@@ -332,27 +332,42 @@ namespace QuantConnect
         /// </summary>
         public Symbol UpdateMappedSymbol(string mappedSymbol)
         {
-            if (ID.SecurityType == SecurityType.Option)
-            {
-                var underlyingSymbol = new Symbol(Underlying.ID, mappedSymbol, null);
-
-                var alias = Value;
-
-                if (ID.Date != SecurityIdentifier.DefaultDate)
-                {
-                    var sym = mappedSymbol;
-                    alias = SymbolRepresentation.GenerateOptionTickerOSI(sym, ID.OptionRight, ID.StrikePrice, ID.Date);
-                }
-
-                return new Symbol(ID, alias, underlyingSymbol);
-            }
-            // Throw for the rest of our option types, we don't support mapping for them (FOPs and Index Options)
-            if (ID.SecurityType.IsOption())
+            // Throw for any option SecurityType that is not for equities, we don't support mapping for them (FOPs and Index Options)
+            if (ID.SecurityType.IsOption() && SecurityType != SecurityType.Option)
             {
                 throw new ArgumentException($"SecurityType {ID.SecurityType} can not be mapped.");
             }
 
-            return new Symbol(ID, mappedSymbol, Underlying);
+            // Avoid updating the current instance's underlying Symbol.
+            var underlyingSymbol = Underlying;
+
+            // Some universe Symbols, such as Constituent ETF universe Symbols and mapped custom data Symbols, have an
+            // underlying equity ETF Symbol as their underlying. When we're checking to see if a specific BaseData
+            // instance requires mapping, only the parent Symbol will be updated, which might not even need to be mapped
+            // (e.g. universe symbols with no equity ticker in symbol value). 
+            // This will ensure that we map all of the underlying Symbol(s) that also require mapping updates.
+            if (HasUnderlying)
+            {
+                underlyingSymbol = Underlying.UpdateMappedSymbol(mappedSymbol);
+            }
+
+            // If this Symbol is not a custom data type, and the security type does not support mapping,
+            // then we know for a fact that this Symbol should not be mapped.
+            // Custom data types should be mapped, especially if this method is called on them because
+            // they can have an underlying that is also mapped.
+            if (SecurityType != SecurityType.Base && !SecurityType.RequiresMapping())
+            {
+                return new Symbol(ID, Value, underlyingSymbol);
+            }
+
+            if (SecurityType == SecurityType.Option)
+            {
+                mappedSymbol = !IsCanonical()
+                    ? SymbolRepresentation.GenerateOptionTickerOSI(mappedSymbol, ID.OptionRight, ID.StrikePrice, ID.Date)
+                    : Value;
+            }
+
+            return new Symbol(ID, mappedSymbol, underlyingSymbol);
         }
 
         /// <summary>
