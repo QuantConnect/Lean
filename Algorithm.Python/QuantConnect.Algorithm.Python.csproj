@@ -139,6 +139,12 @@
     <None Include="TensorFlowNeuralNetworkAlgorithm.py" />
     <None Include="TiingoPriceAlgorithm.py" />
     <None Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
+    <None Update="UniverseSelectionDefinitionsAlgorithm.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="ConstituentsQC500GeneratorAlgorithm.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="AddRemoveSecurityRegressionAlgorithm.py" />
