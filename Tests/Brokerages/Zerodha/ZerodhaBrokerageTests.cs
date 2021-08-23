@@ -36,9 +36,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
     [TestFixture, Ignore("This test requires a configured and active Zerodha account")]
     public class ZerodhaBrokerageTests
     {
-
-
-        private static IOrderProperties orderProperties = new ZerodhaOrderProperties(exchange: "nse");
+        private static IOrderProperties orderProperties = new ZerodhaOrderProperties(exchange: Exchange.NSE);
 
         private IBrokerage _brokerage;
         private OrderProvider _orderProvider;

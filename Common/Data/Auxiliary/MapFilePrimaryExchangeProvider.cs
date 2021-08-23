@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Auxiliary
     public class MapFilePrimaryExchangeProvider : IPrimaryExchangeProvider
     {
         private readonly IMapFileProvider _mapFileProvider;
-        private readonly ConcurrentDictionary<SecurityIdentifier, PrimaryExchange> _primaryExchangeBySid;
+        private readonly ConcurrentDictionary<SecurityIdentifier, Exchange> _primaryExchangeBySid;
 
         /// <summary>
         /// Constructor for Primary Exchange Provider from MapFiles
@@ -35,7 +35,7 @@ namespace QuantConnect.Data.Auxiliary
         public MapFilePrimaryExchangeProvider(IMapFileProvider mapFileProvider)
         {
             _mapFileProvider = mapFileProvider;
-            _primaryExchangeBySid = new ConcurrentDictionary<SecurityIdentifier, PrimaryExchange>();
+            _primaryExchangeBySid = new ConcurrentDictionary<SecurityIdentifier, Exchange>();
         }
 
         /// <summary>
@@ -43,9 +43,9 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="securityIdentifier">The security identifier to get the primary exchange for</param>
         /// <returns>Returns the primary exchange or null if not found</returns>
-        public PrimaryExchange GetPrimaryExchange(SecurityIdentifier securityIdentifier)
+        public Exchange GetPrimaryExchange(SecurityIdentifier securityIdentifier)
         {
-            PrimaryExchange primaryExchange;
+            Exchange primaryExchange;
             if (!_primaryExchangeBySid.TryGetValue(securityIdentifier, out primaryExchange))
             {
                 var mapFile = _mapFileProvider.Get(securityIdentifier.Market).ResolveMapFile(securityIdentifier.Symbol, securityIdentifier.Date);

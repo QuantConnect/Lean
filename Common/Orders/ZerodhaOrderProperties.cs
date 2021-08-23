@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Interfaces;
-using System;
 
 namespace QuantConnect.Orders
 {
@@ -34,7 +33,7 @@ namespace QuantConnect.Orders
         /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
         /// </summary>
         /// <param name="exchange">Exchange value, nse/bse etc</param>
-        public ZerodhaOrderProperties(string exchange) : base(exchange)
+        public ZerodhaOrderProperties(Exchange exchange) : base(exchange)
         {
         }
 
@@ -43,7 +42,7 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="exchange">Exchange value, nse/bse etc</param>
         /// <param name="productType">Product type</param>
-        public ZerodhaOrderProperties(string exchange, KiteProductType productType) : this(exchange)
+        public ZerodhaOrderProperties(Exchange exchange, KiteProductType productType) : this(exchange)
         {
             ProductType = productType.ToStringInvariant();
         }

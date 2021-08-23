@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Can specify the default exchange to execute an order on.
                 // If not specified will default to the primary exchange
-                Exchange = "NASDAQ",
+                Exchange = Exchange.NASDAQ,
                 // Currently only support order for the day
                 TimeInForce = TimeInForce.Day
             };
@@ -59,10 +59,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                // will set 25% of our buying power with a market order that will be routed to exchange set in the default order properties ('NASDAQ')
+                // will set 25% of our buying power with a market order that will be routed to exchange set in the default order properties (NASDAQ)
                 SetHoldings("SPY", 0.25);
-                // will increase our SPY holdings to 50% of our buying power with a market order that will be routed to "ARCA"
-                SetHoldings("SPY", 0.50, orderProperties: new AtreyuOrderProperties { Exchange = "ARCA" });
+                // will increase our SPY holdings to 50% of our buying power with a market order that will be routed to ARCA
+                SetHoldings("SPY", 0.50, orderProperties: new AtreyuOrderProperties { Exchange = Exchange.ARCA });
 
                 Debug("Purchased SPY!");
             }
