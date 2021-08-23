@@ -53,6 +53,7 @@ from QuantConnect.Lean.Engine import *
 from QuantConnect.Orders.Fills import *
 from QuantConnect.Configuration import *
 from QuantConnect.Notifications import *
+from QuantConnect.Data.Auxiliary import *
 from QuantConnect.Data.Shortable import *
 from QuantConnect.Orders.Slippage import *
 from QuantConnect.Securities.Forex import *

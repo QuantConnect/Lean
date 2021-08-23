@@ -11,19 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
+from AlgorithmImports import *
 
 class ImmediateExecutionModel(ExecutionModel):
     '''Provides an implementation of IExecutionModel that immediately submits market orders to achieve the desired portfolio targets'''
@@ -42,9 +30,12 @@ class ImmediateExecutionModel(ExecutionModel):
         self.targetsCollection.AddRange(targets)
         if self.targetsCollection.Count > 0:
             for target in self.targetsCollection.OrderByMarginImpact(algorithm):
+                security = algorithm.Securities[target.Symbol]
                 # calculate remaining quantity to be ordered
-                quantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
+                quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security)
                 if quantity != 0:
-                    algorithm.MarketOrder(target.Symbol, quantity)
+                    aboveMinimumPortfolio = BuyingPowerModelExtensions.AboveMinimumOrderMarginPortfolioPercentage(security.BuyingPowerModel, security, quantity, algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage)
+                    if aboveMinimumPortfolio:
+                        algorithm.MarketOrder(security, quantity)
 
             self.targetsCollection.ClearFulfilled(algorithm)

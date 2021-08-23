@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
