@@ -27,61 +27,113 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmAddUniverseTests
     {
         [TestCaseSource(nameof(ETFConstituentUniverseTestCases))]
-        public void AddUniverseWithConstituentUniverseDefinitionTicker(string ticker, string market, bool isPython = false)
+        public void AddUniverseWithETFConstituentUniverseDefinitionTicker(string ticker, string market)
         {
-            AssertETFConstituentUniverseDefinitionsSymbol(ticker, market, false, isPython);
+            AssertConstituentUniverseDefinitionsSymbol(ticker, market, false, false, true);
+        }
+
+        [TestCaseSource(nameof(ETFConstituentUniverseTestCases))]
+        public void AddUniverseWithETFConstituentUniverseDefinitionTickerPython(string ticker, string market)
+        {
+            AssertConstituentUniverseDefinitionsSymbol(ticker, market, false, true, true);
         }
         
         [TestCaseSource(nameof(ETFConstituentUniverseTestCases))]
-        public void AddUniverseWithConstituentUniverseDefinitionSymbol(string ticker, string market, bool isPython = false)
+        public void AddUniverseWithETFConstituentUniverseDefinitionSymbol(string ticker, string market)
         {
-            AssertETFConstituentUniverseDefinitionsSymbol(ticker, market, true, isPython);
+            AssertConstituentUniverseDefinitionsSymbol(ticker, market, true, false, true);
         }
 
-        private void AssertETFConstituentUniverseDefinitionsSymbol(string ticker, string market, bool isSymbol, bool isPython)
+        [TestCaseSource(nameof(ETFConstituentUniverseTestCases))]
+        public void AddUniverseWithETFConstituentUniverseDefinitionSymbolPython(string ticker, string market)
+        {
+            AssertConstituentUniverseDefinitionsSymbol(ticker, market, true, true, true);
+        }
+
+        [TestCaseSource(nameof(IndexConstituentUniverseTestCases))]
+        public void AddUniverseWithIndexConstituentUniverseDefinitionTicker(string ticker, string market)
+        {
+            AssertConstituentUniverseDefinitionsSymbol(ticker, market, false, false, false);
+        }
+
+        [TestCaseSource(nameof(IndexConstituentUniverseTestCases))]
+        public void AddUniverseWithIndexConstituentUniverseDefinitionSymbol(string ticker, string market)
+        {
+            AssertConstituentUniverseDefinitionsSymbol(ticker, market, true, false, false);
+        }
+
+        [TestCaseSource(nameof(IndexConstituentUniverseTestCases))]
+        public void AddUniverseWithIndexConstituentUniverseDefinitionTickerPython(string ticker, string market)
+        {
+            AssertConstituentUniverseDefinitionsSymbol(ticker, market, false, true, false);
+        }
+
+        [TestCaseSource(nameof(IndexConstituentUniverseTestCases))]
+        public void AddUniverseWithIndexConstituentUniverseDefinitionSymbolPython(string ticker, string market)
+        {
+            AssertConstituentUniverseDefinitionsSymbol(ticker, market, true, true, false);
+        }
+
+        private void AssertConstituentUniverseDefinitionsSymbol(string ticker, string market, bool isSymbol, bool isPython, bool isEtf)
         {
             var algo = CreateAlgorithm();
             algo.SetStartDate(2021, 8, 23);
             algo.SetEndDate(2021, 8, 24);
-            
-            Universe etfConstituentUniverse;
-            var equity = Symbol.Create(ticker, SecurityType.Equity, market ?? Market.USA);
-            
-            if (isSymbol)
+
+            Universe constituentUniverse;
+            var symbol = Symbol.Create(ticker, isEtf ? SecurityType.Equity : SecurityType.Index, market ?? Market.USA);
+
+            if (isSymbol && isEtf)
             {
-                etfConstituentUniverse = isPython 
-                    ? algo.Universe.ETF(equity, algo.UniverseSettings, (PyObject)null)
-                    : algo.Universe.ETF(equity, algo.UniverseSettings, CreateReturnAllFunc());
+                constituentUniverse = isPython
+                    ? algo.Universe.ETF(symbol, algo.UniverseSettings, (PyObject) null)
+                    : algo.Universe.ETF(symbol, algo.UniverseSettings, CreateReturnAllFunc());
+            }
+            else if (isEtf)
+            {
+                constituentUniverse = isPython
+                    ? algo.Universe.ETF(ticker, market, algo.UniverseSettings, (PyObject) null)
+                    : algo.Universe.ETF(ticker, market, algo.UniverseSettings, CreateReturnAllFunc());
+            }
+            else if (isSymbol)
+            {
+                constituentUniverse = isPython
+                    ? algo.Universe.Index(symbol, algo.UniverseSettings, (PyObject) null)
+                    : algo.Universe.Index(symbol, algo.UniverseSettings, CreateReturnAllFunc());
             }
             else
             {
-                etfConstituentUniverse = isPython
-                    ? algo.Universe.ETF(ticker, market, algo.UniverseSettings, (PyObject)null)
-                    : algo.Universe.ETF(ticker, market, algo.UniverseSettings, CreateReturnAllFunc());
+                constituentUniverse = isPython
+                    ? algo.Universe.Index(ticker, market, algo.UniverseSettings, (PyObject) null)
+                    : algo.Universe.Index(ticker, market, algo.UniverseSettings, CreateReturnAllFunc());
             }
+
+            Assert.IsTrue(constituentUniverse.Configuration.Symbol.HasUnderlying);
+            Assert.AreEqual(symbol, constituentUniverse.Configuration.Symbol.Underlying);
             
-            Assert.IsTrue(etfConstituentUniverse.Configuration.Symbol.HasUnderlying);
-            Assert.AreEqual(equity, etfConstituentUniverse.Configuration.Symbol.Underlying);
-            
-            Assert.AreEqual(equity.SecurityType, etfConstituentUniverse.Configuration.Symbol.SecurityType);
-            Assert.IsTrue(etfConstituentUniverse.Configuration.Symbol.ID.Symbol.StartsWithInvariant("qc-universe-etf-constituents"));
+            Assert.AreEqual(symbol.SecurityType, constituentUniverse.Configuration.Symbol.SecurityType);
+            Assert.IsTrue(constituentUniverse.Configuration.Symbol.ID.Symbol.StartsWithInvariant("qc-universe-"));
         }
         
         private static TestCaseData[] ETFConstituentUniverseTestCases()
         {
             return new[]
             {
-                // C# test cases
-                new TestCaseData("SPY", Market.USA, false),
-                new TestCaseData("SPY", null, false),
-                new TestCaseData("GDVD", Market.USA, false),
-                new TestCaseData("GDVD", null, false),
+                new TestCaseData("SPY", Market.USA),
+                new TestCaseData("SPY", null),
+                new TestCaseData("GDVD", Market.USA),
+                new TestCaseData("GDVD", null)
+            };
+        }
 
-                // Python test cases
-                new TestCaseData("SPY", Market.USA, true),
-                new TestCaseData("SPY", null, true),
-                new TestCaseData("GDVD", Market.USA, true),
-                new TestCaseData("GDVD", null, true)
+        private static TestCaseData[] IndexConstituentUniverseTestCases()
+        {
+            return new[]
+            {
+                new TestCaseData("SPX", Market.USA),
+                new TestCaseData("SPX", null),
+                new TestCaseData("NDX", Market.USA),
+                new TestCaseData("NDX", null)
             };
         }
 

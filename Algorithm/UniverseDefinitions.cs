@@ -131,7 +131,7 @@ namespace QuantConnect.Algorithm
             Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc = null)
         {
             return Index(
-                Symbol.Create(indexTicker, SecurityType.Index, market), 
+                Symbol.Create(indexTicker, SecurityType.Index, market ?? Market.USA),
                 universeSettings, 
                 universeFilterFunc);
         }
