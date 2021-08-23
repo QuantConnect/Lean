@@ -436,7 +436,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
                 try
                 {
-                    orderResponse = _kite.PlaceOrder(orderProperties.Exchange.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(),
+                    orderResponse = _kite.PlaceOrder(orderProperties.Exchange.ToString(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(),
                         orderQuantity, orderPrice, zerodhaProductType, kiteOrderType, null, null, triggerPrice);
                 }
                 catch (Exception ex)
@@ -600,7 +600,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
                     null,
-                    orderProperties.Exchange.ToUpperInvariant(),
+                    orderProperties.Exchange.ToString(),
                     order.Symbol.ID.Symbol,
                     order.Direction.ToString().ToUpperInvariant(),
                     orderQuantity,

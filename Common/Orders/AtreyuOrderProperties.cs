@@ -28,6 +28,14 @@ namespace QuantConnect.Orders
         public bool PostOnly { get; set; }
 
         /// <summary>
+        /// Creates a new instance and sets <see cref="TimeInForce"/> to Day
+        /// </summary>
+        public AtreyuOrderProperties()
+        {
+            TimeInForce = TimeInForce.Day;
+        }
+
+        /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
         public override IOrderProperties Clone()

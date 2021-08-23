@@ -14,19 +14,18 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using QuantConnect.Securities;
+using System.Collections.Generic;
+using Newtonsoft.Json.Converters;
+using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
     /// <summary>
-    /// Equity US exchanges
+    /// Lean exchanges
     /// </summary>
     /// <remarks>
     /// The byte value of each entry are the byte representation of the exchange single letter code.
@@ -34,32 +33,102 @@ namespace QuantConnect
     ///     - 'Q' byte representation is 81 and it maps to NASDAQ
     ///     - 'Z' byte representation is 90 and it maps to BATS
     /// </remarks>
-    public enum PrimaryExchange : byte
+    public enum Exchange : byte
     {
 #pragma warning disable 1591
         UNKNOWN=0,
+        /// <summary>
+        /// National Association of Securities Dealers Automated Quotation
+        /// </summary>
         NASDAQ=81,
+        /// <summary>
+        /// Bats Global Markets, Better Alternative Trading System
+        /// </summary>
         BATS=90,
+        /// <summary>
+        /// NYSE Arca
+        /// </summary>
         ARCA=80,
+        /// <summary>
+        /// The New York Stock Exchange
+        /// </summary>
         NYSE=78,
+        /// <summary>
+        /// National Stock Exchange of India
+        /// </summary>
         NSE=67,
+        /// <summary>
+        ///  The Financial Industry Regulatory Authority
+        /// </summary>
         FINRA=68,
+        /// <summary>
+        /// Nasdaq International Securities Exchange
+        /// </summary>
         ISE=73,
+        /// <summary>
+        /// The Options Price Reporting Authority
+        /// </summary>
         OPRA,
+        /// <summary>
+        /// The Canadian Securities Exchange
+        /// </summary>
         CSE=77,
+        /// <summary>
+        /// The Chicago Board Options Exchange
+        /// </summary>
         CBOE=87,
+        /// <summary>
+        /// The American Stock Exchange
+        /// </summary>
         AMEX=65,
+        /// <summary>
+        /// The Securities Industry Automation Corporation
+        /// </summary>
         SIAC,
+        /// <summary>
+        /// CBOE EDGA U.S. equities Exchange
+        /// </summary>
         EDGA=74,
+        /// <summary>
+        /// CBOE EDGX U.S. equities Exchange
+        /// </summary>
         EDGX=75,
+        /// <summary>
+        /// National Association of Securities Dealers Automated Quotation BX
+        /// </summary>
         NASDAQ_BX=66,
+        /// <summary>
+        /// National Association of Securities Dealers Automated Quotation PSX
+        /// </summary>
         NASDAQ_PSX=88,
+        /// <summary>
+        /// Bats Global Markets, Better Alternative Trading System
+        /// </summary>
         BATS_Y,
+        /// <summary>
+        /// CBOE Options Exchange
+        /// </summary>
         C2,
+        /// <summary>
+        /// The Boston Stock Exchange
+        /// </summary>
         BOSTON,
+        /// <summary>
+        /// Miami International Securities Exchange
+        /// </summary>
         MIAX,
+        /// <summary>
+        /// International Securities Exchange GEMINI
+        /// </summary>
         ISE_GEMINI,
+        /// <summary>
+        /// International Securities Exchange GEMINI
+        /// </summary>
         ISE_MERCURY,
+        /// <summary>
+        /// Bombay Stock Exchange
+        /// </summary>
+        BSE,
 #pragma warning restore 1591
     }
 
@@ -753,9 +822,9 @@ namespace QuantConnect
         /// </summary>
         /// <param name="exchange"></param>
         /// <returns></returns>
-        public static PrimaryExchange GetPrimaryExchange(char exchange)
+        public static Exchange GetPrimaryExchange(char exchange)
         {
-            return (PrimaryExchange)exchange;
+            return (Exchange)exchange;
         }
 
         /// <summary>
@@ -763,9 +832,9 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>Useful for performance</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PrimaryExchange GetPrimaryExchange(this string exchange)
+        public static Exchange GetPrimaryExchange(this string exchange)
         {
-            var primaryExchange = PrimaryExchange.UNKNOWN;
+            var primaryExchange = Exchange.UNKNOWN;
             if (string.IsNullOrEmpty(exchange))
             {
                 return primaryExchange;
@@ -777,71 +846,71 @@ namespace QuantConnect
                 case "Q":
                 case "NASDAQ":
                 case "NASDAQ OMX":
-                    return PrimaryExchange.NASDAQ;
+                    return Exchange.NASDAQ;
                 case "Z":
                 case "BATS":
                 case "BATS Z":
-                    return PrimaryExchange.BATS;
+                    return Exchange.BATS;
                 case "P":
                 case "ARCA":
-                    return PrimaryExchange.ARCA;
+                    return Exchange.ARCA;
                 case "N":
                 case "NYSE":
-                    return PrimaryExchange.NYSE;
+                    return Exchange.NYSE;
                 case "C":
                 case "NSE":
-                    return PrimaryExchange.NSE;
+                    return Exchange.NSE;
                 case "D":
                 case "FINRA":
-                    return PrimaryExchange.FINRA;
+                    return Exchange.FINRA;
                 case "I":
                 case "ISE":
-                    return PrimaryExchange.ISE;
+                    return Exchange.ISE;
                 case "OPRA":
-                    return PrimaryExchange.OPRA;
+                    return Exchange.OPRA;
                 case "M":
                 case "CSE":
-                    return PrimaryExchange.CSE;
+                    return Exchange.CSE;
                 case "W":
                 case "CBOE":
-                    return PrimaryExchange.CBOE;
+                    return Exchange.CBOE;
                 case "A":
                 case "AMEX":
-                    return PrimaryExchange.AMEX;
+                    return Exchange.AMEX;
                 case "SIAC":
-                    return PrimaryExchange.SIAC;
+                    return Exchange.SIAC;
                 case "J":
                 case "EDGA":
-                    return PrimaryExchange.EDGA;
+                    return Exchange.EDGA;
                 case "K":
                 case "EDGX":
-                    return PrimaryExchange.EDGX;
+                    return Exchange.EDGX;
                 case "B":
                 case "NASDAQ BX":
-                    return PrimaryExchange.NASDAQ_BX;
+                    return Exchange.NASDAQ_BX;
                 case "X":
                 case "NASDAQ PSX":
-                    return PrimaryExchange.NASDAQ_PSX;
+                    return Exchange.NASDAQ_PSX;
                 case "Y":
                 case "BATS Y":
-                    return PrimaryExchange.BATS_Y;
+                    return Exchange.BATS_Y;
                 case "C2":
-                    return PrimaryExchange.C2;
+                    return Exchange.C2;
                 case "BOSTON":
-                    return PrimaryExchange.BOSTON;
+                    return Exchange.BOSTON;
                 case "MIAX":
-                    return PrimaryExchange.MIAX;
+                    return Exchange.MIAX;
                 case "ISE_GEMINI":
-                    return PrimaryExchange.ISE_GEMINI;
+                    return Exchange.ISE_GEMINI;
                 case "ISE_MERCURY":
-                    return PrimaryExchange.ISE_MERCURY;
+                    return Exchange.ISE_MERCURY;
                 case "UNKNOWN":
-                    return PrimaryExchange.UNKNOWN;
+                    return Exchange.UNKNOWN;
                 default:
                     break;
             }
 
-            return Enum.TryParse(exchange, true, out primaryExchange) ? primaryExchange : PrimaryExchange.UNKNOWN;
+            return Enum.TryParse(exchange, true, out primaryExchange) ? primaryExchange : Exchange.UNKNOWN;
         }
     }
 

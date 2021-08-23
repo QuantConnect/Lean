@@ -93,25 +93,25 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
                 new MapFileRow(new DateTime(2050, 12, 31), "goog", 'Q')
             });
 
-            Assert.AreEqual(PrimaryExchange.NASDAQ, (PrimaryExchange) mapFile.Last().PrimaryExchange);
+            Assert.AreEqual(Exchange.NASDAQ, (Exchange) mapFile.Last().PrimaryExchange);
         }
 
-        [TestCase("20010213,aapl,Q", PrimaryExchange.NASDAQ)]
-        [TestCase("20010213,aapl,Z", PrimaryExchange.BATS)]
-        [TestCase("20010213,aapl,P", PrimaryExchange.ARCA)]
-        [TestCase("20010213,aapl,N", PrimaryExchange.NYSE)]
-        [TestCase("20010213,aapl,C", PrimaryExchange.NSE)]
-        [TestCase("20010213,aapl,D", PrimaryExchange.FINRA)]
-        [TestCase("20010213,aapl,I", PrimaryExchange.ISE)]
-        [TestCase("20010213,aapl,M", PrimaryExchange.CSE)]
-        [TestCase("20010213,aapl,W", PrimaryExchange.CBOE)]
-        [TestCase("20010213,aapl,A", PrimaryExchange.AMEX)]
-        [TestCase("20010213,aapl,J", PrimaryExchange.EDGA)]
-        [TestCase("20010213,aapl,K", PrimaryExchange.EDGX)]
-        [TestCase("20010213,aapl,B", PrimaryExchange.NASDAQ_BX)]
-        [TestCase("20010213,aapl,X", PrimaryExchange.NASDAQ_PSX)]
-        [TestCase("20010213,aapl,Y", PrimaryExchange.BATS_Y)]
-        public void ParsesRowWithExchangesCorrectly(string mapFileRow, PrimaryExchange expectedPrimaryExchange)
+        [TestCase("20010213,aapl,Q", Exchange.NASDAQ)]
+        [TestCase("20010213,aapl,Z", Exchange.BATS)]
+        [TestCase("20010213,aapl,P", Exchange.ARCA)]
+        [TestCase("20010213,aapl,N", Exchange.NYSE)]
+        [TestCase("20010213,aapl,C", Exchange.NSE)]
+        [TestCase("20010213,aapl,D", Exchange.FINRA)]
+        [TestCase("20010213,aapl,I", Exchange.ISE)]
+        [TestCase("20010213,aapl,M", Exchange.CSE)]
+        [TestCase("20010213,aapl,W", Exchange.CBOE)]
+        [TestCase("20010213,aapl,A", Exchange.AMEX)]
+        [TestCase("20010213,aapl,J", Exchange.EDGA)]
+        [TestCase("20010213,aapl,K", Exchange.EDGX)]
+        [TestCase("20010213,aapl,B", Exchange.NASDAQ_BX)]
+        [TestCase("20010213,aapl,X", Exchange.NASDAQ_PSX)]
+        [TestCase("20010213,aapl,Y", Exchange.BATS_Y)]
+        public void ParsesRowWithExchangesCorrectly(string mapFileRow, Exchange expectedExchange)
         {
             // Arrange
             var rowParts = mapFileRow.Split(',');
@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             // Act
             var actualMapFileRow = MapFileRow.Parse(mapFileRow);
             // Assert
-            Assert.AreEqual(expectedPrimaryExchange, actualMapFileRow.PrimaryExchange);
+            Assert.AreEqual(expectedExchange, actualMapFileRow.PrimaryExchange);
             Assert.AreEqual(expectedMapFileRow, actualMapFileRow);
         }
 
@@ -138,7 +138,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             // Act
             var actualMapFileRow = MapFileRow.Parse(mapFileRow);
             // Assert
-            Assert.AreEqual(PrimaryExchange.UNKNOWN, actualMapFileRow.PrimaryExchange);
+            Assert.AreEqual(Exchange.UNKNOWN, actualMapFileRow.PrimaryExchange);
             Assert.AreEqual(expectedMapFileRow, actualMapFileRow);
         }
     }

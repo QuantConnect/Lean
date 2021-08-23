@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache(),
-                PrimaryExchange.UNKNOWN
+                Exchange.UNKNOWN
             );
 
             var holding = new Mock<EquityHolding>(security.Object,

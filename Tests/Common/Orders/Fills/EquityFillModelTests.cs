@@ -1173,7 +1173,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                PrimaryExchange.ARCA
+                Exchange.ARCA
             );
             equity.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             return equity;
