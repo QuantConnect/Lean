@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetExecution(new ImmediateExecutionModel());
             UniverseSettings.Resolution = Resolution.Hour;
-            Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
+            Settings.MinimumOrderMarginPortfolioPercentage = 0.001m;
             SetPortfolioConstruction(new EqualWeightingAlphaStreamsPortfolioConstructionModel());
 
             // AAPL should be liquidated since it's not hold by the alpha

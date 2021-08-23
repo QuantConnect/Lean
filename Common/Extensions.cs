@@ -600,6 +600,7 @@ namespace QuantConnect
                     };
                 })
                 .Where(x => x.Security.HasData
+                            && x.Security.IsTradable
                             && (targetIsDelta ? Math.Abs(x.TargetQuantity) : Math.Abs(x.TargetQuantity - x.ExistingQuantity))
                             >= x.Security.SymbolProperties.LotSize
                 )

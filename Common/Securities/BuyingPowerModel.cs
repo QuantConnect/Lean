@@ -406,11 +406,10 @@ namespace QuantConnect.Securities
                 return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
-            var minimumValue = totalPortfolioValue * parameters.MinimumOrderMarginPortfolioPercentage;
-            if (minimumValue > absFinalOrderMargin
-                // if margin remaining is negative allow the order to pass so we can reduce the position
-                && parameters.Portfolio.GetMarginRemaining(totalPortfolioValue) > 0)
+            if (!BuyingPowerModelExtensions.AboveMinimumOrderMarginPortfolioPercentage(parameters.Portfolio,
+                parameters.MinimumOrderMarginPortfolioPercentage, absFinalOrderMargin))
             {
+                var minimumValue = totalPortfolioValue * parameters.MinimumOrderMarginPortfolioPercentage;
                 string reason = null;
                 if (!parameters.SilenceNonErrorReasons)
                 {
