@@ -44,6 +44,7 @@ namespace QuantConnect.Brokerages.Exante
         private readonly ExanteSymbolMapper _symbolMapper;
         private readonly ConcurrentDictionary<Guid, Order> _orderMap = new();
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
+        private readonly BrokerageConcurrentMessageHandler<ExanteOrder> _messageHandler;
 
         /// <summary>
         /// Returns the brokerage account's base currency
@@ -83,20 +84,14 @@ namespace QuantConnect.Brokerages.Exante
             _symbolMapper = new ExanteSymbolMapper(ComposeTickerToExchangeDictionary());
             _accountId = accountId;
             _aggregator = aggregator;
+            _messageHandler = new BrokerageConcurrentMessageHandler<ExanteOrder>(OnUserMessage);
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += Subscribe;
             _subscriptionManager.UnsubscribeImpl += Unsubscribe;
 
             _client.StreamClient.GetOrdersStreamAsync(exanteOrder =>
             {
-                Order order;
-                if (_orderMap.TryGetValue(exanteOrder.OrderId, out order))
-                {
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) // TODO: What's the fee?
-                    {
-                        Status = ConvertOrderStatus(exanteOrder.OrderState.Status),
-                    });
-                }
+                _messageHandler.HandleNewMessage(exanteOrder);
             });
         }
 
@@ -104,6 +99,18 @@ namespace QuantConnect.Brokerages.Exante
         /// Returns true if we're currently connected to the broker
         /// </summary>
         public override bool IsConnected => _isConnected;
+
+        private void OnUserMessage(ExanteOrder exanteOrder)
+        {
+            Order order;
+            if (_orderMap.TryGetValue(exanteOrder.OrderId, out order))
+            {
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) // TODO: What's the fee?
+                {
+                    Status = ConvertOrderStatus(exanteOrder.OrderState.Status),
+                });
+            }
+        }
 
         private Dictionary<string, string> ComposeTickerToExchangeDictionary()
         {
@@ -289,82 +296,90 @@ namespace QuantConnect.Brokerages.Exante
 
             var quantity = Math.Abs(order.Quantity);
 
-            WebCallResult<IEnumerable<ExanteOrder>> orderPlacement;
-            switch (order.Type)
+            var orderPlacementSuccess = false;
+
+            _messageHandler.WithLockedStream(() =>
             {
-                case OrderType.Market:
-                    orderPlacement = _client.PlaceOrder(
-                        _accountId,
-                        _symbolMapper.GetBrokerageSymbol(order.Symbol),
-                        ExanteOrderType.Market,
-                        orderSide,
-                        quantity,
-                        orderDuration,
-                        gttExpiration: goodTilDateTimeInForceExpiration
-                    );
-                    break;
+                WebCallResult<IEnumerable<ExanteOrder>> orderPlacement;
+                switch (order.Type)
+                {
+                    case OrderType.Market:
+                        orderPlacement = _client.PlaceOrder(
+                            _accountId,
+                            _symbolMapper.GetBrokerageSymbol(order.Symbol),
+                            ExanteOrderType.Market,
+                            orderSide,
+                            quantity,
+                            orderDuration,
+                            gttExpiration: goodTilDateTimeInForceExpiration
+                        );
+                        break;
 
-                case OrderType.Limit:
-                    var limitOrder = (LimitOrder)order;
-                    orderPlacement = _client.PlaceOrder(
-                        _accountId,
-                        _symbolMapper.GetBrokerageSymbol(order.Symbol),
-                        ExanteOrderType.Limit,
-                        orderSide,
-                        quantity,
-                        orderDuration,
-                        limitPrice: limitOrder.LimitPrice,
-                        gttExpiration: goodTilDateTimeInForceExpiration
-                    );
-                    break;
+                    case OrderType.Limit:
+                        var limitOrder = (LimitOrder)order;
+                        orderPlacement = _client.PlaceOrder(
+                            _accountId,
+                            _symbolMapper.GetBrokerageSymbol(order.Symbol),
+                            ExanteOrderType.Limit,
+                            orderSide,
+                            quantity,
+                            orderDuration,
+                            limitPrice: limitOrder.LimitPrice,
+                            gttExpiration: goodTilDateTimeInForceExpiration
+                        );
+                        break;
 
-                case OrderType.StopMarket:
-                    var stopMarketOrder = (StopMarketOrder)order;
-                    orderPlacement = _client.PlaceOrder(
-                        _accountId,
-                        _symbolMapper.GetBrokerageSymbol(order.Symbol),
-                        ExanteOrderType.Stop,
-                        orderSide,
-                        quantity,
-                        orderDuration,
-                        stopPrice: stopMarketOrder.StopPrice,
-                        gttExpiration: goodTilDateTimeInForceExpiration
-                    );
-                    break;
+                    case OrderType.StopMarket:
+                        var stopMarketOrder = (StopMarketOrder)order;
+                        orderPlacement = _client.PlaceOrder(
+                            _accountId,
+                            _symbolMapper.GetBrokerageSymbol(order.Symbol),
+                            ExanteOrderType.Stop,
+                            orderSide,
+                            quantity,
+                            orderDuration,
+                            stopPrice: stopMarketOrder.StopPrice,
+                            gttExpiration: goodTilDateTimeInForceExpiration
+                        );
+                        break;
 
-                case OrderType.StopLimit:
-                    var stopLimitOrder = (StopLimitOrder)order;
-                    orderPlacement = _client.PlaceOrder(
-                        _accountId,
-                        _symbolMapper.GetBrokerageSymbol(order.Symbol),
-                        ExanteOrderType.Stop,
-                        orderSide,
-                        quantity,
-                        orderDuration,
-                        limitPrice: stopLimitOrder.LimitPrice,
-                        stopPrice: stopLimitOrder.StopPrice,
-                        gttExpiration: goodTilDateTimeInForceExpiration
-                    );
-                    break;
+                    case OrderType.StopLimit:
+                        var stopLimitOrder = (StopLimitOrder)order;
+                        orderPlacement = _client.PlaceOrder(
+                            _accountId,
+                            _symbolMapper.GetBrokerageSymbol(order.Symbol),
+                            ExanteOrderType.Stop,
+                            orderSide,
+                            quantity,
+                            orderDuration,
+                            limitPrice: stopLimitOrder.LimitPrice,
+                            stopPrice: stopLimitOrder.StopPrice,
+                            gttExpiration: goodTilDateTimeInForceExpiration
+                        );
+                        break;
 
-                default:
-                    throw new NotSupportedException(
-                        $"ExanteBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
-            }
+                    default:
+                        throw new NotSupportedException(
+                            $"ExanteBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
+                }
 
-            foreach (var o in orderPlacement.Data)
-            {
-                _orderMap[o.OrderId] = order;
-            }
+                foreach (var o in orderPlacement.Data)
+                {
+                    _orderMap[o.OrderId] = order;
+                }
 
-            if (!orderPlacement.Success)
-            {
-                var errorsJson = JArray.Parse(orderPlacement.Error?.Message ?? throw new InvalidOperationException());
-                var errorMsg = string.Join(",", errorsJson.Select(x => x["message"]));
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, errorMsg));
-            }
+                if (!orderPlacement.Success)
+                {
+                    var errorsJson =
+                        JArray.Parse(orderPlacement.Error?.Message ?? throw new InvalidOperationException());
+                    var errorMsg = string.Join(",", errorsJson.Select(x => x["message"]));
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, errorMsg));
+                }
 
-            return orderPlacement.Success;
+                orderPlacementSuccess = orderPlacement.Success;
+            });
+
+            return orderPlacementSuccess;
         }
 
         /// <summary>
@@ -386,52 +401,55 @@ namespace QuantConnect.Brokerages.Exante
                 updateResult = updateResult && d.Success;
             }
 
-            WebCallResult<ExanteOrder> exanteOrder;
-            switch (order.Type)
+            _messageHandler.WithLockedStream(() =>
             {
-                case OrderType.Market:
-                    exanteOrder = _client.ModifyOrder(
-                        Guid.Parse(order.BrokerId.First()),
-                        ExanteOrderAction.Replace,
-                        order.Quantity);
-                    break;
+                WebCallResult<ExanteOrder> exanteOrder;
+                switch (order.Type)
+                {
+                    case OrderType.Market:
+                        exanteOrder = _client.ModifyOrder(
+                            Guid.Parse(order.BrokerId.First()),
+                            ExanteOrderAction.Replace,
+                            order.Quantity);
+                        break;
 
-                case OrderType.Limit:
-                    var limitOrder = (LimitOrder)order;
-                    exanteOrder = _client.ModifyOrder(
-                        Guid.Parse(order.BrokerId.First()),
-                        ExanteOrderAction.Replace,
-                        order.Quantity,
-                        limitPrice: limitOrder.LimitPrice);
-                    break;
+                    case OrderType.Limit:
+                        var limitOrder = (LimitOrder)order;
+                        exanteOrder = _client.ModifyOrder(
+                            Guid.Parse(order.BrokerId.First()),
+                            ExanteOrderAction.Replace,
+                            order.Quantity,
+                            limitPrice: limitOrder.LimitPrice);
+                        break;
 
-                case OrderType.StopMarket:
-                    var stopMarketOrder = (StopMarketOrder)order;
-                    exanteOrder = _client.ModifyOrder(
-                        Guid.Parse(order.BrokerId.First()),
-                        ExanteOrderAction.Replace,
-                        order.Quantity,
-                        stopPrice: stopMarketOrder.StopPrice);
-                    break;
+                    case OrderType.StopMarket:
+                        var stopMarketOrder = (StopMarketOrder)order;
+                        exanteOrder = _client.ModifyOrder(
+                            Guid.Parse(order.BrokerId.First()),
+                            ExanteOrderAction.Replace,
+                            order.Quantity,
+                            stopPrice: stopMarketOrder.StopPrice);
+                        break;
 
-                case OrderType.StopLimit:
-                    var stopLimitOrder = (StopLimitOrder)order;
-                    exanteOrder = _client.ModifyOrder(
-                        Guid.Parse(order.BrokerId.First()),
-                        ExanteOrderAction.Replace,
-                        order.Quantity,
-                        limitPrice: stopLimitOrder.LimitPrice,
-                        stopPrice: stopLimitOrder.StopPrice);
-                    break;
+                    case OrderType.StopLimit:
+                        var stopLimitOrder = (StopLimitOrder)order;
+                        exanteOrder = _client.ModifyOrder(
+                            Guid.Parse(order.BrokerId.First()),
+                            ExanteOrderAction.Replace,
+                            order.Quantity,
+                            limitPrice: stopLimitOrder.LimitPrice,
+                            stopPrice: stopLimitOrder.StopPrice);
+                        break;
 
-                default:
-                    throw new NotSupportedException(
-                        $"ExanteBrokerage.UpdateOrder: Unsupported order type: {order.Type}");
-            }
+                    default:
+                        throw new NotSupportedException(
+                            $"ExanteBrokerage.UpdateOrder: Unsupported order type: {order.Type}");
+                }
 
-            _orderMap[exanteOrder.Data.OrderId] = order;
+                _orderMap[exanteOrder.Data.OrderId] = order;
 
-            updateResult = updateResult && exanteOrder.Success;
+                updateResult = updateResult && exanteOrder.Success;
+            });
             return updateResult;
         }
 
@@ -442,14 +460,22 @@ namespace QuantConnect.Brokerages.Exante
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            var cancelResult = true;
-            foreach (var bi in order.BrokerId)
+            if (order == null)
             {
-                var biGuid = Guid.Parse(bi);
-                var exanteOrder = _client.ModifyOrder(biGuid, ExanteOrderAction.Cancel);
-                _orderMap.TryRemove(biGuid, out _);
-                cancelResult = cancelResult && exanteOrder.Success;
+                throw new ArgumentNullException(nameof(order));
             }
+
+            var cancelResult = true;
+            _messageHandler.WithLockedStream(() =>
+            {
+                foreach (var bi in order.BrokerId)
+                {
+                    var biGuid = Guid.Parse(bi);
+                    var exanteOrder = _client.ModifyOrder(biGuid, ExanteOrderAction.Cancel);
+                    _orderMap.TryRemove(biGuid, out _);
+                    cancelResult = cancelResult && exanteOrder.Success;
+                }
+            });
 
             return cancelResult;
         }
