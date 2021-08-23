@@ -57,10 +57,14 @@ namespace QuantConnect.Algorithm
             UniverseSettings universeSettings = null, 
             Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc = null)
         {
+            market ??= _algorithm.BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Equity, out var defaultMarket)
+                ? defaultMarket
+                : throw new Exception("No default market set for security type: Equity");
+
             var etfSymbol = new Symbol(
                 SecurityIdentifier.GenerateEquity(
                     etfTicker,
-                    market ?? Market.USA,
+                    market,
                     true,
                     mappingResolveDate: _algorithm.Time.Date),
                 etfTicker);
@@ -130,8 +134,12 @@ namespace QuantConnect.Algorithm
             UniverseSettings universeSettings = null,
             Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc = null)
         {
+            market ??= _algorithm.BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Index, out var defaultMarket)
+                ? defaultMarket
+                : throw new Exception("No default market set for security type: Index");
+
             return Index(
-                Symbol.Create(indexTicker, SecurityType.Index, market ?? Market.USA),
+                Symbol.Create(indexTicker, SecurityType.Index, market),
                 universeSettings, 
                 universeFilterFunc);
         }
