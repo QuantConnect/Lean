@@ -261,6 +261,11 @@ namespace QuantConnect.Brokerages.Exante
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
+            if (order == null)
+            {
+                throw new ArgumentNullException(nameof(order));
+            }
+
             var orderSide = ConvertOrderDirection(order.Direction);
 
             DateTime? goodTilDateTimeInForceExpiration = null;
