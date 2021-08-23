@@ -35,7 +35,7 @@ class BasicTemplateAtreyuAlgorithm(QCAlgorithm):
         self.DefaultOrderProperties = AtreyuOrderProperties()
         # Can specify the default exchange to execute an order on.
         # If not specified will default to the primary exchange
-        self.DefaultOrderProperties.Exchange = "NASDAQ"
+        self.DefaultOrderProperties.Exchange = Exchange.NASDAQ
         # Currently only support order for the day
         self.DefaultOrderProperties.TimeInForce = TimeInForce.Day
 
@@ -46,12 +46,12 @@ class BasicTemplateAtreyuAlgorithm(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if not self.Portfolio.Invested:
-            # will set 25% of our buying power with a market order that will be routed to exchange set in the default order properties ('NASDAQ')
+            # will set 25% of our buying power with a market order that will be routed to exchange set in the default order properties (NASDAQ)
             self.SetHoldings("SPY", 0.25)
-            # will increase our SPY holdings to 50% of our buying power with a market order that will be routed to "ARCA"
+            # will increase our SPY holdings to 50% of our buying power with a market order that will be routed to ARCA
 
             orderProperties = AtreyuOrderProperties()
-            orderProperties.Exchange = "ARCA"
+            orderProperties.Exchange = Exchange.ARCA
             self.SetHoldings("SPY", 0.50, orderProperties = orderProperties)
 
             self.Debug("Purchased SPY!")

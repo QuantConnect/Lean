@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "811c09ce6640f28698822652d5269597"}
+            {"OrderListHash", "cb542eaaeab5eac3bcae5d915ded30da"}
         };
     }
 }
