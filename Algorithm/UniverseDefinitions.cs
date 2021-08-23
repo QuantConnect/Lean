@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm
             var etfSymbol = new Symbol(
                 SecurityIdentifier.GenerateEquity(
                     etfTicker,
-                    market,
+                    market ?? Market.USA,
                     true,
                     mappingResolveDate: _algorithm.Time.Date),
                 etfTicker);
