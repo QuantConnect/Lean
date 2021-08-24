@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 31);
             SetCash(100000);
             
-            SetAlpha(new ConstituentWeightedRsiAlphaModel(1));
+            SetAlpha(new ConstituentWeightedRsiAlphaModel());
             SetPortfolioConstruction(new InsightWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
 
@@ -50,6 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
             
             // We load hourly data for ETF constituents in this algorithm
             UniverseSettings.Resolution = Resolution.Hour;
+            Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
+
             AddUniverse(Universe.ETF(spy, UniverseSettings, FilterETFConstituents));
         }
 
@@ -71,16 +73,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private class ConstituentWeightedRsiAlphaModel : AlphaModel
         {
-            private int? _maxTrades;
-            private int _trades;
-            
             private Dictionary<Symbol, SymbolData> _rsiSymbolData = new Dictionary<Symbol, SymbolData>();
 
-            public ConstituentWeightedRsiAlphaModel(int? maxTrades = null)
-            {
-                _maxTrades = maxTrades;
-            }
-            
             /// <summary>
             /// Receives new data and emits new <see cref="Insight"/> instances
             /// </summary>
@@ -130,15 +124,6 @@ namespace QuantConnect.Algorithm.CSharp
                     yield break;
                 }
 
-                if (_rsiSymbolData.Count != 0 && 
-                    _maxTrades != null && 
-                    _trades++ >= _maxTrades.Value)
-                {
-                    // We've exceeded the maximum amount of times we could trade according to the maximum
-                    // set by us when we created this alpha model
-                    yield break;
-                }
-                
                 foreach (var kvp in _rsiSymbolData)
                 {
                     var symbol = kvp.Key;
@@ -218,48 +203,48 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "9"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-0.064%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "-0.331"},
-            {"Net Profit", "-0.010%"},
-            {"Sharpe Ratio", "-1.204"},
-            {"Probabilistic Sharpe Ratio", "15.336%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.34"},
-            {"Alpha", "-0.001"},
-            {"Beta", "-0.001"},
-            {"Annual Standard Deviation", "0.001"},
+            {"Total Trades", "52"},
+            {"Average Win", "0.09%"},
+            {"Average Loss", "-0.05%"},
+            {"Compounding Annual Return", "3.919%"},
+            {"Drawdown", "0.500%"},
+            {"Expectancy", "0.080"},
+            {"Net Profit", "0.630%"},
+            {"Sharpe Ratio", "2.197"},
+            {"Probabilistic Sharpe Ratio", "67.639%"},
+            {"Loss Rate", "61%"},
+            {"Win Rate", "39%"},
+            {"Profit-Loss Ratio", "1.75"},
+            {"Alpha", "0.043"},
+            {"Beta", "-0.024"},
+            {"Annual Standard Deviation", "0.018"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.86"},
-            {"Tracking Error", "0.129"},
-            {"Treynor Ratio", "1.008"},
-            {"Total Fees", "$9.00"},
-            {"Estimated Strategy Capacity", "$120000000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Fitness Score", "0.002"},
-            {"Kelly Criterion Estimate", "54.21"},
-            {"Kelly Criterion Probability Value", "0.251"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-2.425"},
-            {"Portfolio Turnover", "0.003"},
-            {"Total Insights Generated", "4"},
-            {"Total Insights Closed", "4"},
-            {"Total Insights Analysis Completed", "4"},
-            {"Long Insight Count", "4"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-37463.63"},
-            {"Total Accumulated Estimated Alpha Value", "$-74771.15"},
-            {"Mean Population Estimated Insight Value", "$-18692.79"},
-            {"Mean Population Direction", "75%"},
-            {"Mean Population Magnitude", "75%"},
-            {"Rolling Averaged Population Direction", "75%"},
-            {"Rolling Averaged Population Magnitude", "75%"},
-            {"OrderListHash", "719522d3df1987e19b715af1fe65e1f6"}
+            {"Information Ratio", "-0.522"},
+            {"Tracking Error", "0.133"},
+            {"Treynor Ratio", "-1.678"},
+            {"Total Fees", "$52.00"},
+            {"Estimated Strategy Capacity", "$430000000.00"},
+            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
+            {"Fitness Score", "0.144"},
+            {"Kelly Criterion Estimate", "-2.61"},
+            {"Kelly Criterion Probability Value", "0.987"},
+            {"Sortino Ratio", "2.877"},
+            {"Return Over Maximum Drawdown", "6.437"},
+            {"Portfolio Turnover", "0.162"},
+            {"Total Insights Generated", "1076"},
+            {"Total Insights Closed", "1048"},
+            {"Total Insights Analysis Completed", "1048"},
+            {"Long Insight Count", "530"},
+            {"Short Insight Count", "546"},
+            {"Long/Short Ratio", "97.07%"},
+            {"Estimated Monthly Alpha Value", "$-378965.1"},
+            {"Total Accumulated Estimated Alpha Value", "$-756351.1"},
+            {"Mean Population Estimated Insight Value", "$-721.7091"},
+            {"Mean Population Direction", "45.8015%"},
+            {"Mean Population Magnitude", "45.8015%"},
+            {"Rolling Averaged Population Direction", "45.6662%"},
+            {"Rolling Averaged Population Magnitude", "45.6662%"},
+            {"OrderListHash", "f320b74a7bb7207f3f88f7fce9d0f286"}
         };
     }
 }

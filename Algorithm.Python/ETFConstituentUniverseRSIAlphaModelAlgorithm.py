@@ -31,7 +31,7 @@ class ETFConstituentUniverseRSIAlphaModelAlgorithm(QCAlgorithm):
         self.SetEndDate(2021, 1, 31)
         self.SetCash(100000)
 
-        self.SetAlpha(ConstituentWeightedRsiAlphaModel(1))
+        self.SetAlpha(ConstituentWeightedRsiAlphaModel())
         self.SetPortfolioConstruction(InsightWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
 
@@ -39,6 +39,8 @@ class ETFConstituentUniverseRSIAlphaModelAlgorithm(QCAlgorithm):
 
         # We load hourly data for ETF constituents in this algorithm
         self.UniverseSettings.Resolution = Resolution.Hour
+        self.Settings.MinimumOrderMarginPortfolioPercentage = 0.01
+
         self.AddUniverse(self.Universe.ETF(spy, self.UniverseSettings, self.FilterETFConstituents))
 
     ### <summary>
@@ -56,9 +58,6 @@ class ETFConstituentUniverseRSIAlphaModelAlgorithm(QCAlgorithm):
 ### </summary>
 class ConstituentWeightedRsiAlphaModel(AlphaModel):
     def __init__(self, maxTrades=None):
-        self.maxTrades = maxTrades
-        self.trades = 0
-
         self.rsiSymbolData = {}
 
     def Update(self, algorithm: QCAlgorithm, data: Slice):
@@ -92,12 +91,6 @@ class ConstituentWeightedRsiAlphaModel(AlphaModel):
         if not allReady:
             # We're still warming up the RSI indicators.
             return []
-
-        if len(self.rsiSymbolData) != 0: 
-            if self.maxTrades is not None and self.trades >= self.maxTrades:
-                return []
-
-            self.trades += 1
 
         insights = []
 
