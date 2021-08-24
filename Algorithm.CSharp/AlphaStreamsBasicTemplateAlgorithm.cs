@@ -67,7 +67,23 @@ namespace QuantConnect.Algorithm.CSharp
                     // only add it if it's not used by any alpha (already added check)
                     if (newSymbols.Add(symbol) && !UsedBySomeAlpha(symbol))
                     {
-                        AddSecurity(symbol, resolution: UniverseSettings.Resolution);
+                        var security = AddSecurity(symbol, resolution: UniverseSettings.Resolution);
+
+                        // warmup the security so we can fill right away
+                        var configs = SubscriptionManager.SubscriptionDataConfigService
+                            .GetSubscriptionDataConfigs(security.Symbol).ToList();
+                        foreach (var slice in History(new [] { security.Symbol }, LiveMode ? 120 : 30, LiveMode ? Resolution.Second : UniverseSettings.Resolution))
+                        {
+                            for (var i = 0; i < configs.Count; i++)
+                            {
+                                var configType = configs[i].Type;
+                                var dataDictionary = slice.Get(configType);
+                                if (dataDictionary.ContainsKey(symbol))
+                                {
+                                    security.Update(new []{ (BaseData)dataDictionary[symbol] }, configType);
+                                }
+                            }
+                        }
                     }
                 }
                 _symbolsPerAlpha[alphaId] = newSymbols;

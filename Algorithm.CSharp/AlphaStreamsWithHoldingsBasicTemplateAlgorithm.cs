@@ -27,7 +27,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AlphaStreamsWithHoldingsBasicTemplateAlgorithm : AlphaStreamsBasicTemplateAlgorithm
     {
-        private decimal _initialCash = 100000;
         private decimal _expectedSpyQuantity;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -36,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2018, 04, 04);
             SetEndDate(2018, 04, 06);
-            SetCash(_initialCash);
+            SetCash(100000);
 
             SetExecution(new ImmediateExecutionModel());
             UniverseSettings.Resolution = Resolution.Hour;
@@ -46,12 +45,12 @@ namespace QuantConnect.Algorithm.CSharp
             // AAPL should be liquidated since it's not hold by the alpha
             // This is handled by the PCM
             var aapl = AddEquity("AAPL", Resolution.Hour);
-            aapl.Holdings.SetHoldings(100, 10);
+            aapl.Holdings.SetHoldings(40, 10);
 
             // SPY will be bought following the alpha streams portfolio
             // This is handled by the PCM + Execution Model
             var spy = AddEquity("SPY", Resolution.Hour);
-            spy.Holdings.SetHoldings(100, -10);
+            spy.Holdings.SetHoldings(246, -10);
 
             AddData<AlphaStreamsPortfolioState>("94d820a93fff127fa46c15231d");
         }
@@ -61,8 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
             if (_expectedSpyQuantity == 0 && orderEvent.Symbol == "SPY")
             {
                 var security = Securities["SPY"];
-                var priceInAccountCurrency = security.AskPrice * security.QuoteCurrency.ConversionRate;
-                _expectedSpyQuantity = (_initialCash * (1 - Settings.FreePortfolioValuePercentage) - priceInAccountCurrency) / priceInAccountCurrency;
+                var priceInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(security.AskPrice, security.QuoteCurrency.Symbol);
+                _expectedSpyQuantity = (Portfolio.TotalPortfolioValue - Settings.FreePortfolioValue) / priceInAccountCurrency;
                 _expectedSpyQuantity = _expectedSpyQuantity.DiscretelyRoundBy(1, MidpointRounding.ToZero);
             }
 
@@ -76,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("We should no longer hold AAPL since the alpha does not");
             }
 
-            if (Securities["SPY"].Holdings.Quantity != _expectedSpyQuantity)
+            if (Math.Abs(Securities["SPY"].Holdings.Quantity - _expectedSpyQuantity) > _expectedSpyQuantity * 0.01m)
             {
                 throw new Exception($"Unexpected SPY holdings. Expected {_expectedSpyQuantity} was {Securities["SPY"].Holdings.Quantity}");
             }
@@ -99,32 +98,32 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.03%"},
-            {"Compounding Annual Return", "-87.617%"},
-            {"Drawdown", "3.100%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "-96.704%"},
+            {"Drawdown", "3.000%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-1.515%"},
-            {"Sharpe Ratio", "-2.45"},
+            {"Net Profit", "-2.462%"},
+            {"Sharpe Ratio", "-2.478"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.008"},
-            {"Beta", "1.015"},
-            {"Annual Standard Deviation", "0.344"},
-            {"Annual Variance", "0.118"},
-            {"Information Ratio", "-0.856"},
-            {"Tracking Error", "0.005"},
-            {"Treynor Ratio", "-0.83"},
-            {"Total Fees", "$3.09"},
-            {"Estimated Strategy Capacity", "$8900000000.00"},
+            {"Alpha", "-0.001"},
+            {"Beta", "0.998"},
+            {"Annual Standard Deviation", "0.338"},
+            {"Annual Variance", "0.114"},
+            {"Information Ratio", "0.873"},
+            {"Tracking Error", "0.001"},
+            {"Treynor Ratio", "-0.839"},
+            {"Total Fees", "$3.03"},
+            {"Estimated Strategy Capacity", "$8800000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Fitness Score", "0.511"},
+            {"Fitness Score", "0.254"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "6113.173"},
-            {"Portfolio Turnover", "0.511"},
+            {"Return Over Maximum Drawdown", "-30.381"},
+            {"Portfolio Turnover", "0.508"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -138,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "788eb2c74715a78476ba0db3b2654eb6"}
+            {"OrderListHash", "58ba492ac6bc4e855ee156707f955e59"}
         };
     }
 }
