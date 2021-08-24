@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -120,6 +121,53 @@ namespace QuantConnect.Securities
         public static decimal GetInitialMarginRequirement(this IBuyingPowerModel model, Security security, decimal quantity)
         {
             return model.GetInitialMarginRequirement(new InitialMarginParameters(security, quantity));
+        }
+
+        /// <summary>
+        /// Helper method to determine if the requested quantity is above the algorithm minimum order margin portfolio percentage
+        /// </summary>
+        /// <param name="model">The buying power model</param>
+        /// <param name="security">The security</param>
+        /// <param name="quantity">The quantity of shares</param>
+        /// <param name="portfolioManager">The algorithm's portfolio</param>
+        /// <param name="minimumOrderMarginPortfolioPercentage">Minimum order margin portfolio percentage to ignore bad orders, orders with unrealistic small sizes</param>
+        /// <remarks>If we are trading with negative margin remaining this method will return true always</remarks>
+        /// <returns>True if this order quantity is above the minimum requested</returns>
+        public static bool AboveMinimumOrderMarginPortfolioPercentage(this IBuyingPowerModel model, Security security,
+            decimal quantity, SecurityPortfolioManager portfolioManager, decimal minimumOrderMarginPortfolioPercentage)
+        {
+            if (minimumOrderMarginPortfolioPercentage == 0)
+            {
+                return true;
+            }
+            var absFinalOrderMargin = Math.Abs(model.GetInitialMarginRequirement(new InitialMarginParameters(
+                security, quantity)).Value);
+
+            return AboveMinimumOrderMarginPortfolioPercentage(portfolioManager, minimumOrderMarginPortfolioPercentage, absFinalOrderMargin);
+        }
+
+        /// <summary>
+        /// Helper method to determine if the requested quantity is above the algorithm minimum order margin portfolio percentage
+        /// </summary>
+        /// <param name="portfolioManager">The algorithm's portfolio</param>
+        /// <param name="minimumOrderMarginPortfolioPercentage">Minimum order margin portfolio percentage to ignore bad orders, orders with unrealistic small sizes</param>
+        /// <param name="absFinalOrderMargin">The calculated order margin value</param>
+        /// <remarks>If we are trading with negative margin remaining this method will return true always</remarks>
+        /// <returns>True if this order quantity is above the minimum requested</returns>
+        public static bool AboveMinimumOrderMarginPortfolioPercentage(SecurityPortfolioManager portfolioManager,
+            decimal minimumOrderMarginPortfolioPercentage,
+            decimal absFinalOrderMargin)
+        {
+            var minimumValue = portfolioManager.TotalPortfolioValue * minimumOrderMarginPortfolioPercentage;
+
+            if (minimumValue > absFinalOrderMargin
+                // if margin remaining is negative allow the order to pass so we can reduce the position
+                && portfolioManager.GetMarginRemaining(portfolioManager.TotalPortfolioValue) > 0)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

@@ -11,17 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-AddReference("QuantConnect.Common")
-
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from QuantConnect.Algorithm.Framework import *
+from AlgorithmImports import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
-import pandas as pd
 
 class UncorrelatedUniverseSelectionModel(FundamentalUniverseSelectionModel):
     '''This universe selection model picks stocks that currently have their correlation to a benchmark deviated from the mean.'''
