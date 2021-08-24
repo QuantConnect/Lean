@@ -18,12 +18,6 @@ from datetime import timedelta
 
 
 ### <summary>
-### Store constituents data when doing universe selection for later use in the alpha model
-### </summary>
-Constituents = []
-
-
-### <summary>
 ### Example algorithm demonstrating the usage of the RSI indicator
 ### in combination with ETF constituents data to replicate the weighting
 ### of the ETF's assets in our own account.
@@ -37,7 +31,7 @@ class ETFConstituentUniverseRSIAlphaModelAlgorithm(QCAlgorithm):
         self.SetEndDate(2021, 1, 31)
         self.SetCash(100000)
 
-        self.SetAlpha(ConstituentWeightedRsiAlphaModel())
+        self.SetAlpha(ConstituentWeightedRsiAlphaModel(1))
         self.SetPortfolioConstruction(InsightWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
 
@@ -53,17 +47,7 @@ class ETFConstituentUniverseRSIAlphaModelAlgorithm(QCAlgorithm):
     ### <param name="constituents">ETF constituents</param>
     ### <returns>ETF constituent Symbols that we want to include in the algorithm</returns>
     def FilterETFConstituents(self, constituents):
-        global Constituents
-
-        Constituents = [i for i in constituents if i.Weight is not None and i.Weight >= 0.001]
-
-        return [i.Symbol for i in Constituents]
-
-    ### <summary>
-    ### no-op
-    ### </summary>
-    def OnData(self, data):
-        pass
+        return [i.Symbol for i in constituents if i.Weight is not None and i.Weight >= 0.001]
 
 
 ### <summary>
@@ -71,39 +55,50 @@ class ETFConstituentUniverseRSIAlphaModelAlgorithm(QCAlgorithm):
 ### which assets we should invest in and the direction of investment
 ### </summary>
 class ConstituentWeightedRsiAlphaModel(AlphaModel):
-    def __init__(self):
+    def __init__(self, maxTrades=None):
+        self.maxTrades = maxTrades
+        self.trades = 0
+
         self.rsiSymbolData = {}
 
     def Update(self, algorithm: QCAlgorithm, data: Slice):
-        if len(Constituents) == 0 or len(data.Bars) == 0:
+        algoConstituents = []
+        for barSymbol in data.Bars.Keys:
+            if not algorithm.Securities[barSymbol].Cache.HasData(ETFConstituentData):
+                continue
+
+            constituentData = algorithm.Securities[barSymbol].Cache.GetData[ETFConstituentData]()
+            algoConstituents.append(constituentData)
+
+        if len(algoConstituents) == 0 or len(data.Bars) == 0:
             # Don't do anything if we have no data we can work with
             return []
 
-        constituents = {i.Symbol:i for i in Constituents}
+        constituents = {i.Symbol:i for i in algoConstituents}
 
-        allReady = True
         for bar in data.Bars.Values:
             if bar.Symbol not in constituents:
                 # Dealing with a manually added equity, which in this case is SPY
                 continue
 
-            rsiData = self.rsiSymbolData.get(bar.Symbol)
-            if rsiData is None:
+            if bar.Symbol not in self.rsiSymbolData:
                 # First time we're initializing the RSI.
                 # It won't be ready now, but it will be
                 # after 7 data points
                 constituent = constituents[bar.Symbol]
-                rsiData = SymbolData(bar.Symbol, constituent, 7)
-                self.rsiSymbolData[bar.Symbol] = rsiData
+                self.rsiSymbolData[bar.Symbol] = SymbolData(bar.Symbol, algorithm, constituent, 7)
 
-            # Let's make sure all RSI indicators are ready before we emit any insights.
-            allReady = allReady and rsiData.rsi.Update(IndicatorDataPoint(bar.Symbol, bar.EndTime, bar.Close))
-
+        allReady = all([sd.rsi.IsReady for sd in self.rsiSymbolData.values()])
         if not allReady:
             # We're still warming up the RSI indicators.
             return []
 
-        emitted = False
+        if len(self.rsiSymbolData) != 0: 
+            if self.maxTrades is not None and self.trades >= self.maxTrades:
+                return []
+
+            self.trades += 1
+
         insights = []
 
         for symbol, symbolData in self.rsiSymbolData.items():
@@ -124,19 +119,12 @@ class ConstituentWeightedRsiAlphaModel(AlphaModel):
                 float(averageLoss if direction == InsightDirection.Down else averageGain),
                 weight=float(symbolData.constituent.Weight)
             ))
-
-            emitted = True
         
-        if emitted:
-            # Prevents us from placing trades before the next
-            # ETF constituents universe selection occurs.
-            Constituents.clear()
-
         return insights
 
 
 class SymbolData:
-    def __init__(self, symbol, constituent, period):
+    def __init__(self, symbol, algorithm, constituent, period):
         self.Symbol = symbol
         self.constituent = constituent
-        self.rsi = RelativeStrengthIndex(period, MovingAverageType.Exponential)
+        self.rsi = algorithm.RSI(symbol, period, MovingAverageType.Exponential, Resolution.Hour)

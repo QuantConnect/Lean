@@ -33,11 +33,6 @@ namespace QuantConnect.Algorithm.CSharp
     public class ETFConstituentUniverseRSIAlphaModelAlgorithm : QCAlgorithm
     {
         /// <summary>
-        /// Store constituents data when doing universe selection for later use in the alpha model
-        /// </summary>
-        public List<ETFConstituentData> Constituents = new List<ETFConstituentData>();
-        
-        /// <summary>
         /// Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
@@ -46,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 31);
             SetCash(100000);
             
-            SetAlpha(new ConstituentWeightedRsiAlphaModel());
+            SetAlpha(new ConstituentWeightedRsiAlphaModel(1));
             SetPortfolioConstruction(new InsightWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
 
@@ -64,20 +59,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <returns>Symbols to add to universe</returns>
         public IEnumerable<Symbol> FilterETFConstituents(IEnumerable<ETFConstituentData> constituents)
         {
-            Constituents = constituents
+            return constituents
                 .Where(x => x.Weight != null && x.Weight >= 0.001m)
-                .ToList();
-
-            return Constituents
-                .Select(x => x.Symbol)
-                .ToList();
-        }
-
-        /// <summary>
-        /// no-op
-        /// </summary>
-        public override void OnData(Slice data)
-        {
+                .Select(x => x.Symbol);
         }
 
         /// <summary>
@@ -86,7 +70,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private class ConstituentWeightedRsiAlphaModel : AlphaModel
         {
+            private int? _maxTrades;
+            private int _trades;
+            
             private Dictionary<Symbol, SymbolData> _rsiSymbolData = new Dictionary<Symbol, SymbolData>();
+
+            public ConstituentWeightedRsiAlphaModel(int? maxTrades = null)
+            {
+                _maxTrades = maxTrades;
+            }
             
             /// <summary>
             /// Receives new data and emits new <see cref="Insight"/> instances
@@ -97,17 +89,20 @@ namespace QuantConnect.Algorithm.CSharp
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 // Cast first, and then access the constituents collection defined in our algorithm.
-                var algo = (ETFConstituentUniverseRSIAlphaModelAlgorithm) algorithm;
-                if (algo.Constituents.Count == 0 || data.Bars.Count == 0)
+                var algoConstituents = data.Bars.Keys
+                    .Where(x => algorithm.Securities[x].Cache.HasData(typeof(ETFConstituentData)))
+                    .Select(x => algorithm.Securities[x].Cache.GetData<ETFConstituentData>())
+                    .ToList();
+                
+                if (algoConstituents.Count == 0 || data.Bars.Count == 0)
                 {
                     // Don't do anything if we have no data we can work with
                     yield break;
                 }
                 
-                var constituents = algo.Constituents
+                var constituents = algoConstituents
                     .ToDictionary(x => x.Symbol, x => x);
 
-                var allReady = true;
                 foreach (var bar in data.Bars.Values)
                 {
                     if (!constituents.ContainsKey(bar.Symbol))
@@ -116,27 +111,33 @@ namespace QuantConnect.Algorithm.CSharp
                         continue;
                     }
                     
-                    if (!_rsiSymbolData.TryGetValue(bar.Symbol, out var rsiData))
+                    if (!_rsiSymbolData.ContainsKey(bar.Symbol))
                     {
                         // First time we're initializing the RSI.
                         // It won't be ready now, but it will be
                         // after 7 data points.
                         var constituent = constituents[bar.Symbol];
-                        rsiData = new SymbolData(bar.Symbol, constituent, 7);
-                        _rsiSymbolData[bar.Symbol] = rsiData;
+                        _rsiSymbolData[bar.Symbol] = new SymbolData(bar.Symbol, algorithm, constituent, 7);
                     }
-
-                    // Let's make sure all RSI indicators are ready before we emit any insights.
-                    allReady = allReady && rsiData.Rsi.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, bar.Close));
                 }
 
+                // Let's make sure all RSI indicators are ready before we emit any insights.
+                var allReady = _rsiSymbolData.All(kvp => kvp.Value.Rsi.IsReady);
                 if (!allReady)
                 {
                     // We're still warming up the RSI indicators.
                     yield break;
                 }
 
-                var emitted = false;
+                if (_rsiSymbolData.Count != 0 && 
+                    _maxTrades != null && 
+                    _trades++ >= _maxTrades.Value)
+                {
+                    // We've exceeded the maximum amount of times we could trade according to the maximum
+                    // set by us when we created this alpha model
+                    yield break;
+                }
+                
                 foreach (var kvp in _rsiSymbolData)
                 {
                     var symbol = kvp.Key;
@@ -162,15 +163,6 @@ namespace QuantConnect.Algorithm.CSharp
                             ? averageLoss
                             : averageGain),
                         weight: (double?) symbolData.Constituent.Weight);
-
-                    emitted = true;
-                }
-
-                if (emitted)
-                {
-                    // Prevents us from placing trades before the next
-                    // ETF constituents universe selection occurs.
-                    algo.Constituents.Clear();
                 }
             }
         }
@@ -202,11 +194,11 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="symbol">The symbol to add data for</param>
             /// <param name="constituent">ETF constituent data</param>
             /// <param name="period">RSI period</param>
-            public SymbolData(Symbol symbol, ETFConstituentData constituent, int period)
+            public SymbolData(Symbol symbol, QCAlgorithm algorithm, ETFConstituentData constituent, int period)
             {
                 Symbol = symbol;
                 Constituent = constituent;
-                Rsi = new RelativeStrengthIndex(period, MovingAverageType.Exponential);
+                Rsi = algorithm.RSI(symbol, period, MovingAverageType.Exponential, Resolution.Hour);
             }
         }
     }
