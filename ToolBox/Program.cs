@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -198,8 +198,11 @@ namespace QuantConnect.ToolBox
                         break;
                     case "cadc":
                     case "coinapidataconverter":
-                        CoinApiDataConverterProgram.CoinApiDataProgram(GetParameterOrExit(optionsObject, "date"), 
-                            GetParameterOrExit(optionsObject, "source-dir"), GetParameterOrExit(optionsObject, "destination-dir"));
+                        CoinApiDataConverterProgram.CoinApiDataProgram(
+                            GetParameterOrExit(optionsObject, "date"), 
+                            GetParameterOrExit(optionsObject, "source-dir"), 
+                            GetParameterOrExit(optionsObject, "destination-dir"),
+                            GetParameterOrDefault(optionsObject, "market", null));
                         break;
                     case "nmdc":
                     case "nsemarketdataconverter":
