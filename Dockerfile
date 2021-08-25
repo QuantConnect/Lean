@@ -8,9 +8,12 @@ FROM quantconnect/lean:foundation
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
-#Save foundation image version to environment variable
+#Save foundation image and lean version to environment variable
 ARG LEAN_FOUNDATION_VERSION=UNKNOWN
 ENV LEAN_FOUNDATION_VERSION=$LEAN_FOUNDATION_VERSION
+
+ARG LEAN_TAG=latest
+ENV LEAN_VERSION=$LEAN_TAG
 
 #Install Python Tool for Visual Studio Debugger for remote python debugging
 RUN pip install ptvsd
