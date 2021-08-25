@@ -85,7 +85,6 @@ RUN pip install --no-cache-dir      \
     msgpack==1.0.0                  \
     setuptools-git==1.2             \
     xarray==0.15.1                  \
-    plotly==4.7.1                   \
     docutils==0.14                  \
     lightgbm==2.3.0                 \
     nltk==3.4.5                     \
@@ -102,16 +101,13 @@ RUN pip install --no-cache-dir      \
     nvidia-ml-py3==7.352.0          \
     copulalib==1.1.0                \
     copulas==0.3.3                  \
-    cufflinks==0.17.3               \
     gym==0.17.2                     \
     ipywidgets==7.5.1               \
     deap==1.3.1                     \
     pykalman==0.9.5                 \
-    pyro-ppl==1.3.1                 \
     sklearn-json==0.1.0             \
     statistics==1.0.3.5             \
     dtw-python==1.0.5               \
-    mxnet==1.6                      \
     gluonts==0.4.3                  \
     gplearn==0.4.1                  \
     jax==0.1.68                     \
@@ -179,12 +175,6 @@ RUN wget https://cdn.quantconnect.com/fastText/fastText-0.9.2.zip && \
 RUN wget https://cdn.quantconnect.com/tigramite/tigramite-4.1.zip && \
     unzip -q tigramite-4.1.zip && cd tigramite-4.1 && \
     python setup.py install && cd .. && rm -rf tigramite-4.1 && rm tigramite-4.1.zip
-
-# Install H2O: https://www.h2o.ai/download/
-RUN wget https://cdn.quantconnect.com/h2o/h2o-3.34.0.7.zip && \
-    unzip -q h2o-3.34.0.7.zip && \
-    pip install h2o-3.34.0.7-py2.py3-none-any.whl && \
-    rm h2o-3.34.0.7.zip h2o-3.34.0.7-py2.py3-none-any.whl
 
 # Remove black-listed packages
 RUN pip uninstall -y s3transfer
