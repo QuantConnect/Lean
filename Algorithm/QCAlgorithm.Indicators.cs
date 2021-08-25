@@ -1028,6 +1028,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an Market Profile indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose MP we want</param>
+        /// <param name="period">The period of the MP</param>
+        /// <param name="mode">The mode of the MP</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Point of Control (POC) price for the given parameters</returns>
+        public MarketProfile MP(Symbol symbol, int period = 2, string mode="TPO", Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"MP({period})", resolution);
+            var marketProfile = new MarketProfile(name, period, mode);
+            RegisterIndicator(symbol, marketProfile, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, marketProfile, resolution);
+            }
+
+            return marketProfile;
+        }
+
+        /// <summary>
         /// Creates a new Maximum indicator to compute the maximum value
         /// </summary>
         /// <param name="symbol">The symbol whose max we want</param>
