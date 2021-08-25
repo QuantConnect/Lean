@@ -459,6 +459,32 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Yields data to warmup a security for all it's subscribed data types
+        /// </summary>
+        /// <param name="security">The security we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        public IEnumerable<BaseData> GetLastKnownPrices(Security security)
+        {
+            if (security.Symbol.IsCanonical() || HistoryProvider == null)
+            {
+                yield break;
+            }
+
+            var configs = SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(security.Symbol);
+            foreach (var config in configs)
+            {
+                // For speed and memory usage, use Resolution.Minute as the minimum resolution
+                var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)config.Resolution);
+                var lastKnownPrice = GetLastKnownPriceImpl(security, config.Type, config.TickType, configs, resolution);
+                if (lastKnownPrice != null)
+                {
+                    yield return lastKnownPrice;
+                }
+            }
+        }
+
+        /// <summary>
         /// Get the last known price using the history provider.
         /// Useful for seeding securities with the correct price
         /// </summary>
@@ -473,13 +499,8 @@ namespace QuantConnect.Algorithm
 
             var configs = SubscriptionManager.SubscriptionDataConfigService
                 .GetSubscriptionDataConfigs(security.Symbol);
-
-            var dataTimeZone = MarketHoursDatabase
-                .GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType);
-
             // For speed and memory usage, use Resolution.Minute as the minimum resolution
             var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)configs.GetHighestResolution());
-            var isExtendedMarketHours = configs.IsExtendedMarketHours();
 
             // request QuoteBar for Futures and all option types
             var dataType = typeof(BaseData);
@@ -510,6 +531,24 @@ namespace QuantConnect.Algorithm
                 dataType = subscriptionDataConfig.Type;
                 tickType = subscriptionDataConfig.TickType;
             }
+
+            return GetLastKnownPriceImpl(security, dataType, tickType, configs, resolution);
+        }
+
+        /// <summary>
+        /// Get the last known price using the history provider.
+        /// Useful for seeding securities with the correct price
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
+        private BaseData GetLastKnownPriceImpl(Security security, Type dataType,
+            TickType tickType, List<SubscriptionDataConfig> configs,
+            Resolution resolution)
+        {
+            var dataTimeZone = MarketHoursDatabase
+                .GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType);
+
+            var isExtendedMarketHours = configs.IsExtendedMarketHours();
 
             Func<int, BaseData> getLastKnownPriceForPeriods = backwardsPeriods =>
             {
@@ -670,14 +709,19 @@ namespace QuantConnect.Algorithm
 
         private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
         {
-            Security security;
-            if (Securities.TryGetValue(symbol, out security))
-            {
+            var matchingSubscriptions = SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs:true)
                 // find all subscriptions matching the requested type with a higher resolution than requested
-                var matchingSubscriptions = from sub in security.Subscriptions.OrderByDescending(s => s.Resolution)
-                    where SubscriptionDataConfigTypeFilter(type, sub.Type)
-                    select sub;
-
+                .OrderByDescending(s => s.Resolution)
+                // lets make sure to respect the order of the data types
+                .ThenByDescending(config => SubscriptionManager.AvailableDataTypes[config.SecurityType].IndexOf(config.TickType))
+                .ThenBy(config => config.IsInternalFeed ? 1 : 0)
+                .Where(s => SubscriptionDataConfigTypeFilter(type, s.Type))
+                .ToList();
+            // we use the subscription manager registered configurations here, we can not rely on the Securities collection
+            // since this might be called when creating a security and warming it up
+            if (matchingSubscriptions.Count != 0)
+            {
                 if (resolution.HasValue
                     && (resolution == Resolution.Daily || resolution == Resolution.Hour)
                     && symbol.SecurityType == SecurityType.Equity)
@@ -685,7 +729,7 @@ namespace QuantConnect.Algorithm
                     // for Daily and Hour resolution, for equities, we have to
                     // filter out any existing subscriptions that could be of Quote type
                     // This could happen if they were Resolution.Minute/Second/Tick
-                    matchingSubscriptions = matchingSubscriptions.Where(s => s.TickType != TickType.Quote);
+                    return matchingSubscriptions.Where(s => s.TickType != TickType.Quote);
                 }
 
                 return matchingSubscriptions;

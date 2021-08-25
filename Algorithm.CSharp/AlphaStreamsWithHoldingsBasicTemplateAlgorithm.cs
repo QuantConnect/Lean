@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (_expectedSpyQuantity == 0 && orderEvent.Symbol == "SPY")
+            if (_expectedSpyQuantity == 0 && orderEvent.Symbol == "SPY" && orderEvent.Status == OrderStatus.Filled)
             {
                 var security = Securities["SPY"];
                 var priceInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(security.AskPrice, security.QuoteCurrency.Symbol);
@@ -75,7 +75,8 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("We should no longer hold AAPL since the alpha does not");
             }
 
-            if (Math.Abs(Securities["SPY"].Holdings.Quantity - _expectedSpyQuantity) > _expectedSpyQuantity * 0.01m)
+            // we allow some padding for small price differences
+            if (Math.Abs(Securities["SPY"].Holdings.Quantity - _expectedSpyQuantity) > _expectedSpyQuantity * 0.03m)
             {
                 throw new Exception($"Unexpected SPY holdings. Expected {_expectedSpyQuantity} was {Securities["SPY"].Holdings.Quantity}");
             }
@@ -97,33 +98,33 @@ namespace QuantConnect.Algorithm.CSharp
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-96.704%"},
-            {"Drawdown", "3.000%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "-2.462%"},
-            {"Sharpe Ratio", "-2.478"},
+            {"Average Win", "0.01%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "-87.617%"},
+            {"Drawdown", "3.100%"},
+            {"Expectancy", "8.518"},
+            {"Net Profit", "-1.515%"},
+            {"Sharpe Ratio", "-2.45"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.001"},
-            {"Beta", "0.998"},
-            {"Annual Standard Deviation", "0.338"},
-            {"Annual Variance", "0.114"},
-            {"Information Ratio", "0.873"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "-0.839"},
-            {"Total Fees", "$3.03"},
-            {"Estimated Strategy Capacity", "$8800000000.00"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "18.04"},
+            {"Alpha", "0.008"},
+            {"Beta", "1.015"},
+            {"Annual Standard Deviation", "0.344"},
+            {"Annual Variance", "0.118"},
+            {"Information Ratio", "-0.856"},
+            {"Tracking Error", "0.005"},
+            {"Treynor Ratio", "-0.83"},
+            {"Total Fees", "$3.09"},
+            {"Estimated Strategy Capacity", "$8900000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Fitness Score", "0.254"},
+            {"Fitness Score", "0.511"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-30.381"},
-            {"Portfolio Turnover", "0.508"},
+            {"Return Over Maximum Drawdown", "6113.173"},
+            {"Portfolio Turnover", "0.511"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -137,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "58ba492ac6bc4e855ee156707f955e59"}
+            {"OrderListHash", "788eb2c74715a78476ba0db3b2654eb6"}
         };
     }
 }

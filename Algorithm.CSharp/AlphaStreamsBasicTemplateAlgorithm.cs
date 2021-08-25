@@ -17,6 +17,8 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Brokerages;
+using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Custom.AlphaStreams;
@@ -44,6 +46,9 @@ namespace QuantConnect.Algorithm.CSharp
             Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
             SetPortfolioConstruction(new EqualWeightingAlphaStreamsPortfolioConstructionModel());
 
+            SetSecurityInitializer(new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
+                new FuncSecuritySeeder(GetLastKnownPrices)));
+
             foreach (var alphaId in new [] { "623b06b231eb1cc1aa3643a46", "9fc8ef73792331b11dbd5429a" })
             {
                 AddData<AlphaStreamsPortfolioState>(alphaId);
@@ -67,23 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // only add it if it's not used by any alpha (already added check)
                     if (newSymbols.Add(symbol) && !UsedBySomeAlpha(symbol))
                     {
-                        var security = AddSecurity(symbol, resolution: UniverseSettings.Resolution);
-
-                        // warmup the security so we can fill right away
-                        var configs = SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(security.Symbol).ToList();
-                        foreach (var slice in History(new [] { security.Symbol }, LiveMode ? 120 : 30, LiveMode ? Resolution.Second : UniverseSettings.Resolution))
-                        {
-                            for (var i = 0; i < configs.Count; i++)
-                            {
-                                var configType = configs[i].Type;
-                                var dataDictionary = slice.Get(configType);
-                                if (dataDictionary.ContainsKey(symbol))
-                                {
-                                    security.Update(new []{ (BaseData)dataDictionary[symbol] }, configType);
-                                }
-                            }
-                        }
+                        AddSecurity(symbol, resolution: UniverseSettings.Resolution);
                     }
                 }
                 _symbolsPerAlpha[alphaId] = newSymbols;
