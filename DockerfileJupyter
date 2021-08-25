@@ -54,9 +54,10 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=\"Notebooks\" --LabApp.token='' " \
     > start.sh && echo "from QuantConnect.AlphaStream import *" >> ${WORK}AlgorithmImports.py
 
-#Save foundation image version to environment variable
+#Save foundation image and lean version to environment variable
 ARG LEAN_FOUNDATION_VERSION=UNKNOWN
 ENV LEAN_FOUNDATION_VERSION=$LEAN_FOUNDATION_VERSION
+ENV LEAN_VERSION=$LEAN_TAG
 
 RUN chmod -R 777 ${WORK}
 EXPOSE 8888
