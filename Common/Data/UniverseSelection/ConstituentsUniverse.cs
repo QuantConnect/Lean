@@ -63,7 +63,7 @@ namespace QuantConnect.Data.UniverseSelection
             Symbol symbol,
             UniverseSettings universeSettings,
             PyObject constituentsFilter = null)
-            : this(symbol, universeSettings, ConvertPythonUniverseFilterFunction(constituentsFilter))
+            : this(symbol, universeSettings, constituentsFilter.ConvertPythonUniverseFilterFunction<T>())
         {
         }
 
@@ -109,7 +109,7 @@ namespace QuantConnect.Data.UniverseSelection
             SubscriptionDataConfig subscriptionDataConfig,
             UniverseSettings universeSettings,
             PyObject constituentsFilter = null)
-        : this(subscriptionDataConfig, universeSettings, ConvertPythonUniverseFilterFunction(constituentsFilter))
+        : this(subscriptionDataConfig, universeSettings, constituentsFilter.ConvertPythonUniverseFilterFunction<T>())
         {
         }
     }

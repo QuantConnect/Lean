@@ -41,7 +41,7 @@ class FundamentalUniverseSelectionModel:
 
     def CreateCoarseFundamentalUniverse(self, algorithm):
         '''Creates the coarse fundamental universe object.
-        This is provided to allow more flexibility when creating coarse universe, such as using algorithm.Universe.DollarVolume.Top(5)
+        This is provided to allow more flexibility when creating coarse universe.
         Args:
             algorithm: The algorithm instance
         Returns:

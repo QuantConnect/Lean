@@ -33,7 +33,7 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
         self.aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
         self.qqq = self.AddEquity("QQQ", Resolution.Daily).Symbol
 
-        self.AddUniverse(ETFConstituentsUniverse(self.qqq, self.UniverseSettings, self.FilterETFs))
+        self.AddUniverse(self.Universe.ETF(self.qqq, self.UniverseSettings, self.FilterETFs))
 
     def FilterETFs(self, constituents):
         constituentSymbols = [i.Symbol for i in constituents]

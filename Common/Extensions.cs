@@ -2457,6 +2457,24 @@ namespace QuantConnect
                 return pyObject.AsManagedObject(typeToConvertTo);
             }
         }
+        
+        /// <summary>
+        /// Converts a Python function to a managed function returning a Symbol
+        /// </summary>
+        /// <param name="universeFilterFunc">Universe filter function from Python</param>
+        /// <returns>Function that provides <typeparamref name="T"/> and returns an enumerable of Symbols</returns>
+        public static Func<IEnumerable<T>, IEnumerable<Symbol>> ConvertPythonUniverseFilterFunction<T>(this PyObject universeFilterFunc)
+        {
+            Func<IEnumerable<T>, object> convertedFunc;
+            Func<IEnumerable<T>, IEnumerable<Symbol>> filterFunc = null;
+
+            if (universeFilterFunc.TryConvertToDelegate(out convertedFunc))
+            {
+                filterFunc = convertedFunc.ConvertToUniverseSelectionSymbolDelegate();
+            }
+
+            return filterFunc;
+        }
 
         /// <summary>
         /// Wraps the provided universe selection selector checking if it returned <see cref="Universe.Unchanged"/>

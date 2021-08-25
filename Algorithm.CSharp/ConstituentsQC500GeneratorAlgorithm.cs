@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);            // Set Strategy Cash
 
             // Add QC500 Universe
-            AddUniverse(Universe.Index.QC500);
+            AddUniverse(Universe.QC500);
         }
     }
 }
