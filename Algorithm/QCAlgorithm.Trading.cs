@@ -1032,10 +1032,12 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">string symbol we wish to hold</param>
         /// <param name="percentage">double percentage of holdings desired</param>
         /// <param name="liquidateExistingHoldings">liquidate existing holdings if necessary to hold this stock</param>
+        /// <param name="tag">Tag the order with a short string.</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
-        public void SetHoldings(Symbol symbol, double percentage, bool liquidateExistingHoldings = false)
+        public void SetHoldings(Symbol symbol, double percentage, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            SetHoldings(symbol, percentage.SafeDecimalCast(), liquidateExistingHoldings);
+            SetHoldings(symbol, percentage.SafeDecimalCast(), liquidateExistingHoldings, tag, orderProperties);
         }
 
         /// <summary>
