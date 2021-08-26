@@ -249,6 +249,44 @@ namespace QuantConnect.Brokerages.Exante
             return response;
         }
 
+        /// <summary>Get transactions</summary>
+        /// <returns>List of transactions with the specified filter</returns>
+        public WebCallResult<IEnumerable<ExanteTransaction>> GetTransactions(
+            Guid? transactionId = null,
+            string? accountId = null,
+            string? symbolId = null,
+            string? asset = null,
+            IEnumerable<ExanteTransactionType>? types = null,
+            int? offset = null,
+            int? limit = null,
+            ExanteArrayOrderType orderType = ExanteArrayOrderType.Desc,
+            DateTime? from = null,
+            DateTime? to = null,
+            Guid? orderId = null,
+            int? orderPosition = null,
+            CancellationToken ct = default(CancellationToken)
+            )
+        {
+            var response =
+                _client.GetTransactionsAsync(
+                    transactionId,
+                    accountId,
+                    symbolId,
+                    asset,
+                    types,
+                    offset,
+                    limit,
+                    orderType,
+                    from,
+                    to,
+                    orderId,
+                    orderPosition,
+                    ct
+                ).SynchronouslyAwaitTaskResult();
+            CheckIfResponseOk(response);
+            return response;
+        }
+
         public void Dispose()
         {
             _client?.Dispose();

@@ -19,6 +19,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using CryptoExchange.Net.Objects;
 using Exante.Net;
 using Exante.Net.Enums;
@@ -105,7 +106,18 @@ namespace QuantConnect.Brokerages.Exante
             Order order;
             if (_orderMap.TryGetValue(exanteOrder.OrderId, out order))
             {
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) // TODO: What's the fee?
+                Thread.Sleep(1_000); // Need to wait for `_client.GetTransactions(...)`
+
+                var transactions = _client.GetTransactions(
+                    orderId: exanteOrder.OrderId, types: new[] { ExanteTransactionType.Commission }
+                );
+
+                var commission = transactions.Data.FirstOrDefault();
+                var fee = commission == null
+                    ? OrderFee.Zero
+                    : new OrderFee(new CashAmount(commission.Amount, commission.Asset));
+
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, fee)
                 {
                     Status = ConvertOrderStatus(exanteOrder.OrderState.Status),
                 });
