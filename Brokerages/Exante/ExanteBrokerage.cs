@@ -239,7 +239,6 @@ namespace QuantConnect.Brokerages.Exante
                 order.Symbol = ConvertSymbol(symbol);
                 order.Time = item.Date;
                 order.Status = ConvertOrderStatus(item.OrderState.Status);
-                // order.Price = ; // TODO: what's the price?
                 list.Add(order);
             }
 
