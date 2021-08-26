@@ -161,7 +161,10 @@
     <Content Include="TestData\gdax_tick.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\ibm_mp.csv">
+    <Content Include="TestData\tp_datatest.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\vp_datatest.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\SampleMarketHoursDatabase.json">
