@@ -12,7 +12,7 @@ MAINTAINER QuantConnect <contact@quantconnect.com>
 ARG LEAN_FOUNDATION_VERSION=UNKNOWN
 ENV LEAN_FOUNDATION_VERSION=$LEAN_FOUNDATION_VERSION
 
-ARG LEAN_TAG=latest
+ARG LEAN_TAG=UNKNOWN
 ENV LEAN_VERSION=$LEAN_TAG
 
 #Install debugpy and PyDevD for remote python debugging
