@@ -1749,6 +1749,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
+                Log.Trace($"InteractiveBrokersBrokerage.HandlePortfolioUpdates(): {e}");
+
+                // clear positions for expired option contracts
+                if (e.Contract.SecType is IB.SecurityType.Option or IB.SecurityType.FutureOption &&
+                    e.Position == 0)
+                {
+                    var symbol = MapSymbol(e.Contract);
+
+                    if (OptionSymbol.IsOptionContractExpired(symbol, DateTime.UtcNow) &&
+                        _algorithm.Securities.TryGetValue(symbol, out var security))
+                    {
+                        Log.Trace("InteractiveBrokersBrokerage.HandlePortfolioUpdates(): clearing position for expired option holding: " +
+                            $"Symbol: {symbol.Value}, Quantity: {security.Holdings.Quantity}");
+
+                        security.Holdings.SetHoldings(0, 0);
+                    }
+                }
+
                 _accountHoldingsResetEvent.Reset();
                 if (_loadExistingHoldings)
                 {

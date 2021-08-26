@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -103,7 +103,9 @@ namespace QuantConnect.Securities.Option
         /// <returns>True if the option contract is expired at the specified time, false otherwise</returns>
         public static bool IsOptionContractExpired(Symbol symbol, DateTime currentTimeUtc)
         {
-            if (symbol.SecurityType != SecurityType.Option)
+            if (symbol.SecurityType != SecurityType.Option &&
+                symbol.SecurityType != SecurityType.FutureOption &&
+                symbol.SecurityType != SecurityType.IndexOption)
             {
                 return false;
             }
