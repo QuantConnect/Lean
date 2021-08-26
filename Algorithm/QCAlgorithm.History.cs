@@ -14,14 +14,14 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
+using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
+using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm
 {
@@ -467,11 +467,12 @@ namespace QuantConnect.Algorithm
         {
             if (security.Symbol.IsCanonical() || HistoryProvider == null)
             {
-                yield break;
+                return Enumerable.Empty<BaseData>();
             }
 
             var configs = SubscriptionManager.SubscriptionDataConfigService
                 .GetSubscriptionDataConfigs(security.Symbol);
+            var result = new List<BaseData>();
             foreach (var config in configs)
             {
                 // For speed and memory usage, use Resolution.Minute as the minimum resolution
@@ -479,9 +480,12 @@ namespace QuantConnect.Algorithm
                 var lastKnownPrice = GetLastKnownPriceImpl(security, config.Type, config.TickType, configs, resolution);
                 if (lastKnownPrice != null)
                 {
-                    yield return lastKnownPrice;
+                    result.Add(lastKnownPrice);
                 }
             }
+
+            // return the data ordered by time ascending
+            return result.OrderBy(data => data.Time);
         }
 
         /// <summary>
@@ -572,12 +576,13 @@ namespace QuantConnect.Algorithm
                 );
 
                 BaseData result = null;
-                History(new List<HistoryRequest> { request })
-                    .PushThrough(bar =>
+                foreach (var data in History(new List<HistoryRequest> { request }).Get(dataType, security.Symbol))
+                {
+                    if (!data.IsFillForward)
                     {
-                        if (!bar.IsFillForward)
-                            result = bar;
-                    });
+                        result = data;
+                    }
+                }
 
                 return result;
             };

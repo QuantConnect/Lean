@@ -14,18 +14,19 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
+using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Algorithm;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Algorithm
@@ -226,6 +227,64 @@ namespace QuantConnect.Tests.Algorithm
             var lastKnownPrice = _algorithm.GetLastKnownPrice(option);
             Assert.IsNotNull(lastKnownPrice);
             Assert.AreEqual(barTime.AddMinutes(1), lastKnownPrice.EndTime);
+        }
+
+        [Test]
+        public void GetLastKnownPriceOfCustomData()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetDateTime(new DateTime(2018, 4, 4).ConvertToUtc(algorithm.TimeZone));
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+
+            algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                _dataProvider,
+                cacheProvider,
+                _mapFileProvider,
+                _factorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+
+            var alpha = algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a");
+
+            var lastKnownPrice = algorithm.GetLastKnownPrice(alpha);
+            Assert.IsNotNull(lastKnownPrice);
+
+            cacheProvider.DisposeSafely();
+        }
+
+        [Test]
+        public void GetLastKnownPricesEquity()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetDateTime(new DateTime(2013, 10, 8).ConvertToUtc(algorithm.TimeZone));
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+
+            algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                _dataProvider,
+                cacheProvider,
+                _mapFileProvider,
+                _factorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+
+            var equity = algorithm.AddEquity("SPY");
+
+            var lastKnownPrices = algorithm.GetLastKnownPrices(equity).ToList();
+            Assert.AreEqual(2, lastKnownPrices.Count);
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(TradeBar)));
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(QuoteBar)));
+
+            cacheProvider.DisposeSafely();
         }
 
         [Test]
