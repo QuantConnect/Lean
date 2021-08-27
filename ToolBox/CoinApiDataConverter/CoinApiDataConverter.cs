@@ -58,7 +58,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         {
             _market = string.IsNullOrWhiteSpace(market) 
                 ? null 
-                : market;
+                : market.ToLowerInvariant();
             
             _processingDate = date;
             _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, SecurityType.Crypto.ToLower(), "coinapi"));
