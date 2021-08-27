@@ -141,18 +141,6 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Gets an enumerable of the requested data type by accessing the slices for the requested symbol
-        /// </summary>
-        /// <param name="slices">The enumerable of slice</param>
-        /// <param name="type">The data type</param>
-        /// <param name="symbol">The symbol to retrieve</param>
-        /// <returns>An enumerable of the requested data type by accessing each slice for the requested symbol</returns>
-        public static IEnumerable<BaseData> Get(this IEnumerable<Slice> slices, Type type, Symbol symbol)
-        {
-            return slices.Select(x => x.Get(type)).Where(x => x.ContainsKey(symbol)).Select(x => (BaseData)x[symbol]);
-        }
-
-        /// <summary>
         /// Gets an enumerable of decimal by accessing the slice for the symbol and then retrieving the specified
         /// field on each piece of data
         /// </summary>

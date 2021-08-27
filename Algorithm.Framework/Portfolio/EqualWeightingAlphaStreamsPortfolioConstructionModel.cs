@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     _targetsPerSymbolPerAlpha[security.Symbol] = new Dictionary<Symbol, PortfolioTarget>();
 
                     var lastState = security.Cache.GetData<AlphaStreamsPortfolioState>();
-                    lastState ??= (AlphaStreamsPortfolioState) algorithm.GetLastKnownPrice(security);
+                    lastState ??= algorithm.GetLastKnownPrices(security).OfType<AlphaStreamsPortfolioState>().LastOrDefault();
                     if (lastState != null)
                     {
                         // keep the last state per alpha

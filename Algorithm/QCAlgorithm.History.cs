@@ -461,145 +461,85 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Yields data to warmup a security for all it's subscribed data types
         /// </summary>
-        /// <param name="security">The security we want to get seed data for</param>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
         /// <returns>Securities historical data</returns>
         public IEnumerable<BaseData> GetLastKnownPrices(Security security)
         {
-            if (security.Symbol.IsCanonical() || HistoryProvider == null)
+            return GetLastKnownPrices(security.Symbol);
+        }
+
+        /// <summary>
+        /// Yields data to warmup a security for all it's subscribed data types
+        /// </summary>
+        /// <param name="symbol">The symbol we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        public IEnumerable<BaseData> GetLastKnownPrices(Symbol symbol)
+        {
+            if (symbol.IsCanonical() || HistoryProvider == null)
             {
                 return Enumerable.Empty<BaseData>();
             }
 
-            var configs = SubscriptionManager.SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(security.Symbol);
-            var result = new List<BaseData>();
-            foreach (var config in configs)
-            {
-                // For speed and memory usage, use Resolution.Minute as the minimum resolution
-                var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)config.Resolution);
-                var lastKnownPrice = GetLastKnownPriceImpl(security, config.Type, config.TickType, configs, resolution);
-                if (lastKnownPrice != null)
-                {
-                    result.Add(lastKnownPrice);
-                }
-            }
-
-            // return the data ordered by time ascending
-            return result.OrderBy(data => data.Time);
-        }
-
-        /// <summary>
-        /// Get the last known price using the history provider.
-        /// Useful for seeding securities with the correct price
-        /// </summary>
-        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
-        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
-        public BaseData GetLastKnownPrice(Security security)
-        {
-            if (security.Symbol.IsCanonical() || HistoryProvider == null)
-            {
-                return null;
-            }
-
-            var configs = SubscriptionManager.SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(security.Symbol);
+            var result = new Dictionary<TickType, BaseData>();
             // For speed and memory usage, use Resolution.Minute as the minimum resolution
-            var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)configs.GetHighestResolution());
-
-            // request QuoteBar for Futures and all option types
-            var dataType = typeof(BaseData);
-            if (security.Type.IsOption() || security.Type == SecurityType.Future)
+            var resolution = (Resolution)Math.Max((int)Resolution.Minute,
+                (int)SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).GetHighestResolution());
+            Func<int, bool> requestData = period =>
             {
-                dataType = LeanData.GetDataType(resolution, TickType.Quote);
-            }
-
-            // Get the config with the largest resolution
-            var subscriptionDataConfig = GetMatchingSubscription(security.Symbol, dataType);
-
-            TickType tickType;
-
-            if (subscriptionDataConfig == null)
-            {
-                dataType = typeof(TradeBar);
-                tickType = LeanData.GetCommonTickTypeForCommonDataTypes(dataType, security.Type);
-            }
-            else
-            {
-                // if subscription resolution is Tick, we also need to update the data type from Tick to TradeBar/QuoteBar
-                if (subscriptionDataConfig.Resolution == Resolution.Tick)
-                {
-                    dataType = LeanData.GetDataType(resolution, subscriptionDataConfig.TickType);
-                    subscriptionDataConfig = new SubscriptionDataConfig(subscriptionDataConfig, dataType, resolution: resolution);
-                }
-
-                dataType = subscriptionDataConfig.Type;
-                tickType = subscriptionDataConfig.TickType;
-            }
-
-            return GetLastKnownPriceImpl(security, dataType, tickType, configs, resolution);
-        }
-
-        /// <summary>
-        /// Get the last known price using the history provider.
-        /// Useful for seeding securities with the correct price
-        /// </summary>
-        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
-        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
-        private BaseData GetLastKnownPriceImpl(Security security, Type dataType,
-            TickType tickType, List<SubscriptionDataConfig> configs,
-            Resolution resolution)
-        {
-            var dataTimeZone = MarketHoursDatabase
-                .GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType);
-
-            var isExtendedMarketHours = configs.IsExtendedMarketHours();
-
-            Func<int, BaseData> getLastKnownPriceForPeriods = backwardsPeriods =>
-            {
-                var startTimeUtc = _historyRequestFactory
-                    .GetStartTimeAlgoTz(security.Symbol, backwardsPeriods, resolution, security.Exchange.Hours, dataTimeZone)
-                    .ConvertToUtc(_localTimeKeeper.TimeZone);
-
-                var request = new HistoryRequest(
-                    startTimeUtc,
-                    UtcTime,
-                    dataType,
-                    security.Symbol,
-                    resolution,
-                    security.Exchange.Hours,
-                    dataTimeZone,
-                    resolution,
-                    isExtendedMarketHours,
-                    configs.IsCustomData(),
-                    configs.DataNormalizationMode(),
-                    tickType
-                );
-
-                BaseData result = null;
-                foreach (var data in History(new List<HistoryRequest> { request }).Get(dataType, security.Symbol))
-                {
-                    if (!data.IsFillForward)
+                var historyRequests = CreateBarCountHistoryRequests(new[] { symbol }, period, resolution)
+                    .Select(request =>
                     {
-                        result = data;
+                        // force no fill forward behavior
+                        request.FillForwardResolution = null;
+                        return request;
+                    })
+                    // request only those tick types we didn't get the data we wanted
+                    .Where(request => !result.ContainsKey(request.TickType))
+                    .ToList();
+                foreach (var slice in History(historyRequests))
+                {
+                    for (var i = 0; i < historyRequests.Count; i++)
+                    {
+                        var historyRequest = historyRequests[i];
+                        var data = slice.Get(historyRequest.DataType);
+                        if (data.ContainsKey(symbol))
+                        {
+                            // keep the last data point per tick type
+                            result[historyRequest.TickType] = (BaseData)data[symbol];
+                        }
                     }
                 }
-
-                return result;
+                // true when all history requests tick types have a data point
+                return historyRequests.All(request => result.ContainsKey(request.TickType));
             };
 
-            var lastKnownPrice = getLastKnownPriceForPeriods(1);
-            if (lastKnownPrice != null)
+            if (!requestData(5))
             {
-                return lastKnownPrice;
+                // If the first attempt to get the last know price returns null, it maybe the case of an illiquid security.
+                // We increase the look-back period for this case accordingly to the resolution to cover 3 trading days
+                var periods =
+                    resolution == Resolution.Daily ? 3 :
+                    resolution == Resolution.Hour ? 24 : 1440;
+                requestData(periods);
             }
+            // return the data ordered by time ascending
+            return result.Values.OrderBy(data => data.Time);
+        }
 
-            // If the first attempt to get the last know price returns null, it maybe the case of an illiquid security.
-            // We increase the look-back period for this case accordingly to the resolution to cover 3 trading days
-            var periods =
-                resolution == Resolution.Daily ? 3 :
-                resolution == Resolution.Hour ? 24 : 1440;
-
-            return getLastKnownPriceForPeriods(periods);
+        /// <summary>
+        /// Get the last known price using the history provider.
+        /// Useful for seeding securities with the correct price
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
+        [Obsolete("This method is obsolete please use 'GetLastKnownPrices' which will return the last data point" +
+            " for each type associated with the requested security")]
+        public BaseData GetLastKnownPrice(Security security)
+        {
+            return GetLastKnownPrices(security.Symbol)
+                // since we are returning a single data point let's respect order
+                .OrderBy(data => GetTickTypeOrder(data.Symbol.SecurityType, LeanData.GetCommonTickTypeForCommonDataTypes(data.GetType(), data.Symbol.SecurityType)))
+                .LastOrDefault();
         }
 
         /// <summary>
@@ -712,6 +652,11 @@ namespace QuantConnect.Algorithm
             return GetMatchingSubscriptions(symbol, type, resolution).FirstOrDefault();
         }
 
+        private int GetTickTypeOrder(SecurityType securityType, TickType tickType)
+        {
+            return SubscriptionManager.AvailableDataTypes[securityType].IndexOf(tickType);
+        }
+
         private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
         {
             var matchingSubscriptions = SubscriptionManager.SubscriptionDataConfigService
@@ -719,7 +664,7 @@ namespace QuantConnect.Algorithm
                 // find all subscriptions matching the requested type with a higher resolution than requested
                 .OrderByDescending(s => s.Resolution)
                 // lets make sure to respect the order of the data types
-                .ThenByDescending(config => SubscriptionManager.AvailableDataTypes[config.SecurityType].IndexOf(config.TickType))
+                .ThenByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType))
                 .ThenBy(config => config.IsInternalFeed ? 1 : 0)
                 .Where(s => SubscriptionDataConfigTypeFilter(type, s.Type))
                 .ToList();

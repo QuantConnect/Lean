@@ -221,7 +221,11 @@ namespace QuantConnect.Tests.Algorithm
             var barTime = new DateTime(2014, 6, 6, 15, 0, 0, 0);
             _testHistoryProvider.Slices = new[] 
             { 
-                new Slice(barTime, new[] { new TradeBar(barTime, optionSymbol, 100, 100, 100, 100, 1) })
+                new Slice(barTime, new BaseData[]
+                {
+                    new TradeBar(barTime, optionSymbol, 100, 100, 100, 100, 1),
+                    new QuoteBar(barTime, optionSymbol, new Bar(1 ,2 ,3, 4), 1, new Bar(1 ,2 ,3, 4), 2)
+                })
             }.ToList();
 
             var lastKnownPrice = _algorithm.GetLastKnownPrice(option);
@@ -279,7 +283,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var equity = algorithm.AddEquity("SPY");
 
-            var lastKnownPrices = algorithm.GetLastKnownPrices(equity).ToList();
+            var lastKnownPrices = algorithm.GetLastKnownPrices(equity.Symbol).ToList();
             Assert.AreEqual(2, lastKnownPrices.Count);
             Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(TradeBar)));
             Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(QuoteBar)));
