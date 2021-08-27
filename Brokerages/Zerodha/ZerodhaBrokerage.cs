@@ -266,12 +266,8 @@ namespace QuantConnect.Brokerages.Zerodha
                     .Value;
                 if (order == null)
                 {
-                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
-                    if (order == null)
-                    {
-                        // not our order, nothing else to do here
-                        return;
-                    }
+                    Log.Error($"ZerodhaBrokerage.OnOrderUpdate(): order not found: BrokerId: {brokerId}");
+                    return;
                 }
 
                 if (orderUpdate.Status == "CANCELLED")
@@ -317,7 +313,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     decimal totalRegisteredFillQuantity;
                     _fills.TryGetValue(order.Id, out totalRegisteredFillQuantity);
                     //async events received from zerodha: https://kite.trade/forum/discussion/comment/34752/#Comment_34752
-                    if (cumulativeFillQuantity <= totalRegisteredFillQuantity)
+                    if (Math.Abs(cumulativeFillQuantity) <= Math.Abs(totalRegisteredFillQuantity))
                     {
                         // already filled more quantity
                         return;
