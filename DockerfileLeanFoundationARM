@@ -2,7 +2,7 @@
 # Some packages from the AMD image are excluded because they are not available on ARM or take too long to build
 
 # Use base system for cleaning up wayward processes
-FROM phusion/baseimage:bionic-1.0.0
+FROM phusion/baseimage:focal-1.0.0
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
