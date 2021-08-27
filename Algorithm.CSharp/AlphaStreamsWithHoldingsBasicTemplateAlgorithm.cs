@@ -27,7 +27,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AlphaStreamsWithHoldingsBasicTemplateAlgorithm : AlphaStreamsBasicTemplateAlgorithm
     {
-        private decimal _initialCash = 100000;
         private decimal _expectedSpyQuantity;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -36,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2018, 04, 04);
             SetEndDate(2018, 04, 06);
-            SetCash(_initialCash);
+            SetCash(100000);
 
             SetExecution(new ImmediateExecutionModel());
             UniverseSettings.Resolution = Resolution.Hour;
@@ -46,23 +45,23 @@ namespace QuantConnect.Algorithm.CSharp
             // AAPL should be liquidated since it's not hold by the alpha
             // This is handled by the PCM
             var aapl = AddEquity("AAPL", Resolution.Hour);
-            aapl.Holdings.SetHoldings(100, 10);
+            aapl.Holdings.SetHoldings(40, 10);
 
             // SPY will be bought following the alpha streams portfolio
             // This is handled by the PCM + Execution Model
             var spy = AddEquity("SPY", Resolution.Hour);
-            spy.Holdings.SetHoldings(100, -10);
+            spy.Holdings.SetHoldings(246, -10);
 
             AddData<AlphaStreamsPortfolioState>("94d820a93fff127fa46c15231d");
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (_expectedSpyQuantity == 0 && orderEvent.Symbol == "SPY")
+            if (_expectedSpyQuantity == 0 && orderEvent.Symbol == "SPY" && orderEvent.Status == OrderStatus.Filled)
             {
                 var security = Securities["SPY"];
-                var priceInAccountCurrency = security.AskPrice * security.QuoteCurrency.ConversionRate;
-                _expectedSpyQuantity = (_initialCash * (1 - Settings.FreePortfolioValuePercentage) - priceInAccountCurrency) / priceInAccountCurrency;
+                var priceInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(security.AskPrice, security.QuoteCurrency.Symbol);
+                _expectedSpyQuantity = (Portfolio.TotalPortfolioValue - Settings.FreePortfolioValue) / priceInAccountCurrency;
                 _expectedSpyQuantity = _expectedSpyQuantity.DiscretelyRoundBy(1, MidpointRounding.ToZero);
             }
 
@@ -76,7 +75,8 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("We should no longer hold AAPL since the alpha does not");
             }
 
-            if (Securities["SPY"].Holdings.Quantity != _expectedSpyQuantity)
+            // we allow some padding for small price differences
+            if (Math.Abs(Securities["SPY"].Holdings.Quantity - _expectedSpyQuantity) > _expectedSpyQuantity * 0.03m)
             {
                 throw new Exception($"Unexpected SPY holdings. Expected {_expectedSpyQuantity} was {Securities["SPY"].Holdings.Quantity}");
             }
@@ -98,17 +98,17 @@ namespace QuantConnect.Algorithm.CSharp
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-1.03%"},
+            {"Average Win", "0.01%"},
+            {"Average Loss", "0.00%"},
             {"Compounding Annual Return", "-87.617%"},
             {"Drawdown", "3.100%"},
-            {"Expectancy", "-1"},
+            {"Expectancy", "8.518"},
             {"Net Profit", "-1.515%"},
             {"Sharpe Ratio", "-2.45"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "18.04"},
             {"Alpha", "0.008"},
             {"Beta", "1.015"},
             {"Annual Standard Deviation", "0.344"},

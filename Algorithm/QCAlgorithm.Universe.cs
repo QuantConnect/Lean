@@ -517,7 +517,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="security">The security to add</param>
         /// <param name="configurations">The <see cref="SubscriptionDataConfig"/> instances we want to add</param>
-        private void AddToUserDefinedUniverse(
+        private Security AddToUserDefinedUniverse(
             Security security,
             List<SubscriptionDataConfig> configurations)
         {
@@ -532,10 +532,18 @@ namespace QuantConnect.Algorithm
                     securityUniverse?.Remove(security.Symbol);
 
                     Securities.Remove(security.Symbol);
+                    Securities.Add(security);
+                }
+                else
+                {
+                    // we will reuse existing so we return it to the user
+                    security = existingSecurity;
                 }
             }
-
-            Securities.Add(security);
+            else
+            {
+                Securities.Add(security);
+            }
 
             // add this security to the user defined universe
             Universe universe;
@@ -587,6 +595,8 @@ namespace QuantConnect.Algorithm
                 // should never happen, someone would need to add a non-user defined universe with this symbol
                 throw new Exception("Expected universe with symbol '" + universeSymbol.Value + "' to be of type UserDefinedUniverse.");
             }
+
+            return security;
         }
 
         /// <summary>

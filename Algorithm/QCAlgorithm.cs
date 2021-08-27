@@ -1508,8 +1508,7 @@ namespace QuantConnect.Algorithm
                 return security;
             }
 
-            AddToUserDefinedUniverse(security, configs);
-            return security;
+            return AddToUserDefinedUniverse(security, configs);
         }
 
         /// <summary>
@@ -2268,8 +2267,7 @@ namespace QuantConnect.Algorithm
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, extendedMarketHours, dataNormalizationMode: UniverseSettings.DataNormalizationMode);
             var security = Securities.CreateSecurity(symbol, configs, leverage);
 
-            AddToUserDefinedUniverse(security, configs);
-            return (T)security;
+            return (T) AddToUserDefinedUniverse(security, configs);
         }
 
         /// <summary>

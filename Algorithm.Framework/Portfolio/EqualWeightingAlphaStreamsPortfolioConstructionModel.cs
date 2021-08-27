@@ -123,7 +123,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     _rebalance = true;
                     _targetsPerSymbolPerAlpha[security.Symbol] = new Dictionary<Symbol, PortfolioTarget>();
 
-                    var lastState = algorithm.History<AlphaStreamsPortfolioState>(security.Symbol, TimeSpan.FromDays(1)).LastOrDefault();
+                    var lastState = security.Cache.GetData<AlphaStreamsPortfolioState>();
+                    lastState ??= algorithm.GetLastKnownPrices(security).OfType<AlphaStreamsPortfolioState>().LastOrDefault();
                     if (lastState != null)
                     {
                         // keep the last state per alpha
@@ -213,6 +214,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
             }
 
+            List<Symbol> symbolsToRemove = null;
             // We adjust existing targets for symbols that got removed from this alpha
             foreach (var removedTarget in ourExistingTargets.Values.Where(target => !newTargets.ContainsKey(target.Symbol)))
             {
@@ -224,11 +226,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     newAggregatedTarget = new PortfolioTarget(symbol, quantity.DiscretelyRoundBy(_unitQuantity[symbol], MidpointRounding.ToZero));
                 }
 
-                ourExistingTargets.Remove(symbol);
+                symbolsToRemove ??= new List<Symbol>();
+                symbolsToRemove.Add(symbol);
                 if (existingAggregatedTarget == null || existingAggregatedTarget.Quantity != newAggregatedTarget.Quantity)
                 {
                     updatedTargets = true;
                     _targetsPerSymbol[symbol] = newAggregatedTarget;
+                }
+            }
+
+            if (symbolsToRemove != null)
+            {
+                for (var i = 0; i < symbolsToRemove.Count; i++)
+                {
+                    // we can't remove from dictionary while iterating through it
+                    ourExistingTargets.Remove(symbolsToRemove[i]);
                 }
             }
 

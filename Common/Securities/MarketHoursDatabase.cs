@@ -100,8 +100,7 @@ namespace QuantConnect.Securities
         /// <returns>The raw data time zone for the specified security</returns>
         public DateTimeZone GetDataTimeZone(string market, Symbol symbol, SecurityType securityType)
         {
-            var stringSymbol = symbol == null ? string.Empty : symbol.Value;
-            return GetEntry(market, stringSymbol, securityType).DataTimeZone;
+            return GetEntry(market, GetDatabaseSymbolKey(symbol), securityType).DataTimeZone;
         }
 
         /// <summary>

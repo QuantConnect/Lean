@@ -17,6 +17,8 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Brokerages;
+using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Custom.AlphaStreams;
@@ -43,6 +45,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetExecution(new ImmediateExecutionModel());
             Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
             SetPortfolioConstruction(new EqualWeightingAlphaStreamsPortfolioConstructionModel());
+
+            SetSecurityInitializer(new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
+                new FuncSecuritySeeder(GetLastKnownPrices)));
 
             foreach (var alphaId in new [] { "623b06b231eb1cc1aa3643a46", "9fc8ef73792331b11dbd5429a" })
             {
