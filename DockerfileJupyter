@@ -27,7 +27,6 @@ RUN conda install -y -c conda-forge notebook=6.0.3 && conda clean -y --all
 RUN pip install --no-cache-dir clr-loader==0.1.6
 
 ENV LD_LIBRARY_PATH=/lib/
-RUN ln -s /lib/$(uname -m)-linux-gnu/libc.so.6 /lib/$(uname -m)-linux-gnu/libc.so
 
 # Install .NET Interactive to support C# in Jupyter notebooks
 ENV PATH="${PATH}:/root/.dotnet/tools"
