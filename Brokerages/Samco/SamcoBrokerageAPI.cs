@@ -143,51 +143,63 @@ namespace QuantConnect.Brokerages.Samco
 
         public IEnumerable<TradeBar> GetIntradayCandles(string symbol, string exchange, DateTime startDateTime, DateTime endDateTime, Resolution resolution = Resolution.Minute)
         {
-            var start = startDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            var end = endDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
             var interval = 1;
             if (resolution == Resolution.Hour)
             {
                 interval = 60;
             }
-            string endpoint = $"/intraday/candleData?symbolName={HttpUtility.UrlEncode(symbol)}&fromDate={start}&toDate={end}&exchange={exchange}&interval={interval}";
-
-            var restRequest = new RestRequest(endpoint, Method.GET);
-            var response = ExecuteRestRequest(restRequest);
-
-            if (response.StatusCode != HttpStatusCode.OK)
+            var latestTime = startDateTime;
+            do
             {
-                throw new Exception(
-                    $"SamcoBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, " +
-                    $"Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
-            }
-
-            // we need to drop the last bar provided by the exchange as its open time is a history
-            // request's end time
-            var candles = JsonConvert.DeserializeObject<CandleResponse>(response.Content);
-
-            if (candles.intradayCandleData?.Any() == null)
-            {
-                yield break;
-            }
-
-            foreach (var candle in candles.intradayCandleData)
-            {
-                yield return new TradeBar()
+                latestTime = latestTime.AddDays(29);
+                if (endDateTime < latestTime)
                 {
-                    Time = candle.dateTime,
-                    Symbol = symbol,
-                    Low = candle.low,
-                    High = candle.high,
-                    Open = candle.open,
-                    Close = candle.close,
-                    Volume = candle.volume,
-                    Value = candle.close,
-                    DataType = MarketDataType.TradeBar,
-                    Period = Resolution.Minute.ToTimeSpan(),
-                    EndTime = candle.dateTime.AddMinutes(1)
-                };
-            }
+                    latestTime = endDateTime;
+                }
+                var start = startDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                var end = latestTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            
+            
+                string endpoint = $"/intraday/candleData?symbolName={HttpUtility.UrlEncode(symbol)}&fromDate={start}&toDate={end}&exchange={exchange}&interval={interval}";
+
+                var restRequest = new RestRequest(endpoint, Method.GET);
+                var response = ExecuteRestRequest(restRequest);
+
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    throw new Exception(
+                        $"SamcoBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, " +
+                        $"Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                }
+
+                // we need to drop the last bar provided by the exchange as its open time is a history
+                // request's end time
+                var candles = JsonConvert.DeserializeObject<CandleResponse>(response.Content);
+
+                if (candles.intradayCandleData?.Any() == null)
+                {
+                    yield break;
+                }
+
+                foreach (var candle in candles.intradayCandleData)
+                {
+                    yield return new TradeBar()
+                    {
+                        Time = candle.dateTime,
+                        Symbol = symbol,
+                        Low = candle.low,
+                        High = candle.high,
+                        Open = candle.open,
+                        Close = candle.close,
+                        Volume = candle.volume,
+                        Value = candle.close,
+                        DataType = MarketDataType.TradeBar,
+                        Period = Resolution.Minute.ToTimeSpan(),
+                        EndTime = candle.dateTime.AddMinutes(1)
+                    };
+                }
+                startDateTime = latestTime;
+            } while (startDateTime < endDateTime);
         }
 
         /// <summary>

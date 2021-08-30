@@ -377,12 +377,18 @@ namespace QuantConnect.Brokerages.Samco
             var exchange = _securityProvider.GetSecurity(leanSymbol).Exchange;
             string symbol = _symbolMapper.GetBrokerageSymbol(leanSymbol);
             var period = request.Resolution.ToTimeSpan();
-            DateTime latestTime = request.StartTimeUtc;
+            var startTime = request.StartTimeLocal;
+            var endTime = request.EndTimeLocal;
+            var latestTime = request.StartTimeLocal;
 
             do
             {
                 latestTime = latestTime.AddDays(29);
-                var start = request.StartTimeUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                if (endTime < latestTime)
+                {
+                    latestTime = endTime;
+                }
+                var start = startTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                 var end = latestTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
                 var scrip = _symbolMapper.SamcoSymbols.Where(x => x.Name.ToUpperInvariant() == symbol).First();
@@ -434,7 +440,8 @@ namespace QuantConnect.Brokerages.Samco
                         EndTime = candle.dateTime.AddMinutes(1)
                     };
                 }
-            } while (latestTime < request.EndTimeUtc);
+                startTime = latestTime;
+            } while (startTime < endTime);
         }
 
         /// <summary>
