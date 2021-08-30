@@ -276,13 +276,13 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
         public string GrossAvailableMargin { get; set; }
 
         [JsonProperty("payInToday")]
-        public long PayInToday { get; set; }
+        public decimal PayInToday { get; set; }
 
         [JsonProperty("notionalCash")]
-        public long NotionalCash { get; set; }
+        public decimal NotionalCash { get; set; }
 
         [JsonProperty("collateralMarginAgainstShares")]
-        public long CollateralMarginAgainstShares { get; set; }
+        public decimal CollateralMarginAgainstShares { get; set; }
 
         [JsonProperty("marginUsed")]
         public string MarginUsed { get; set; }
