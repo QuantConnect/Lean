@@ -27,53 +27,34 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class VolumeProfile: MarketProfile
     {
+        /// <summary>
+        /// Creates a new VolumeProfile indicator with the specified period
+        /// </summary>
+        /// <param name="period">The period of the indicator</param>
         public VolumeProfile(int period = 2)
             : this($"VP({period})", period)
         {
         }
 
         /// <summary>
-        /// Creates a new MarkProfile indicator with the specified period
+        /// Creates a new VolumeProfile indicator with the specified name, period and roundoff
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of this indicator</param>
+        /// <param name="roundoff">How many digits you want to round and the precision. 
+        /// i.e roundoff=0.01 round to two digits exactly.</param>
         public VolumeProfile(string name, int period, decimal roundoff = 0.05m)
             : base(name, period, roundoff)
         { }
 
         /// <summary>
-        /// Add the new input value to the Close array and Volume dictionary in the VOL mode.
+        /// Define the Volume for the Volume Profile mode
         /// </summary>
-        /// <param name="input">The input value to this indicator on this time step</param>
-        public override void Add(TradeBar input)
+        /// <param name="input"></param>
+        /// <returns>The volume of the input Data Point</returns>
+        protected override decimal DefineVolume(TradeBar input)
         {
-            decimal ClosePrice = Round(input.Close);// Roundoff the close price
-            if (!Close.Contains(ClosePrice))
-            {
-                Close.Add(ClosePrice);
-                Volume[ClosePrice] = input.Volume;
-            }
-            else
-            {
-                Volume[ClosePrice] += input.Volume;
-            }
-            TotalVolume.Update(input.Time, input.Volume);
-
-            // Check if the indicator is in the given period
-
-            try
-            {
-                TradeBar firstItem = DataPoints.MostRecentlyRemoved;
-                ClosePrice = Round(firstItem.Close); // Roundoff the close price
-                Volume[ClosePrice] -= firstItem.Volume;
-                if (Volume[ClosePrice] == 0)
-                {
-                    Volume.Remove(ClosePrice);
-                    Close.Remove(ClosePrice);
-                }
-            }
-            catch { }
-
+            return input.Volume;
         }
     }
 }

@@ -1028,46 +1028,18 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates an Market Profile indicator for the symbol. The indicator will be automatically
-        /// updated on the given resolution.
-        /// 
-        /// It can be in Time Price Opportunity (TPO) or Volume Profile (VOL) mode.
-        /// </summary>
-        /// <param name="symbol">The symbol whose MP we want</param>
-        /// <param name="period">The period of the MP</param>
-        /// <param name="mode">The mode of the MP</param>
-        /// <param name="roundoff">The amount of round to the close values</param>
-        /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The Market Profile indicator for the given parameters</returns>
-        public MarketProfile MP(Symbol symbol, int period = 2, string mode="VOL", decimal roundoff=0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
-        {
-            if (mode == "TPO")
-            {
-                return TP(symbol, period, roundoff, resolution, selector);
-            }else if (mode == "VOL")
-            {
-                return VP(symbol, period, roundoff, resolution, selector);
-            }
-            else
-            {
-                throw new ArgumentException($"Market Profile has not {mode} mode");
-            }
-        }
-
-        /// <summary>
         /// Creates an Market Profile indicator for the symbol with Volume Profile (VOL) mode. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
-        /// <param name="symbol">The symbol whose MP we want</param>
-        /// <param name="period">The period of the MP</param>
+        /// <param name="symbol">The symbol whose VP we want</param>
+        /// <param name="period">The period of the VP</param>
         /// <param name="roundoff">The amount of round to the close values</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The Market Profile indicator with Volume Profile (VOL) mode for the given parameters</returns>
+        /// <returns>The Volume Profile indicator for the given parameters</returns>
         public VolumeProfile VP(Symbol symbol, int period = 2, decimal roundoff=0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"MP({period})", resolution);
+            var name = CreateIndicatorName(symbol, $"VP({period})", resolution);
             var marketProfile = new VolumeProfile(name, period,roundoff);
             RegisterIndicator(symbol, marketProfile, resolution, selector);
 
@@ -1083,15 +1055,18 @@ namespace QuantConnect.Algorithm
         /// Creates an Market Profile indicator for the symbol with Time Price Opportunity (TPO) mode. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
-        /// <param name="symbol">The symbol whose MP we want</param>
-        /// <param name="period">The period of the MP</param>
-        /// <param name="roundoff">The amount of round to the close values</param>
+        /// <param name="symbol">The symbol whose TP we want</param>
+        /// <param name="period">The period of the TP</param>
+        /// <param name="roundoff">/// How many digits you want to round and the precision. i.e roundoff=0.01 round to two digits exactly.</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The Market Profile indicator with Time Price Opportunity (TPO) mode for the given parameters</returns>
+        /// <returns>The Time Profile indicator for the given parameters</returns>
         public TimeProfile TP(Symbol symbol, int period = 2, decimal roundoff=0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"TP({period})", resolution);
+
+            if (roundoff <= 0) throw new ArgumentException("Roundoff must be extrictly bigger than zero.");
+
             var marketProfile = new TimeProfile(name, period, roundoff);
             RegisterIndicator(symbol, marketProfile, resolution, selector);
 

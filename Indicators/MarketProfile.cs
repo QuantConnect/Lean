@@ -38,33 +38,34 @@ namespace QuantConnect.Indicators
     /// A discussion on the difference between TPO (Time Price Opportunity) 
     /// and VOL (Volume Profile) chart types: https://jimdaltontrading.com/tpo-vs-volume-profile
     /// </summary>
-    public class MarketProfile : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public abstract class MarketProfile : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private int _period;
-
-        private decimal _roundoff;
+        private readonly decimal _roundoff;
 
         /// <summary>
-        /// Rolling Window to erase old DataPoints out of the given period
+        /// Rolling Window to erase old DataPoints values out of the given period
+        /// First item is going to contain Data Point's close value
+        /// 
+        /// Second item is going to contain the Volume, which can be 1 or
+        /// the Data Point's volume value
         /// </summary>
-        protected RollingWindow<TradeBar> DataPoints;
+        private RollingWindow<Tuple<decimal, decimal>> OldDataPoints { get; }
 
         /// <summary>
-        /// Close values in the given period of time
+        /// Close values and Volume values in the given period of time.
+        /// Close values are the keys and Volume values the values.
+        /// The list is sorted in ascending order of the keys
         /// </summary>
-        protected List<decimal> Close;
-
-        /// <summary>
-        /// If the mode is TPO, Volume represent the frequency of the Close values.
-        /// Otherwise, Volume represent the sum of the Volume values for the same Close value. 
-        /// </summary>
-        protected Dictionary<decimal, decimal> Volume;
+        private SortedList<decimal, decimal> DataPoints { get; }
 
         /// <summary>
         /// The highest reached close price level during the period
         /// </summary>
         private decimal _profilehigh;
-        public decimal PH
+        /// <summary>
+        /// Get ProfileHigh value
+        /// </summary>
+        public decimal ProfileHigh
         {
             get { return _profilehigh; }
         }
@@ -72,8 +73,11 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The lowest reached close price level during the period
         /// </summary>
-        public decimal _profilelow;
-        public decimal PL
+        private decimal _profilelow;
+        /// <summary>
+        /// Get the lowest reached close price level during the period
+        /// </summary>
+        public decimal ProfileLow
         {
             get { return _profilelow; }
         }
@@ -88,6 +92,9 @@ namespace QuantConnect.Indicators
         /// This price is MarketProfile.Current.Value
         /// </summary>
         private decimal _pocprice;
+        /// <summary>
+        /// Get the price of the Point of Control (POC)
+        /// </summary>
         public decimal POCPrice
         {
             get { return _pocprice; }
@@ -97,15 +104,23 @@ namespace QuantConnect.Indicators
         /// Volume where the most tradding occured (Point of Control(POC))
         /// </summary>
         private decimal _pocvolume;
+        /// <summary>
+        /// Get the volume of the Point of Control (POC)
+        /// </summary>
         public decimal POCVolume
         {
             get { return _pocvolume; }
         }
 
         /// <summary>
-        /// 70% of the day's trading
+        /// The range of price levels in which a specified percentage of all volume 
+        /// was traded during the time period. Typically, this percentage is set 
+        /// to 70% however it is up to the trader’s discretion.
         /// </summary>
-        public decimal _valuearea;
+        private decimal _valuearea;
+        /// <summary>
+        /// Get 70% percent of the day's trading
+        /// </summary>
         public decimal ValueArea
         {
             get { return _valuearea; }
@@ -114,8 +129,11 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The highest close price level within the value area
         /// </summary>
-        public decimal _vah;
-        public decimal VAH
+        private decimal _vah;
+        /// <summary>
+        /// Get the highest close price level within the value area
+        /// </summary>
+        public decimal ValueAreaHigh
         {
             get { return _vah; }
         }
@@ -123,8 +141,11 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The lowest close price level within the value area
         /// </summary>
-        public decimal _val;
-        public decimal VAL
+        private decimal _val;
+        /// <summary>
+        /// Get the lowest close price level within the value area
+        /// </summary>
+        public decimal ValueAreaLow
         {
             get { return _val; }
         }
@@ -145,29 +166,18 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod { get; }
 
         /// <summary>
-        /// Initializes a new instance of the MarketProfile class using the specified period
-        /// </summary>
-        /// <param name="period">The period over which to perform the computation</param>
-        public MarketProfile(int period = 2)
-            : this($"MP({period})", period)
-        {
-        }
-
-        /// <summary>
         /// Creates a new MarkProfile indicator with the specified period
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of this indicator</param>
-        /// <param name="roundoff">The amount of round. By default 0.05</param>
-        public MarketProfile(string name, int period, decimal roundoff = 0.05m)
+        /// <param name="roundoff">How many digits you want to round and the precision. 
+        /// i.e roundoff=0.01 round to two digits exactly. roundoff=0.05 by default.</param>
+        protected MarketProfile(string name, int period, decimal roundoff = 0.05m)
             : base(name)
         {
-            DataPoints = new RollingWindow<TradeBar>(period);
-            Close = new List<decimal>();
-            Volume = new Dictionary<decimal, decimal>();
+            OldDataPoints = new RollingWindow<Tuple<decimal, decimal>>(period);
+            DataPoints = new SortedList<decimal, decimal>();
             TotalVolume = new Sum(name + "_Sum", period);
-            _period = period;
-            POCIndex = 0;
             _pocprice = 0;
             _pocvolume = 0;
             _roundoff = 1 / roundoff;
@@ -180,41 +190,93 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator, Point of Control (POC) price</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            DataPoints.Add(input);
-            Add(input);
+            // Define Volume and add it to DataPoints and OldDataPoints
+            decimal VolumeQuantity = DefineVolume(input);
+            Add(input,VolumeQuantity);
+
+            // Get the index of the close price with maximum volume
             POCIndex = GetMax();
             // Get the POC price and volume values
-            _pocprice = Close[POCIndex];
-            _pocvolume = Volume[_pocprice];
+            _pocprice = DataPoints.Keys[POCIndex];
+            _pocvolume = DataPoints.Values[POCIndex];
 
             // Get the highest and lowest close prices
-            _profilehigh = Close.Max();
-            _profilelow = Close.Min();
+            _profilehigh = DataPoints.Keys.Max();
+            _profilelow = DataPoints.Keys.Min();
 
-            // Calulate the Value area
+            // Calulate the Value Area
             CalculateValueArea();
 
             return POCPrice;
         }
 
         /// <summary>
+        /// Define the Volume value that's going to be used
+        /// </summary>
+        /// <param name="input">Data</param>
+        /// <returns>The Volume value it's going to be used</returns>
+        protected abstract decimal DefineVolume(TradeBar input);
+
+        /// <summary>
         /// Add the new input value to the Close array and Volume dictionary.
         /// </summary>
         /// <param name="input">The input value to this indicator on this time step</param>
-        public virtual void Add(TradeBar input) { }
+        /// <param name="VolumeQuantity">Volume quantity of the data point, it dependes of DefineVolume method.</param>
+        private void Add(TradeBar input, decimal VolumeQuantity) 
+        {
+            // Check if the RollingWindow DataPoint has been filled to its capacity
+            bool isFilled=OldDataPoints.IsReady;
+
+            OldDataPoints.Add(new Tuple<decimal, decimal>(input.Close, VolumeQuantity));
+
+            decimal ClosePrice = Round(input.Close);
+            if (!DataPoints.Keys.Contains(ClosePrice))
+            {
+                DataPoints.Add(ClosePrice,VolumeQuantity);
+            }
+            else
+            {
+                DataPoints[ClosePrice] += VolumeQuantity;
+            }
+
+            TotalVolume.Update(input.Time, VolumeQuantity);
+
+            // If isFilled is true it means that the capacity was full before we added a new data point
+            // so by this time the RollingWindow has already removed the first added data point, so we
+            // need to remove it from the sortedList DataPoints
+            if (isFilled)
+            {
+                Tuple<decimal, decimal> RemovedDataPoint = OldDataPoints.MostRecentlyRemoved;
+                ClosePrice = Round(RemovedDataPoint.Item1);
+                DataPoints[ClosePrice] -= RemovedDataPoint.Item2;
+                if (DataPoints[ClosePrice] == 0)
+                {
+                    DataPoints.Remove(ClosePrice);
+                }
+            }
+        }
 
         /// <summary>
-        /// Finds the close price with biggest value in Volume.
+        /// Finds the close price with biggest volume value.
         /// </summary>
-        /// <returns> Close price with biggest value in Volume</returns>
+        /// <returns> Index of the close price with biggest volume value</returns>
         private int GetMax()
         {
             int Max_idx = 0;
-            for (int i = 0; i < Close.Count; i++)
+            for (int i = 0; i < DataPoints.Values.Count; i++)
             {
-                if (Volume[Close[i]] > Volume[Close[Max_idx]])
+                if (DataPoints.Values[i] > DataPoints.Values[Max_idx])
                 {
                     Max_idx = i;
+                }
+                else if(DataPoints.Values[i] == DataPoints.Values[Max_idx])
+                {
+                    // Find the maximum with minimum distance to the center
+                    decimal mid = DataPoints.Count - 1;
+                    if(Math.Abs(mid/2 - i)<Math.Abs(mid/2 - Max_idx))
+                    {
+                        Max_idx = i;
+                    }
                 }
             }
             return Max_idx;
@@ -240,12 +302,12 @@ namespace QuantConnect.Indicators
                 lastMin = minIndex;
                 lastMax = maxIndex;
 
-                nextMinIndex = Clip(minIndex - 1, 0, Close.Count - 1);
-                nextMaxIndex = Clip(maxIndex + 1, 0, Close.Count - 1);
+                nextMinIndex = Clip(minIndex - 1, 0, DataPoints.Count - 1);
+                nextMaxIndex = Clip(maxIndex + 1, 0, DataPoints.Count - 1);
 
                 if (nextMinIndex != lastMin)
                 {
-                    lowVolume = Volume[Close[nextMinIndex]];
+                    lowVolume = DataPoints.Values[nextMinIndex];
                 }
                 else
                 {
@@ -254,7 +316,7 @@ namespace QuantConnect.Indicators
 
                 if (nextMaxIndex != lastMax)
                 {
-                    highVolume = Volume[Close[nextMaxIndex]];
+                    highVolume = DataPoints.Values[nextMaxIndex];
                 }
                 else
                 {
@@ -266,7 +328,7 @@ namespace QuantConnect.Indicators
                     trialVolume += lowVolume;
                     minIndex = nextMinIndex;
                 }
-                else if ((lowVolume == 0) || ((highVolume != 0) && (highVolume > lowVolume)))
+                else if ((lowVolume == 0) || ((highVolume != 0) && (highVolume >= lowVolume)))
                 {
                     trialVolume += highVolume;
                     maxIndex = nextMaxIndex;
@@ -277,8 +339,8 @@ namespace QuantConnect.Indicators
                 }
 
             }
-            _vah = Close[maxIndex];
-            _val = Close[minIndex];
+            _vah = DataPoints.Keys[maxIndex];
+            _val = DataPoints.Keys[minIndex];
         }
 
         /// <summary>
@@ -319,11 +381,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            DataPoints = new RollingWindow<TradeBar>(_period);
-            Close = new List<decimal>();
-            Volume = new Dictionary<decimal, decimal>();
+            OldDataPoints.Reset();
+            DataPoints.Clear();
             TotalVolume.Reset();
-            POCIndex = 0;
             _pocprice = 0;
             _pocvolume = 0;
             base.Reset();

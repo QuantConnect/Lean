@@ -27,11 +27,11 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override string TestFileName => "tp_datatest.csv";
 
-        protected override string TestColumnName => "POC";
+        protected override string TestColumnName => "POCPrice";
 
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new TimeProfile(22);
+            return new TimeProfile(3);
         }
         protected override Action<IndicatorBase<TradeBar>, double> Assertion
         {
@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Indicators
         public void ComparesWithExternalDataPOCVolume()
         {
             TestHelper.TestIndicator(
-                new TimeProfile("TP(22)", 22),
+                CreateIndicator(),
                 TestFileName,
                 "POCVolume",
                 (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).POCVolume)
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "PH",
-                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).PH)
+                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ProfileHigh)
                 );
         }
 
@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "PL",
-                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).PL)
+                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ProfileLow)
                 );
         }
 
@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "VA",
-                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueArea)
+                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueArea,0.01)
                 );
         }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "VAH",
-                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).VAH)
+                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueAreaHigh)
                 );
         }
 
@@ -100,7 +100,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "VAL",
-                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).VAL)
+                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueAreaLow)
                 );
         }
 
@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var tp = (TimeProfile)CreateIndicator();
             var reference = new System.DateTime(2020, 8, 1);
-            for (int i = 0; i < 22; i++)
+            for (int i = 0; i < 3; i++)
             {
                 tp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddDays(1 + i) });
             }
