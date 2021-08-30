@@ -266,12 +266,8 @@ namespace QuantConnect.Brokerages.Zerodha
                     .Value;
                 if (order == null)
                 {
-                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
-                    if (order == null)
-                    {
-                        // not our order, nothing else to do here
-                        return;
-                    }
+                    Log.Error($"ZerodhaBrokerage.OnOrderUpdate(): order not found: BrokerId: {brokerId}");
+                    return;
                 }
 
                 if (orderUpdate.Status == "CANCELLED")
@@ -295,7 +291,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(orderUpdate.InstrumentToken);
                     var fillPrice = orderUpdate.AveragePrice;
-                    var fillQuantity = orderUpdate.FilledQuantity;
+                    decimal cumulativeFillQuantity = orderUpdate.FilledQuantity;
                     var direction = orderUpdate.TransactionType == "SELL" ? OrderDirection.Sell : OrderDirection.Buy;
                     var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
 
@@ -303,27 +299,32 @@ namespace QuantConnect.Brokerages.Zerodha
                     var orderFee = security.FeeModel.GetOrderFee(
                         new OrderFeeParameters(security, order));
 
-                    
                     if (direction == OrderDirection.Sell)
                     {
-                        fillQuantity = -1 * fillQuantity;
+                        cumulativeFillQuantity = -1 * cumulativeFillQuantity;
                     }
+
                     var status = OrderStatus.Filled;
-                    if (fillQuantity != order.Quantity)
+                    if (cumulativeFillQuantity != order.Quantity)
                     {
-                        decimal totalFillQuantity;
-                        _fills.TryGetValue(order.Id, out totalFillQuantity);
-                        totalFillQuantity += fillQuantity;
-                        _fills[order.Id] = totalFillQuantity;
-                        status = totalFillQuantity == order.Quantity
-                            ? OrderStatus.Filled
-                            : OrderStatus.PartiallyFilled;
+                        status = OrderStatus.PartiallyFilled;
                     }
+
+                    decimal totalRegisteredFillQuantity;
+                    _fills.TryGetValue(order.Id, out totalRegisteredFillQuantity);
+                    //async events received from zerodha: https://kite.trade/forum/discussion/comment/34752/#Comment_34752
+                    if (Math.Abs(cumulativeFillQuantity) <= Math.Abs(totalRegisteredFillQuantity))
+                    {
+                        // already filled more quantity
+                        return;
+                    }
+                    _fills[order.Id] = cumulativeFillQuantity;
+                    var fillQuantityInThisEvewnt = cumulativeFillQuantity - totalRegisteredFillQuantity;
 
                     var orderEvent = new OrderEvent
                     (
                         order.Id, symbol, updTime, status,
-                        direction, fillPrice, fillQuantity,
+                        direction, fillPrice, fillQuantityInThisEvewnt,
                         orderFee, $"Zerodha Order Event {direction}"
                     );
 
