@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -89,7 +90,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 foreach (var portfolioTarget in _targetsPerSymbol.Values)
                 {
-                    yield return portfolioTarget;
+                    if (algorithm.Securities.ContainsKey(portfolioTarget.Symbol))
+                    {
+                        yield return portfolioTarget;
+                    }
+                    else
+                    {
+                        // this could happen if the algorithm has not yet added a security used by an alpha
+                        Log.Error("EqualWeightingAlphaStreamsPortfolioConstructionModel.CreateTargets(): " +
+                            $"Skip emitting portfolio target, security not found in algorithm {portfolioTarget.Symbol}");
+                    }
                 }
             }
         }

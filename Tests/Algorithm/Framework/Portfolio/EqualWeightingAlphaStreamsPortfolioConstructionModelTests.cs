@@ -55,6 +55,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.SetHistoryProvider(historyProvider);
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.Settings.FreePortfolioValue = 0;
+            _algorithm.SetFinishedWarmingUp();
         }
 
         [TearDown]
@@ -90,6 +91,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var alpha = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a").Symbol;
             var data = _algorithm.History<AlphaStreamsPortfolioState>(alpha, TimeSpan.FromDays(2)).Last();
+            AddSecurities(_algorithm, data);
             _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }));
 
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, Array.Empty<Insight>()).ToList();
@@ -106,6 +108,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var alpha = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a").Symbol;
             var data = _algorithm.History<AlphaStreamsPortfolioState>(alpha, TimeSpan.FromDays(1)).ToList()[0];
+            AddSecurities(_algorithm, data);
             _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }));
 
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, Array.Empty<Insight>()).ToList();
@@ -124,6 +127,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var alpha = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a").Symbol;
             var data = _algorithm.History<AlphaStreamsPortfolioState>(alpha, TimeSpan.FromDays(2)).Last();
+            AddSecurities(_algorithm, data);
             var position = data.PositionGroups.Single().Positions.Single();
             _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }));
 
@@ -165,6 +169,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var symbol = alpha1.Symbol;
             var symbol2 = alpha2.Symbol;
             var data = _algorithm.History<AlphaStreamsPortfolioState>(symbol, TimeSpan.FromDays(1)).Last();
+            AddSecurities(_algorithm, data);
             data.TotalPortfolioValue = totalPortfolioValueAlpha1;
             var position = data.PositionGroups.Single().Positions.Single();
 
@@ -199,6 +204,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual((position.Quantity * alpha1Weight).DiscretelyRoundBy(1, MidpointRounding.ToZero)
                 + (position.Quantity * -10m * alpha2Weight).DiscretelyRoundBy(1, MidpointRounding.ToZero),
                 targets.Single().Quantity);
+        }
+
+        private void AddSecurities(QCAlgorithm algorithm, AlphaStreamsPortfolioState portfolioState)
+        {
+            foreach (var symbol in portfolioState.PositionGroups?.SelectMany(positionGroup => positionGroup.Positions)
+                .Select(state => state.Symbol) ?? Enumerable.Empty<Symbol>())
+            {
+                _algorithm.AddSecurity(symbol);
+            }
         }
 
         private void SetUtcTime(DateTime dateTime) => _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));

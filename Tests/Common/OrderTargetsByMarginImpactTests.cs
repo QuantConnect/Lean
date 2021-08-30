@@ -223,6 +223,7 @@ namespace QuantConnect.Tests.Common
             {
                 aapl.Holdings.SetHoldings(10, holdings.Value);
             }
+            algorithm.SetFinishedWarmingUp();
             return algorithm;
         }
     }
