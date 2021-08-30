@@ -613,19 +613,31 @@ namespace QuantConnect.Brokerages.Samco
                 return;
             }
             var sub = new Subscription();
+            //re add already subscribed symbols and send in one go
+            foreach (var listingId in subscribeInstrumentTokens)
+            {
+                try
+                {
+                    sub.request.data.symbols.Add(new Subscription.Symbol { symbol = listingId });
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                    throw;
+                }
+            }
             foreach (var symbol in symbols)
             {
                 try
                 {
                     var quote = GetQuote(symbol);
-                    _subscriptionsById[quote.listingId] = symbol;
-                    sub.request.data.symbols.Add(new Subscription.Symbol { symbol = quote.listingId });
-                    if (!subscribeInstrumentTokens.Contains(quote.listingId))
+                    var listingId = quote.listingId;
+                    if (!subscribeInstrumentTokens.Contains(listingId))
                     {
-                        subscribeInstrumentTokens.Add(quote.listingId);
-
-                        unSubscribeInstrumentTokens.Remove(quote.listingId);
-                        _subscriptionsById[quote.listingId] = symbol;
+                        sub.request.data.symbols.Add(new Subscription.Symbol { symbol = listingId });
+                        subscribeInstrumentTokens.Add(listingId);
+                        unSubscribeInstrumentTokens.Remove(listingId);
+                        _subscriptionsById[listingId] = symbol;
                     }
                 }
                 catch (Exception exception)
@@ -635,7 +647,10 @@ namespace QuantConnect.Brokerages.Samco
                 }
             }
             var request = JsonConvert.SerializeObject(sub);
+            // required to flush input json as per samco forum
+            request = request + "\n";
             WebSocket.Send(request);
+            Unsubscribe(symbols);
         }
 
         /// <summary>
@@ -1043,13 +1058,14 @@ namespace QuantConnect.Brokerages.Samco
                     try
                     {
                         var quote = GetQuote(symbol);
-                        sub.request.data.symbols.Add(new Subscription.Symbol { symbol = quote.listingId });
-                        if (!unSubscribeInstrumentTokens.Contains(quote.listingId))
+                        var listingId = quote.listingId;
+                        if (!unSubscribeInstrumentTokens.Contains(listingId))
                         {
-                            unSubscribeInstrumentTokens.Add(quote.listingId);
-                            subscribeInstrumentTokens.Remove(quote.listingId);
+                            sub.request.data.symbols.Add(new Subscription.Symbol { symbol = listingId });
+                            unSubscribeInstrumentTokens.Add(listingId);
+                            subscribeInstrumentTokens.Remove(listingId);
                             Symbol unSubscribeSymbol;
-                            _subscriptionsById.TryRemove(quote.listingId, out unSubscribeSymbol);
+                            _subscriptionsById.TryRemove(listingId, out unSubscribeSymbol);
                         }
                     }
                     catch (Exception exception)
@@ -1059,6 +1075,8 @@ namespace QuantConnect.Brokerages.Samco
                     }
                 }
                 var request = JsonConvert.SerializeObject(sub);
+                // required to flush input json as per samco forum
+                request = request + "\n";
                 WebSocket.Send(request);
                 return true;
             }
