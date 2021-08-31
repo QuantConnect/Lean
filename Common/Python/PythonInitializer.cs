@@ -106,31 +106,38 @@ namespace QuantConnect.Python
         /// these modules must be reloaded by reload() from importlib library</remarks>
         public static void ActivatePythonVirtualEnvironment(string pathToVirtualEnv)
         {
-            if (pathToVirtualEnv != null)
+            if (pathToVirtualEnv == null)
             {
-                pathToVirtualEnv = pathToVirtualEnv.TrimEnd('/').TrimEnd('\\');
-                var pathsToPrepend = new List<string>();
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    // For linux we need to know the python version to determine the lib folder containing our packages
-                    // Compare our PyDLL to the directory names under the lib directory and get a match
-                    var pyDll = Environment.GetEnvironmentVariable("PYTHONNET_PYDLL");
-                    var version = Path.GetFileNameWithoutExtension(pyDll);
-                    var libDir = Directory.GetDirectories($"{pathToVirtualEnv}/lib")
-                        .Select(d => new DirectoryInfo(d).Name)
-                        .First(x => version.Contains(x, StringComparison.InvariantCulture));
-
-                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/{libDir}");
-                    pathsToPrepend.Add($"{pathToVirtualEnv}/lib/{libDir}/site-packages");
-                }
-                else
-                {
-                    pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib");
-                    pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib\\site-packages");
-                }
-
-                AddPythonPaths(pathsToPrepend);
+                return;
             }
+
+            if(!Directory.Exists(pathToVirtualEnv)){
+                Log.Error($"PythonIntializer.ActivatePythonVirtualEnvironment(): Path {pathToVirtualEnv} to virtual environment does not exist");
+                return;
+            }
+
+            pathToVirtualEnv = pathToVirtualEnv.TrimEnd('/').TrimEnd('\\');
+            var pathsToPrepend = new List<string>();
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // For linux we need to know the python version to determine the lib folder containing our packages
+                // Compare our PyDLL to the directory names under the lib directory and get a match
+                var pyDll = Environment.GetEnvironmentVariable("PYTHONNET_PYDLL");
+                var version = Path.GetFileNameWithoutExtension(pyDll);
+                var libDir = Directory.GetDirectories($"{pathToVirtualEnv}/lib")
+                    .Select(d => new DirectoryInfo(d).Name)
+                    .First(x => version.Contains(x, StringComparison.InvariantCulture));
+
+                pathsToPrepend.Add($"{pathToVirtualEnv}/lib/{libDir}");
+                pathsToPrepend.Add($"{pathToVirtualEnv}/lib/{libDir}/site-packages");
+            }
+            else
+            {
+                pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib");
+                pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib\\site-packages");
+            }
+
+            AddPythonPaths(pathsToPrepend);
         }
     }
 }
