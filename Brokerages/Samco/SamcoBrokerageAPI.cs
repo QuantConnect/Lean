@@ -47,6 +47,10 @@ namespace QuantConnect.Brokerages.Samco
             RestClient = new RestClient("https://api.stocknote.com");
         }
 
+        /// <summary>
+        /// Gets the RestClient.
+        /// </summary>
+        /// <value>An instance of the RestClient</value>
         public IRestClient RestClient { get; }
 
         /// <summary>
@@ -55,6 +59,12 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>A Samco API Token</returns>
         public string SamcoToken => _token;
 
+        /// <summary>
+        /// Initialize a new Samco API instance.
+        /// </summary>
+        /// <param name="login">Your Samco User ID</param>
+        /// <param name="password">Your Samco login Password</param>
+        /// <param name="yearOfBirth">Birth year as registered with Samco</param>
         public void Authorize(string login, string password, string yearOfBirth)
         {
             var auth = new AuthRequest
@@ -96,7 +106,7 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         public void Dispose()
         {
-            _restRateLimiter.DisposeSafely();
+            _restRateLimiter.Dispose();
         }
 
         /// <summary>
@@ -141,6 +151,14 @@ namespace QuantConnect.Brokerages.Samco
             return holdingResponse;
         }
 
+        /// <summary>
+        /// Get historical intraday candles for given symbol
+        /// </summary>
+        /// <param name="symbol">Your Samco User ID</param>
+        /// <param name="exchange">Your Samco login Password</param>
+        /// <param name="startDateTime">Birth year as registered with Samco</param>
+        /// <param name="endDateTime">Your Samco login Password</param>
+        /// <param name="resolution">Birth year as registered with Samco</param>
         public IEnumerable<TradeBar> GetIntradayCandles(string symbol, string exchange, DateTime startDateTime, DateTime endDateTime, Resolution resolution = Resolution.Minute)
         {
             var interval = 1;
@@ -239,6 +257,11 @@ namespace QuantConnect.Brokerages.Samco
             return positionsReponse;
         }
 
+        /// <summary>
+        /// Get quote for a given symbol.
+        /// </summary>
+        /// <param name="symbol">Your Samco User ID</param>
+        /// <param name="exchange">Your Samco login Password</param>
         public QuoteResponse GetQuote(string symbol, string exchange = "NSE")
         {
             string endpoint = $"/quote/getQuote?symbolName={HttpUtility.UrlEncode(symbol)}&exchange={exchange.ToUpperInvariant()}";
@@ -402,7 +425,7 @@ namespace QuantConnect.Brokerages.Samco
             throw new NotSupportedException($"SamcoBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
         }
 
-        private string GetOrderValidity(TimeInForce orderTimeforce)
+        private static string GetOrderValidity(TimeInForce orderTimeforce)
         {
             if( orderTimeforce == TimeInForce.GoodTilCanceled || orderTimeforce == TimeInForce.Day)
             {

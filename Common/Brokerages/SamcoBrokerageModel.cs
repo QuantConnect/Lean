@@ -26,6 +26,9 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
+    /// <summary>
+    /// Brokerage Model implementation for Samco
+    /// </summary>
     public class SamcoBrokerageModel : DefaultBrokerageModel
     {
         private readonly Type[] _supportedTimeInForces =

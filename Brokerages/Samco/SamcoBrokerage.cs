@@ -65,8 +65,8 @@ namespace QuantConnect.Brokerages.Samco
         //EQUITY / COMMODITY
         private readonly string _tradingSegment;
 
-        private readonly List<string> subscribeInstrumentTokens = new List<string>();
-        private readonly List<string> unSubscribeInstrumentTokens = new List<string>();
+        private readonly List<string> _subscribeInstrumentTokens = new List<string>();
+        private readonly List<string> _unSubscribeInstrumentTokens = new List<string>();
 
         private DateTime _lastTradeTickTime;
 
@@ -207,7 +207,7 @@ namespace QuantConnect.Brokerages.Samco
         {
             _aggregator.Dispose();
             _samcoAPI.Dispose();
-            _ctsFillMonitor.Cancel();
+            _ctsFillMonitor.Dispose();
             _fillMonitorTask.Wait(TimeSpan.FromSeconds(5));
             _fillMonitorResetEvent.Dispose();
         }
@@ -614,7 +614,7 @@ namespace QuantConnect.Brokerages.Samco
             }
             var sub = new Subscription();
             //re add already subscribed symbols and send in one go
-            foreach (var listingId in subscribeInstrumentTokens)
+            foreach (var listingId in _subscribeInstrumentTokens)
             {
                 try
                 {
@@ -632,11 +632,11 @@ namespace QuantConnect.Brokerages.Samco
                 {
                     var quote = GetQuote(symbol);
                     var listingId = quote.listingId;
-                    if (!subscribeInstrumentTokens.Contains(listingId))
+                    if (!_subscribeInstrumentTokens.Contains(listingId))
                     {
                         sub.request.data.symbols.Add(new Subscription.Symbol { symbol = listingId });
-                        subscribeInstrumentTokens.Add(listingId);
-                        unSubscribeInstrumentTokens.Remove(listingId);
+                        _subscribeInstrumentTokens.Add(listingId);
+                        _unSubscribeInstrumentTokens.Remove(listingId);
                         _subscriptionsById[listingId] = symbol;
                     }
                 }
@@ -706,29 +706,6 @@ namespace QuantConnect.Brokerages.Samco
                 return;
             });
             return submitted;
-        }
-
-        private Holding ConvertHolding(HoldingsResponse.HoldingDetail detail)
-        {
-            var holding = new Holding
-            {
-                Symbol = _symbolMapper.GetLeanSymbol(detail.tradingSymbol, _symbolMapper.GetLeanSecurityType(detail.tradingSymbol)),
-                AveragePrice = detail.averagePrice,
-                Quantity = detail.holdingsQuantity,
-                UnrealizedPnL = (detail.lastTradedPrice - detail.averagePrice) * detail.holdingsQuantity,
-                CurrencySymbol = Currencies.GetCurrencySymbol("INR"),
-            };
-
-            try
-            {
-                holding.MarketPrice = detail.lastTradedPrice;
-            }
-            catch (Exception)
-            {
-                Log.Error($"SamcoBrokerage.ConvertHolding(): failed to set {holding.Symbol} market price");
-                throw;
-            }
-            return holding;
         }
 
         private OrderStatus ConvertOrderStatus(OrderDetails orderDetails)
@@ -1059,11 +1036,11 @@ namespace QuantConnect.Brokerages.Samco
                     {
                         var quote = GetQuote(symbol);
                         var listingId = quote.listingId;
-                        if (!unSubscribeInstrumentTokens.Contains(listingId))
+                        if (!_unSubscribeInstrumentTokens.Contains(listingId))
                         {
                             sub.request.data.symbols.Add(new Subscription.Symbol { symbol = listingId });
-                            unSubscribeInstrumentTokens.Add(listingId);
-                            subscribeInstrumentTokens.Remove(listingId);
+                            _unSubscribeInstrumentTokens.Add(listingId);
+                            _subscribeInstrumentTokens.Remove(listingId);
                             Symbol unSubscribeSymbol;
                             _subscriptionsById.TryRemove(listingId, out unSubscribeSymbol);
                         }
