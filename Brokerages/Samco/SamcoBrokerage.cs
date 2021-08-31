@@ -339,7 +339,7 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-            // Samco API only allows us to support history requests for TickType.Trade
+            // Samco API only allows us to support history requests for TickType.Trade 
             if (request.TickType != TickType.Trade)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidTickType",
@@ -374,74 +374,21 @@ namespace QuantConnect.Brokerages.Samco
             }
 
             var leanSymbol = request.Symbol;
-            var exchange = _securityProvider.GetSecurity(leanSymbol).Exchange;
-            string symbol = _symbolMapper.GetBrokerageSymbol(leanSymbol);
-            var period = request.Resolution.ToTimeSpan();
-            var startTime = request.StartTimeLocal;
-            var endTime = request.EndTimeLocal;
-            var latestTime = request.StartTimeLocal;
+            var securityExchange = _securityProvider.GetSecurity(leanSymbol).Exchange;
+            var exchange = _symbolMapper.GetDefaultExchange(leanSymbol);
+            var scrip = _symbolMapper.SamcoSymbols.Where(x => x.Name.ToUpperInvariant() == leanSymbol.ID.Symbol).First();
+            var isIndex = scrip.Instrument == "INDEX";
 
-            do
+            var history = _samcoAPI.GetIntradayCandles(request.Symbol, exchange, request.StartTimeLocal, request.EndTimeLocal, request.Resolution, isIndex);
+
+            foreach (var baseData in history)
             {
-                latestTime = latestTime.AddDays(29);
-                if (endTime < latestTime)
+                if (!securityExchange.DateTimeIsOpen(baseData.Time) && !request.IncludeExtendedMarketHours)
                 {
-                    latestTime = endTime;
+                    continue;
                 }
-                var start = startTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-                var end = latestTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-
-                var scrip = _symbolMapper.SamcoSymbols.Where(x => x.Name.ToUpperInvariant() == symbol).First();
-                string endpoint = $"/intraday/candleData?symbolName={symbol}&fromDate={start}&toDate={end}";
-                if (scrip.Instrument == "INDEX")
-                {
-                    endpoint = $"/intraday/indexCandleData?symbolName={symbol}&fromDate={start}&toDate={end}";
-                }
-                var restRequest = new RestRequest(endpoint, Method.GET);
-                var response = _samcoAPI.ExecuteRestRequest(restRequest);
-
-                if (response.StatusCode != HttpStatusCode.OK)
-                {
-                    throw new Exception(
-                        $"SamcoBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, " +
-                        $"Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
-                }
-
-                // we need to drop the last bar provided by the exchange as its open time is a
-                // history request's end time
-                var candles = JsonConvert.DeserializeObject<CandleResponse>(response.Content);
-
-                if (candles.intradayCandleData?.Any() == null)
-                {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "NoHistoricalData",
-                        $"Exchange returned no data for {symbol} on history request " +
-                        $"from {request.StartTimeUtc:s} to {request.EndTimeUtc:s}"));
-                    yield break;
-                }
-
-                foreach (var candle in candles.intradayCandleData)
-                {
-                    if (!exchange.DateTimeIsOpen(candle.dateTime) && !request.IncludeExtendedMarketHours)
-                    {
-                        continue;
-                    }
-                    yield return new TradeBar()
-                    {
-                        Time = candle.dateTime,
-                        Symbol = request.Symbol,
-                        Low = candle.low,
-                        High = candle.high,
-                        Open = candle.open,
-                        Close = candle.close,
-                        Volume = candle.volume,
-                        Value = candle.close,
-                        DataType = MarketDataType.TradeBar,
-                        Period = period,
-                        EndTime = candle.dateTime.AddMinutes(1)
-                    };
-                }
-                startTime = latestTime;
-            } while (startTime < endTime);
+                yield return baseData;
+            }
         }
 
         /// <summary>
@@ -502,7 +449,6 @@ namespace QuantConnect.Brokerages.Samco
                     }
                 }
             }
-
             return list;
         }
 
