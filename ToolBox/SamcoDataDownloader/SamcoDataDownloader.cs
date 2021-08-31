@@ -70,8 +70,9 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
                 {
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
-
                     var exchange = symbolMapper.GetDefaultExchange(pairObject);
+                    var scrip = symbolMapper.SamcoSymbols.Where(x => x.Name.ToUpperInvariant() == pairObject.ID.Symbol).First();
+                    var isIndex = scrip.Instrument == "INDEX";
 
                     // Write data
                     var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
@@ -82,7 +83,7 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
                         throw new ArgumentException("Samco Doesn't support tick resolution");
                     }
 
-                    history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, exchange, startDate, endDate).ToList();
+                    history = _samcoAPI.GetIntradayCandles(pairObject, exchange, startDate, endDate, isIndex: isIndex).ToList();
 
                     foreach (var bar in history)
                     {

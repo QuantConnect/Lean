@@ -154,19 +154,22 @@ namespace QuantConnect.Brokerages.Samco
         /// <summary>
         /// Get historical intraday candles for given symbol
         /// </summary>
-        /// <param name="symbol">Your Samco User ID</param>
-        /// <param name="exchange">Your Samco login Password</param>
-        /// <param name="startDateTime">Birth year as registered with Samco</param>
-        /// <param name="endDateTime">Your Samco login Password</param>
-        /// <param name="resolution">Birth year as registered with Samco</param>
-        public IEnumerable<TradeBar> GetIntradayCandles(string symbol, string exchange, DateTime startDateTime, DateTime endDateTime, Resolution resolution = Resolution.Minute)
+        /// <param name="leanSymbol">Lean symbol</param>
+        /// <param name="exchange">Exchange at which symbol is traded. Like NSE/BSE</param>
+        /// <param name="startDateTime">Start date of request</param>
+        /// <param name="endDateTime">End date of request</param>
+        /// <param name="resolution">Resolution for which data is required</param>
+        /// <param name="isIndex">If given symbol is index or not</param>
+        public IEnumerable<TradeBar> GetIntradayCandles(Symbol leanSymbol, string exchange, DateTime startDateTime, DateTime endDateTime, Resolution resolution = Resolution.Minute, bool isIndex = false)
         {
+            var brokerageSymbol = leanSymbol.ID.Symbol;
             var interval = 1;
             if (resolution == Resolution.Hour)
             {
                 interval = 60;
             }
             var latestTime = startDateTime;
+
             do
             {
                 latestTime = latestTime.AddDays(29);
@@ -176,9 +179,12 @@ namespace QuantConnect.Brokerages.Samco
                 }
                 var start = startDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                 var end = latestTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            
-            
-                string endpoint = $"/intraday/candleData?symbolName={HttpUtility.UrlEncode(symbol)}&fromDate={start}&toDate={end}&exchange={exchange}&interval={interval}";
+
+                string endpoint = $"/intraday/candleData?symbolName={brokerageSymbol}&fromDate={start}&toDate={end}&exchange={exchange}&interval={interval}";
+                if (isIndex)
+                {
+                    endpoint = $"/intraday/indexCandleData?symbolName={brokerageSymbol}&fromDate={start}&toDate={end}&exchange={exchange}&interval={interval}";
+                }
 
                 var restRequest = new RestRequest(endpoint, Method.GET);
                 var response = ExecuteRestRequest(restRequest);
@@ -204,7 +210,7 @@ namespace QuantConnect.Brokerages.Samco
                     yield return new TradeBar()
                     {
                         Time = candle.dateTime,
-                        Symbol = symbol,
+                        Symbol = leanSymbol,
                         Low = candle.low,
                         High = candle.high,
                         Open = candle.open,
@@ -212,7 +218,7 @@ namespace QuantConnect.Brokerages.Samco
                         Volume = candle.volume,
                         Value = candle.close,
                         DataType = MarketDataType.TradeBar,
-                        Period = Resolution.Minute.ToTimeSpan(),
+                        Period = resolution.ToTimeSpan(),
                         EndTime = candle.dateTime.AddMinutes(1)
                     };
                 }
@@ -260,8 +266,8 @@ namespace QuantConnect.Brokerages.Samco
         /// <summary>
         /// Get quote for a given symbol.
         /// </summary>
-        /// <param name="symbol">Your Samco User ID</param>
-        /// <param name="exchange">Your Samco login Password</param>
+        /// <param name="symbol">brokerage symbol</param>
+        /// <param name="exchange">Exchange at which symbol is traded. Like NSE/BSE</param>
         public QuoteResponse GetQuote(string symbol, string exchange = "NSE")
         {
             string endpoint = $"/quote/getQuote?symbolName={HttpUtility.UrlEncode(symbol)}&exchange={exchange.ToUpperInvariant()}";
