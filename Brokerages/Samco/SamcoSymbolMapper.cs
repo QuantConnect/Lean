@@ -34,9 +34,9 @@ namespace QuantConnect.Brokerages.Samco
         /// <summary>
         /// The list of known Samco symbols.
         /// </summary>
-        private List<ScripMaster> _samcoTradableSymbolList = new List<ScripMaster>();
+        private readonly List<ScripMaster> _samcoTradableSymbolList = new List<ScripMaster>();
 
-        private string _getSymbolsEndpoint = "https://developers.stocknote.com/doc/ScripMaster.csv";
+        private readonly string _getSymbolsEndpoint = "https://developers.stocknote.com/doc/ScripMaster.csv";
 
         /// <summary>
         /// List of Samco Symbols that are Tradable
@@ -65,7 +65,7 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         /// <param name="scrip">A Lean symbol instance</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol CreateLeanSymbol(ScripMaster scrip)
+        public static Symbol CreateLeanSymbol(ScripMaster scrip)
         {
             if (scrip == null)
             {
@@ -305,21 +305,6 @@ namespace QuantConnect.Brokerages.Samco
 
             // return as it is due to Samco has similar Symbol format
             return samcoSymbol.ToUpperInvariant();
-        }
-
-        private static void SaveStreamAsFile(string filePath, Stream inputStream, string fileName)
-        {
-            DirectoryInfo info = new DirectoryInfo(filePath);
-            if (!info.Exists)
-            {
-                info.Create();
-            }
-
-            string path = Path.Combine(filePath, fileName);
-            using (FileStream outputFileStream = new FileStream(path, FileMode.Create))
-            {
-                inputStream.CopyTo(outputFileStream);
-            }
         }
     }
 }

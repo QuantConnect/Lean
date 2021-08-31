@@ -97,7 +97,7 @@ namespace QuantConnect.Orders.Fees
             }
 
             var exchangeTransactionCharge = Math.Round(turnover * ExchangeTransactionChargeMultiplier, 2);
-            var cc = 0;
+            var clearingCharge = 0;
 
             var stateTax = Math.Round(StateTaxMultiplier * (brokerage + exchangeTransactionCharge), 2);
 
@@ -115,7 +115,7 @@ namespace QuantConnect.Orders.Fees
                 }
             }
 
-            var totalTax = Math.Round(brokerage + securitiesTransactionTaxTotal + exchangeTransactionCharge + stampCharges + cc + stateTax + sebiCharges, 2);
+            var totalTax = Math.Round(brokerage + securitiesTransactionTaxTotal + exchangeTransactionCharge + stampCharges + clearingCharge + stateTax + sebiCharges, 2);
 
             return totalTax;
         }

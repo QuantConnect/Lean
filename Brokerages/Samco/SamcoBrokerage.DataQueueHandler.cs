@@ -28,8 +28,6 @@ namespace QuantConnect.Brokerages.Samco
     {
         #region IDataQueueHandler implementation
 
-        private IEnumerable<Symbol> Subscriptions => _subscriptionManager.GetSubscribedSymbols();
-
         /// <summary>
         /// Sets the job we're subscribing for
         /// </summary>
