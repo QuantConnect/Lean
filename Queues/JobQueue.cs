@@ -115,8 +115,7 @@ namespace QuantConnect.Queues
                     DeployId = algorithmId,
                     Parameters = parameters,
                     Language = Language,
-                    Controls = controls,
-                    PythonVirtualEnvironment = Config.Get("python-venv")
+                    Controls = controls
                 };
 
                 try
@@ -148,8 +147,7 @@ namespace QuantConnect.Queues
                 BacktestId = algorithmId,
                 Language = Language,
                 Parameters = parameters,
-                Controls = controls,
-                PythonVirtualEnvironment = Config.Get("python-venv")
+                Controls = controls
             };
 
             return backtestJob;
