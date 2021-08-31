@@ -70,10 +70,20 @@ namespace QuantConnect.Lean.Launcher
             string assemblyPath;
             job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
 
-            // Activate our PythonVirtualEnvironment if provided
+            // Activate our PythonVirtualEnvironment; Cloud case we know we deploy to "/venv"
             if (!string.IsNullOrEmpty(job.PythonVirtualEnvironment))
             {
-                PythonInitializer.ActivatePythonVirtualEnvironment(job.PythonVirtualEnvironment);
+                var path = "/venv";
+                Log.Trace($"Engine.Main(): Activating Python Virtual Environment at {path}");
+                PythonInitializer.ActivatePythonVirtualEnvironment(path);
+            }
+
+            // Activate our PythonVirtualEnvironment if defined in config
+            var configPythonVenv = Config.Get("python-venv");
+            if(!string.IsNullOrEmpty(configPythonVenv))
+            {
+                Log.Trace($"Engine.Main(): Activating Python Virtual Environment at {configPythonVenv}");
+                PythonInitializer.ActivatePythonVirtualEnvironment(configPythonVenv);
             }
 
             leanEngineAlgorithmHandlers = Initializer.GetAlgorithmHandlers();
