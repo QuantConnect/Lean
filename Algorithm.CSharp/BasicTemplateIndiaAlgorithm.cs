@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("UNIONBANK", Resolution.Second, Market.India);
             
             //Set Order Prperties as per the requirements for order placement
-            DefaultOrderProperties = new IndiaOrderProperties(exchange: "nse");
+            DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE);
             //override default productType value set in config.json if needed - order specific productType value
             //DefaultOrderProperties = new IndiaOrderProperties(exchange: "nse", IndiaOrderProperties.IndiaProductType.CNC);
 

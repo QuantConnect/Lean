@@ -52,7 +52,7 @@ namespace QuantConnect.Orders
         /// Initialize a new OrderProperties for <see cref="IndiaOrderProperties"/>
         /// </summary>
         /// <param name="exchange">Exchange value, nse/bse etc</param>
-        public IndiaOrderProperties(string exchange) : base(exchange)
+        public IndiaOrderProperties(Exchange exchange) : base(exchange)
         {
         }
 
@@ -61,7 +61,7 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="exchange">Exchange value, nse/bse etc</param>
         /// <param name="productType">ProductType value, MIS/CNC/NRML etc</param>
-        public IndiaOrderProperties(string exchange, IndiaProductType productType) : base(exchange)
+        public IndiaOrderProperties(Exchange exchange, IndiaProductType productType) : base(exchange)
         {
             ProductType = productType.ToString();
         }

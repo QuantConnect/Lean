@@ -546,7 +546,7 @@ namespace QuantConnect.Brokerages.Samco
                     throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties");
                 }
 
-                SamcoOrderResponse orderResponse = _samcoAPI.PlaceOrder(order, order.Symbol.Value, orderProperties.Exchange.ToUpperInvariant(), samcoProductType);
+                SamcoOrderResponse orderResponse = _samcoAPI.PlaceOrder(order, order.Symbol.Value, orderProperties.Exchange.ToString().ToUpperInvariant(), samcoProductType);
 
                 if (orderResponse.validationErrors != null)
                 {
