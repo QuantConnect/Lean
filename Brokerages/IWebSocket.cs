@@ -25,8 +25,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Wraps constructor
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="sessionToken"></param>
+        /// <param name="url">The target websocket url</param>
+        /// <param name="sessionToken">The websocket session token</param>
         void Initialize(string url, string sessionToken = null);
 
         /// <summary>

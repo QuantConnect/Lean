@@ -53,9 +53,6 @@ namespace QuantConnect.Algorithm.CSharp
                                    // days. The following statements yield the same filtering criteria
                                    .Expiration(0, 180));
             // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
-
-            // use the underlying equity as the benchmark
-            SetBenchmark(t => 0);
         }
 
         /// <summary>
