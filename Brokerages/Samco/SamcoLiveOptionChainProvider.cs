@@ -24,7 +24,7 @@ namespace QuantConnect.Brokerages.Samco
     /// An implementation of <see cref="IOptionChainProvider"/> that fetches the list of contracts
     /// from the Samco StockNote API
     /// </summary>
-    class SamcoLiveOptionChainProvider : IOptionChainProvider
+    public class SamcoLiveOptionChainProvider : IOptionChainProvider
     {
         private readonly SamcoSymbolMapper _symbolMapper;
 
@@ -39,17 +39,17 @@ namespace QuantConnect.Brokerages.Samco
         /// <summary>
         /// Gets the option chain associated with the underlying Symbol
         /// </summary>
-        /// <param name="underlyingSymbol">Underlying symbol to get the option chain for</param>
+        /// <param name="symbol">Underlying symbol to get the option chain for</param>
         /// <param name="date">Unused</param>
         /// <returns>Option chain</returns>
-        public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
+        public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
         {
             var symbols = new List<Symbol>();
             foreach (var scripMaster in _symbolMapper.SamcoSymbols)
             {
                 symbols.Add(SamcoSymbolMapper.CreateLeanSymbol(scripMaster));
             }
-            return symbols.Where(s => s.SecurityType == SecurityType.Option && s.ID.Symbol == underlyingSymbol.Value);
+            return symbols.Where(s => s.SecurityType == SecurityType.Option && s.ID.Symbol == symbol.Value);
         }
     }
 }
