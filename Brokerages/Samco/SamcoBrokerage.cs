@@ -24,13 +24,11 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -339,7 +337,7 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-            // Samco API only allows us to support history requests for TickType.Trade 
+            // Samco API only allows us to support history requests for TickType.Trade
             if (request.TickType != TickType.Trade)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidTickType",
@@ -376,8 +374,7 @@ namespace QuantConnect.Brokerages.Samco
             var leanSymbol = request.Symbol;
             var securityExchange = _securityProvider.GetSecurity(leanSymbol).Exchange;
             var exchange = _symbolMapper.GetDefaultExchange(leanSymbol);
-            var scrip = _symbolMapper.SamcoSymbols.Where(x => x.Name.ToUpperInvariant() == leanSymbol.ID.Symbol).First();
-            var isIndex = scrip.Instrument == "INDEX";
+            var isIndex = leanSymbol.SecurityType == SecurityType.Index;
 
             var history = _samcoAPI.GetIntradayCandles(request.Symbol, exchange, request.StartTimeLocal, request.EndTimeLocal, request.Resolution, isIndex);
 
@@ -576,8 +573,8 @@ namespace QuantConnect.Brokerages.Samco
             {
                 try
                 {
-                    var quote = GetQuote(symbol);
-                    var listingId = quote.listingId;
+                    var scrip = _symbolMapper.SamcoSymbols.Where(x => x.Name.ToUpperInvariant() == symbol.ID.Symbol).First();
+                    var listingId = scrip.SymbolCode;
                     if (!_subscribeInstrumentTokens.Contains(listingId))
                     {
                         sub.request.data.symbols.Add(new Subscription.Symbol { symbol = listingId });
@@ -596,7 +593,6 @@ namespace QuantConnect.Brokerages.Samco
             // required to flush input json as per samco forum
             request = request + "\n";
             WebSocket.Send(request);
-            Unsubscribe(symbols);
         }
 
         /// <summary>
@@ -705,12 +701,13 @@ namespace QuantConnect.Brokerages.Samco
                 var updTime = DateTime.UtcNow;
                 var security = _securityProvider.GetSecurity(order.Symbol);
                 var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
+                var status = OrderStatus.Filled;
 
                 if (order.Direction == OrderDirection.Sell)
                 {
                     fillQuantity = -1 * fillQuantity;
                 }
-                var status = OrderStatus.Filled;
+
                 if (fillQuantity != order.Quantity)
                 {
                     decimal totalFillQuantity;
@@ -718,9 +715,11 @@ namespace QuantConnect.Brokerages.Samco
                     totalFillQuantity += fillQuantity;
                     _fills[order.Id] = totalFillQuantity;
 
-                    status = totalFillQuantity == order.Quantity
-                        ? OrderStatus.Filled
-                        : OrderStatus.PartiallyFilled;
+                    if (totalFillQuantity != order.Quantity)
+                    {
+                        status = OrderStatus.PartiallyFilled;
+                        orderFee = OrderFee.Zero;
+                    }
                 }
 
                 var orderEvent = new OrderEvent
@@ -980,8 +979,8 @@ namespace QuantConnect.Brokerages.Samco
                 {
                     try
                     {
-                        var quote = GetQuote(symbol);
-                        var listingId = quote.listingId;
+                        var scrip = _symbolMapper.SamcoSymbols.Where(x => x.Name.ToUpperInvariant() == symbol.ID.Symbol).First();
+                        var listingId = scrip.SymbolCode;
                         if (!_unSubscribeInstrumentTokens.Contains(listingId))
                         {
                             sub.request.data.symbols.Add(new Subscription.Symbol { symbol = listingId });
