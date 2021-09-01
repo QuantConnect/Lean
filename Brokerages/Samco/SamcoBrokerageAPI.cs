@@ -218,8 +218,7 @@ namespace QuantConnect.Brokerages.Samco
                         Volume = candle.volume,
                         Value = candle.close,
                         DataType = MarketDataType.TradeBar,
-                        Period = resolution.ToTimeSpan(),
-                        EndTime = candle.dateTime.AddMinutes(1)
+                        Period = resolution.ToTimeSpan()
                     };
                 }
                 startDateTime = latestTime;
@@ -433,7 +432,7 @@ namespace QuantConnect.Brokerages.Samco
 
         private static string GetOrderValidity(TimeInForce orderTimeforce)
         {
-            if( orderTimeforce == TimeInForce.GoodTilCanceled || orderTimeforce == TimeInForce.Day)
+            if (orderTimeforce == TimeInForce.GoodTilCanceled || orderTimeforce == TimeInForce.Day)
             {
                 return "DAY";
             }
