@@ -13,17 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Represents an Indicator of the Market Profile with Time Price Opporturnity (TPO) mode and its attributes
+    /// Represents an Indicator of the Market Profile with Time Price Opportunity (TPO) mode and its attributes
     /// </summary>
     public class TimeProfile: MarketProfile
     {

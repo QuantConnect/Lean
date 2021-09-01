@@ -14,8 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -23,7 +21,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    class VolumeProfileTests : CommonIndicatorTests<TradeBar>
+    public class VolumeProfileTests : CommonIndicatorTests<TradeBar>
     {
         protected override string TestFileName => "vp_datatest.csv";
 
@@ -109,6 +107,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var vp = (VolumeProfile)CreateIndicator();
             var reference = new System.DateTime(2020, 8, 1);
+            Assert.IsFalse(vp.IsReady);
             for (int i = 0; i < 3; i++)
             {
                 vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1,Volume=1, Time = reference.AddDays(1 + i) });
@@ -117,10 +116,22 @@ namespace QuantConnect.Tests.Indicators
             vp.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(vp);
-            Assert.AreEqual(vp.POCPrice, 0m);
-            Assert.AreEqual(vp.POCVolume, 0m);
             vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume=1, Time = reference.AddDays(1) });
             Assert.AreEqual(vp.Current.Value, 1m);
+        }
+
+        [Test]
+        public override void WarmsUpProperly()
+        {
+            var vp = new VolumeProfile(20);
+            var time = DateTime.Today;
+            var period = ((IIndicatorWarmUpPeriodProvider)vp).WarmUpPeriod;
+
+            for (var i = 0; i < period; i++)
+            {
+                vp.Update(time.AddDays(i), i);
+                Assert.AreEqual(i == period - 1, vp.IsReady);
+            }
         }
     }
 }

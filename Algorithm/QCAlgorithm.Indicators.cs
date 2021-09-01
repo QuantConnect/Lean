@@ -1033,7 +1033,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose VP we want</param>
         /// <param name="period">The period of the VP</param>
-        /// <param name="roundoff">The amount of round to the close values</param>
+        /// <param name="roundoff">How many digits you want to round and the precision. i.e roundoff=0.01 round to two digits exactly.</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The Volume Profile indicator for the given parameters</returns>
@@ -1057,16 +1057,13 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose TP we want</param>
         /// <param name="period">The period of the TP</param>
-        /// <param name="roundoff">/// How many digits you want to round and the precision. i.e roundoff=0.01 round to two digits exactly.</param>
+        /// <param name="roundoff">How many digits you want to round and the precision. i.e roundoff=0.01 round to two digits exactly.</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The Time Profile indicator for the given parameters</returns>
         public TimeProfile TP(Symbol symbol, int period = 2, decimal roundoff=0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"TP({period})", resolution);
-
-            if (roundoff <= 0) throw new ArgumentException("Roundoff must be extrictly bigger than zero.");
-
             var marketProfile = new TimeProfile(name, period, roundoff);
             RegisterIndicator(symbol, marketProfile, resolution, selector);
 
