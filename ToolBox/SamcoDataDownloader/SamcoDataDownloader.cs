@@ -22,7 +22,6 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.ToolBox.SamcoDataDownloader
 {
@@ -71,19 +70,16 @@ namespace QuantConnect.ToolBox.SamcoDataDownloader
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
                     var exchange = symbolMapper.GetDefaultExchange(pairObject);
-                    var scrip = symbolMapper.SamcoSymbols.Where(x => x.Name.ToUpperInvariant() == pairObject.ID.Symbol).First();
-                    var isIndex = scrip.Instrument == "INDEX";
+                    var isIndex = pairObject.SecurityType == SecurityType.Index;
 
                     // Write data
                     var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
                     IList<TradeBar> fileEnum = new List<TradeBar>();
-                    var history = new List<TradeBar>();
                     if (castResolution == Resolution.Tick)
                     {
                         throw new ArgumentException("Samco Doesn't support tick resolution");
                     }
-
-                    history = _samcoAPI.GetIntradayCandles(pairObject, exchange, startDate, endDate, isIndex: isIndex).ToList();
+                    var history = _samcoAPI.GetIntradayCandles(pairObject, exchange, startDate, endDate, isIndex: isIndex);
 
                     foreach (var bar in history)
                     {
