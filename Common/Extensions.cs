@@ -574,6 +574,7 @@ namespace QuantConnect
         /// <summary>
         /// Returns an ordered enumerable where position reducing orders are executed first
         /// and the remaining orders are executed in decreasing order value.
+        /// Will NOT return targets during algorithm warmup.
         /// Will NOT return targets for securities that have no data yet.
         /// Will NOT return targets for which current holdings + open orders quantity, sum up to the target quantity
         /// </summary>
@@ -586,6 +587,11 @@ namespace QuantConnect
             IAlgorithm algorithm,
             bool targetIsDelta = false)
         {
+            if (algorithm.IsWarmingUp)
+            {
+                return Enumerable.Empty<IPortfolioTarget>();
+            }
+
             return targets.Select(x =>
                 {
                     var security = algorithm.Securities[x.Symbol];

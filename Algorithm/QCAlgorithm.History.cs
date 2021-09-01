@@ -538,7 +538,7 @@ namespace QuantConnect.Algorithm
         {
             return GetLastKnownPrices(security.Symbol)
                 // since we are returning a single data point let's respect order
-                .OrderBy(data => GetTickTypeOrder(data.Symbol.SecurityType, LeanData.GetCommonTickTypeForCommonDataTypes(data.GetType(), data.Symbol.SecurityType)))
+                .OrderByDescending(data => GetTickTypeOrder(data.Symbol.SecurityType, LeanData.GetCommonTickTypeForCommonDataTypes(data.GetType(), data.Symbol.SecurityType)))
                 .LastOrDefault();
         }
 

@@ -88,7 +88,7 @@ namespace QuantConnect.Data.Auxiliary
         {
             FactorFile factorFile = null;
 
-            var path = Path.Combine(Globals.DataFolder, "equity", market, "factor_files", permtick.ToLowerInvariant() + ".csv");
+            var path = Path.Combine(Globals.CacheDataFolder, "equity", market, "factor_files", permtick.ToLowerInvariant() + ".csv");
 
             var factorFileStream = _dataProvider.Fetch(path);
             if (factorFileStream != null)
