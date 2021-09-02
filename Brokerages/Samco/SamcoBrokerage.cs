@@ -31,6 +31,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Brokerages.Samco
 {
@@ -51,6 +52,10 @@ namespace QuantConnect.Brokerages.Samco
         private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
         private readonly ConcurrentDictionary<string, Order> _pendingOrders = new ConcurrentDictionary<string, Order>();
         private readonly SamcoBrokerageAPI _samcoAPI;
+        private readonly string _samcoApiKey;
+        private readonly string _samcoApiSecret;
+        private readonly string _samcoYob;
+        private readonly Timer _reconnectTimer;
 
         // MIS/CNC/NRML
         private readonly string _samcoProductType;
@@ -101,14 +106,15 @@ namespace QuantConnect.Brokerages.Samco
             _securityProvider = algorithm.Portfolio;
             _aggregator = aggregator;
             _samcoAPI = new SamcoBrokerageAPI();
-            _samcoAPI.Authorize(apiKey, apiSecret, yob);
             _symbolMapper = new SamcoSymbolMapper();
             _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnMessageImpl);
+            _samcoApiKey = apiKey;
+            _samcoApiSecret = apiSecret;
+            _samcoYob = yob;
 
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
 
             WebSocket = new WebSocketClientWrapper();
-            WebSocket.Initialize("wss://stream.stocknote.com", _samcoAPI.SamcoToken);
             WebSocket.Message += OnMessage;
             WebSocket.Open += (sender, args) =>
             {
@@ -126,6 +132,22 @@ namespace QuantConnect.Brokerages.Samco
 
             _subscriptionManager = subscriptionManager;
             _fillMonitorTask = Task.Factory.StartNew(FillMonitorAction, _ctsFillMonitor.Token);
+
+            // A single connection to stream.stocknote.com is only valid for 24 hours;
+            // expect to be disconnected at the 24 hour mark
+            _reconnectTimer = new Timer
+            {
+                // 23.5 hours
+                Interval = 23.5 * 60 * 60 * 1000
+            };
+            _reconnectTimer.Elapsed += (s, e) =>
+            {
+                Log.Trace("Daily websocket restart: disconnect");
+                Disconnect();
+
+                Log.Trace("Daily websocket restart: connect");
+                Connect();
+            };
             Log.Trace("Start Samco Brokerage");
         }
 
@@ -175,6 +197,9 @@ namespace QuantConnect.Brokerages.Samco
 
             Log.Trace("SamcoBrokerage.Connect(): Connecting...");
 
+            _samcoAPI.Authorize(_samcoApiKey, _samcoApiSecret, _samcoYob);
+            WebSocket.Initialize("wss://stream.stocknote.com", _samcoAPI.SamcoToken);
+
             var resetEvent = new ManualResetEvent(false);
             EventHandler triggerEvent = (o, args) => resetEvent.Set();
             WebSocket.Open += triggerEvent;
@@ -183,6 +208,7 @@ namespace QuantConnect.Brokerages.Samco
             {
                 throw new TimeoutException("Websockets connection timeout.");
             }
+            _reconnectTimer.Start();
             WebSocket.Open -= triggerEvent;
         }
 
@@ -193,6 +219,7 @@ namespace QuantConnect.Brokerages.Samco
         {
             if (WebSocket.IsOpen)
             {
+                _reconnectTimer.Stop();
                 WebSocket.Close();
             }
         }
@@ -208,6 +235,7 @@ namespace QuantConnect.Brokerages.Samco
             _ctsFillMonitor.Dispose();
             _fillMonitorTask.Wait(TimeSpan.FromSeconds(5));
             _fillMonitorResetEvent.Dispose();
+            _reconnectTimer.Dispose();
         }
 
         /// <summary>
@@ -834,6 +862,7 @@ namespace QuantConnect.Brokerages.Samco
 
             try
             {
+                WaitTillConnected();
                 foreach (var order in GetOpenOrders())
                 {
                     _pendingOrders.TryAdd(order.BrokerId.First(), order);
@@ -841,39 +870,47 @@ namespace QuantConnect.Brokerages.Samco
 
                 while (!_ctsFillMonitor.IsCancellationRequested)
                 {
-                    _fillMonitorResetEvent.WaitOne(TimeSpan.FromMilliseconds(_fillMonitorTimeout), _ctsFillMonitor.Token);
-
-                    foreach (var kvp in _pendingOrders)
+                    try
                     {
-                        var orderId = kvp.Key;
-                        var order = kvp.Value;
+                        WaitTillConnected();
+                        _fillMonitorResetEvent.WaitOne(TimeSpan.FromMilliseconds(_fillMonitorTimeout), _ctsFillMonitor.Token);
 
-                        var response = _samcoAPI.GetOrderDetails(orderId);
-
-                        if (response.status != null)
+                        foreach (var kvp in _pendingOrders)
                         {
-                            if (response.status.ToUpperInvariant() == "FAILURE")
-                            {
-                                OnMessage(new BrokerageMessageEvent(
-                                    BrokerageMessageType.Warning,
-                                    -1,
-                                    $"SamcoBrokerage.FillMonitorAction(): request failed: [{response.status}] {response.statusMessage}, Content: {response.ToString()}, ErrorMessage: {response.validationErrors}"));
+                            var orderId = kvp.Key;
+                            var order = kvp.Value;
 
-                                continue;
+                            var response = _samcoAPI.GetOrderDetails(orderId);
+
+                            if (response.status != null)
+                            {
+                                if (response.status.ToUpperInvariant() == "FAILURE")
+                                {
+                                    OnMessage(new BrokerageMessageEvent(
+                                        BrokerageMessageType.Warning,
+                                        -1,
+                                        $"SamcoBrokerage.FillMonitorAction(): request failed: [{response.status}] {response.statusMessage}, Content: {response.ToString()}, ErrorMessage: {response.validationErrors}"));
+
+                                    continue;
+                                }
+                            }
+
+                            //Process cancelled orders here.
+                            if (response.orderStatus == "CANCELLED")
+                            {
+                                OnOrderClose(response.orderDetails);
+                            }
+
+                            if (response.orderStatus == "EXECUTED")
+                            {
+                                // Process rest of the orders here.
+                                EmitFillOrder(response);
                             }
                         }
-
-                        //Process cancelled orders here.
-                        if (response.orderStatus == "CANCELLED")
-                        {
-                            OnOrderClose(response.orderDetails);
-                        }
-
-                        if (response.orderStatus == "EXECUTED")
-                        {
-                            // Process rest of the orders here.
-                            EmitFillOrder(response);
-                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, exception.Message));
                     }
                 }
             }
@@ -1003,6 +1040,14 @@ namespace QuantConnect.Brokerages.Samco
                 return true;
             }
             return false;
+        }
+
+        private void WaitTillConnected()
+        {
+            while (!IsConnected)
+            {
+                Thread.Sleep(500);
+            }
         }
     }
 }
