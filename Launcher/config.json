@@ -123,7 +123,7 @@
   // kraken configuration
   "kraken-api-secret": "",
   "kraken-api-key": "",
-  "kraken-spot-verification-tier": "Starter", // Starter, Intermediate, Pro
+  "kraken-verification-tier": "Starter", // Starter, Intermediate, Pro
 
   // arteyu configuration
   "atreyu-host": "",
