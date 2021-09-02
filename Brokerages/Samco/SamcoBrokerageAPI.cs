@@ -67,6 +67,8 @@ namespace QuantConnect.Brokerages.Samco
         /// <param name="yearOfBirth">Birth year as registered with Samco</param>
         public void Authorize(string login, string password, string yearOfBirth)
         {
+            Log.Trace("SamcoBrokerageAPI.Authorize(): Getting new Token");
+
             var auth = new AuthRequest
             {
                 userId = login,
