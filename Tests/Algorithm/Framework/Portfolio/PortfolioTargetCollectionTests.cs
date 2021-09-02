@@ -48,6 +48,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void ClearFulfilledDoesNotRemoveUnreachedTarget()
         {
             var algorithm = new FakeAlgorithm();
+            algorithm.SetFinishedWarmingUp();
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
@@ -64,6 +65,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void ClearRemovesUnreachedTarget()
         {
             var algorithm = new FakeAlgorithm();
+            algorithm.SetFinishedWarmingUp();
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
@@ -80,6 +82,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void ClearFulfilledRemovesPositiveTarget()
         {
             var algorithm = new FakeAlgorithm();
+            algorithm.SetFinishedWarmingUp();
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
@@ -97,6 +100,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void ClearFulfilledRemovesNegativeTarget()
         {
             var algorithm = new FakeAlgorithm();
+            algorithm.SetFinishedWarmingUp();
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
@@ -114,6 +118,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void OrderByMarginImpactDoesNotReturnTargetsWithNoData()
         {
             var algorithm = new FakeAlgorithm();
+            algorithm.SetFinishedWarmingUp();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             algorithm.AddEquity(symbol);
@@ -131,6 +136,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void OrderByMarginImpactReturnsExpectedTargets()
         {
             var algorithm = new FakeAlgorithm();
+            algorithm.SetFinishedWarmingUp();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             var equity = algorithm.AddEquity(symbol);
@@ -150,6 +156,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void OrderByMarginImpactDoesNotReturnTargetsForWhichUnorderedQuantityIsZeroBecauseTargetIsZero()
         {
             var algorithm = new FakeAlgorithm();
+            algorithm.SetFinishedWarmingUp();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             var equity = algorithm.AddEquity(symbol);
@@ -168,6 +175,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void OrderByMarginImpactDoesNotReturnTargetsForWhichUnorderedQuantityIsZeroBecauseTargetReached()
         {
             var algorithm = new FakeAlgorithm();
+            algorithm.SetFinishedWarmingUp();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             var equity = algorithm.AddEquity(symbol);
@@ -187,9 +195,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [Test]
         public void OrderByMarginImpactDoesNotReturnTargetsForWhichUnorderedQuantityIsZeroBecauseOpenOrder()
         {
-            var algorithm = new FakeAlgorithm();
             var orderProcessor = new FakeOrderProcessor();
-            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+            var algorithm = GetAlgorithm(orderProcessor);
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             var equity = algorithm.AddEquity(symbol);
             equity.Cache.AddData(new TradeBar(DateTime.UtcNow, symbol, 1, 1, 1, 1, 1));
@@ -207,6 +214,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var targets = collection.OrderByMarginImpact(algorithm);
             Assert.AreEqual(collection.Count, 1);
             Assert.IsTrue(targets.IsNullOrEmpty());
+        }
+
+        private QCAlgorithm GetAlgorithm(IOrderProcessor orderProcessor)
+        {
+            var algorithm = new FakeAlgorithm();
+            algorithm.SetFinishedWarmingUp();
+            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+            return algorithm;
         }
 
         private class FakeSecurityHolding : SecurityHolding

@@ -43,7 +43,6 @@
     <Compile Include="CompositeRiskManagementModelFrameworkAlgorithm.py" />
     <Compile Include="ConfidenceWeightedFrameworkAlgorithm.py" />
     <Compile Include="ConsolidateRegressionAlgorithm.py" />
-    <Compile Include="ConstituentsQC500GeneratorAlgorithm.py" />
     <Compile Include="ConstituentsUniverseRegressionAlgorithm.py" />
     <Compile Include="ConvertToFrameworkAlgorithm.py" />
     <Compile Include="CustomBuyingPowerModelAlgorithm.py" />

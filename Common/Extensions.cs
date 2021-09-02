@@ -574,6 +574,7 @@ namespace QuantConnect
         /// <summary>
         /// Returns an ordered enumerable where position reducing orders are executed first
         /// and the remaining orders are executed in decreasing order value.
+        /// Will NOT return targets during algorithm warmup.
         /// Will NOT return targets for securities that have no data yet.
         /// Will NOT return targets for which current holdings + open orders quantity, sum up to the target quantity
         /// </summary>
@@ -586,6 +587,11 @@ namespace QuantConnect
             IAlgorithm algorithm,
             bool targetIsDelta = false)
         {
+            if (algorithm.IsWarmingUp)
+            {
+                return Enumerable.Empty<IPortfolioTarget>();
+            }
+
             return targets.Select(x =>
                 {
                     var security = algorithm.Securities[x.Symbol];
@@ -600,6 +606,7 @@ namespace QuantConnect
                     };
                 })
                 .Where(x => x.Security.HasData
+                            && x.Security.IsTradable
                             && (targetIsDelta ? Math.Abs(x.TargetQuantity) : Math.Abs(x.TargetQuantity - x.ExistingQuantity))
                             >= x.Security.SymbolProperties.LotSize
                 )
@@ -2455,6 +2462,24 @@ namespace QuantConnect
 
                 return pyObject.AsManagedObject(typeToConvertTo);
             }
+        }
+        
+        /// <summary>
+        /// Converts a Python function to a managed function returning a Symbol
+        /// </summary>
+        /// <param name="universeFilterFunc">Universe filter function from Python</param>
+        /// <returns>Function that provides <typeparamref name="T"/> and returns an enumerable of Symbols</returns>
+        public static Func<IEnumerable<T>, IEnumerable<Symbol>> ConvertPythonUniverseFilterFunction<T>(this PyObject universeFilterFunc)
+        {
+            Func<IEnumerable<T>, object> convertedFunc;
+            Func<IEnumerable<T>, IEnumerable<Symbol>> filterFunc = null;
+
+            if (universeFilterFunc.TryConvertToDelegate(out convertedFunc))
+            {
+                filterFunc = convertedFunc.ConvertToUniverseSelectionSymbolDelegate();
+            }
+
+            return filterFunc;
         }
 
         /// <summary>

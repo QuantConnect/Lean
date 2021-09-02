@@ -13,16 +13,9 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Algorithm.Framework.Execution;
-using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Algorithm.Framework.Risk;
-using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using QuantConnect.Data;
+using QuantConnect.Orders;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -49,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("UNIONBANK", Resolution.Second, Market.India);
             
             //Set Order Prperties as per the requirements for order placement
-            DefaultOrderProperties = new ZerodhaOrderProperties(exchange: "nse");
+            DefaultOrderProperties = new ZerodhaOrderProperties(exchange: Exchange.NSE);
             //override default productType value set in config.json if needed - order specific productType value
             //DefaultOrderProperties = new ZerodhaOrderProperties(exchange: "nse",ZerodhaOrderProperties.KiteProductType.CNC);
 

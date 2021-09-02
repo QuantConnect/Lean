@@ -74,6 +74,19 @@ namespace QuantConnect.Orders
         public static decimal GetUnorderedQuantity(IAlgorithm algorithm, IPortfolioTarget target)
         {
             var security = algorithm.Securities[target.Symbol];
+
+            return GetUnorderedQuantity(algorithm, target, security);
+        }
+
+        /// <summary>
+        /// Gets the remaining quantity to be ordered to reach the specified target quantity.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="target">The portfolio target</param>
+        /// <param name="security">The target security</param>
+        /// <returns>The signed remaining quantity to be ordered</returns>
+        public static decimal GetUnorderedQuantity(IAlgorithm algorithm, IPortfolioTarget target, Security security)
+        {
             var holdings = security.Holdings.Quantity;
             var openOrderQuantity = algorithm.Transactions.GetOpenOrderTickets(target.Symbol)
                 .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);

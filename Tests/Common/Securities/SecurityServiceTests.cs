@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Arrange
             var equitySymbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var mockedPrimaryExchangeProvider = new Mock<IPrimaryExchangeProvider>();
-            mockedPrimaryExchangeProvider.Setup(pep => pep.GetPrimaryExchange(equitySymbol.ID)).Returns(PrimaryExchange.NASDAQ);
+            mockedPrimaryExchangeProvider.Setup(pep => pep.GetPrimaryExchange(equitySymbol.ID)).Returns(Exchange.NASDAQ);
 
             var algorithm = new AlgorithmStub();
             var securityService = new SecurityService(algorithm.Portfolio.CashBook,
@@ -259,7 +259,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(equity.Subscriptions.Count(), 1);
             Assert.AreEqual(equity.Subscriptions.First().Type, typeof(TradeBar));
             Assert.AreEqual(equity.Subscriptions.First().TickType, TickType.Trade);
-            Assert.AreEqual(((QuantConnect.Securities.Equity.Equity)equity).PrimaryExchange, PrimaryExchange.NASDAQ);
+            Assert.AreEqual(((QuantConnect.Securities.Equity.Equity)equity).PrimaryExchange, Exchange.NASDAQ);
         }
     }
 }

@@ -17,6 +17,8 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Brokerages;
+using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Custom.AlphaStreams;
@@ -44,6 +46,9 @@ namespace QuantConnect.Algorithm.CSharp
             Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
             SetPortfolioConstruction(new EqualWeightingAlphaStreamsPortfolioConstructionModel());
 
+            SetSecurityInitializer(new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
+                new FuncSecuritySeeder(GetLastKnownPrices)));
+
             foreach (var alphaId in new [] { "623b06b231eb1cc1aa3643a46", "9fc8ef73792331b11dbd5429a" })
             {
                 AddData<AlphaStreamsPortfolioState>(alphaId);
@@ -58,24 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var portfolioState in data.Get<AlphaStreamsPortfolioState>().Values)
             {
-                var alphaId = portfolioState.Symbol;
-                var currentSymbols = _symbolsPerAlpha[alphaId];
-
-                var newSymbols = new HashSet<Symbol>(currentSymbols.Count);
-                foreach (var symbol in portfolioState.PositionGroups?.SelectMany(positionGroup => positionGroup.Positions).Select(state => state.Symbol) ?? Enumerable.Empty<Symbol>())
-                {
-                    // only add it if it's not used by any alpha (already added check)
-                    if (newSymbols.Add(symbol) && !UsedBySomeAlpha(symbol))
-                    {
-                        AddSecurity(symbol, resolution: UniverseSettings.Resolution);
-                    }
-                }
-                _symbolsPerAlpha[alphaId] = newSymbols;
-
-                foreach (var symbol in currentSymbols.Where(symbol => !UsedBySomeAlpha(symbol)))
-                {
-                    RemoveSecurity(symbol);
-                }
+                ProcessPortfolioState(portfolioState);
             }
         }
 
@@ -91,7 +79,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (addedSecurity.Symbol.IsCustomDataType<AlphaStreamsPortfolioState>())
                 {
-                    _symbolsPerAlpha[addedSecurity.Symbol] = new HashSet<Symbol>();
+                    if (!_symbolsPerAlpha.ContainsKey(addedSecurity.Symbol))
+                    {
+                        _symbolsPerAlpha[addedSecurity.Symbol] = new HashSet<Symbol>();
+                    }
+                    // warmup alpha state, adding target securities
+                    ProcessPortfolioState(addedSecurity.Cache.GetData<AlphaStreamsPortfolioState>());
                 }
             }
 
@@ -101,6 +94,36 @@ namespace QuantConnect.Algorithm.CSharp
         private bool UsedBySomeAlpha(Symbol asset)
         {
             return _symbolsPerAlpha.Any(pair => pair.Value.Contains(asset));
+        }
+
+        private void ProcessPortfolioState(AlphaStreamsPortfolioState portfolioState)
+        {
+            if (portfolioState == null)
+            {
+                return;
+            }
+
+            var alphaId = portfolioState.Symbol;
+            if (!_symbolsPerAlpha.TryGetValue(alphaId, out var currentSymbols))
+            {
+                _symbolsPerAlpha[alphaId] = currentSymbols = new HashSet<Symbol>();
+            }
+
+            var newSymbols = new HashSet<Symbol>(currentSymbols.Count);
+            foreach (var symbol in portfolioState.PositionGroups?.SelectMany(positionGroup => positionGroup.Positions).Select(state => state.Symbol) ?? Enumerable.Empty<Symbol>())
+            {
+                // only add it if it's not used by any alpha (already added check)
+                if (newSymbols.Add(symbol) && !UsedBySomeAlpha(symbol))
+                {
+                    AddSecurity(symbol, resolution: UniverseSettings.Resolution, extendedMarketHours: UniverseSettings.ExtendedMarketHours);
+                }
+            }
+            _symbolsPerAlpha[alphaId] = newSymbols;
+
+            foreach (var symbol in currentSymbols.Where(symbol => !UsedBySomeAlpha(symbol)))
+            {
+                RemoveSecurity(symbol);
+            }
         }
 
         /// <summary>

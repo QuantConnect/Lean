@@ -37,7 +37,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.5" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.6" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -77,7 +77,6 @@
     <None Include="TrainingExampleAlgorithm.py" />
     <None Include="LongOnlyAlphaStreamAlgorithm.py" />
     <None Include="CustomPartialFillModelAlgorithm.py" />
-    <Content Include="BasicTemplateConstituentUniverseAlgorithm.py" />
     <Content Include="BasicTemplateOptionsConsolidationAlgorithm.py" />
     <None Include="BasicTemplateOptionsPriceModel.py" />
     <Content Include="CoarseFineOptionUniverseChainRegressionAlgorithm.py" />
@@ -140,6 +139,8 @@
     <None Include="TensorFlowNeuralNetworkAlgorithm.py" />
     <None Include="TiingoPriceAlgorithm.py" />
     <None Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
+    <None Include="UniverseSelectionDefinitionsAlgorithm.py" />
+    <None Include="ConstituentsQC500GeneratorAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AddRemoveSecurityRegressionAlgorithm.py" />
@@ -171,7 +172,6 @@
     <None Include="CoarseFineFundamentalRegressionAlgorithm.py" />
     <None Include="CoarseFundamentalTop3Algorithm.py" />
     <None Include="CompositeAlphaModelFrameworkAlgorithm.py" />
-    <None Include="ConstituentsQC500GeneratorAlgorithm.py" />
     <None Include="CustomBenchmarkAlgorithm.py" />
     <None Include="CustomChartingAlgorithm.py" />
     <None Include="CustomDataBitcoinAlgorithm.py" />
@@ -238,7 +238,6 @@
     <None Include="TimeInForceAlgorithm.py" />
     <None Include="TrailingStopRiskFrameworkAlgorithm.py" />
     <None Include="UncorrelatedUniverseSelectionFrameworkAlgorithm.py" />
-    <None Include="UniverseSelectionDefinitionsAlgorithm.py" />
     <None Include="UniverseSelectionRegressionAlgorithm.py" />
     <None Include="UpdateOrderRegressionAlgorithm.py" />
     <None Include="UserDefinedUniverseAlgorithm.py" />

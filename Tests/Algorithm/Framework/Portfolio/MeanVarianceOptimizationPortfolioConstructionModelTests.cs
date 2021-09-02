@@ -42,6 +42,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             _nowUtc = new DateTime(2013, 10, 8);
             _algorithm = new QCAlgorithm();
+            _algorithm.SetFinishedWarmingUp();
             _algorithm.SetPandasConverter();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.SetDateTime(_nowUtc.ConvertToUtc(_algorithm.TimeZone));

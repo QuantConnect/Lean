@@ -14,27 +14,26 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Basic template algorithm which showcases ConstituentsUniverse simple use case
+### Regression algorithm testing the SetHolding trading API precision
 ### </summary>
-class BasicTemplateConstituentUniverseAlgorithm(QCAlgorithm):
+class SetHoldingsRegressionAlgorithm(QCAlgorithm):
+    '''Basic template algorithm simply initializes the date range and cash'''
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10, 7)
-        self.SetEndDate(2013,10,11)
-        
-        # by default will use algorithms UniverseSettings
-        self.AddUniverse(self.Universe.Constituent.Steel())
+        self.SetStartDate(2013, 10, 7)
+        self.SetEndDate(2013, 10, 8)
+        self.AddEquity("SPY", Resolution.Minute)
 
-        # we specify the UniverseSettings it should use
-        self.AddUniverse(self.Universe.Constituent.AggressiveGrowth(
-            UniverseSettings(Resolution.Hour,
-                2,
-                False,
-                False,
-                self.UniverseSettings.MinimumTimeInUniverse)))
+    def OnData(self, data):
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)))
-        self.SetExecution(ImmediateExecutionModel())
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        Arguments:
+            data: Slice object keyed by symbol containing the stock data
+        '''
+        if not self.Portfolio.Invested:
+            self.SetHoldings("SPY", 0.1)
+            self.SetHoldings("SPY", np.float(0.20))
+            self.SetHoldings("SPY", np.float64(0.30))
+            self.SetHoldings("SPY", 1)
