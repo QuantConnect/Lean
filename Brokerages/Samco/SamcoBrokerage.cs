@@ -142,13 +142,14 @@ namespace QuantConnect.Brokerages.Samco
             };
             _reconnectTimer.Elapsed += (s, e) =>
             {
-                Log.Trace("Daily websocket restart: disconnect");
+                Log.Trace("SamcoBrokerage(): Daily websocket restart: disconnect");
                 Disconnect();
 
-                Log.Trace("Daily websocket restart: connect");
+                Log.Trace("SamcoBrokerage(): Daily websocket restart: connect");
                 Connect();
             };
-            Log.Trace("Start Samco Brokerage");
+            _reconnectTimer.Start();
+            Log.Trace("SamcoBrokerage(): Start Samco Brokerage");
         }
 
         /// <summary>
@@ -208,7 +209,6 @@ namespace QuantConnect.Brokerages.Samco
             {
                 throw new TimeoutException("Websockets connection timeout.");
             }
-            _reconnectTimer.Start();
             WebSocket.Open -= triggerEvent;
         }
 
@@ -219,7 +219,6 @@ namespace QuantConnect.Brokerages.Samco
         {
             if (WebSocket.IsOpen)
             {
-                _reconnectTimer.Stop();
                 WebSocket.Close();
             }
         }
@@ -910,7 +909,7 @@ namespace QuantConnect.Brokerages.Samco
                     }
                     catch (Exception exception)
                     {
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, exception.Message));
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, exception.Message));
                     }
                 }
             }
