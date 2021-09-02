@@ -50,7 +50,7 @@ namespace QuantConnect.Orders.Fees
         public readonly List<string> FxStablecoinList = new() {"CAD", "EUR", "GBP", "JPY", "USD", "USDT", "DAI", "USDC"};
  
         /// <summary>
-        /// Get the fee for this order in USD
+        /// Get the fee for this order in Quote
         /// </summary>
         /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
         /// containing the security and order</param>
@@ -76,6 +76,11 @@ namespace QuantConnect.Orders.Fees
             {
                 // limit order posted to the order book
                 fee = MakerTier1CryptoFee;
+            }
+
+            if (FxStablecoinList.Any(i => security.Symbol.Value.StartsWith(i)))
+            {
+                fee = Tier1FxFee;
             }
             
             return new OrderFee(new CashAmount(
