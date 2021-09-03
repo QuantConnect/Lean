@@ -138,7 +138,7 @@ RUN pip install --no-cache-dir      \
     gluonts==0.4.3                  \
     gplearn==0.4.1                  \
     jax==0.1.68                     \
-    jaxlib==0.1.47                  \
+    jaxlib==0.1.69                  \
     keras-rl==0.4.2                 \
     pennylane==0.9.0                \
     neural-tangents==0.2.1          \
