@@ -3437,5 +3437,4 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158, 10197
         };
     }
-
 }
