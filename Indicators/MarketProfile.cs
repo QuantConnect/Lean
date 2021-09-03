@@ -46,7 +46,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The range of roundoff to the prices. i.e two decimal places, three decimal places
         /// </summary>
-        private readonly decimal _priceRangeRoundoff;
+        private readonly decimal _priceRangeRoundOff;
 
         /// <summary>
         /// Rolling Window to erase old VolumePerPrice values out of the given period
@@ -70,14 +70,14 @@ namespace QuantConnect.Indicators
         private IndicatorBase<IndicatorDataPoint> _totalVolume { get; }
 
         /// <summary>
-        /// Get a copy of the _volumePerPrice field
-        /// </summary>
-        public SortedList<decimal, decimal> VolumePerPrice => new SortedList<decimal, decimal>(_volumePerPrice);
-
-        /// <summary>
         /// POC Index
         /// </summary>
         private int _pointOfControl;
+
+        /// <summary>
+        /// Get a copy of the _volumePerPrice field
+        /// </summary>
+        public SortedList<decimal, decimal> VolumePerPrice => new SortedList<decimal, decimal>(_volumePerPrice);
 
         /// <summary>
         /// The highest reached close price level during the period.
@@ -134,21 +134,21 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of this indicator</param>
-        /// <param name="roundoff">How many digits you want to round and the precision. 
-        /// i.e roundoff=0.01 round to two digits exactly. roundoff=0.05 by default.</param>
-        protected MarketProfile(string name, int period, decimal roundoff = 0.05m)
+        /// <param name="priceRangeRoundOff">How many digits you want to round and the precision.
+        /// i.e 0.01 round to two digits exactly. 0.05 by default.</param>
+        protected MarketProfile(string name, int period, decimal priceRangeRoundOff = 0.05m)
             : base(name)
         {
             // Check roundoff is positive
-            if (roundoff <= 0)
+            if (priceRangeRoundOff <= 0)
             {
-                throw new ArgumentException("Roundoff must be extrictly bigger than zero.");
+                throw new ArgumentException("Must be strictly bigger than zero.", nameof(priceRangeRoundOff));
             }
 
             _oldDataPoints = new RollingWindow<Tuple<decimal, decimal>>(period);
             _volumePerPrice = new SortedList<decimal, decimal>();
             _totalVolume = new Sum(name + "_Sum", period);
-            _priceRangeRoundoff = 1 / roundoff;
+            _priceRangeRoundOff = 1 / priceRangeRoundOff;
         }
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace QuantConnect.Indicators
         /// <returns>The rounded decimal number</returns>
         private decimal Round(decimal a)
         {
-            return Math.Ceiling(a * _priceRangeRoundoff) / _priceRangeRoundoff;
+            return Math.Ceiling(a * _priceRangeRoundOff) / _priceRangeRoundOff;
         }
 
         /// <summary>

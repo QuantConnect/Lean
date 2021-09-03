@@ -32,14 +32,14 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Creates a new VolumeProfile indicator with the specified name, period and roundoff
+        /// Creates a new VolumeProfile indicator with the specified name, period and priceRangeRoundOff
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of this indicator</param>
-        /// <param name="roundoff">How many digits you want to round and the precision. 
-        /// i.e roundoff=0.01 round to two digits exactly.</param>
-        public VolumeProfile(string name, int period, decimal roundoff = 0.05m)
-            : base(name, period, roundoff)
+        /// <param name="priceRangeRoundOff">How many digits you want to round and the precision.
+        /// i.e 0.01 round to two digits exactly.</param>
+        public VolumeProfile(string name, int period, decimal priceRangeRoundOff = 0.05m)
+            : base(name, period, priceRangeRoundOff)
         { }
 
         /// <summary>
