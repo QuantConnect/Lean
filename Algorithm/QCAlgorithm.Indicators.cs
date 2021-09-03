@@ -1033,14 +1033,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose VP we want</param>
         /// <param name="period">The period of the VP</param>
-        /// <param name="roundoff">How many digits you want to round and the precision. i.e roundoff=0.01 round to two digits exactly.</param>
+        /// <param name="_priceRangeRoundoff">How many digits you want to round and the precision. i.e roundoff=0.01 round to two digits exactly.</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The Volume Profile indicator for the given parameters</returns>
-        public VolumeProfile VP(Symbol symbol, int period = 2, decimal roundoff=0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
+        public VolumeProfile VP(Symbol symbol, int period = 2, decimal _priceRangeRoundoff=0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"VP({period})", resolution);
-            var marketProfile = new VolumeProfile(name, period,roundoff);
+            var marketProfile = new VolumeProfile(name, period,_priceRangeRoundoff);
             RegisterIndicator(symbol, marketProfile, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)
@@ -1057,14 +1057,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose TP we want</param>
         /// <param name="period">The period of the TP</param>
-        /// <param name="roundoff">How many digits you want to round and the precision. i.e roundoff=0.01 round to two digits exactly.</param>
+        /// <param name="_priceRangeRoundoff">How many digits you want to round and the precision. i.e roundoff=0.01 round to two digits exactly.</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The Time Profile indicator for the given parameters</returns>
-        public TimeProfile TP(Symbol symbol, int period = 2, decimal roundoff=0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
+        public TimeProfile TP(Symbol symbol, int period = 2, decimal _priceRangeRoundoff=0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"TP({period})", resolution);
-            var marketProfile = new TimeProfile(name, period, roundoff);
+            var marketProfile = new TimeProfile(name, period, _priceRangeRoundoff);
             RegisterIndicator(symbol, marketProfile, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)

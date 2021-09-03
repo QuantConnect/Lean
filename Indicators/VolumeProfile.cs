@@ -47,7 +47,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input"></param>
         /// <returns>The volume of the input Data Point</returns>
-        protected override decimal DefineVolume(TradeBar input)
+        protected override decimal GetVolume(TradeBar input)
         {
             return input.Volume;
         }

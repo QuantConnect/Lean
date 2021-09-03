@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "VA",
-                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueArea,0.01)
+                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueAreaVolume,0.01)
                 );
         }
 
@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.Indicators
         public override void WarmsUpProperly()
         {
             var tp = new TimeProfile(20);
-            var time = DateTime.Today;
+            var time = new DateTime(2020, 8, 1);
             var period = ((IIndicatorWarmUpPeriodProvider)tp).WarmUpPeriod;
 
             for (var i = 0; i < period; i++)
