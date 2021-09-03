@@ -28,6 +28,26 @@ namespace QuantConnect.Orders
         public string Oflags { get; set; }
 
         /// <summary>
+        /// Post-only order (available when ordertype = limit)
+        /// </summary>
+        public bool PostOnly { get; set; }
+        
+        /// <summary>
+        /// Prefer fee in base currency (default if selling)
+        /// </summary>
+        public bool FeeInBase { get; set; }
+        
+        /// <summary>
+        /// Prefer fee in quote currency (default if buying, mutually exclusive with FeeInBase)
+        /// </summary>
+        public bool FeeInQuote { get; set; }
+        
+        /// <summary>
+        /// https://support.kraken.com/hc/en-us/articles/201648183-Market-Price-Protection
+        /// </summary>
+        public bool NoMarketPriceProtection { get; set; }
+
+        /// <summary>
         /// Conditional close orders are triggered by execution of the primary order in the same quantity and opposite direction. Ordertypes can be the same with primary order.
         /// </summary>
         public Order ConditionalOrder { get; set; } = null;

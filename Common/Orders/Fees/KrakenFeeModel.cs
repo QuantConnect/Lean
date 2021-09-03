@@ -18,6 +18,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -50,16 +51,21 @@ namespace QuantConnect.Orders.Fees
         public readonly List<string> FxStablecoinList = new() {"CAD", "EUR", "GBP", "JPY", "USD", "USDT", "DAI", "USDC"};
  
         /// <summary>
-        /// Get the fee for this order in Quote
+        /// Get the fee for this order.
+        /// If sell - fees in base currency
+        /// If buy - fees in quote currency
+        /// It can be defined manually in <see cref="KrakenOrderProperties"/>
         /// </summary>
         /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
         /// containing the security and order</param>
-        /// <returns>The cost of the order USD</returns>
+        /// <returns>The fee of the order</returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             var order = parameters.Order;
             var security = parameters.Security;
-            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+
+            var isBuy = order.Direction == OrderDirection.Buy;
+            var unitPrice = isBuy ? security.AskPrice : security.BidPrice;
 
             if (order.Type == OrderType.Limit)
             {
@@ -72,20 +78,34 @@ namespace QuantConnect.Orders.Fees
             var props = order.Properties as KrakenOrderProperties;
             
             if (order.Type == OrderType.Limit &&
-                (props?.Oflags?.Contains("post") == true || !order.IsMarketable))
+                (props?.PostOnly == true || !order.IsMarketable))
             {
                 // limit order posted to the order book
                 fee = MakerTier1CryptoFee;
+            }
+
+            if (isBuy && props?.FeeInBase == true)
+            {
+                isBuy = false;
+            }
+            
+            if (!isBuy && props?.FeeInQuote == true)
+            {
+                isBuy = true;
             }
 
             if (FxStablecoinList.Any(i => security.Symbol.Value.StartsWith(i)))
             {
                 fee = Tier1FxFee;
             }
+            string actualBaseCurrency;
+            string actualQuoteCurrency;
+
+            CurrencyPairUtil.DecomposeCurrencyPair(security.Symbol, out actualBaseCurrency, out actualQuoteCurrency);
             
             return new OrderFee(new CashAmount(
                 unitPrice * order.AbsoluteQuantity * fee,
-                security.QuoteCurrency.Symbol));
+                isBuy ? actualQuoteCurrency : actualBaseCurrency));
         }
     }
 }

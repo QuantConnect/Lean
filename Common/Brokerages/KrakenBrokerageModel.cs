@@ -26,21 +26,23 @@ using QuantConnect;
 
 namespace QuantConnect.Brokerages
 {
+    /// <summary>
+    /// Kraken Brokerage model
+    /// </summary>
     public class KrakenBrokerageModel : DefaultBrokerageModel
     {
+        private readonly List<string> _fiatsAvailableMargin = new() {"USD", "EUR"};
+        private readonly List<string> _onlyFiatsAvailableMargin = new() {"BTC", "USDT", "USDC"};
+        private readonly List<string> _ethAvailableMargin = new() {"REP", "XTZ", "ADA", "EOS", "TRX", "LINK" };
+        
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
 
         /// <summary>
-        /// Constructor for Kraken brokerage model
+        /// Leverage map of different coins
         /// </summary>
-        /// <param name="accountType">Cash or Margin</param>
-        public KrakenBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
-        {
-            
-        }
         public IReadOnlyDictionary<string, decimal> CoinLeverage { get; } = new Dictionary<string, decimal>
         {
             {"BTC", 5}, // only with fiats
@@ -60,17 +62,15 @@ namespace QuantConnect.Brokerages
             {"USDC", 3}, // only with fiats
         };
 
-        private readonly List<string> _fiatsAvailableMargin = new() {"USD", "EUR"};
-        private readonly List<string> _onlyFiatsAvailableMargin = new() {"BTC", "USDT", "USDC"};
-        private readonly List<string> _ethAvailableMargin = new() {"REP", "XTZ", "ADA", "EOS", "TRX", "LINK" };
-
-        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
+        /// <summary>
+        /// Constructor for Kraken brokerage model
+        /// </summary>
+        /// <param name="accountType">Cash or Margin</param>
+        public KrakenBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
         {
-            var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Crypto] = Market.Kraken;
-            return map.ToReadOnlyDictionary();
+            
         }
-
+        
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
@@ -117,13 +117,7 @@ namespace QuantConnect.Brokerages
         {
             if (AccountType == AccountType.Margin)
             {
-                foreach (var lev in CoinLeverage)
-                {
-                    if (security.Symbol.Value.StartsWith(lev.Key))
-                    {
-                        return new SecurityMarginModel(lev.Value);
-                    }
-                }
+                return new SecurityMarginModel(GetLeverage(security));
             }
                    
             return new CashBuyingPowerModel();
@@ -142,7 +136,7 @@ namespace QuantConnect.Brokerages
             }
 
             // first check whether this security support margin only with fiats.
-            foreach (var coin in _onlyFiatsAvailableMargin.Where(coin => security.Symbol.Value.StartsWith(coin)).Where(coin => _fiatsAvailableMargin.Any(rightFiat => security.Symbol.Value.EndsWith(rightFiat))))
+            foreach (var coin in _onlyFiatsAvailableMargin.Where(coin => security.Symbol.ID.Symbol.StartsWith(coin)).Where(coin => _fiatsAvailableMargin.Any(rightFiat => security.Symbol.Value.EndsWith(rightFiat))))
             {
                 return CoinLeverage[coin];
             }
@@ -150,14 +144,14 @@ namespace QuantConnect.Brokerages
             List<string> extendedCoinArray = new() {"BTC", "ETH"};
             extendedCoinArray.AddRange(_fiatsAvailableMargin);
             // Then check whether this security support margin with ETH.
-            foreach (var coin in _ethAvailableMargin.Where(coin => security.Symbol.Value.StartsWith(coin)).Where(coin => extendedCoinArray.Any(rightFiat => security.Symbol.Value.EndsWith(rightFiat))))
+            foreach (var coin in _ethAvailableMargin.Where(coin => security.Symbol.ID.Symbol.StartsWith(coin)).Where(coin => extendedCoinArray.Any(rightFiat => security.Symbol.Value.EndsWith(rightFiat))))
             {
                 return CoinLeverage[coin];
             }
 
             extendedCoinArray.Remove("ETH");
             // At the end check all others.
-            foreach (var coin in CoinLeverage.Keys.Where(coin => security.Symbol.Value.StartsWith(coin)).Where(coin => extendedCoinArray.Any(rightFiat => security.Symbol.Value.EndsWith(rightFiat))))
+            foreach (var coin in CoinLeverage.Keys.Where(coin => security.Symbol.ID.Symbol.StartsWith(coin)).Where(coin => extendedCoinArray.Any(rightFiat => security.Symbol.Value.EndsWith(rightFiat))))
             {
                 return CoinLeverage[coin];
             }
@@ -174,6 +168,17 @@ namespace QuantConnect.Brokerages
         {
             var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Kraken);
             return SecurityBenchmark.CreateInstance(securities, symbol);
+        }
+        
+        /// <summary>
+        /// Get default markets and specify Kraken as crypto market
+        /// </summary>
+        /// <returns></returns>
+        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
+        {
+            var map = DefaultMarketMap.ToDictionary();
+            map[SecurityType.Crypto] = Market.Kraken;
+            return map.ToReadOnlyDictionary();
         }
     }
 }
