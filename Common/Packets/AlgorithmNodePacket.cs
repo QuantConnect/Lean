@@ -23,7 +23,7 @@ namespace QuantConnect.Packets
     /// <summary>
     /// Algorithm Node Packet is a work task for the Lean Engine
     /// </summary>
-    public class AlgorithmNodePacket : Packet
+    public class AlgorithmNodePacket : PythonEnvironmentPacket
     {
         /// <summary>
         /// Default constructor for the algorithm node:
@@ -110,12 +110,6 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "sVersion")]
         public string Version;
-
-        /// <summary>
-        /// Virtual environment directory to use for PythonNet libraries
-        /// </summary>
-        [JsonProperty(PropertyName = "sPythonVirtualEnvironment")]
-        public string PythonVirtualEnvironment;
 
         /// <summary>
         /// An algorithm packet which has already been run and is being redelivered on this node.
