@@ -16,6 +16,9 @@
 
 namespace QuantConnect.Orders
 {
+    /// <summary>
+    /// Kraken order properties
+    /// </summary>
     public class KrakenOrderProperties : OrderProperties
     {
         /// <summary>

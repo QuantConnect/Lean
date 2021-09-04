@@ -95,6 +95,20 @@ namespace QuantConnect.Brokerages
             }
             return base.CanSubmitOrder(security, order, out message);
         }
+        
+        /// <summary>
+        /// Kraken does no support update of orders
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order"></param>
+        /// <param name="request"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        {
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
+            return false;
+        }
 
         /// <summary>
         /// Provides Kraken fee model
