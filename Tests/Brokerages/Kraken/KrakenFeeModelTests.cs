@@ -96,20 +96,20 @@ namespace QuantConnect.Tests.Brokerages.Kraken
         {
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new KrakenOrderProperties())),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new KrakenOrderProperties() { Oflags = "post" }))
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new KrakenOrderProperties() { PostOnly = true}))
         };
 
         private static TestCaseData[] TakerOrders => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)),
-            new TestCaseData(new MarketOrderTestParameters(Symbol, new KrakenOrderProperties() { Oflags = "post" })),
+            new TestCaseData(new MarketOrderTestParameters(Symbol, new KrakenOrderProperties() { PostOnly = true })),
             new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new KrakenOrderProperties()) { OrderSubmissionData = OrderSubmissionData}),
         };
         
         private static TestCaseData[] FiatsOrders => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(FiatSymbol)),
-            new TestCaseData(new MarketOrderTestParameters(FiatSymbol, new KrakenOrderProperties() { Oflags = "post" })),
+            new TestCaseData(new MarketOrderTestParameters(FiatSymbol, new KrakenOrderProperties() { PostOnly = true })),
             new TestCaseData(new LimitOrderTestParameters(FiatSymbol, LowPrice, HighPrice, new KrakenOrderProperties()) { OrderSubmissionData = OrderSubmissionData}),
         };
 

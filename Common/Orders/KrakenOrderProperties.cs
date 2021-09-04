@@ -14,19 +14,10 @@
  *
 */
 
-
-using System;
-
 namespace QuantConnect.Orders
 {
     public class KrakenOrderProperties : OrderProperties
     {
-        /// <summary>
-        /// Comma delimited list of order flags. viqc = volume in quote currency (not currently available), fcib = prefer fee in base currency, fciq = prefer fee in quote currency,
-        /// nompp = no market price protection, post = post only order (available when ordertype = limit)
-        /// </summary>
-        public string Oflags { get; set; }
-
         /// <summary>
         /// Post-only order (available when ordertype = limit)
         /// </summary>
