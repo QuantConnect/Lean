@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Brokerages.Kraken
 
             var leverage = _brokerageModel.GetLeverage(security);
             
-            Assert.True(leverage == expectedLeverage, "Expected leverage doesn't match with returned");
+            Assert.AreEqual(leverage, expectedLeverage, "Expected leverage doesn't match with returned");
         }
     }
 }
