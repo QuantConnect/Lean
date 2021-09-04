@@ -44,6 +44,6 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Conditional close orders are triggered by execution of the primary order in the same quantity and opposite direction. Ordertypes can be the same with primary order.
         /// </summary>
-        public Order ConditionalOrder { get; set; } = null;
+        public Order ConditionalOrder { get; set; }
     }
 }
