@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
+using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using QuantConnect.Logging;
-using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -32,6 +32,7 @@ namespace QuantConnect.Brokerages
         private const int ReceiveBufferSize = 8192;
 
         private string _url;
+        private string _sessionToken;
         private CancellationTokenSource _cts;
         private ClientWebSocket _client;
         private Task _taskConnect;
@@ -40,10 +41,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Wraps constructor
         /// </summary>
-        /// <param name="url"></param>
-        public void Initialize(string url)
+        /// <param name="url">The target websocket url</param>
+        /// <param name="sessionToken">The websocket session token</param>
+        public void Initialize(string url, string sessionToken = null)
         {
             _url = url;
+            _sessionToken = sessionToken;
         }
 
         /// <summary>
@@ -209,10 +212,14 @@ namespace QuantConnect.Brokerages
                 {
                     try
                     {
-                        lock(_locker)
+                        lock (_locker)
                         {
                             _client.DisposeSafely();
                             _client = new ClientWebSocket();
+                            if (_sessionToken != null)
+                            {
+                                _client.Options.SetRequestHeader("x-session-token", _sessionToken);
+                            }
                             _client.ConnectAsync(new Uri(_url), connectionCts.Token).SynchronouslyAwaitTask();
                         }
                         OnOpen();
@@ -280,12 +287,12 @@ namespace QuantConnect.Brokerages
                 {
                     return new TextMessage
                     {
-                        Message = Encoding.UTF8.GetString(ms.GetBuffer(), 0 , (int)ms.Length),
+                        Message = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length),
                     };
                 }
                 else if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {Encoding.UTF8.GetString(ms.GetBuffer(), 0 , (int)ms.Length)}");
+                    Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length)}");
                     return null;
                 }
             }

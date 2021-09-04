@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -36,7 +36,9 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
     [TestFixture, Ignore("This test requires a configured and active Zerodha account")]
     public class ZerodhaBrokerageTests
     {
-        private static IOrderProperties orderProperties = new ZerodhaOrderProperties(exchange: Exchange.NSE);
+
+
+        private static IOrderProperties orderProperties = new IndiaOrderProperties(exchange: Exchange.NSE);
 
         private IBrokerage _brokerage;
         private OrderProvider _orderProvider;

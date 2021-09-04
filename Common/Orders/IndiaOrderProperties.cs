@@ -17,40 +17,20 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
 {
-
     /// <summary>
-    /// Contains additional properties and settings for an order submitted to Zerodha Brokerage
+    /// Contains additional properties and settings for an order submitted to Indian Brokerages
     /// </summary>
-    public class ZerodhaOrderProperties : OrderProperties
+    public class IndiaOrderProperties : OrderProperties
     {
+        /// <summary>
+        /// India product type
+        /// </summary>
+        public string ProductType { get; }
 
         /// <summary>
-        /// Kite product type
+        /// Define the India Order type that we are targeting (MIS/CNC/NRML).
         /// </summary>
-        public string ProductType { get;}
-
-        /// <summary>
-        /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
-        /// </summary>
-        /// <param name="exchange">Exchange value, nse/bse etc</param>
-        public ZerodhaOrderProperties(Exchange exchange) : base(exchange)
-        {
-        }
-
-        /// <summary>
-        /// Initialize a new OrderProperties for <see cref="ZerodhaOrderProperties"/>
-        /// </summary>
-        /// <param name="exchange">Exchange value, nse/bse etc</param>
-        /// <param name="productType">Product type</param>
-        public ZerodhaOrderProperties(Exchange exchange, KiteProductType productType) : this(exchange)
-        {
-            ProductType = productType.ToStringInvariant();
-        }
-
-        /// <summary>
-        /// Define the Kite Order type that we are targeting (MIS/CNC/NRML).
-        /// </summary>
-        public enum KiteProductType
+        public enum IndiaProductType
         {
             /// <summary>
             /// Margin Intraday Square Off 
@@ -67,13 +47,31 @@ namespace QuantConnect.Orders
             /// </summary>
             NRML
         }
-        
+
+        /// <summary>
+        /// Initialize a new OrderProperties for <see cref="IndiaOrderProperties"/>
+        /// </summary>
+        /// <param name="exchange">Exchange value, nse/bse etc</param>
+        public IndiaOrderProperties(Exchange exchange) : base(exchange)
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new OrderProperties for <see cref="IndiaOrderProperties"/>
+        /// </summary>
+        /// <param name="exchange">Exchange value, nse/bse etc</param>
+        /// <param name="productType">ProductType value, MIS/CNC/NRML etc</param>
+        public IndiaOrderProperties(Exchange exchange, IndiaProductType productType) : base(exchange)
+        {
+            ProductType = productType.ToString();
+        }
+
         /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
         public override IOrderProperties Clone()
         {
-            return (ZerodhaOrderProperties)MemberwiseClone();
+            return (IndiaOrderProperties)MemberwiseClone();
         }
     }
 }

@@ -13,61 +13,46 @@
  * limitations under the License.
 */
 
-using System;
-
-namespace QuantConnect.Brokerages
+namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Wrapper for WebSocket4Net to enhance testability
+    /// Provides the default implementation of <see cref="IFeeModel"/> Refer to https://www.samco.in/technology/brokerage_calculator
     /// </summary>
-    public interface IWebSocket
+    public class SamcoFeeModel : IndiaFeeModel
     {
         /// <summary>
-        /// Wraps constructor
+        /// Brokerage calculation Factor
         /// </summary>
-        /// <param name="url">The target websocket url</param>
-        /// <param name="sessionToken">The websocket session token</param>
-        void Initialize(string url, string sessionToken = null);
+        protected override decimal BrokerageMultiplier => 0.0003M;
 
         /// <summary>
-        /// Wraps send method
+        /// Maximum brokerage per order
         /// </summary>
-        /// <param name="data"></param>
-        void Send(string data);
+        protected override decimal MaxBrokerage => 20;
 
         /// <summary>
-        /// Wraps Connect method
+        /// Securities Transaction Tax calculation Factor
         /// </summary>
-        void Connect();
+        protected override decimal SecuritiesTransactionTaxTotalMultiplier => 0.00025M;
 
         /// <summary>
-        /// Wraps Close method
+        /// Exchange Transaction Charge calculation Factor
         /// </summary>
-        void Close();
+        protected override decimal ExchangeTransactionChargeMultiplier => 0.0000325M;
 
         /// <summary>
-        /// Wraps IsOpen
+        /// State Tax calculation Factor
         /// </summary>
-        bool IsOpen { get; }
+        protected override decimal StateTaxMultiplier => 0.18M;
 
         /// <summary>
-        /// on message event
+        /// Sebi Charges calculation Factor
         /// </summary>
-        event EventHandler<WebSocketMessage> Message;
+        protected override decimal SebiChargesMultiplier => 0.000002M;
 
         /// <summary>
-        /// On error event
+        /// Stamp Charges calculation Factor
         /// </summary>
-        event EventHandler<WebSocketError> Error;
-
-        /// <summary>
-        /// On Open event
-        /// </summary>
-        event EventHandler Open;
-
-        /// <summary>
-        /// On Close event
-        /// </summary>
-        event EventHandler<WebSocketCloseData> Closed;
+        protected override decimal StampChargesMultiplier => 0.00002M;
     }
 }
