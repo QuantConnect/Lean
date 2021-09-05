@@ -1579,10 +1579,15 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"RDV({period})", resolution);
             var relativeDailyVolume = new RelativeDailyVolume(name, period);
             RegisterIndicator(symbol, relativeDailyVolume, resolution, selector);
+            var numberOfBars = (TimeSpan.FromDays(1) / resolution.ToTimeSpan()) * period;
 
             if (EnableAutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(symbol, relativeDailyVolume, Resolution.Daily);
+                var history = History(symbol, (int)numberOfBars, resolution);
+                foreach(TradeBar tradeBar in history)
+                {
+                    relativeDailyVolume.Update(tradeBar);
+                }
             }
 
             return relativeDailyVolume;
