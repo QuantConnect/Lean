@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
+using System;
 
 namespace QuantConnect.Orders
 {
@@ -27,6 +28,9 @@ namespace QuantConnect.Orders
         /// Defines the length of time over which an order will continue working before it is cancelled
         /// </summary>
         public TimeInForce TimeInForce { get; set; }
+
+        /// <inheritdoc/>
+        public int LinkedOrderId { get; set;}
 
         /// <summary>
         /// Defines the exchange name for a particular market

@@ -28,6 +28,11 @@ namespace QuantConnect.Interfaces
         TimeInForce TimeInForce { get; set; }
 
         /// <summary>
+        /// Order ID of original order.  Useful when trying to group buys and sells together
+        /// </summary>
+        int LinkedOrderId { get; set; }
+
+        /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
         IOrderProperties Clone();

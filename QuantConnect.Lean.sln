@@ -58,6 +58,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Optimizer", "O
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Optimizer.Launcher", "Optimizer.Launcher\QuantConnect.Optimizer.Launcher.csproj", "{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SilverAlgorythms", "Project2022\SilverAlgorythms\SilverAlgorythms.csproj", "{B38A4DD8-B892-4A7C-9895-D0AD732220A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -154,6 +156,10 @@ Global
 		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B38A4DD8-B892-4A7C-9895-D0AD732220A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B38A4DD8-B892-4A7C-9895-D0AD732220A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B38A4DD8-B892-4A7C-9895-D0AD732220A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B38A4DD8-B892-4A7C-9895-D0AD732220A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

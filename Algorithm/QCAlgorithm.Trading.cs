@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -187,9 +187,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOrder(Symbol symbol, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOrder(Symbol symbol, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, int linkedOrderId = 0)
         {
-            return MarketOrder(symbol, (decimal)quantity, asynchronous, tag, orderProperties);
+            return MarketOrder(symbol, (decimal)quantity, asynchronous, tag, orderProperties, linkedOrderId);
         }
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOrder(Symbol symbol, double quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOrder(Symbol symbol, double quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, int linkedOrderId = 0)
         {
             return MarketOrder(symbol, quantity.SafeDecimalCast(), asynchronous, tag, orderProperties);
         }
@@ -215,7 +215,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, int linkedOrderId = 0)
         {
             var security = Securities[symbol];
             return MarketOrder(security, quantity, asynchronous, tag, orderProperties);
@@ -230,7 +230,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, int linkedOrderId = 0)
         {
             // check the exchange is open before sending a market order, if it's not open
             // then convert it into a market on open order
@@ -249,7 +249,18 @@ namespace QuantConnect.Algorithm
                 return mooTicket;
             }
 
-            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
+            IOrderProperties defaultOrderProperties;
+            if (orderProperties == null)
+            {
+                defaultOrderProperties = DefaultOrderProperties?.Clone();
+            }
+            else
+            {
+                defaultOrderProperties = orderProperties;
+            }
+
+            defaultOrderProperties.LinkedOrderId = linkedOrderId;
+            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, defaultOrderProperties);
 
             // If warming up, do not submit
             if (IsWarmingUp)
