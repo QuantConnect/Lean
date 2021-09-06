@@ -97,6 +97,14 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets the order properties for this request
+        /// </summary>
+        public OrderUserProperties UserProperties
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
         /// The <see cref="OrderRequest.OrderId"/> will default to <see cref="OrderResponseErrorCode.UnableToFindOrder"/>
         /// </summary>
@@ -120,7 +128,8 @@ namespace QuantConnect.Orders
             decimal triggerPrice,
             DateTime time,
             string tag,
-            IOrderProperties properties = null
+            IOrderProperties properties = null, 
+            OrderUserProperties userProperties = null
             )
             : base(time, (int) OrderResponseErrorCode.UnableToFindOrder, tag)
         {
@@ -132,6 +141,7 @@ namespace QuantConnect.Orders
             StopPrice = stopPrice;
             TriggerPrice = triggerPrice;
             OrderProperties = properties;
+            UserProperties = userProperties;
         }
 
         /// <summary>
@@ -156,9 +166,10 @@ namespace QuantConnect.Orders
             decimal limitPrice,
             DateTime time,
             string tag,
-            IOrderProperties properties = null
+            IOrderProperties properties = null,
+            OrderUserProperties userProperties = null
             )
-            : this(orderType, securityType, symbol, quantity, stopPrice, limitPrice, 0, time, tag, properties)
+            : this(orderType, securityType, symbol, quantity, stopPrice, limitPrice, 0, time, tag, properties, userProperties)
         {
         }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -187,7 +187,13 @@ namespace QuantConnect.Orders.Serialization
         /// </summary>
         [JsonProperty("time-in-force-expiry", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public double? TimeInForceExpiry { get; set; }
-        
+
+        /// <summary>
+        /// The time in force expiration time if any
+        /// </summary>
+        [JsonProperty("order-user-properties", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public OrderUserProperties UserProperties { get; set; }
+
         /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>

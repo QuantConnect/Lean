@@ -65,9 +65,10 @@ namespace QuantConnect.Orders
             decimal limitPrice,
             DateTime time,
             string tag = "",
-            IOrderProperties properties = null
+            IOrderProperties properties = null,
+            OrderUserProperties userProperties = null
             )
-            : base(symbol, quantity, time, tag, properties)
+            : base(symbol, quantity, time, tag, properties, userProperties)
         {
             TriggerPrice = (decimal) triggerPrice;
             LimitPrice = limitPrice;

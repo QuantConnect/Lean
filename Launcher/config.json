@@ -15,7 +15,7 @@
   "algorithm-language": "CSharp",
 
   //Physical DLL location
-  "algorithm-location": "SilverAlgorythms.dll",
+  "algorithm-location": "SilverAlgorithms.dll",
   //"algorithm-location": "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
 
   //Research notebook
@@ -180,8 +180,8 @@
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
     "orderSize": 3,
-    "buyThreshold": 0.036,
-    "sellThreshold": 0.01
+    "buyThreshold": 0.001,
+    "sellThreshold": 0.05
   },
 
   // specify supported languages when running regression tests

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -54,7 +54,7 @@ namespace QuantConnect.Orders
         /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, string tag = "", IOrderProperties properties = null)
+        public LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, string tag = "", IOrderProperties properties = null, OrderUserProperties userProperties = null)
             : base(symbol, quantity, time, tag, properties)
         {
             LimitPrice = limitPrice;

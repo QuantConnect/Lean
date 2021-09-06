@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -64,8 +64,8 @@ namespace QuantConnect.Orders
         /// <param name="time">The current time</param>
         /// <param name="tag">A user defined tag for the order</param>
         /// <param name="properties">The order properties for this order</param>
-        public MarketOnCloseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
-            : base(symbol, quantity, time, tag, properties)
+        public MarketOnCloseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null, OrderUserProperties userProperties = null)
+            : base(symbol, quantity, time, tag, properties, userProperties)
         {
         }
 

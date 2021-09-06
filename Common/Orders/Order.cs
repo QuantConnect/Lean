@@ -136,6 +136,11 @@ namespace QuantConnect.Orders
         public IOrderProperties Properties { get; private set; }
 
         /// <summary>
+        /// Additional user set properties of the order
+        /// </summary>
+        public OrderUserProperties UserProperties { get; private set; }
+
+        /// <summary>
         /// The symbol's security type
         /// </summary>
         public SecurityType SecurityType => Symbol.ID.SecurityType;
@@ -211,6 +216,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             Properties = new OrderProperties();
+            UserProperties = new OrderUserProperties();
         }
 
         /// <summary>
@@ -221,7 +227,7 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
+        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null, OrderUserProperties userProperties = null)
         {
             Time = time;
             Price = 0;
@@ -233,6 +239,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             Properties = properties ?? new OrderProperties();
+            UserProperties = userProperties ?? new OrderUserProperties();
         }
 
         /// <summary>
@@ -338,6 +345,7 @@ namespace QuantConnect.Orders
             order.Tag = Tag;
             order.Properties = Properties.Clone();
             order.OrderSubmissionData = OrderSubmissionData?.Clone();
+            order.UserProperties = UserProperties;  //TODO: verify this is ok
         }
 
         /// <summary>
@@ -369,7 +377,8 @@ namespace QuantConnect.Orders
                 new OrderProperties { TimeInForce = timeInForce },
                 serializedOrder.LimitPrice ?? 0,
                 serializedOrder.StopPrice ?? 0,
-                serializedOrder.TriggerPrice ?? 0);
+                serializedOrder.TriggerPrice ?? 0,
+                serializedOrder.UserProperties);
 
             order.OrderSubmissionData = new OrderSubmissionData(serializedOrder.SubmissionBidPrice,
                 serializedOrder.SubmissionAskPrice,
@@ -408,11 +417,11 @@ namespace QuantConnect.Orders
         public static Order CreateOrder(SubmitOrderRequest request)
         {
             return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
-                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice);
+                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.UserProperties);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
-            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice)
+            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice, OrderUserProperties userProperties)
         {
             Order order;
             switch (type)
@@ -454,6 +463,7 @@ namespace QuantConnect.Orders
             }
             order.Status = OrderStatus.New;
             order.Id = orderId;
+            order.UserProperties = userProperties;
             return order;
         }
     }

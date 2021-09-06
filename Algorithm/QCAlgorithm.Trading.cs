@@ -173,9 +173,9 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         /// <seealso cref="MarketOrder(Symbol, decimal, bool, string)"/>
-        public OrderTicket Order(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket Order(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
-            return MarketOrder(symbol, quantity, asynchronous, tag, orderProperties);
+            return MarketOrder(symbol, quantity, asynchronous, tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -187,9 +187,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOrder(Symbol symbol, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, int linkedOrderId = 0)
+        public OrderTicket MarketOrder(Symbol symbol, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
-            return MarketOrder(symbol, (decimal)quantity, asynchronous, tag, orderProperties, linkedOrderId);
+            return MarketOrder(symbol, (decimal)quantity, asynchronous, tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -201,9 +201,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOrder(Symbol symbol, double quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, int linkedOrderId = 0)
+        public OrderTicket MarketOrder(Symbol symbol, double quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
-            return MarketOrder(symbol, quantity.SafeDecimalCast(), asynchronous, tag, orderProperties);
+            return MarketOrder(symbol, quantity.SafeDecimalCast(), asynchronous, tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -215,10 +215,10 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, int linkedOrderId = 0)
+        public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
             var security = Securities[symbol];
-            return MarketOrder(security, quantity, asynchronous, tag, orderProperties);
+            return MarketOrder(security, quantity, asynchronous, tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -230,13 +230,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, int linkedOrderId = 0)
+        public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
             // check the exchange is open before sending a market order, if it's not open
             // then convert it into a market on open order
             if (!security.Exchange.ExchangeOpen)
             {
-                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
+                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag, userProperties: userProperties);
                 if (!_isMarketOnOpenOrderWarningSent)
                 {
                     var anyNonDailySubscriptions = security.Subscriptions.Any(x => x.Resolution != Resolution.Daily);
@@ -259,8 +259,7 @@ namespace QuantConnect.Algorithm
                 defaultOrderProperties = orderProperties;
             }
 
-            defaultOrderProperties.LinkedOrderId = linkedOrderId;
-            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, defaultOrderProperties);
+            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, defaultOrderProperties, userProperties: userProperties);
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -295,9 +294,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOnOpenOrder(Symbol symbol, double quantity, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOnOpenOrder(Symbol symbol, double quantity, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
-            return MarketOnOpenOrder(symbol, quantity.SafeDecimalCast(), tag, orderProperties);
+            return MarketOnOpenOrder(symbol, quantity.SafeDecimalCast(), tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -308,9 +307,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOnOpenOrder(Symbol symbol, int quantity, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOnOpenOrder(Symbol symbol, int quantity, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
-            return MarketOnOpenOrder(symbol, (decimal)quantity, tag, orderProperties);
+            return MarketOnOpenOrder(symbol, (decimal)quantity, tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -321,10 +320,10 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone(), userProperties: userProperties);
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -1236,9 +1235,9 @@ namespace QuantConnect.Algorithm
             return exchangeHours.IsOpen(time, false);
         }
 
-        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m,  decimal triggerPrice = 0m)
+        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m,  decimal triggerPrice = 0m, OrderUserProperties userProperties = null)
         {
-            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, UtcTime, tag, properties);
+            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, UtcTime, tag, properties, userProperties);
         }
     }
 }

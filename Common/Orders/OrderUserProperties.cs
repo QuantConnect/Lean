@@ -15,21 +15,21 @@
 
 using QuantConnect.Orders;
 
-namespace QuantConnect.Interfaces
+namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Contains additional properties and settings for an order
+    /// Contains additional properties to be set by user
     /// </summary>
-    public interface IOrderProperties
+    public record OrderUserProperties
     {
         /// <summary>
-        /// Defines the length of time over which an order will continue working before it is cancelled
+        /// User defined integer.
         /// </summary>
-        TimeInForce TimeInForce { get; set; }
+        public int UserId { get; set; }
 
         /// <summary>
-        /// Returns a new instance clone of this object
+        /// User defined string.
         /// </summary>
-        IOrderProperties Clone();
+        public string UserString { get; set; }
     }
 }
