@@ -36,10 +36,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of this indicator</param>
+        /// <param name="valueAreaVolumePercentage">The percentage of volume contained in the value area</param>
         /// <param name="priceRangeRoundOff">How many digits you want to round and the precision.
         /// i.e 0.01 round to two digits exactly.</param>
-        public VolumeProfile(string name, int period, decimal priceRangeRoundOff = 0.05m)
-            : base(name, period, priceRangeRoundOff)
+        public VolumeProfile(string name, int period, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m)
+            : base(name, period, valueAreaVolumePercentage, priceRangeRoundOff)
         { }
 
         /// <summary>
