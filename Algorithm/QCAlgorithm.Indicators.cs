@@ -1576,18 +1576,13 @@ namespace QuantConnect.Algorithm
             {
                 throw new ArgumentException("RelativeDailyVolume Indicator must have a resolution less than Resolution.Daily", nameof(resolution));
             }
-            var name = CreateIndicatorName(symbol, $"RDV({period})", resolution);
-            var relativeDailyVolume = new RelativeDailyVolume(name, period);
+            var name = CreateIndicatorName(symbol, $"RDV({period}, {resolution})", resolution);
+            var relativeDailyVolume = new RelativeDailyVolume(name, period, resolution);
             RegisterIndicator(symbol, relativeDailyVolume, resolution, selector);
-            var numberOfBars = (TimeSpan.FromDays(1) / resolution.ToTimeSpan()) * period;
 
             if (EnableAutomaticIndicatorWarmUp)
             {
-                var history = History(symbol, (int)numberOfBars, resolution);
-                foreach(TradeBar tradeBar in history)
-                {
-                    relativeDailyVolume.Update(tradeBar);
-                }
+                WarmUpIndicator(symbol, relativeDailyVolume, resolution);
             }
 
             return relativeDailyVolume;

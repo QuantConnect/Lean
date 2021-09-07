@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new RelativeDailyVolume(2);
+            return new RelativeDailyVolume(2, Resolution.Hour);
         }
 
         protected override string TestFileName => "spy_rdv.txt";
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void ResetsProperly()
         {
-            var rdv = new RelativeDailyVolume(2); // Default resolution is daily
+            var rdv = new RelativeDailyVolume(2, Resolution.Daily); // Default resolution is Hour
             var reference = System.DateTime.Today;
 
             rdv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1) });
@@ -83,14 +83,14 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WarmsUpProperly()
         {
-            var rdv1 = new RelativeDailyVolume(2);
-            var rdv2 = new RelativeDailyVolume(2);
-            var rdv3 = new RelativeDailyVolume(2);
-            var rdv4 = new RelativeDailyVolume(2);
-            var rdv5 = new RelativeDailyVolume(2);
-            var rdv6 = new RelativeDailyVolume(2);
-            var rdv7 = new RelativeDailyVolume(2);
-            var rdv8 = new RelativeDailyVolume(2);
+            var rdv1 = new RelativeDailyVolume(2, Resolution.Daily);
+            var rdv2 = new RelativeDailyVolume(2, Resolution.Hour);
+            var rdv3 = new RelativeDailyVolume(2, Resolution.Minute);
+            var rdv4 = new RelativeDailyVolume(2, Resolution.Second);
+            var rdv5 = new RelativeDailyVolume(2, Resolution.Daily);
+            var rdv6 = new RelativeDailyVolume(2, Resolution.Hour);
+            var rdv7 = new RelativeDailyVolume(2, Resolution.Minute);
+            var rdv8 = new RelativeDailyVolume(2, Resolution.Second);
             var reference = new DateTime(2000, 1, 1, 0, 0, 0);
 
             AddTradeBarData(ref rdv1, 2 + 1, Resolution.Daily, reference); // Needs one more datapoint after x days to be ready

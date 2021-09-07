@@ -24,7 +24,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
-class RelativeDailyVOlumeAlgorithm(QCAlgorithm):
+class RelativeDailyVolumeAlgorithm(QCAlgorithm):
     '''RelativeDailyVolumeAlgorithm uses the RDV indicator to trade an asset '''
 
     def Initialize(self):
