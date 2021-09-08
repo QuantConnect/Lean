@@ -221,6 +221,9 @@ namespace QuantConnect.Brokerages
 
                 case BrokerageName.TradingTechnologies:
                     return new TradingTechnologiesBrokerageModel(accountType);
+                
+                case BrokerageName.Samco:
+                    return new SamcoBrokerageModel(accountType);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
