@@ -22,7 +22,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using QuantConnect;
 
 namespace QuantConnect.Brokerages
 {
@@ -99,11 +98,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Kraken does no support update of orders
         /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order"></param>
-        /// <param name="request"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
+        /// <param name="security">Security</param>
+        /// <param name="order">Order that should be updated</param>
+        /// <param name="request">Update request</param>
+        /// <param name="message">Outgoing message</param>
+        /// <returns>Always false as Kraken does no support update of orders</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
@@ -113,8 +112,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Provides Kraken fee model
         /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
+        /// <param name="security">Security</param>
+        /// <returns>Kraken fee model</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
             return new KrakenFeeModel();
@@ -187,7 +186,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Get default markets and specify Kraken as crypto market
         /// </summary>
-        /// <returns></returns>
+        /// <returns>default markets</returns>
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
         {
             var map = DefaultMarketMap.ToDictionary();
