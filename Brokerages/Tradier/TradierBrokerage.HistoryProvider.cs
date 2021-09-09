@@ -20,6 +20,7 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Brokerages.Tradier
@@ -94,6 +95,12 @@ namespace QuantConnect.Brokerages.Tradier
                 if (request.Symbol.IsCanonical())
                 {
                     throw new ArgumentException("Invalid symbol, cannot use canonical symbols for history request");
+                }
+
+                if (request.DataType == typeof(QuoteBar))
+                {
+                    Log.Error("TradierBrokerage.GetHistory(): Tradier only supports TradeBars");
+                    yield break;
                 }
 
                 var start = request.StartTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);

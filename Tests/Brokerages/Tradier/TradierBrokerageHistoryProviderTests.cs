@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
                 var now = DateTime.UtcNow;
                 var request = new HistoryRequest(now.Add(-period),
                     now,
-                    typeof(QuoteBar),
+                    typeof(TradeBar),
                     symbol,
                     resolution,
                     SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
                     false,
                     false,
                     DataNormalizationMode.Adjusted,
-                    TickType.Quote);
+                    TickType.Trade);
 
 
                 GetHistoryHelper(request, resolution);
@@ -89,20 +89,38 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             }
         }
     
-        [Test]
-        public void GetsOptionHistory(){
+        [TestCase(Resolution.Daily)]
+        [TestCase(Resolution.Hour)]
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Second)]
+        [TestCase(Resolution.Tick)]
+        public void GetsOptionHistory(Resolution resolution){
             TestDelegate test = () =>
             { 
                 var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
                 var option = Symbol.CreateOption(spy, Market.USA, OptionStyle.American, OptionRight.Put, 440m, new DateTime(2021, 09, 10));
-                var resolution = Resolution.Daily;
 
                 var start = new DateTime(2021, 8, 25);
-                var end = new DateTime(2021, 9, 3);
+                DateTime end;
+
+                switch(resolution){
+                    case Resolution.Daily:
+                        end = new DateTime(2021, 9, 3);
+                        break;
+                    case Resolution.Hour:
+                        end = new DateTime(2021, 8, 26);
+                        break;
+                    case Resolution.Minute:
+                    case Resolution.Second:
+                    case Resolution.Tick:
+                    default:
+                        end = new DateTime(2021, 8, 25, 15, 0, 0);
+                        break;
+                }
 
                 var request = new HistoryRequest(start,
                     end,
-                    typeof(QuoteBar),
+                    typeof(TradeBar),
                     option,
                     resolution,
                     SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
@@ -111,7 +129,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
                     false,
                     false,
                     DataNormalizationMode.Adjusted,
-                    TickType.Quote);
+                    TickType.Trade);
 
                 GetHistoryHelper(request, resolution);
             };
