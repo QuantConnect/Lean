@@ -439,9 +439,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket StopMarketOrder(Symbol symbol, int quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopMarketOrder(Symbol symbol, int quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
-            return StopMarketOrder(symbol, (decimal)quantity, stopPrice, tag, orderProperties);
+            return StopMarketOrder(symbol, (decimal)quantity, stopPrice, tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -453,9 +453,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket StopMarketOrder(Symbol symbol, double quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopMarketOrder(Symbol symbol, double quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
-            return StopMarketOrder(symbol, quantity.SafeDecimalCast(), stopPrice, tag, orderProperties);
+            return StopMarketOrder(symbol, quantity.SafeDecimalCast(), stopPrice, tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -467,10 +467,10 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket StopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag, stopPrice: stopPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag, stopPrice: stopPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone(), userProperties: userProperties);
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -490,9 +490,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket StopLimitOrder(Symbol symbol, int quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopLimitOrder(Symbol symbol, int quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
-            return StopLimitOrder(symbol, (decimal)quantity, stopPrice, limitPrice, tag, orderProperties);
+            return StopLimitOrder(symbol, (decimal)quantity, stopPrice, limitPrice, tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -505,9 +505,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket StopLimitOrder(Symbol symbol, double quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopLimitOrder(Symbol symbol, double quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
-            return StopLimitOrder(symbol, quantity.SafeDecimalCast(), stopPrice, limitPrice, tag, orderProperties);
+            return StopLimitOrder(symbol, quantity.SafeDecimalCast(), stopPrice, limitPrice, tag, orderProperties, userProperties);
         }
 
         /// <summary>
@@ -520,10 +520,10 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        public OrderTicket StopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null, OrderUserProperties userProperties = null)
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone(), userProperties: userProperties);
             var response = PreOrderChecks(request);
             if (response.IsError)
             {

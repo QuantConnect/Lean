@@ -179,13 +179,14 @@
 
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
-    "orderSize": 3,
+    "orderSize": 50,
     "buyThreshold": 0.001,
-    "sellThreshold": 0.05
+    "sellThreshold": 0.015,
+    "trailingStopPercent": 0.0007
   },
 
   // specify supported languages when running regression tests
-  "regression-test-languages": [ "CSharp", "Python" ],
+  "regression-test-languages": [ "CSharp"/*, "Python"*/ ],
 
   "environments": {
 
