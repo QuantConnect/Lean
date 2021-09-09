@@ -1757,13 +1757,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     var symbol = MapSymbol(e.Contract);
 
-                    if (OptionSymbol.IsOptionContractExpired(symbol, DateTime.UtcNow) &&
-                        _algorithm.Securities.TryGetValue(symbol, out var security))
+                    if (OptionSymbol.IsOptionContractExpired(symbol, DateTime.UtcNow))
                     {
-                        Log.Trace("InteractiveBrokersBrokerage.HandlePortfolioUpdates(): clearing position for expired option holding: " +
-                            $"Symbol: {symbol.Value}, Quantity: {security.Holdings.Quantity}");
-
-                        security.Holdings.SetHoldings(0, 0);
+                        OnOptionPositionExpired(new OptionPositionExpiredEventArgs(symbol));
                     }
                 }
 

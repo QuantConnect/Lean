@@ -25,6 +25,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Util;
 
@@ -164,6 +165,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage.OptionPositionAssigned += (sender, fill) =>
             {
                 HandlePositionAssigned(fill);
+            };
+
+            _brokerage.OptionPositionExpired += (sender, e) =>
+            {
+                HandleOptionPositionExpired(e);
             };
 
             IsActive = true;
@@ -1129,6 +1135,41 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // informing user algorithm that option position has been assigned
             _algorithm.OnAssignmentOrderEvent(fill);
+        }
+
+        /// <summary>
+        /// Option expiration event is received and new order events are generated
+        /// </summary>
+        private void HandleOptionPositionExpired(OptionPositionExpiredEventArgs e)
+        {
+            if (_algorithm.Securities.TryGetValue(e.Symbol, out var security))
+            {
+                Log.Trace("BrokerageTransactionHandler.HandleOptionPositionExpired(): clearing position for expired option holding: " +
+                    $"Symbol: {e.Symbol.Value}, Quantity: {security.Holdings.Quantity}");
+
+                var quantity = -security.Holdings.Quantity;
+
+                // generate new order and ticket for the expired option
+                var order = new OptionExerciseOrder(e.Symbol, quantity, DateTime.UtcNow)
+                {
+                    Id = _algorithm.Transactions.GetIncrementOrderId()
+                };
+
+                var ticket = order.ToOrderTicket(_algorithm.Transactions);
+
+                AddOpenOrder(order, ticket);
+
+                Interlocked.Increment(ref _totalOrderCount);
+
+                // generate the order events reusing the option exercise model
+                var option = (Option)security;
+                var orderEvents = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+                foreach (var orderEvent in orderEvents)
+                {
+                    HandleOrderEvent(orderEvent);
+                }
+            }
         }
 
         /// <summary>

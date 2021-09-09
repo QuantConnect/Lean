@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Moq;
 using NodaTime;
@@ -1232,6 +1233,77 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(orderTicket.Status, OrderStatus.Invalid);
             Assert.AreEqual(_algorithm.OrderEvents.Count, 1);
             Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Invalid), 1);
+        }
+
+        // Short Call --> OTM (expired worthless)
+        [TestCase(-1, OptionRight.Call, 455, 100, 450, 1, 0, 100, "OTM")]
+        // Short Put --> OTM (expired worthless)
+        [TestCase(-1, OptionRight.Put, 455, 100, 460, 1, 0, 100, "OTM")]
+        // Long Call --> OTM (expired worthless)
+        [TestCase(1, OptionRight.Call, 455, 100, 450, 1, 0, 100, "OTM")]
+        // Long Put --> OTM (expired worthless)
+        [TestCase(1, OptionRight.Put, 455, 100, 460, 1, 0, 100, "OTM")]
+        // Short Call --> ITM (assigned)
+        [TestCase(-1, OptionRight.Call, 450, 100, 455, 2, 0, 0, "Automatic Assignment")]
+        // Short Put --> ITM (assigned)
+        [TestCase(-1, OptionRight.Put, 455, 100, 450, 2, 0, 200, "Automatic Assignment")]
+        // Long Call --> ITM (auto-exercised)
+        [TestCase(1, OptionRight.Call, 450, 100, 455, 2, 0, 200, "Automatic Exercise")]
+        // Long Put --> ITM (auto-exercised)
+        [TestCase(1, OptionRight.Put, 455, 100, 450, 2, 0, 0, "Automatic Exercise")]
+        public void OptionExpirationEmitsOrderEvents(
+            int initialOptionPosition,
+            OptionRight optionRight,
+            decimal strikePrice,
+            int initialUnderlyingPosition,
+            decimal underlyingPrice,
+            int expectedOrderEvents,
+            int expectedOptionPosition,
+            int expectedUnderlyingPosition,
+            string expectedMessage
+            )
+        {
+            var algorithm = new TestAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var equity = algorithm.AddEquity("SPY");
+            var optionSymbol = Symbol.CreateOption(equity.Symbol, equity.Symbol.ID.Market, OptionStyle.American, optionRight, strikePrice,
+                new DateTime(2021, 9, 8));
+            var option = algorithm.AddOptionContract(optionSymbol);
+
+            algorithm.Portfolio[equity.Symbol].SetHoldings(underlyingPrice, initialUnderlyingPosition);
+            algorithm.Portfolio[option.Symbol].SetHoldings(0.01m, initialOptionPosition);
+
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            algorithm.SetFinishedWarmingUp();
+
+            using var brokerage = new NoSubmitTestBrokerage(algorithm);
+            var transactionHandler = new BrokerageTransactionHandler();
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            // lets wait until the transactionHandler starts running
+            Thread.Sleep(250);
+
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+            var method = transactionHandler.GetType().GetMethod("HandleOptionPositionExpired", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.IsNotNull(method);
+
+            var parameters = new object[] { new OptionPositionExpiredEventArgs(optionSymbol) };
+            method.Invoke(transactionHandler, parameters);
+
+            transactionHandler.Exit();
+
+            var tickets = algorithm.Transactions.GetOrderTickets().ToList();
+            Assert.AreEqual(1, tickets.Count);
+
+            var ticket = tickets.First();
+            Assert.IsTrue(ticket.HasOrder);
+
+            Assert.AreEqual(expectedOrderEvents, ticket.OrderEvents.Count);
+            Assert.AreEqual(1, ticket.OrderEvents.Count(x => x.Message.Contains(expectedMessage, StringComparison.InvariantCulture)));
+
+            Assert.AreEqual(expectedUnderlyingPosition, algorithm.Portfolio[equity.Symbol].Quantity);
+            Assert.AreEqual(expectedOptionPosition, algorithm.Portfolio[optionSymbol].Quantity);
         }
 
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
