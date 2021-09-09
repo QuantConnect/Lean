@@ -26,6 +26,7 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -390,9 +391,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var securityBenchmark = _algorithm.Benchmark as SecurityBenchmark;
                 if (securityBenchmark != null)
                 {
+                    var resolution = _algorithm.LiveMode ? Resolution.Minute : Resolution.Hour;
+
+                    // Check that the tradebar subscription we are using can support this resolution GH #5893
+                    var baseInstance = typeof(TradeBar).GetBaseDataInstance();
+                    baseInstance.Symbol = securityBenchmark.Security.Symbol;
+                    var supportedResolutions = baseInstance.SupportedResolutions();
+                    if (!supportedResolutions.Contains(resolution))
+                    {
+                        resolution = supportedResolutions.Last();
+                    }
+
+                    //securityBenchmark.Security.Type
                     var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
                         securityBenchmark.Security.Symbol,
-                        _algorithm.LiveMode ? Resolution.Minute : Resolution.Hour,
+                        resolution,
                         isInternalFeed: true,
                         fillForward: false).First();
 
