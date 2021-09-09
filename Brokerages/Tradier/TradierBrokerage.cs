@@ -494,11 +494,12 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Get the historical bars for this period
         /// </summary>
-        public List<TradierTimeSeries> GetTimeSeries(string symbol, DateTime start, DateTime end, TradierTimeSeriesIntervals interval)
+        public List<TradierTimeSeries> GetTimeSeries(Symbol symbol, DateTime start, DateTime end, TradierTimeSeriesIntervals interval)
         {
-            //Send Request:
+            // Create and send request
+            var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
             var request = new RestRequest("markets/timesales", Method.GET);
-            request.AddParameter("symbol", symbol, ParameterType.QueryString);
+            request.AddParameter("symbol", ticker, ParameterType.QueryString);
             request.AddParameter("interval", GetEnumDescription(interval), ParameterType.QueryString);
             request.AddParameter("start", start.ToStringInvariant("yyyy-MM-dd HH:mm"), ParameterType.QueryString);
             request.AddParameter("end", end.ToStringInvariant("yyyy-MM-dd HH:mm"), ParameterType.QueryString);
@@ -509,13 +510,15 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Get full daily, weekly or monthly bars of historical periods:
         /// </summary>
-        public List<TradierHistoryBar> GetHistoricalData(string symbol,
+        public List<TradierHistoryBar> GetHistoricalData(Symbol symbol,
             DateTime start,
             DateTime end,
             TradierHistoricalDataIntervals interval = TradierHistoricalDataIntervals.Daily)
         {
+            // Create and send request
+            var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
             var request = new RestRequest("markets/history", Method.GET);
-            request.AddParameter("symbol", symbol, ParameterType.QueryString);
+            request.AddParameter("symbol", ticker, ParameterType.QueryString);
             request.AddParameter("start", start.ToStringInvariant("yyyy-MM-dd"), ParameterType.QueryString);
             request.AddParameter("end", end.ToStringInvariant("yyyy-MM-dd"), ParameterType.QueryString);
             request.AddParameter("interval", GetEnumDescription(interval));
