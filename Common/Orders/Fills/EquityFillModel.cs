@@ -587,11 +587,52 @@ namespace QuantConnect.Orders.Fills
             {
                 return fill;
             }
-            // make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Close;
-            fill.Status = OrderStatus.Filled;
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            // The official close is recorded after the market is closed
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var primaryExchange = (byte)((Equity)asset).PrimaryExchange;
+                var officialClose = (uint)(TradeConditionFlags.Regular | TradeConditionFlags.OfficialClose);
+                var closingPrints = (uint)(TradeConditionFlags.Regular | TradeConditionFlags.ClosingPrints);
+                var ticks = asset.Cache.GetAll<Tick>().OrderBy(x => x.EndTime).ToList();
+
+                // Get the last valid (non-zero) tick of trade type from an close market
+                var trade = ticks
+                    .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
+                    .LastOrDefault(x =>
+                        x.TickType == TickType.Trade && x.Price > 0 && x.ExchangeCode == primaryExchange &&
+                        (x.ParsedSaleCondition == officialClose || x.ParsedSaleCondition == closingPrints));
+
+                // If there is no tick with the desired information, we wait one minute
+                if (trade == null)
+                {
+                    trade = ticks.LastOrDefault(x => x.Price > 0);
+                    if (trade == null || (trade.EndTime - nextMarketClose).TotalMinutes < 1)
+                    {
+                        return fill;
+                    }
+                }
+
+                fill.FillPrice = trade.Price;
+            }
+            // make sure the exchange is open/normal market hours before filling
+            else if (!IsExchangeOpen(asset, false))
+            {
+                return fill;
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar == null)
+                {
+                    return fill;
+                }
+
+                fill.FillPrice = tradeBar.Close;
+            }
+
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
@@ -600,15 +641,15 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     fill.FillPrice += slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
                 case OrderDirection.Sell:
                     fill.FillPrice -= slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
             }
+
+            // assume the order completely filled
+            fill.FillQuantity = order.Quantity;
+            fill.Status = OrderStatus.Filled;
 
             return fill;
         }

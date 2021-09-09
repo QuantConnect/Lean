@@ -760,29 +760,24 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(expected, fill.FillPrice);
         }
 
-        [Test]
-        public void PerformsMarketOnCloseUsingClosingPrice()
+        [TestCase(-100)]
+        [TestCase(100)]
+        public void PerformsMarketOnCloseUsingClosingPriceWithDailySubscription(int quantity)
         {
+            Func<DateTime, decimal, TradeBar> getTradeBar = (t, c) => new TradeBar(t.RoundDown(Time.OneDay * 2),
+                Symbols.SPY, 1.33m, 2m, 0.5m, c, 100, Time.OneDay);
+
             var reference = new DateTime(2015, 06, 05, 15, 0, 0); // before market close
-            var model = new EquityFillModel();
-            var order = new MarketOnCloseOrder(Symbols.SPY, 100, reference);
-            var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(
-                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
-                config,
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            var config = CreateTradeBarConfig(Symbols.SPY, Resolution.Daily);
+            var equity = CreateEquity(config);
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOnCloseOrder(Symbols.SPY, quantity, reference);
             var time = reference;
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
-            security.SetMarketPrice(new TradeBar(time - config.Increment, Symbols.SPY, 1m, 2m, 0.5m, 1.33m, 100, config.Increment));
+            equity.SetMarketPrice(getTradeBar(time, 2m));
 
             var fill = model.Fill(new FillModelParameters(
-                security,
+                equity,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
                 Time.OneHour)).OrderEvent;
@@ -791,23 +786,178 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             // market closes after 60min, so this is just before market Close
             time = reference.AddMinutes(59);
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
-            security.SetMarketPrice(new TradeBar(time - config.Increment, Symbols.SPY, 1.33m, 2.75m, 1.15m, 1.45m, 100, config.Increment));
+            equity.SetMarketPrice(getTradeBar(time, 1.45m));
 
-            fill = model.Fill(new FillModelParameters(
-                security,
+            fill = model.MarketOnCloseFill(equity, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // market closes
+            const decimal expected = 1.40m;
+            time = reference.AddMinutes(60);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.SetMarketPrice(getTradeBar(time, expected));
+
+            fill = model.MarketOnCloseFill(equity, order);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(expected, fill.FillPrice);
+        }
+
+        [TestCase(-100)]
+        [TestCase(100)]
+        public void PerformsMarketOnCloseUsingClosingPriceWithMinuteSubscription(int quantity)
+        {
+            var reference = new DateTime(2015, 06, 05, 15, 0, 0); // before market close
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var equity = CreateEquity(config);
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOnCloseOrder(Symbols.SPY, quantity, reference);
+            var time = reference;
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.SetMarketPrice(new TradeBar(time - config.Increment, Symbols.SPY, 1m, 2m, 0.5m, 1.33m, 100, config.Increment));
+
+            var fill = model.Fill(new FillModelParameters(
+                equity,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
                 Time.OneHour)).OrderEvent;
             Assert.AreEqual(0, fill.FillQuantity);
 
+            // market closes after 60min, so this is just before market Close
+            time = reference.AddMinutes(59);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.SetMarketPrice(new TradeBar(time - config.Increment, Symbols.SPY, 1.33m, 2.75m, 1.15m, 1.45m, 100, config.Increment));
+
+            fill = model.MarketOnCloseFill(equity, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+
             // market closes
             time = reference.AddMinutes(60);
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
-            security.SetMarketPrice(new TradeBar(time - config.Increment, Symbols.SPY, 1.45m, 2.0m, 1.1m, 1.40m, 100, config.Increment));
+            equity.SetMarketPrice(new TradeBar(time - config.Increment, Symbols.SPY, 1.45m, 2.0m, 1.1m, 1.40m, 100, config.Increment));
 
-            fill = model.MarketOnCloseFill(security, order);
+            fill = model.MarketOnCloseFill(equity, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(security.Close, fill.FillPrice);
+            Assert.AreEqual(equity.Close, fill.FillPrice);
+        }
+
+        [TestCase(-100)]
+        [TestCase(100)]
+        public void PerformsMarketOnCloseUsingClosingPriceWithTickSubscription(int quantity)
+        {
+            var reference = new DateTime(2015, 06, 05, 15, 0, 0); // before market close
+            var config = CreateTickConfig(Symbols.SPY);
+            var equity = CreateEquity(config);
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOnCloseOrder(Symbols.SPY, quantity, reference);
+            var time = reference;
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            // Official Close
+            var saleCondition = "1000001";
+
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY, "80000001", "P", 100, 1m),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m)
+            }, typeof(Tick));
+
+            var fill = model.Fill(new FillModelParameters(
+                equity,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // market closes after 60min, so this is just before market Close
+            time = reference.AddMinutes(59);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.Update(new List<Tick>
+            {
+                // It should fill with this tick based on sales condition but the market is still open
+                new Tick(time, Symbols.SPY, saleCondition, "P", 100, 1)
+            }, typeof(Tick));
+
+            fill = model.MarketOnCloseFill(equity, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            const decimal expected = 1m;
+            // market closes
+            time = reference.AddMinutes(60).AddMilliseconds(100);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.9m),   // Not Close
+                new Tick(time, Symbols.SPY, saleCondition, "Q", 100, 0.95m),            // Close but not primary exchange
+                new Tick(time, Symbols.SPY, saleCondition, "P", 100, expected),         // Fill with this tick
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m),
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.95m),   // Open but not primary exchange
+            }, typeof(Tick));
+
+            fill = model.MarketOnCloseFill(equity, order);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(expected, fill.FillPrice);
+        }
+
+        [TestCase(-100)]
+        [TestCase(100)]
+        public void PerformsMarketOnCloseUsingClosingPriceWithTickSubscriptionButNoSalesCondition(int quantity)
+        {
+            var reference = new DateTime(2015, 06, 05, 15, 0, 0); // before market close
+            var config = CreateTickConfig(Symbols.SPY);
+            var equity = CreateEquity(config);
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOnCloseOrder(Symbols.SPY, quantity, reference);
+            var time = reference;
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            // No Sales Condition
+            var saleCondition = "";
+
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY, "80000001", "P", 100, 1m),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m)
+            }, typeof(Tick));
+
+            var fill = model.Fill(new FillModelParameters(
+                equity,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            const decimal expected = 1m;
+            // market closes
+            time = reference.AddMinutes(60).AddMilliseconds(100);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.9m),   // Not Close
+                new Tick(time, Symbols.SPY, saleCondition, "Q", 100, 0.95m),            // Close but not primary exchange
+                new Tick(time, Symbols.SPY, saleCondition, "P", 100, expected),         // Fill with this tick
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m),
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.95m),   // Open but not primary exchange
+            }, typeof(Tick));
+
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // 2 minutes after the close
+            time = reference.AddMinutes(62);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.9m),   // Not Close
+                new Tick(time, Symbols.SPY, saleCondition, "P", 100, 0.95m),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m),
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.95m),   // Open but not primary exchange
+                new Tick(time, Symbols.SPY, saleCondition, "Q", 100, expected),         // Fill with this tick
+            }, typeof(Tick));
+
+            fill = model.MarketOnCloseFill(equity, order);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(expected, fill.FillPrice);
         }
 
         [TestCase(OrderDirection.Buy)]
