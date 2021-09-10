@@ -99,6 +99,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use Kraken models
         /// </summary>
-        Kraken
+        Kraken,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use ftx models
+        /// </summary>
+        FTX
     }
 }
