@@ -38,7 +38,7 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
-    <PackageReference Include="QuantConnect.IBAutomater" Version="2.0.56" />
+    <PackageReference Include="QuantConnect.IBAutomater" Version="2.0.57" />
     <PackageReference Include="RestSharp" Version="106.12.0" />
   </ItemGroup>
   <ItemGroup>
