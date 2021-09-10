@@ -32,7 +32,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityDefinitionSymbolResolver
     {
-        private readonly Dictionary<string, MapFileResolver> _mapFileResolvers;
+        private readonly IMapFileProvider _mapFileProvider;
         private readonly List<SecurityDefinition> _securityDefinitions;
         private readonly IDataProvider _dataProvider;
         
@@ -54,7 +54,8 @@ namespace QuantConnect.Securities
                 Log.Error($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {securitiesDefinitionKey}");
             }
 
-            _mapFileResolvers = new Dictionary<string, MapFileResolver>();
+            _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+            _mapFileProvider.Initialize(_dataProvider);
         }
         
         /// <summary>
@@ -76,7 +77,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.CUSIP == cusip),
+                _securityDefinitions?.FirstOrDefault(x => x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
         
@@ -122,7 +123,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.SEDOL == sedol),
+                _securityDefinitions?.FirstOrDefault(x => x.SEDOL.Equals(sedol, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
 
@@ -145,7 +146,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.ISIN == isin),
+                _securityDefinitions?.FirstOrDefault(x => x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
 
@@ -166,14 +167,7 @@ namespace QuantConnect.Securities
             }
 
             var market = securityDefinition.SecurityIdentifier.Market;
-            if (!_mapFileResolvers.TryGetValue(market, out var mapFileResolver))
-            {
-                var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
-                mapFileProvider.Initialize(_dataProvider);
-
-                mapFileResolver = mapFileProvider.Get(market);
-                _mapFileResolvers[market] = mapFileResolver;
-            }
+            var mapFileResolver = _mapFileProvider.Get(market);
             
             // Get the first ticker the symbol traded under, and then lookup the
             // trading date to get the ticker on the trading date.
