@@ -17,6 +17,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QLNet;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Securities
 {
@@ -33,49 +35,72 @@ namespace QuantConnect.Securities
         public SecurityIdentifier SecurityIdentifier { get; set; }
         
         /// <summary>
-        /// The CUSIP of the security
+        /// The Committee on Uniform Securities Identification Procedures (CUSIP) number of a security
         /// </summary>
+        /// <remarks>For more information on CUSIP numbers: https://en.wikipedia.org/wiki/CUSIP</remarks>
         public string CUSIP { get; set; }
        
         /// <summary>
-        /// The FIGI of the security
+        /// The composite Financial Instrument Global Identifier (FIGI) of a security
         /// </summary>
-        public string FIGI { get; set; }
+        /// <remarks>
+        /// The composite FIGI differs from an exchange-level FIGI, in that it identifies
+        /// an asset across all exchanges in a single country that the asset trades in.
+        /// For more information about the FIGI standard: https://en.wikipedia.org/wiki/Financial_Instrument_Global_Identifier
+        /// </remarks>
+        public string CompositeFIGI { get; set; }
         
         /// <summary>
-        /// SEDOL of the security
+        /// The Stock Exchange Daily Official List (SEDOL) security identifier of a security
         /// </summary>
+        /// <remarks>For more information about SEDOL security identifiers: https://en.wikipedia.org/wiki/SEDOL</remarks>
         public string SEDOL { get; set; }
        
         /// <summary>
-        /// ISIN of the security
+        /// The International Securities Identification Number (ISIN) of a security
         /// </summary>
+        /// <remarks>For more information about the ISIN standard: https://en.wikipedia.org/wiki/International_Securities_Identification_Number</remarks>
         public string ISIN { get; set; }
         
         /// <summary>
         /// Reads data from the specified file and converts it to a list of SecurityDefinition
         /// </summary>
-        /// <param name="securitiesFile">File to read from</param>
+        /// <param name="dataProvider">Data provider used to obtain symbol mappings data</param>
+        /// <param name="securitiesDefinitionKey">Location to read the securities definition data from</param>
         /// <returns>List of security definitions</returns>
-        public static List<SecurityDefinition> FromCsvFile(FileInfo securitiesFile)
+        public static List<SecurityDefinition> Read(IDataProvider dataProvider, string securitiesDefinitionKey)
         {
-            return File.ReadAllLines(securitiesFile.FullName)
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(FromCsvLine)
-                .ToList();
+            using var stream = dataProvider.Fetch(securitiesDefinitionKey);
+            using var reader = new StreamReader(stream);
+            
+            var securityDefinitions = new List<SecurityDefinition>();
+            
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                securityDefinitions.Add(FromCsvLine(line));
+            }
+
+            return securityDefinitions;
         }
 
         /// <summary>
         /// Attempts to read data from the specified file and convert it into a list of SecurityDefinition
         /// </summary>
-        /// <param name="securitiesFile">File to read from</param>
+        /// <param name="dataProvider">Data provider used to obtain symbol mappings data</param>
+        /// <param name="securitiesDatabaseKey">Location of the file to read from</param>
         /// <param name="securityDefinitions">Security definitions read</param>
         /// <returns>true if data was read successfully, false otherwise</returns>
-        public static bool TryFromCsvFile(FileInfo securitiesFile, out List<SecurityDefinition> securityDefinitions)
+        public static bool TryRead(IDataProvider dataProvider, string securitiesDatabaseKey, out List<SecurityDefinition> securityDefinitions)
         {
             try
             {
-                securityDefinitions = FromCsvFile(securitiesFile);
+                securityDefinitions = Read(dataProvider, securitiesDatabaseKey);
                 return true;
             }
             catch
@@ -97,7 +122,7 @@ namespace QuantConnect.Securities
             {
                 SecurityIdentifier = SecurityIdentifier.Parse(csv[0]),
                 CUSIP = string.IsNullOrWhiteSpace(csv[1]) ? null : csv[1],
-                FIGI = string.IsNullOrWhiteSpace(csv[2]) ? null : csv[2],
+                CompositeFIGI = string.IsNullOrWhiteSpace(csv[2]) ? null : csv[2],
                 SEDOL = string.IsNullOrWhiteSpace(csv[3]) ? null : csv[3],
                 ISIN = string.IsNullOrWhiteSpace(csv[4]) ? null : csv[4]
             };

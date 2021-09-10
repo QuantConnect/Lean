@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -52,12 +53,11 @@ namespace QuantConnect.Tests.Common.Securities
                 "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038"
             });
 
-            File.WriteAllText(
-                Path.Combine(symbolPropertiesDirectory.FullName, "security-database.csv"),
-                securityDatabaseLines);
+            var securityDatabaseFilePath = Path.Combine(symbolPropertiesDirectory.FullName, "security-database.csv");
+            File.WriteAllText(securityDatabaseFilePath,securityDatabaseLines);
 
             // Initialize the resolver now that we have data
-            _instance = new SecurityDefinitionSymbolResolver(_testingDataDirectory);
+            _instance = new SecurityDefinitionSymbolResolver(new DefaultDataProvider(), securityDatabaseFilePath);
         }
 
         [OneTimeTearDown]

@@ -2466,7 +2466,10 @@ namespace QuantConnect.Algorithm
         /// Converts an ISIN identifier into a <see cref="Symbol"/>
         /// </summary>
         /// <param name="isin">The International Securities Identification Number (ISIN) of an asset</param>
-        /// <param name="tradingDate">The date that the stock being looked up was being trading at</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
         /// <returns>Symbol corresponding to the ISIN. If no Symbol with a matching ISIN was found, returns null.</returns>
         public Symbol ISIN(string isin, DateTime? tradingDate = null)
         {
@@ -2477,7 +2480,10 @@ namespace QuantConnect.Algorithm
         /// Converts a composite FIGI identifier into a <see cref="Symbol"/>
         /// </summary>
         /// <param name="compositeFigi">The composite Financial Instrument Global Identifier (FIGI) of an asset</param>
-        /// <param name="tradingDate">The date that the stock being looked up was being trading at</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
         /// <returns>Symbol corresponding to the composite FIGI. If no Symbol with a matching composite FIGI was found, returns null.</returns>
         /// <remarks>
         /// The composite FIGI differs from an exchange-level FIGI, in that it identifies
@@ -2492,7 +2498,10 @@ namespace QuantConnect.Algorithm
         /// Converts a CUSIP identifier into a <see cref="Symbol"/>
         /// </summary>
         /// <param name="cusip">The CUSIP number of an asset</param>
-        /// <param name="tradingDate">The date that the stock being looked up was being trading at</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
         /// <returns>Symbol corresponding to the CUSIP. If no Symbol with a matching CUSIP was found, returns null.</returns>
         public Symbol CUSIP(string cusip, DateTime? tradingDate = null)
         {
@@ -2503,7 +2512,10 @@ namespace QuantConnect.Algorithm
         /// Converts a SEDOL identifier into a <see cref="Symbol"/>
         /// </summary>
         /// <param name="sedol">The SEDOL identifier of an asset</param>
-        /// <param name="tradingDate">The date that the stock being looked up was being trading at</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
         /// <returns>Symbol corresponding to the SEDOL. If no Symbol with a matching SEDOL was found, returns null.</returns>
         public Symbol SEDOL(string sedol, DateTime? tradingDate = null)
         {

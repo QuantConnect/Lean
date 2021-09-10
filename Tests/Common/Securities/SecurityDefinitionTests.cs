@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securityDefinition = SecurityDefinition.FromCsvLine(line);
             
             Assert.AreEqual(cusipExpected, securityDefinition.CUSIP);
-            Assert.AreEqual(figiExpected, securityDefinition.FIGI);
+            Assert.AreEqual(figiExpected, securityDefinition.CompositeFIGI);
             Assert.AreEqual(sedolExpected, securityDefinition.SEDOL);
             Assert.AreEqual(isinExpected, securityDefinition.ISIN);
         }
