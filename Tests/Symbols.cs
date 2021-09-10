@@ -68,6 +68,8 @@ namespace QuantConnect.Tests
         public static readonly Symbol Future_ESZ18_Dec2018 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2018, 12, 21));
         public static readonly Symbol Future_CLF19_Jan2019 = CreateFutureSymbol("CL", new DateTime(2018, 12, 19));
 
+        public static readonly Symbol SPX = CreateIndexSymbol("SPX");
+
         public static readonly ImmutableArray<Symbol> All =
             typeof(Symbols).GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Where(field => field.FieldType == typeof(Symbol))
@@ -122,6 +124,7 @@ namespace QuantConnect.Tests
                 case SecurityType.Future:   return Future_CLF19_Jan2019;
                 case SecurityType.Cfd:      return XAGUSD;
                 case SecurityType.Crypto:   return BTCUSD;
+                case SecurityType.Index:    return SPX;
                 default:
                     throw new NotImplementedException($"Symbols.GetBySecurityType({type}) is not implemented.");
             }
@@ -174,6 +177,11 @@ namespace QuantConnect.Tests
                 market = DefaultBrokerageModel.DefaultMarketMap[SecurityType.Future];
             }
             return Symbol.Create(ticker, SecurityType.Future, market, "/" + ticker);
+        }
+
+        private static Symbol CreateIndexSymbol(string ticker)
+        {
+            return Symbol.Create(ticker, SecurityType.Index, Market.USA);
         }
     }
 }
