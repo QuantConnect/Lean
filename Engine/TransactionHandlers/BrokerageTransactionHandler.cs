@@ -1150,7 +1150,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var quantity = -security.Holdings.Quantity;
 
                 // generate new order and ticket for the expired option
-                var order = new OptionExerciseOrder(e.Symbol, quantity, DateTime.UtcNow)
+                var order = new OptionExerciseOrder(e.Symbol, quantity, CurrentTimeUtc)
                 {
                     Id = _algorithm.Transactions.GetIncrementOrderId()
                 };
@@ -1163,7 +1163,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 // generate the order events reusing the option exercise model
                 var option = (Option)security;
-                var orderEvents = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+                var orderEvents = option.OptionExerciseModel.OptionExercise(option, order);
 
                 foreach (var orderEvent in orderEvents)
                 {
