@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
             SetPortfolioConstruction(new EqualWeightingAlphaStreamsPortfolioConstructionModel());
 
-            SetSecurityInitializer(new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
+            SetSecurityInitializer(new BrokerageModelSecurityInitializer(BrokerageModel,
                 new FuncSecuritySeeder(GetLastKnownPrices)));
 
             foreach (var alphaId in new [] { "623b06b231eb1cc1aa3643a46", "9fc8ef73792331b11dbd5429a" })
