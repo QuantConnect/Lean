@@ -394,20 +394,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var resolution = _algorithm.LiveMode ? Resolution.Minute : Resolution.Hour;
 
                     // Check that the tradebar subscription we are using can support this resolution GH #5893
-                    var baseInstance = typeof(TradeBar).GetBaseDataInstance();
+                    var subscriptionType = _algorithm.SubscriptionManager.SubscriptionDataConfigService.LookupSubscriptionConfigDataTypes(securityBenchmark.Security.Type, resolution, securityBenchmark.Security.Symbol.IsCanonical()).First();
+                    var baseInstance = subscriptionType.Item1.GetBaseDataInstance();
                     baseInstance.Symbol = securityBenchmark.Security.Symbol;
                     var supportedResolutions = baseInstance.SupportedResolutions();
                     if (!supportedResolutions.Contains(resolution))
                     {
-                        resolution = supportedResolutions.Last();
+                        resolution = supportedResolutions.OrderByDescending(x => x).First();
                     }
 
-                    //securityBenchmark.Security.Type
+                    var subscriptionList = new List<Tuple<Type, TickType>>() {subscriptionType};
                     var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
                         securityBenchmark.Security.Symbol,
                         resolution,
                         isInternalFeed: true,
-                        fillForward: false).First();
+                        fillForward: false,
+                        subscriptionDataTypes: subscriptionList
+                        ).First();
 
                     // we want to start from the previous tradable bar so the benchmark security
                     // never has 0 price
