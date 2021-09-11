@@ -53,6 +53,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="dataProvider">DataProvider to use</param>
         public void Initialize(IDataProvider dataProvider)
         {
+            if (_dataProvider != null)
+            {
+                return;
+            }
+            
             _dataProvider = dataProvider;
             StartExpirationTask();
         }
