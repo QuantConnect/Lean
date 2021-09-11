@@ -18,6 +18,44 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
 {
+
+    /// <summary>
+    /// This indicator is capable of wiring up two separate indicators into a single indicator
+    /// such that the output of each will be sent to a user specified function.
+    /// </summary>
+    /// <remarks>
+    /// This implementation maintains backward compatibility for single type composite indicators.
+    /// After discovering minor differences in the types of the left and right indicators we realized we need to have a two type solution
+    /// </remarks>
+    /// <typeparam name="T">The type of data input into this indicator</typeparam>
+    public class CompositeIndicator<T> : CompositeIndicator<T,T>
+        where T : IBaseData
+    {
+        /// <summary>
+        /// Creates a new CompositeIndicator capable of taking the output from the left and right indicators
+        /// and producing a new value via the composer delegate specified
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="left">The left indicator for the 'composer'</param>
+        /// <param name="right">The right indidcator for the 'composoer'</param>
+        /// <param name="composer">Function used to compose the left and right indicators</param>
+        public CompositeIndicator(string name, IndicatorBase<T> left, IndicatorBase<T> right, IndicatorComposer composer)
+            : base(name, left, right, composer)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator capable of taking the output from the left and right indicators
+        /// and producing a new value via the composer delegate specified
+        /// </summary>
+        /// <param name="left">The left indicator for the 'composer'</param>
+        /// <param name="right">The right indidcator for the 'composoer'</param>
+        /// <param name="composer">Function used to compose the left and right indicators</param>
+        public CompositeIndicator(IndicatorBase<T> left, IndicatorBase<T> right, IndicatorComposer composer)
+            : this($"COMPOSE({left.Name},{right.Name})", left, right, composer)
+        { }
+    }
+
     /// <summary>
     /// This indicator is capable of wiring up two separate indicators into a single indicator
     /// such that the output of each will be sent to a user specified function.
@@ -27,10 +65,25 @@ namespace QuantConnect.Indicators
     /// will have its values automatically updated each time a new piece of data is received from both
     /// the left and right indicators.
     /// </remarks>
-    /// <typeparam name="T">The type of data input into this indicator</typeparam>
-    public class CompositeIndicator<T> : IndicatorBase<IndicatorDataPoint>
+    /// <typeparam name="T">The type of data input into this indicator on the left side</typeparam>
+    /// <typeparam name="K">The type of data input into this indicator on the right side</typeparam>
+    public class CompositeIndicator<T, K> : IndicatorBase<IndicatorDataPoint>
         where T : IBaseData
+        where K : IBaseData
     {
+        /// <summary>
+        /// Implicitly convert this T,K converter to a T composite indicator. Works safely when T,K are the same
+        /// </summary>
+        public static implicit operator CompositeIndicator<T>(CompositeIndicator<T,K> indicator)
+        {
+            var converted = (CompositeIndicator<T>)indicator;
+            if (converted == null){
+                throw new ArgumentException(" Cannot convert");
+            }
+
+            return converted;
+        }
+
         /// <summary>
         /// Delegate type used to compose the output of two indicators into a new value.
         /// </summary>
@@ -41,7 +94,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="right">The right indicator</param>
         /// <returns>And indicator result representing the composition of the two indicators</returns>
-        public delegate IndicatorResult IndicatorComposer(IndicatorBase<T> left, IndicatorBase<T> right);
+        public delegate IndicatorResult IndicatorComposer(IndicatorBase<T> left, IndicatorBase<K> right);
 
         /// <summary>function used to compose the individual indicators</summary>
         private readonly IndicatorComposer _composer;
@@ -54,7 +107,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the 'right' indicator for the delegate
         /// </summary>
-        public IndicatorBase<T> Right { get; private set; }
+        public IndicatorBase<K> Right { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -81,7 +134,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator for the 'composer'</param>
         /// <param name="right">The right indidcator for the 'composoer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(string name, IndicatorBase<T> left, IndicatorBase<T> right, IndicatorComposer composer)
+        public CompositeIndicator(string name, IndicatorBase<T> left, IndicatorBase<K> right, IndicatorComposer composer)
             : base(name)
         {
             _composer = composer;
@@ -97,7 +150,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator for the 'composer'</param>
         /// <param name="right">The right indidcator for the 'composoer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(IndicatorBase<T> left, IndicatorBase<T> right, IndicatorComposer composer)
+        public CompositeIndicator(IndicatorBase<T> left, IndicatorBase<K> right, IndicatorComposer composer)
             : this($"COMPOSE({left.Name},{right.Name})", left, right, composer)
         { }
 
