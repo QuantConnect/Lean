@@ -128,8 +128,8 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ABCDEF99", 2021, 9, 9, null, Market.USA)]
         [TestCase(null, 2021, 9, 9, null, Market.USA)]
         [TestCase("1", 2021, 9, 9, null, Market.USA)]
-        [TestCase("bbg000BSWKH7", 1998, 5, 21, null, Market.USA)]
-        [TestCase("BBG000BSwKH7", 1998, 5, 21, null, Market.USA)]
+        [TestCase("bbg000BSWKH7", 1998, 5, 21, "QQQ", Market.USA)]
+        [TestCase("BBG000BSwKH7", 1998, 5, 21, "QQQ", Market.USA)]
         public void ResolvesCompositeFIGI(string compositeFigi, int year, int month, int day, string expectedTicker, string expectedMarket)
         {
             var tradingDate = new DateTime(year, month, day);
