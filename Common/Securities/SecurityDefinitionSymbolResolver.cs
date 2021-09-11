@@ -77,7 +77,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)),
+                _securityDefinitions?.FirstOrDefault(x => x.CUSIP != null && x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
         
@@ -100,7 +100,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.CompositeFIGI == compositeFigi),
+                _securityDefinitions?.FirstOrDefault(x => x.CompositeFIGI != null && x.CompositeFIGI.Equals(compositeFigi, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
         
@@ -123,7 +123,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.SEDOL.Equals(sedol, StringComparison.InvariantCultureIgnoreCase)),
+                _securityDefinitions?.FirstOrDefault(x => x.SEDOL != null && x.SEDOL.Equals(sedol, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
 
@@ -146,7 +146,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)),
+                _securityDefinitions?.FirstOrDefault(x => x.ISIN != null && x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
 
