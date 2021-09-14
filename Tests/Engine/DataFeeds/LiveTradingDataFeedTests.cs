@@ -833,9 +833,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(fineWasCalled);
         }
 
-
-        [Test]
-        public void FineCoarseFundamentalDataGetsPipedCorrectly()
+        [TestCase(1)]
+        [TestCase(2)]
+        public void FineCoarseFundamentalDataGetsPipedCorrectly(int numberOfUniverses)
         {
             _startDate = new DateTime(2014, 3, 25);
             CustomMockedFileBaseData.StartDate = _startDate;
@@ -843,18 +843,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var feed = RunDataFeed(getNextTicksFunction: fdqh => Enumerable.Empty<BaseData>());
 
-            var fineWasCalled = false;
-            _algorithm.AddUniverse(coarse => coarse
-                    .Where(x => x.Symbol.ID.Symbol.Contains("AAPL")).Select((fundamental, i) => fundamental.Symbol),
-                fine =>
-                {
-                    var symbol = fine.First().Symbol;
-                    if (symbol == Symbols.AAPL)
+            var fineWasCalled = new List<bool> { false, false };
+            for (var i = 0; i < numberOfUniverses; i++)
+            {
+                var index = i;
+                _algorithm.AddUniverse(coarse => coarse
+                        .Where(x => x.Symbol.ID.Symbol.Contains("AAPL")).Select((fundamental, i) => fundamental.Symbol),
+                    fine =>
                     {
-                        fineWasCalled = true;
-                    }
-                    return new[] { symbol };
-                });
+                        var symbol = fine.First().Symbol;
+                        if (symbol == Symbols.AAPL)
+                        {
+                            fineWasCalled[index] = true;
+                        }
+                        return new[] { symbol };
+                    });
+            }
 
             var receivedFundamentalsData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
@@ -869,7 +873,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }, sendUniverseData: true, alwaysInvoke: true, secondsTimeStep: 3600, endDate: _startDate.AddDays(10));
 
             Assert.IsTrue(receivedFundamentalsData);
-            Assert.IsTrue(fineWasCalled);
+            for (var i = 0; i < numberOfUniverses; i++)
+            {
+                Assert.IsTrue(fineWasCalled[i]);
+            }
         }
 
         [TestCase(SecurityType.Future)]

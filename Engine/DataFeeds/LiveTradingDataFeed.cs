@@ -304,10 +304,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: {config.Symbol.ID}");
 
-                // we subscribe using a normalized symbol, without a random GUID,
-                // since the ticker plant will send the coarse data using this symbol
-                var normalizedSymbol = CoarseFundamental.CreateUniverseSymbol(config.Symbol.ID.Market, false);
-
                 // Will try to pull coarse data from the data folder every 10min, file with today's date.
                 // If lean is started today it will trigger initial coarse universe selection
                 var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider,
@@ -318,11 +314,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
                 // aggregates each coarse data point into a single BaseDataCollection
-                var aggregator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, normalizedSymbol, true);
-                _customExchange.AddEnumerator(normalizedSymbol, aggregator);
+                var aggregator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol, true);
+                _customExchange.AddEnumerator(config.Symbol, aggregator);
 
                 var enqueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.SetDataHandler(normalizedSymbol, data =>
+                _customExchange.SetDataHandler(config.Symbol, data =>
                 {
                     var coarseData = data as BaseDataCollection;
                     enqueable.Enqueue(new BaseDataCollection(coarseData.Time, config.Symbol, coarseData.Data));
