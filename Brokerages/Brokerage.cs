@@ -216,7 +216,10 @@ namespace QuantConnect.Brokerages
             {
                 // remove the key, we really only want to return the cached value on the first request
                 var result = JsonConvert.DeserializeObject<List<Holding>>(value);
-
+                if (result == null)
+                {
+                    return new List<Holding>();
+                }
                 Log.Trace($"Brokerage.GetAccountHoldings(): sourcing holdings from provided brokerage data, found {result.Count} entries");
                 return result;
             }
@@ -242,7 +245,10 @@ namespace QuantConnect.Brokerages
             {
                 // remove the key, we really only want to return the cached value on the first request
                 var result = JsonConvert.DeserializeObject<List<CashAmount>>(value);
-
+                if (result == null)
+                {
+                    return new List<CashAmount>();
+                }
                 Log.Trace($"Brokerage.GetCashBalance(): sourcing cash balance from provided brokerage data, found {result.Count} entries");
                 return result;
             }
