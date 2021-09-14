@@ -21,21 +21,53 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Indicators
 {
-    /// <summary>
-    /// Provides a base type for all indicators
-    /// </summary>
-    /// <typeparam name="T">The type of data input into this indicator</typeparam>
-    [DebuggerDisplay("{ToDetailedString()}")]
-    public abstract partial class IndicatorBase<T> : IIndicator<T>
-        where T : IBaseData
+    public abstract class IndicatorBase
     {
-        /// <summary>the most recent input that was given to this indicator</summary>
-        private Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
+        /// <summary>
+        /// Gets the current state of this indicator. If the state has not been updated
+        /// then the time on the value will equal DateTime.MinValue.
+        /// </summary>
+        public IndicatorDataPoint Current { get; protected set; }
+
+        /// <summary>
+        /// Gets a name for this indicator
+        /// </summary>
+        public string Name { get; protected set; }
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public abstract bool IsReady { get; }
 
         /// <summary>
         /// Event handler that fires after this indicator is updated
         /// </summary>
         public event IndicatorUpdatedHandler Updated;
+
+        public abstract void Reset();
+
+        /// <summary>
+        /// Event invocator for the Updated event
+        /// </summary>
+        /// <param name="consolidated">This is the new piece of data produced by this indicator</param>
+        protected virtual void OnUpdated(IndicatorDataPoint consolidated)
+        {
+            Updated?.Invoke(this, consolidated);
+        }
+
+        // TODO: other non generic methods?
+    }
+
+    /// <summary>
+    /// Provides a base type for all indicators
+    /// </summary>
+    /// <typeparam name="T">The type of data input into this indicator</typeparam>
+    [DebuggerDisplay("{ToDetailedString()}")]
+    public abstract partial class IndicatorBase<T> : IndicatorBase, IIndicator<T>
+        where T : IBaseData
+    {
+        /// <summary>the most recent input that was given to this indicator</summary>
+        private Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
 
         /// <summary>
         /// Initializes a new instance of the Indicator class using the specified name.
@@ -46,23 +78,6 @@ namespace QuantConnect.Indicators
             Name = name;
             Current = new IndicatorDataPoint(DateTime.MinValue, 0m);
         }
-
-        /// <summary>
-        /// Gets a name for this indicator
-        /// </summary>
-        public string Name { get; private set; }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public abstract bool IsReady { get; }
-
-        /// <summary>
-        /// Gets the current state of this indicator. If the state has not been updated
-        /// then the time on the value will equal DateTime.MinValue.
-        /// </summary>
-        public IndicatorDataPoint Current { get; protected set; }
-
         /// <summary>
         /// Gets the number of samples processed by this indicator
         /// </summary>
@@ -137,7 +152,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
-        public virtual void Reset()
+        public override void Reset()
         {
             Samples = 0;
             _previousInput.Clear();
@@ -266,15 +281,6 @@ namespace QuantConnect.Indicators
         {
             // default implementation always returns IndicatorStatus.Success
             return new IndicatorResult(ComputeNextValue(input));
-        }
-
-        /// <summary>
-        /// Event invocator for the Updated event
-        /// </summary>
-        /// <param name="consolidated">This is the new piece of data produced by this indicator</param>
-        protected virtual void OnUpdated(IndicatorDataPoint consolidated)
-        {
-            Updated?.Invoke(this, consolidated);
         }
     }
 }
