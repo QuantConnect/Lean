@@ -24,8 +24,7 @@ namespace QuantConnect.Indicators
     /// such that the output of each will be sent to a user specified function.
     /// </summary>
     /// <remarks>
-    /// This implementation maintains backward compatibility for single type composite indicators.
-    /// After discovering minor differences in the types of the left and right indicators we realized we need to have a two type solution
+    /// This implementation maintains backward compatibility for generic type composite indicators.
     /// </remarks>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
     public class CompositeIndicator<T> : CompositeIndicator
@@ -39,7 +38,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator for the 'composer'</param>
         /// <param name="right">The right indidcator for the 'composoer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(string name, IndicatorBase<T> left, IndicatorBase<T> right, CompositeIndicator.IndicatorComposer composer)
+        public CompositeIndicator(string name, IndicatorBase left, IndicatorBase right, CompositeIndicator.IndicatorComposer composer)
             : base(name, left, right, composer)
         {
         }
@@ -51,7 +50,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator for the 'composer'</param>
         /// <param name="right">The right indidcator for the 'composoer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(IndicatorBase<T> left, IndicatorBase<T> right, CompositeIndicator.IndicatorComposer composer)
+        public CompositeIndicator(IndicatorBase left, IndicatorBase right, CompositeIndicator.IndicatorComposer composer)
             : this($"COMPOSE({left.Name},{right.Name})", left, right, composer)
         { }
     }
@@ -65,8 +64,6 @@ namespace QuantConnect.Indicators
     /// will have its values automatically updated each time a new piece of data is received from both
     /// the left and right indicators.
     /// </remarks>
-    /// <typeparam name="T">The type of data input into this indicator on the left side</typeparam>
-    /// <typeparam name="K">The type of data input into this indicator on the right side</typeparam>
     public class CompositeIndicator : IndicatorBase<IndicatorDataPoint>
     {
         /// <summary>
