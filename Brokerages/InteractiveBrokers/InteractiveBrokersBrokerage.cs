@@ -3317,19 +3317,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // IBGateway was closed by IBAutomater because the auto-restart token expired or it was closed manually (less likely)
                 Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater...");
 
-                Task.Factory.StartNew(() =>
+                // during weekends wait until one hour before FX market open before restarting IBAutomater
+                var delay = _ibAutomater.IsWithinWeekendServerResetTimes()
+                    ? GetNextWeekendReconnectionTimeUtc() - DateTime.UtcNow
+                    : TimeSpan.FromMinutes(5);
+
+                Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Delay before restart: {delay:d'd 'h'h 'm'm 's's'}");
+
+                Task.Delay(delay).ContinueWith(_ =>
                 {
                     try
                     {
-                        // during weekends wait until one hour before FX market open before restarting IBAutomater
-                        var delay = _ibAutomater.IsWithinWeekendServerResetTimes()
-                            ? GetNextWeekendReconnectionTimeUtc() - DateTime.UtcNow
-                            : TimeSpan.FromSeconds(10);
-
-                        Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Delay before restart: {delay:d'd 'h'h 'm'm 's's'}");
-
-                        Thread.Sleep(delay);
-
                         Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): restarting...");
 
                         Disconnect();
@@ -3342,7 +3340,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     {
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterRestartError", exception.ToString()));
                     }
-                }, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
+                }, CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default);
             }
         }
 
