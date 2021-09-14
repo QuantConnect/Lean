@@ -50,12 +50,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Brokerage Id for this order for when the brokerage splits orders into multiple pieces
         /// </summary>
-        public List<string> BrokerId { get; internal set; }
+        public List<string> BrokerId { get; set; }
 
         /// <summary>
         /// Symbol of the Asset
         /// </summary>
-        public Symbol Symbol { get; internal set; }
+        public Symbol Symbol { get; set; }
 
         /// <summary>
         /// Price of the Order.
@@ -63,7 +63,7 @@ namespace QuantConnect.Orders
         public decimal Price
         {
             get { return _price; }
-            internal set { _price = value.Normalize(); }
+            set { _price = value.Normalize(); }
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets the utc time the order was created.
         /// </summary>
-        public DateTime Time { get; internal set; }
+        public DateTime Time { get; set; }
 
         /// <summary>
         /// Gets the utc time this order was created. Alias for <see cref="Time"/>
@@ -104,8 +104,8 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal Quantity
         {
-            get { return _quantity; }
-            internal set { _quantity = value.Normalize(); }
+            get { return _quantity; } 
+            set { _quantity = value.Normalize(); }
         }
 
         /// <summary>
