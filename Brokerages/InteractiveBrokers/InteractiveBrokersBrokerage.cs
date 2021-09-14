@@ -3315,24 +3315,34 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (!result.HasError && !_isDisposeCalled)
             {
                 // IBGateway was closed by IBAutomater because the auto-restart token expired or it was closed manually (less likely)
-                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater in 10 seconds...");
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater...");
 
-                Thread.Sleep(TimeSpan.FromSeconds(10));
-
-                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): restarting...");
-
-                try
+                Task.Factory.StartNew(() =>
                 {
-                    Disconnect();
+                    try
+                    {
+                        // during weekends wait until one hour before FX market open before restarting IBAutomater
+                        var delay = _ibAutomater.IsWithinWeekendServerResetTimes()
+                            ? GetNextWeekendReconnectionTimeUtc() - DateTime.UtcNow
+                            : TimeSpan.FromSeconds(10);
 
-                    CheckIbAutomaterError(_ibAutomater.Start(false));
+                        Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Delay before restart: {delay:d'd 'h'h 'm'm 's's'}");
 
-                    Connect();
-                }
-                catch (Exception exception)
-                {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterRestartError", exception.ToString()));
-                }
+                        Thread.Sleep(delay);
+
+                        Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): restarting...");
+
+                        Disconnect();
+
+                        CheckIbAutomaterError(_ibAutomater.Start(false));
+
+                        Connect();
+                    }
+                    catch (Exception exception)
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterRestartError", exception.ToString()));
+                    }
+                }, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
             }
         }
 
@@ -3362,6 +3372,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomaterAutoRestartError", exception.ToString()));
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the time (UTC) of the next reconnection attempt.
+        /// </summary>
+        private static DateTime GetNextWeekendReconnectionTimeUtc()
+        {
+            // return the UTC time at one hour before Sunday FX market open,
+            // ignoring holidays as we should be able to connect with closed markets anyway
+            var nextDate = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).Date;
+            while (nextDate.DayOfWeek != DayOfWeek.Sunday)
+            {
+                nextDate += Time.OneDay;
+            }
+
+            return new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 16, 0, 0).ConvertToUtc(TimeZones.NewYork);
         }
 
         private void CheckIbAutomaterError(StartResult result, bool throwException = true)
