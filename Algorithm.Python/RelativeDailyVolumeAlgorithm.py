@@ -11,11 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
 from AlgorithmImports import *
 
 ### <summary>
@@ -35,11 +30,10 @@ class RelativeDailyVolumeAlgorithm(QCAlgorithm):
 
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,20)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
 
-        self.EnableAutomaticIndicatorWarmUp = True;
-        self.spy = self.AddEquity("SPY", Resolution.Hour).Symbol;
-        self.rdv = self.RDV(self.spy, 2);
+        self.EnableAutomaticIndicatorWarmUp = True
+        self.spy = self.AddEquity("SPY", Resolution.Hour).Symbol
+        self.rdv = self.RDV(self.spy)
 
     def OnData(self, data):
         if self.rdv.Current.Value > 1 and not self.Portfolio[self.spy].Invested:

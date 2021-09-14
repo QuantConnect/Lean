@@ -32,7 +32,7 @@ namespace QuantConnect.Indicators
         private readonly SortedDictionary<DateTime, decimal> _currentData;
         private int _previousDay;
         private int _days;
-        private int _warmUpPeriodDays; // On reset this value does not change
+        private readonly int _warmUpPeriodDays;
 
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
@@ -63,9 +63,9 @@ namespace QuantConnect.Indicators
         {
             _relativeData = new SortedDictionary<TimeSpan, SimpleMovingAverage>();
             _currentData = new SortedDictionary<DateTime, decimal>();
-            var numberOfBars = (TimeSpan.FromDays(1) / resolution.ToTimeSpan()) * period;
+            // Will give # of bars for entire day thus works for all asset classes
+            WarmUpPeriod = (int) (TimeSpan.FromDays(1) / resolution.ToTimeSpan()) * period;
             _warmUpPeriodDays = period;
-            WarmUpPeriod = (int)numberOfBars; // Will give # of bars for entire day thus works for all asset classes
             _previousDay = -1; // No calendar day can be -1, thus default is not a calendar day
             _days = -1; // Will increment by one after first TradeBar, then will increment by one every new day
         }
@@ -87,8 +87,7 @@ namespace QuantConnect.Indicators
                     cumulativeVolume += pair.Value;
                     if (!_relativeData.TryGetValue(timeBar, out daysAverage))
                     {
-                        var cur = _warmUpPeriodDays;
-                        daysAverage = _relativeData[timeBar] = new SimpleMovingAverage(cur);
+                        daysAverage = _relativeData[timeBar] = new SimpleMovingAverage(_warmUpPeriodDays);
                     }
                     daysAverage.Update(pair.Key, cumulativeVolume);
                 }

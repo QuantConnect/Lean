@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
@@ -42,11 +41,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 20);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
 
             EnableAutomaticIndicatorWarmUp = true;
             _symbol = AddEquity("SPY", Resolution.Hour).Symbol;
-            _rdv = RDV(_symbol, 2, Resolution.Hour);
+            _rdv = RDV(_symbol);
         }
 
         public override void OnData(Slice slice)
