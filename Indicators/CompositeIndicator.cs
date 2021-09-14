@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -76,11 +76,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public static implicit operator CompositeIndicator<T>(CompositeIndicator<T,K> indicator)
         {
-            var converted = (CompositeIndicator<T>)indicator;
-            if (converted == null){
-                throw new ArgumentException(" Cannot convert");
-            }
-
+            var converted = indicator as CompositeIndicator<T>;
             return converted;
         }
 
