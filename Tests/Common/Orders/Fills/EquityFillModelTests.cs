@@ -804,7 +804,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         [TestCase(-100)]
         [TestCase(100)]
-        public void PerformsMarketOnCloseUsingClosingPriceWithMinuteSubscription(int quantity)
+        public void PerformsMarketOnCloseUsingClosingPriceWithMinuteTradeBarSubscription(int quantity)
         {
             var reference = new DateTime(2015, 06, 05, 15, 0, 0); // before market close
             var config = CreateTradeBarConfig(Symbols.SPY);
@@ -842,10 +842,61 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         [TestCase(-100)]
         [TestCase(100)]
-        public void PerformsMarketOnCloseUsingClosingPriceWithTickSubscription(int quantity)
+        public void PerformsMarketOnCloseUsingClosingPriceWithMinuteQuoteBarSubscription(int quantity)
         {
             var reference = new DateTime(2015, 06, 05, 15, 0, 0); // before market close
-            var config = CreateTickConfig(Symbols.SPY);
+            var config = CreateQuoteBarConfig(Symbols.SPY);
+            var equity = CreateEquity(config);
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOnCloseOrder(Symbols.SPY, quantity, reference);
+            var time = reference;
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.SetMarketPrice(new QuoteBar(time, Symbols.SPY,
+                new Bar(1.45m, 1.99m, 1.09m, 1.39m), 100,
+                new Bar(1.46m, 2.01m, 1.11m, 1.41m), 100, config.Increment));
+
+            var fill = model.Fill(new FillModelParameters(
+                equity,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // market closes after 60min, so this is just before market Close
+            time = reference.AddMinutes(59);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.SetMarketPrice(new QuoteBar(time - config.Increment, Symbols.SPY,
+                new Bar(1.45m, 1.99m, 1.09m, 1.39m), 100,
+                new Bar(1.46m, 2.01m, 1.11m, 1.41m), 100, config.Increment));
+
+            fill = model.MarketOnCloseFill(equity, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            const decimal expected = 1.4m;
+
+            // market closes
+            time = reference.AddMinutes(60);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.SetMarketPrice(new TradeBar(time - config.Increment, Symbols.SPY, 1.45m, 2.0m, 1.1m, 1.40m, 100, config.Increment));
+            equity.SetMarketPrice(new QuoteBar(time, Symbols.SPY,
+                new Bar(1.45m, 1.99m, 1.09m, expected), 100,
+                new Bar(1.46m, 2.01m, 1.11m, expected), 100, config.Increment));
+
+            fill = model.MarketOnCloseFill(equity, order);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(expected, fill.FillPrice);
+            Assert.IsTrue(fill.Message.StartsWith("Warning: No trade information available", StringComparison.InvariantCulture));
+        }
+
+
+        [TestCase(-100, true)]
+        [TestCase(100, true)]
+        [TestCase(-100, false)]
+        [TestCase(100, false)]
+        public void PerformsMarketOnCloseUsingClosingPriceWithTickSubscription(int quantity, bool extendedHours)
+        {
+            var reference = new DateTime(2015, 06, 05, 15, 0, 0); // before market close
+            var config = CreateTickConfig(Symbols.SPY, extendedHours: extendedHours);
             var equity = CreateEquity(config);
             var model = (EquityFillModel)equity.FillModel;
             var order = new MarketOnCloseOrder(Symbols.SPY, quantity, reference);
@@ -882,6 +933,29 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillQuantity);
 
             const decimal expected = 1m;
+            // market closes
+            time = reference.AddMinutes(60);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.9m),   // Not Close
+                new Tick(time, Symbols.SPY, "80000001", "Q", 100, 0.95m),            // Close but not primary exchange
+                new Tick(time, Symbols.SPY, "80000001", "P", 100, 0.98m),         // Fill with this tick
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m),
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, expected),   // Fill with this tick is no extended hours
+            }, typeof(Tick));
+
+            // If the subscriptions doesn't include extended hours, fills with the last tick
+            if (!extendedHours)
+            {
+                fill = model.MarketOnCloseFill(equity, order);
+                Assert.AreEqual(order.Quantity, fill.FillQuantity);
+                Assert.AreEqual(expected, fill.FillPrice);
+                return;
+            }
+
+            Assert.AreEqual(0, fill.FillQuantity);
+
             // market closes
             time = reference.AddMinutes(60).AddMilliseconds(100);
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
@@ -1329,19 +1403,19 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             return equity;
         }
 
-        private SubscriptionDataConfig CreateTickConfig(Symbol symbol)
+        private SubscriptionDataConfig CreateTickConfig(Symbol symbol, bool extendedHours = true)
         {
-            return new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, extendedHours, false);
         }
 
-        private SubscriptionDataConfig CreateQuoteBarConfig(Symbol symbol, Resolution resolution = Resolution.Minute)
+        private SubscriptionDataConfig CreateQuoteBarConfig(Symbol symbol, Resolution resolution = Resolution.Minute, bool extendedHours = true)
         {
-            return new SubscriptionDataConfig(typeof(QuoteBar), symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(typeof(QuoteBar), symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, extendedHours, false);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, Resolution resolution = Resolution.Minute)
+        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, Resolution resolution = Resolution.Minute, bool extendedHours = true)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, extendedHours, false);
         }
 
         private class TestFillModel : EquityFillModel
