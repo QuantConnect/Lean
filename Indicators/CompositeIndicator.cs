@@ -14,47 +14,9 @@
 */
 
 using System;
-using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
 {
-
-    /// <summary>
-    /// This indicator is capable of wiring up two separate indicators into a single indicator
-    /// such that the output of each will be sent to a user specified function.
-    /// </summary>
-    /// <remarks>
-    /// This implementation maintains backward compatibility for generic type composite indicators.
-    /// </remarks>
-    /// <typeparam name="T">The type of data input into this indicator</typeparam>
-    public class CompositeIndicator<T> : CompositeIndicator
-        where T : IBaseData
-    {
-        /// <summary>
-        /// Creates a new CompositeIndicator capable of taking the output from the left and right indicators
-        /// and producing a new value via the composer delegate specified
-        /// </summary>
-        /// <param name="name">The name of this indicator</param>
-        /// <param name="left">The left indicator for the 'composer'</param>
-        /// <param name="right">The right indidcator for the 'composoer'</param>
-        /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(string name, IndicatorBase left, IndicatorBase right, CompositeIndicator.IndicatorComposer composer)
-            : base(name, left, right, composer)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new CompositeIndicator capable of taking the output from the left and right indicators
-        /// and producing a new value via the composer delegate specified
-        /// </summary>
-        /// <param name="left">The left indicator for the 'composer'</param>
-        /// <param name="right">The right indidcator for the 'composoer'</param>
-        /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(IndicatorBase left, IndicatorBase right, CompositeIndicator.IndicatorComposer composer)
-            : this($"COMPOSE({left.Name},{right.Name})", left, right, composer)
-        { }
-    }
-
     /// <summary>
     /// This indicator is capable of wiring up two separate indicators into a single indicator
     /// such that the output of each will be sent to a user specified function.
