@@ -15,7 +15,6 @@
 
 namespace QuantConnect.Indicators
 {
-
     public abstract partial class IndicatorBase
     {
         /// <summary>

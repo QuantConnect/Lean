@@ -108,59 +108,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to the current object.
-        /// </summary>
-        /// <returns>
-        /// true if the specified object  is equal to the current object; otherwise, false.
-        /// </returns>
-        /// <param name="obj">The object to compare with the current object. </param>
-        public override bool Equals(object obj)
-        {
-            // this implementation acts as a liason to prevent inconsistency between the operators
-            // == and != against primitive types. the core impl for equals between two indicators
-            // is still reference equality, however, when comparing value types (floats/int, ect..)
-            // we'll use value type semantics on Current.Value
-            // because of this, we shouldn't need to override GetHashCode as well since we're still
-            // solely relying on reference semantics (think hashset/dictionary impls)
-
-            if (ReferenceEquals(obj, null)) return false;
-            var type = obj.GetType();
-
-            while (type != null && type != typeof(object))
-            {
-
-                // TODO: Not sure about this
-                var cur = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
-                if (typeof(IndicatorBase<>) == cur)
-                {
-                    return ReferenceEquals(this, obj);
-                }
-                type = type.BaseType;
-            }
-
-            try
-            {
-                // the obj is not an indicator, so let's check for value types, try converting to decimal
-                var converted = obj.ConvertInvariant<decimal>();
-                return Current.Value == converted;
-            }
-            catch (InvalidCastException)
-            {
-                // conversion failed, return false
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Get Hash Code for this Object
-        /// </summary>
-        /// <returns>Integer Hash Code</returns>
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        /// <summary>
         /// Compares the current object with another object of the same type.
         /// </summary>
         /// <returns>
@@ -313,6 +260,57 @@ namespace QuantConnect.Indicators
         {
             // default implementation always returns IndicatorStatus.Success
             return new IndicatorResult(ComputeNextValue(input));
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current object.
+        /// </summary>
+        /// <returns>
+        /// true if the specified object  is equal to the current object; otherwise, false.
+        /// </returns>
+        /// <param name="obj">The object to compare with the current object. </param>
+        public override bool Equals(object obj)
+        {
+            // this implementation acts as a liason to prevent inconsistency between the operators
+            // == and != against primitive types. the core impl for equals between two indicators
+            // is still reference equality, however, when comparing value types (floats/int, ect..)
+            // we'll use value type semantics on Current.Value
+            // because of this, we shouldn't need to override GetHashCode as well since we're still
+            // solely relying on reference semantics (think hashset/dictionary impls)
+
+            if (ReferenceEquals(obj, null)) return false;
+            var type = obj.GetType();
+
+            while (type != null && type != typeof(object))
+            {
+                var cur = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+                if (typeof(IndicatorBase<>) == cur)
+                {
+                    return ReferenceEquals(this, obj);
+                }
+                type = type.BaseType;
+            }
+
+            try
+            {
+                // the obj is not an indicator, so let's check for value types, try converting to decimal
+                var converted = obj.ConvertInvariant<decimal>();
+                return Current.Value == converted;
+            }
+            catch (InvalidCastException)
+            {
+                // conversion failed, return false
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Get Hash Code for this Object
+        /// </summary>
+        /// <returns>Integer Hash Code</returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 }
