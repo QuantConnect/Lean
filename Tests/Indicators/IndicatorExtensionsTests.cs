@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,6 +19,7 @@ using QuantConnect.Indicators;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -404,6 +405,75 @@ namespace QuantConnect.Tests.Indicators
             indicatorB1.Of(indicatorB2);
         }
 
+        protected static TestCaseData[] IndicatorOfDifferentBaseCases()
+        {
+            var combinations = new []
+            {
+                new TestCaseData(new TestTradeBarIndicator("TB"), new TestQuoteBarIndicator("QB")),
+                new TestCaseData(new TestTradeBarIndicator("TB"), new TestBaseDataIndicator("BD")),
+                new TestCaseData(new TestTradeBarIndicator("TB"), new TestIndicatorDataPointIndicator("IDP")),
+
+                new TestCaseData(new TestQuoteBarIndicator("QB"), new TestTradeBarIndicator("TB")),
+                new TestCaseData(new TestQuoteBarIndicator("QB"), new TestBaseDataIndicator("BD")),
+                new TestCaseData(new TestQuoteBarIndicator("QB"), new TestIndicatorDataPointIndicator("IDP")),
+
+                new TestCaseData( new TestBaseDataIndicator("BD"), new TestTradeBarIndicator("TB")),
+                new TestCaseData( new TestBaseDataIndicator("BD"), new TestQuoteBarIndicator("QB")),
+                new TestCaseData( new TestBaseDataIndicator("BD"), new TestIndicatorDataPointIndicator("IDP")),
+
+                new TestCaseData(new TestIndicatorDataPointIndicator("IDP"), new TestTradeBarIndicator("TB")),
+                new TestCaseData(new TestIndicatorDataPointIndicator("IDP"), new TestQuoteBarIndicator("QB")),
+                new TestCaseData(new TestIndicatorDataPointIndicator("IDP"), new TestBaseDataIndicator("BD")),
+            };
+
+            return combinations;
+        }
+
+        [TestCaseSource(nameof(IndicatorOfDifferentBaseCases))]
+        public void DifferentBaseIndicators(dynamic left, dynamic right)
+        {
+            CompositeTestRunner(left, right);
+        }
+        
+        [TestCaseSource(nameof(IndicatorOfDifferentBaseCases))]
+        public void DifferentBaseIndicatorsPy(dynamic left, dynamic right)
+        {
+            using (Py.GIL())
+            {
+                CompositeTestRunner(((IIndicator)left).ToPython(), ((IIndicator)right).ToPython());
+            }
+        }
+
+        public static void CompositeTestRunner(dynamic left, dynamic right)
+        {
+            var minus = IndicatorExtensions.Minus(left, right);
+            var plus = IndicatorExtensions.Plus(left, right);
+            var times = IndicatorExtensions.Times(left, right);
+            var over = IndicatorExtensions.Over(left, right);
+
+            // Check our values are all zero
+            Assert.AreEqual(0, (int)right.Current.Value);
+            Assert.AreEqual(0, (int)left.Current.Value);
+
+            Assert.AreEqual(0, minus.Current.Value);
+            Assert.AreEqual(0, plus.Current.Value);
+            Assert.AreEqual(0, times.Current.Value);
+            Assert.AreEqual(0, over.Current.Value);
+
+            // Use our test indicator method to update left and right
+            left.UpdateValue(5);
+            right.UpdateValue(10);
+
+            // Check final expected values, this ensures that composites are updating correctly
+            Assert.AreEqual(5, (int)left.Current.Value);
+            Assert.AreEqual(10, (int)right.Current.Value);
+
+            Assert.AreEqual(-5, minus.Current.Value);
+            Assert.AreEqual(15, plus.Current.Value);
+            Assert.AreEqual(50, times.Current.Value);
+            Assert.AreEqual(.5, over.Current.Value);
+        }
+
         [Test]
         public void MinusSubtractsLeftAndConstant_Py()
         {
@@ -567,6 +637,106 @@ namespace QuantConnect.Tests.Indicators
             protected override decimal ComputeNextValue(IndicatorDataPoint input)
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        private abstract class TestIndicator<T> : IndicatorBase<T>
+            where T : IBaseData
+        {
+            protected TestIndicator(string name)
+                : base(name)
+            {
+
+            }
+
+            public void UpdateValue(int value)
+            {
+                Current = new IndicatorDataPoint(DateTime.MinValue, value);
+                OnUpdated(Current);
+            }
+        }
+
+        private class TestTradeBarIndicator : TestIndicator<TradeBar>
+        {
+            public TestTradeBarIndicator(string name)
+                : base(name)
+            {
+            }
+
+            public override bool IsReady
+            {
+                get
+                {
+                    return true;
+                }
+            }
+
+            protected override decimal ComputeNextValue(TradeBar input)
+            {
+                return input.Value;
+            }
+        }
+
+        private class TestQuoteBarIndicator : TestIndicator<QuoteBar>
+        {
+            public TestQuoteBarIndicator(string name)
+                : base(name)
+            {
+            }
+
+            public override bool IsReady
+            {
+                get
+                {
+                    return true;
+                }
+            }
+
+            protected override decimal ComputeNextValue(QuoteBar input)
+            {
+                return input.Value;
+            }
+        }
+
+        private class TestBaseDataIndicator : TestIndicator<BaseData>
+        {
+            public TestBaseDataIndicator(string name)
+                : base(name)
+            {
+            }
+
+            public override bool IsReady
+            {
+                get
+                {
+                    return true;
+                }
+            }
+
+            protected override decimal ComputeNextValue(BaseData input)
+            {
+                return input.Value;
+            }
+        }
+
+        private class TestIndicatorDataPointIndicator : TestIndicator<IndicatorDataPoint>
+        {
+            public TestIndicatorDataPointIndicator(string name)
+                : base(name)
+            {
+            }
+
+            public override bool IsReady
+            {
+                get
+                {
+                    return true;
+                }
+            }
+
+            protected override decimal ComputeNextValue(IndicatorDataPoint input)
+            {
+                return input.Value;
             }
         }
     }
