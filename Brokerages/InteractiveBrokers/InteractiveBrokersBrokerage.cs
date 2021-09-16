@@ -93,7 +93,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // tracks requested order updates, so we can flag Submitted order events as updates
         private readonly ConcurrentDictionary<int, int> _orderUpdates = new ConcurrentDictionary<int, int>();
         // tracks executions before commission reports, map: execId -> execution
-        private readonly ConcurrentDictionary<string, Execution> _orderExecutions = new ConcurrentDictionary<string, Execution>();
+        private readonly ConcurrentDictionary<string, IB.ExecutionDetailsEventArgs> _orderExecutions = new ConcurrentDictionary<string, IB.ExecutionDetailsEventArgs>();
         // tracks commission reports before executions, map: execId -> commission report
         private readonly ConcurrentDictionary<string, CommissionReport> _commissionReports = new ConcurrentDictionary<string, CommissionReport>();
 
@@ -1170,6 +1170,54 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Helper method to normalize a provided price to the Lean expected unit
+        /// </summary>
+        private decimal NormalizePriceToLean(decimal price, Contract contract, Symbol symbol)
+        {
+            // which other security type should be normalized: FOPs?
+            if (symbol.SecurityType == SecurityType.Future)
+            {
+                return price / GetContractPriceMagnifier(contract, symbol);
+            }
+            return price;
+        }
+
+        /// <summary>
+        /// Helper method to normalize a provided price to the brokerage expected unit, for example cents
+        /// </summary>
+        private decimal NormalizePriceToBrokerage(decimal price, Contract contract, Symbol symbol)
+        {
+            // which other security type should be normalized: FOPs?
+            if (symbol.SecurityType == SecurityType.Future)
+            {
+                return price * GetContractPriceMagnifier(contract, symbol);
+            }
+            return price;
+        }
+
+        /// <summary>
+        /// Will return the price magnifier for the requested symbol
+        /// </summary>
+        private decimal GetContractPriceMagnifier(Contract contract, Symbol symbol)
+        {
+            if (symbol.SecurityType != SecurityType.Future)
+            {
+                return 1m;
+            }
+            var uniqueKey = GetUniqueKey(contract);
+            if (!_contractDetails.TryGetValue(uniqueKey, out var contractDetails))
+            {
+                contractDetails = GetContractDetails(contract, symbol);
+                if (contractDetails == null)
+                {
+                    Log.Error($"InteractiveBrokersBrokerage:GetContractPriceMagnifier(): Failed to get ContractDetails for {symbol.Value}, assuming magnifier value 1");
+                    return 1;
+                }
+            }
+            return contractDetails.PriceMagnifier;
+        }
+
+        /// <summary>
         /// Find contract details given a ticker and contract
         /// </summary>
         /// <param name="contract">Contract we are searching for</param>
@@ -1570,7 +1618,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     if (CanEmitFill(order, executionDetails.Execution))
                     {
                         // we have both execution and commission report, emit the fill
-                        EmitOrderFill(order, executionDetails.Execution, commissionReport);
+                        EmitOrderFill(order, executionDetails, commissionReport);
                     }
 
                     _commissionReports.TryRemove(commissionReport.ExecId, out commissionReport);
@@ -1578,7 +1626,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 else
                 {
                     // save execution in dictionary and wait for commission report
-                    _orderExecutions[executionDetails.Execution.ExecId] = executionDetails.Execution;
+                    _orderExecutions[executionDetails.Execution.ExecId] = executionDetails;
                 }
             }
             catch (Exception err)
@@ -1599,29 +1647,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace("InteractiveBrokersBrokerage.HandleCommissionReport(): " + e);
 
-                Execution execution;
-                if (!_orderExecutions.TryGetValue(e.CommissionReport.ExecId, out execution))
+                IB.ExecutionDetailsEventArgs executionDetails;
+                if (!_orderExecutions.TryGetValue(e.CommissionReport.ExecId, out executionDetails))
                 {
                     // save commission in dictionary and wait for execution event
                     _commissionReports[e.CommissionReport.ExecId] = e.CommissionReport;
                     return;
                 }
 
-                var order = _orderProvider.GetOrderByBrokerageId(execution.OrderId);
+                var order = _orderProvider.GetOrderByBrokerageId(executionDetails.Execution.OrderId);
                 if (order == null)
                 {
-                    Log.Error("InteractiveBrokersBrokerage.HandleExecutionDetails(): Unable to locate order with BrokerageID " + execution.OrderId);
+                    Log.Error("InteractiveBrokersBrokerage.HandleExecutionDetails(): Unable to locate order with BrokerageID " + executionDetails.Execution.OrderId);
                     return;
                 }
 
-                if (CanEmitFill(order, execution))
+                if (CanEmitFill(order, executionDetails.Execution))
                 {
                     // we have both execution and commission report, emit the fill
-                    EmitOrderFill(order, execution, e.CommissionReport);
+                    EmitOrderFill(order, executionDetails, e.CommissionReport);
                 }
 
                 // always remove previous execution
-                _orderExecutions.TryRemove(e.CommissionReport.ExecId, out execution);
+                _orderExecutions.TryRemove(e.CommissionReport.ExecId, out executionDetails);
             }
             catch (Exception err)
             {
@@ -1656,12 +1704,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Emits an order fill (or partial fill) including the actual IB commission paid
         /// </summary>
-        private void EmitOrderFill(Order order, Execution execution, CommissionReport commissionReport)
+        private void EmitOrderFill(Order order, IB.ExecutionDetailsEventArgs executionDetails, CommissionReport commissionReport)
         {
-            var currentQuantityFilled = Convert.ToInt32(execution.Shares);
-            var totalQuantityFilled = Convert.ToInt32(execution.CumQty);
+            var currentQuantityFilled = Convert.ToInt32(executionDetails.Execution.Shares);
+            var totalQuantityFilled = Convert.ToInt32(executionDetails.Execution.CumQty);
             var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
-            var price = Convert.ToDecimal(execution.Price);
+            var price = ConvertPrice(executionDetails.Execution.Price, executionDetails.Contract, order.Symbol);
             var orderFee = new OrderFee(new CashAmount(
                 Convert.ToDecimal(commissionReport.Commission),
                 commissionReport.Currency.ToUpperInvariant()));
@@ -1767,23 +1815,23 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var limitIfTouchedOrder = order as LimitIfTouchedOrder;
             if (limitOrder != null)
             {
-                ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(limitOrder.LimitPrice, GetMinTick(contract, order.Symbol)));
+                ibOrder.LmtPrice = ConvertPrice(limitOrder.LimitPrice, contract, order.Symbol);
             }
             else if (stopMarketOrder != null)
             {
-                ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(stopMarketOrder.StopPrice, GetMinTick(contract, order.Symbol)));
+                ibOrder.AuxPrice = ConvertPrice(stopMarketOrder.StopPrice, contract, order.Symbol);
             }
             else if (stopLimitOrder != null)
             {
                 var minTick = GetMinTick(contract, order.Symbol);
-                ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.LimitPrice, minTick));
-                ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.StopPrice, minTick));
+                ibOrder.LmtPrice = ConvertPrice(stopLimitOrder.LimitPrice, contract, order.Symbol, minTick);
+                ibOrder.AuxPrice = ConvertPrice(stopLimitOrder.StopPrice, contract, order.Symbol, minTick);
             }
             else if (limitIfTouchedOrder != null)
             {
                 var minTick = GetMinTick(contract, order.Symbol);
-                ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(limitIfTouchedOrder.LimitPrice, minTick));
-                ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(limitIfTouchedOrder.TriggerPrice, minTick));
+                ibOrder.LmtPrice = ConvertPrice(limitIfTouchedOrder.LimitPrice, contract, order.Symbol, minTick);
+                ibOrder.AuxPrice = ConvertPrice(limitIfTouchedOrder.TriggerPrice, contract, order.Symbol, minTick);
             }
 
             // add financial advisor properties
@@ -1827,6 +1875,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return ibOrder;
         }
 
+        /// <summary>
+        /// Convert the decimal price from Lean into a double for IB, applying price magnifier and rounding
+        /// to min tick size.  Note that rounding should already have happened in BrokerageTransactionHandler's
+        /// RoundOrderPrices().
+        /// </summary>
+        private double ConvertPrice(decimal price, Contract contract, Symbol symbol, decimal? minTick = null)
+        {
+            // Minimum tick size is given in un-magnified scale - round first then scale
+            return Convert.ToDouble(
+                NormalizePriceToBrokerage(
+                    RoundPrice(price, minTick ?? GetMinTick(contract, symbol)), 
+                    contract, 
+                    symbol));
+        }
+
+        /// <summary>
+        /// Convert the double price from IB into a decimal for Lean, reversing IB's price magnifier
+        /// </summary>
+        private decimal ConvertPrice(double price, Contract contract, Symbol symbol)
+        {
+            return NormalizePriceToLean(Convert.ToDecimal(price), contract, symbol);
+        }
+
         private Order ConvertOrder(IBApi.Order ibOrder, Contract contract)
         {
             // this function is called by GetOpenOrders which is mainly used by the setup handler to
@@ -1864,7 +1935,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.Limit:
                     order = new LimitOrder(mappedSymbol,
                         Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
-                        Convert.ToDecimal(ibOrder.LmtPrice),
+                        ConvertPrice(ibOrder.LmtPrice, contract, mappedSymbol),
                         new DateTime()
                         );
                     break;
@@ -1872,7 +1943,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.StopMarket:
                     order = new StopMarketOrder(mappedSymbol,
                         Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
-                        Convert.ToDecimal(ibOrder.AuxPrice),
+                        ConvertPrice(ibOrder.AuxPrice, contract, mappedSymbol),
                         new DateTime()
                         );
                     break;
@@ -1880,8 +1951,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(mappedSymbol,
                         Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
-                        Convert.ToDecimal(ibOrder.AuxPrice),
-                        Convert.ToDecimal(ibOrder.LmtPrice),
+                        ConvertPrice(ibOrder.AuxPrice, contract, mappedSymbol),
+                        ConvertPrice(ibOrder.LmtPrice, contract, mappedSymbol),
                         new DateTime()
                         );
                     break;
@@ -1889,8 +1960,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.LimitIfTouched:
                     order = new LimitIfTouchedOrder(mappedSymbol,
                         Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
-                        Convert.ToDecimal(ibOrder.AuxPrice),
-                        Convert.ToDecimal(ibOrder.LmtPrice),
+                        ConvertPrice(ibOrder.AuxPrice, contract, mappedSymbol),
+                        ConvertPrice(ibOrder.LmtPrice, contract, mappedSymbol),
                         new DateTime()
                     );
                     break;
@@ -2308,14 +2379,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
         }
 
-        private static TradeBar ConvertTradeBar(Symbol symbol, Resolution resolution, IB.HistoricalDataEventArgs historyBar)
+        // TODO: Test PriceMagnifier changes with GetHistory()
+        private static TradeBar ConvertTradeBar(Symbol symbol, Resolution resolution, IB.HistoricalDataEventArgs historyBar, decimal priceMagnifier)
         {
             var time = resolution != Resolution.Daily ?
                 Time.UnixTimeStampToDateTime(Convert.ToDouble(historyBar.Bar.Time, CultureInfo.InvariantCulture)) :
                 DateTime.ParseExact(historyBar.Bar.Time, "yyyyMMdd", CultureInfo.InvariantCulture);
 
-            return new TradeBar(time, symbol, (decimal)historyBar.Bar.Open, (decimal)historyBar.Bar.High, (decimal)historyBar.Bar.Low,
-                (decimal)historyBar.Bar.Close, historyBar.Bar.Volume, resolution.ToTimeSpan());
+            return new TradeBar(time, symbol, (decimal)historyBar.Bar.Open / priceMagnifier, (decimal)historyBar.Bar.High / priceMagnifier, 
+                (decimal)historyBar.Bar.Low / priceMagnifier, (decimal)historyBar.Bar.Close / priceMagnifier, historyBar.Bar.Volume, resolution.ToTimeSpan());
         }
 
         /// <summary>
@@ -2512,6 +2584,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                             var id = GetNextId();
                             var contract = CreateContract(subscribeSymbol, false);
+                            var priceMagnifier = GetContractPriceMagnifier(contract, subscribeSymbol);
 
                             _requestInformation[id] = $"[Id={id}] Subscribe: {symbol.Value} ({GetContractDescription(contract)})";
 
@@ -2531,7 +2604,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             Client.ClientSocket.reqMktData(id, contract, "101", false, false, new List<TagValue>());
 
                             _subscribedSymbols[symbol] = id;
-                            _subscribedTickers[id] = new SubscriptionEntry { Symbol = subscribeSymbol };
+                            _subscribedTickers[id] = new SubscriptionEntry { Symbol = subscribeSymbol, PriceMagnifier = priceMagnifier };
 
                             Log.Trace($"InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {symbol.Value} ({GetContractDescription(contract)}) # {id}");
                         }
@@ -2668,7 +2741,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var symbol = entry.Symbol;
 
             // negative price (-1) means no price available, normalize to zero
-            var price = e.Price < 0 ? 0 : Convert.ToDecimal(e.Price);
+            var price = e.Price < 0 ? 0 : Convert.ToDecimal(e.Price) / entry.PriceMagnifier;
 
             switch (e.Field)
             {
@@ -3132,6 +3205,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 ? Convert.ToInt32(!request.IncludeExtendedMarketHours)
                 : 0;
 
+            // TODO: Test PriceMagnifier changes with GetHistory()
+            var priceMagnifier = GetContractPriceMagnifier(contract, request.Symbol);
+
             // making multiple requests if needed in order to download the history
             while (endTime >= startTime)
             {
@@ -3145,7 +3221,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     if (args.RequestId == historicalTicker)
                     {
-                        var bar = ConvertTradeBar(request.Symbol, request.Resolution, args);
+                        var bar = ConvertTradeBar(request.Symbol, request.Resolution, args, priceMagnifier);
                         if (request.Resolution != Resolution.Daily)
                         {
                             bar.Time = bar.Time.ConvertFromUtc(exchangeTimeZone);
@@ -3426,6 +3502,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private class SubscriptionEntry
         {
             public Symbol Symbol { get; set; }
+            public decimal PriceMagnifier { get; set; }
             public Tick LastTradeTick { get; set; }
             public Tick LastQuoteTick { get; set; }
             public Tick LastOpenInterestTick { get; set; }
