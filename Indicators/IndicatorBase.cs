@@ -52,6 +52,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public event IndicatorUpdatedHandler Updated;
 
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
         public abstract void Reset();
 
         /// <summary>

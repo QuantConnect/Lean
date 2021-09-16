@@ -442,10 +442,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 foreach (var method in methods)
                 {
-                    Console.WriteLine(method);
                     var newCase = new TestCaseData(combo, method);
-
-                    Console.WriteLine(newCase);
                     cases.Add(newCase);
                 }
             }
@@ -695,6 +692,11 @@ namespace QuantConnect.Tests.Indicators
                 Current = new IndicatorDataPoint(DateTime.MinValue, value);
                 OnUpdated(Current);
             }
+
+            protected override decimal ComputeNextValue(T input)
+            {
+                return input.Value;
+            }
         }
 
         private class TestTradeBarIndicator : TestIndicator<TradeBar>
@@ -710,11 +712,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     return true;
                 }
-            }
-
-            protected override decimal ComputeNextValue(TradeBar input)
-            {
-                return input.Value;
             }
         }
 
@@ -732,11 +729,6 @@ namespace QuantConnect.Tests.Indicators
                     return true;
                 }
             }
-
-            protected override decimal ComputeNextValue(QuoteBar input)
-            {
-                return input.Value;
-            }
         }
 
         private class TestBaseDataIndicator : TestIndicator<BaseData>
@@ -753,11 +745,6 @@ namespace QuantConnect.Tests.Indicators
                     return true;
                 }
             }
-
-            protected override decimal ComputeNextValue(BaseData input)
-            {
-                return input.Value;
-            }
         }
 
         private class TestIndicatorDataPointIndicator : TestIndicator<IndicatorDataPoint>
@@ -773,11 +760,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     return true;
                 }
-            }
-
-            protected override decimal ComputeNextValue(IndicatorDataPoint input)
-            {
-                return input.Value;
             }
         }
     }
