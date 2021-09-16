@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 using System.Linq;
@@ -407,58 +408,102 @@ namespace QuantConnect.Tests.Indicators
 
         protected static TestCaseData[] IndicatorOfDifferentBaseCases()
         {
-            var combinations = new []
+            // Helper for getting all permutations of the indicators listed below
+            static IEnumerable<IEnumerable<T>>
+                GetPermutations<T>(IEnumerable<T> list, int length)
             {
-                new TestCaseData(new TestTradeBarIndicator("TB"), new TestQuoteBarIndicator("QB")),
-                new TestCaseData(new TestTradeBarIndicator("TB"), new TestBaseDataIndicator("BD")),
-                new TestCaseData(new TestTradeBarIndicator("TB"), new TestIndicatorDataPointIndicator("IDP")),
+                if (length == 1) return list.Select(t => new T[] { t });
+                return GetPermutations(list, length - 1)
+                    .SelectMany(t => list.Where(o => !t.Contains(o)),
+                        (t1, t2) => t1.Concat(new T[] { t2 }));
+            }
 
-                new TestCaseData(new TestQuoteBarIndicator("QB"), new TestTradeBarIndicator("TB")),
-                new TestCaseData(new TestQuoteBarIndicator("QB"), new TestBaseDataIndicator("BD")),
-                new TestCaseData(new TestQuoteBarIndicator("QB"), new TestIndicatorDataPointIndicator("IDP")),
-
-                new TestCaseData( new TestBaseDataIndicator("BD"), new TestTradeBarIndicator("TB")),
-                new TestCaseData( new TestBaseDataIndicator("BD"), new TestQuoteBarIndicator("QB")),
-                new TestCaseData( new TestBaseDataIndicator("BD"), new TestIndicatorDataPointIndicator("IDP")),
-
-                new TestCaseData(new TestIndicatorDataPointIndicator("IDP"), new TestTradeBarIndicator("TB")),
-                new TestCaseData(new TestIndicatorDataPointIndicator("IDP"), new TestQuoteBarIndicator("QB")),
-                new TestCaseData(new TestIndicatorDataPointIndicator("IDP"), new TestBaseDataIndicator("BD")),
+            // Define our indicators to test on
+            var testIndicators = new IIndicator[]
+            {
+                new TestBaseDataIndicator("BD"),
+                new TestQuoteBarIndicator("QB"),
+                new TestTradeBarIndicator("TB"),
+                new TestIndicatorDataPointIndicator("IDP")
             };
 
-            return combinations;
+            // Methods defined in CompositeTestRunner
+            var methods = new string[]
+            {
+                "minus", "plus", "over", "times"
+            };
+
+            // Create every combination of indicators
+            var combinations = GetPermutations(testIndicators, 2);
+
+            // Create a case for each method with each combination of indicators
+            var cases = new List<TestCaseData>();
+            foreach (var combo in combinations)
+            {
+                foreach (var method in methods)
+                {
+                    Console.WriteLine(method);
+                    var newCase = new TestCaseData(combo, method);
+
+                    Console.WriteLine(newCase);
+                    cases.Add(newCase);
+                }
+            }
+
+            return cases.ToArray();
         }
 
         [TestCaseSource(nameof(IndicatorOfDifferentBaseCases))]
-        public void DifferentBaseIndicators(dynamic left, dynamic right)
+        public void DifferentBaseIndicators(IEnumerable<IIndicator> indicators, string method)
         {
-            CompositeTestRunner(left, right);
+            CompositeTestRunner(indicators.ElementAt(0), indicators.ElementAt(1), method);
         }
         
         [TestCaseSource(nameof(IndicatorOfDifferentBaseCases))]
-        public void DifferentBaseIndicatorsPy(dynamic left, dynamic right)
+        public void DifferentBaseIndicatorsPy(IEnumerable<IIndicator> indicators, string method)
         {
             using (Py.GIL())
             {
-                CompositeTestRunner(((IIndicator)left).ToPython(), ((IIndicator)right).ToPython());
+                CompositeTestRunner(indicators.ElementAt(0).ToPython(), indicators.ElementAt(1).ToPython(), method);
             }
         }
 
-        public static void CompositeTestRunner(dynamic left, dynamic right)
+        public static void CompositeTestRunner(dynamic left, dynamic right, string method)
         {
-            var minus = IndicatorExtensions.Minus(left, right);
-            var plus = IndicatorExtensions.Plus(left, right);
-            var times = IndicatorExtensions.Times(left, right);
-            var over = IndicatorExtensions.Over(left, right);
+            // Reset before every test; the permutation setup in test cases uses the same instance for each permutation
+            left.Reset();
+            right.Reset();
+
+            double expected;
+            CompositeIndicator compositeIndicator;
+
+            switch (method)
+            {
+                case "minus":
+                    expected = -5; // 5 - 10
+                    compositeIndicator = IndicatorExtensions.Minus(left, right);
+                    break;
+                case "plus":
+                    expected = 15; // 5 + 10
+                    compositeIndicator = IndicatorExtensions.Plus(left, right);
+                    break;
+                case "over":
+                    expected = .5; // 5 / 10
+                    compositeIndicator = IndicatorExtensions.Over(left, right);
+                    break;
+                case "times":
+                    expected = 50; // 5 * 10
+                    compositeIndicator = IndicatorExtensions.Times(left, right);
+                    break;
+                default:
+                    Assert.Fail($"Method '{method}' not handled by this test, please implement");
+                    throw new ArgumentException($"Cannot proceed with test using method {method}");
+            }
 
             // Check our values are all zero
             Assert.AreEqual(0, (int)right.Current.Value);
             Assert.AreEqual(0, (int)left.Current.Value);
-
-            Assert.AreEqual(0, minus.Current.Value);
-            Assert.AreEqual(0, plus.Current.Value);
-            Assert.AreEqual(0, times.Current.Value);
-            Assert.AreEqual(0, over.Current.Value);
+            Assert.AreEqual(0, compositeIndicator.Current.Value);
 
             // Use our test indicator method to update left and right
             left.UpdateValue(5);
@@ -467,11 +512,7 @@ namespace QuantConnect.Tests.Indicators
             // Check final expected values, this ensures that composites are updating correctly
             Assert.AreEqual(5, (int)left.Current.Value);
             Assert.AreEqual(10, (int)right.Current.Value);
-
-            Assert.AreEqual(-5, minus.Current.Value);
-            Assert.AreEqual(15, plus.Current.Value);
-            Assert.AreEqual(50, times.Current.Value);
-            Assert.AreEqual(.5, over.Current.Value);
+            Assert.AreEqual(expected, compositeIndicator.Current.Value);
         }
 
         [Test]
