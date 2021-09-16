@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
 {
@@ -27,9 +26,7 @@ namespace QuantConnect.Indicators
     /// will have its values automatically updated each time a new piece of data is received from both
     /// the left and right indicators.
     /// </remarks>
-    /// <typeparam name="T">The type of data input into this indicator</typeparam>
-    public class CompositeIndicator<T> : IndicatorBase<IndicatorDataPoint>
-        where T : IBaseData
+    public class CompositeIndicator : IndicatorBase<IndicatorDataPoint>
     {
         /// <summary>
         /// Delegate type used to compose the output of two indicators into a new value.
@@ -41,7 +38,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="right">The right indicator</param>
         /// <returns>And indicator result representing the composition of the two indicators</returns>
-        public delegate IndicatorResult IndicatorComposer(IndicatorBase<T> left, IndicatorBase<T> right);
+        public delegate IndicatorResult IndicatorComposer(IndicatorBase left, IndicatorBase right);
 
         /// <summary>function used to compose the individual indicators</summary>
         private readonly IndicatorComposer _composer;
@@ -49,12 +46,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the 'left' indicator for the delegate
         /// </summary>
-        public IndicatorBase<T> Left { get; private set; }
+        public IndicatorBase Left { get; private set; }
 
         /// <summary>
         /// Gets the 'right' indicator for the delegate
         /// </summary>
-        public IndicatorBase<T> Right { get; private set; }
+        public IndicatorBase Right { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -81,7 +78,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator for the 'composer'</param>
         /// <param name="right">The right indidcator for the 'composoer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(string name, IndicatorBase<T> left, IndicatorBase<T> right, IndicatorComposer composer)
+        public CompositeIndicator(string name, IndicatorBase left, IndicatorBase right, IndicatorComposer composer)
             : base(name)
         {
             _composer = composer;
@@ -97,7 +94,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator for the 'composer'</param>
         /// <param name="right">The right indidcator for the 'composoer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(IndicatorBase<T> left, IndicatorBase<T> right, IndicatorComposer composer)
+        public CompositeIndicator(IndicatorBase left, IndicatorBase right, IndicatorComposer composer)
             : this($"COMPOSE({left.Name},{right.Name})", left, right, composer)
         { }
 
@@ -120,7 +117,7 @@ namespace QuantConnect.Indicators
         /// </remarks>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(IndicatorDataPoint _)
         {
             // this should never actually be invoked
             return _composer.Invoke(Left, Right).Value;

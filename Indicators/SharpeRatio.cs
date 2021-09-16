@@ -37,7 +37,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Indicator to store the calculation of the sharpe ratio
         /// </summary>
-        private readonly CompositeIndicator<IndicatorDataPoint> _sharpeRatio;
+        private readonly CompositeIndicator _sharpeRatio;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
