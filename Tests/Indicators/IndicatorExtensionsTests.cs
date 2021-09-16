@@ -421,10 +421,10 @@ namespace QuantConnect.Tests.Indicators
             // Define our indicators to test on
             var testIndicators = new IIndicator[]
             {
-                new TestBaseDataIndicator("BD"),
-                new TestQuoteBarIndicator("QB"),
-                new TestTradeBarIndicator("TB"),
-                new TestIndicatorDataPointIndicator("IDP")
+                new TestIndicator<BaseData>("BD"),
+                new TestIndicator<QuoteBar>("QB"),
+                new TestIndicator<TradeBar>("TB"),
+                new TestIndicator<IndicatorDataPoint>("IDP")
             };
 
             // Methods defined in CompositeTestRunner
@@ -678,13 +678,21 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
-        private abstract class TestIndicator<T> : IndicatorBase<T>
+        private class TestIndicator<T> : IndicatorBase<T>
             where T : IBaseData
         {
-            protected TestIndicator(string name)
+            public TestIndicator(string name)
                 : base(name)
             {
 
+            }
+
+            public override bool IsReady
+            {
+                get
+                {
+                    return true;
+                }
             }
 
             public void UpdateValue(int value)
@@ -696,70 +704,6 @@ namespace QuantConnect.Tests.Indicators
             protected override decimal ComputeNextValue(T input)
             {
                 return input.Value;
-            }
-        }
-
-        private class TestTradeBarIndicator : TestIndicator<TradeBar>
-        {
-            public TestTradeBarIndicator(string name)
-                : base(name)
-            {
-            }
-
-            public override bool IsReady
-            {
-                get
-                {
-                    return true;
-                }
-            }
-        }
-
-        private class TestQuoteBarIndicator : TestIndicator<QuoteBar>
-        {
-            public TestQuoteBarIndicator(string name)
-                : base(name)
-            {
-            }
-
-            public override bool IsReady
-            {
-                get
-                {
-                    return true;
-                }
-            }
-        }
-
-        private class TestBaseDataIndicator : TestIndicator<BaseData>
-        {
-            public TestBaseDataIndicator(string name)
-                : base(name)
-            {
-            }
-
-            public override bool IsReady
-            {
-                get
-                {
-                    return true;
-                }
-            }
-        }
-
-        private class TestIndicatorDataPointIndicator : TestIndicator<IndicatorDataPoint>
-        {
-            public TestIndicatorDataPointIndicator(string name)
-                : base(name)
-            {
-            }
-
-            public override bool IsReady
-            {
-                get
-                {
-                    return true;
-                }
             }
         }
     }
