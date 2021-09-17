@@ -191,22 +191,30 @@ namespace QuantConnect
         /// <summary>
         /// The exchange short code
         /// </summary>
-        public string Code { get; }
+        public string Code { get; init; }
 
         /// <summary>
         /// The exchange name
         /// </summary>
-        public string Name { get; }
+        public string Name { get; init; }
 
         /// <summary>
         /// The associated lean market <see cref="Market"/>
         /// </summary>
-        public string Market { get; }
+        public string Market { get; init; }
 
         /// <summary>
         /// Security types traded in this exchange
         /// </summary>
-        public SecurityType[] SecurityTypes { get; }
+        public SecurityType[] SecurityTypes { get; init; }
+
+        /// <summary>
+        /// Creates a new empty exchange instance
+        /// </summary>
+        /// <remarks>For json round trip serialization</remarks>
+        private Exchange()
+        {
+        }
 
         /// <summary>
         /// Creates a new exchange instance

@@ -90,7 +90,8 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>The collection of map files capable of mapping equity symbols within the specified market</returns>
         public static MapFileResolver Create(string dataDirectory, string market)
         {
-            var path = Path.Combine(dataDirectory, "equity", market.ToLowerInvariant(), "map_files");
+            market = market.ToLowerInvariant();
+            var path = Path.Combine(dataDirectory, "equity", market, "map_files");
             return new MapFileResolver(MapFile.GetMapFiles(path, market));
         }
 

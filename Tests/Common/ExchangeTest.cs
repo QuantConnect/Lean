@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common
@@ -82,6 +83,15 @@ namespace QuantConnect.Tests.Common
             {
                 Assert.AreEqual(expectedResult, left.GetHashCode() == right.GetHashCode());
             }
+        }
+
+        [Test]
+        public void RoundTripSerialization()
+        {
+            var serialized = JsonConvert.SerializeObject(Exchange.C2);
+            var deserialized = JsonConvert.DeserializeObject<Exchange>(serialized);
+
+            Assert.AreEqual(Exchange.C2, deserialized);
         }
 
         private static TestCaseData[] EqualityExchangeCases()

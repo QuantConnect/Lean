@@ -3428,9 +3428,10 @@ def Test(dataFrame, symbol):
                 Assert.AreEqual(rowsInfile, df.shape[0].AsManagedObject(typeof(int)));
 
                 int columnsNumber = df.shape[1].AsManagedObject(typeof(int));
-                if (columnsNumber == 3 || columnsNumber == 6)
+                var lastPrice = df.get("lastprice");
+                if (lastPrice != null)
                 {
-                    Assert.AreEqual(sumValue, df.get("lastprice").sum().AsManagedObject(typeof(double)), 1e-4);
+                    Assert.AreEqual(sumValue, lastPrice.sum().AsManagedObject(typeof(double)), 1e-4);
                 }
                 else if (columnsNumber == 1)
                 {

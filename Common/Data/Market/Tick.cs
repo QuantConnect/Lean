@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Market
     [ProtoInclude(1000, typeof(OpenInterest))]
     public class Tick : BaseData
     {
-        private Exchange _exchange;
+        private Exchange _exchange = QuantConnect.Exchange.UNKNOWN;
         private string _exchangeValue;
         private uint? _parsedSaleCondition;
 
@@ -58,13 +58,14 @@ namespace QuantConnect.Data.Market
                 if (_exchange == null)
                 {
                     _exchange = Symbol != null
-                        ? _exchangeValue.GetPrimaryExchange(Symbol.SecurityType) : _exchangeValue.GetPrimaryExchange();
+                        ? _exchangeValue.GetPrimaryExchange(Symbol.SecurityType, Symbol.ID.Market) : _exchangeValue.GetPrimaryExchange();
                 }
                 return _exchange.Code;
             }
             set
             {
                 _exchangeValue = value;
+                _exchange = null;
             }
         }
 
@@ -79,13 +80,14 @@ namespace QuantConnect.Data.Market
                 if (_exchange == null)
                 {
                     _exchange = Symbol != null
-                        ? _exchangeValue.GetPrimaryExchange(Symbol.SecurityType) : _exchangeValue.GetPrimaryExchange();
+                        ? _exchangeValue.GetPrimaryExchange(Symbol.SecurityType, Symbol.ID.Market) : _exchangeValue.GetPrimaryExchange();
                 }
                 return _exchange;
             }
             set
             {
                 _exchangeValue = value;
+                _exchange = null;
             }
         }
 
@@ -175,8 +177,8 @@ namespace QuantConnect.Data.Market
             Symbol = Symbol.Empty;
             TickType = TickType.Trade;
             Quantity = 0;
-            Exchange = "";
-            SaleCondition = "";
+            _exchange = QuantConnect.Exchange.UNKNOWN;
+            SaleCondition = string.Empty;
             Suspicious = false;
             BidSize = 0;
             AskSize = 0;
