@@ -288,7 +288,7 @@ namespace QuantConnect.Data.Consolidators
     }
 
     /// <summary>
-    /// Provides a type safe wrapper on the WickedRenkoConsolidator class. This just allows us to define our selector functions with the real type they'll be receiving
+    /// Provides a type safe wrapper on the RenkoConsolidator class. This just allows us to define our selector functions with the real type they'll be receiving
     /// </summary>
     /// <typeparam name="TInput"></typeparam>
     public class RenkoConsolidator<TInput> : RenkoConsolidator
@@ -313,6 +313,42 @@ namespace QuantConnect.Data.Consolidators
         public void Update(TInput data)
         {
             base.Update(data);
+        }
+    }
+
+    /// <summary>
+    /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
+    /// with Renko type <see cref="RenkoType.Wicked"/>.
+    /// /// </summary>
+    /// <remarks>For backwards compatibility now that WickedRenkoConsolidators -> RenkoConsolidator</remarks>
+    public class WickedRenkoConsolidator : RenkoConsolidator
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// </summary>
+        /// <param name="barSize">The constant value size of each bar</param>
+        public WickedRenkoConsolidator(decimal barSize)
+            : base(barSize)
+        {
+        }
+    }
+
+    /// <summary>
+    /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
+    /// with Renko type <see cref="RenkoType.Wicked"/>.
+    /// Provides a type safe wrapper on the WickedRenkoConsolidator class. This just allows us to define our selector functions with the real type they'll be receiving
+    /// /// </summary>
+    /// <remarks>For backwards compatibility now that WickedRenkoConsolidators -> RenkoConsolidator</remarks>
+    public class WickedRenkoConsolidator<T> : RenkoConsolidator<T>
+        where T : IBaseData
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// </summary>
+        /// <param name="barSize">The constant value size of each bar</param>
+        public WickedRenkoConsolidator(decimal barSize)
+            : base(barSize)
+        {
         }
     }
 }
