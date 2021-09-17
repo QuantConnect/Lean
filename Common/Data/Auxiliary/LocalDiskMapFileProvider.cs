@@ -78,7 +78,7 @@ namespace QuantConnect.Data.Auxiliary
                 }
                 return MapFileResolver.Empty;
             }
-            return new MapFileResolver(MapFile.GetMapFiles(mapFileDirectory));
+            return new MapFileResolver(MapFile.GetMapFiles(mapFileDirectory, market));
         }
     }
 }

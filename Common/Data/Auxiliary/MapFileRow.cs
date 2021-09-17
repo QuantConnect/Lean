@@ -44,8 +44,8 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, char primaryExchange = '\0')
-            : this(date, mappedSymbol, Exchanges.GetPrimaryExchange(primaryExchange))
+        public MapFileRow(DateTime date, string mappedSymbol, string primaryExchange = "", string market = QuantConnect.Market.USA)
+            : this(date, mappedSymbol, primaryExchange.GetPrimaryExchange(SecurityType.Equity, market))
         { }
         
         /// <summary>
@@ -65,28 +65,20 @@ namespace QuantConnect.Data.Auxiliary
         {
             var path = MapFile.GetMapFilePath(permtick, market);
             return File.Exists(path)
-                ? Read(path)
+                ? File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).Select(s => Parse(s, market))
                 : Enumerable.Empty<MapFileRow>();
-        }
-
-        /// <summary>
-        /// Reads in the map_file at the specified path
-        /// </summary>
-        public static IEnumerable<MapFileRow> Read(string path)
-        {
-            return File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).Select(Parse);
         }
 
         /// <summary>
         /// Parses the specified line into a MapFileRow
         /// </summary>
-        public static MapFileRow Parse(string line)
+        public static MapFileRow Parse(string line, string market)
         {
             var csv = line.Split(',');
             var primaryExchange = Exchange.UNKNOWN;
             if (csv.Length == 3)
             {
-                primaryExchange = csv[2].GetPrimaryExchange();
+                primaryExchange = csv[2].GetPrimaryExchange(SecurityType.Equity, market);
             }
 
             return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], primaryExchange);
