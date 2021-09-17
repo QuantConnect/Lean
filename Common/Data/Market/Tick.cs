@@ -14,13 +14,13 @@
 */
 
 using System;
-using System.Globalization;
-using System.IO;
-using System.Runtime.CompilerServices;
-using Newtonsoft.Json;
 using ProtoBuf;
-using QuantConnect.Logging;
+using System.IO;
+using Newtonsoft.Json;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Data.Market
 {
@@ -32,8 +32,8 @@ namespace QuantConnect.Data.Market
     [ProtoInclude(1000, typeof(OpenInterest))]
     public class Tick : BaseData
     {
-        private string _exchange = string.Empty;
-        private byte _exchangeCode;
+        private Exchange _exchange;
+        private string _exchangeValue;
         private uint? _parsedSaleCondition;
 
         /// <summary>
@@ -51,17 +51,20 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Exchange code this tick came from <see cref="Exchanges"/>
         /// </summary>
-        public byte ExchangeCode
+        public string ExchangeCode
         {
             get
             {
-                return _exchangeCode;
+                if (_exchange == null)
+                {
+                    _exchange = Symbol != null
+                        ? _exchangeValue.GetPrimaryExchange(Symbol.SecurityType) : _exchangeValue.GetPrimaryExchange();
+                }
+                return _exchange.Code;
             }
             set
             {
-                value = Enum.IsDefined(typeof(Exchange), value) ? value : (byte)QuantConnect.Exchange.UNKNOWN;
-                _exchangeCode = value;
-                _exchange = ((Exchange) value).ToString();
+                _exchangeValue = value;
             }
         }
 
@@ -73,12 +76,16 @@ namespace QuantConnect.Data.Market
         {
             get
             {
+                if (_exchange == null)
+                {
+                    _exchange = Symbol != null
+                        ? _exchangeValue.GetPrimaryExchange(Symbol.SecurityType) : _exchangeValue.GetPrimaryExchange();
+                }
                 return _exchange;
             }
             set
             {
-                _exchange = value;
-                _exchangeCode = (byte) Exchanges.GetPrimaryExchange(_exchange);
+                _exchangeValue = value;
             }
         }
 
@@ -188,7 +195,7 @@ namespace QuantConnect.Data.Market
             AskPrice = original.AskPrice;
             // directly set privates so we don't parse the exchange
             _exchange = original._exchange;
-            _exchangeCode = original._exchangeCode;
+            _exchangeValue = original._exchangeValue;
             SaleCondition = original.SaleCondition;
             Quantity = original.Quantity;
             Suspicious = original.Suspicious;

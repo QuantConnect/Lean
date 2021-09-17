@@ -15,10 +15,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -87,7 +86,7 @@ namespace QuantConnect.Data.Auxiliary
             var primaryExchange = Exchange.UNKNOWN;
             if (csv.Length == 3)
             {
-                primaryExchange = Exchanges.GetPrimaryExchange(Convert.ToChar(csv[2], CultureInfo.InvariantCulture));
+                primaryExchange = csv[2].GetPrimaryExchange();
             }
 
             return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], primaryExchange);
@@ -166,7 +165,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            var encodedExchange = PrimaryExchange == Exchange.UNKNOWN? string.Empty : $",{Convert.ToChar((byte) PrimaryExchange)}";
+            var encodedExchange = PrimaryExchange == Exchange.UNKNOWN? string.Empty : $",{PrimaryExchange.Code}";
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}";
         }
 
@@ -176,7 +175,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>resulting string</returns>
         public override string ToString()
         {
-            var mainExchange = PrimaryExchange == Exchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange.ToString()}";
+            var mainExchange = PrimaryExchange == Exchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange}";
             return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange;
         }
     }
