@@ -20,7 +20,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="indicators" />
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="consolidating data" />
-class RenkoConsolidatorAlgorithm(QCAlgorithm):
+class ClassicRenkoConsolidatorAlgorithm(QCAlgorithm):
     '''Demonstration of how to initialize and use the RenkoConsolidator'''
 
     def Initialize(self):

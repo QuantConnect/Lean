@@ -228,7 +228,7 @@
     <None Include="RawPricesCoarseUniverseAlgorithm.py" />
     <None Include="RegressionAlgorithm.py" />
     <None Include="RegressionChannelAlgorithm.py" />
-    <None Include="RenkoConsolidatorAlgorithm.py" />
+    <None Include="ClassicRenkoConsolidatorAlgorithm.py" />
     <None Include="RollingWindowAlgorithm.py" />
     <None Include="ScheduledEventsAlgorithm.py" />
     <None Include="ScheduledQueuingAlgorithm.py" />

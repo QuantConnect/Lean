@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indicators" />
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="consolidating data" />
-    public class RenkoConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ClassicRenkoConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initializes the algorithm state.
