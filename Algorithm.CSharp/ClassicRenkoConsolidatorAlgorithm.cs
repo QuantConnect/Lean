@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indicators" />
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="consolidating data" />
-    public class RenkoConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ClassicRenkoConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initializes the algorithm state.
@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             // property of the data it receives.
 
             // break SPY into $2.5 renko bricks and send that data to our 'OnRenkoBar' method
-            var renkoClose = new RenkoConsolidator(2.5m);
+            var renkoClose = new ClassicRenkoConsolidator(2.5m);
             renkoClose.DataConsolidated += (sender, consolidated) =>
             {
                 // call our event handler for renko data
@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             // this allows us to perform the renko logic on values other than Close, even computed values!
 
             // break SPY into (2*o + h + l + 3*c)/7
-            var renko7bar = new RenkoConsolidator<TradeBar>(2.5m, x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m, x => x.Volume);
+            var renko7bar = new ClassicRenkoConsolidator<TradeBar>(2.5m, x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m, x => x.Volume);
             renko7bar.DataConsolidated += (sender, consolidated) =>
             {
                 HandleRenko7Bar(consolidated);

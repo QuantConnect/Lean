@@ -14,13 +14,13 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Demonstration of how to initialize and use the RenkoConsolidator
+### Demonstration of how to initialize and use the Classic RenkoConsolidator
 ### </summary>
 ### <meta name="tag" content="renko" />
 ### <meta name="tag" content="indicators" />
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="consolidating data" />
-class RenkoConsolidatorAlgorithm(QCAlgorithm):
+class ClassicRenkoConsolidatorAlgorithm(QCAlgorithm):
     '''Demonstration of how to initialize and use the RenkoConsolidator'''
 
     def Initialize(self):
@@ -34,7 +34,7 @@ class RenkoConsolidatorAlgorithm(QCAlgorithm):
         # renko logic to the Value property of the data it receives.
 
         # break SPY into $2.5 renko bricks and send that data to our 'OnRenkoBar' method
-        renkoClose = RenkoConsolidator(2.5)
+        renkoClose = ClassicRenkoConsolidator(2.5)
         renkoClose.DataConsolidated += self.HandleRenkoClose
         self.SubscriptionManager.AddConsolidator("SPY", renkoClose)
 
@@ -42,7 +42,7 @@ class RenkoConsolidatorAlgorithm(QCAlgorithm):
         # this allows us to perform the renko logic on values other than Close, even computed values!
 
         # break SPY into (2*o + h + l + 3*c)/7
-        renko7bar = RenkoConsolidator(2.5, lambda x: (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7, lambda x: x.Volume)
+        renko7bar = ClassicRenkoConsolidator(2.5, lambda x: (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7, lambda x: x.Volume)
         renko7bar.DataConsolidated += self.HandleRenko7Bar
         self.SubscriptionManager.AddConsolidator("SPY", renko7bar)
 

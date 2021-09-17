@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,27 +14,70 @@
 */
 
 using System;
-using Python.Runtime;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
     /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
+    /// with Renko type <see cref="RenkoType.Wicked"/>.
     /// </summary>
+    /// <remarks>This implementation replaced the original implementation that was shown to have inaccuracies in its representation
+    /// of Renko charts. The original implementation has been moved to <see cref="ClassicRenkoConsolidator"/>.</remarks>
     public class RenkoConsolidator : IDataConsolidator
     {
-        private RenkoBar _currentBar;
+        private bool _firstTick = true;
+        private RenkoBar _lastWicko;
         private DataConsolidatedHandler _dataConsolidatedHandler;
-        private decimal _barSize;
-        private bool _evenBars;
-        private Func<IBaseData, decimal> _selector;
-        private Func<IBaseData, decimal> _volumeSelector;
+        private RenkoBar _currentBar;
+        private IBaseData _consolidated;
+        
+        /// <summary>
+        /// Time of consolidated close.
+        /// </summary>
+        /// <remarks>Protected for testing</remarks>
+        protected DateTime CloseOn;
+
+        /// <summary>
+        /// Value of consolidated close.
+        /// </summary>
+        /// <remarks>Protected for testing</remarks>
+        protected decimal CloseRate;
+
+        /// <summary>
+        /// Value of consolidated high.
+        /// </summary>
+        /// <remarks>Protected for testing</remarks>
+        protected decimal HighRate;
+
+        /// <summary>
+        /// Value of consolidated low.
+        /// </summary>
+        /// <remarks>Protected for testing</remarks>
+        protected decimal LowRate;
+
+        /// <summary>
+        /// Time of consolidated open.
+        /// </summary>
+        /// <remarks>Protected for testing</remarks>
+        protected DateTime OpenOn;
+
+        /// <summary>
+        /// Value of consolidate open.
+        /// </summary>
+        /// <remarks>Protected for testing</remarks>
+        protected decimal OpenRate;
+
+        /// <summary>
+        /// Size of the consolidated bar.
+        /// </summary>
+        /// <remarks>Protected for testing</remarks>
+        protected decimal BarSize;
 
         /// <summary>
         /// Gets the kind of the bar
         /// </summary>
-        public RenkoType Type => RenkoType.Classic;
+        public RenkoType Type => RenkoType.Wicked;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -55,7 +98,11 @@ namespace QuantConnect.Data.Consolidators
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
         /// </summary>
-        public IBaseData Consolidated { get; private set; }
+        public IBaseData Consolidated
+        {
+            get { return _consolidated; }
+            private set { _consolidated = value; }
+        }
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -73,98 +120,11 @@ namespace QuantConnect.Data.Consolidators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
-        /// The value selector will by default select <see cref="IBaseData.Value"/>
-        /// The volume selector will by default select zero.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
-        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(decimal barSize, bool evenBars = true)
+        public RenkoConsolidator(decimal barSize)
         {
-            EpsilonCheck(barSize);
-            _barSize = barSize;
-            _selector = x => x.Value;
-            _evenBars = evenBars;
-            _volumeSelector = x => 0;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
-        /// </summary>
-        /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
-        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
-        /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
-        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
-        /// not aggregate volume per bar.</param>
-        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(
-            decimal barSize,
-            Func<IBaseData, decimal> selector,
-            Func<IBaseData, decimal> volumeSelector = null,
-            bool evenBars = true
-            )
-        {
-            EpsilonCheck(barSize);
-            _barSize = barSize;
-            _selector = selector ?? (x => x.Value);
-            _evenBars = evenBars;
-            _volumeSelector = volumeSelector ?? (x => 0);
-        }
-
-        /// <summary>
-        ///Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
-        /// </summary>
-        /// <param name="barSize">The constant value size of each bar</param>
-        /// <param name="type">The RenkoType of the bar</param>
-        [Obsolete("Please use the WickedRenkoConsolidator if RenkoType is not Classic")]
-        public RenkoConsolidator(decimal barSize, RenkoType type)
-        : this(barSize, true)
-        {
-            if (type != RenkoType.Classic)
-            {
-                throw new ArgumentException("Please use the WickedRenkoConsolidator type if RenkoType is not Classic");
-            }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
-        /// </summary>
-        /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
-        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
-        /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
-        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
-        /// not aggregate volume per bar.</param>
-        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(decimal barSize,
-            PyObject selector,
-            PyObject volumeSelector = null,
-            bool evenBars = true)
-            : this(barSize, evenBars)
-        {
-            if (selector != null)
-            {
-                if (!selector.TryConvertToDelegate(out _selector))
-                {
-                    throw new ArgumentException(
-                        "Unable to convert parameter 'selector' to delegate type Func<IBaseData, decimal>");
-                }
-            }
-            else
-            {
-                _selector = x => x.Value;
-            }
-
-            if (volumeSelector != null)
-            {
-                if (!volumeSelector.TryConvertToDelegate(out _volumeSelector))
-                {
-                    throw new ArgumentException(
-                        "Unable to convert parameter 'volumeSelector' to delegate type Func<IBaseData, decimal>");
-                }
-            }
-            else
-            {
-                _volumeSelector = x => 0;
-            }
+            BarSize = barSize;
         }
 
         /// <summary>
@@ -173,34 +133,91 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public void Update(IBaseData data)
         {
-            var currentValue = _selector(data);
-            var volume = _volumeSelector(data);
+            var rate = data.Price;
 
-            decimal? close = null;
-
-            // if we're already in a bar then update it
-            if (_currentBar != null)
+            if (_firstTick)
             {
-                _currentBar.Update(data.Time, currentValue, volume);
+                _firstTick = false;
 
-                // if the update caused this bar to close, fire the event and reset the bar
-                if (_currentBar.IsClosed)
-                {
-                    close = _currentBar.Close;
-                    OnDataConsolidated(_currentBar);
-                    _currentBar = null;
-                }
+                // Round our first rate to the same length as BarSize
+                var decimalPlaces = BitConverter.GetBytes(decimal.GetBits(BarSize)[3])[2];
+                rate = Math.Round(rate, decimalPlaces);
+
+                OpenOn = data.Time;
+                CloseOn = data.Time;
+                OpenRate = rate;
+                HighRate = rate;
+                LowRate = rate;
+                CloseRate = rate;
             }
-
-            if (_currentBar == null)
+            else
             {
-                var open = close ?? currentValue;
-                if (_evenBars && !close.HasValue)
+                CloseOn = data.Time;
+
+                if (rate > HighRate)
                 {
-                    open = Math.Ceiling(open / _barSize) * _barSize;
+                    HighRate = rate;
                 }
 
-                _currentBar = new RenkoBar(data.Symbol, data.Time, _barSize, open, volume);
+                if (rate < LowRate)
+                {
+                    LowRate = rate;
+                }
+
+                CloseRate = rate;
+
+                if (CloseRate > OpenRate)
+                {
+                    if (_lastWicko == null || _lastWicko.Direction == BarDirection.Rising)
+                    {
+                        Rising(data);
+                        return;
+                    }
+
+                    var limit = _lastWicko.Open + BarSize;
+
+                    if (CloseRate > limit)
+                    {
+                        var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, _lastWicko.Open, limit,
+                            LowRate, limit);
+
+                        _lastWicko = wicko;
+
+                        OnDataConsolidated(wicko);
+
+                        OpenOn = CloseOn;
+                        OpenRate = limit;
+                        LowRate = limit;
+
+                        Rising(data);
+                    }
+                }
+                else if (CloseRate < OpenRate)
+                {
+                    if (_lastWicko == null || _lastWicko.Direction == BarDirection.Falling)
+                    {
+                        Falling(data);
+                        return;
+                    }
+
+                    var limit = _lastWicko.Open - BarSize;
+
+                    if (CloseRate < limit)
+                    {
+                        var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, _lastWicko.Open, HighRate,
+                            limit, limit);
+
+                        _lastWicko = wicko;
+
+                        OnDataConsolidated(wicko);
+
+                        OpenOn = CloseOn;
+                        OpenRate = limit;
+                        HighRate = limit;
+
+                        Falling(data);
+                    }
+                }
             }
         }
 
@@ -220,27 +237,53 @@ namespace QuantConnect.Data.Consolidators
             _dataConsolidatedHandler = null;
         }
 
-        private static void EpsilonCheck(decimal barSize)
-        {
-            if (barSize < Extensions.GetDecimalEpsilon())
-            {
-                throw new ArgumentOutOfRangeException(nameof(barSize),
-                    "RenkoConsolidator bar size must be positve and greater than 1e-28");
-            }
-        }
-
         /// <summary>
         /// Event invocator for the DataConsolidated event. This should be invoked
         /// by derived classes when they have consolidated a new piece of data.
         /// </summary>
         /// <param name="consolidated">The newly consolidated data</param>
-        private void OnDataConsolidated(RenkoBar consolidated)
+        protected void OnDataConsolidated(RenkoBar consolidated)
         {
             DataConsolidated?.Invoke(this, consolidated);
-
+            _currentBar = consolidated;
             _dataConsolidatedHandler?.Invoke(this, consolidated);
-
             Consolidated = consolidated;
+        }
+
+        private void Rising(IBaseData data)
+        {
+            decimal limit;
+
+            while (CloseRate > (limit = OpenRate + BarSize))
+            {
+                var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, OpenRate, limit, LowRate, limit);
+
+                _lastWicko = wicko;
+
+                OnDataConsolidated(wicko);
+
+                OpenOn = CloseOn;
+                OpenRate = limit;
+                LowRate = limit;
+            }
+        }
+
+        private void Falling(IBaseData data)
+        {
+            decimal limit;
+
+            while (CloseRate < (limit = OpenRate - BarSize))
+            {
+                var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, OpenRate, HighRate, limit, limit);
+
+                _lastWicko = wicko;
+
+                OnDataConsolidated(wicko);
+
+                OpenOn = CloseOn;
+                OpenRate = limit;
+                HighRate = limit;
+            }
         }
     }
 
@@ -252,47 +295,11 @@ namespace QuantConnect.Data.Consolidators
         where TInput : IBaseData
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
-        /// </summary>
-        /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
-        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
-        /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
-        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
-        /// not aggregate volume per bar.</param>
-        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(
-            decimal barSize,
-            Func<TInput, decimal> selector,
-            Func<TInput, decimal> volumeSelector = null,
-            bool evenBars = true
-            )
-            : base(barSize, x => selector((TInput) x),
-                volumeSelector == null ? (Func<IBaseData, decimal>) null : x => volumeSelector((TInput) x), evenBars)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
-        /// The value selector will by default select <see cref="IBaseData.Value"/>
-        /// The volume selector will by default select zero.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
-        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(decimal barSize, bool evenBars = true)
-            : this(barSize, x => x.Value, x => 0, evenBars)
-        {
-        }
-        
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
-        /// The value selector will by default select <see cref="IBaseData.Value"/>
-        /// The volume selector will by default select zero.
-        /// </summary>
-        /// <param name="barSize">The constant value size of each bar</param>
-        /// <param name="type">The RenkoType of the bar</param>
-        [Obsolete("Please use the WickedRenkoConsolidator if RenkoType is not Classic")]
-        public RenkoConsolidator(decimal barSize, RenkoType type)
-            : base(barSize, type)
+        public RenkoConsolidator(decimal barSize)
+            : base(barSize)
         {
         }
 
@@ -306,6 +313,42 @@ namespace QuantConnect.Data.Consolidators
         public void Update(TInput data)
         {
             base.Update(data);
+        }
+    }
+
+    /// <summary>
+    /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
+    /// with Renko type <see cref="RenkoType.Wicked"/>.
+    /// /// </summary>
+    /// <remarks>For backwards compatibility now that WickedRenkoConsolidators -> RenkoConsolidator</remarks>
+    public class WickedRenkoConsolidator : RenkoConsolidator
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// </summary>
+        /// <param name="barSize">The constant value size of each bar</param>
+        public WickedRenkoConsolidator(decimal barSize)
+            : base(barSize)
+        {
+        }
+    }
+
+    /// <summary>
+    /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
+    /// with Renko type <see cref="RenkoType.Wicked"/>.
+    /// Provides a type safe wrapper on the WickedRenkoConsolidator class. This just allows us to define our selector functions with the real type they'll be receiving
+    /// /// </summary>
+    /// <remarks>For backwards compatibility now that WickedRenkoConsolidators -> RenkoConsolidator</remarks>
+    public class WickedRenkoConsolidator<T> : RenkoConsolidator<T>
+        where T : IBaseData
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// </summary>
+        /// <param name="barSize">The constant value size of each bar</param>
+        public WickedRenkoConsolidator(decimal barSize)
+            : base(barSize)
+        {
         }
     }
 }
