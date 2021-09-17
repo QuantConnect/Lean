@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,7 +22,7 @@ namespace QuantConnect.Data.Consolidators
     /// <summary>
     /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
     /// </summary>
-    public class RenkoConsolidator : IDataConsolidator
+    public class ClassicRenkoConsolidator : IDataConsolidator
     {
         private RenkoBar _currentBar;
         private DataConsolidatedHandler _dataConsolidatedHandler;
@@ -72,13 +72,13 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// The value selector will by default select <see cref="IBaseData.Value"/>
         /// The volume selector will by default select zero.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(decimal barSize, bool evenBars = true)
+        public ClassicRenkoConsolidator(decimal barSize, bool evenBars = true)
         {
             EpsilonCheck(barSize);
             _barSize = barSize;
@@ -88,7 +88,7 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator" /> class.
         /// </summary>
         /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
@@ -96,7 +96,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(
+        public ClassicRenkoConsolidator(
             decimal barSize,
             Func<IBaseData, decimal> selector,
             Func<IBaseData, decimal> volumeSelector = null,
@@ -111,22 +111,22 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        ///Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        ///Initializes a new instance of the <see cref="ClassicRenkoConsolidator" /> class.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="type">The RenkoType of the bar</param>
-        [Obsolete("Please use the WickedRenkoConsolidator if RenkoType is not Classic")]
-        public RenkoConsolidator(decimal barSize, RenkoType type)
+        [Obsolete("Please use the new RenkoConsolidator if RenkoType is not Classic")]
+        public ClassicRenkoConsolidator(decimal barSize, RenkoType type)
         : this(barSize, true)
         {
             if (type != RenkoType.Classic)
             {
-                throw new ArgumentException("Please use the WickedRenkoConsolidator type if RenkoType is not Classic");
+                throw new ArgumentException("Please use the new RenkoConsolidator type if RenkoType is not Classic");
             }
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator" /> class.
         /// </summary>
         /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
@@ -134,7 +134,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(decimal barSize,
+        public ClassicRenkoConsolidator(decimal barSize,
             PyObject selector,
             PyObject volumeSelector = null,
             bool evenBars = true)
@@ -248,11 +248,11 @@ namespace QuantConnect.Data.Consolidators
     /// Provides a type safe wrapper on the RenkoConsolidator class. This just allows us to define our selector functions with the real type they'll be receiving
     /// </summary>
     /// <typeparam name="TInput"></typeparam>
-    public class RenkoConsolidator<TInput> : RenkoConsolidator
+    public class ClassicRenkoConsolidator<TInput> : ClassicRenkoConsolidator
         where TInput : IBaseData
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator" /> class.
         /// </summary>
         /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
@@ -260,7 +260,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(
+        public ClassicRenkoConsolidator(
             decimal barSize,
             Func<TInput, decimal> selector,
             Func<TInput, decimal> volumeSelector = null,
@@ -272,26 +272,26 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// The value selector will by default select <see cref="IBaseData.Value"/>
         /// The volume selector will by default select zero.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(decimal barSize, bool evenBars = true)
+        public ClassicRenkoConsolidator(decimal barSize, bool evenBars = true)
             : this(barSize, x => x.Value, x => 0, evenBars)
         {
         }
         
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// The value selector will by default select <see cref="IBaseData.Value"/>
         /// The volume selector will by default select zero.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="type">The RenkoType of the bar</param>
         [Obsolete("Please use the WickedRenkoConsolidator if RenkoType is not Classic")]
-        public RenkoConsolidator(decimal barSize, RenkoType type)
+        public ClassicRenkoConsolidator(decimal barSize, RenkoType type)
             : base(barSize, type)
         {
         }
