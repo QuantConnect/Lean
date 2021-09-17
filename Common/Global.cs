@@ -756,11 +756,12 @@ namespace QuantConnect
                     case "T":
                     case "Q":
                     case "NASDAQ":
-                    case "NASDAQ OMX":
+                    case "NASDAQ_OMX":
                         return Exchange.NASDAQ;
                     case "Z":
                     case "BATS":
                     case "BATS Z":
+                    case "BATS_Z":
                         return Exchange.BATS;
                     case "P":
                     case "ARCA":
@@ -805,12 +806,15 @@ namespace QuantConnect
                         return Exchange.EDGX;
                     case "B":
                     case "NASDAQ BX":
+                    case "NASDAQ_BX":
                         return Exchange.NASDAQ_BX;
                     case "X":
                     case "NASDAQ PSX":
+                    case "NASDAQ_PSX":
                         return Exchange.NASDAQ_PSX;
                     case "Y":
                     case "BATS Y":
+                    case "BATS_Y":
                         return Exchange.BATS_Y;
                     case "BOSTON":
                         return Exchange.BOSTON;
@@ -831,9 +835,11 @@ namespace QuantConnect
                     case "ISE":
                         return Exchange.ISE;
                     case "H":
+                    case "ISE GEMINI":
                     case "ISE_GEMINI":
                         return Exchange.ISE_GEMINI;
                     case "J":
+                    case "ISE MERCURY":
                     case "ISE_MERCURY":
                         return Exchange.ISE_MERCURY;
                     case "O":

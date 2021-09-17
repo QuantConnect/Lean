@@ -66,7 +66,7 @@ namespace QuantConnect.Data.Auxiliary
 
         private static MapFileResolver GetMapFileResolver(string market)
         {
-            var mapFileDirectory = Path.Combine(Globals.CacheDataFolder, "equity", market.ToLowerInvariant(), "map_files");
+            var mapFileDirectory = Path.Combine(Globals.CacheDataFolder, "equity", market, "map_files");
             if (!Directory.Exists(mapFileDirectory))
             {
                 // only write this message once per application instance
@@ -78,7 +78,7 @@ namespace QuantConnect.Data.Auxiliary
                 }
                 return MapFileResolver.Empty;
             }
-            return new MapFileResolver(MapFile.GetMapFiles(mapFileDirectory));
+            return new MapFileResolver(MapFile.GetMapFiles(mapFileDirectory, market));
         }
     }
 }
