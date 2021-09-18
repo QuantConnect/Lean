@@ -681,6 +681,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             fill = model.MarketOnOpenFill(equity, order);
             Assert.AreEqual(0, fill.FillQuantity);
 
+            // The trade is received after the market is open, but it is not have a official open flag
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY, "", "P", 100, expected),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m)
+            }, typeof(Tick));
+
+            fill = model.MarketOnOpenFill(equity, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual("No trade with the OfficialOpen or OpeningPrints flag within the 1-minute timeout.", fill.Message);
+
             // One quote and some trades with different conditions are received after the market is open,
             // but there is trade prior to that with different price
             equity.Update(new List<Tick>
@@ -690,6 +701,64 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Tick(time, Symbols.SPY, saleCondition, "P", 100, expected),         // Fill with this tick
                 new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m),
                 new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.95m),   // Open but not primary exchange
+            }, typeof(Tick));
+
+            fill = model.MarketOnOpenFill(equity, order);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(expected, fill.FillPrice);
+        }
+
+        [TestCase(-100, 0.9)]
+        [TestCase(100, 1.1)]
+        public void PerformsMarketOnOpenUsingOpenPriceWithTickSubscriptionButNoSalesCondition(int quantity, decimal expected)
+        {
+            var reference = new DateTime(2015, 06, 05, 9, 0, 0); // before market open
+            var config = CreateTickConfig(Symbols.SPY);
+            var equity = CreateEquity(config);
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOnOpenOrder(Symbols.SPY, quantity, reference);
+            var time = reference;
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            // No Sales Condition
+            var saleCondition = "";
+
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY, "80000001", "P", 100, 1m),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m)
+            }, typeof(Tick));
+
+            var fill = model.Fill(new FillModelParameters(
+                equity,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            const decimal price = 1m;
+            // market opens after 30min. 1 minute after open to accept the last trade
+            time = reference.AddMinutes(32);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.9m),   // Not Close
+                new Tick(time, Symbols.SPY, saleCondition, "P", 100, 0.95m),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m),
+                new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.95m),   // Open but not primary exchange
+                new Tick(time, Symbols.SPY, saleCondition, "Q", 100, price),         // Fill with this tick
+            }, typeof(Tick));
+
+            fill = model.MarketOnOpenFill(equity, order);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(price, fill.FillPrice);
+
+            // Test whether it fills on the bid/ask if there is no trade
+            equity.Cache.Reset();
+            equity.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m),
             }, typeof(Tick));
 
             fill = model.MarketOnOpenFill(equity, order);
