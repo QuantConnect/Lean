@@ -88,29 +88,15 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         {
             var mapFile = new MapFile("goog", new List<MapFileRow>
             {
-                new MapFileRow(new DateTime(2014, 03, 27), "goocv", 'Q'),
-                new MapFileRow(new DateTime(2014, 04, 02), "goocv", 'Q'),
-                new MapFileRow(new DateTime(2050, 12, 31), "goog", 'Q')
+                new MapFileRow(new DateTime(2014, 03, 27), "goocv", "Q"),
+                new MapFileRow(new DateTime(2014, 04, 02), "goocv", "Q"),
+                new MapFileRow(new DateTime(2050, 12, 31), "goog", "Q")
             });
 
             Assert.AreEqual(Exchange.NASDAQ, (Exchange) mapFile.Last().PrimaryExchange);
         }
 
-        [TestCase("20010213,aapl,Q", Exchange.NASDAQ)]
-        [TestCase("20010213,aapl,Z", Exchange.BATS)]
-        [TestCase("20010213,aapl,P", Exchange.ARCA)]
-        [TestCase("20010213,aapl,N", Exchange.NYSE)]
-        [TestCase("20010213,aapl,C", Exchange.NSE)]
-        [TestCase("20010213,aapl,D", Exchange.FINRA)]
-        [TestCase("20010213,aapl,I", Exchange.ISE)]
-        [TestCase("20010213,aapl,M", Exchange.CSE)]
-        [TestCase("20010213,aapl,W", Exchange.CBOE)]
-        [TestCase("20010213,aapl,A", Exchange.AMEX)]
-        [TestCase("20010213,aapl,J", Exchange.EDGA)]
-        [TestCase("20010213,aapl,K", Exchange.EDGX)]
-        [TestCase("20010213,aapl,B", Exchange.NASDAQ_BX)]
-        [TestCase("20010213,aapl,X", Exchange.NASDAQ_PSX)]
-        [TestCase("20010213,aapl,Y", Exchange.BATS_Y)]
+        [TestCaseSource(nameof(ParsesRowWithExchangesCorrectlyCases))]
         public void ParsesRowWithExchangesCorrectly(string mapFileRow, Exchange expectedExchange)
         {
             // Arrange
@@ -118,9 +104,9 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var expectedMapFileRow = new MapFileRow(
                 DateTime.ParseExact(rowParts[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture),
                 rowParts[1],
-                Convert.ToChar(rowParts[2], CultureInfo.InvariantCulture));
+                rowParts[2]);
             // Act
-            var actualMapFileRow = MapFileRow.Parse(mapFileRow);
+            var actualMapFileRow = MapFileRow.Parse(mapFileRow, QuantConnect.Market.USA);
             // Assert
             Assert.AreEqual(expectedExchange, actualMapFileRow.PrimaryExchange);
             Assert.AreEqual(expectedMapFileRow, actualMapFileRow);
@@ -136,10 +122,32 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
                 DateTime.ParseExact(rowParts[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture),
                 rowParts[1]);
             // Act
-            var actualMapFileRow = MapFileRow.Parse(mapFileRow);
+            var actualMapFileRow = MapFileRow.Parse(mapFileRow, QuantConnect.Market.USA);
             // Assert
             Assert.AreEqual(Exchange.UNKNOWN, actualMapFileRow.PrimaryExchange);
             Assert.AreEqual(expectedMapFileRow, actualMapFileRow);
+        }
+
+        private static TestCaseData[] ParsesRowWithExchangesCorrectlyCases()
+        {
+            return new[]
+            {
+                new TestCaseData("20010213,aapl,Q", Exchange.NASDAQ),
+                new TestCaseData("20010213,aapl,Z", Exchange.BATS),
+                new TestCaseData("20010213,aapl,P", Exchange.ARCA),
+                new TestCaseData("20010213,aapl,N", Exchange.NYSE),
+                new TestCaseData("20010213,aapl,C", Exchange.NSX),
+                new TestCaseData("20010213,aapl,D", Exchange.FINRA),
+                new TestCaseData("20010213,aapl,I", Exchange.ISE),
+                new TestCaseData("20010213,aapl,M", Exchange.CSE),
+                new TestCaseData("20010213,aapl,W", Exchange.CBOE),
+                new TestCaseData("20010213,aapl,A", Exchange.AMEX),
+                new TestCaseData("20010213,aapl,J", Exchange.EDGA),
+                new TestCaseData("20010213,aapl,K", Exchange.EDGX),
+                new TestCaseData("20010213,aapl,B", Exchange.NASDAQ_BX),
+                new TestCaseData("20010213,aapl,X", Exchange.NASDAQ_PSX),
+                new TestCaseData("20010213,aapl,Y", Exchange.BATS_Y),
+            };
         }
     }
 }

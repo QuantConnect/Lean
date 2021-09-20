@@ -566,8 +566,8 @@ namespace QuantConnect.Tests.Common.Util
             return new List<LeanDataLineTestParameters>
             {
                 //equity
-                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.SPY, Value = 1, Quantity = 2, TickType = TickType.Trade, Exchange = "EX", SaleCondition = "SC", Suspicious = true}, SecurityType.Equity, Resolution.Tick,
-                    "34200000,10000,2,EX,SC,1"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.SPY, Value = 1, Quantity = 2, TickType = TickType.Trade, Exchange = Exchange.BATS_Y, SaleCondition = "SC", Suspicious = true}, SecurityType.Equity, Resolution.Tick,
+                    "34200000,10000,2,Y,SC,1"),
                 new LeanDataLineTestParameters(new TradeBar(time, Symbols.SPY, 1, 2, 3, 4, 5, TimeSpan.FromMinutes(1)), SecurityType.Equity, Resolution.Minute,
                     "34200000,10000,20000,30000,40000,5"),
                 new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.SPY, 1, 2, 3, 4, 5, TimeSpan.FromDays(1)), SecurityType.Equity, Resolution.Daily,
@@ -582,10 +582,10 @@ namespace QuantConnect.Tests.Common.Util
                     "34200000,10000,20000,30000,40000,5,60000,70000,80000,90000,10"),
                 new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.SPY_P_192_Feb19_2016, new Bar(1, 2, 3, 4), 5, new Bar(6, 7, 8, 9), 10, TimeSpan.FromDays(1)), SecurityType.Option, Resolution.Daily,
                     "20160218 00:00,10000,20000,30000,40000,5,60000,70000,80000,90000,10"),
-                new LeanDataLineTestParameters(new Tick(time, Symbols.SPY_P_192_Feb19_2016, 0, 1, 3) {Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "EX", Suspicious = true}, SecurityType.Option, Resolution.Tick,
-                    "34200000,10000,2,30000,4,EX,1"),
-                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.SPY_P_192_Feb19_2016, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = "EX", SaleCondition = "SC", Suspicious = true}, SecurityType.Option, Resolution.Tick,
-                    "34200000,10000,2,EX,SC,1"),
+                new LeanDataLineTestParameters(new Tick(time, Symbols.SPY_P_192_Feb19_2016, 0, 1, 3) {Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = Exchange.C2, Suspicious = true}, SecurityType.Option, Resolution.Tick,
+                    "34200000,10000,2,30000,4,W,1"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.SPY_P_192_Feb19_2016, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = Exchange.C2, SaleCondition = "SC", Suspicious = true}, SecurityType.Option, Resolution.Tick,
+                    "34200000,10000,2,W,SC,1"),
                 new LeanDataLineTestParameters(new TradeBar(time, Symbols.SPY_P_192_Feb19_2016, 1, 2, 3, 4, 5, TimeSpan.FromMinutes(1)), SecurityType.Option, Resolution.Minute,
                     "34200000,10000,20000,30000,40000,5"),
                 new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.SPY_P_192_Feb19_2016, 1, 2, 3, 4, 5, TimeSpan.FromDays(1)), SecurityType.Option, Resolution.Daily,

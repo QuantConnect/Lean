@@ -25,114 +25,6 @@ using static QuantConnect.StringExtensions;
 namespace QuantConnect
 {
     /// <summary>
-    /// Lean exchanges
-    /// </summary>
-    /// <remarks>
-    /// The byte value of each entry are the byte representation of the exchange single letter code.
-    /// E.g.
-    ///     - 'Q' byte representation is 81 and it maps to NASDAQ
-    ///     - 'Z' byte representation is 90 and it maps to BATS
-    /// </remarks>
-    public enum Exchange : byte
-    {
-#pragma warning disable 1591
-        UNKNOWN=0,
-        /// <summary>
-        /// National Association of Securities Dealers Automated Quotation
-        /// </summary>
-        NASDAQ=81,
-        /// <summary>
-        /// Bats Global Markets, Better Alternative Trading System
-        /// </summary>
-        BATS=90,
-        /// <summary>
-        /// NYSE Arca
-        /// </summary>
-        ARCA=80,
-        /// <summary>
-        /// The New York Stock Exchange
-        /// </summary>
-        NYSE=78,
-        /// <summary>
-        /// National Stock Exchange of India
-        /// </summary>
-        NSE=67,
-        /// <summary>
-        ///  The Financial Industry Regulatory Authority
-        /// </summary>
-        FINRA=68,
-        /// <summary>
-        /// Nasdaq International Securities Exchange
-        /// </summary>
-        ISE=73,
-        /// <summary>
-        /// The Options Price Reporting Authority
-        /// </summary>
-        OPRA,
-        /// <summary>
-        /// The Canadian Securities Exchange
-        /// </summary>
-        CSE=77,
-        /// <summary>
-        /// The Chicago Board Options Exchange
-        /// </summary>
-        CBOE=87,
-        /// <summary>
-        /// The American Stock Exchange
-        /// </summary>
-        AMEX=65,
-        /// <summary>
-        /// The Securities Industry Automation Corporation
-        /// </summary>
-        SIAC,
-        /// <summary>
-        /// CBOE EDGA U.S. equities Exchange
-        /// </summary>
-        EDGA=74,
-        /// <summary>
-        /// CBOE EDGX U.S. equities Exchange
-        /// </summary>
-        EDGX=75,
-        /// <summary>
-        /// National Association of Securities Dealers Automated Quotation BX
-        /// </summary>
-        NASDAQ_BX=66,
-        /// <summary>
-        /// National Association of Securities Dealers Automated Quotation PSX
-        /// </summary>
-        NASDAQ_PSX=88,
-        /// <summary>
-        /// Bats Global Markets, Better Alternative Trading System
-        /// </summary>
-        BATS_Y,
-        /// <summary>
-        /// CBOE Options Exchange
-        /// </summary>
-        C2,
-        /// <summary>
-        /// The Boston Stock Exchange
-        /// </summary>
-        BOSTON,
-        /// <summary>
-        /// Miami International Securities Exchange
-        /// </summary>
-        MIAX,
-        /// <summary>
-        /// International Securities Exchange GEMINI
-        /// </summary>
-        ISE_GEMINI,
-        /// <summary>
-        /// International Securities Exchange GEMINI
-        /// </summary>
-        ISE_MERCURY,
-        /// <summary>
-        /// Bombay Stock Exchange
-        /// </summary>
-        BSE,
-#pragma warning restore 1591
-    }
-
-    /// <summary>
     /// Shortcut date format strings
     /// </summary>
     public static class DateFormat
@@ -812,9 +704,22 @@ namespace QuantConnect
         /// Gets the exchange as single character representation.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetPrimaryExchangeCodeGetPrimaryExchange(this string exchange,
+            SecurityType securityType = SecurityType.Equity,
+            string market = Market.USA)
+        {
+            return exchange.GetPrimaryExchange(securityType, market).Code;
+        }
+
+        /// <summary>
+        /// Gets the exchange as single character representation.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Obsolete("This overload has not enough information to determine the exchange. " +
+            "Please use overload expecting a SecurityType and Market")]
         public static string GetPrimaryExchangeAsSingleCharacter(this string exchange)
         {
-            return string.IsNullOrEmpty(exchange) ? null : ((char)exchange.GetPrimaryExchange()).ToString();
+            return exchange.GetPrimaryExchange().Code;
         }
 
         /// <summary>
@@ -822,9 +727,11 @@ namespace QuantConnect
         /// </summary>
         /// <param name="exchange"></param>
         /// <returns></returns>
+        [Obsolete("This overload has not enough information to determine the exchange. " +
+            "Please use overload expecting a string, SecurityType and Market")]
         public static Exchange GetPrimaryExchange(char exchange)
         {
-            return (Exchange)exchange;
+            return exchange.ToString().GetPrimaryExchange();
         }
 
         /// <summary>
@@ -832,7 +739,9 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>Useful for performance</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Exchange GetPrimaryExchange(this string exchange)
+        public static Exchange GetPrimaryExchange(this string exchange,
+            SecurityType securityType = SecurityType.Equity,
+            string market = Market.USA)
         {
             var primaryExchange = Exchange.UNKNOWN;
             if (string.IsNullOrEmpty(exchange))
@@ -840,77 +749,110 @@ namespace QuantConnect
                 return primaryExchange;
             }
 
-            switch (exchange.LazyToUpper())
+            if (securityType == SecurityType.Equity)
             {
-                case "T":
-                case "Q":
-                case "NASDAQ":
-                case "NASDAQ OMX":
-                    return Exchange.NASDAQ;
-                case "Z":
-                case "BATS":
-                case "BATS Z":
-                    return Exchange.BATS;
-                case "P":
-                case "ARCA":
-                    return Exchange.ARCA;
-                case "N":
-                case "NYSE":
-                    return Exchange.NYSE;
-                case "C":
-                case "NSE":
-                    return Exchange.NSE;
-                case "D":
-                case "FINRA":
-                    return Exchange.FINRA;
-                case "I":
-                case "ISE":
-                    return Exchange.ISE;
-                case "OPRA":
-                    return Exchange.OPRA;
-                case "M":
-                case "CSE":
-                    return Exchange.CSE;
-                case "W":
-                case "CBOE":
-                    return Exchange.CBOE;
-                case "A":
-                case "AMEX":
-                    return Exchange.AMEX;
-                case "SIAC":
-                    return Exchange.SIAC;
-                case "J":
-                case "EDGA":
-                    return Exchange.EDGA;
-                case "K":
-                case "EDGX":
-                    return Exchange.EDGX;
-                case "B":
-                case "NASDAQ BX":
-                    return Exchange.NASDAQ_BX;
-                case "X":
-                case "NASDAQ PSX":
-                    return Exchange.NASDAQ_PSX;
-                case "Y":
-                case "BATS Y":
-                    return Exchange.BATS_Y;
-                case "C2":
-                    return Exchange.C2;
-                case "BOSTON":
-                    return Exchange.BOSTON;
-                case "MIAX":
-                    return Exchange.MIAX;
-                case "ISE_GEMINI":
-                    return Exchange.ISE_GEMINI;
-                case "ISE_MERCURY":
-                    return Exchange.ISE_MERCURY;
-                case "UNKNOWN":
-                    return Exchange.UNKNOWN;
-                default:
-                    break;
+                switch (exchange.LazyToUpper())
+                {
+                    case "T":
+                    case "Q":
+                    case "NASDAQ":
+                    case "NASDAQ_OMX":
+                        return Exchange.NASDAQ;
+                    case "Z":
+                    case "BATS":
+                    case "BATS Z":
+                    case "BATS_Z":
+                        return Exchange.BATS;
+                    case "P":
+                    case "ARCA":
+                        return Exchange.ARCA;
+                    case "N":
+                    case "NYSE":
+                        return Exchange.NYSE;
+                    case "C":
+                    case "NSX":
+                    case "NSE":
+                        if (market == Market.USA)
+                        {
+                            return Exchange.NSX;
+                        }
+                        else if (market == Market.India)
+                        {
+                            return Exchange.NSE;
+                        }
+                        return Exchange.UNKNOWN;
+                    case "D":
+                    case "FINRA":
+                        return Exchange.FINRA;
+                    case "I":
+                    case "ISE":
+                        return Exchange.ISE;
+                    case "M":
+                    case "CSE":
+                        return Exchange.CSE;
+                    case "W":
+                    case "CBOE":
+                        return Exchange.CBOE;
+                    case "A":
+                    case "AMEX":
+                        return Exchange.AMEX;
+                    case "SIAC":
+                        return Exchange.SIAC;
+                    case "J":
+                    case "EDGA":
+                        return Exchange.EDGA;
+                    case "K":
+                    case "EDGX":
+                        return Exchange.EDGX;
+                    case "B":
+                    case "NASDAQ BX":
+                    case "NASDAQ_BX":
+                        return Exchange.NASDAQ_BX;
+                    case "X":
+                    case "NASDAQ PSX":
+                    case "NASDAQ_PSX":
+                        return Exchange.NASDAQ_PSX;
+                    case "Y":
+                    case "BATS Y":
+                    case "BATS_Y":
+                        return Exchange.BATS_Y;
+                    case "BOSTON":
+                        return Exchange.BOSTON;
+                    case "BSE":
+                        return Exchange.BSE;
+                }
             }
-
-            return Enum.TryParse(exchange, true, out primaryExchange) ? primaryExchange : Exchange.UNKNOWN;
+            else if (securityType == SecurityType.Option)
+            {
+                switch (exchange.LazyToUpper())
+                {
+                    case "A":
+                    case "AMEX":
+                        return Exchange.AMEX_Options;
+                    case "MIAX":
+                        return Exchange.MIAX;
+                    case "I":
+                    case "ISE":
+                        return Exchange.ISE;
+                    case "H":
+                    case "ISE GEMINI":
+                    case "ISE_GEMINI":
+                        return Exchange.ISE_GEMINI;
+                    case "J":
+                    case "ISE MERCURY":
+                    case "ISE_MERCURY":
+                        return Exchange.ISE_MERCURY;
+                    case "O":
+                    case "OPRA":
+                        return Exchange.OPRA;
+                    case "W":
+                    case "C2":
+                        return Exchange.C2;
+                    default:
+                        return Exchange.UNKNOWN;
+                }
+            }
+            return Exchange.UNKNOWN;
         }
     }
 

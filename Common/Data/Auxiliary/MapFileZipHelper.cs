@@ -36,7 +36,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads the zip bytes as text and parses as MapFileRows to create MapFiles
         /// </summary>
-        public static IEnumerable<MapFile> ReadMapFileZip(Stream file)
+        public static IEnumerable<MapFile> ReadMapFileZip(Stream file, string market)
         {
             if (file == null || file.Length == 0)
             {
@@ -47,7 +47,7 @@ namespace QuantConnect.Data.Auxiliary
                    let filename = kvp.Key
                    where filename.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase)
                    let lines = kvp.Value.Where(line => !string.IsNullOrEmpty(line))
-                   let mapFile = SafeRead(filename, lines)
+                   let mapFile = SafeRead(filename, lines, market)
                    select mapFile;
             return result;
         }
@@ -55,12 +55,12 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Parses the contents as a MapFile, if error returns a new empty map file
         /// </summary>
-        private static MapFile SafeRead(string filename, IEnumerable<string> contents)
+        private static MapFile SafeRead(string filename, IEnumerable<string> contents, string market)
         {
             var permtick = Path.GetFileNameWithoutExtension(filename);
             try
             {
-                return new MapFile(permtick, contents.Select(MapFileRow.Parse));
+                return new MapFile(permtick, contents.Select(s => MapFileRow.Parse(s, market)));
             }
             catch
             {

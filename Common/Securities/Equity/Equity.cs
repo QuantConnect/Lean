@@ -75,7 +75,7 @@ namespace QuantConnect.Securities.Equity
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCache securityCache,
-            Exchange primaryExchange=QuantConnect.Exchange.UNKNOWN)
+            Exchange primaryExchange = null)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -95,7 +95,7 @@ namespace QuantConnect.Securities.Equity
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);
-            PrimaryExchange = primaryExchange;
+            PrimaryExchange = primaryExchange ?? QuantConnect.Exchange.UNKNOWN;
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace QuantConnect.Securities.Equity
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            Exchange primaryExchange = QuantConnect.Exchange.UNKNOWN)
+            Exchange primaryExchange = null)
             : base(
                 config,
                 quoteCurrency,
@@ -128,7 +128,7 @@ namespace QuantConnect.Securities.Equity
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);
-            PrimaryExchange = primaryExchange;
+            PrimaryExchange = primaryExchange ?? QuantConnect.Exchange.UNKNOWN;;
         }
 
         /// <summary>

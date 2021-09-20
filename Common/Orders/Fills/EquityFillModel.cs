@@ -494,7 +494,7 @@ namespace QuantConnect.Orders.Fills
 
             if (subscribedTypes.Contains(typeof(Tick)))
             {
-                var primaryExchange = (byte) ((Equity) asset).PrimaryExchange;
+                var primaryExchange = ((Equity) asset).PrimaryExchange;
                 var officialOpen = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OfficialOpen);
                 var openingPrints = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OpeningPrints);
 
@@ -502,7 +502,7 @@ namespace QuantConnect.Orders.Fills
                 var trade = asset.Cache.GetAll<Tick>()
                     .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
                     .FirstOrDefault(x =>
-                        x.TickType == TickType.Trade && x.Price > 0 && x.ExchangeCode == primaryExchange &&
+                        x.TickType == TickType.Trade && x.Price > 0 && x.Exchange == primaryExchange &&
                         (x.ParsedSaleCondition == officialOpen || x.ParsedSaleCondition == openingPrints) &&
                         asset.Exchange.DateTimeIsOpen(x.Time));
 
