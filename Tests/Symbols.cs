@@ -148,6 +148,10 @@ namespace QuantConnect.Tests
             }
             return Symbol.CreateFuture(symbol, market, expiry);
         }
+        internal static Symbol CreateFutureOptionSymbol(Symbol underlying, OptionRight right, decimal strike, DateTime expiry)
+        {
+            return Symbol.CreateOption(underlying, underlying.ID.Market, OptionStyle.American, right, strike, expiry);
+        }
 
         private static Symbol CreateCfdSymbol(string symbol, string market)
         {
