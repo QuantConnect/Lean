@@ -1044,7 +1044,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return details.Contract.PrimaryExch;
             }
 
-            details = GetContractDetails(contract, symbol);
+            details = GetContractDetails(contract, symbol.Value);
             if (details == null)
             {
                 // we were unable to find the contract details
@@ -1071,7 +1071,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.TradingClass = symbol.ID.Symbol;
             }
 
-            details = GetContractDetails(contract, symbol);
+            details = GetContractDetails(contract, symbol.Value);
             if (details == null)
             {
                 // we were unable to find the contract details
@@ -1081,7 +1081,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return details.Contract.TradingClass;
         }
 
-        private decimal GetMinTick(Contract contract, Symbol symbol)
+        private decimal GetMinTick(Contract contract, string ticker)
         {
             ContractDetails details;
             if (_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
@@ -1089,7 +1089,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return (decimal)details.MinTick;
             }
 
-            details = GetContractDetails(contract, symbol);
+            details = GetContractDetails(contract, ticker);
             if (details == null)
             {
                 // we were unable to find the contract details
@@ -1099,7 +1099,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return (decimal)details.MinTick;
         }
 
-        private ContractDetails GetContractDetails(Contract contract, string symbol)
+        /// <summary>
+        /// Will return and cache the IB contract details for the requested contract
+        /// </summary>
+        /// <param name="contract">The target contract</param>
+        /// <param name="ticker">The associated Lean ticker. Just used for logging, can be provided empty</param>
+        private ContractDetails GetContractDetails(Contract contract, string ticker)
         {
             const int timeout = 60; // sec
 
@@ -1107,9 +1112,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var contractDetailsList = new List<ContractDetails>();
 
-            Log.Trace($"InteractiveBrokersBrokerage.GetContractDetails(): {symbol} ({contract})");
+            Log.Trace($"InteractiveBrokersBrokerage.GetContractDetails(): {ticker} ({contract})");
 
-            _requestInformation[requestId] = $"[Id={requestId}] GetContractDetails: {symbol} ({contract})";
+            _requestInformation[requestId] = $"[Id={requestId}] GetContractDetails: {ticker} ({contract})";
 
             var manualResetEvent = new ManualResetEvent(false);
 
@@ -1174,11 +1179,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Helper method to normalize a provided price to the Lean expected unit
         /// </summary>
-        private decimal NormalizePriceToLean(double price, Contract contract, string symbol, SecurityType securityType)
+        private decimal NormalizePriceToLean(double price, Contract contract, string ticker, SecurityType securityType)
         {
             if (securityType == SecurityType.Future || securityType == SecurityType.FutureOption)
             {
-                return Convert.ToDecimal(price) / GetContractPriceMagnifier(contract, symbol, securityType);
+                return Convert.ToDecimal(price) / GetContractPriceMagnifier(contract, ticker, securityType);
             }
             return Convert.ToDecimal(price);
         }
@@ -1187,12 +1192,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Helper method to normalize a provided price to the brokerage expected unit, for example cents,
         /// applying rounding to minimum tick size
         /// </summary>
-        private double NormalizePriceToBrokerage(decimal price, Contract contract, string symbol, SecurityType securityType, decimal? minTick = null)
+        private double NormalizePriceToBrokerage(decimal price, Contract contract, string ticker, SecurityType securityType, decimal? minTick = null)
         {
-            var roundedPrice = RoundPrice(price, minTick ?? GetMinTick(contract, symbol));
+            var roundedPrice = RoundPrice(price, minTick ?? GetMinTick(contract, ticker));
             if (securityType == SecurityType.Future || securityType == SecurityType.FutureOption)
             {
-                roundedPrice *= GetContractPriceMagnifier(contract, symbol, securityType);
+                roundedPrice *= GetContractPriceMagnifier(contract, ticker, securityType);
             }
             return Convert.ToDouble(roundedPrice);
         }
@@ -1200,7 +1205,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Will return the price magnifier for the requested symbol
         /// </summary>
-        private decimal GetContractPriceMagnifier(Contract contract, string symbol, SecurityType securityType)
+        private decimal GetContractPriceMagnifier(Contract contract, string ticker, SecurityType securityType)
         {
             if (securityType != SecurityType.Future && securityType != SecurityType.FutureOption)
             {
@@ -1209,10 +1214,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var uniqueKey = GetUniqueKey(contract);
             if (!_contractDetails.TryGetValue(uniqueKey, out var contractDetails))
             {
-                contractDetails = GetContractDetails(contract, symbol);
+                contractDetails = GetContractDetails(contract, ticker);
                 if (contractDetails == null)
                 {
-                    Log.Error($"InteractiveBrokersBrokerage:GetContractPriceMagnifier(): Failed to get ContractDetails for {symbol}, assuming magnifier value 1");
+                    Log.Error($"InteractiveBrokersBrokerage:GetContractPriceMagnifier(): Failed to get ContractDetails for {ticker}, assuming magnifier value 1");
                     return 1;
                 }
             }
@@ -1711,7 +1716,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var currentQuantityFilled = Convert.ToInt32(executionDetails.Execution.Shares);
             var totalQuantityFilled = Convert.ToInt32(executionDetails.Execution.CumQty);
             var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
-            var price = NormalizePriceToLean(executionDetails.Execution.Price, executionDetails.Contract, order.Symbol, order.SecurityType);
+            var price = NormalizePriceToLean(executionDetails.Execution.Price, executionDetails.Contract, order.Symbol.Value, order.SecurityType);
             var orderFee = new OrderFee(new CashAmount(
                 Convert.ToDecimal(commissionReport.Commission),
                 commissionReport.Currency.ToUpperInvariant()));
@@ -1817,23 +1822,23 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var limitIfTouchedOrder = order as LimitIfTouchedOrder;
             if (limitOrder != null)
             {
-                ibOrder.LmtPrice = NormalizePriceToBrokerage(limitOrder.LimitPrice, contract, order.Symbol, order.SecurityType);
+                ibOrder.LmtPrice = NormalizePriceToBrokerage(limitOrder.LimitPrice, contract, order.Symbol.Value, order.SecurityType);
             }
             else if (stopMarketOrder != null)
             {
-                ibOrder.AuxPrice = NormalizePriceToBrokerage(stopMarketOrder.StopPrice, contract, order.Symbol, order.SecurityType);
+                ibOrder.AuxPrice = NormalizePriceToBrokerage(stopMarketOrder.StopPrice, contract, order.Symbol.Value, order.SecurityType);
             }
             else if (stopLimitOrder != null)
             {
-                var minTick = GetMinTick(contract, order.Symbol);
-                ibOrder.LmtPrice = NormalizePriceToBrokerage(stopLimitOrder.LimitPrice, contract, order.Symbol, order.SecurityType, minTick);
-                ibOrder.AuxPrice = NormalizePriceToBrokerage(stopLimitOrder.StopPrice, contract, order.Symbol, order.SecurityType, minTick);
+                var minTick = GetMinTick(contract, order.Symbol.Value);
+                ibOrder.LmtPrice = NormalizePriceToBrokerage(stopLimitOrder.LimitPrice, contract, order.Symbol.Value, order.SecurityType, minTick);
+                ibOrder.AuxPrice = NormalizePriceToBrokerage(stopLimitOrder.StopPrice, contract, order.Symbol.Value, order.SecurityType, minTick);
             }
             else if (limitIfTouchedOrder != null)
             {
-                var minTick = GetMinTick(contract, order.Symbol);
-                ibOrder.LmtPrice = NormalizePriceToBrokerage(limitIfTouchedOrder.LimitPrice, contract, order.Symbol, order.SecurityType, minTick);
-                ibOrder.AuxPrice = NormalizePriceToBrokerage(limitIfTouchedOrder.TriggerPrice, contract, order.Symbol, order.SecurityType, minTick);
+                var minTick = GetMinTick(contract, order.Symbol.Value);
+                ibOrder.LmtPrice = NormalizePriceToBrokerage(limitIfTouchedOrder.LimitPrice, contract, order.Symbol.Value, order.SecurityType, minTick);
+                ibOrder.AuxPrice = NormalizePriceToBrokerage(limitIfTouchedOrder.TriggerPrice, contract, order.Symbol.Value, order.SecurityType, minTick);
             }
 
             // add financial advisor properties
@@ -1914,7 +1919,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.Limit:
                     order = new LimitOrder(mappedSymbol,
                         Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
-                        NormalizePriceToLean(ibOrder.LmtPrice, contract, mappedSymbol, mappedSymbol.SecurityType),
+                        NormalizePriceToLean(ibOrder.LmtPrice, contract, mappedSymbol.Value, mappedSymbol.SecurityType),
                         new DateTime()
                         );
                     break;
@@ -1922,7 +1927,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.StopMarket:
                     order = new StopMarketOrder(mappedSymbol,
                         Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
-                        NormalizePriceToLean(ibOrder.AuxPrice, contract, mappedSymbol, mappedSymbol.SecurityType),
+                        NormalizePriceToLean(ibOrder.AuxPrice, contract, mappedSymbol.Value, mappedSymbol.SecurityType),
                         new DateTime()
                         );
                     break;
@@ -1930,8 +1935,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(mappedSymbol,
                         Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
-                        NormalizePriceToLean(ibOrder.AuxPrice, contract, mappedSymbol, mappedSymbol.SecurityType),
-                        NormalizePriceToLean(ibOrder.LmtPrice, contract, mappedSymbol, mappedSymbol.SecurityType),
+                        NormalizePriceToLean(ibOrder.AuxPrice, contract, mappedSymbol.Value, mappedSymbol.SecurityType),
+                        NormalizePriceToLean(ibOrder.LmtPrice, contract, mappedSymbol.Value, mappedSymbol.SecurityType),
                         new DateTime()
                         );
                     break;
@@ -1939,8 +1944,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.LimitIfTouched:
                     order = new LimitIfTouchedOrder(mappedSymbol,
                         Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
-                        NormalizePriceToLean(ibOrder.AuxPrice, contract, mappedSymbol, mappedSymbol.SecurityType),
-                        NormalizePriceToLean(ibOrder.LmtPrice, contract, mappedSymbol, mappedSymbol.SecurityType),
+                        NormalizePriceToLean(ibOrder.AuxPrice, contract, mappedSymbol.Value, mappedSymbol.SecurityType),
+                        NormalizePriceToLean(ibOrder.LmtPrice, contract, mappedSymbol.Value, mappedSymbol.SecurityType),
                         new DateTime()
                     );
                     break;
@@ -2013,7 +2018,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         return null;
                     }
                     contract.Strike = NormalizePriceToBrokerage(symbol.ID.StrikePrice, underlyingContract,
-                        symbol.Underlying, symbol.Underlying.SecurityType);
+                        symbol.Underlying.Value, symbol.Underlying.SecurityType);
                 }
                 else
                 {
@@ -2467,7 +2472,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     }
 
                     var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
-                    var strike = NormalizePriceToLean(contract.Strike, contract, contract.ToString(), SecurityType.FutureOption);
+                    // we don't have the Lean ticker yet, ticker is just used for logging
+                    var strike = NormalizePriceToLean(contract.Strike, contract, ticker: string.Empty, SecurityType.FutureOption);
 
                     return Symbol.CreateOption(futureSymbol, market, OptionStyle.American, right, strike, contractExpiryDate);
                 }
@@ -2577,7 +2583,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                             var id = GetNextId();
                             var contract = CreateContract(subscribeSymbol, false);
-                            var priceMagnifier = GetContractPriceMagnifier(contract, subscribeSymbol, subscribeSymbol.SecurityType);
+                            var priceMagnifier = GetContractPriceMagnifier(contract, subscribeSymbol.Value, subscribeSymbol.SecurityType);
 
                             _requestInformation[id] = $"[Id={id}] Subscribe: {symbol.Value} ({GetContractDescription(contract)})";
 
@@ -3198,7 +3204,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 ? Convert.ToInt32(!request.IncludeExtendedMarketHours)
                 : 0;
 
-            var priceMagnifier = GetContractPriceMagnifier(contract, request.Symbol, request.Symbol.SecurityType);
+            var priceMagnifier = GetContractPriceMagnifier(contract, request.Symbol.Value, request.Symbol.SecurityType);
 
             // making multiple requests if needed in order to download the history
             while (endTime >= startTime)
