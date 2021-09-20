@@ -3391,6 +3391,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // IBGateway was closed by IBAutomater because the auto-restart token expired or it was closed manually (less likely)
                 Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater...");
 
+                try
+                {
+                    // disconnect immediately so orders will not be submitted to the API while waiting for reconnection
+                    Disconnect();
+                }
+                catch (Exception exception)
+                {
+                    Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): error in Disconnect(): {exception}");
+                }
+
                 // during weekends wait until one hour before FX market open before restarting IBAutomater
                 var delay = _ibAutomater.IsWithinWeekendServerResetTimes()
                     ? GetNextWeekendReconnectionTimeUtc() - DateTime.UtcNow
@@ -3403,8 +3413,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     try
                     {
                         Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): restarting...");
-
-                        Disconnect();
 
                         CheckIbAutomaterError(_ibAutomater.Start(false));
 
