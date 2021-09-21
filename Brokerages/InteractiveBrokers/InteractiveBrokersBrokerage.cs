@@ -2384,7 +2384,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Time.UnixTimeStampToDateTime(Convert.ToDouble(historyBar.Bar.Time, CultureInfo.InvariantCulture)) :
                 DateTime.ParseExact(historyBar.Bar.Time, "yyyyMMdd", CultureInfo.InvariantCulture);
 
-            return new TradeBar(time, symbol, (decimal)historyBar.Bar.Open / priceMagnifier, (decimal)historyBar.Bar.High / priceMagnifier, 
+            return new TradeBar(time, symbol, (decimal)historyBar.Bar.Open / priceMagnifier, (decimal)historyBar.Bar.High / priceMagnifier,
                 (decimal)historyBar.Bar.Low / priceMagnifier, (decimal)historyBar.Bar.Close / priceMagnifier, historyBar.Bar.Volume, resolution.ToTimeSpan());
         }
 
