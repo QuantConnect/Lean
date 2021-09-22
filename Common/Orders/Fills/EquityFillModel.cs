@@ -519,12 +519,15 @@ namespace QuantConnect.Orders.Fills
                         .GetMarketHours(asset.LocalTime)
                         .GetMarketOpen(TimeSpan.Zero, false);
 
+                    fill.Message = "No trade with the OfficialOpen or OpeningPrints flag within the 1-minute timeout.";
+
                     tick = trades.LastOrDefault() ?? asset.Cache.GetAll<Tick>().LastOrDefault();
                     if ((tick?.EndTime.TimeOfDay - previousOpen)?.TotalMinutes < 1)
                     {
-                        fill.Message = "No trade with the OfficialOpen or OpeningPrints flag within the 1-minute timeout.";
                         return fill;
                     }
+
+                    fill.Message += $" Fill with last {tick.TickType} data.";
                 }
 
                 endTime = tick?.EndTime ?? endTime;
@@ -578,13 +581,16 @@ namespace QuantConnect.Orders.Fills
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
+            var bestEffortMessage = "";
+
             // If there is no trade information, get the bid or ask, then apply the slippage
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out _);
+                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage);
+                        fill.Message += bestEffortMessage;
                     }
 
                     fill.FillPrice += slip;
@@ -592,7 +598,8 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Sell:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out _);
+                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage);
+                        fill.Message += bestEffortMessage;
                     }
 
                     fill.FillPrice -= slip;
@@ -649,12 +656,21 @@ namespace QuantConnect.Orders.Fills
                 if (tick == null)
                 {
                     tick = trades.LastOrDefault() ?? asset.Cache.GetAll<Tick>().LastOrDefault();
-                    if (Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol).IsExtendedMarketHours() &&
-                        (tick?.EndTime - nextMarketClose)?.TotalMinutes < 1)
+                    if (Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol).IsExtendedMarketHours())
                     {
                         fill.Message = "No trade with the OfficialClose or ClosingPrints flag within the 1-minute timeout.";
-                        return fill;
+
+                        if ((tick?.EndTime - nextMarketClose)?.TotalMinutes < 1)
+                        {
+                            return fill;
+                        }
                     }
+                    else
+                    {
+                        fill.Message = "No trade with the OfficialClose or ClosingPrints flag for data that does not include extended market hours.";
+                    }
+
+                    fill.Message += $" Fill with last {tick.TickType} data.";
                 }
 
                 if (tick?.TickType == TickType.Trade)
@@ -680,13 +696,16 @@ namespace QuantConnect.Orders.Fills
             // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
+            var bestEffortMessage = "";
+
             // If there is no trade information, get the bid or ask, then apply the slippage
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out _);
+                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage);
+                        fill.Message += bestEffortMessage;
                     }
 
                     fill.FillPrice += slip;
@@ -694,7 +713,8 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Sell:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out _);
+                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage);
+                        fill.Message += bestEffortMessage;
                     }
 
                     fill.FillPrice -= slip;

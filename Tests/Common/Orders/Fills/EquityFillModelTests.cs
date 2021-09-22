@@ -764,6 +764,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             fill = model.MarketOnOpenFill(equity, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(expected, fill.FillPrice);
+            Assert.IsTrue(fill.Message.Contains("Fill with last Quote data.", StringComparison.InvariantCulture));
         }
 
         [TestCase(Resolution.Minute, 3, 17, 0, 9, 29)]
@@ -1020,6 +1021,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 fill = model.MarketOnCloseFill(equity, order);
                 Assert.AreEqual(order.Quantity, fill.FillQuantity);
                 Assert.AreEqual(expected, fill.FillPrice);
+                Assert.AreEqual("No trade with the OfficialClose or ClosingPrints flag for data that does not include extended market hours. Fill with last Trade data.", fill.Message);
                 return;
             }
 
@@ -1084,7 +1086,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Tick(time, Symbols.SPY,  "80000001", "P", 100, 0.95m),   // Open but not primary exchange
             }, typeof(Tick));
 
+            fill = model.MarketOnCloseFill(equity, order);
             Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual("No trade with the OfficialClose or ClosingPrints flag within the 1-minute timeout.", fill.Message);
 
             // 2 minutes after the close
             time = reference.AddMinutes(62);
@@ -1101,6 +1105,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             fill = model.MarketOnCloseFill(equity, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(expected, fill.FillPrice);
+            Assert.IsTrue(fill.Message.Contains("Fill with last Trade data.", StringComparison.InvariantCulture));
         }
 
         [TestCase(OrderDirection.Buy)]
