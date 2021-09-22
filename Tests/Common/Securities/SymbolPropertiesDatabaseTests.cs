@@ -49,6 +49,29 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void LoadsMinimumOrderSize()
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+
+            var bitfinexSymbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
+            var bitfinexSymbolProperties = db.GetSymbolProperties(bitfinexSymbol.ID.Market, bitfinexSymbol, bitfinexSymbol.SecurityType, "USD");
+
+            var binanceSymbol = Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance);
+            var binanceSymbolProperties = db.GetSymbolProperties(binanceSymbol.ID.Market, binanceSymbol, binanceSymbol.SecurityType, "EUR");
+
+            var gdaxSymbol = Symbol.Create("BTCGBP", SecurityType.Crypto, Market.GDAX);
+            var gdaxSymbolProperties = db.GetSymbolProperties(gdaxSymbol.ID.Market, gdaxSymbol, gdaxSymbol.SecurityType, "GBP");
+
+            var krakenSymbol = Symbol.Create("BTCCAD", SecurityType.Crypto, Market.Kraken);
+            var krakenSymbolProperties = db.GetSymbolProperties(krakenSymbol.ID.Market, krakenSymbol, krakenSymbol.SecurityType, "CAD");
+
+            Assert.AreEqual(bitfinexSymbolProperties.MinimumOrderSize, 0.00006m);
+            Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 0.00001m);
+            Assert.AreEqual(gdaxSymbolProperties.MinimumOrderSize, 0.0001m);
+            Assert.AreEqual(krakenSymbolProperties.MinimumOrderSize, 0.0001m);
+        }
+
+        [Test]
         public void LoadsDefaultLotSize()
         {
             var defaultSymbolProperties = SymbolProperties.GetDefault(Currencies.USD);
