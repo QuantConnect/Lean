@@ -13,26 +13,21 @@
  * limitations under the License.
 */
 
-using QuantConnect.Brokerages.GDAX;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Brokerages;
 
-namespace QuantConnect.Tests.Brokerages.GDAX
+namespace QuantConnect.Tests.Brokerages.Kraken
 {
-    public class GDAXTestsHelpers
+    class KrakenTestHelpers
     {
-        private static readonly Symbol Btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
-
         public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute)
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 CreateConfig(securityType, resolution),
                 new Cash(Currencies.USD, 1000, price),
-                SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.GDAX, "BTCUSD", SecurityType.Crypto, "USD"),
+                SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.Kraken, "BTCUSD", SecurityType.Crypto, "USD"),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
@@ -41,21 +36,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         private static SubscriptionDataConfig CreateConfig(SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("BTCUSD", securityType, Market.GDAX), resolution, TimeZones.Utc, TimeZones.Utc,
+            return new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("BTCUSD", securityType, Market.Kraken), resolution, TimeZones.Utc, TimeZones.Utc,
             false, true, false);
-        }
-
-        public static void AddOrder(GDAXBrokerage unit, int id, string brokerId, decimal quantity)
-        {
-            var order = new Orders.MarketOrder { BrokerId = new List<string> { brokerId }, Symbol = Btcusd, Quantity = quantity, Id = id };
-            order.PriceCurrency = Currencies.USD;
-            unit.CachedOrderIDs.TryAdd(1, order);
-            unit.FillSplit.TryAdd(id, new GDAXFill(order));
-        }
-
-        public static WebSocketMessage GetArgs(WebSocketClientWrapper.MessageData data)
-        {
-            return new WebSocketMessage(null, data);
         }
     }
 }
