@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -73,17 +73,9 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// The minimum order size allowed
-        /// </summary>
-        public decimal? MinimumOrderSize
-        {
-            get;
-        }
-
-        /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
@@ -97,7 +89,6 @@ namespace QuantConnect.Securities
             }
 
             MarketTicker = marketTicker;
-            MinimumOrderSize = minimumOrderSize;
         }
 
         /// <summary>

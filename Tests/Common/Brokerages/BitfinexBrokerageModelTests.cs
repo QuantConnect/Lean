@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using Moq;
 using System;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
@@ -21,16 +20,12 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
-using QuantConnect.Tests.Brokerages.Bitfinex;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class BitfinexBrokerageModelTests
     {
-        private readonly BitfinexBrokerageModel _unit = new BitfinexBrokerageModel();
-
         protected Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
         protected Crypto Security
         {
@@ -175,18 +170,6 @@ namespace QuantConnect.Tests.Common.Brokerages
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
-        }
-
-        [TestCase(0.01, true)]
-        [TestCase(0.00005, false)]
-        public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
-        {
-            BrokerageMessageEvent message;
-            var order = new Mock<Order>();
-
-            order.Object.Quantity = orderQuantity;
-
-            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(BitfinexTestHelpers.GetSecurity(), order.Object, out message));
         }
     }
 }

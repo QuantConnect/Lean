@@ -152,8 +152,9 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            decimal? minimumOrderSize=security.SymbolProperties.MinimumOrderSize;
-            if ((minimumOrderSize != null) && (Math.Abs(order.Quantity) < minimumOrderSize))
+            decimal minimumOrderSize;
+            if (MinimumOrderSizes.TryGetValue(security.Symbol.Value, out minimumOrderSize) &&
+                Math.Abs(order.Quantity) < minimumOrderSize)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}")
