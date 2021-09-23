@@ -1199,7 +1199,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private OptionExerciseOrder GenerateOptionExerciseOrder(Security security, decimal quantity)
         {
-            // generate new execercise order and ticket for the option
+            // generate new exercise order and ticket for the option
             var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc)
             {
                 Id = _algorithm.Transactions.GetIncrementOrderId()
