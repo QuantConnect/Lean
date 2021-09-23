@@ -30,6 +30,7 @@ using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -39,6 +40,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class DefaultBrokerageModel : IBrokerageModel
     {
+        private readonly BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
+
         /// <summary>
         /// The default markets for the backtesting brokerage
         /// </summary>
@@ -400,6 +403,32 @@ namespace QuantConnect.Brokerages
         public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
         {
             return GetBuyingPowerModel(security);
+        }
+
+        /// <summary>
+        /// Checks if the order size is valid, it means, the order size is bigger than the minimum size allowed
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
+        /// <returns></returns>
+        public static bool IsValidOrderSize(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            var minimumOrderSize = security.SymbolProperties.MinimumOrderSize;
+            if ((minimumOrderSize != null) && (Math.Abs(order.Quantity) < minimumOrderSize))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}")
+                );
+
+                return false;
+            }
+            else
+            {
+                message = null;
+                return true;
+            }
         }
     }
 }

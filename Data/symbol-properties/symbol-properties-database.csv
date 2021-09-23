@@ -4,363 +4,363 @@ market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_
 # Use # signs for comments
 #
 
-fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,0.1,1,
-fxcm,DE10YBEUR,cfd,Euro-Bund,EUR,10,0.001,1,
-fxcm,XCUUSD,cfd,Copper,USD,100,0.0001,1,
-fxcm,ES35EUR,cfd,IBEX 35 index of Spanish listed shares,EUR,0.1,0.1,1,
-fxcm,EU50EUR,cfd,Euro Stoxx 50 index of European listed shares,EUR,0.1,0.1,1,
-fxcm,FR40EUR,cfd,CAC 40 index of French listed shares,EUR,0.1,0.1,1,
-fxcm,DE30EUR,cfd,DAX index of German listed shares,EUR,0.1,0.1,1,
-fxcm,HK33HKD,cfd,Hang Seng index of Hong Kong listed shares,HKD,1,0.1,1,
-fxcm,IT40EUR,cfd,FTSE MIB index of Italian listed shares,EUR,0.1,0.1,1,
-fxcm,JP225JPY,cfd,Nikkei 225 index of Japanese listed shares,JPY,1,0.1,10,
-fxcm,NAS100USD,cfd,TECH 100 index of US listed shares,USD,0.1,0.1,1,
-fxcm,NATGASUSD,cfd,Natural Gas (Henry Hub),USD,100,0.0001,1,
-fxcm,SPX500USD,cfd,S&P 500 index of US listed shares,USD,1,0.01,1,
-fxcm,CH20CHF,cfd,Swiss Market Index of Swiss listed shares,CHF,0.1,0.1,1,
-fxcm,UK100GBP,cfd,FTSE 100 index of UK listed shares,GBP,0.1,0.1,1,
-fxcm,BCOUSD,cfd,Crude Oil (Brent),USD,10,0.001,1,
-fxcm,US30USD,cfd,Index of top 30 shares on Wall Street,USD,0.1,0.1,1,
-fxcm,DXYUSD,cfd,Dow Jones FXCM Dollar Index Basket,USD,1,0.1,1,
-fxcm,WTICOUSD,cfd,Crude Oil (WTI),USD,10,0.001,1,
-fxcm,XAGUSD,cfd,Silver,USD,1,0.001,50,
-fxcm,XAUUSD,cfd,Gold,USD,1,0.001,1,
-fxcm,XPDUSD,cfd,Palladium,USD,1,0.01,1,
-fxcm,XPTUSD,cfd,Platinum,USD,1,0.01,1,
+fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,0.1,1
+fxcm,DE10YBEUR,cfd,Euro-Bund,EUR,10,0.001,1
+fxcm,XCUUSD,cfd,Copper,USD,100,0.0001,1
+fxcm,ES35EUR,cfd,IBEX 35 index of Spanish listed shares,EUR,0.1,0.1,1
+fxcm,EU50EUR,cfd,Euro Stoxx 50 index of European listed shares,EUR,0.1,0.1,1
+fxcm,FR40EUR,cfd,CAC 40 index of French listed shares,EUR,0.1,0.1,1
+fxcm,DE30EUR,cfd,DAX index of German listed shares,EUR,0.1,0.1,1
+fxcm,HK33HKD,cfd,Hang Seng index of Hong Kong listed shares,HKD,1,0.1,1
+fxcm,IT40EUR,cfd,FTSE MIB index of Italian listed shares,EUR,0.1,0.1,1
+fxcm,JP225JPY,cfd,Nikkei 225 index of Japanese listed shares,JPY,1,0.1,10
+fxcm,NAS100USD,cfd,TECH 100 index of US listed shares,USD,0.1,0.1,1
+fxcm,NATGASUSD,cfd,Natural Gas (Henry Hub),USD,100,0.0001,1
+fxcm,SPX500USD,cfd,S&P 500 index of US listed shares,USD,1,0.01,1
+fxcm,CH20CHF,cfd,Swiss Market Index of Swiss listed shares,CHF,0.1,0.1,1
+fxcm,UK100GBP,cfd,FTSE 100 index of UK listed shares,GBP,0.1,0.1,1
+fxcm,BCOUSD,cfd,Crude Oil (Brent),USD,10,0.001,1
+fxcm,US30USD,cfd,Index of top 30 shares on Wall Street,USD,0.1,0.1,1
+fxcm,DXYUSD,cfd,Dow Jones FXCM Dollar Index Basket,USD,1,0.1,1
+fxcm,WTICOUSD,cfd,Crude Oil (WTI),USD,10,0.001,1
+fxcm,XAGUSD,cfd,Silver,USD,1,0.001,50
+fxcm,XAUUSD,cfd,Gold,USD,1,0.001,1
+fxcm,XPDUSD,cfd,Palladium,USD,1,0.01,1
+fxcm,XPTUSD,cfd,Platinum,USD,1,0.01,1
 
-oanda,AU200AUD,cfd,Australia 200,AUD,1,0.1,0.1,
-oanda,BCOUSD,cfd,Brent Crude Oil,USD,1,0.001,1,
-oanda,CH20CHF,cfd,Swiss 20,CHF,1,0.1,1,
-oanda,CORNUSD,cfd,Corn,USD,1,0.001,1,
-oanda,DE10YBEUR,cfd,Bund,EUR,1,0.001,1,
-oanda,DE30EUR,cfd,Germany 30,EUR,1,0.1,0.1,
-oanda,EU50EUR,cfd,Europe 50,EUR,1,0.1,0.1,
-oanda,FR40EUR,cfd,France 40,EUR,1,0.1,0.1,
-oanda,HK33HKD,cfd,Hong Kong 33,HKD,1,0.1,0.1,
-oanda,JP225USD,cfd,Japan 225,USD,1,0.1,0.1,
-oanda,NAS100USD,cfd,US Nas 100,USD,1,0.1,0.1,
-oanda,NATGASUSD,cfd,Natural Gas,USD,1,0.001,1,
-oanda,NL25EUR,cfd,Netherlands 25,EUR,1,0.001,0.1,
-oanda,SG30SGD,cfd,Singapore 30,SGD,1,0.01,0.1,
-oanda,SOYBNUSD,cfd,Soybeans,USD,1,0.001,1,
-oanda,SPX500USD,cfd,US SPX 500,USD,1,0.1,0.1,
-oanda,SUGARUSD,cfd,Sugar,USD,1,0.00001,1,
-oanda,UK100GBP,cfd,UK 100,GBP,1,0.1,0.1,
-oanda,UK10YBGBP,cfd,UK 10Y Gilt,GBP,1,0.001,1,
-oanda,US2000USD,cfd,US Russ 2000,USD,1,0.001,0.1,
-oanda,US30USD,cfd,US Wall St 30,USD,1,0.1,0.1,
-oanda,USB02YUSD,cfd,US 2Y T-Note,USD,1,0.001,1,
-oanda,USB05YUSD,cfd,US 5Y T-Note,USD,1,0.001,1,
-oanda,USB10YUSD,cfd,US 10Y T-Note,USD,1,0.001,1,
-oanda,USB30YUSD,cfd,US T-Bond,USD,1,0.001,1,
-oanda,WHEATUSD,cfd,Wheat,USD,1,0.001,1,
-oanda,WTICOUSD,cfd,West Texas Oil,USD,1,0.001,1,
-oanda,XAGAUD,cfd,Silver/AUD,AUD,1,0.00001,1,
-oanda,XAGCAD,cfd,Silver/CAD,CAD,1,0.00001,1,
-oanda,XAGCHF,cfd,Silver/CHF,CHF,1,0.00001,1,
-oanda,XAGEUR,cfd,Silver/EUR,EUR,1,0.00001,1,
-oanda,XAGGBP,cfd,Silver/GBP,GBP,1,0.00001,1,
-oanda,XAGHKD,cfd,Silver/HKD,HKD,1,0.00001,1,
-oanda,XAGJPY,cfd,Silver/JPY,JPY,1,0.1,1,
-oanda,XAGNZD,cfd,Silver/NZD,NZD,1,0.00001,1,
-oanda,XAGSGD,cfd,Silver/SGD,SGD,1,0.00001,1,
-oanda,XAGUSD,cfd,Silver,USD,1,0.00001,1,
-oanda,XAUAUD,cfd,Gold/AUD,AUD,1,0.001,1,
-oanda,XAUCAD,cfd,Gold/CAD,CAD,1,0.001,1,
-oanda,XAUCHF,cfd,Gold/CHF,CHF,1,0.001,1,
-oanda,XAUEUR,cfd,Gold/EUR,EUR,1,0.001,1,
-oanda,XAUGBP,cfd,Gold/GBP,GBP,1,0.001,1,
-oanda,XAUHKD,cfd,Gold/HKD,HKD,1,0.001,1,
-oanda,XAUJPY,cfd,Gold/JPY,JPY,1,1,1,
-oanda,XAUNZD,cfd,Gold/NZD,NZD,1,0.001,1,
-oanda,XAUSGD,cfd,Gold/SGD,SGD,1,0.001,1,
-oanda,XAUUSD,cfd,Gold,USD,1,0.001,1,
-oanda,XAUXAG,cfd,Gold/Silver,XAG,1,0.001,1,
-oanda,XCUUSD,cfd,Copper,USD,1,0.00001,1,
-oanda,XPDUSD,cfd,Palladium,USD,1,0.001,1,
-oanda,XPTUSD,cfd,Platinum,USD,1,0.001,1,
+oanda,AU200AUD,cfd,Australia 200,AUD,1,0.1,0.1
+oanda,BCOUSD,cfd,Brent Crude Oil,USD,1,0.001,1
+oanda,CH20CHF,cfd,Swiss 20,CHF,1,0.1,1
+oanda,CORNUSD,cfd,Corn,USD,1,0.001,1
+oanda,DE10YBEUR,cfd,Bund,EUR,1,0.001,1
+oanda,DE30EUR,cfd,Germany 30,EUR,1,0.1,0.1
+oanda,EU50EUR,cfd,Europe 50,EUR,1,0.1,0.1
+oanda,FR40EUR,cfd,France 40,EUR,1,0.1,0.1
+oanda,HK33HKD,cfd,Hong Kong 33,HKD,1,0.1,0.1
+oanda,JP225USD,cfd,Japan 225,USD,1,0.1,0.1
+oanda,NAS100USD,cfd,US Nas 100,USD,1,0.1,0.1
+oanda,NATGASUSD,cfd,Natural Gas,USD,1,0.001,1
+oanda,NL25EUR,cfd,Netherlands 25,EUR,1,0.001,0.1
+oanda,SG30SGD,cfd,Singapore 30,SGD,1,0.01,0.1
+oanda,SOYBNUSD,cfd,Soybeans,USD,1,0.001,1
+oanda,SPX500USD,cfd,US SPX 500,USD,1,0.1,0.1
+oanda,SUGARUSD,cfd,Sugar,USD,1,0.00001,1
+oanda,UK100GBP,cfd,UK 100,GBP,1,0.1,0.1
+oanda,UK10YBGBP,cfd,UK 10Y Gilt,GBP,1,0.001,1
+oanda,US2000USD,cfd,US Russ 2000,USD,1,0.001,0.1
+oanda,US30USD,cfd,US Wall St 30,USD,1,0.1,0.1
+oanda,USB02YUSD,cfd,US 2Y T-Note,USD,1,0.001,1
+oanda,USB05YUSD,cfd,US 5Y T-Note,USD,1,0.001,1
+oanda,USB10YUSD,cfd,US 10Y T-Note,USD,1,0.001,1
+oanda,USB30YUSD,cfd,US T-Bond,USD,1,0.001,1
+oanda,WHEATUSD,cfd,Wheat,USD,1,0.001,1
+oanda,WTICOUSD,cfd,West Texas Oil,USD,1,0.001,1
+oanda,XAGAUD,cfd,Silver/AUD,AUD,1,0.00001,1
+oanda,XAGCAD,cfd,Silver/CAD,CAD,1,0.00001,1
+oanda,XAGCHF,cfd,Silver/CHF,CHF,1,0.00001,1
+oanda,XAGEUR,cfd,Silver/EUR,EUR,1,0.00001,1
+oanda,XAGGBP,cfd,Silver/GBP,GBP,1,0.00001,1
+oanda,XAGHKD,cfd,Silver/HKD,HKD,1,0.00001,1
+oanda,XAGJPY,cfd,Silver/JPY,JPY,1,0.1,1
+oanda,XAGNZD,cfd,Silver/NZD,NZD,1,0.00001,1
+oanda,XAGSGD,cfd,Silver/SGD,SGD,1,0.00001,1
+oanda,XAGUSD,cfd,Silver,USD,1,0.00001,1
+oanda,XAUAUD,cfd,Gold/AUD,AUD,1,0.001,1
+oanda,XAUCAD,cfd,Gold/CAD,CAD,1,0.001,1
+oanda,XAUCHF,cfd,Gold/CHF,CHF,1,0.001,1
+oanda,XAUEUR,cfd,Gold/EUR,EUR,1,0.001,1
+oanda,XAUGBP,cfd,Gold/GBP,GBP,1,0.001,1
+oanda,XAUHKD,cfd,Gold/HKD,HKD,1,0.001,1
+oanda,XAUJPY,cfd,Gold/JPY,JPY,1,1,1
+oanda,XAUNZD,cfd,Gold/NZD,NZD,1,0.001,1
+oanda,XAUSGD,cfd,Gold/SGD,SGD,1,0.001,1
+oanda,XAUUSD,cfd,Gold,USD,1,0.001,1
+oanda,XAUXAG,cfd,Gold/Silver,XAG,1,0.001,1
+oanda,XCUUSD,cfd,Copper,USD,1,0.00001,1
+oanda,XPDUSD,cfd,Palladium,USD,1,0.001,1
+oanda,XPTUSD,cfd,Platinum,USD,1,0.001,1
 
-usa,[*],option,,USD,100,0.01,1,
-usa,[*],equity,,USD,1,0.01,1,
-usa,[*],index,,USD,1,0.01,1,
-usa,[*],indexoption,,USD,100,0.05,1,
+usa,[*],option,,USD,100,0.01,1
+usa,[*],equity,,USD,1,0.01,1
+usa,[*],index,,USD,1,0.01,1
+usa,[*],indexoption,,USD,100,0.05,1
 
 # for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
-cfe,VX,future,VIX futures ,USD,1000.0,0.05,1.0,
-cbot,AW,future,Bloomberg Commodity Index Futures,USD,100.0,0.1,1.0,
-cbot,BCF,future,Black Sea Corn Financially Settled (Platts) Futures,USD,50.0,0.25,1.0,
-cbot,BWF,future,Black Sea Wheat Financially Settled (Platts) Futures,USD,50.0,0.25,1.0,
-cbot,EH,future,Ethanol Futures,USD,29000.0,0.001,1.0,
-cbot,F1U,future,5-Year USD MAC Swap Futures,USD,1000.0,0.0078125,1.0,
-cbot,KE,future,KC HRW Wheat Futures,USD,5000.0,0.0025,1.0,
-cbot,TN,future,Ultra 10-Year U.S. Treasury Note Futures,USD,1000.0,0.015625,1.0,
-cbot,UB,future,Ultra U.S. Treasury Bond Futures,USD,1000.0,0.03125,1.0,
-cbot,YM,future,E-mini Dow ($5) Futures,USD,5.0,1.0,1.0,
-cbot,ZB,future,U.S. Treasury Bond Futures,USD,1000.0,0.03125,1.0,
-cbot,ZC,future,Corn Futures,USD,5000.0,0.0025,1.0,
-cbot,ZF,future,5-Year T-Note Futures,USD,1000.0,0.0078125,1.0,
-cbot,ZL,future,Soybean Oil Futures,USD,60000.0,0.01,1.0,
-cbot,ZM,future,Soybean Meal Futures,USD,100.0,0.1,1.0,
-cbot,ZN,future,10-Year T-Note Futures,USD,1000.0,0.015625,1.0,
-cbot,ZO,future,Oats Futures,USD,5000.0,0.25,1.0,
-cbot,ZS,future,Soybean Futures,USD,5000.0,0.0025,1.0,
-cbot,ZT,future,2-Year T-Note Futures,USD,2000.0,0.00390625,1.0,
-cbot,ZW,future,Chicago SRW Wheat Futures,USD,5000.0,0.0025,1.0,
-cme,6A,future,Australian Dollar Futures,USD,100000.0,0.0001,1.0,
-cme,6B,future,British Pound Futures,USD,62500.0,0.0001,1.0,
-cme,6C,future,Canadian Dollar Futures,USD,100000.0,5e-05,1.0,
-cme,6E,future,Euro FX Futures,USD,125000.0,5e-05,1.0,
-cme,6J,future,Japanese Yen Futures,USD,12500000.0,5e-07,1.0,
-cme,6L,future,Brazilian Real Futures,USD,100000.0,5e-05,1.0,
-cme,6M,future,Mexican Peso Futures,USD,500000.0,1e-05,1.0,
-cme,6N,future,New Zealand Dollar Futures,USD,100000.0,0.0001,1.0,
-cme,6R,future,Russian Ruble Futures,USD,2500000.0,5e-06,1.0,
-cme,6S,future,Swiss Franc Futures,USD,125000.0,0.0001,1.0,
-cme,6Z,future,South African Rand Futures,USD,500000.0,2.5e-05,1.0,
-cme,ACD,future,Australian Dollar/Canadian Dollar Futures,CAD,200000.0,0.0001,1.0,
-cme,AJY,future,Australian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0,
-cme,ANE,future,Australian Dollar/New Zealand Dollar Futures,NZD,200000.0,0.0001,1.0,
-cme,BIO,future,E-mini Nasdaq-100 Biotechnology Index Futures,USD,50.0,0.1,1.0,
-cme,BTC,future,Bitcoin Futures,USD,5.0,5.0,1.0,
-cme,CB,future,Cash-settled Butter Futures,USD,20000.0,0.00025,1.0,
-cme,CJY,future,Canadian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0,
-cme,CNH,future,Standard-Size USD/Offshore RMB (CNH) Futures,CNY,100000.0,0.0001,1.0,
-cme,CSC,future,Cash-Settled Cheese Futures,USD,20000.0,0.001,1.0,
-cme,DC,future,Class III Milk Futures,USD,2000.0,0.01,1.0,
-cme,DY,future,Dry Whey Futures,USD,44000.0,0.00025,1.0,
-cme,E7,future,E-mini Euro FX Futures,USD,62500.0,0.0001,1.0,
-cme,EAD,future,Euro/Australian Dollar Futures,AUD,125000.0,0.0001,1.0,
-cme,ECD,future,Euro/Canadian Dollar Futures,CAD,125000.0,0.0001,1.0,
-cme,EI,future,E-mini FTSE Emerging Index Futures,USD,100.0,0.1,1.0,
-cme,EMD,future,E-mini S&P MidCap 400 Futures,USD,100.0,0.1,1.0,
-cme,ES,future,E-mini S&P 500 Futures,USD,50.0,0.25,1.0,
-cme,ESK,future,Euro/Swedish Krona Futures,SEK,125000.0,0.0005,1.0,
-cme,GD,future,S&P-GSCI Commodity Index Futures,USD,250.0,0.05,1.0,
-cme,GDK,future,Class IV Milk Futures,USD,2000.0,0.01,1.0,
-cme,GE,future,Eurodollar Futures,USD,2500.0,0.0025,1.0,
-cme,GF,future,Feeder Cattle Futures,USD,50000.0,0.025,1.0,
-cme,GNF,future,Nonfat Dry Milk Futures,USD,44000.0,0.00025,1.0,
-cme,HE,future,Lean Hog Futures,USD,40000.0,0.025,1.0,
-cme,IBV,future,USD-Denominated Ibovespa Index Futures,USD,1.0,5.0,1.0,
-cme,J7,future,E-mini Japanese Yen Futures,USD,6250000.0,1e-06,1.0,
-cme,LBS,future,Random Length Lumber Futures,USD,110.0,0.1,1.0,
-cme,LE,future,Live Cattle Futures,USD,40000.0,0.025,1.0,
-cme,NKD,future,Nikkei/USD Futures,USD,5.0,5.0,1.0,
-cme,NQ,future,E-mini Nasdaq-100 Futures,USD,20.0,0.25,1.0,
-cme,RTY,future,E-mini  Russell 2000 Index Futures,USD,50.0,0.1,1.0,
-comex,AUP,future,Aluminum MW U.S. Transaction Premium Platts (25MT) Futures,USD,55116.0,1e-05,1.0,
-comex,EDP,future,Aluminium European Premium Duty-Paid (Metal Bulletin) Futures,USD,25.0,0.01,1.0,
-comex,GC,future,Gold Futures,USD,100.0,0.1,1.0,
-comex,HG,future,Copper Futures,USD,25000.0,0.0005,1.0,
-comex,SI,future,Silver Futures,USD,5000.0,0.005,1.0,
-ice,B,future,Brent Crude Futures,USD,1000.0,0.01,1.0,
-ice,CC,future,Cocoa Futures,USD,10.0,1.0,1.0,
-ice,CT,future,Cotton No. 2 Futures,USD,50000.0,0.0001,1.0,
-ice,DX,future,US Dollar Index Futures,USD,1000.0,0.005,1.0,
-ice,G,future,Low Sulfur Gasoil,USD,100.0,0.25,1.0,
-ice,KC,future,Coffee C Arabica Futures,USD,37500.0,0.0005,1.0,
-ice,OJ,future,Frozen Concentrated Orange Juice,USD,15000.0,0.0005,1.0,
-ice,SB,future,Sugar No. 11 Futures,USD,112000,0.0001,1,
-nymex,1S,future,Propane Non-LDH Mont Belvieu (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0,
-nymex,22,future,Argus Propane Far East Index BALMO Futures,USD,1000.0,0.001,1.0,
-nymex,A0D,future,Mini European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,100.0,0.001,1.0,
-nymex,A0F,future,Mini Singapore Fuel Oil 180 cst (Platts) Futures,USD,100.0,0.001,1.0,
-nymex,A1L,future,Gulf Coast ULSD (Platts) Up-Down BALMO Futures,USD,42000.0,0.0001,1.0,
-nymex,A1M,future,Gulf Coast Jet (Platts) Up-Down BALMO Futures,USD,42000.0,0.0001,1.0,
-nymex,A1R,future,Propane Non-LDH Mont Belvieu (OPIS) Futures,USD,42000.0,1e-05,1.0,
-nymex,A32,future,European Propane CIF ARA (Argus) BALMO Futures,USD,1000.0,0.01,1.0,
-nymex,A3G,future,Premium Unleaded Gasoline 10 ppm FOB MED (Platts) Futures,USD,1000.0,0.001,1.0,
-nymex,A7E,future,Argus Propane Far East Index Futures,USD,1000.0,0.001,1.0,
-nymex,A7I,future,Gasoline Euro-bob Oxy NWE Barges (Argus) Crack Spread BALMO Futures,USD,1000.0,0.001,1.0,
-nymex,A7Q,future,Mont Belvieu Natural Gasoline (OPIS) Futures,USD,42000.0,1e-05,1.0,
-nymex,A8J,future,Mont Belvieu Normal Butane (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0,
-nymex,A8K,future,Conway Propane (OPIS) Futures,USD,42000.0,1e-05,1.0,
-nymex,A8O,future,Mont Belvieu LDH Propane (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0,
-nymex,A91,future,Argus Propane Far East Index vs. European Propane CIF ARA (Argus) Futures,USD,1000.0,0.001,1.0,
-nymex,A9N,future,Argus Propane (Saudi Aramco) Futures,USD,1000.0,0.001,1.0,
-nymex,AA6,future,Group Three ULSD (Platts) vs. NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0,
-nymex,AA8,future,Group Three Sub-octane Gasoline (Platts) vs. RBOB Futures,USD,42000.0,0.0001,1.0,
-nymex,ABS,future,Singapore Fuel Oil 180 cst (Platts) BALMO Futures,USD,1000.0,0.001,1.0,
-nymex,ABT,future,Singapore Fuel Oil 380 cst (Platts) BALMO Futures,USD,1000.0,0.001,1.0,
-nymex,AC0,future,Mont Belvieu Ethane (OPIS) Futures,USD,42000.0,1e-05,1.0,
-nymex,AD0,future,Mont Belvieu Normal Butane (OPIS) Futures,USD,42000.0,1e-05,1.0,
-nymex,ADB,future,Brent Crude Oil vs. Dubai Crude Oil (Platts) Futures,USD,1000.0,0.001,1.0,
-nymex,AE5,future,Argus LLS vs. WTI (Argus) Trade Month Futures,USD,1000.0,0.01,1.0,
-nymex,AGA,future,Singapore Gasoil (Platts) vs. Low Sulphur Gasoil Futures,USD,1000.0,0.001,1.0,
-nymex,AJL,future,Los Angeles CARBOB Gasoline (OPIS) vs. RBOB Gasoline Futures,USD,42000.0,0.0001,1.0,
-nymex,AJS,future,Los Angeles Jet (OPIS) vs. NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0,
-nymex,AKL,future,Los Angeles CARB Diesel (OPIS) vs. NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0,
-nymex,AKZ,future,European Naphtha (Platts) BALMO Futures,USD,1000.0,0.001,1.0,
-nymex,APS,future,European Propane CIF ARA (Argus) Futures,USD,1000.0,0.01,1.0,
-nymex,AR0,future,Mont Belvieu Natural Gasoline (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0,
-nymex,ARE,future,RBOB Gasoline Crack Spread Futures,USD,1000.0,0.01,1.0,
-nymex,AVZ,future,Gulf Coast HSFO (Platts) BALMO Futures,USD,1000.0,0.001,1.0,
-nymex,AYV,future,Mars (Argus) vs. WTI Trade Month Futures,USD,1000.0,0.01,1.0,
-nymex,AYX,future,Mars (Argus) vs. WTI Financial Futures,USD,1000.0,0.01,1.0,
-nymex,AZ1,future,Ethanol T2 FOB Rdam Including Duty (Platts) Futures,EUR,100.0,0.001,1.0,
-nymex,B0,future,Mont Belvieu LDH Propane (OPIS) Futures,USD,42000.0,1e-05,1.0,
-nymex,B7H,future,Gasoline Euro-bob Oxy NWE Barges (Argus) Futures,USD,1000.0,0.001,1.0,
-nymex,BK,future,WTI-Brent Financial Futures,USD,1000.0,0.01,1.0,
-nymex,BOO,future,3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread (1000mt) Futures,USD,6350.0,0.001,1.0,
-nymex,BR7,future,Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO Futures,USD,1000.0,0.001,1.0,
-nymex,BZ,future,Brent Last Day Financial Futures,USD,1000.0,0.01,1.0,
-nymex,CL,future,Crude Oil Futures,USD,1000.0,0.01,1.0,
-nymex,CRB,future,Gulf Coast CBOB Gasoline A2 (Platts) vs. RBOB Gasoline Futures,USD,42000.0,0.0001,1.0,
-nymex,CSW,future,Clearbrook Bakken Sweet (NE2) Monthly Index Futures,USD,1000.0,0.001,1.0,
-nymex,CSX,future,WTI Financial Futures,USD,1000.0,0.01,1.0,
-nymex,CU,future,Chicago Ethanol (Platts) Futures,USD,42000.0,0.0001,1.0,
-nymex,D1N,future,Singapore Mogas 92 Unleaded (Platts) Brent Crack Spread Futures,USD,1000.0,0.001,1.0,
-nymex,DCB,future,Dubai Crude Oil (Platts) Financial Futures,USD,1000.0,0.001,1.0,
-nymex,E6,future,Japan C&F Naphtha (Platts) BALMO Futures,USD,1000.0,0.001,1.0,
-nymex,EN,future,European Naphtha (Platts) Crack Spread Futures,USD,1000.0,0.001,1.0,
-nymex,EPN,future,European Propane CIF ARA (Argus) vs. Naphtha Cargoes CIF NWE (Platts) Futures,USD,1000.0,0.001,1.0,
-nymex,EVC,future,Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0,
-nymex,EWG,future,East-West Gasoline Spread (Platts-Argus) Futures,USD,1000.0,0.001,1.0,
-nymex,EWN,future,East-West Naphtha: Japan C&F vs. Cargoes CIF NWE Spread (Platts) Futures,USD,1000.0,0.001,1.0,
-nymex,EXR,future,RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350000 gallons) Futures,USD,350000.0,0.0001,1.0,
-nymex,FO,future,3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures,USD,1000.0,0.001,1.0,
-nymex,FRC,future,Freight Route TC14 (Baltic) Futures,USD,1000.0,0.0001,1.0,
-nymex,FSS,future,1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0,
-nymex,GCU,future,Gulf Coast HSFO (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0,
-nymex,HCL,future,WTI Houston Crude Oil Futures,USD,1000.0,0.01,1.0,
-nymex,HH,future,Natural Gas (Henry Hub) Last-day Financial Futures,USD,10000.0,0.001,1.0,
-nymex,HO,future,NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0,
-nymex,HP,future,Natural Gas (Henry Hub) Penultimate Financial Futures,USD,10000.0,0.001,1.0,
-nymex,HRC,future,U.S. Midwest Domestic Hot-Rolled Coil Steel (CRU) Index Futures,USD,20.0,1.0,1.0,
-nymex,HTT,future,WTI Houston (Argus) vs. WTI Trade Month Futures,USD,1000.0,0.01,1.0,
-nymex,NG,future,Henry Hub Natural Gas Futures,USD,10000.0,0.001,1.0,
-nymex,PA,future,Palladium Futures,USD,100.0,0.05,1.0,
-nymex,PL,future,Platinum Futures,USD,50.0,0.1,1.0,
-nymex,RB,future,RBOB Gasoline Futures,USD,42000.0,0.0001,1.0,
-nymex,YO,future,No. 11 Sugar Futures,USD,112000.0,0.0001,1.0,
-sgx,NK,future,SGX Nikkei 225 Index Futures,JPY,500,5,5.0,
-sgx,TW,future,MSCI Taiwan Index Futures,USD,100,0.1,50.0,
-sgx,IN,future,Nifty Indices Futures,USD,2,0.5,50.0,
-india,NIFTY,future,Nifty50 Index,INR,0.05,75,1,
-india,BANKNIFTY,future,BankNifty Index,INR,0.05,25,1.0,
-india,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1.0,
-hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0,
+cfe,VX,future,VIX futures ,USD,1000.0,0.05,1.0
+cbot,AW,future,Bloomberg Commodity Index Futures,USD,100.0,0.1,1.0
+cbot,BCF,future,Black Sea Corn Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
+cbot,BWF,future,Black Sea Wheat Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
+cbot,EH,future,Ethanol Futures,USD,29000.0,0.001,1.0
+cbot,F1U,future,5-Year USD MAC Swap Futures,USD,1000.0,0.0078125,1.0
+cbot,KE,future,KC HRW Wheat Futures,USD,5000.0,0.0025,1.0
+cbot,TN,future,Ultra 10-Year U.S. Treasury Note Futures,USD,1000.0,0.015625,1.0
+cbot,UB,future,Ultra U.S. Treasury Bond Futures,USD,1000.0,0.03125,1.0
+cbot,YM,future,E-mini Dow ($5) Futures,USD,5.0,1.0,1.0
+cbot,ZB,future,U.S. Treasury Bond Futures,USD,1000.0,0.03125,1.0
+cbot,ZC,future,Corn Futures,USD,5000.0,0.0025,1.0
+cbot,ZF,future,5-Year T-Note Futures,USD,1000.0,0.0078125,1.0
+cbot,ZL,future,Soybean Oil Futures,USD,60000.0,0.01,1.0
+cbot,ZM,future,Soybean Meal Futures,USD,100.0,0.1,1.0
+cbot,ZN,future,10-Year T-Note Futures,USD,1000.0,0.015625,1.0
+cbot,ZO,future,Oats Futures,USD,5000.0,0.25,1.0
+cbot,ZS,future,Soybean Futures,USD,5000.0,0.0025,1.0
+cbot,ZT,future,2-Year T-Note Futures,USD,2000.0,0.00390625,1.0
+cbot,ZW,future,Chicago SRW Wheat Futures,USD,5000.0,0.0025,1.0
+cme,6A,future,Australian Dollar Futures,USD,100000.0,0.0001,1.0
+cme,6B,future,British Pound Futures,USD,62500.0,0.0001,1.0
+cme,6C,future,Canadian Dollar Futures,USD,100000.0,5e-05,1.0
+cme,6E,future,Euro FX Futures,USD,125000.0,5e-05,1.0
+cme,6J,future,Japanese Yen Futures,USD,12500000.0,5e-07,1.0
+cme,6L,future,Brazilian Real Futures,USD,100000.0,5e-05,1.0
+cme,6M,future,Mexican Peso Futures,USD,500000.0,1e-05,1.0
+cme,6N,future,New Zealand Dollar Futures,USD,100000.0,0.0001,1.0
+cme,6R,future,Russian Ruble Futures,USD,2500000.0,5e-06,1.0
+cme,6S,future,Swiss Franc Futures,USD,125000.0,0.0001,1.0
+cme,6Z,future,South African Rand Futures,USD,500000.0,2.5e-05,1.0
+cme,ACD,future,Australian Dollar/Canadian Dollar Futures,CAD,200000.0,0.0001,1.0
+cme,AJY,future,Australian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
+cme,ANE,future,Australian Dollar/New Zealand Dollar Futures,NZD,200000.0,0.0001,1.0
+cme,BIO,future,E-mini Nasdaq-100 Biotechnology Index Futures,USD,50.0,0.1,1.0
+cme,BTC,future,Bitcoin Futures,USD,5.0,5.0,1.0
+cme,CB,future,Cash-settled Butter Futures,USD,20000.0,0.00025,1.0
+cme,CJY,future,Canadian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
+cme,CNH,future,Standard-Size USD/Offshore RMB (CNH) Futures,CNY,100000.0,0.0001,1.0
+cme,CSC,future,Cash-Settled Cheese Futures,USD,20000.0,0.001,1.0
+cme,DC,future,Class III Milk Futures,USD,2000.0,0.01,1.0
+cme,DY,future,Dry Whey Futures,USD,44000.0,0.00025,1.0
+cme,E7,future,E-mini Euro FX Futures,USD,62500.0,0.0001,1.0
+cme,EAD,future,Euro/Australian Dollar Futures,AUD,125000.0,0.0001,1.0
+cme,ECD,future,Euro/Canadian Dollar Futures,CAD,125000.0,0.0001,1.0
+cme,EI,future,E-mini FTSE Emerging Index Futures,USD,100.0,0.1,1.0
+cme,EMD,future,E-mini S&P MidCap 400 Futures,USD,100.0,0.1,1.0
+cme,ES,future,E-mini S&P 500 Futures,USD,50.0,0.25,1.0
+cme,ESK,future,Euro/Swedish Krona Futures,SEK,125000.0,0.0005,1.0
+cme,GD,future,S&P-GSCI Commodity Index Futures,USD,250.0,0.05,1.0
+cme,GDK,future,Class IV Milk Futures,USD,2000.0,0.01,1.0
+cme,GE,future,Eurodollar Futures,USD,2500.0,0.0025,1.0
+cme,GF,future,Feeder Cattle Futures,USD,50000.0,0.025,1.0
+cme,GNF,future,Nonfat Dry Milk Futures,USD,44000.0,0.00025,1.0
+cme,HE,future,Lean Hog Futures,USD,40000.0,0.025,1.0
+cme,IBV,future,USD-Denominated Ibovespa Index Futures,USD,1.0,5.0,1.0
+cme,J7,future,E-mini Japanese Yen Futures,USD,6250000.0,1e-06,1.0
+cme,LBS,future,Random Length Lumber Futures,USD,110.0,0.1,1.0
+cme,LE,future,Live Cattle Futures,USD,40000.0,0.025,1.0
+cme,NKD,future,Nikkei/USD Futures,USD,5.0,5.0,1.0
+cme,NQ,future,E-mini Nasdaq-100 Futures,USD,20.0,0.25,1.0
+cme,RTY,future,E-mini  Russell 2000 Index Futures,USD,50.0,0.1,1.0
+comex,AUP,future,Aluminum MW U.S. Transaction Premium Platts (25MT) Futures,USD,55116.0,1e-05,1.0
+comex,EDP,future,Aluminium European Premium Duty-Paid (Metal Bulletin) Futures,USD,25.0,0.01,1.0
+comex,GC,future,Gold Futures,USD,100.0,0.1,1.0
+comex,HG,future,Copper Futures,USD,25000.0,0.0005,1.0
+comex,SI,future,Silver Futures,USD,5000.0,0.005,1.0
+ice,B,future,Brent Crude Futures,USD,1000.0,0.01,1.0
+ice,CC,future,Cocoa Futures,USD,10.0,1.0,1.0
+ice,CT,future,Cotton No. 2 Futures,USD,50000.0,0.0001,1.0
+ice,DX,future,US Dollar Index Futures,USD,1000.0,0.005,1.0
+ice,G,future,Low Sulfur Gasoil,USD,100.0,0.25,1.0
+ice,KC,future,Coffee C Arabica Futures,USD,37500.0,0.0005,1.0
+ice,OJ,future,Frozen Concentrated Orange Juice,USD,15000.0,0.0005,1.0
+ice,SB,future,Sugar No. 11 Futures,USD,112000,0.0001,1
+nymex,1S,future,Propane Non-LDH Mont Belvieu (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0
+nymex,22,future,Argus Propane Far East Index BALMO Futures,USD,1000.0,0.001,1.0
+nymex,A0D,future,Mini European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,100.0,0.001,1.0
+nymex,A0F,future,Mini Singapore Fuel Oil 180 cst (Platts) Futures,USD,100.0,0.001,1.0
+nymex,A1L,future,Gulf Coast ULSD (Platts) Up-Down BALMO Futures,USD,42000.0,0.0001,1.0
+nymex,A1M,future,Gulf Coast Jet (Platts) Up-Down BALMO Futures,USD,42000.0,0.0001,1.0
+nymex,A1R,future,Propane Non-LDH Mont Belvieu (OPIS) Futures,USD,42000.0,1e-05,1.0
+nymex,A32,future,European Propane CIF ARA (Argus) BALMO Futures,USD,1000.0,0.01,1.0
+nymex,A3G,future,Premium Unleaded Gasoline 10 ppm FOB MED (Platts) Futures,USD,1000.0,0.001,1.0
+nymex,A7E,future,Argus Propane Far East Index Futures,USD,1000.0,0.001,1.0
+nymex,A7I,future,Gasoline Euro-bob Oxy NWE Barges (Argus) Crack Spread BALMO Futures,USD,1000.0,0.001,1.0
+nymex,A7Q,future,Mont Belvieu Natural Gasoline (OPIS) Futures,USD,42000.0,1e-05,1.0
+nymex,A8J,future,Mont Belvieu Normal Butane (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0
+nymex,A8K,future,Conway Propane (OPIS) Futures,USD,42000.0,1e-05,1.0
+nymex,A8O,future,Mont Belvieu LDH Propane (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0
+nymex,A91,future,Argus Propane Far East Index vs. European Propane CIF ARA (Argus) Futures,USD,1000.0,0.001,1.0
+nymex,A9N,future,Argus Propane (Saudi Aramco) Futures,USD,1000.0,0.001,1.0
+nymex,AA6,future,Group Three ULSD (Platts) vs. NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0
+nymex,AA8,future,Group Three Sub-octane Gasoline (Platts) vs. RBOB Futures,USD,42000.0,0.0001,1.0
+nymex,ABS,future,Singapore Fuel Oil 180 cst (Platts) BALMO Futures,USD,1000.0,0.001,1.0
+nymex,ABT,future,Singapore Fuel Oil 380 cst (Platts) BALMO Futures,USD,1000.0,0.001,1.0
+nymex,AC0,future,Mont Belvieu Ethane (OPIS) Futures,USD,42000.0,1e-05,1.0
+nymex,AD0,future,Mont Belvieu Normal Butane (OPIS) Futures,USD,42000.0,1e-05,1.0
+nymex,ADB,future,Brent Crude Oil vs. Dubai Crude Oil (Platts) Futures,USD,1000.0,0.001,1.0
+nymex,AE5,future,Argus LLS vs. WTI (Argus) Trade Month Futures,USD,1000.0,0.01,1.0
+nymex,AGA,future,Singapore Gasoil (Platts) vs. Low Sulphur Gasoil Futures,USD,1000.0,0.001,1.0
+nymex,AJL,future,Los Angeles CARBOB Gasoline (OPIS) vs. RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
+nymex,AJS,future,Los Angeles Jet (OPIS) vs. NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0
+nymex,AKL,future,Los Angeles CARB Diesel (OPIS) vs. NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0
+nymex,AKZ,future,European Naphtha (Platts) BALMO Futures,USD,1000.0,0.001,1.0
+nymex,APS,future,European Propane CIF ARA (Argus) Futures,USD,1000.0,0.01,1.0
+nymex,AR0,future,Mont Belvieu Natural Gasoline (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0
+nymex,ARE,future,RBOB Gasoline Crack Spread Futures,USD,1000.0,0.01,1.0
+nymex,AVZ,future,Gulf Coast HSFO (Platts) BALMO Futures,USD,1000.0,0.001,1.0
+nymex,AYV,future,Mars (Argus) vs. WTI Trade Month Futures,USD,1000.0,0.01,1.0
+nymex,AYX,future,Mars (Argus) vs. WTI Financial Futures,USD,1000.0,0.01,1.0
+nymex,AZ1,future,Ethanol T2 FOB Rdam Including Duty (Platts) Futures,EUR,100.0,0.001,1.0
+nymex,B0,future,Mont Belvieu LDH Propane (OPIS) Futures,USD,42000.0,1e-05,1.0
+nymex,B7H,future,Gasoline Euro-bob Oxy NWE Barges (Argus) Futures,USD,1000.0,0.001,1.0
+nymex,BK,future,WTI-Brent Financial Futures,USD,1000.0,0.01,1.0
+nymex,BOO,future,3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread (1000mt) Futures,USD,6350.0,0.001,1.0
+nymex,BR7,future,Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO Futures,USD,1000.0,0.001,1.0
+nymex,BZ,future,Brent Last Day Financial Futures,USD,1000.0,0.01,1.0
+nymex,CL,future,Crude Oil Futures,USD,1000.0,0.01,1.0
+nymex,CRB,future,Gulf Coast CBOB Gasoline A2 (Platts) vs. RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
+nymex,CSW,future,Clearbrook Bakken Sweet (NE2) Monthly Index Futures,USD,1000.0,0.001,1.0
+nymex,CSX,future,WTI Financial Futures,USD,1000.0,0.01,1.0
+nymex,CU,future,Chicago Ethanol (Platts) Futures,USD,42000.0,0.0001,1.0
+nymex,D1N,future,Singapore Mogas 92 Unleaded (Platts) Brent Crack Spread Futures,USD,1000.0,0.001,1.0
+nymex,DCB,future,Dubai Crude Oil (Platts) Financial Futures,USD,1000.0,0.001,1.0
+nymex,E6,future,Japan C&F Naphtha (Platts) BALMO Futures,USD,1000.0,0.001,1.0
+nymex,EN,future,European Naphtha (Platts) Crack Spread Futures,USD,1000.0,0.001,1.0
+nymex,EPN,future,European Propane CIF ARA (Argus) vs. Naphtha Cargoes CIF NWE (Platts) Futures,USD,1000.0,0.001,1.0
+nymex,EVC,future,Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0
+nymex,EWG,future,East-West Gasoline Spread (Platts-Argus) Futures,USD,1000.0,0.001,1.0
+nymex,EWN,future,East-West Naphtha: Japan C&F vs. Cargoes CIF NWE Spread (Platts) Futures,USD,1000.0,0.001,1.0
+nymex,EXR,future,RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350000 gallons) Futures,USD,350000.0,0.0001,1.0
+nymex,FO,future,3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures,USD,1000.0,0.001,1.0
+nymex,FRC,future,Freight Route TC14 (Baltic) Futures,USD,1000.0,0.0001,1.0
+nymex,FSS,future,1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0
+nymex,GCU,future,Gulf Coast HSFO (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0
+nymex,HCL,future,WTI Houston Crude Oil Futures,USD,1000.0,0.01,1.0
+nymex,HH,future,Natural Gas (Henry Hub) Last-day Financial Futures,USD,10000.0,0.001,1.0
+nymex,HO,future,NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0
+nymex,HP,future,Natural Gas (Henry Hub) Penultimate Financial Futures,USD,10000.0,0.001,1.0
+nymex,HRC,future,U.S. Midwest Domestic Hot-Rolled Coil Steel (CRU) Index Futures,USD,20.0,1.0,1.0
+nymex,HTT,future,WTI Houston (Argus) vs. WTI Trade Month Futures,USD,1000.0,0.01,1.0
+nymex,NG,future,Henry Hub Natural Gas Futures,USD,10000.0,0.001,1.0
+nymex,PA,future,Palladium Futures,USD,100.0,0.05,1.0
+nymex,PL,future,Platinum Futures,USD,50.0,0.1,1.0
+nymex,RB,future,RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
+nymex,YO,future,No. 11 Sugar Futures,USD,112000.0,0.0001,1.0
+sgx,NK,future,SGX Nikkei 225 Index Futures,JPY,500,5,5.0
+sgx,TW,future,MSCI Taiwan Index Futures,USD,100,0.1,50.0
+sgx,IN,future,Nifty Indices Futures,USD,2,0.5,50.0
+india,NIFTY,future,Nifty50 Index,INR,0.05,75,1
+india,BANKNIFTY,future,BankNifty Index,INR,0.05,25,1.0
+india,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1.0
+hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0
 
 # Futures options -- will default to Futures contract specs in case no entry exists
-cbot,OZB,futureoption,U.S. Treasury Bond American Futures Options,USD,1000.0,0.015625,1.0,
-cbot,OZC,futureoption,Corn American Futures Options,USD,5000.0,0.00125,1.0,
-cbot,OZS,futureoption,Soybean American Futures Options,USD,5000.0,0.00125,1.0,
-cbot,OZT,futureoption,2-Year T-Note American Futures Options,USD,2000.0,0.0078125,1.0,
-cbot,OZW,futureoption,Chicago SRW Wheat American Futures Options,USD,5000.0,0.00125,1.0,
-comex,SO,futureoption,Silver American Futures Options,USD,5000.0,0.001,1.0,
+cbot,OZB,futureoption,U.S. Treasury Bond American Futures Options,USD,1000.0,0.015625,1.0
+cbot,OZC,futureoption,Corn American Futures Options,USD,5000.0,0.00125,1.0
+cbot,OZS,futureoption,Soybean American Futures Options,USD,5000.0,0.00125,1.0
+cbot,OZT,futureoption,2-Year T-Note American Futures Options,USD,2000.0,0.0078125,1.0
+cbot,OZW,futureoption,Chicago SRW Wheat American Futures Options,USD,5000.0,0.00125,1.0
+comex,SO,futureoption,Silver American Futures Options,USD,5000.0,0.001,1.0
 
 
-fxcm,AUDCAD,forex,,CAD,1,0.00001,1000,
-fxcm,AUDCHF,forex,,CHF,1,0.00001,1000,
-fxcm,AUDJPY,forex,,JPY,1,0.001,1000,
-fxcm,AUDNZD,forex,,NZD,1,0.00001,1000,
-fxcm,AUDUSD,forex,,USD,1,0.00001,1000,
-fxcm,CADCHF,forex,,CHF,1,0.00001,1000,
-fxcm,CADJPY,forex,,JPY,1,0.001,1000,
-fxcm,CHFJPY,forex,,JPY,1,0.001,1000,
-fxcm,EURAUD,forex,,AUD,1,0.00001,1000,
-fxcm,EURCAD,forex,,CAD,1,0.00001,1000,
-fxcm,EURCHF,forex,,CHF,1,0.00001,1000,
-fxcm,EURGBP,forex,,GBP,1,0.00001,1000,
-fxcm,EURJPY,forex,,JPY,1,0.001,1000,
-fxcm,EURNOK,forex,,NOK,1,0.00001,1000,
-fxcm,EURNZD,forex,,NZD,1,0.00001,1000,
-fxcm,EURSEK,forex,,SEK,1,0.00001,1000,
-fxcm,EURTRY,forex,,TRY,1,0.00001,1000,
-fxcm,EURUSD,forex,,USD,1,0.00001,1000,
-fxcm,GBPAUD,forex,,AUD,1,0.00001,1000,
-fxcm,GBPCAD,forex,,CAD,1,0.00001,1000,
-fxcm,GBPCHF,forex,,CHF,1,0.00001,1000,
-fxcm,GBPJPY,forex,,JPY,1,0.001,1000,
-fxcm,GBPNZD,forex,,NZD,1,0.00001,1000,
-fxcm,GBPUSD,forex,,USD,1,0.00001,1000,
-fxcm,NZDCAD,forex,,CAD,1,0.00001,1000,
-fxcm,NZDCHF,forex,,CHF,1,0.00001,1000,
-fxcm,NZDJPY,forex,,JPY,1,0.001,1000,
-fxcm,NZDUSD,forex,,USD,1,0.00001,1000,
-fxcm,TRYJPY,forex,,JPY,1,0.001,1000,
-fxcm,USDCAD,forex,,CAD,1,0.00001,1000,
-fxcm,USDCHF,forex,,CHF,1,0.00001,1000,
-fxcm,USDCNH,forex,,CNH,1,0.00001,1000,
-fxcm,USDJPY,forex,,JPY,1,0.001,1000,
-fxcm,USDMXN,forex,,MXN,1,0.00001,1000,
-fxcm,USDNOK,forex,,NOK,1,0.00001,1000,
-fxcm,USDSEK,forex,,SEK,1,0.00001,1000,
-fxcm,USDTRY,forex,,TRY,1,0.00001,1000,
-fxcm,USDZAR,forex,,ZAR,1,0.00001,1000,
-fxcm,ZARJPY,forex,,JPY,1,0.001,1000,
+fxcm,AUDCAD,forex,,CAD,1,0.00001,1000
+fxcm,AUDCHF,forex,,CHF,1,0.00001,1000
+fxcm,AUDJPY,forex,,JPY,1,0.001,1000
+fxcm,AUDNZD,forex,,NZD,1,0.00001,1000
+fxcm,AUDUSD,forex,,USD,1,0.00001,1000
+fxcm,CADCHF,forex,,CHF,1,0.00001,1000
+fxcm,CADJPY,forex,,JPY,1,0.001,1000
+fxcm,CHFJPY,forex,,JPY,1,0.001,1000
+fxcm,EURAUD,forex,,AUD,1,0.00001,1000
+fxcm,EURCAD,forex,,CAD,1,0.00001,1000
+fxcm,EURCHF,forex,,CHF,1,0.00001,1000
+fxcm,EURGBP,forex,,GBP,1,0.00001,1000
+fxcm,EURJPY,forex,,JPY,1,0.001,1000
+fxcm,EURNOK,forex,,NOK,1,0.00001,1000
+fxcm,EURNZD,forex,,NZD,1,0.00001,1000
+fxcm,EURSEK,forex,,SEK,1,0.00001,1000
+fxcm,EURTRY,forex,,TRY,1,0.00001,1000
+fxcm,EURUSD,forex,,USD,1,0.00001,1000
+fxcm,GBPAUD,forex,,AUD,1,0.00001,1000
+fxcm,GBPCAD,forex,,CAD,1,0.00001,1000
+fxcm,GBPCHF,forex,,CHF,1,0.00001,1000
+fxcm,GBPJPY,forex,,JPY,1,0.001,1000
+fxcm,GBPNZD,forex,,NZD,1,0.00001,1000
+fxcm,GBPUSD,forex,,USD,1,0.00001,1000
+fxcm,NZDCAD,forex,,CAD,1,0.00001,1000
+fxcm,NZDCHF,forex,,CHF,1,0.00001,1000
+fxcm,NZDJPY,forex,,JPY,1,0.001,1000
+fxcm,NZDUSD,forex,,USD,1,0.00001,1000
+fxcm,TRYJPY,forex,,JPY,1,0.001,1000
+fxcm,USDCAD,forex,,CAD,1,0.00001,1000
+fxcm,USDCHF,forex,,CHF,1,0.00001,1000
+fxcm,USDCNH,forex,,CNH,1,0.00001,1000
+fxcm,USDJPY,forex,,JPY,1,0.001,1000
+fxcm,USDMXN,forex,,MXN,1,0.00001,1000
+fxcm,USDNOK,forex,,NOK,1,0.00001,1000
+fxcm,USDSEK,forex,,SEK,1,0.00001,1000
+fxcm,USDTRY,forex,,TRY,1,0.00001,1000
+fxcm,USDZAR,forex,,ZAR,1,0.00001,1000
+fxcm,ZARJPY,forex,,JPY,1,0.001,1000
 
-oanda,AUDCAD,forex,AUD/CAD,CAD,1,0.00001,1,
-oanda,AUDCHF,forex,AUD/CHF,CHF,1,0.00001,1,
-oanda,AUDHKD,forex,AUD/HKD,HKD,1,0.00001,1,
-oanda,AUDJPY,forex,AUD/JPY,JPY,1,0.001,1,
-oanda,AUDNZD,forex,AUD/NZD,NZD,1,0.00001,1,
-oanda,AUDSGD,forex,AUD/SGD,SGD,1,0.00001,1,
-oanda,AUDUSD,forex,AUD/USD,USD,1,0.00001,1,
-oanda,CADCHF,forex,CAD/CHF,CHF,1,0.00001,1,
-oanda,CADHKD,forex,CAD/HKD,HKD,1,0.00001,1,
-oanda,CADJPY,forex,CAD/JPY,JPY,1,0.001,1,
-oanda,CADSGD,forex,CAD/SGD,SGD,1,0.00001,1,
-oanda,CHFHKD,forex,CHF/HKD,HKD,1,0.00001,1,
-oanda,CHFJPY,forex,CHF/JPY,JPY,1,0.001,1,
-oanda,CHFZAR,forex,CHF/ZAR,ZAR,1,0.00001,1,
-oanda,EURAUD,forex,EUR/AUD,AUD,1,0.00001,1,
-oanda,EURCAD,forex,EUR/CAD,CAD,1,0.00001,1,
-oanda,EURCHF,forex,EUR/CHF,CHF,1,0.00001,1,
-oanda,EURCZK,forex,EUR/CZK,CZK,1,0.00001,1,
-oanda,EURDKK,forex,EUR/DKK,DKK,1,0.00001,1,
-oanda,EURGBP,forex,EUR/GBP,GBP,1,0.00001,1,
-oanda,EURHKD,forex,EUR/HKD,HKD,1,0.00001,1,
-oanda,EURHUF,forex,EUR/HUF,HUF,1,0.001,1,
-oanda,EURJPY,forex,EUR/JPY,JPY,1,0.001,1,
-oanda,EURNOK,forex,EUR/NOK,NOK,1,0.00001,1,
-oanda,EURNZD,forex,EUR/NZD,NZD,1,0.00001,1,
-oanda,EURPLN,forex,EUR/PLN,PLN,1,0.00001,1,
-oanda,EURSEK,forex,EUR/SEK,SEK,1,0.00001,1,
-oanda,EURSGD,forex,EUR/SGD,SGD,1,0.00001,1,
-oanda,EURTRY,forex,EUR/TRY,TRY,1,0.00001,1,
-oanda,EURUSD,forex,EUR/USD,USD,1,0.00001,1,
-oanda,EURZAR,forex,EUR/ZAR,ZAR,1,0.00001,1,
-oanda,GBPAUD,forex,GBP/AUD,AUD,1,0.00001,1,
-oanda,GBPCAD,forex,GBP/CAD,CAD,1,0.00001,1,
-oanda,GBPCHF,forex,GBP/CHF,CHF,1,0.00001,1,
-oanda,GBPHKD,forex,GBP/HKD,HKD,1,0.00001,1,
-oanda,GBPJPY,forex,GBP/JPY,JPY,1,0.001,1,
-oanda,GBPNZD,forex,GBP/NZD,NZD,1,0.00001,1,
-oanda,GBPPLN,forex,GBP/PLN,PLN,1,0.00001,1,
-oanda,GBPSGD,forex,GBP/SGD,SGD,1,0.00001,1,
-oanda,GBPUSD,forex,GBP/USD,USD,1,0.00001,1,
-oanda,GBPZAR,forex,GBP/ZAR,ZAR,1,0.00001,1,
-oanda,HKDJPY,forex,HKD/JPY,JPY,1,0.00001,1,
-oanda,NZDCAD,forex,NZD/CAD,CAD,1,0.00001,1,
-oanda,NZDCHF,forex,NZD/CHF,CHF,1,0.00001,1,
-oanda,NZDHKD,forex,NZD/HKD,HKD,1,0.00001,1,
-oanda,NZDJPY,forex,NZD/JPY,JPY,1,0.001,1,
-oanda,NZDSGD,forex,NZD/SGD,SGD,1,0.00001,1,
-oanda,NZDUSD,forex,NZD/USD,USD,1,0.00001,1,
-oanda,SGDCHF,forex,SGD/CHF,CHF,1,0.00001,1,
-oanda,SGDHKD,forex,SGD/HKD,HKD,1,0.00001,1,
-oanda,SGDJPY,forex,SGD/JPY,JPY,1,0.001,1,
-oanda,TRYJPY,forex,TRY/JPY,JPY,1,0.001,1,
-oanda,USDCAD,forex,USD/CAD,CAD,1,0.00001,1,
-oanda,USDCHF,forex,USD/CHF,CHF,1,0.00001,1,
-oanda,USDCNH,forex,USD/CNH,CNH,1,0.00001,1,
-oanda,USDCZK,forex,USD/CZK,CZK,1,0.00001,1,
-oanda,USDDKK,forex,USD/DKK,DKK,1,0.00001,1,
-oanda,USDHKD,forex,USD/HKD,HKD,1,0.00001,1,
-oanda,USDHUF,forex,USD/HUF,HUF,1,0.001,1,
-oanda,USDINR,forex,USD/INR,INR,1,0.001,1,
-oanda,USDJPY,forex,USD/JPY,JPY,1,0.001,1,
-oanda,USDMXN,forex,USD/MXN,MXN,1,0.00001,1,
-oanda,USDNOK,forex,USD/NOK,NOK,1,0.00001,1,
-oanda,USDPLN,forex,USD/PLN,PLN,1,0.00001,1,
-oanda,USDSAR,forex,USD/SAR,SAR,1,0.00001,1,
-oanda,USDSEK,forex,USD/SEK,SEK,1,0.00001,1,
-oanda,USDSGD,forex,USD/SGD,SGD,1,0.00001,1,
-oanda,USDTHB,forex,USD/THB,THB,1,0.001,1,
-oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1,
-oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1,
-oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1,
+oanda,AUDCAD,forex,AUD/CAD,CAD,1,0.00001,1
+oanda,AUDCHF,forex,AUD/CHF,CHF,1,0.00001,1
+oanda,AUDHKD,forex,AUD/HKD,HKD,1,0.00001,1
+oanda,AUDJPY,forex,AUD/JPY,JPY,1,0.001,1
+oanda,AUDNZD,forex,AUD/NZD,NZD,1,0.00001,1
+oanda,AUDSGD,forex,AUD/SGD,SGD,1,0.00001,1
+oanda,AUDUSD,forex,AUD/USD,USD,1,0.00001,1
+oanda,CADCHF,forex,CAD/CHF,CHF,1,0.00001,1
+oanda,CADHKD,forex,CAD/HKD,HKD,1,0.00001,1
+oanda,CADJPY,forex,CAD/JPY,JPY,1,0.001,1
+oanda,CADSGD,forex,CAD/SGD,SGD,1,0.00001,1
+oanda,CHFHKD,forex,CHF/HKD,HKD,1,0.00001,1
+oanda,CHFJPY,forex,CHF/JPY,JPY,1,0.001,1
+oanda,CHFZAR,forex,CHF/ZAR,ZAR,1,0.00001,1
+oanda,EURAUD,forex,EUR/AUD,AUD,1,0.00001,1
+oanda,EURCAD,forex,EUR/CAD,CAD,1,0.00001,1
+oanda,EURCHF,forex,EUR/CHF,CHF,1,0.00001,1
+oanda,EURCZK,forex,EUR/CZK,CZK,1,0.00001,1
+oanda,EURDKK,forex,EUR/DKK,DKK,1,0.00001,1
+oanda,EURGBP,forex,EUR/GBP,GBP,1,0.00001,1
+oanda,EURHKD,forex,EUR/HKD,HKD,1,0.00001,1
+oanda,EURHUF,forex,EUR/HUF,HUF,1,0.001,1
+oanda,EURJPY,forex,EUR/JPY,JPY,1,0.001,1
+oanda,EURNOK,forex,EUR/NOK,NOK,1,0.00001,1
+oanda,EURNZD,forex,EUR/NZD,NZD,1,0.00001,1
+oanda,EURPLN,forex,EUR/PLN,PLN,1,0.00001,1
+oanda,EURSEK,forex,EUR/SEK,SEK,1,0.00001,1
+oanda,EURSGD,forex,EUR/SGD,SGD,1,0.00001,1
+oanda,EURTRY,forex,EUR/TRY,TRY,1,0.00001,1
+oanda,EURUSD,forex,EUR/USD,USD,1,0.00001,1
+oanda,EURZAR,forex,EUR/ZAR,ZAR,1,0.00001,1
+oanda,GBPAUD,forex,GBP/AUD,AUD,1,0.00001,1
+oanda,GBPCAD,forex,GBP/CAD,CAD,1,0.00001,1
+oanda,GBPCHF,forex,GBP/CHF,CHF,1,0.00001,1
+oanda,GBPHKD,forex,GBP/HKD,HKD,1,0.00001,1
+oanda,GBPJPY,forex,GBP/JPY,JPY,1,0.001,1
+oanda,GBPNZD,forex,GBP/NZD,NZD,1,0.00001,1
+oanda,GBPPLN,forex,GBP/PLN,PLN,1,0.00001,1
+oanda,GBPSGD,forex,GBP/SGD,SGD,1,0.00001,1
+oanda,GBPUSD,forex,GBP/USD,USD,1,0.00001,1
+oanda,GBPZAR,forex,GBP/ZAR,ZAR,1,0.00001,1
+oanda,HKDJPY,forex,HKD/JPY,JPY,1,0.00001,1
+oanda,NZDCAD,forex,NZD/CAD,CAD,1,0.00001,1
+oanda,NZDCHF,forex,NZD/CHF,CHF,1,0.00001,1
+oanda,NZDHKD,forex,NZD/HKD,HKD,1,0.00001,1
+oanda,NZDJPY,forex,NZD/JPY,JPY,1,0.001,1
+oanda,NZDSGD,forex,NZD/SGD,SGD,1,0.00001,1
+oanda,NZDUSD,forex,NZD/USD,USD,1,0.00001,1
+oanda,SGDCHF,forex,SGD/CHF,CHF,1,0.00001,1
+oanda,SGDHKD,forex,SGD/HKD,HKD,1,0.00001,1
+oanda,SGDJPY,forex,SGD/JPY,JPY,1,0.001,1
+oanda,TRYJPY,forex,TRY/JPY,JPY,1,0.001,1
+oanda,USDCAD,forex,USD/CAD,CAD,1,0.00001,1
+oanda,USDCHF,forex,USD/CHF,CHF,1,0.00001,1
+oanda,USDCNH,forex,USD/CNH,CNH,1,0.00001,1
+oanda,USDCZK,forex,USD/CZK,CZK,1,0.00001,1
+oanda,USDDKK,forex,USD/DKK,DKK,1,0.00001,1
+oanda,USDHKD,forex,USD/HKD,HKD,1,0.00001,1
+oanda,USDHUF,forex,USD/HUF,HUF,1,0.001,1
+oanda,USDINR,forex,USD/INR,INR,1,0.001,1
+oanda,USDJPY,forex,USD/JPY,JPY,1,0.001,1
+oanda,USDMXN,forex,USD/MXN,MXN,1,0.00001,1
+oanda,USDNOK,forex,USD/NOK,NOK,1,0.00001,1
+oanda,USDPLN,forex,USD/PLN,PLN,1,0.00001,1
+oanda,USDSAR,forex,USD/SAR,SAR,1,0.00001,1
+oanda,USDSEK,forex,USD/SEK,SEK,1,0.00001,1
+oanda,USDSGD,forex,USD/SGD,SGD,1,0.00001,1
+oanda,USDTHB,forex,USD/THB,THB,1,0.001,1
+oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1
+oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1
+oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1
 
 # Source : https://pro.coinbase.com/markets
 gdax,ALGOEUR,crypto,Algorand-Euro,EUR,1,0.0001,1,ALGO-EUR,1

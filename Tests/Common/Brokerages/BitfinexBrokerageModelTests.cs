@@ -21,7 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
-using QuantConnect.Tests.Brokerages.Bitfinex;
+using QuantConnect.Tests.Brokerages;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Common.Brokerages
@@ -186,7 +186,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(BitfinexTestHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
         }
     }
 }

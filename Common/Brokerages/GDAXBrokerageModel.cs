@@ -32,48 +32,6 @@ namespace QuantConnect.Brokerages
     {
         private readonly BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
 
-        // https://pro.coinbase.com/markets
-        private static readonly Dictionary<string, decimal> MinimumOrderSizes = new Dictionary<string, decimal>
-        {
-            { "BTCUSD", 0.0001m },
-            { "BTCEUR", 0.0001m },
-            { "BTCGBP", 0.0001m },
-
-            { "BCHUSD", 0.01m },
-            { "BCHEUR", 0.01m },
-            { "BCHBTC", 0.01m },
-
-            { "ETHUSD", 0.001m },
-            { "ETHEUR", 0.001m },
-            { "ETHGBP", 0.001m },
-            { "ETHBTC", 0.001m },
-
-            { "LTCUSD", 0.01m },
-            { "LTCEUR", 0.01m },
-            { "LTCGBP", 0.01m },
-            { "LTCBTC", 0.01m },
-
-            { "XRPUSD", 1m },
-            { "XRPEUR", 1m },
-            { "XRPBTC", 1m },
-
-            { "EOSUSD", 0.1m },
-            { "EOSEUR", 0.1m },
-            { "EOSBTC", 0.1m },
-
-            { "XLMUSD", 1m },
-            { "XLMEUR", 1m },
-            { "XLMBTC", 1m },
-
-            { "ETCUSD", 0.1m },
-            { "ETCEUR", 0.1m },
-            { "ETCBTC", 0.1m },
-
-            { "ZRXUSD", 1m },
-            { "ZRXEUR", 1m },
-            { "ZRXBTC", 1m }
-        };
-
         // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
         private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
 
@@ -152,13 +110,8 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            decimal? minimumOrderSize=security.SymbolProperties.MinimumOrderSize;
-            if ((minimumOrderSize != null) && (Math.Abs(order.Quantity) < minimumOrderSize))
+            if(!IsValidOrderSize(security, order, out message))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}")
-                );
-
                 return false;
             }
 

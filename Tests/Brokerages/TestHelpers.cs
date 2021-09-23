@@ -13,29 +13,35 @@
  * limitations under the License.
 */
 
+using QuantConnect.Brokerages.GDAX;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using System.Collections.Generic;
+using QuantConnect.Brokerages;
 
-namespace QuantConnect.Tests.Brokerages.Bitfinex
+namespace QuantConnect.Tests.Brokerages
 {
-    class BitfinexTestHelpers
+    public class TestsHelpers
     {
-        public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute)
+        private static readonly Symbol Btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+
+        public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.GDAX, string quoteCurrency = "USD")
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                CreateConfig(securityType, resolution),
-                new Cash(Currencies.USD, 1000, price),
-                SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.Bitfinex, "BTCUSD", SecurityType.Crypto, "USD"),
+                CreateConfig(symbol, market, securityType, resolution),
+                new Cash(quoteCurrency, 1000, price),
+                SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, SecurityType.Crypto, quoteCurrency),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
         }
-        private static SubscriptionDataConfig CreateConfig(SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute)
+
+        private static SubscriptionDataConfig CreateConfig(string symbol, string market, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("BTCUSD", securityType, Market.Bitfinex), resolution, TimeZones.Utc, TimeZones.Utc,
+            return new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create(symbol, securityType, market), resolution, TimeZones.Utc, TimeZones.Utc,
             false, true, false);
         }
     }

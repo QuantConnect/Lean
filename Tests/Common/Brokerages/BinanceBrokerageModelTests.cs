@@ -16,7 +16,7 @@
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
-using QuantConnect.Tests.Brokerages.Binance;
+using QuantConnect.Tests.Brokerages;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Common.Brokerages
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(BinanceTestHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(TestsHelpers.GetSecurity(symbol: "BTCEUR", market: Market.Binance, quoteCurrency: "EUR"), order.Object, out message));
         }
     }
 }

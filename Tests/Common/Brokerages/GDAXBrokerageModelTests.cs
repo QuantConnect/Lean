@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,7 +16,7 @@
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
-using QuantConnect.Tests.Brokerages.GDAX;
+using QuantConnect.Tests.Brokerages;
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
@@ -34,26 +34,26 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetLeverageTest()
         {
-            Assert.AreEqual(1, _unit.GetLeverage(GDAXTestsHelpers.GetSecurity()));
+            Assert.AreEqual(1, _unit.GetLeverage(TestsHelpers.GetSecurity()));
         }
 
         [Test]
         public void GetFeeModelTest()
         {
-            Assert.IsInstanceOf<GDAXFeeModel>(_unit.GetFeeModel(GDAXTestsHelpers.GetSecurity()));
+            Assert.IsInstanceOf<GDAXFeeModel>(_unit.GetFeeModel(TestsHelpers.GetSecurity()));
         }
 
         [Test]
         public void GetBuyingPowerModelTest()
         {
-            Assert.IsInstanceOf<CashBuyingPowerModel>(_unit.GetBuyingPowerModel(GDAXTestsHelpers.GetSecurity()));
+            Assert.IsInstanceOf<CashBuyingPowerModel>(_unit.GetBuyingPowerModel(TestsHelpers.GetSecurity()));
         }
 
         [Test]
         public void CanUpdateOrderTest()
         {
             BrokerageMessageEvent message;
-            Assert.AreEqual(false, _unit.CanUpdateOrder(GDAXTestsHelpers.GetSecurity(), Mock.Of<Order>(),
+            Assert.AreEqual(false, _unit.CanUpdateOrder(TestsHelpers.GetSecurity(), Mock.Of<Order>(),
                 new UpdateOrderRequest(DateTime.UtcNow, 1, new UpdateOrderFields()), out message));
         }
 
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 order.Object.BrokerId = new List<string>() {"abc123"};
             }
 
-            Assert.AreEqual(!isUpdate, _unit.CanSubmitOrder(GDAXTestsHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(!isUpdate, _unit.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
         }
 
         [TestCase(0.01, true)]
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(GDAXTestsHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
         }
 
         [TestCase(SecurityType.Crypto, true)]
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new Mock<Order>();
             order.Object.Quantity = 10.0m;
 
-            Assert.AreEqual(isValidSecurityType, _unit.CanSubmitOrder(GDAXTestsHelpers.GetSecurity(1.0m, securityType), order.Object, out message));
+            Assert.AreEqual(isValidSecurityType, _unit.CanSubmitOrder(TestsHelpers.GetSecurity(1.0m, securityType), order.Object, out message));
         }
 
         [TestCase(OrderType.Market, 2019, 2, 1, 0, 0, 0, true)]
@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             var utcTime = new DateTime(year, month, day, hour, minute, second);
 
             BrokerageMessageEvent message;
-            var security = GDAXTestsHelpers.GetSecurity();
+            var security = TestsHelpers.GetSecurity();
             var order = Order.CreateOrder(new SubmitOrderRequest(orderType, SecurityType.Crypto, security.Symbol, 10.0m, 1.0m, 10.0m, utcTime, "Test Order"));
 
             Assert.AreEqual(isValidOrderType, _unit.CanSubmitOrder(security, order, out message));
@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void FeeModelReturnsCorrectOrderFeeForTakerMarketOrder()
         {
-            var security = GDAXTestsHelpers.GetSecurity();
+            var security = TestsHelpers.GetSecurity();
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m });
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void FeeModelReturnsCorrectOrderFeeForMakerLimitOrdersTickResolution()
         {
-            var security = GDAXTestsHelpers.GetSecurity(resolution: Resolution.Tick);
+            var security = TestsHelpers.GetSecurity(resolution: Resolution.Tick);
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 5000m });
 
@@ -172,7 +172,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void FeeModelReturnsCorrectOrderFeeForTakerLimitOrdersTickResolution()
         {
-            var security = GDAXTestsHelpers.GetSecurity(resolution: Resolution.Tick);
+            var security = TestsHelpers.GetSecurity(resolution: Resolution.Tick);
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 5000m });
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
@@ -211,7 +211,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void FeeModelReturnsCorrectOrderFeeForMakerLimitOrdersMinuteResolution()
         {
             var time = new DateTime(2018, 4, 10);
-            var security = GDAXTestsHelpers.GetSecurity();
+            var security = TestsHelpers.GetSecurity();
 
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m, EndTime = time.AddSeconds(75) });
@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void FeeModelReturnsCorrectOrderFeeForTakerLimitOrdersMinuteResolution()
         {
             var time = new DateTime(2018, 4, 10);
-            var security = GDAXTestsHelpers.GetSecurity();
+            var security = TestsHelpers.GetSecurity();
 
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m, EndTime = time.AddMinutes(1) });

@@ -114,13 +114,8 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            decimal? minimumOrderSize = security.SymbolProperties.MinimumOrderSize;
-            if ((minimumOrderSize != null) && (Math.Abs(order.Quantity) < minimumOrderSize))
+            if (!IsValidOrderSize(security, order, out message))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}")
-                );
-
                 return false;
             }
 
