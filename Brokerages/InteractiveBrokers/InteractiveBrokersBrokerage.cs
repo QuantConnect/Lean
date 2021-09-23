@@ -998,7 +998,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (order.Type == OrderType.OptionExercise)
             {
-                _client.ClientSocket.exerciseOptions(ibOrderId, contract, 1, decimal.ToInt32(order.Quantity), _account, 0);
+                // IB API requires exerciseQuantity to be positive
+                _client.ClientSocket.exerciseOptions(ibOrderId, contract, 1, decimal.ToInt32(order.AbsoluteQuantity), _account, 0);
             }
             else
             {
