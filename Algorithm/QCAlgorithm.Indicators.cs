@@ -2530,41 +2530,6 @@ namespace QuantConnect.Algorithm
 
             SubscriptionManager.RemoveConsolidator(symbol, consolidator);
         }
-        
-        /// <summary>
-        /// Warms up a given list of indicators with historical data
-        /// </summary>
-        /// <param name="symbol">The symbol whose indicators we want</param>
-        /// <param name="indicators">The indicators we want to warm up</param>
-        /// <param name="period">The necessary period to warm up the indicators</param>
-        /// <param name="resolution">The resolution</param>
-        public void IndicatorBatchUpdate(Symbol symbol, IEnumerable<IIndicator> indicators, int period, Resolution resolution)
-        {
-            var history = History(new []{symbol}, period, resolution);
-            if (history == Enumerable.Empty<Slice>()) return;
-            Action<IBaseData> handler;
-
-            foreach(var indicator in indicators)
-            {
-                if (indicator is not IndicatorBase)
-                    throw new ArgumentException($"Invalid type {indicator.GetType()}. Expected Indicator.");
-
-                if (indicator is IndicatorBase<IndicatorDataPoint>)
-                {
-                    handler = data => indicator.Update(new IndicatorDataPoint(data.Symbol, data.EndTime, data.Value));
-                }
-                else
-                {
-                    handler = data => indicator.Update(data);
-                }
-                history.PushThrough(slice => handler(slice));
-                if (!indicator.IsReady)
-                {
-                    Debug($"Warning! Indicator {indicator.Name} for Symbol {symbol.ID.ToString()} not ready after IndicatorBatchUpdate. " + 
-                          $"Please choose a sufficient period and make sure there is enough historical data for {symbol.ID.ToString()}.");
-                }
-            }
-        }
 
         /// <summary>
         /// Gets the default consolidator for the specified symbol and resolution
