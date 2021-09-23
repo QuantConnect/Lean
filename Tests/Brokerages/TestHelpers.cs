@@ -13,19 +13,14 @@
  * limitations under the License.
 */
 
-using QuantConnect.Brokerages.GDAX;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Brokerages;
 
 namespace QuantConnect.Tests.Brokerages
 {
     public class TestsHelpers
     {
-        private static readonly Symbol Btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
-
         public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.GDAX, string quoteCurrency = "USD")
         {
             return new Security(
