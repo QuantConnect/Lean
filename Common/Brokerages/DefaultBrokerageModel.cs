@@ -40,8 +40,6 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class DefaultBrokerageModel : IBrokerageModel
     {
-        private readonly BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
-
         /// <summary>
         /// The default markets for the backtesting brokerage
         /// </summary>
