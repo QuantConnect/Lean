@@ -2696,4 +2696,7 @@ kraken,USDCAD,crypto,USD/CAD,CAD,1,0.00001,0.00000001,ZUSDZCAD,10
 kraken,USDJPY,crypto,USD/JPY,JPY,1,0.001,0.00000001,ZUSDZJPY,10
 
 ftx,BTCUSD,crypto,Bitcoin-United States Dollar,USD,1,0.01,0.00000001,BTC/USD
+ftx,BTCUSDT,crypto,Bitcoin-United States Dollar Tether,USD,1,0.01,0.00000001,BTC/USDT
 ftx,XRPUSD,crypto,Ripple-United States Dollar,USD,1,0.01,0.00000001,XRP/USD
+ftx,XRPUSDT,crypto,Ripple-United States Dollar Tether,USDT,1,0.01,0.00000001,XRP/USDT
+ftx,USDTUSD,crypto,Ripple-United States Dollar Tether,USD,1,0.01,0.00000001,USDT/USD

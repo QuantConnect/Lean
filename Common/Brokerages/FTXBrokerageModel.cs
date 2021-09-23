@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -33,6 +35,12 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
+
+
+        /// <summary>
         /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
         /// For cash accounts, leverage = 1 is used.
         /// For margin trading, max leverage = 5
@@ -44,6 +52,13 @@ namespace QuantConnect.Brokerages
             return AccountType == AccountType.Margin
                 ? new SecurityMarginModel(_defaultLeverage)
                 : new CashBuyingPowerModel();
+        }
+
+        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
+        {
+            var map = DefaultMarketMap.ToDictionary();
+            map[SecurityType.Crypto] = Market.FTX;
+            return map.ToReadOnlyDictionary();
         }
     }
 }
