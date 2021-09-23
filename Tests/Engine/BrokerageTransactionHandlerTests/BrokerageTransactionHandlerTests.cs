@@ -1285,10 +1285,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
-            var method = transactionHandler.GetType().GetMethod("HandleOptionPositionExpired", BindingFlags.NonPublic | BindingFlags.Instance);
+            var method = transactionHandler.GetType().GetMethod("HandleOptionNotification", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.IsNotNull(method);
 
-            var parameters = new object[] { new OptionPositionExpiredEventArgs(optionSymbol) };
+            var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, 0) };
             method.Invoke(transactionHandler, parameters);
 
             transactionHandler.Exit();

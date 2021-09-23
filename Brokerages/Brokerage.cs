@@ -50,9 +50,9 @@ namespace QuantConnect.Brokerages
         public event EventHandler<OrderEvent> OptionPositionAssigned;
 
         /// <summary>
-        /// Event that fires each time an option position has expired
+        /// Event that fires each time an option position has changed
         /// </summary>
-        public event EventHandler<OptionPositionExpiredEventArgs> OptionPositionExpired;
+        public event EventHandler<OptionNotificationEventArgs> OptionNotification;
 
         /// <summary>
         /// Event that fires each time a user's brokerage account is changed
@@ -163,16 +163,16 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Event invocator for the OptionPositionExpired event
+        /// Event invocator for the OptionNotification event
         /// </summary>
-        /// <param name="e">The OrderEvent</param>
-        protected virtual void OnOptionPositionExpired(OptionPositionExpiredEventArgs e)
+        /// <param name="e">The OptionNotification event arguments</param>
+        protected virtual void OnOptionNotification(OptionNotificationEventArgs e)
         {
             try
             {
-                Log.Debug("Brokerage.OnOptionPositionExpired(): " + e);
+                Log.Debug("Brokerage.OnOptionNotification(): " + e);
 
-                OptionPositionExpired?.Invoke(this, e);
+                OptionNotification?.Invoke(this, e);
             }
             catch (Exception err)
             {

@@ -167,9 +167,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandlePositionAssigned(fill);
             };
 
-            _brokerage.OptionPositionExpired += (sender, e) =>
+            _brokerage.OptionNotification += (sender, e) =>
             {
-                HandleOptionPositionExpired(e);
+                HandleOptionNotification(e);
             };
 
             IsActive = true;
@@ -1138,37 +1138,91 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Option expiration event is received and new order events are generated
+        /// Option notification event is received and new order events are generated
         /// </summary>
-        private void HandleOptionPositionExpired(OptionPositionExpiredEventArgs e)
+        private void HandleOptionNotification(OptionNotificationEventArgs e)
         {
             if (_algorithm.Securities.TryGetValue(e.Symbol, out var security))
             {
-                Log.Trace("BrokerageTransactionHandler.HandleOptionPositionExpired(): clearing position for expired option holding: " +
-                    $"Symbol: {e.Symbol.Value}, Quantity: {security.Holdings.Quantity}");
-
-                var quantity = -security.Holdings.Quantity;
-
-                // generate new order and ticket for the expired option
-                var order = new OptionExerciseOrder(e.Symbol, quantity, CurrentTimeUtc)
+                if (OptionSymbol.IsOptionContractExpired(e.Symbol, CurrentTimeUtc))
                 {
-                    Id = _algorithm.Transactions.GetIncrementOrderId()
-                };
+                    if (e.Position == 0)
+                    {
+                        Log.Trace(
+                            "BrokerageTransactionHandler.HandleOptionNotification(): clearing position for expired option holding: " +
+                            $"Symbol: {e.Symbol.Value}, " +
+                            $"Quantity: {security.Holdings.Quantity}");
 
-                var ticket = order.ToOrderTicket(_algorithm.Transactions);
+                        var quantity = -security.Holdings.Quantity;
 
-                AddOpenOrder(order, ticket);
+                        var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
 
-                Interlocked.Increment(ref _totalOrderCount);
-
-                // generate the order events reusing the option exercise model
-                var option = (Option)security;
-                var orderEvents = option.OptionExerciseModel.OptionExercise(option, order);
-
-                foreach (var orderEvent in orderEvents)
-                {
-                    HandleOrderEvent(orderEvent);
+                        EmitOptionNotificationEvents(security, exerciseOrder);
+                    }
                 }
+                else
+                {
+                    // if position is reduced, could be an early exercise or early assignment
+                    if (Math.Abs(e.Position) < security.Holdings.AbsoluteQuantity)
+                    {
+                        // if we are long the option and there is an open exercise order, assume it's an early exercise
+                        if (security.Holdings.IsLong)
+                        {
+                            if (GetOpenOrders(x =>
+                                    x.Symbol == e.Symbol &&
+                                    x.Type == OrderType.OptionExercise)
+                                .FirstOrDefault() is OptionExerciseOrder exerciseOrder)
+                            {
+                                EmitOptionNotificationEvents(security, exerciseOrder);
+                            }
+                        }
+
+                        // if we are short the option and there are no buy orders, assume it's an early assignment
+                        else if (security.Holdings.IsShort)
+                        {
+                            if (!GetOpenOrders(x =>
+                                    x.Symbol == e.Symbol &&
+                                    x.Direction == OrderDirection.Buy)
+                                .Any())
+                            {
+                                var quantity = e.Position - security.Holdings.Quantity;
+
+                                var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+
+                                EmitOptionNotificationEvents(security, exerciseOrder);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private OptionExerciseOrder GenerateOptionExerciseOrder(Security security, decimal quantity)
+        {
+            // generate new execercise order and ticket for the option
+            var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc)
+            {
+                Id = _algorithm.Transactions.GetIncrementOrderId()
+            };
+
+            var ticket = order.ToOrderTicket(_algorithm.Transactions);
+
+            AddOpenOrder(order, ticket);
+
+            Interlocked.Increment(ref _totalOrderCount);
+
+            return order;
+        }
+
+        private void EmitOptionNotificationEvents(Security security, OptionExerciseOrder order)
+        {
+            // generate the order events reusing the option exercise model
+            var option = (Option)security;
+            var orderEvents = option.OptionExerciseModel.OptionExercise(option, order);
+
+            foreach (var orderEvent in orderEvents)
+            {
+                HandleOrderEvent(orderEvent);
             }
         }
 

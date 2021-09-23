@@ -1751,16 +1751,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace($"InteractiveBrokersBrokerage.HandlePortfolioUpdates(): {e}");
 
-                // clear positions for expired option contracts
-                if (e.Contract.SecType is IB.SecurityType.Option or IB.SecurityType.FutureOption &&
-                    e.Position == 0)
+                // notify the transaction handler about all option position updates
+                if (e.Contract.SecType is IB.SecurityType.Option or IB.SecurityType.FutureOption)
                 {
                     var symbol = MapSymbol(e.Contract);
 
-                    if (OptionSymbol.IsOptionContractExpired(symbol, DateTime.UtcNow))
-                    {
-                        OnOptionPositionExpired(new OptionPositionExpiredEventArgs(symbol));
-                    }
+                    OnOptionNotification(new OptionNotificationEventArgs(symbol, e.Position));
                 }
 
                 _accountHoldingsResetEvent.Reset();
