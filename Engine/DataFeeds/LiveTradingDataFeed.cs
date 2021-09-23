@@ -300,11 +300,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
             }
-            else if (config.Type == typeof (CoarseFundamental))
+            else if (config.Type == typeof (CoarseFundamental) || config.Type == typeof (ETFConstituentData))
             {
-                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: {config.Symbol.ID}");
+                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating {config.Type.Name} universe: {config.Symbol.ID}");
 
-                // Will try to pull coarse data from the data folder every 10min, file with today's date.
+                // Will try to pull data from the data folder every 10min, file with yesterdays date.
                 // If lean is started today it will trigger initial coarse universe selection
                 var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider,
                     // we adjust time to the previous tradable date
@@ -320,8 +320,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.SetDataHandler(config.Symbol, data =>
                 {
-                    var coarseData = data as BaseDataCollection;
-                    enqueable.Enqueue(new BaseDataCollection(coarseData.Time, config.Symbol, coarseData.Data));
+                    enqueable.Enqueue(data);
                     subscription.OnNewDataAvailable();
                 });
                 enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider,
