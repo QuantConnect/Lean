@@ -1278,14 +1278,15 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algorithm.SetFinishedWarmingUp();
 
             using var brokerage = new NoSubmitTestBrokerage(algorithm);
-            var transactionHandler = new BrokerageTransactionHandler();
+            var transactionHandler = new TestBrokerageTransactionHandler();
             transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            // lets wait until the transactionHandler starts running
-            Thread.Sleep(250);
+
+            // 9 PM ET
+            transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 1, 0, 0);
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
-            var method = transactionHandler.GetType().GetMethod("HandleOptionNotification", BindingFlags.NonPublic | BindingFlags.Instance);
+            var method = typeof(BrokerageTransactionHandler).GetMethod("HandleOptionNotification", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.IsNotNull(method);
 
             var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, 0) };
@@ -1306,10 +1307,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(expectedOptionPosition, algorithm.Portfolio[optionSymbol].Quantity);
         }
 
-        // Long Call --> ITM (exercised early)
+        // Long Call --> ITM (exercised early - full)
         [TestCase(1, OptionRight.Call, 450, 100, 455, 2, 0, 200, "Automatic Exercise")]
-        // Long Put --> ITM (exercised early)
+        // Long Put --> ITM (exercised early - full)
         [TestCase(1, OptionRight.Put, 455, 100, 450, 2, 0, 0, "Automatic Exercise")]
+        // Long Call --> ITM (exercised early - partial)
+        [TestCase(3, OptionRight.Call, 450, 100, 455, 2, 1, 300, "Automatic Exercise")]
+        // Long Put --> ITM (exercised early - partial)
+        [TestCase(3, OptionRight.Put, 455, 300, 450, 2, 1, 100, "Automatic Exercise")]
         public void EarlyExerciseEmitsOrderEvents(
             int initialOptionPosition,
             OptionRight optionRight,
@@ -1339,8 +1344,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             using var brokerage = new NoSubmitTestBrokerage(algorithm);
             var transactionHandler = new TestBrokerageTransactionHandler();
             transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            // lets wait until the transactionHandler starts running
-            Thread.Sleep(250);
 
             // 10 AM ET
             transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 8, 14, 0, 0);
@@ -1348,7 +1351,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             // Creates an exercise order
-            var orderRequest = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -initialOptionPosition, 0, 0, transactionHandler.TestCurrentTimeUtc, "");
+            var exerciseQuantity = initialOptionPosition - expectedOptionPosition;
+            var orderRequest = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -exerciseQuantity, 0, 0, transactionHandler.TestCurrentTimeUtc, "");
 
             // Submit and process the exercise order
             var orderTicket = transactionHandler.Process(orderRequest);
@@ -1360,7 +1364,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var method = typeof(BrokerageTransactionHandler).GetMethod("HandleOptionNotification", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.IsNotNull(method);
 
-            var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, 0) };
+            var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) };
             method.Invoke(transactionHandler, parameters);
 
             transactionHandler.Exit();
@@ -1378,10 +1382,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(expectedOptionPosition, algorithm.Portfolio[optionSymbol].Quantity);
         }
 
-        // Short Call --> ITM (assigned early)
+        // Short Call --> ITM (assigned early - full)
         [TestCase(-1, OptionRight.Call, 450, 100, 455, 2, 0, 0, "Automatic Assignment")]
-        // Short Put --> ITM (assigned early)
+        // Short Put --> ITM (assigned early - full)
         [TestCase(-1, OptionRight.Put, 455, 100, 450, 2, 0, 200, "Automatic Assignment")]
+        // Short Call --> ITM (assigned early - partial)
+        [TestCase(-3, OptionRight.Call, 450, 300, 455, 2, -1, 100, "Automatic Assignment")]
+        // Short Put --> ITM (assigned early - partial)
+        [TestCase(-3, OptionRight.Put, 455, 100, 450, 2, -1, 300, "Automatic Assignment")]
         public void EarlyAssignmentEmitsOrderEvents(
             int initialOptionPosition,
             OptionRight optionRight,
@@ -1411,8 +1419,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             using var brokerage = new NoSubmitTestBrokerage(algorithm);
             var transactionHandler = new TestBrokerageTransactionHandler();
             transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            // lets wait until the transactionHandler starts running
-            Thread.Sleep(250);
 
             // 10 AM ET
             transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 8, 14, 0, 0);
@@ -1422,7 +1428,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var method = typeof(BrokerageTransactionHandler).GetMethod("HandleOptionNotification", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.IsNotNull(method);
 
-            var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, 0) };
+            var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) };
             method.Invoke(transactionHandler, parameters);
 
             transactionHandler.Exit();

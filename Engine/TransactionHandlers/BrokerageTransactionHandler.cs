@@ -1159,6 +1159,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                         EmitOptionNotificationEvents(security, exerciseOrder);
                     }
+                    else
+                    {
+                        Log.Error("BrokerageTransactionHandler.HandleOptionNotification(): " +
+                            $"unexpected position ({e.Position} instead of zero) " +
+                            $"for expired option contract: {e.Symbol.Value}");
+                    }
                 }
                 else
                 {
