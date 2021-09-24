@@ -24,7 +24,6 @@ using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
@@ -739,34 +738,41 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, receivedDelisted, $"Did not receive {DelistingType.Delisted}");
         }
 
-        [Test]
-        public void CoarseFundamentalDataIsHoldUntilTimeIsRight()
+        [TestCase("20140325", typeof(CoarseFundamental))]
+        [TestCase("20201202", typeof(ETFConstituentData))]
+        public void UniverseDataIsHoldUntilTimeIsRight(string dateTime, Type universeData)
         {
-            _startDate = new DateTime(2014, 3, 25);
+            _startDate = Time.ParseDate(dateTime);
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
-            Log.Trace($"StartTime {_manualTimeProvider.GetUtcNow()}");
+            Log.Debug($"StartTime {_manualTimeProvider.GetUtcNow()}");
 
-            // we just want to emit one single coarse data packet
             var feed = RunDataFeed(getNextTicksFunction: fdqh => Enumerable.Empty<BaseData>());
-
-            _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
+            if (universeData == typeof(CoarseFundamental))
+            {
+                _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
+            }
+            else
+            {
+                _algorithm.AddUniverse(_algorithm.Universe.ETF("SPY", Market.USA, _algorithm.UniverseSettings,
+                    constituentData => constituentData.Take(10).Select(x => x.Symbol)));
+            }
             // will add the universe
             _algorithm.OnEndOfTimeStep();
 
-            var receivedCoarseData = false;
+            var receivedUniverseData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 if (ts.UniverseData.Count > 0 &&
-                    ts.UniverseData.First().Value.Data.First() is CoarseFundamental)
+                    ts.UniverseData.First().Value.Data.First().GetType() == universeData)
                 {
                     var now = _manualTimeProvider.GetUtcNow();
                     Log.Trace($"Received BaseDataCollection {now}");
 
                     // Assert data got hold until time was right
                     Assert.IsTrue(now.Hour < 23 && now.Hour > 5, $"Unexpected now value: {now}");
-                    receivedCoarseData = true;
+                    receivedUniverseData = true;
 
                     // we got what we wanted, end unit test
                     _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
@@ -776,9 +782,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 secondsTimeStep: 3600,
                 endDate: _startDate.AddDays(1));
 
-            Log.Trace($"EndTime {_manualTimeProvider.GetUtcNow()}");
+            Log.Debug($"EndTime {_manualTimeProvider.GetUtcNow()}");
 
-            Assert.IsTrue(receivedCoarseData, "Did not receive Coarse data.");
+            Assert.IsTrue(receivedUniverseData, "Did not receive universe data.");
         }
 
         [Test]
