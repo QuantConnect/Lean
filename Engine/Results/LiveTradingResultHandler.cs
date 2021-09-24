@@ -1144,7 +1144,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
         /// so we ignore extended market hours updates</remarks>
-        protected override decimal GetBenchmarkValue()
+        protected override decimal GetBenchmarkValue(DateTime time)
         {
             return _benchmarkValue;
         }
@@ -1221,7 +1221,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (force || UserExchangeIsOpen(time))
             {
-                _benchmarkValue = base.GetBenchmarkValue();
+                _benchmarkValue = base.GetBenchmarkValue(time);
             }
         }
 

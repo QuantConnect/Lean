@@ -559,6 +559,18 @@ namespace QuantConnect.Algorithm
                 Benchmark = BrokerageModel.GetBenchmark(Securities);
             }
 
+            // Check benchmark timezone against algorithm timezone to warn for misaligned statistics
+            if (Benchmark is SecurityBenchmark securityBenchmark)
+            {
+                // Only warn on daily resolutions as its statistics will suffer the most
+                var subscription = securityBenchmark.Security.Subscriptions.OrderByDescending(x => x.Resolution).FirstOrDefault();
+                if (subscription?.Resolution == Resolution.Daily && subscription.DataTimeZone != TimeZone)
+                {
+                    Log($"QCAlgorithm.PostInitialize(): Warning: Using a security benchmark of a different timezone ({subscription.DataTimeZone})" +
+                        $" than the algorithm TimeZone ({TimeZone}) may lead to skewed and incorrect statistics. Use a higher resolution than daily to minimize.");
+                }
+            }
+
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
             OnEndOfTimeStep();
         }

@@ -165,6 +165,13 @@ namespace QuantConnect.Lean.Engine
                 }
             }
 
+            // Schedule a daily event for sampling at midnight every night
+            algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(), algorithm.Schedule.TimeRules.At(0, 0), () =>
+            {
+                // Sample this as 1 second before midnight to create this point for the previous day
+                results.Sample(algorithm.Time.AddSeconds(-1));
+            });
+
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
@@ -195,7 +202,7 @@ namespace QuantConnect.Lean.Engine
                 // We need to sample at the top of the loop in case we have a strategy
                 // with no data added. Time pulses would be emitted between days, and
                 // would cause us to skip sampling of the portfolio in those dead days.
-                results.Sample(time);
+
 
                 if (backtestMode)
                 {

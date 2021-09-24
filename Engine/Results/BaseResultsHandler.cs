@@ -441,9 +441,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
         /// so we ignore extended market hours updates</remarks>
-        protected virtual decimal GetBenchmarkValue()
+        protected virtual decimal GetBenchmarkValue(DateTime time)
         {
-            return Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding();
+            return Algorithm.Benchmark.Evaluate(time).SmartRounding();
         }
 
         /// <summary>
@@ -453,41 +453,27 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
         public virtual void Sample(DateTime time, bool force = false)
         {
-            var dayChanged = PreviousUtcSampleTime.Date != time.Date;
+            var currentPortfolioValue = GetPortfolioValue();
+            var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 
-            if (dayChanged || force)
+            // Update our max portfolio value
+            CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
+
+            // Sample all our default charts
+            SampleEquity(time, currentPortfolioValue);
+            SampleBenchmark(time, GetBenchmarkValue(time));
+            SamplePerformance(time, portfolioPerformance);
+            SampleDrawdown(time, currentPortfolioValue);
+            SampleSalesVolume(time);
+            SampleExposure(time, currentPortfolioValue);
+            SampleCapacity(time);
+
+            // Update daily portfolio value on scheduled calls. Force is an unscheduled call
+            if (!force || PreviousUtcSampleTime.Date != time.Date)
             {
-                if (force)
-                {
-                    // For any forced sampling, we need to sample at the time we provide to this method.
-                    PreviousUtcSampleTime = time;
-                }
-
-                var currentPortfolioValue = GetPortfolioValue();
-                var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
-
-                // Update our max portfolio value
-                CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
-
-                // Sample all our default charts
-                SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
-                SampleBenchmark(PreviousUtcSampleTime, GetBenchmarkValue());
-                SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
-                SampleDrawdown(PreviousUtcSampleTime, currentPortfolioValue);
-                SampleSalesVolume(PreviousUtcSampleTime);
-                SampleExposure(PreviousUtcSampleTime, currentPortfolioValue);
-                SampleCapacity(PreviousUtcSampleTime);
-
-                // If the day changed, set the closing portfolio value. Otherwise, we would end up
-                // with skewed statistics if a processing event was forced.
-                if (dayChanged)
-                {
-                    DailyPortfolioValue = currentPortfolioValue;
-                }
+                DailyPortfolioValue = currentPortfolioValue;
+                PreviousUtcSampleTime = time;
             }
-
-            // this time goes into the sample, we keep him updated because sample is called before we update anything, so the sampled values are from the last call
-            PreviousUtcSampleTime = time;
         }
 
         /// <summary>
