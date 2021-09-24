@@ -85,16 +85,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.250%"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "-0.359%"},
             {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0.003%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-0.005%"},
             {"Sharpe Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
@@ -106,11 +106,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$2.00"},
             {"Estimated Strategy Capacity", "$18000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.072"},
+            {"Fitness Score", "0.036"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-82.863"},
             {"Portfolio Turnover", "0.072"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d78a4f8592bd22fae98d2e718901f5e8"}
+            {"OrderListHash", "f9a1e665c5fafa5b6853fd223173e82c"}
         };
     }
 }

@@ -260,11 +260,20 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Default stop fill model implementation in base class security. (Stop Market Order Type)
+        /// A Stop order is an instruction to submit a buy or sell market order
+        /// if and when the user-specified stop trigger price is attained or penetrated.
+        /// A Stop order is not guaranteed a specific execution price and may execute significantly away from its stop price.
+        /// A Sell Stop order is always placed below the current market price and is typically used to limit a loss or
+        /// protect a profit on a long stock position. A Buy Stop order is always placed above the current market price.
+        /// It is typically used to limit a loss or help protect a profit on a short sale.
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        /// There's no way to know if the price has "gapped" past the stop price within a single OHLC bar. 
+        /// So we have to assume a fluid, high volume market, where every price between the high and low has been touched.
+        /// </remarks>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
@@ -278,40 +287,71 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
-            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+            // Get the last bar
+            var tradeBar = GetBestEffortTradeBar(asset, out var fillMessage);
 
-            // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            // Do not use stale data to trigger stop market fill
+            if (tradeBar == null || tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone) <= order.Time)
+            {
+                fill.Message = fillMessage ?? "Do not use stale data to trigger stop market fill";
+                return fill;
+            }
 
-            //Calculate the model slippage: e.g. 0.01c
-            var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+            fill.Message = fillMessage ?? string.Empty;
 
-            //Check if the Stop Order was filled: opposite to a limit order
+            // A Stop order is an instruction to submit a buy or sell market order
+            // if and when the user-specified stop trigger price is attained or penetrated.
             switch (order.Direction)
             {
-                case OrderDirection.Sell:
-                    //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                    if (prices.Low < order.StopPrice)
+                case OrderDirection.Buy:
+
+                    // Buy Stop: The high has attained or penetrated (cross above) the stop trigger:
+                    if (tradeBar.High >= order.StopPrice)
                     {
-                        fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
-                        fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip);
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
+                        fill.Status = OrderStatus.Filled;
+
+                        // Calculate the model slippage: e.g. 0.01c
+                        var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+
+                        // If bar opens above stop price, fill at open price
+                        if (tradeBar.Open > order.StopPrice)
+                        {
+                            fill.FillPrice = tradeBar.Open + slip;
+                            fill.Message = "Fill at Open";
+                            return fill;
+                        }
+
+                        // Assuming worse case scenario fill - fill at highest of the stop & asset ask price.
+                        var fillPrice = GetBestEffortAskPrice(asset, order.Time, out _);
+                        fill.FillPrice = Math.Max(order.StopPrice, fillPrice + slip);
                     }
                     break;
 
-                case OrderDirection.Buy:
-                    //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                    if (prices.High > order.StopPrice)
+                case OrderDirection.Sell:
+
+                    // Sell Stop: The low has attained or penetrated (cross below) the stop trigger:
+                    if (tradeBar.Low <= order.StopPrice)
                     {
-                        fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at highest of the stop & asset price.
-                        fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
+                        fill.Status = OrderStatus.Filled;
+                        
+                        // Calculate the model slippage: e.g. 0.01c
+                        var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+
+                        // If bar opens below stop price, fill at open price
+                        if (tradeBar.Open < order.StopPrice)
+                        {
+                            fill.FillPrice = tradeBar.Open - slip;
+                            fill.Message = "Fill at Open";
+                            return fill;
+                        }
+
+                        // Assuming worse case scenario fill - fill at lowest of the stop & asset bid price.
+                        var fillPrice = GetBestEffortBidPrice(asset, order.Time, out _);
+                        fill.FillPrice = Math.Min(order.StopPrice, fillPrice - slip);
                     }
                     break;
             }
@@ -943,6 +983,52 @@ namespace QuantConnect.Orders.Fills
             }
 
             throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data was found. SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
+        }
+
+        /// <summary>
+        /// Get current High for subscribed data
+        /// This method will try to get the most recent high price data, so it will try to get tick trade first, then trade bar.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="message">Information about the best effort, whether need to use quote information</param>
+        private TradeBar GetBestEffortTradeBar(Security asset, out string message)
+        {
+            message = null;
+            TradeBar tradeBar = null;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trades = asset.Cache.GetAll<Tick>()
+                    .Where(x => x.TickType == TickType.Trade && x.LastPrice > 0)
+                    .OrderBy(x => x.EndTime).ToList();
+
+                if (trades.Count > 0)
+                {
+                    tradeBar = new TradeBar { Symbol = asset.Symbol };
+                    foreach (var trade in trades)
+                    {
+                        tradeBar.UpdateTrade(trade.LastPrice, trade.Quantity);
+                    }
+
+                    tradeBar.Time = trades.First().Time;
+                    tradeBar.EndTime = trades.Last().EndTime;
+                    return tradeBar;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                tradeBar = asset.Cache.GetData<TradeBar>();
+            }
+
+            if (tradeBar == null)
+            {
+                message = $"Warning: No trade information available at {asset.LocalTime.ToStringInvariant()} {asset.Exchange.TimeZone}";
+            }
+
+            return tradeBar;
         }
 
         /// <summary>
