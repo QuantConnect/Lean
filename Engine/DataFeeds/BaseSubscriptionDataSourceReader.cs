@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             switch (subscriptionDataSource.TransportMedium)
             {
                 case SubscriptionTransportMedium.LocalFile:
-                    reader = HandleLocalFileSource(subscriptionDataSource);
+                    reader = new LocalFileSubscriptionStreamReader(DataCacheProvider, subscriptionDataSource.Source);
                     break;
 
                 case SubscriptionTransportMedium.RemoteFile:
@@ -88,18 +88,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Opens up an IStreamReader for a local file source
-        /// </summary>
-        protected IStreamReader HandleLocalFileSource(SubscriptionDataSource source)
-        {
-            // handles zip or text files
-            return new LocalFileSubscriptionStreamReader(DataCacheProvider, source.Source);
-        }
-
-        /// <summary>
         /// Opens up an IStreamReader for a remote file source
         /// </summary>
-        protected IStreamReader HandleRemoteSourceFile(SubscriptionDataSource source)
+        private IStreamReader HandleRemoteSourceFile(SubscriptionDataSource source)
         {
             SubscriptionDataSourceReader.CheckRemoteFileCache();
 

@@ -16,10 +16,11 @@
 
 using System;
 using System.IO;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -49,6 +50,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 case FileFormat.Csv:
                     reader = textReader = new TextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
+
+                    if (config.Type.IsSubclassOf(typeof(BaseDataCollection)))
+                    {
+                        reader = new BaseDataCollectionAggregatorReader(reader, config.Type);
+                    }
                     break;
 
                 case FileFormat.Collection:
