@@ -472,8 +472,9 @@ namespace QuantConnect.Lean.Engine.Results
             if (PreviousUtcSampleTime.Date != time.Date)
             {
                 DailyPortfolioValue = currentPortfolioValue;
-                PreviousUtcSampleTime = time;
             }
+
+            PreviousUtcSampleTime = time;
         }
 
         /// <summary>

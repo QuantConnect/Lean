@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -305,13 +304,20 @@ namespace QuantConnect.Statistics
             return listPercentage;
         }
 
+        /// <summary>
+        /// Grab the first point for every day
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="points"></param>
+        /// <returns>Dictionary of sample points by day</returns>
+        /// <remarks>We grab the First() value on purpose because we explicitly sample at midnight for the previous days performance</remarks>
         private static SortedDictionary<DateTime, T> ResampleDaily<T>(SortedDictionary<DateTime, T> points)
         {
             // GroupBy(...) is guaranteed to preserve the order the elements are in.
             // See http://msdn.microsoft.com/en-us/library/bb534501 for more information.
             return new SortedDictionary<DateTime, T>(
                 points.GroupBy(kvp => kvp.Key.Date)
-                    .Select(x => x.Last())
+                    .Select(x => x.First())
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
         }
     }

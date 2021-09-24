@@ -675,7 +675,8 @@ namespace QuantConnect.Lean.Engine
             results.SendStatusUpdate(AlgorithmStatus.Completed);
             SetStatus(AlgorithmStatus.Completed);
 
-            //Take final samples; If we are already at midnight its daily, otherwise sample at the end of day to not overwrite our previous daily values
+            // Take final sample; if its currently midnight we can just sample with this time otherwise sample on the next day at 12AM
+            // This is to preserve our daily performance samples, StatisticsBuilder.ResampleDaily()
             results.Sample(time == time.Date ? time : time.Date.AddDays(1));
 
         } // End of Run();
