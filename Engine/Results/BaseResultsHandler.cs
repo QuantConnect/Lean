@@ -468,8 +468,8 @@ namespace QuantConnect.Lean.Engine.Results
             SampleExposure(time, currentPortfolioValue);
             SampleCapacity(time);
 
-            // Update daily portfolio value on scheduled calls. Force is an unscheduled call
-            if (!force || PreviousUtcSampleTime.Date != time.Date)
+            // Update daily portfolio value only once a day
+            if (PreviousUtcSampleTime.Date != time.Date)
             {
                 DailyPortfolioValue = currentPortfolioValue;
                 PreviousUtcSampleTime = time;

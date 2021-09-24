@@ -166,10 +166,9 @@ namespace QuantConnect.Lean.Engine
             }
 
             // Schedule a daily event for sampling at midnight every night
-            algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(), algorithm.Schedule.TimeRules.At(0, 0), () =>
+            algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(), algorithm.Schedule.TimeRules.Midnight, () =>
             {
-                // Sample this as 1 second before midnight to create this point for the previous day
-                results.Sample(algorithm.Time.AddSeconds(-1));
+                results.Sample(algorithm.UtcTime);
             });
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
@@ -676,8 +675,8 @@ namespace QuantConnect.Lean.Engine
             results.SendStatusUpdate(AlgorithmStatus.Completed);
             SetStatus(AlgorithmStatus.Completed);
 
-            //Take final samples:
-            results.Sample(time, force: true);
+            //Take final samples; If we are already at midnight its daily, otherwise sample at the end of day to not overwrite our previous daily values
+            results.Sample(time == time.Date ? time : time.Date.AddDays(1));
 
         } // End of Run();
 
