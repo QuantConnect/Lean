@@ -1104,10 +1104,11 @@ namespace QuantConnect.Lean.Engine.Results
                     continue;
                 }
 
-                // if the user added Crypto, Forex or an extended market hours subscription just sample always, one way trip.
+                // if the user added Crypto, Forex, Daily or an extended market hours subscription just sample always, one way trip.
                 _sampleChartAlways = symbol.SecurityType == QuantConnect.SecurityType.Crypto
                                      || symbol.SecurityType == QuantConnect.SecurityType.Forex
-                                     || Algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Any(config => config.ExtendedMarketHours);
+                                     || Algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
+                                         .Any(config => config.ExtendedMarketHours || config.Resolution == Resolution.Daily);
 
                 if (!_exchangeHours.ContainsKey(securityChange.Symbol.ID.Market))
                 {
