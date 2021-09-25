@@ -448,9 +448,11 @@ namespace QuantConnect.Lean.Engine.Results
 
         /// <summary>
         /// Samples portfolio equity, benchmark, and daily performance
+        /// Called by scheduled event every night at midnight algorithm time
         /// </summary>
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
         /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
+        /// <remarks>Force is no longer used</remarks>
         public virtual void Sample(DateTime time, bool force = false)
         {
             var currentPortfolioValue = GetPortfolioValue();
@@ -468,12 +470,13 @@ namespace QuantConnect.Lean.Engine.Results
             SampleExposure(time, currentPortfolioValue);
             SampleCapacity(time);
 
-            // Update daily portfolio value only once a day
+            // Update daily portfolio value only once a day on the first point of the day
             if (PreviousUtcSampleTime.Date != time.Date)
             {
                 DailyPortfolioValue = currentPortfolioValue;
             }
 
+            // Update our last sample time
             PreviousUtcSampleTime = time;
         }
 
