@@ -583,11 +583,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [TestCase(FileFormat.Csv, true, false)]
-        [TestCase(FileFormat.Collection, true, false)]
+        [TestCase(FileFormat.UnfoldingCollection, true, false)]
         [TestCase(FileFormat.Csv, false, false)]
-        [TestCase(FileFormat.Collection, false, false)]
+        [TestCase(FileFormat.UnfoldingCollection, false, false)]
         [TestCase(FileFormat.Csv, false, true)]
-        [TestCase(FileFormat.Collection, false, true)]
+        [TestCase(FileFormat.UnfoldingCollection, false, true)]
         public void RestCustomDataReturningNullDoesNotInfinitelyPoll(FileFormat fileFormat, bool returnsNull, bool throwsException)
         {
             TestCustomData.FileFormat = fileFormat;
@@ -2439,7 +2439,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Symbol = config.Symbol
                 };
 
-                if (FileFormat == FileFormat.Collection)
+                if (FileFormat == FileFormat.UnfoldingCollection)
                 {
                     return new BaseDataCollection
                     {

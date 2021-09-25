@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using QuantConnect.Data;
+using System.ComponentModel;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Event fired when the specified source is considered invalid, this may
         /// be from a missing file or failure to download a remote source
         /// </summary>
-        public abstract event EventHandler<InvalidSourceEventArgs> InvalidSource;
+        public event EventHandler<InvalidSourceEventArgs> InvalidSource;
 
         /// <summary>
         /// Creates a new instance
@@ -66,25 +66,48 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A new instance of <see cref="IStreamReader"/> to read the source, or null if there was an error</returns>
         protected IStreamReader CreateStreamReader(SubscriptionDataSource subscriptionDataSource)
         {
-            IStreamReader reader;
-            switch (subscriptionDataSource.TransportMedium)
+            IStreamReader reader = null;
+            try
             {
-                case SubscriptionTransportMedium.LocalFile:
-                    reader = new LocalFileSubscriptionStreamReader(DataCacheProvider, subscriptionDataSource.Source);
-                    break;
+                switch (subscriptionDataSource.TransportMedium)
+                {
+                    case SubscriptionTransportMedium.LocalFile:
+                        reader = new LocalFileSubscriptionStreamReader(DataCacheProvider, subscriptionDataSource.Source);
+                        break;
 
-                case SubscriptionTransportMedium.RemoteFile:
-                    reader = HandleRemoteSourceFile(subscriptionDataSource);
-                    break;
+                    case SubscriptionTransportMedium.RemoteFile:
+                        reader = HandleRemoteSourceFile(subscriptionDataSource);
+                        break;
 
-                case SubscriptionTransportMedium.Rest:
-                    reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source, subscriptionDataSource.Headers, IsLiveMode);
-                    break;
+                    case SubscriptionTransportMedium.Rest:
+                        reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source, subscriptionDataSource.Headers, IsLiveMode);
+                        break;
 
-                default:
-                    throw new InvalidEnumArgumentException("Unexpected SubscriptionTransportMedium specified: " + subscriptionDataSource.TransportMedium);
+                    default:
+                        throw new InvalidEnumArgumentException("Unexpected SubscriptionTransportMedium specified: " + subscriptionDataSource.TransportMedium);
+                }
+            }
+            catch (Exception e)
+            {
+                OnInvalidSource(subscriptionDataSource, e);
+                return reader;
+            }
+
+            if (reader == null || reader.EndOfStream)
+            {
+                OnInvalidSource(subscriptionDataSource, new Exception($"The reader was empty for source: ${subscriptionDataSource.Source}"));
             }
             return reader;
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="InvalidSource"/> event
+        /// </summary>
+        /// <param name="source">The <see cref="SubscriptionDataSource"/> that was invalid</param>
+        /// <param name="exception">The exception if one was raised, otherwise null</param>
+        protected void OnInvalidSource(SubscriptionDataSource source, Exception exception)
+        {
+            InvalidSource?.Invoke(this, new InvalidSourceEventArgs(source, exception));
         }
 
         /// <summary>

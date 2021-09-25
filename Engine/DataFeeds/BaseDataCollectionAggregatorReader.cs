@@ -16,6 +16,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 
@@ -24,26 +25,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Data source reader that will aggregate data points into a base data collection
     /// </summary>
-    public class BaseDataCollectionAggregatorReader : ISubscriptionDataSourceReader
+    public class BaseDataCollectionAggregatorReader : TextSubscriptionDataSourceReader
     {
-        private Type _collectionType;
+        private readonly Type _collectionType;
         private BaseDataCollection _collection;
-        private ISubscriptionDataSourceReader _reader;
 
         /// <summary>
-        /// Event fired when the specified source is considered invalid, this may
-        /// be from a missing file or failure to download a remote source
+        /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
         /// </summary>
-        public event EventHandler<InvalidSourceEventArgs> InvalidSource;
-
-        /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        public BaseDataCollectionAggregatorReader(ISubscriptionDataSourceReader reader, Type collectionType)
+        /// <param name="dataCacheProvider">This provider caches files if needed</param>
+        /// <param name="config">The subscription's configuration</param>
+        /// <param name="date">The date this factory was produced to read data for</param>
+        /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
+        public BaseDataCollectionAggregatorReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            : base(dataCacheProvider, config, date, isLiveMode)
         {
-            _reader = reader;
-            _collectionType = collectionType;
-            _reader.InvalidSource += (sender, args) => InvalidSource?.Invoke(sender, args);
+            _collectionType = config.Type;
         }
 
         /// <summary>
@@ -51,9 +48,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="source">The source to be read</param>
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
-        public IEnumerable<BaseData> Read(SubscriptionDataSource source)
+        public override IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            foreach (var point in _reader.Read(source))
+            foreach (var point in base.Read(source))
             {
                 if (point is BaseDataCollection)
                 {
@@ -77,6 +74,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _collection.Data.Add(point);
                 }
             }
+
             if (_collection != null)
             {
                 yield return _collection;

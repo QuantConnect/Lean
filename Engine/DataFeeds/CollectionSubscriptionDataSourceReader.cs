@@ -14,6 +14,7 @@
 */
 using System;
 using QuantConnect.Data;
+using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -46,12 +47,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Event fired when the specified source is considered invalid, this may
-        /// be from a missing file or failure to download a remote source
-        /// </summary>
-        public override event EventHandler<InvalidSourceEventArgs> InvalidSource;
-
-        /// <summary>
         /// Event fired when an exception is thrown during a call to
         /// <see cref="BaseData.Reader(SubscriptionDataConfig, string, DateTime, bool)"/>
         /// </summary>
@@ -69,19 +64,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IStreamReader reader = null;
             try
             {
-                try
+                reader = CreateStreamReader(source);
+                if (reader == null)
                 {
-                    reader = CreateStreamReader(source);
-                }
-                catch (Exception e)
-                {
-                    OnInvalidSource(source, e);
-                    yield break;
-                }
-
-                if (reader == null || reader.EndOfStream)
-                {
-                    OnInvalidSource(source, new Exception($"The reader was empty for source: ${source.Source}"));
                     yield break;
                 }
 
@@ -114,6 +99,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // and in live mode, but just in case...
                         || instances == null && reader.ShouldBeRateLimited)
                     {
+                        // in live trading these data points will be unrolled at the
+                        // 'LiveCustomDataSubscriptionEnumeratorFactory' level
                         yield return instances;
                     }
                     else
@@ -130,8 +117,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             finally
             {
-                if (reader != null)
-                    reader.Dispose();
+                reader.DisposeSafely();
             }
         }
 
@@ -144,17 +130,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var handler = ReaderError;
             if (handler != null) handler(this, new ReaderErrorEventArgs(line, exception));
-        }
-
-        /// <summary>
-        /// Event invocator for the <see cref="InvalidSource"/> event
-        /// </summary>
-        /// <param name="source">The <see cref="SubscriptionDataSource"/> that was invalid</param>
-        /// <param name="exception">The exception if one was raised, otherwise null</param>
-        private void OnInvalidSource(SubscriptionDataSource source, Exception exception)
-        {
-            var handler = InvalidSource;
-            if (handler != null) handler(this, new InvalidSourceEventArgs(source, exception));
         }
     }
 }
