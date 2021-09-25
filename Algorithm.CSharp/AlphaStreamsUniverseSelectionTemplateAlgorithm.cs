@@ -75,8 +75,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var result = base.ExpectedStatistics;
                 result["Compounding Annual Return"] = "-13.200%";
-                result["Information Ratio"] = "2.827";
-                result["Tracking Error"] = "0.248";
+                result["Information Ratio"] = "0.587";
+                result["Tracking Error"] = "0.296";
                 result["Fitness Score"] = "0.011";
                 result["Return Over Maximum Drawdown"] = "-113.513";
                 result["Portfolio Turnover"] = "0.023";
