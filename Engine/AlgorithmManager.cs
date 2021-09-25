@@ -676,7 +676,7 @@ namespace QuantConnect.Lean.Engine
             SetStatus(AlgorithmStatus.Completed);
 
             //Take final samples:
-            results.Sample(time);
+            results.Sample(time, force: true);
 
         } // End of Run();
 
