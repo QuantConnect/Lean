@@ -54,12 +54,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (point is BaseDataCollection)
                 {
+                    // if underlying already is returning a collection let it through as is
                     yield return point;
                 }
                 else
                 {
                     if (_collection != null && _collection.EndTime != point.EndTime)
                     {
+                        // when we get a new time we flush current collection instance, if any
                         yield return _collection;
                         _collection = null;
                     }
@@ -71,10 +73,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _collection.Symbol = point.Symbol;
                         _collection.EndTime = point.EndTime;
                     }
+                    // aggregate the data points
                     _collection.Data.Add(point);
                 }
             }
 
+            // underlying reader ended, flush current collection instance if any
             if (_collection != null)
             {
                 yield return _collection;
