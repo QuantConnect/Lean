@@ -96,6 +96,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (reader == null || reader.EndOfStream)
             {
                 OnInvalidSource(subscriptionDataSource, new Exception($"The reader was empty for source: ${subscriptionDataSource.Source}"));
+                return null;
             }
             return reader;
         }
