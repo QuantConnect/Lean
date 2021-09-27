@@ -660,17 +660,42 @@ namespace QuantConnect.Algorithm
         private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
         {
             var matchingSubscriptions = SubscriptionManager.SubscriptionDataConfigService
+                 // we add internal subscription so that history requests are covered, this allows us to warm them up too
                 .GetSubscriptionDataConfigs(symbol, includeInternalConfigs:true)
                 // find all subscriptions matching the requested type with a higher resolution than requested
                 .OrderByDescending(s => s.Resolution)
                 // lets make sure to respect the order of the data types
                 .ThenByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType))
-                .ThenBy(config => config.IsInternalFeed ? 1 : 0)
-                .Where(s => SubscriptionDataConfigTypeFilter(type, s.Type))
-                .ToList();
+                .Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
+
+            var internalConfig = new List<SubscriptionDataConfig>();
+            var userConfig = new List<SubscriptionDataConfig>();
+            foreach (var config in matchingSubscriptions)
+            {
+                if (config.IsInternalFeed)
+                {
+                    internalConfig.Add(config);
+                }
+                else
+                {
+                    userConfig.Add(config);
+                }
+            }
+
+            // if we have any user defined subscription configuration we use it, else we use internal ones if any
+            List<SubscriptionDataConfig> configs = null;
+            if(userConfig.Count != 0)
+            {
+                configs = userConfig;
+            }
+            else if (internalConfig.Count != 0)
+            {
+                configs = internalConfig;
+            }
+
             // we use the subscription manager registered configurations here, we can not rely on the Securities collection
             // since this might be called when creating a security and warming it up
-            if (matchingSubscriptions.Count != 0)
+            if (configs != null && configs.Count != 0)
             {
                 if (resolution.HasValue
                     && (resolution == Resolution.Daily || resolution == Resolution.Hour)
@@ -679,10 +704,10 @@ namespace QuantConnect.Algorithm
                     // for Daily and Hour resolution, for equities, we have to
                     // filter out any existing subscriptions that could be of Quote type
                     // This could happen if they were Resolution.Minute/Second/Tick
-                    return matchingSubscriptions.Where(s => s.TickType != TickType.Quote);
+                    return configs.Where(s => s.TickType != TickType.Quote);
                 }
 
-                return matchingSubscriptions;
+                return configs;
             }
             else
             {
