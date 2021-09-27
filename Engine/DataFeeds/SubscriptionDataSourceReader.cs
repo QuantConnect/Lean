@@ -16,10 +16,10 @@
 
 using System;
 using System.IO;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -44,14 +44,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, BaseData factory, IDataProvider dataProvider)
         {
             ISubscriptionDataSourceReader reader;
-            TextSubscriptionDataSourceReader textReader = null;
             switch (source.Format)
             {
                 case FileFormat.Csv:
-                    reader = textReader = new TextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
+                    reader = new TextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
                     break;
 
-                case FileFormat.Collection:
+                case FileFormat.UnfoldingCollection:
                     reader = new CollectionSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
                     break;
 
@@ -61,6 +60,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 case FileFormat.Index:
                     return new IndexSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, dataProvider);
+
+                case FileFormat.FoldingCollection:
+                    reader = new BaseDataCollectionAggregatorReader(dataCacheProvider, config, date, isLiveMode);
+                    break;
 
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");
@@ -72,10 +75,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (!factory.IsSparseData())
                 {
                     reader.InvalidSource += (sender, args) => Log.Error($"SubscriptionDataSourceReader.InvalidSource(): File not found: {args.Source.Source}");
-                    if (textReader != null)
-                    {
-                        textReader.CreateStreamReaderError += (sender, args) => Log.Error($"SubscriptionDataSourceReader.CreateStreamReaderError(): File not found: {args.Source.Source}");
-                    }
                 }
             }
 
