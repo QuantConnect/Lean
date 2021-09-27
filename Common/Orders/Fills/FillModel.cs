@@ -208,7 +208,8 @@ namespace QuantConnect.Orders.Fills
                         // otherwise, assume price moved through the stop price
                         else
                         {
-                            fill.FillPrice = order.StopPrice - slip;
+                            // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
+                            fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip);
                         }
                     }
                     break;
@@ -229,8 +230,9 @@ namespace QuantConnect.Orders.Fills
                         // otherwise, assume price moved through the stop price
                         else
                         {
-                            fill.FillPrice = order.StopPrice + slip;
-                        }                        
+                            // Assuming worse case scenario fill - fill at highest of the stop & asset price.
+                            fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
+                        }
                     }
                     break;
             }

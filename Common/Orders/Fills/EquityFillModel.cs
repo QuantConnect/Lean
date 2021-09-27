@@ -324,8 +324,9 @@ namespace QuantConnect.Orders.Fills
                         }
 
                         // Assuming worse case scenario fill - fill at highest of the stop & asset ask price.
-                        var fillPrice = GetBestEffortAskPrice(asset, order.Time, out _);
+                        var fillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage);
                         fill.FillPrice = Math.Max(order.StopPrice, fillPrice + slip);
+                        fill.Message += fillMessage;
                     }
                     break;
 
@@ -350,8 +351,9 @@ namespace QuantConnect.Orders.Fills
                         }
 
                         // Assuming worse case scenario fill - fill at lowest of the stop & asset bid price.
-                        var fillPrice = GetBestEffortBidPrice(asset, order.Time, out _);
+                        var fillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage);
                         fill.FillPrice = Math.Min(order.StopPrice, fillPrice - slip);
+                        fill.Message += fillMessage;
                     }
                     break;
             }
@@ -986,15 +988,15 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Get current High for subscribed data
-        /// This method will try to get the most recent high price data, so it will try to get tick trade first, then trade bar.
+        /// Get current trade bar for subscribed data
+        /// This method will try to get the most recent trade bar data. It will try to get tick trade first to create a trade bar, then trade bar.
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
         /// <param name="message">Information about the best effort, whether need to use quote information</param>
         private TradeBar GetBestEffortTradeBar(Security asset, out string message)
         {
             message = null;
-            TradeBar tradeBar = null;
+            var tradeBar = new TradeBar { Symbol = asset.Symbol, Time = DateTime.MinValue, Period = TimeSpan.Zero };
 
             var subscribedTypes = GetSubscribedTypes(asset);
 
@@ -1002,19 +1004,12 @@ namespace QuantConnect.Orders.Fills
             {
                 var trades = asset.Cache.GetAll<Tick>()
                     .Where(x => x.TickType == TickType.Trade && x.LastPrice > 0)
-                    .OrderBy(x => x.EndTime).ToList();
+                    .OrderBy(x => x.EndTime);
 
-                if (trades.Count > 0)
+                foreach (var trade in trades)
                 {
-                    tradeBar = new TradeBar { Symbol = asset.Symbol };
-                    foreach (var trade in trades)
-                    {
-                        tradeBar.UpdateTrade(trade.LastPrice, trade.Quantity);
-                    }
-
-                    tradeBar.Time = trades.First().Time;
-                    tradeBar.EndTime = trades.Last().EndTime;
-                    return tradeBar;
+                    tradeBar.UpdateTrade(trade.LastPrice, trade.Quantity);
+                    tradeBar.Time = trade.Time;
                 }
             }
 
@@ -1023,7 +1018,7 @@ namespace QuantConnect.Orders.Fills
                 tradeBar = asset.Cache.GetData<TradeBar>();
             }
 
-            if (tradeBar == null)
+            if (tradeBar == null || tradeBar.EndTime == DateTime.MinValue)
             {
                 message = $"Warning: No trade information available at {asset.LocalTime.ToStringInvariant()} {asset.Exchange.TimeZone}";
             }
