@@ -94,4 +94,15 @@ namespace QuantConnect.Tests.Brokerages
 
         public override bool ExpectedCancellationResult => true;
     }
+    
+    // to be used with brokerages which do not support UpdateOrder
+    public class NonUpdateableLimitIfTouchedOrderTestParameters : LimitIfTouchedOrderTestParameters
+    {
+        public NonUpdateableLimitIfTouchedOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null)
+            : base(symbol, highLimit, lowLimit, properties)
+        {
+        }
+
+        public override bool ModifyUntilFilled => false;
+    }
 }
