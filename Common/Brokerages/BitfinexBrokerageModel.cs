@@ -101,6 +101,11 @@ namespace QuantConnect.Brokerages
             return new BitfinexFeeModel();
         }
 
+        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        {
+            return IsValidOrderSize(security, order, out message);
+        }
+
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.

@@ -92,6 +92,20 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Binance does not support update of orders
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order"></param>
+        /// <param name="request"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        {
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
+            return false;
+        }
+
+        /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
         /// </summary>

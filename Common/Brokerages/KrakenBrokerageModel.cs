@@ -71,7 +71,21 @@ namespace QuantConnect.Brokerages
         {
             
         }
-        
+
+        /// <summary>
+        /// Kraken does not support update of orders
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order"></param>
+        /// <param name="request"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        {
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
+            return false;
+        }
+
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
@@ -100,20 +114,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
             return base.CanSubmitOrder(security, order, out message);
-        }
-        
-        /// <summary>
-        /// Kraken does no support update of orders
-        /// </summary>
-        /// <param name="security">Security</param>
-        /// <param name="order">Order that should be updated</param>
-        /// <param name="request">Update request</param>
-        /// <param name="message">Outgoing message</param>
-        /// <returns>Always false as Kraken does no support update of orders</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
-        {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
-            return false;
         }
 
         /// <summary>

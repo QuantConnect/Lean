@@ -319,6 +319,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var order = GetOrderByIdInternal(request.OrderId);
                 var orderQuantity = request.Quantity ?? ticket.Quantity;
 
+                // ensure the order is tagged with a currency
+                var security = _algorithm.Securities[order.Symbol];
+                BrokerageMessageEvent message;
+
                 var shortable = true;
                 if (order?.Direction == OrderDirection.Sell || orderQuantity < 0)
                 {
@@ -362,6 +366,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
                     _orderRequestQueue.Add(request);
+
+                    WaitForOrderSubmission(ticket);
                 }
             }
             catch (Exception err)
@@ -855,6 +861,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // modify the values of the order object
             order.ApplyUpdateOrderRequest(request);
+
+            if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanUpdateOrder(_algorithm.Securities[order.Symbol], order, request, out message))
+            {
+                if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidRequest", "BrokerageModel declared unable to update order: " + order.Id);
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToUpdateOrder, "OrderID: " + order.Id + " " + message);
+                _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    OrderFee.Zero,
+                    "BrokerageModel declared unable to update order"));
+                return response;
+            }
 
             // rounds the order prices
             RoundOrderPrices(order, security);

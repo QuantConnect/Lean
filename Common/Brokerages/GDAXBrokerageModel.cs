@@ -82,7 +82,7 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gdax does no support update of orders
+        /// Gdax does not support update of orders
         /// </summary>
         /// <param name="security"></param>
         /// <param name="order"></param>
