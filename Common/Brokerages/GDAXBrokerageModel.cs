@@ -110,7 +110,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if(!IsValidOrderSize(security, order, out message))
+            if(!IsValidOrderSize(security, order.AbsoluteQuantity, out message))
             {
                 return false;
             }

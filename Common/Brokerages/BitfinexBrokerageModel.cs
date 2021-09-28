@@ -101,9 +101,26 @@ namespace QuantConnect.Brokerages
             return new BitfinexFeeModel();
         }
 
+        /// <summary>
+        /// Checks whether an order can be updated or not in the Bitfinex brokerage model
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order">The order to be updated</param>
+        /// <param name="request">The update request</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>True if the update requested quantity is valid, false otherwise</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            return IsValidOrderSize(security, order, out message);
+            // If the requested quantity is null is going to be ignored by the moment ApplyUpdateOrderRequest() method is call
+            if (request.Quantity == null)
+            {
+                message = null;
+                return true;
+            }
+
+            // Check if the requested quantity is valid
+            var requestedQuantity = (decimal) request.Quantity;
+            return IsValidOrderSize(security, requestedQuantity, out message);
         }
 
         /// <summary>
@@ -119,7 +136,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (!IsValidOrderSize(security, order, out message))
+            if (!IsValidOrderSize(security, order.AbsoluteQuantity, out message))
             {
                 return false;
             }

@@ -118,7 +118,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (!IsValidOrderSize(security, order, out message))
+            if (!IsValidOrderSize(security, order.AbsoluteQuantity, out message))
             {
                 return false;
             }

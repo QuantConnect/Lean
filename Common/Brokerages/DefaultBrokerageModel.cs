@@ -404,19 +404,19 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Checks if the order size is valid, it means, the order size is bigger than the minimum size allowed
+        /// Checks if the order quantity is valid, it means, the order size is bigger than the minimum size allowed
         /// </summary>
         /// <param name="security"></param>
-        /// <param name="order">The order to be processed</param>
-        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
-        /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public static bool IsValidOrderSize(Security security, Order order, out BrokerageMessageEvent message)
+        /// <param name="orderQuantity">The quantity of the order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may be invalid</param>
+        /// <returns>True if the order quantity is bigger than the minimum allowed, false otherwise</returns>
+        public static bool IsValidOrderSize(Security security, decimal orderQuantity, out BrokerageMessageEvent message)
         {
             var minimumOrderSize = security.SymbolProperties.MinimumOrderSize;
-            if ( minimumOrderSize != null && Math.Abs(order.AbsoluteQuantity) < minimumOrderSize)
+            if ( minimumOrderSize != null && Math.Abs(orderQuantity) < minimumOrderSize)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}. Order quantity was {order.AbsoluteQuantity}")
+                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}. Order quantity was {orderQuantity}")
                 );
 
                 return false;
