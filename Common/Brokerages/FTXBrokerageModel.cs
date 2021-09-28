@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -59,6 +60,26 @@ namespace QuantConnect.Brokerages
             var map = DefaultMarketMap.ToDictionary();
             map[SecurityType.Crypto] = Market.FTX;
             return map.ToReadOnlyDictionary();
+        }
+
+        /// <summary>
+        /// Please note that the order's queue priority will be reset, and the order ID of the modified order will be different from that of the original order.
+        /// Also note: this is implemented as cancelling and replacing your order.
+        /// There's a chance that the order meant to be cancelled gets filled and its replacement still gets placed.
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order"></param>
+        /// <param name="request"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        {
+            message = 
+                new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning, 
+                    0, 
+                    "You must cancel and re-create instead.");
+            return false;
         }
     }
 }
