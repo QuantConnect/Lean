@@ -166,7 +166,8 @@ namespace QuantConnect.Lean.Engine
             }
 
             // Schedule a daily event for sampling at midnight every night
-            algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(), algorithm.Schedule.TimeRules.Midnight, () =>
+            algorithm.Schedule.On("Daily Sampling", algorithm.Schedule.DateRules.EveryDay(),
+                algorithm.Schedule.TimeRules.Midnight, () =>
             {
                 results.Sample(algorithm.UtcTime);
             });
