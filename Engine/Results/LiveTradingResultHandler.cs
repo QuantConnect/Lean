@@ -1046,6 +1046,10 @@ namespace QuantConnect.Lean.Engine.Results
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
 
+                // Check to see if we should update stored portfolio and bench values
+                UpdatePortfolioValue(time, forceProcess);
+                UpdateBenchmarkValue(time, forceProcess);
+
                 //Sample the portfolio value over time for chart.
                 SampleEquity(time, Math.Round(GetPortfolioValue(), 4));
 
