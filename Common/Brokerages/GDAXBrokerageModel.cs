@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
@@ -84,10 +83,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gdax does not support update of orders
         /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order"></param>
-        /// <param name="request"></param>
-        /// <param name="message"></param>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be updated</param>
+        /// <param name="request">The requested update to be made to the order</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>GDAX does not support update of orders, so it will always return false</returns>
         /// <returns></returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
@@ -98,9 +98,10 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Evaluates whether exchange will accept order. Will reject order update
         /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order"></param>
-        /// <param name="message"></param>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
         /// <returns></returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
@@ -110,7 +111,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if(!IsValidOrderSize(security, order.AbsoluteQuantity, out message))
+            if(!IsValidOrderSize(security, order.Quantity, out message))
             {
                 return false;
             }

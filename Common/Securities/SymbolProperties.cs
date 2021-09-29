@@ -73,7 +73,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// The minimum order size allowed
+        /// The minimum order size allowed, it goes by base currency
         /// </summary>
         public decimal? MinimumOrderSize
         {

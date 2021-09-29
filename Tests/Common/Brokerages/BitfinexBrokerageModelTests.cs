@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class BitfinexBrokerageModelTests
     {
-        private readonly BitfinexBrokerageModel _unit = new BitfinexBrokerageModel();
+        private readonly BitfinexBrokerageModel _bitfinexBrokerageModel = new BitfinexBrokerageModel();
 
         protected Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
         protected Crypto Security
@@ -186,7 +186,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _bitfinexBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
         }
     }
 }

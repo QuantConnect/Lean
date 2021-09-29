@@ -319,10 +319,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var order = GetOrderByIdInternal(request.OrderId);
                 var orderQuantity = request.Quantity ?? ticket.Quantity;
 
-                // ensure the order is tagged with a currency
-                var security = _algorithm.Securities[order.Symbol];
-                BrokerageMessageEvent message;
-
                 var shortable = true;
                 if (order?.Direction == OrderDirection.Sell || orderQuantity < 0)
                 {
@@ -366,8 +362,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
                     _orderRequestQueue.Add(request);
-
-                    WaitForOrderSubmission(ticket);
                 }
             }
             catch (Exception err)

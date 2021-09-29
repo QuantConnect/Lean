@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     class KrakenBrokerageModelTests
     {
-        private readonly KrakenBrokerageModel _unit = new KrakenBrokerageModel();
+        private readonly KrakenBrokerageModel _krakenBrokerageModel = new KrakenBrokerageModel();
 
         [TestCase(0.01, true)]
         [TestCase(0.00009, false)]
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _krakenBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
         }
     }
 }

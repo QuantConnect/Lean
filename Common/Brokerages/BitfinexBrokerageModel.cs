@@ -21,7 +21,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -104,7 +103,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Checks whether an order can be updated or not in the Bitfinex brokerage model
         /// </summary>
-        /// <param name="security"></param>
+        /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be updated</param>
         /// <param name="request">The update request</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
@@ -130,13 +129,13 @@ namespace QuantConnect.Brokerages
         /// <remarks>
         /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
         /// </remarks>
-        /// <param name="security"></param>
+        /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (!IsValidOrderSize(security, order.AbsoluteQuantity, out message))
+            if (!IsValidOrderSize(security, order.Quantity, out message))
             {
                 return false;
             }

@@ -21,7 +21,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -94,11 +93,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Binance does not support update of orders
         /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order"></param>
-        /// <param name="request"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be updated</param>
+        /// <param name="request">The requested update to be made to the order</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>Binance does not support update of orders, so it will always return false</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
@@ -112,13 +111,13 @@ namespace QuantConnect.Brokerages
         /// <remarks>
         /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
         /// </remarks>
-        /// <param name="security"></param>
+        /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (!IsValidOrderSize(security, order.AbsoluteQuantity, out message))
+            if (!IsValidOrderSize(security, order.Quantity, out message))
             {
                 return false;
             }

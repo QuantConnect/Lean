@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class BinanceBrokerageModelTests
     {
-        private readonly BinanceBrokerageModel _unit = new BinanceBrokerageModel();
+        private readonly BinanceBrokerageModel _binanceBrokerageModel = new BinanceBrokerageModel();
 
         [TestCase(0.01, true)]
         [TestCase(0.000009, false)]
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(TestsHelpers.GetSecurity(symbol: "BTCEUR", market: Market.Binance, quoteCurrency: "EUR"), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _binanceBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(symbol: "BTCEUR", market: Market.Binance, quoteCurrency: "EUR"), order.Object, out message));
         }
     }
 }

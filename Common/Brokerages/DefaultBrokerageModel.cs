@@ -15,9 +15,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Benchmarks;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;

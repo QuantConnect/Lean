@@ -14,8 +14,6 @@
  *
 */
 
-
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Benchmarks;
@@ -23,7 +21,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -73,33 +70,19 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Kraken does not support update of orders
-        /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order"></param>
-        /// <param name="request"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
-        {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
-            return false;
-        }
-
-        /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
         /// </summary>
         /// <remarks>
         /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
         /// </remarks>
-        /// <param name="security"></param>
+        /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (!IsValidOrderSize(security, order.AbsoluteQuantity, out message))
+            if (!IsValidOrderSize(security, order.Quantity, out message))
             {
                 return false;
             }
@@ -114,6 +97,20 @@ namespace QuantConnect.Brokerages
                 return false;
             }
             return base.CanSubmitOrder(security, order, out message);
+        }
+
+        /// <summary>
+        /// Kraken does not support update of orders
+        /// </summary>
+        /// <param name="security">Security</param>
+        /// <param name="order">Order that should be updated</param>
+        /// <param name="request">Update request</param>
+        /// <param name="message">Outgoing message</param>
+        /// <returns>Always false as Kraken does not support update of orders</returns>
+        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        {
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
+            return false;
         }
 
         /// <summary>

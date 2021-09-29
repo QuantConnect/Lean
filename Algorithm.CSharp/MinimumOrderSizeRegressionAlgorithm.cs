@@ -21,22 +21,25 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class BuyBTCWithLessThanOneDollarAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    /// <summary>
+    /// This algorithm asserts that the minimum order size is respected at the moment of
+    /// place an order or update an order
+    /// </summary>
+    public class MinimumOrderSizeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
             SetStartDate(2013, 10, 1);
             SetEndDate(2013, 10, 1);
-            SetCash(1);
             SetBrokerageModel(Brokerages.BrokerageName.Bitfinex, AccountType.Cash);
-            AddCrypto("BTCUSD", Resolution.Minute, Market.Bitfinex);
+            AddCrypto("BTCUSD", Resolution.Hour);
         }
 
         public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
-                // Place an order that would fail because of the size
+                // Place an order that will fail because of the size
                 var invalidOrder = MarketOnOpenOrder("BTCUSD", 0.00002);
                 if (invalidOrder.Status != OrderStatus.Invalid)
                 {
@@ -44,31 +47,37 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Update an order that fails because of the size
-                var validOrder = MarketOnOpenOrder("BTCUSD", 0.0002);
-                var invalidUpdate = validOrder.Update(new UpdateOrderFields()
+                var validOrderOne = MarketOnOpenOrder("BTCUSD", 0.0002, "NotUpdated");
+                validOrderOne.Update(new UpdateOrderFields()
                 {
-                    Quantity = 0.00002m
+                    Quantity = 0.00002m,
+                    Tag = "Updated"
                 });
-
-                if (invalidUpdate.IsSuccess)
-                {
-                    throw new Exception("Update was expected to fail");
-                }
 
                 // Place and update an order that will succeed
-                validOrder = MarketOnOpenOrder("BTCUSD", 0.0002);
-                var validUpdate = validOrder.Update(new UpdateOrderFields()
+                var validOrderTwo = MarketOnOpenOrder("BTCUSD", 0.0002, "NotUpdated");
+                validOrderTwo.Update(new UpdateOrderFields()
                 {
-                    Quantity = 0.002m
+                    Quantity = 0.002m,
+                    Tag = "Updated"
                 });
+            }
+        }
 
-                if (!validUpdate.IsSuccess)
-                {
-                    throw new Exception("Update was expected to succeed");
-                }
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            var order = Transactions.GetOrderById(orderEvent.OrderId);
 
-                // Order to fill the portfolio
-                var closeOrder = MarketOrder("BTCUSD", 0.0002);
+            // Update of validOrderOne is expected to fail
+            if( (order.Id == 2) && (order.LastUpdateTime != null) && (order.Tag == "Updated"))
+            {
+                throw new Exception("Order update expected to fail");
+            }
+
+            // Update of validOrdertwo is expected to succeed
+            if ((order.Id == 3) && (order.LastUpdateTime != null) && (order.Tag == "NotUpdated"))
+            {
+                throw new Exception("Order update expected to succeed");
             }
         }
 
@@ -87,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "40"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -106,15 +115,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$3000.00"},
+            {"Total Fees", "$0.01"},
+            {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "BTCUSD E3"},
-            {"Fitness Score", "0.012"},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-433.212"},
-            {"Portfolio Turnover", "0.025"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -128,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "c880ad4820a90e5e48c22f6fe5a5c7f1"}
+            {"OrderListHash", "dda3d03e8154ae0aad7ee17bdfd306cb"}
         };
     }
 }
