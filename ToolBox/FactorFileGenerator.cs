@@ -126,7 +126,7 @@ namespace QuantConnect.ToolBox
             // If there is no more dividends or splits, return
             if (!orderedDividendSplits.Any())
             {
-                factorFileRows.Add(CreateLastFactorFileRow(factorFileRows));
+                factorFileRows.Add(CreateLastFactorFileRow(factorFileRows, _dailyDataForEquity.Last().Close));
                 return new FactorFile(Symbol.ID.Symbol, factorFileRows);
             }
 
@@ -135,7 +135,8 @@ namespace QuantConnect.ToolBox
             // If there is no more daily equity data to use, return
             if (_lastDateFromEquityData > nextEvent.Time)
             {
-                factorFileRows.Add(CreateLastFactorFileRow(factorFileRows));
+                decimal initialReferencePrice = 1;
+                factorFileRows.Add(CreateLastFactorFileRow(factorFileRows, initialReferencePrice));
                 return new FactorFile(Symbol.ID.Symbol, factorFileRows);
             }
 
@@ -153,14 +154,13 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="factorFileRows">The list of factor file rows</param>
         /// <returns><see cref="FactorFileRow"/></returns>
-        private FactorFileRow CreateLastFactorFileRow(List<FactorFileRow> factorFileRows)
+        private FactorFileRow CreateLastFactorFileRow(List<FactorFileRow> factorFileRows, decimal referencePrice)
         {
-            decimal initialReferencePrice = 1;
             return new FactorFileRow(
                 _dailyDataForEquity.Last().Time.Date,
                 factorFileRows.Last().PriceFactor,
                 factorFileRows.Last().SplitFactor,
-                initialReferencePrice
+                referencePrice
             );
         }
 
@@ -180,15 +180,12 @@ namespace QuantConnect.ToolBox
                 case "Dividend":
                     nextFactorFileRow = CalculateNextDividendFactor(nextEvent, factorFileRows.Last());
                     break;
-
                 case "Split":
                     nextFactorFileRow = CalculateNextSplitFactor(nextEvent, factorFileRows.Last());
                     break;
-
                 case "IntraDayDividendSplit":
                     nextFactorFileRow = CalculateIntradayDividendSplit((IntraDayDividendSplit)nextEvent, factorFileRows.Last());
                     break;
-
                 default:
                     throw new ArgumentException("Unhandled BaseData type for FactorFileGenerator.");
             }
