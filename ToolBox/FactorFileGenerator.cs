@@ -155,10 +155,12 @@ namespace QuantConnect.ToolBox
         /// <returns><see cref="FactorFileRow"/></returns>
         private FactorFileRow CreateLastFactorFileRow(List<FactorFileRow> factorFileRows)
         {
+            decimal initialReferencePrice = 1;
             return new FactorFileRow(
                 _dailyDataForEquity.Last().Time.Date,
                 factorFileRows.Last().PriceFactor,
-                factorFileRows.Last().SplitFactor
+                factorFileRows.Last().SplitFactor,
+                initialReferencePrice
             );
         }
 
