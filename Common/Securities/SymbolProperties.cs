@@ -73,7 +73,9 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// The minimum order size allowed, it goes by base currency
+        /// The minimum order size allowed
+        /// For crypto/forex pairs it's expected to be expressed in base currency
+        /// i.e For BTC/USD the minimum order size allowed with GDAX is 0.0001 BTC
         /// </summary>
         public decimal? MinimumOrderSize
         {

@@ -404,7 +404,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Checks if the order quantity is valid, it means, the order size is bigger than the minimum size allowed
         /// </summary>
-        /// <param name="security"></param>
+        /// <param name="security">The security of the order</param>
         /// <param name="orderQuantity">The quantity of the order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may be invalid</param>
         /// <returns>True if the order quantity is bigger than the minimum allowed, false otherwise</returns>
