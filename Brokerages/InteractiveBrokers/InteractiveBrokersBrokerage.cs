@@ -998,7 +998,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (order.Type == OrderType.OptionExercise)
             {
-                _client.ClientSocket.exerciseOptions(ibOrderId, contract, 1, decimal.ToInt32(order.Quantity), _account, 0);
+                // IB API requires exerciseQuantity to be positive
+                _client.ClientSocket.exerciseOptions(ibOrderId, contract, 1, decimal.ToInt32(order.AbsoluteQuantity), _account, 0);
             }
             else
             {
@@ -1749,6 +1750,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
+                Log.Trace($"InteractiveBrokersBrokerage.HandlePortfolioUpdates(): {e}");
+
+                // notify the transaction handler about all option position updates
+                if (e.Contract.SecType is IB.SecurityType.Option or IB.SecurityType.FutureOption)
+                {
+                    var symbol = MapSymbol(e.Contract);
+
+                    OnOptionNotification(new OptionNotificationEventArgs(symbol, e.Position));
+                }
+
                 _accountHoldingsResetEvent.Reset();
                 if (_loadExistingHoldings)
                 {

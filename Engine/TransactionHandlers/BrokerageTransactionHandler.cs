@@ -25,6 +25,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Util;
 
@@ -164,6 +165,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage.OptionPositionAssigned += (sender, fill) =>
             {
                 HandlePositionAssigned(fill);
+            };
+
+            _brokerage.OptionNotification += (sender, e) =>
+            {
+                HandleOptionNotification(e);
             };
 
             IsActive = true;
@@ -1129,6 +1135,101 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // informing user algorithm that option position has been assigned
             _algorithm.OnAssignmentOrderEvent(fill);
+        }
+
+        /// <summary>
+        /// Option notification event is received and new order events are generated
+        /// </summary>
+        private void HandleOptionNotification(OptionNotificationEventArgs e)
+        {
+            if (_algorithm.Securities.TryGetValue(e.Symbol, out var security))
+            {
+                if (OptionSymbol.IsOptionContractExpired(e.Symbol, CurrentTimeUtc))
+                {
+                    if (e.Position == 0)
+                    {
+                        Log.Trace(
+                            "BrokerageTransactionHandler.HandleOptionNotification(): clearing position for expired option holding: " +
+                            $"Symbol: {e.Symbol.Value}, " +
+                            $"Quantity: {security.Holdings.Quantity}");
+
+                        var quantity = -security.Holdings.Quantity;
+
+                        var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+
+                        EmitOptionNotificationEvents(security, exerciseOrder);
+                    }
+                    else
+                    {
+                        Log.Error("BrokerageTransactionHandler.HandleOptionNotification(): " +
+                            $"unexpected position ({e.Position} instead of zero) " +
+                            $"for expired option contract: {e.Symbol.Value}");
+                    }
+                }
+                else
+                {
+                    // if position is reduced, could be an early exercise or early assignment
+                    if (Math.Abs(e.Position) < security.Holdings.AbsoluteQuantity)
+                    {
+                        // if we are long the option and there is an open exercise order, assume it's an early exercise
+                        if (security.Holdings.IsLong)
+                        {
+                            if (GetOpenOrders(x =>
+                                    x.Symbol == e.Symbol &&
+                                    x.Type == OrderType.OptionExercise)
+                                .FirstOrDefault() is OptionExerciseOrder exerciseOrder)
+                            {
+                                EmitOptionNotificationEvents(security, exerciseOrder);
+                            }
+                        }
+
+                        // if we are short the option and there are no buy orders, assume it's an early assignment
+                        else if (security.Holdings.IsShort)
+                        {
+                            if (!GetOpenOrders(x =>
+                                    x.Symbol == e.Symbol &&
+                                    x.Direction == OrderDirection.Buy)
+                                .Any())
+                            {
+                                var quantity = e.Position - security.Holdings.Quantity;
+
+                                var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+
+                                EmitOptionNotificationEvents(security, exerciseOrder);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private OptionExerciseOrder GenerateOptionExerciseOrder(Security security, decimal quantity)
+        {
+            // generate new exercise order and ticket for the option
+            var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc)
+            {
+                Id = _algorithm.Transactions.GetIncrementOrderId()
+            };
+
+            var ticket = order.ToOrderTicket(_algorithm.Transactions);
+
+            AddOpenOrder(order, ticket);
+
+            Interlocked.Increment(ref _totalOrderCount);
+
+            return order;
+        }
+
+        private void EmitOptionNotificationEvents(Security security, OptionExerciseOrder order)
+        {
+            // generate the order events reusing the option exercise model
+            var option = (Option)security;
+            var orderEvents = option.OptionExerciseModel.OptionExercise(option, order);
+
+            foreach (var orderEvent in orderEvents)
+            {
+                HandleOrderEvent(orderEvent);
+            }
         }
 
         /// <summary>

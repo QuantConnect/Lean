@@ -167,9 +167,9 @@
   // Required for IEX history requests
   "iex-cloud-api-key": "",
 
-  // Required for market data from Coin API 
+  // Required for market data from Coin API
   "coinapi-api-key": "",
-  "coinapi-product": "free", // free, startup, streamer, professional, enterprise 
+  "coinapi-product": "free", // free, startup, streamer, professional, enterprise
 
   // Required for streaming Polygon.io data
   // To get your access token go to https://polygon.io
