@@ -111,11 +111,11 @@ namespace QuantConnect.Lean.Engine.Results
         void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent);
 
         /// <summary>
-        /// Method to attempt to update the <see cref="IResultHandler"/> with various performance metrics.
+        /// Method to update the <see cref="IResultHandler"/> with various performance metrics.
+        /// Called once a day by scheduled event in AlgorithmManager
         /// </summary>
         /// <param name="time">Current time</param>
-        /// <param name="force">Forces a sampling event if true</param>
-        void Sample(DateTime time, bool force = false);
+        void Sample(DateTime time);
 
         /// <summary>
         /// Set the algorithm of the result handler after its been initialized.

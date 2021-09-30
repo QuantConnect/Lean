@@ -97,8 +97,7 @@ namespace QuantConnect.Lean.Engine.Results
             _api = api;
             _job = (LiveNodePacket)job;
             if (_job == null) throw new Exception("LiveResultHandler.Constructor(): Submitted Job type invalid.");
-            PreviousUtcSampleTime = DateTime.UtcNow;
-            _currentUtcDate = PreviousUtcSampleTime.Date;
+            _currentUtcDate = DateTime.UtcNow.Date;
             base.Initialize(job, messagingHandler, api, transactionHandler);
         }
 
@@ -1126,12 +1125,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// Samples portfolio equity, benchmark, and daily performance
         /// </summary>
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
-        /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
-        public override void Sample(DateTime time, bool force = false)
+        public override void Sample(DateTime time)
         {
-            UpdatePortfolioValue(time, force);
-            UpdateBenchmarkValue(time, force);
-            base.Sample(time, force);
+            // Force an update for our values before doing our daily sample
+            UpdatePortfolioValue(time, true);
+            UpdateBenchmarkValue(time, true);
+            base.Sample(time);
         }
 
         /// <summary>
@@ -1149,6 +1148,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
         /// so we ignore extended market hours updates</remarks>
+        /// <param name="time">Time to resolve benchmark value at</param>
         protected override decimal GetBenchmarkValue(DateTime time)
         {
             return _benchmarkValue;

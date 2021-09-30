@@ -183,11 +183,6 @@ namespace QuantConnect.Lean.Engine.Results
         protected decimal CumulativeMaxPortfolioValue;
 
         /// <summary>
-        /// Last time the <see cref="IResultHandler.Sample(DateTime, bool)"/> method was called in UTC
-        /// </summary>
-        protected DateTime PreviousUtcSampleTime;
-
-        /// <summary>
         /// Sampling period for timespans between resamples of the charting equity.
         /// </summary>
         /// <remarks>Specifically critical for backtesting since with such long timeframes the sampled data can get extreme.</remarks>
@@ -441,6 +436,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
         /// so we ignore extended market hours updates</remarks>
+        /// <param name="time">Time to resolve benchmark value at</param>
         protected virtual decimal GetBenchmarkValue(DateTime time)
         {
             return Algorithm.Benchmark.Evaluate(time).SmartRounding();
@@ -451,9 +447,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Called by scheduled event every night at midnight algorithm time
         /// </summary>
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
-        /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
-        /// <remarks>Force is no longer used</remarks>
-        public virtual void Sample(DateTime time, bool force = false)
+        public virtual void Sample(DateTime time)
         {
             var currentPortfolioValue = GetPortfolioValue();
             var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
@@ -470,14 +464,8 @@ namespace QuantConnect.Lean.Engine.Results
             SampleExposure(time, currentPortfolioValue);
             SampleCapacity(time);
 
-            // Update daily portfolio value only once a day on the first point of the day
-            if (PreviousUtcSampleTime.Date != time.Date)
-            {
-                DailyPortfolioValue = currentPortfolioValue;
-            }
-
-            // Update our last sample time
-            PreviousUtcSampleTime = time;
+            // Update daily portfolio value; works because we only call sample once a day
+            DailyPortfolioValue = currentPortfolioValue;
         }
 
         /// <summary>
