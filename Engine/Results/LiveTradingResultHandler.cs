@@ -66,8 +66,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         private bool _sampleChartAlways;
         private bool _userExchangeIsOpen;
-        private decimal _portfolioValue;
-        private decimal _benchmarkValue;
+        private readonly ReferenceWrapper<decimal> _portfolioValue;
+        private readonly ReferenceWrapper<decimal> _benchmarkValue;
         private DateTime _lastChartSampleLogicCheck;
         private readonly Dictionary<string, SecurityExchangeHours> _exchangeHours;
 
@@ -83,6 +83,9 @@ namespace QuantConnect.Lean.Engine.Results
             SetNextStatusUpdate();
             _streamedChartLimit = Config.GetInt("streamed-chart-limit", 12);
             _streamedChartGroupSize = Config.GetInt("streamed-chart-group-size", 3);
+
+            _portfolioValue = new ReferenceWrapper<decimal>(0);
+            _benchmarkValue = new ReferenceWrapper<decimal>(0);
         }
 
         /// <summary>
@@ -711,7 +714,7 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
-            _portfolioValue = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
+            _portfolioValue.Value = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
             AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
 
@@ -1125,11 +1128,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// Samples portfolio equity, benchmark, and daily performance
         /// </summary>
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
-        public override void Sample(DateTime time)
+        public void Sample(DateTime time)
         {
             // Force an update for our values before doing our daily sample
-            UpdatePortfolioValue(time, true);
-            UpdateBenchmarkValue(time, true);
+            UpdatePortfolioValue(time);
+            UpdateBenchmarkValue(time);
             base.Sample(time);
         }
 
@@ -1140,7 +1143,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// so we ignore extended market hours updates</remarks>
         protected override decimal GetPortfolioValue()
         {
-            return _portfolioValue;
+            return _portfolioValue.Value;
         }
 
         /// <summary>
@@ -1151,7 +1154,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time to resolve benchmark value at</param>
         protected override decimal GetBenchmarkValue(DateTime time)
         {
-            return _benchmarkValue;
+            return _benchmarkValue.Value;
         }
 
         /// <summary>
@@ -1222,20 +1225,20 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateBenchmarkValue(DateTime time, bool force)
+        private void UpdateBenchmarkValue(DateTime time, bool force = false)
         {
             if (force || UserExchangeIsOpen(time))
             {
-                _benchmarkValue = base.GetBenchmarkValue(time);
+                _benchmarkValue.Value = base.GetBenchmarkValue(time);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdatePortfolioValue(DateTime time, bool force)
+        private void UpdatePortfolioValue(DateTime time, bool force = false)
         {
             if (force || UserExchangeIsOpen(time))
             {
-                _portfolioValue = base.GetPortfolioValue();
+                _portfolioValue.Value = base.GetPortfolioValue();
             }
         }
 

@@ -35,11 +35,7 @@ namespace QuantConnect.Tests.Engine.Results
         public void DailySampleValueBasedOnMarketHour(bool extendedMarketHoursEnabled)
         {
             var referenceDate = new DateTime(2020, 11, 25);
-            var resultHandler = new TestLiveTradingResultHandler
-            {
-                // market is open
-                InitialSampleTime = referenceDate.AddHours(10)
-            };
+            var resultHandler = new LiveTradingResultHandler();
             resultHandler.Initialize(new LiveNodePacket(),
                 new QuantConnect.Messaging.Messaging(),
                 new Api.Api(), 
@@ -54,39 +50,29 @@ namespace QuantConnect.Tests.Engine.Results
             resultHandler.SetAlgorithm(algo, 100000);
             resultHandler.OnSecuritiesChanged(SecurityChanges.Added(aapl));
 
+            // Add values during market hours, should always update
             algo.Portfolio.CashBook["USD"].AddAmount(1000);
             algo.Portfolio.InvalidateTotalPortfolioValue();
+
             resultHandler.Sample(referenceDate.AddHours(15));
+            Assert.IsTrue(resultHandler.Charts.ContainsKey("Strategy Equity"));
+            Assert.AreEqual(1, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
-            Assert.IsFalse(resultHandler.Charts.ContainsKey("Strategy Equity"), "Should not sample on the same start date");
+            var currentEquityValue = resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last().y;
+            Assert.AreEqual(101000, currentEquityValue);
 
-            // will be ignored based on 'extendedMarketHoursEnabled'
+            // Add value to portfolio, see if portfolio updates with new sample
+            // will be changed to 'extendedMarketHoursEnabled' = true
             algo.Portfolio.CashBook["USD"].AddAmount(10000);
             algo.Portfolio.InvalidateTotalPortfolioValue();
+
             resultHandler.Sample(referenceDate.AddHours(22));
+            Assert.AreEqual(2, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
-            Assert.IsFalse(resultHandler.Charts.ContainsKey("Strategy Equity"), "Should not sample on the same start date");
-
-            resultHandler.Sample(referenceDate.AddHours(24));
-            Assert.IsTrue(resultHandler.Charts.ContainsKey("Strategy Equity"), "Expect sample of date change");
-
-            Assert.AreEqual(extendedMarketHoursEnabled ? 111000 : 101000,
-                resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Single().y);
+            currentEquityValue = resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last().y;
+            Assert.AreEqual(extendedMarketHoursEnabled ? 111000 : 101000, currentEquityValue);
 
             resultHandler.Exit();
-        }
-
-        private class TestLiveTradingResultHandler : LiveTradingResultHandler
-        {
-            public DateTime InitialSampleTime { get; set; }
-            public override void Initialize(AlgorithmNodePacket job,
-                IMessagingHandler messagingHandler,
-                IApi api,
-                ITransactionHandler transactionHandler)
-            {
-                base.Initialize(job, messagingHandler, api, transactionHandler);
-                PreviousUtcSampleTime = InitialSampleTime;
-            }
         }
 
         private class TestDataFeed : IDataFeed
