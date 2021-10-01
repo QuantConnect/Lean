@@ -16,12 +16,15 @@
 
 using System;
 using System.Collections.Generic;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Benchmarks;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -62,6 +65,45 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsNotNull(benchmark);
             Assert.AreEqual(securityType, benchmark.Security.Type);
             Assert.IsNull(_algorithm.RunTimeError);
+        }
+
+        [TestCase(Resolution.Daily)]
+        [TestCase(Resolution.Hour)]
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Second)]
+        public void MisalignedBenchmarkAndAlgorithmTimeZones(Resolution resolution)
+        {
+            // Verify that if we have an algorithm subscribed to a daily resolution and benchmark timezone is not
+            // algorithm time zone that we post an warning via log that statistics will be affected
+
+            // Setup a empty algorithm for the test
+            var algorithm = new QCAlgorithm();
+            var dataManager = new DataManagerStub(algorithm, new MockDataFeed(), liveMode: true);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+
+            // Default benchmark is SPY which is NY TimeZone, subscribe to an equity in our provided
+            // resolution, and then set timezone to UTC.
+            algorithm.AddEquity("AAPL", resolution);
+            algorithm.SetTimeZone(DateTimeZone.Utc);
+            algorithm.PostInitialize();
+
+            // Verify if our log is there (Should only be there in Daily case)
+            switch (resolution)
+            {
+                case Resolution.Daily:
+                    if (algorithm.LogMessages.TryPeek(out string result))
+                    {
+                        Assert.IsTrue(result.Contains("Using a security benchmark of a different timezone", StringComparison.InvariantCulture));
+                    }
+                    else
+                    {
+                        Assert.Fail("Warning was not posted");
+                    }
+                    break;
+                default:
+                    Assert.AreEqual(0, algorithm.LogMessages.Count);
+                    break;
+            }
         }
 
         public class BenchmarkTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper

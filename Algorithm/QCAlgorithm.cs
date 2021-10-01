@@ -562,9 +562,10 @@ namespace QuantConnect.Algorithm
             // Check benchmark timezone against algorithm timezone to warn for misaligned statistics
             if (Benchmark is SecurityBenchmark securityBenchmark)
             {
-                // Only warn on daily resolutions as its statistics will suffer the most
-                var subscription = securityBenchmark.Security.Subscriptions.OrderByDescending(x => x.Resolution).FirstOrDefault();
-                if (subscription?.Resolution == Resolution.Daily && subscription.DataTimeZone != TimeZone)
+                // Only warn on algorithms subscribed to daily resolution as its statistics will suffer the most
+                var subscription = SubscriptionManager.Subscriptions.OrderByDescending(x => x.Resolution).FirstOrDefault();
+                if (subscription?.Resolution == Resolution.Daily && 
+                    MarketHoursDatabase.GetDataTimeZone(securityBenchmark.Security.Symbol.ID.Market, securityBenchmark.Security.Symbol, securityBenchmark.Security.Type) != TimeZone)
                 {
                     Log($"QCAlgorithm.PostInitialize(): Warning: Using a security benchmark of a different timezone ({subscription.DataTimeZone})" +
                         $" than the algorithm TimeZone ({TimeZone}) may lead to skewed and incorrect statistics. Use a higher resolution than daily to minimize.");
