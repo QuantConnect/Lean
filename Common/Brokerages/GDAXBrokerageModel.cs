@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
@@ -31,48 +30,6 @@ namespace QuantConnect.Brokerages
     public class GDAXBrokerageModel : DefaultBrokerageModel
     {
         private readonly BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
-
-        // https://pro.coinbase.com/markets
-        private static readonly Dictionary<string, decimal> MinimumOrderSizes = new Dictionary<string, decimal>
-        {
-            { "BTCUSD", 0.0001m },
-            { "BTCEUR", 0.0001m },
-            { "BTCGBP", 0.0001m },
-
-            { "BCHUSD", 0.01m },
-            { "BCHEUR", 0.01m },
-            { "BCHBTC", 0.01m },
-
-            { "ETHUSD", 0.001m },
-            { "ETHEUR", 0.001m },
-            { "ETHGBP", 0.001m },
-            { "ETHBTC", 0.001m },
-
-            { "LTCUSD", 0.01m },
-            { "LTCEUR", 0.01m },
-            { "LTCGBP", 0.01m },
-            { "LTCBTC", 0.01m },
-
-            { "XRPUSD", 1m },
-            { "XRPEUR", 1m },
-            { "XRPBTC", 1m },
-
-            { "EOSUSD", 0.1m },
-            { "EOSEUR", 0.1m },
-            { "EOSBTC", 0.1m },
-
-            { "XLMUSD", 1m },
-            { "XLMEUR", 1m },
-            { "XLMBTC", 1m },
-
-            { "ETCUSD", 0.1m },
-            { "ETCEUR", 0.1m },
-            { "ETCBTC", 0.1m },
-
-            { "ZRXUSD", 1m },
-            { "ZRXEUR", 1m },
-            { "ZRXBTC", 1m }
-        };
 
         // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
         private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
@@ -124,13 +81,13 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gdax does no support update of orders
+        /// Gdax does not support update of orders
         /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order"></param>
-        /// <param name="request"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be updated</param>
+        /// <param name="request">The requested update to be made to the order</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>GDAX does not support update of orders, so it will always return false</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = _message;
@@ -140,10 +97,10 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Evaluates whether exchange will accept order. Will reject order update
         /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             if (order.BrokerId != null && order.BrokerId.Any())
@@ -152,14 +109,8 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            decimal minimumOrderSize;
-            if (MinimumOrderSizes.TryGetValue(security.Symbol.Value, out minimumOrderSize) &&
-                Math.Abs(order.Quantity) < minimumOrderSize)
+            if(!IsValidOrderSize(security, order.Quantity, out message))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}")
-                );
-
                 return false;
             }
 

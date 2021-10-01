@@ -475,12 +475,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void AttachEventHandlers(ISubscriptionDataSourceReader dataSourceReader, SubscriptionDataSource source)
         {
-            // NOTE: There seems to be some overlap in InvalidSource and CreateStreamReaderError
-            //       this may be worthy of further investigation and potential consolidation of events.
-
-            // handle missing files
             dataSourceReader.InvalidSource += (sender, args) =>
             {
+                if (_config.IsCustomData && !_config.Type.GetBaseDataInstance().IsSparseData())
+                {
+                    OnDownloadFailed(
+                        new DownloadFailedEventArgs(_config.Symbol,
+                            "We could not fetch the requested data. " +
+                            "This may not be valid data, or a failed download of custom data. " +
+                            $"Skipping source ({args.Source.Source})."));
+                    return;
+                }
+
                 switch (args.Source.TransportMedium)
                 {
                     case SubscriptionTransportMedium.LocalFile:
@@ -507,18 +513,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // handle empty files/instantiation errors
                 var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
-                textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
-                {
-                    if (_config.IsCustomData && !_config.Type.GetBaseDataInstance().IsSparseData())
-                    {
-                        OnDownloadFailed(
-                            new DownloadFailedEventArgs(_config.Symbol,
-                                "We could not fetch the requested data. " +
-                                "This may not be valid data, or a failed download of custom data. " +
-                                $"Skipping source ({args.Source.Source})."));
-                    }
-                };
-
                 // handle parser errors
                 textSubscriptionFactory.ReaderError += (sender, args) =>
                 {

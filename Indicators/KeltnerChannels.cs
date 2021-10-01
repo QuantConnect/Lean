@@ -68,7 +68,7 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = period;
 
             //Initialise ATR and SMA
-            AverageTrueRange = new AverageTrueRange(name + "_AverageTrueRange", period, MovingAverageType.Simple);
+            AverageTrueRange = new AverageTrueRange(name + "_AverageTrueRange", period, movingAverageType);
             MiddleBand = movingAverageType.AsIndicator(name + "_MiddleBand", period);
 
             //Compute Lower Band

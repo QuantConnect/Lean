@@ -17,12 +17,12 @@ using System;
 using System.IO;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -44,22 +44,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private static Queue<string> CacheKeys = new Queue<string>(100);
 
         /// <summary>
-        /// Event fired when the specified source is considered invalid, this may
-        /// be from a missing file or failure to download a remote source
-        /// </summary>
-        public override event EventHandler<InvalidSourceEventArgs> InvalidSource;
-
-        /// <summary>
         /// Event fired when an exception is thrown during a call to
         /// <see cref="BaseData.Reader(SubscriptionDataConfig,string,DateTime,bool)"/>
         /// </summary>
         public event EventHandler<ReaderErrorEventArgs> ReaderError;
-
-        /// <summary>
-        /// Event fired when there's an error creating an <see cref="IStreamReader"/> or the
-        /// instantiated <see cref="IStreamReader"/> has no data.
-        /// </summary>
-        public event EventHandler<CreateStreamReaderErrorEventArgs> CreateStreamReaderError;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
@@ -116,10 +104,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 cache = _shouldCacheDataPoints ? new List<BaseData>(30000) : null;
                 using (var reader = CreateStreamReader(source))
                 {
-                    // if the reader doesn't have data then we're done with this subscription
-                    if (reader == null || reader.EndOfStream)
+                    if (reader == null)
                     {
-                        OnCreateStreamReaderError(_date, source);
+                        // if the reader doesn't have data then we're done with this subscription
                         yield break;
                     }
 
@@ -217,17 +204,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Event invocator for the <see cref="InvalidSource"/> event
-        /// </summary>
-        /// <param name="source">The <see cref="SubscriptionDataSource"/> that was invalid</param>
-        /// <param name="exception">The exception if one was raised, otherwise null</param>
-        private void OnInvalidSource(SubscriptionDataSource source, Exception exception)
-        {
-            var handler = InvalidSource;
-            if (handler != null) handler(this, new InvalidSourceEventArgs(source, exception));
-        }
-
-        /// <summary>
         /// Event invocator for the <see cref="ReaderError"/> event
         /// </summary>
         /// <param name="line">The line that caused the exception</param>
@@ -236,17 +212,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var handler = ReaderError;
             if (handler != null) handler(this, new ReaderErrorEventArgs(line, exception));
-        }
-
-        /// <summary>
-        /// Event invocator for the <see cref="CreateStreamReaderError"/> event
-        /// </summary>
-        /// <param name="date">The date of the source</param>
-        /// <param name="source">The source that caused the error</param>
-        private void OnCreateStreamReaderError(DateTime date, SubscriptionDataSource source)
-        {
-            var handler = CreateStreamReaderError;
-            if (handler != null) handler(this, new CreateStreamReaderErrorEventArgs(date, source));
         }
 
         /// <summary>
