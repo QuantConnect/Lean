@@ -2530,6 +2530,75 @@ namespace QuantConnect.Algorithm
 
             SubscriptionManager.RemoveConsolidator(symbol, consolidator);
         }
+        
+        /// <summary>
+        /// Warms up a given list of indicators with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicators we want</param>
+        /// <param name="indicators">The indicators we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicators</param>
+        /// <param name="resolution">The resolution</param>
+        public void IndicatorBatchUpdate(Symbol symbol, IEnumerable<IIndicator> indicators, int period, Resolution resolution)
+        {
+            var history = History(new []{symbol}, period, resolution);
+            if (history == Enumerable.Empty<Slice>()) return;
+            dynamic handler;
+
+            foreach(var indicator in indicators)
+            {
+                if (indicator is IndicatorBase<IndicatorDataPoint>)
+                {
+                    handler = new Action<BaseData>(data => indicator.Update(new IndicatorDataPoint(data.Symbol, data.EndTime, data.Value)));
+                }
+                else if (indicator is IndicatorBase<TradeBar>)
+                {
+                    handler = new Action<TradeBar>(data => indicator.Update(data));
+                }
+                else if (indicator is IndicatorBase<QuoteBar>)
+                {
+                    handler = new Action<QuoteBar>(data => indicator.Update(data));
+                }
+                else 
+                {
+                    handler = new Action<BaseData>(data => indicator.Update(data));
+                }
+                var timeSpan = resolution.ToTimeSpan();
+                WarmUpIndicatorImpl(symbol, timeSpan, handler, history);
+
+                if (!indicator.IsReady)
+                {
+                    Debug($"Warning! Indicator {indicator.Name} for Symbol {symbol.ID.ToString()} not ready after IndicatorBatchUpdate. " + 
+                          $"Choose a sufficient period and make sure the required historical data is available. ");
+                }
+            }
+        }
+
+        public void IndicatorBatchUpdate(Symbol symbol, IIndicator indicator, int period, Resolution resolution)
+        {
+            IndicatorBatchUpdate(symbol, new List<IIndicator>(){indicator}, period, resolution);
+        }
+        
+        /// <summary>
+        /// Pushes historical data through a consolidator
+        /// </summary>
+        /// <param name="symbol">The symbol whose consolidator we want</param>
+        /// <param name="indicators">The consolidator we want to push historical data through</param>
+        /// <param name="period">The necessary period for the history request</param>
+        /// <param name="resolution">The resolution</param>
+        public void ConsolidatorBatchUpdate(Symbol symbol, IDataConsolidator consolidator, int period, Resolution resolution)
+        {
+            var history = History(new []{symbol}, period, resolution);
+            if (history == Enumerable.Empty<Slice>()) return;
+            var inputType = consolidator.InputType;
+            foreach(var slice in history)
+            {
+                var data = slice.Get(inputType);
+                if (data.ContainsKey(symbol))
+                {
+                    consolidator.Update(data[symbol]);
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the default consolidator for the specified symbol and resolution
