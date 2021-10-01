@@ -70,6 +70,7 @@ class SymbolData:
         self.ema = ExponentialMovingAverage(period)
         self.avgSpread = AverageBidAskSpreadIndicator(period)
         indicators.extend([self.ema, self.avgSpread])
+        self.rollingWindow = deque(maxlen=period)
         self.consolidator = QuoteBarConsolidator(timedelta(minutes=1))
         self.consolidator.DataConsolidated += self.OnDataConsolidated
         algorithm.SubscriptionManager.AddConsolidator(security.Symbol, self.consolidator)
@@ -83,6 +84,7 @@ class SymbolData:
     def OnDataConsolidated(self, sender, quoteBar):
         self.ema.Update(quoteBar.Time, quoteBar.Ask.Close)
         self.avgSpread.Update(quoteBar)
+        self.rollingWindow.appendleft(quoteBar)
 
 
     def LogIndicatorStates(self, indicators):
