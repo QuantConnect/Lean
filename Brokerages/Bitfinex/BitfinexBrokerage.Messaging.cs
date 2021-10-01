@@ -443,8 +443,8 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                     if (orderFee.Value.Currency != baseCurrency)
                     {
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UnexpectedFeeCurrency", $"Unexpected fee currency {orderFee.Value.Currency} for symbol {symbol}. OrderId {order.Id}. BrokerageOrderId {brokerId}. " +
-                            $"Algorithm account type should be {AccountType.Margin}."));
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "UnexpectedFeeCurrency", $"Unexpected fee currency {orderFee.Value.Currency} for symbol {symbol}. OrderId {order.Id}. BrokerageOrderId {brokerId}. " +
+                            "Algorithm account type should be set to Margin to match brokerage."));
                     }
                     else
                     {
