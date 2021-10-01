@@ -963,6 +963,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (!_completeOrders.TryGetValue(orderEvent.OrderId, out order))
                 {
                     Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to locate open Order with id " + orderEvent.OrderId);
+                    LogOrderEvent(orderEvent);
                     return;
                 }
 
@@ -973,6 +974,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (!_completeOrderTickets.TryGetValue(orderEvent.OrderId, out ticket))
                 {
                     Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to resolve open ticket: " + orderEvent.OrderId);
+                    LogOrderEvent(orderEvent);
                     return;
                 }
                 _cancelPendingOrders.UpdateOrRemove(order.Id, orderEvent.Status);
@@ -1103,6 +1105,20 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // unexpected error, we need to close down shop
                     _algorithm.SetRuntimeError(err, "Order Event Handler");
                 }
+            }
+
+            LogOrderEvent(orderEvent);
+        }
+
+        /// <summary>
+        /// Debug logging helper method, called after HandleOrderEvent has finished updating status, price and quantity
+        /// </summary>
+        /// <param name="e">The order event</param>
+        private static void LogOrderEvent(OrderEvent e)
+        {
+            if (Log.DebuggingEnabled)
+            {
+                Log.Debug("BrokerageTransactionHandler.LogOrderEvent(): " + e);
             }
         }
 
