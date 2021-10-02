@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [TestCase(nameof(BasicTemplateAlgorithm), true)]
-        [TestCase(nameof(BasicTemplateDailyAlgorithm), false)]
+        [TestCase(nameof(BasicTemplateDailyAlgorithm), true)]
         [TestCase(nameof(ResolutionSwitchingAlgorithm), false)]
         public void SamplesNotMisalignedRelative(string algorithm, bool shouldSucceed)
         {
@@ -283,8 +283,8 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 0,                      // First sample at start 10/7 12AM, zero because no change has occurred yet
                 0,                      // 10/7 - 10/8 <- We get first data at 12AM on 10/8
-                0,                      // 10/8 - 10/9 <- We buy at open; portfolio doesn't update until after event at 12AM on 10/9
-                -0.01123413,            // 10/9 - 10/10
+                -0.011770290000000001,  // 10/8 - 10/9 <- We buy at with OnMarketOpen order
+                0.0005425408,           // 10/9 - 10/10
                 0.02211161,             // 10/10 - 10/11
                 0.0062483               // 10/11 12AM - 10/11 8PM
             };
@@ -300,8 +300,8 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
                 0,                          // 10/7 - 10/8 <- We get first data at 12AM on 10/8
-                0,                          // 10/8 - 10/9 <- We buy at open; portfolio doesn't update until after event at 12AM on 10/9 so we haven't updated yet
-                -0.011234131000000052,      // 10/9 - 10/10
+                -0.011770286000000052,      // 10/8 - 10/9 <- We buy at with OnMarketOpen order
+                0.000542540861101854,       // 10/9 - 10/10
                 0.022111611742941455,       // 10/10 - 10/11
                 0.0062483003408066885       // 10/11 - 10/12
             };
@@ -448,8 +448,8 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 0,                      // First sample at start 10/7 12AM, zero because no change has occurred yet
                 0,                      // 10/7 - 10/8 <- We get first data at 12AM on 10/8
-                0,                      // 10/8 - 10/9 <- We buy at open; portfolio doesn't update until after event at 12AM on 10/9
-                -0.01115368,            // 10/9 - 10/10
+                -0.01112113,            // 10/8 - 10/9 <- We buy at with OnMarketOpen order
+                -3.291606E-05,          // 10/9 - 10/10
                 0.01100997,             // 10/10 - 10/11
                 0.005968033             // 10/11 12AM - 10/11 8PM
             };
@@ -465,8 +465,8 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
                 0,                          // 10/7 - 10/8 <- We get first data at 12AM on 10/8
-                0,                          // 10/8 - 10/9 <- We buy at open; portfolio doesn't update until after event at 12AM on 10/9 so we haven't updated yet
-                -0.011153677000000025,      // 10/9 - 10/10
+                -0.011121126999999979,      // 10/8 - 10/9 <- We buy at with OnMarketOpen order
+                -3.29160637250732E-05,      // 10/9 - 10/10
                 0.011009966611364035,       // 10/10 - 10/11
             };
 
