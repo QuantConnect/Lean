@@ -50,7 +50,7 @@ namespace QuantConnect.Securities
             
             if (!SecurityDefinition.TryRead(_dataProvider, securitiesDefinitionKey, out _securityDefinitions))
             {
-                Log.Error($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {securitiesDefinitionKey}");
+                Log.Trace($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {securitiesDefinitionKey}");
             }
 
             _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
