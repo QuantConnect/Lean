@@ -103,7 +103,7 @@ class SymbolData:
 
 
 class AverageBidAskSpreadIndicator(PythonIndicator):
-    '''Ihe AverageBidAskSpreadIndicator computes the bid-ask spread and smoothes it over a given period.'''
+    '''The AverageBidAskSpreadIndicator computes the bid-ask spread and smoothes it over a given period.'''
     def __init__(self, period):
         self.period = period
         self.Name = self.__class__.__name__
