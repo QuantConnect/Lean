@@ -502,9 +502,12 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Emit stream tick
         /// </summary>
         /// <param name="tick"></param>
-        public void EmitTick(Tick tick)
+        private void EmitTick(Tick tick)
         {
-            _aggregator.Update(tick);
+            lock (TickLocker)
+            {
+                _aggregator.Update(tick);
+            }
         }
 
         /// <summary>
