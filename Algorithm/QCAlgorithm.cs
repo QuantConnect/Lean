@@ -564,10 +564,11 @@ namespace QuantConnect.Algorithm
             {
                 // Only warn on algorithms subscribed to daily resolution as its statistics will suffer the most
                 var subscription = SubscriptionManager.Subscriptions.OrderByDescending(x => x.Resolution).FirstOrDefault();
-                if (subscription?.Resolution == Resolution.Daily && 
-                    MarketHoursDatabase.GetDataTimeZone(securityBenchmark.Security.Symbol.ID.Market, securityBenchmark.Security.Symbol, securityBenchmark.Security.Type) != TimeZone)
+                var benchmarkTimeZone = MarketHoursDatabase.GetDataTimeZone(securityBenchmark.Security.Symbol.ID.Market,
+                    securityBenchmark.Security.Symbol, securityBenchmark.Security.Type);
+                if ((subscription?.Resolution == Resolution.Daily || UniverseSettings.Resolution == Resolution.Daily) && benchmarkTimeZone != TimeZone)
                 {
-                    Log($"QCAlgorithm.PostInitialize(): Warning: Using a security benchmark of a different timezone ({subscription.DataTimeZone})" +
+                    Log($"QCAlgorithm.PostInitialize(): Warning: Using a security benchmark of a different timezone ({benchmarkTimeZone})" +
                         $" than the algorithm TimeZone ({TimeZone}) may lead to skewed and incorrect statistics. Use a higher resolution than daily to minimize.");
                 }
             }
