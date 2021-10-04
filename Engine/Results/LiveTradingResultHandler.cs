@@ -66,8 +66,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         private bool _sampleChartAlways;
         private bool _userExchangeIsOpen;
-        private readonly ReferenceWrapper<decimal> _portfolioValue;
-        private readonly ReferenceWrapper<decimal> _benchmarkValue;
+        private ReferenceWrapper<decimal> _portfolioValue;
+        private ReferenceWrapper<decimal> _benchmarkValue;
         private DateTime _lastChartSampleLogicCheck;
         private readonly Dictionary<string, SecurityExchangeHours> _exchangeHours;
 
@@ -714,7 +714,8 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
-            _portfolioValue.Value = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
+            DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
+            _portfolioValue = new ReferenceWrapper<decimal>(startingPortfolioValue);
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
             AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
 
@@ -1229,7 +1230,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (force || UserExchangeIsOpen(time))
             {
-                _benchmarkValue.Value = base.GetBenchmarkValue(time);
+                _benchmarkValue = new ReferenceWrapper<decimal>(base.GetBenchmarkValue(time));
             }
         }
 
@@ -1238,7 +1239,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (force || UserExchangeIsOpen(time))
             {
-                _portfolioValue.Value = base.GetPortfolioValue();
+                _portfolioValue = new ReferenceWrapper<decimal>(base.GetPortfolioValue());
             }
         }
 
