@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -51,9 +52,32 @@ namespace QuantConnect.Brokerages
         public override IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
             return AccountType == AccountType.Margin
-                ? new SecurityMarginModel(_defaultLeverage)
+                ? new SecurityMarginModel(GetLeverage(security))
                 : new CashBuyingPowerModel();
         }
+
+        /// <summary>
+        /// Gets the brokerage's leverage for the specified security
+        /// </summary>
+        /// <param name="security">The security's whose leverage we seek</param>
+        /// <returns>The leverage for the specified security</returns>
+        public override decimal GetLeverage(Security security)
+        {
+            if (AccountType == AccountType.Cash)
+            {
+                return 1m;
+            }
+
+            return _defaultLeverage;
+        }
+
+        /// <summary>
+        /// Provides FTX fee model
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        public override IFeeModel GetFeeModel(Security security)
+            => new FTXFeeModel();
 
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
         {
@@ -74,10 +98,10 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = 
+            message =
                 new BrokerageMessageEvent(
-                    BrokerageMessageType.Warning, 
-                    0, 
+                    BrokerageMessageType.Warning,
+                    0,
                     "You must cancel and re-create instead.");
             return false;
         }
