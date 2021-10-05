@@ -13,65 +13,53 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
-using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm reproduces GH issue 3781
+    /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
+    /// framework you can use for designing an algorithm.
     /// </summary>
-    public class SetHoldingsMarketOnOpenRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="using quantconnect" />
+    /// <meta name="tag" content="trading and orders" />
+    public class BasicTemplateHourlyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _aapl;
+        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 11);    //Set End Date
+            SetCash(100000);             //Set Strategy Cash
 
-            AddEquity("SPY");
-            _aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
+            // Find more symbols here: http://quantconnect.com/data
+            // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
+            // Futures Resolution: Tick, Second, Minute
+            // Options Resolution: Minute Only.
+            AddEquity("SPY", Resolution.Hour);
+
+            // There are other assets with similar methods. See "Selecting Options" etc for more details.
+            // AddFuture, AddForex, AddCfd, AddOption
         }
 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
             if (!Portfolio.Invested)
             {
-                if (Securities[_aapl].HasData)
-                {
-                    SetHoldings(_aapl, 1);
-                    var orderTicket = Transactions.GetOpenOrderTickets(_aapl).Single();
-                }
+                SetHoldings(_spy, 1);
+                Debug("Purchased Stock");
             }
-        }
-
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            if (orderEvent.Status == OrderStatus.Submitted)
-            {
-                var orderTickets = Transactions.GetOpenOrderTickets(_aapl).Single();
-            }
-            else
-            {
-                // should be filled
-                var orderTickets = Transactions.GetOpenOrderTickets(_aapl).ToList(ticket => ticket);
-                if (!orderTickets.IsNullOrEmpty())
-                {
-                    throw new Exception($"We don't expect any open order tickets: {orderTickets[0]}");
-                }
-            }
-
-            if (orderEvent.OrderId > 1)
-            {
-                throw new Exception($"We only expect 1 order to be placed: {orderEvent}");
-            }
-            Debug($"OnOrderEvent: {orderEvent}");
         }
 
         /// <summary>
@@ -92,31 +80,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "61.726%"},
-            {"Drawdown", "1.800%"},
+            {"Compounding Annual Return", "227.693%"},
+            {"Drawdown", "2.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.661%"},
-            {"Sharpe Ratio", "2.551"},
-            {"Probabilistic Sharpe Ratio", "54.049%"},
+            {"Net Profit", "1.529%"},
+            {"Sharpe Ratio", "8.889"},
+            {"Probabilistic Sharpe Ratio", "67.609%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.77"},
-            {"Beta", "0.66"},
-            {"Annual Standard Deviation", "0.212"},
-            {"Annual Variance", "0.045"},
-            {"Information Ratio", "-8.483"},
-            {"Tracking Error", "0.17"},
-            {"Treynor Ratio", "0.818"},
-            {"Total Fees", "$32.32"},
-            {"Estimated Strategy Capacity", "$190000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Fitness Score", "0.203"},
+            {"Alpha", "-0.005"},
+            {"Beta", "0.996"},
+            {"Annual Standard Deviation", "0.222"},
+            {"Annual Variance", "0.049"},
+            {"Information Ratio", "-14.564"},
+            {"Tracking Error", "0.001"},
+            {"Treynor Ratio", "1.978"},
+            {"Total Fees", "$3.44"},
+            {"Estimated Strategy Capacity", "$110000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Fitness Score", "0.247"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "34.202"},
-            {"Portfolio Turnover", "0.203"},
+            {"Sortino Ratio", "12.105"},
+            {"Return Over Maximum Drawdown", "112.047"},
+            {"Portfolio Turnover", "0.249"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -130,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "a07e746c2480aad04e9b00433a0dc94a"}
+            {"OrderListHash", "f409be3a7c63d9c1394c2e6c005a15ee"}
         };
     }
 }

@@ -27,7 +27,7 @@ class SectorWeightingFrameworkAlgorithm(QCAlgorithm):
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.SetStartDate(2014, 4, 3)
+        self.SetStartDate(2014, 4, 2)
         self.SetEndDate(2014, 4, 6)
         self.SetCash(100000)
 

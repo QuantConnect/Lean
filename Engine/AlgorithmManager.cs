@@ -165,6 +165,13 @@ namespace QuantConnect.Lean.Engine
                 }
             }
 
+            // Schedule a daily event for sampling at midnight every night
+            algorithm.Schedule.On("Daily Sampling", algorithm.Schedule.DateRules.EveryDay(),
+                algorithm.Schedule.TimeRules.Midnight, () =>
+            {
+                results.Sample(algorithm.UtcTime);
+            });
+
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
@@ -191,11 +198,6 @@ namespace QuantConnect.Lean.Engine
 
                 time = timeSlice.Time;
                 DataPoints += timeSlice.DataPointCount;
-
-                // We need to sample at the top of the loop in case we have a strategy
-                // with no data added. Time pulses would be emitted between days, and
-                // would cause us to skip sampling of the portfolio in those dead days.
-                results.Sample(time);
 
                 if (backtestMode)
                 {
@@ -304,11 +306,11 @@ namespace QuantConnect.Lean.Engine
                 // security prices got updated
                 algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
-                // fire real time events after we've updated based on the new data
-                realtime.SetTime(timeSlice.Time);
-
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
+
+                // fire real time events after we've updated based on the new data
+                realtime.SetTime(timeSlice.Time);
 
                 // process end of day delistings
                 ProcessDelistedSymbols(algorithm, delistings);
@@ -670,7 +672,7 @@ namespace QuantConnect.Lean.Engine
             SetStatus(AlgorithmStatus.Completed);
 
             //Take final samples:
-            results.Sample(time, force: true);
+            results.Sample(time);
 
         } // End of Run();
 

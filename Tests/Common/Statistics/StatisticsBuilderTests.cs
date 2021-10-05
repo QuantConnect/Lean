@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 6, 16, 0, 0), DateTimeKind.Utc), 0.083333333333333m * 100m)
             };
 
-            Assert.Throws<Exception>(() =>
+            Assert.Throws<ArgumentException>(() =>
             {
                 StatisticsBuilder.Generate(
                     new List<Trade>(),
@@ -71,61 +71,6 @@ namespace QuantConnect.Tests.Common.Statistics
                     1,
                     null);
             }, "Misaligned values provided, but we still generate statistics");
-        }
-
-        [Test]
-        public void Generate_HandlesMultipleEntriesPerDay_ResamplesProperly()
-        {
-            var testBenchmarkPoints = new List<ChartPoint>
-            {
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 1, 0, 0, 0), DateTimeKind.Utc), 0), // Should be resampled away
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 1, 16, 0, 0), DateTimeKind.Utc), 100),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 2, 16, 0, 0), DateTimeKind.Utc), 102),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 3, 0, 0, 0), DateTimeKind.Utc), 0), // Should be resampled away
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 3, 16, 0, 0), DateTimeKind.Utc), 110),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 4, 16, 0, 0), DateTimeKind.Utc), 110),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 5, 16, 0, 0), DateTimeKind.Utc), 120),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 6, 16, 0, 0), DateTimeKind.Utc), 130),
-            };
-
-            var testEquityPoints = new List<ChartPoint>
-            {
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 1, 16, 0, 0), DateTimeKind.Utc), 100000),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 2, 16, 0, 0), DateTimeKind.Utc), 102000),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 3, 16, 0, 0), DateTimeKind.Utc), 110000),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 4, 16, 0, 0), DateTimeKind.Utc), 110000),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 5, 16, 0, 0), DateTimeKind.Utc), 120000),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 6, 16, 0, 0), DateTimeKind.Utc), 130000),
-            };
-
-            var testPerformancePoints = new List<ChartPoint>
-            {
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 1, 9, 30, 0), DateTimeKind.Utc), 500000m * 100m),             // Should be resampled away
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 1, 10, 30, 0), DateTimeKind.Utc), 1m * 100m),                 // Should be resampled away
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 1, 11, 30, 0), DateTimeKind.Utc), 2m * 100m),                 // Should be resampled away
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 1, 16, 0, 0), DateTimeKind.Utc), 100000m * 100m),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 2, 4, 0, 0), DateTimeKind.Utc), 50m * 100m),                  // Should be resampled away
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 2, 16, 0, 0), DateTimeKind.Utc), 0.02m * 100m),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 3, 16, 0, 0), DateTimeKind.Utc), 0.0784313725490196m * 100m),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 4, 16, 0, 0), DateTimeKind.Utc), 0),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 5, 16, 0, 0), DateTimeKind.Utc), 0.090909090909090m * 100m),
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 6, 0, 0, 0), DateTimeKind.Utc), 0m * 100m),                   // Should be resampled away
-                new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 6, 16, 0, 0), DateTimeKind.Utc), 0.083333333333333m * 100m)
-            };
-
-            var performance = StatisticsBuilder.Generate(
-                new List<Trade>(),
-                new SortedDictionary<DateTime, decimal>(),
-                testEquityPoints,
-                testPerformancePoints,
-                testBenchmarkPoints,
-                100000m,
-                0m,
-                1,
-                null);
-
-            Assert.AreEqual(1, Math.Round(performance.TotalPerformance.PortfolioStatistics.Beta, 5));
-            Assert.AreEqual(0, performance.TotalPerformance.PortfolioStatistics.Drawdown);
         }
     }
 }
