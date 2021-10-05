@@ -199,11 +199,6 @@ namespace QuantConnect.Lean.Engine
                 time = timeSlice.Time;
                 DataPoints += timeSlice.DataPointCount;
 
-                // We need to sample at the top of the loop in case we have a strategy
-                // with no data added. Time pulses would be emitted between days, and
-                // would cause us to skip sampling of the portfolio in those dead days.
-
-
                 if (backtestMode)
                 {
                     if (algorithm.Portfolio.TotalPortfolioValue <= 0)
