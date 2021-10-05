@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 new ChartPoint(DateTime.SpecifyKind(new DateTime(2019, 1, 6, 16, 0, 0), DateTimeKind.Utc), 0.083333333333333m * 100m)
             };
 
-            Assert.Throws<Exception>(() =>
+            Assert.Throws<ArgumentException>(() =>
             {
                 StatisticsBuilder.Generate(
                     new List<Trade>(),
