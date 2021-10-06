@@ -29,7 +29,7 @@ namespace QuantConnect.Brokerages
         private const decimal _defaultLeverage = 3m;
 
         /// <summary>
-        /// Constructor for Kraken brokerage model
+        /// Creates an instance of <see cref="FTXBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
         public FTXBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
         /// For cash accounts, leverage = 1 is used.
-        /// For margin trading, max leverage = 5
+        /// For margin trading, FTX supports up to 20x leverage, default is 3xs 
         /// </summary>
         /// <param name="security">The security to get a buying power model for</param>
         /// <returns>The buying power model for this brokerage/security</returns>
@@ -79,23 +79,16 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
             => new FTXFeeModel();
 
-        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
-        {
-            var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Crypto] = Market.FTX;
-            return map.ToReadOnlyDictionary();
-        }
-
         /// <summary>
         /// Please note that the order's queue priority will be reset, and the order ID of the modified order will be different from that of the original order.
         /// Also note: this is implemented as cancelling and replacing your order.
         /// There's a chance that the order meant to be cancelled gets filled and its replacement still gets placed.
         /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order"></param>
-        /// <param name="request"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be updated</param>
+        /// <param name="request">The requested update to be made to the order</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message =
@@ -104,6 +97,13 @@ namespace QuantConnect.Brokerages
                     0,
                     "You must cancel and re-create instead.");
             return false;
+        }
+
+        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
+        {
+            var map = DefaultMarketMap.ToDictionary();
+            map[SecurityType.Crypto] = Market.FTX;
+            return map.ToReadOnlyDictionary();
         }
     }
 }
