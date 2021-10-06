@@ -327,6 +327,24 @@ def Test4(dataFrame):
             }
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void BackwardsCompatibilityDataFrame_Subset(bool cache)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.droplevel('symbol')
+    data = data[['lastprice', 'quantity']][:-1]").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
