@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -59,11 +59,12 @@ namespace QuantConnect.ToolBox.BinanceDownloader
                         .GetValue("tickSize");
 
                     var lotFilter = symbol.Filters
-                        .First(f => f.GetValue("filterType").ToString() == "LOT_SIZE")
-                        .GetValue("stepSize");
+                        .First(f => f.GetValue("filterType").ToString() == "LOT_SIZE");
 
+                    var stepSize = lotFilter.GetValue("stepSize");
+                    var minSize = lotFilter.GetValue("minQty");
 
-                    yield return $"binance,{symbol.Name},crypto,{symbol.Name},{symbol.QuoteAsset},1,{priceFilter},{lotFilter},{symbol.Name}";
+                    yield return $"binance,{symbol.Name},crypto,{symbol.Name},{symbol.QuoteAsset},1,{priceFilter},{stepSize},{symbol.Name},{minSize}";
                 }
             }
         }
