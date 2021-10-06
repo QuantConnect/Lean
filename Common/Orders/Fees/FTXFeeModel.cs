@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -42,29 +43,26 @@ namespace QuantConnect.Orders.Fees
         {
             var order = parameters.Order;
             var security = parameters.Security;
-            decimal fee = TakerFee;
             var props = order.Properties as FTXOrderProperties;
 
+            //taker by default
+            var fee = TakerFee;
+            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            unitPrice *= security.SymbolProperties.ContractMultiplier;
+            var currency = security.QuoteCurrency.Symbol;
+
+            //maker if limit
             if (order.Type == OrderType.Limit && (props?.PostOnly == true || !order.IsMarketable))
             {
-                // limit order posted to the order book
-                fee = MakerFee;
+                fee =  MakerFee;
+                unitPrice = 1;
+                currency =((IBaseCurrencySymbol)security).BaseCurrencySymbol;
             }
-
-            // get order value in quote currency
-            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
-            if (order.Type == OrderType.Limit)
-            {
-                // limit order posted to the order book
-                unitPrice = ((LimitOrder)order).LimitPrice;
-            }
-
-            unitPrice *= security.SymbolProperties.ContractMultiplier;
 
             // apply fee factor, currently we do not model 30-day volume, so we use the first tier
             return new OrderFee(new CashAmount(
                 unitPrice * order.AbsoluteQuantity * fee,
-                security.QuoteCurrency.Symbol));
+                currency));
         }
     }
 }

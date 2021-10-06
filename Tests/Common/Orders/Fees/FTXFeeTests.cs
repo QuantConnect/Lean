@@ -34,12 +34,13 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [SetUp]
         public void Initialize()
         {
-            var tz = TimeZones.NewYork;
+            var spdb = SymbolPropertiesDatabase.FromDataFolder();
+            var tz = TimeZones.Utc;
             _xrpusdt = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USDT", 0, 1),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("XRP/USDT", SecurityType.Crypto, Market.FTX), Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("XRP/USDT", "USDT", 1, 0.01m, 0.00000001m, string.Empty),
+                spdb.GetSymbolProperties(Market.FTX, Symbol.Create("XRP/USDT", SecurityType.Crypto, Market.FTX), SecurityType.Crypto, "USDT"),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
@@ -49,7 +50,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash(Currencies.USD, 0, 10),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("ETH/USD", SecurityType.Crypto, Market.FTX), Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("ETH/USD", Currencies.USD, 1, 0.01m, 0.00000001m, string.Empty),
+                spdb.GetSymbolProperties(Market.FTX, Symbol.Create("ETH/USD", SecurityType.Crypto, Market.FTX), SecurityType.Crypto, Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
@@ -66,8 +67,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 )
             );
 
-            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            // 100 (price) * 0.0007 (taker fee)
+            Assert.AreEqual(_ethusd.QuoteCurrency.Symbol, fee.Value.Currency);
+            // 100 (price) * 0.0007 (taker fee, in quote currency)
             Assert.AreEqual(0.07m, fee.Value.Amount);
         }
 
@@ -81,9 +82,9 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 )
             );
 
-            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            // 100 (price) * 0.0002 (maker fee)
-            Assert.AreEqual(0.02m, fee.Value.Amount);
+            Assert.AreEqual(_ethusd.BaseCurrencySymbol, fee.Value.Currency);
+            // 0.0002 (maker fee, in base currency)
+            Assert.AreEqual(0.0002, fee.Value.Amount);
         }
 
         [Test]

@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
@@ -24,11 +23,12 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Tests.Brokerages;
-using QuantConnect.Tests.Common.Data.Auxiliary;
+using System;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
+    [TestFixture]
     public class FTXBrokerageModelTests
     {
         private FTXBrokerageModel _brokerageModel;
@@ -43,14 +43,14 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         protected Crypto Security =>
             new(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 1m),
                 new SubscriptionDataConfig(
                     typeof(TradeBar),
                     _symbol,
                     Resolution.Minute,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
+                    TimeZones.Utc,
+                    TimeZones.Utc,
                     false,
                     false,
                     false
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetCashBuyingPowerModelTest()
         {
-            FTXBrokerageModel model = new FTXBrokerageModel(AccountType.Cash);
+            var model = new FTXBrokerageModel(AccountType.Cash);
             Assert.IsInstanceOf<CashBuyingPowerModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(1, model.GetLeverage(Security));
         }
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetSecurityMarginModelTest()
         {
-            FTXBrokerageModel model = new FTXBrokerageModel(AccountType.Margin);
+            var model = new FTXBrokerageModel(AccountType.Margin);
             Assert.IsInstanceOf<SecurityMarginModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(3M, model.GetLeverage(Security));
         }
