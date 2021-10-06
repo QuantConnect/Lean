@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
@@ -78,6 +79,17 @@ namespace QuantConnect.Brokerages
         /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
             => new FTXFeeModel();
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public override IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("BTC/USD", SecurityType.Crypto, Market.FTX);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
+        }
 
         /// <summary>
         /// Please note that the order's queue priority will be reset, and the order ID of the modified order will be different from that of the original order.
