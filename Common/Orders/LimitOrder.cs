@@ -28,7 +28,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Limit price for this order.
         /// </summary>
-        public decimal LimitPrice { get; set; }
+        public decimal LimitPrice { get; internal set; }
 
         /// <summary>
         /// Limit Order Type
