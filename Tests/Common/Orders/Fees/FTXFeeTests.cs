@@ -57,13 +57,60 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             _ethusd.SetMarketPrice(new Tick(DateTime.UtcNow, _ethusd.Symbol, 100, 100));
         }
 
-        [Test]
-        public void ReturnsTakerFeeInQuoteCurrencyInAccountCurrency()
+        [TestCase(-1)]
+        [TestCase(1)]
+        public void ReturnsTakerFeeInQuoteCurrency(decimal quantity)
         {
+            //{
+            //    "channel": "fills",
+            //    "type": "update",
+            //    "data": {
+            //        "id": 4199228419,
+            //        "market": "XRP/USDT",
+            //        "future": null,
+            //        "baseCurrency": "XRP",
+            //        "quoteCurrency": "USDT",
+            //        "type": "order",
+            //        "side": "sell",
+            //        "price": 1.07225,
+            //        "size": 10,
+            //        "orderId": 85922585621,
+            //        "time": "2021-10-07T19:25:45.411201+00:00",
+            //        "tradeId": 2084391649,
+            //        "feeRate": 0.0007,
+            //        "fee": 0.00750575,
+            //        "feeCurrency": "USDT",
+            //        "liquidity": "taker"
+            //    }
+            //}
+
+            //{
+            //    "channel": "fills",
+            //    "type": "update",
+            //    "data": {
+            //        "id": 4199574804,
+            //        "market": "XRP/USDT",
+            //        "future": null,
+            //        "baseCurrency": "XRP",
+            //        "quoteCurrency": "USDT",
+            //        "type": "order",
+            //        "side": "buy",
+            //        "price": 1.075725,
+            //        "size": 1,
+            //        "orderId": 85928918834,
+            //        "time": "2021-10-07T20:02:07.116972+00:00",
+            //        "tradeId": 2084563562,
+            //        "feeRate": 0.0007,
+            //        "fee": 0.0007530075,
+            //        "feeCurrency": "USDT",
+            //        "liquidity": "taker"
+            //    }
+            //}
+
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     _ethusd,
-                    new MarketOrder(_ethusd.Symbol, 1, DateTime.UtcNow)
+                    new MarketOrder(_ethusd.Symbol, quantity, DateTime.UtcNow)
                 )
             );
 
@@ -73,12 +120,73 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         }
 
         [Test]
-        public void ReturnsMakerFeeInQuoteCurrencyInAccountCurrency()
+        public void ReturnsMakerFeeInQuoteCurrency()
         {
+            //{
+            //    "channel": "fills",
+            //    "type": "update",
+            //    "data": {
+            //        "id": 4199162157,
+            //        "market": "XRP/USDT",
+            //        "future": null,
+            //        "baseCurrency": "XRP",
+            //        "quoteCurrency": "USDT",
+            //        "type": "order",
+            //        "side": "sell",
+            //        "price": 1.074,
+            //        "size": 1,
+            //        "orderId": 85920785762,
+            //        "time": "2021-10-07T19:19:27.092534+00:00",
+            //        "tradeId": 2084358777,
+            //        "feeRate": 0.0002,
+            //        "fee": 0.0002148,
+            //        "feeCurrency": "USDT",
+            //        "liquidity": "maker"
+            //    }
+            //}
+
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     _ethusd,
                     new LimitOrder(_ethusd.Symbol, -1, 100, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(_ethusd.QuoteCurrency.Symbol, fee.Value.Currency);
+            // 0.0002 (maker fee, in quote currency)
+            Assert.AreEqual(0.02, fee.Value.Amount);
+        }
+
+        [Test]
+        public void ReturnsMakerFeeInBaseCurrency()
+        {
+            //{
+            //    "channel": "fills",
+            //    "type": "update",
+            //    "data": {
+            //        "id": 4199609111,
+            //        "market": "XRP/USDT",
+            //        "future": null,
+            //        "baseCurrency": "XRP",
+            //        "quoteCurrency": "USDT",
+            //        "type": "order",
+            //        "side": "buy",
+            //        "price": 1.077,
+            //        "size": 1,
+            //        "orderId": 85929414038,
+            //        "time": "2021-10-07T20:05:40.241875+00:00",
+            //        "tradeId": 2084580551,
+            //        "feeRate": 0.0002,
+            //        "fee": 0.0002,
+            //        "feeCurrency": "XRP",
+            //        "liquidity": "maker"
+            //    }
+            //}
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    _ethusd,
+                    new LimitOrder(_ethusd.Symbol, 1, 100, DateTime.UtcNow)
                 )
             );
 
@@ -88,7 +196,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         }
 
         [Test]
-        public void ReturnsFeeInQuoteCurrencyInOtherCurrency()
+        public void ReturnsFeeInQuoteCurrencyInNonAccountCurrency()
         {
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(

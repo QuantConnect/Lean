@@ -55,8 +55,11 @@ namespace QuantConnect.Orders.Fees
             if (order.Type == OrderType.Limit && (props?.PostOnly == true || !order.IsMarketable))
             {
                 fee =  MakerFee;
-                unitPrice = 1;
-                currency =((IBaseCurrencySymbol)security).BaseCurrencySymbol;
+                if (order.Direction == OrderDirection.Buy)
+                {
+                    unitPrice = 1;
+                    currency = ((IBaseCurrencySymbol)security).BaseCurrencySymbol;
+                }
             }
 
             // apply fee factor, currently we do not model 30-day volume, so we use the first tier
