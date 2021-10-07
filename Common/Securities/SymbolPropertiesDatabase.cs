@@ -277,7 +277,8 @@ namespace QuantConnect.Securities
                 minimumPriceVariation: csv[6].ToDecimalAllowExponent(),
                 lotSize: csv[7].ToDecimal(),
                 marketTicker: csv.Length > 8 ? csv[8] : string.Empty,
-                minimumOrderSize: csv.Length > 9 ? csv[9].ToDecimal() : null);
+                minimumOrderSize: csv.Length > 9 ? csv[9].ToDecimal() : null,
+                priceMagnifier: csv.Length > 10 ? csv[10].ToDecimal() : 1);
         }
     }
 }

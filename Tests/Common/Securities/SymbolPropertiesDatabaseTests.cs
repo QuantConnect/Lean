@@ -72,6 +72,40 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void LoadsPriceMagnifier()
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+
+            List<Symbol> symbols = new List<Symbol>();
+
+            // Futures in cents
+            var keSymbol = Symbol.Create("KE", SecurityType.Future, Market.CBOT);
+            var zcSymbol = Symbol.Create("ZC", SecurityType.Future, Market.CBOT);
+            var zlSymbol = Symbol.Create("ZL", SecurityType.Future, Market.CBOT);
+            var zoSymbol = Symbol.Create("ZO", SecurityType.Future, Market.CBOT);
+            var zsSymbol = Symbol.Create("ZS", SecurityType.Future, Market.CBOT);
+            var zwSymbol = Symbol.Create("ZW", SecurityType.Future, Market.CBOT);
+            var cbSymbol = Symbol.Create("CB", SecurityType.Future, Market.CME);
+            var dySymbol = Symbol.Create("DY", SecurityType.Future, Market.CME);
+            var gfSymbol = Symbol.Create("GF", SecurityType.Future, Market.CME);
+            var gnfSymbol = Symbol.Create("GNF", SecurityType.Future, Market.CME);
+            var heSymbol = Symbol.Create("HE", SecurityType.Future, Market.CME);
+            var leSymbol = Symbol.Create("LE", SecurityType.Future, Market.CME);
+
+            foreach (var symbol in symbols)
+            {
+                var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, SecurityType.Future, "USD");
+                Assert.AreEqual(symbolProperties.PriceMagnifier, 100);
+            }
+
+            // Future not in cents
+            var cscSymbol = Symbol.Create("CSC", SecurityType.Future, Market.CME);
+            var cscSymbolProperties = db.GetSymbolProperties(Market.CME, cscSymbol, SecurityType.Future, "USD");
+            Assert.AreEqual(cscSymbolProperties.PriceMagnifier, 1);
+        }
+
+
+        [Test]
         public void LoadsDefaultLotSize()
         {
             var defaultSymbolProperties = SymbolProperties.GetDefault(Currencies.USD);

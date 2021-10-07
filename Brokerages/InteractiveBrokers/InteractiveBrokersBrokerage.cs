@@ -1212,17 +1212,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 return 1m;
             }
-            var uniqueKey = GetUniqueKey(contract);
-            if (!_contractDetails.TryGetValue(uniqueKey, out var contractDetails))
-            {
-                contractDetails = GetContractDetails(contract, ticker);
-                if (contractDetails == null)
-                {
-                    Log.Error($"InteractiveBrokersBrokerage:GetContractPriceMagnifier(): Failed to get ContractDetails for {ticker}, assuming magnifier value 1");
-                    return 1;
-                }
-            }
-            return contractDetails.PriceMagnifier;
+
+            SymbolProperties symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(contract.PrimaryExch, contract.Symbol, securityType, contract.Currency);
+            return symbolProperties.PriceMagnifier;
         }
 
         /// <summary>

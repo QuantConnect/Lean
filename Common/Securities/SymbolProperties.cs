@@ -83,9 +83,19 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Allows execution and strike prices to be reported consistently with market data, historical data and the order price
+        /// Apply conversion of prices passing between Lean and IB so that within Lean all prices are USD, and the correct cent prices are sent to the brokerage
+        /// By default is 1 but for futures assets in cents is 100
+        /// </summary>
+        public decimal PriceMagnifier
+        {
+            get;
+        }
+
+        /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null, decimal priceMagnifier = 1)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
@@ -100,6 +110,7 @@ namespace QuantConnect.Securities
 
             MarketTicker = marketTicker;
             MinimumOrderSize = minimumOrderSize;
+            PriceMagnifier = priceMagnifier;
         }
 
         /// <summary>
