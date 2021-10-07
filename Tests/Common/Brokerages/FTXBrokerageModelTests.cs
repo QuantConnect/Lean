@@ -88,6 +88,18 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(Market.FTX, _brokerageModel.DefaultMarkets[securityType]);
         }
 
+        [TestCase(0.01, true)]
+        [TestCase(0.00005, false)]
+        public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
+        {
+            BrokerageMessageEvent message;
+            var order = new Mock<Order>();
+
+            order.Object.Quantity = orderQuantity;
+
+            Assert.AreEqual(isValidOrderQuantity, _brokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.FTX), order.Object, out message));
+        }
+
         [Test]
         public void CannotUpdateOrder()
         {
