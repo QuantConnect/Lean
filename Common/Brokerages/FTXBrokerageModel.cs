@@ -87,7 +87,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The benchmark for this brokerage</returns>
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
-            var symbol = Symbol.Create("BTC/USD", SecurityType.Crypto, Market.FTX);
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.FTX);
             return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 

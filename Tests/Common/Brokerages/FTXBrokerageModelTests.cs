@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void Init()
         {
             _brokerageModel = new();
-            _symbol = Symbol.Create("ETH/USD", SecurityType.Crypto, Market.FTX);
+            _symbol = Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX);
         }
 
         protected Crypto Security =>
