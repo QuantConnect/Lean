@@ -118,13 +118,24 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            //if (!IsValidOrderSize(security, order.Quantity, out message))
             message = null;
+
+            if (security.HasData)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
+                );
+
+                return false;
+            }
+
+            // Binance API provides minimum order size in quote currency
+            // and hence we have to check current order size using available price and order quantity
             var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             if (order.AbsoluteQuantity * price < security.SymbolProperties.MinimumOrderSize)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order quantity was {order.AbsoluteQuantity}")
+                    Invariant($"The minimum order size (in quote currency) for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order quantity was {order.Quantity}")
                 );
 
                 return false;

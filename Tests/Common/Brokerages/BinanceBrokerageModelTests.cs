@@ -16,8 +16,10 @@
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
-using QuantConnect.Tests.Brokerages;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Tests.Brokerages;
+using System;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -25,7 +27,8 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class BinanceBrokerageModelTests
     {
-        private readonly BinanceBrokerageModel _binanceBrokerageModel = new BinanceBrokerageModel();
+        private readonly BinanceBrokerageModel _binanceBrokerageModel = new();
+        private readonly Symbol _btceur = Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance);
 
         [TestCase(0.01, true)]
         [TestCase(0.000009, false)]
@@ -36,7 +39,34 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _binanceBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(symbol: "BTCEUR", market: Market.Binance, quoteCurrency: "EUR"), order.Object, out message));
+            var security = TestsHelpers.GetSecurity(symbol: _btceur.Value, market: _btceur.ID.Market, quoteCurrency: "EUR");
+            security.Cache.AddData(new Tick
+            {
+                AskPrice = 50001,
+                BidPrice = 49999,
+                Time = DateTime.UtcNow,
+                Symbol = _btceur,
+                TickType = TickType.Quote,
+                AskSize = 1,
+                BidSize = 1
+            });
+
+            Assert.AreEqual(isValidOrderQuantity, _binanceBrokerageModel.CanSubmitOrder(security, order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, message == null);
+        }
+
+        [Test]
+        public void CannotSubmitOrder_IfPriceNotInitialized()
+        {
+            BrokerageMessageEvent message;
+            var order = new Mock<Order>();
+
+            order.Object.Quantity = 1;
+
+            var security = TestsHelpers.GetSecurity(symbol: _btceur.Value, market: _btceur.ID.Market, quoteCurrency: "EUR");
+
+            Assert.AreEqual(false, _binanceBrokerageModel.CanSubmitOrder(security, order.Object, out message));
+            Assert.NotNull(message);
         }
     }
 }
