@@ -1140,11 +1140,9 @@ namespace QuantConnect.Util
                     High = g.Max(b => b.High),
                     Low = g.Min(b => b.Low),
                     Close = g.Last().Close,
-                    Volume = g.Sum(b => b.Volume),
                     Value = g.Last().Close,
                     DataType = MarketDataType.TradeBar,
-                    Period = resolution,
-                    EndTime = g.Key.AddMilliseconds(resolution.TotalMilliseconds)
+                    Period = resolution
                 };
         }
         
@@ -1182,5 +1180,41 @@ namespace QuantConnect.Util
                         Period = resolution
                     };
         }
+        
+         /// <summary>
+         /// Aggregates a list of ticks at the requested resolution
+         /// </summary>
+         /// <param name="ticks">List of <see cref="QuoteBar"/>s</param>
+         /// <param name="symbol">Symbol of all QuoteBars</param>
+         /// <param name="resolution">Desired resolution for new <see cref="QuoteBar"/>s</param>
+         /// <returns>List of aggregated <see cref="QuoteBar"/>s</returns>
+         public static IEnumerable<QuoteBar> AggregateTicks(IEnumerable<Tick> ticks, Symbol symbol, TimeSpan resolution)
+         {
+             return
+                from t in ticks
+                    group t by t.Time.RoundDown(resolution)
+                    into g
+                    select new QuoteBar
+                    {
+                        Symbol = symbol,
+                        Time = g.Key,
+                        Bid = new Bar
+                        {
+                            Open = g.First().BidPrice,
+                            High = g.Max(b => b.BidPrice),
+                            Low = g.Min(b => b.BidPrice),
+                            Close = g.Last().BidPrice
+                        },
+                        Ask = new Bar
+                        {
+                            Open = g.First().AskPrice,
+                            High = g.Max(b => b.AskPrice),
+                            Low = g.Min(b => b.AskPrice),
+                            Close = g.Last().AskPrice
+                        },
+                        Period = resolution
+                    };
+        }
+    
     }
 }

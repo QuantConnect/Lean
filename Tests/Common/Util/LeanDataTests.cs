@@ -444,9 +444,8 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", optionZipFilePath);
             Assert.AreEqual($"20200105_og_minute_quote_american_{right.ToLower()}_{strike}0000_{expiry:yyyyMMdd}.csv", optionEntryFilePath);
         }
-
-        [Test]
-        [TestCaseSource(nameof(AggregateTradeBarsTestData))]
+        
+        [Test, TestCaseSource(nameof(AggregateTradeBarsTestData))]
         public void AggregateTradeBarsTest(TimeSpan resolution, TradeBar expectedFirstTradeBar)
         {
             var initialTime = new DateTime(2020, 1, 5, 12, 0, 0);
@@ -469,9 +468,8 @@ namespace QuantConnect.Tests.Common.Util
 
         }
         
-        [Test]
-        [TestCaseSource(nameof(AggregateQuoteBarsTestData))]
-        public void AggregateQuoteBarsTest(TimeSpan resolution, QuoteBar expectedFirstTradeBar)
+        [Test, TestCaseSource(nameof(AggregateQuoteBarsTestData))]
+        public void AggregateQuoteBarsTest(TimeSpan resolution, QuoteBar expectedFirstBar)
         {
             var initialTime = new DateTime(2020, 1, 5, 12, 0, 0);
             var symbol = Symbols.AAPL;
@@ -489,9 +487,31 @@ namespace QuantConnect.Tests.Common.Util
         
             var firstBar = aggregated.First();
             
-            AssertBarsAreEqual(expectedFirstTradeBar.Ask, firstBar.Ask);
-            AssertBarsAreEqual(expectedFirstTradeBar.Bid, firstBar.Bid);
+            AssertBarsAreEqual(expectedFirstBar.Ask, firstBar.Ask);
+            AssertBarsAreEqual(expectedFirstBar.Bid, firstBar.Bid);
+        }
         
+        [Test, TestCaseSource(nameof(AggregateTickTestData))]
+        public void AggregateTicksTest(TimeSpan resolution, QuoteBar expectedFirstBar)
+        {
+            var initialTime = new DateTime(2020, 1, 5, 12, 0, 0);
+            var symbol = Symbols.AAPL;
+            var initialTicks = new[]
+            {
+                new Tick(initialTime, symbol, string.Empty, string.Empty, 10, 11, 12, 13),
+                new Tick(initialTime.Add(TimeSpan.FromSeconds(1)), symbol, string.Empty, string.Empty, 14, 15, 16, 17),
+                new Tick(initialTime.Add(TimeSpan.FromSeconds(10)), symbol, string.Empty, string.Empty, 18, 19, 20, 21),
+                new Tick(initialTime.Add(TimeSpan.FromSeconds(61)), symbol, string.Empty, string.Empty, 22, 23, 24, 25),
+            };
+
+            var aggregated = LeanData.AggregateTicks(initialTicks, symbol, resolution).ToList();
+
+            Assert.True(aggregated.All(i => i.Period == resolution));
+
+            var firstBar = aggregated.First();
+
+            AssertBarsAreEqual(expectedFirstBar.Ask, firstBar.Ask);
+            AssertBarsAreEqual(expectedFirstBar.Bid, firstBar.Bid);
         }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
@@ -712,6 +732,18 @@ namespace QuantConnect.Tests.Common.Util
                     new TestCaseData(TimeSpan.FromMinutes(1), new QuoteBar {Ask = new Bar {Open = 10, High = 15, Low = 7, Close = 9}, Bid = {Open = 7, High = 14, Low = 4, Close = 5}, Period = TimeSpan.FromMinutes(1)}),
                     new TestCaseData(TimeSpan.FromHours(1), new QuoteBar {Ask = new Bar {Open = 10, High = 25, Low = 7, Close = 21}, Bid = {Open = 7, High = 22, Low = 4, Close = 20}, Period = TimeSpan.FromMinutes(1)}),
                     new TestCaseData(TimeSpan.FromDays(1), new QuoteBar {Ask = new Bar {Open = 10, High = 25, Low = 7, Close = 11}, Bid = {Open = 7, High = 22, Low = 4, Close = 10}, Period = TimeSpan.FromMinutes(1)}),
+                };
+            }
+        }
+        
+        private static TestCaseData[] AggregateTickTestData
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(TimeSpan.FromSeconds(1), new QuoteBar {Ask = new Bar {Open = 13, High = 13, Low = 13, Close = 13}, Bid = {Open = 11, High = 11, Low = 11, Close = 11}, Period = TimeSpan.FromSeconds(1)}),
+                    new TestCaseData(TimeSpan.FromMinutes(1), new QuoteBar {Ask = new Bar {Open = 13, High = 21, Low = 13, Close = 21}, Bid = {Open = 11, High = 19, Low = 11, Close = 19}, Period = TimeSpan.FromMinutes(1)}),
                 };
             }
         }

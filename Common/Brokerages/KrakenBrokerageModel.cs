@@ -100,7 +100,7 @@ namespace QuantConnect.Brokerages
             if (order.Type == OrderType.MarketOnClose || order.Type == OrderType.MarketOnOpen || order.Type == OrderType.OptionExercise)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"{order.Type} orders are not  supported by Kraken.")
+                    StringExtensions.Invariant($"{order.Type} orders are not supported by Kraken.")
                 );
 
                 return false;
