@@ -153,11 +153,56 @@ namespace QuantConnect
             }
             return time;
         }
+        
+        /// <summary>
+        /// Create a C# DateTime from a UnixTimestamp
+        /// </summary>
+        /// <param name="unixTimeStamp">Decimal unix timestamp (Time since Midnight Jan 1 1970)</param>
+        /// <returns>C# date timeobject</returns>
+        public static DateTime UnixTimeStampToDateTime(decimal unixTimeStamp)
+        {
+            DateTime time;
+            try
+            {
+                // Any residual decimal numbers that remain are nanoseconds from [0, 100) nanoseconds.
+                // If we cast to (long), only the integer component of the decimal is taken, and can
+                // potentially result in look-ahead bias in increments of 100 nanoseconds, i.e. 1 DateTime tick.
+                var ticks = Math.Ceiling(unixTimeStamp * TimeSpan.TicksPerSecond);
+                time = EpochTime.AddTicks((long)ticks);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, Invariant($"UnixTimeStamp: {unixTimeStamp}"));
+                time = DateTime.Now;
+            }
+            return time;
+        }
+        
+        /// <summary>
+        /// Create a C# DateTime from a UnixTimestamp
+        /// </summary>
+        /// <param name="unixTimeStamp">Long unix timestamp (Time since Midnight Jan 1 1970)</param>
+        /// <returns>C# date timeobject</returns>
+        public static DateTime UnixTimeStampToDateTime(long unixTimeStamp)
+        {
+            DateTime time;
+            try
+            {
+                var ticks = unixTimeStamp * TimeSpan.TicksPerSecond;
+                time = EpochTime.AddTicks(ticks);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, Invariant($"UnixTimeStamp: {unixTimeStamp}"));
+                time = DateTime.Now;
+            }
+            return time;
+        }
 
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
-        /// <param name="unixTimeStamp">Double unix timestamp (Time since Midnight Jan 1 1970) in milliseconds</param>
+        /// <param name="unixTimeStamp">Decimal unix timestamp (Time since Midnight Jan 1 1970) in milliseconds</param>
         /// <returns>C# date timeobject</returns>
         public static DateTime UnixMillisecondTimeStampToDateTime(decimal unixTimeStamp)
         {
