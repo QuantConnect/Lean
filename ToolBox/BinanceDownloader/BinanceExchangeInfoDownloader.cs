@@ -60,11 +60,13 @@ namespace QuantConnect.ToolBox.BinanceDownloader
 
                     var lotFilter = symbol.Filters
                         .First(f => f.GetValue("filterType").ToString() == "LOT_SIZE");
-
                     var stepSize = lotFilter.GetValue("stepSize").ToObject<decimal>().NormalizeToStr();
-                    var minSize = lotFilter.GetValue("minQty").ToObject<decimal>().NormalizeToStr();
 
-                    yield return $"binance,{symbol.Name},crypto,{symbol.Name},{symbol.QuoteAsset},1,{priceFilter},{stepSize},{symbol.Name},{minSize}";
+                    var minNotional = symbol.Filters
+                        .First(f => f.GetValue("filterType").ToString() == "MIN_NOTIONAL");
+                    var minOrderSize = minNotional.GetValue("minNotional").ToObject<decimal>().NormalizeToStr();
+
+                    yield return $"binance,{symbol.Name},crypto,{symbol.Name},{symbol.QuoteAsset},1,{priceFilter},{stepSize},{symbol.Name},{minOrderSize}";
                 }
             }
         }
