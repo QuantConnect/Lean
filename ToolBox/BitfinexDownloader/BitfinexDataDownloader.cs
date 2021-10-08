@@ -91,41 +91,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
         {
             return _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Bitfinex);
         }
-
-        /// <summary>
-        /// Aggregates a list of minute bars at the requested resolution
-        /// Warning.
-        /// Aggregated data is not used as Volume of aggregated data doesn't match to Bitfinex API Response for same period of higher resolution.
-        /// Example:
-        /// https://api.bitfinex.com/v2/candles/trade:1h:tBTCUSD/hist?limit=1000&sort=1&start=1533150000000&end=1533153540000
-        /// https://api.bitfinex.com/v2/candles/trade:1m:tBTCUSD/hist?limit=1000&sort=1&start=1533150000000&end=1533153540000
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="bars"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal IEnumerable<TradeBar> AggregateBars(Symbol symbol, IEnumerable<TradeBar> bars, TimeSpan resolution)
-        {
-            return
-                (from b in bars
-                 group b by b.Time.RoundDown(resolution)
-                     into g
-                 select new TradeBar
-                 {
-                     Symbol = symbol,
-                     Time = g.Key,
-                     Open = g.First().Open,
-                     High = g.Max(b => b.High),
-                     Low = g.Min(b => b.Low),
-                     Close = g.Last().Close,
-                     Volume = g.Sum(b => b.Volume),
-                     Value = g.Last().Close,
-                     DataType = MarketDataType.TradeBar,
-                     Period = resolution,
-                     EndTime = g.Key.AddMilliseconds(resolution.TotalMilliseconds)
-                 });
-        }
-
+        
         #region Console Helper
 
         /// <summary>

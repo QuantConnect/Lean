@@ -98,7 +98,7 @@ namespace QuantConnect.ToolBox.IBDownloader
                                 // Save the data (other resolutions)
                                 foreach (var res in new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily })
                                 {
-                                    var resData = downloader.AggregateBars(symbol, bars, res.ToTimeSpan());
+                                    var resData = LeanData.AggregateQuoteBars(bars, symbol, res.ToTimeSpan());
 
                                     writer = new LeanDataWriter(res, symbol, dataDirectory);
                                     writer.Write(resData);

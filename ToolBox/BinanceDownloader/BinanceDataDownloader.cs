@@ -97,35 +97,6 @@ namespace QuantConnect.ToolBox.BinanceDownloader
             return _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Binance);
         }
 
-        /// <summary>
-        /// Aggregates a list of minute bars at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="bars"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal IEnumerable<TradeBar> AggregateBars(Symbol symbol, IEnumerable<TradeBar> bars, TimeSpan resolution)
-        {
-            return
-                (from b in bars
-                 group b by b.Time.RoundDown(resolution)
-                     into g
-                 select new TradeBar
-                 {
-                     Symbol = symbol,
-                     Time = g.Key,
-                     Open = g.First().Open,
-                     High = g.Max(b => b.High),
-                     Low = g.Min(b => b.Low),
-                     Close = g.Last().Close,
-                     Volume = g.Sum(b => b.Volume),
-                     Value = g.Last().Close,
-                     DataType = MarketDataType.TradeBar,
-                     Period = resolution,
-                     EndTime = g.Key.AddMilliseconds(resolution.TotalMilliseconds)
-                 });
-        }
-
         public void Dispose()
         {
             _brokerage.Disconnect();
