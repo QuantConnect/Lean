@@ -1216,8 +1216,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 return 1m;
             }
-
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, ticker, securityType, Currencies.USD);
+            var key = MarketHoursDatabase.GetDatabaseSymbolKey(ticker);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, key, securityType, Currencies.USD);
             return symbolProperties.PriceMagnifier;
         }
 
