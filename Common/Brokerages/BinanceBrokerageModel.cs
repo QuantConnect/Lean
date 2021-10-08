@@ -120,7 +120,7 @@ namespace QuantConnect.Brokerages
         {
             message = null;
 
-            if (security.HasData)
+            if (!security.HasData)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
@@ -131,11 +131,36 @@ namespace QuantConnect.Brokerages
 
             // Binance API provides minimum order size in quote currency
             // and hence we have to check current order size using available price and order quantity
-            var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
-            if (order.AbsoluteQuantity * price < security.SymbolProperties.MinimumOrderSize)
+            var quantityIsValid = true;
+            switch (order)
+            {
+                case LimitOrder limitOrder:
+                    quantityIsValid &= order.AbsoluteQuantity * limitOrder.LimitPrice < security.SymbolProperties.MinimumOrderSize;
+                    break;
+                case MarketOrder _:
+                    var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+                    quantityIsValid &= order.AbsoluteQuantity * price < security.SymbolProperties.MinimumOrderSize;
+                    break;
+                case StopLimitOrder stopLimitOrder:
+                    quantityIsValid &= order.AbsoluteQuantity * stopLimitOrder.LimitPrice < security.SymbolProperties.MinimumOrderSize;
+                    // Binance Trading UI requires this check too...
+                    quantityIsValid &= order.AbsoluteQuantity * stopLimitOrder.StopPrice < security.SymbolProperties.MinimumOrderSize;
+                    break;
+                case StopMarketOrder stopMarketOrder:
+                    quantityIsValid &= order.AbsoluteQuantity * stopMarketOrder.StopPrice < security.SymbolProperties.MinimumOrderSize;
+                    break;
+                default:
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Invariant($"{order.Type} orders are not supported by Kraken.")
+                    );
+                    return false;
+            }
+
+
+            if (!quantityIsValid)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The minimum order size (in quote currency) for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order quantity was {order.Quantity}")
+                    Invariant($"The minimum order size (in quote currency) for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order quantity was {order.Quantity}.")
                 );
 
                 return false;
