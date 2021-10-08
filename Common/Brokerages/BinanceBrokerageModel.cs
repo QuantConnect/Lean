@@ -13,14 +13,15 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -117,12 +118,18 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (!IsValidOrderSize(security, order.Quantity, out message))
+            //if (!IsValidOrderSize(security, order.Quantity, out message))
+            message = null;
+            var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            if (order.AbsoluteQuantity * price < security.SymbolProperties.MinimumOrderSize)
             {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order quantity was {order.AbsoluteQuantity}")
+                );
+
                 return false;
             }
 
-            message = null;
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
