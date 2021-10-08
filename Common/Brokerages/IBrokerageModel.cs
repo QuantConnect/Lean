@@ -228,6 +228,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Kraken:
                     return new KrakenBrokerageModel(accountType);
 
+                case BrokerageName.FTX:
+                    return new FTXBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }

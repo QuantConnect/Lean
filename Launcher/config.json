@@ -189,6 +189,10 @@
   "samco-product-type": "MIS", //MIS(Intraday) or CNC(Delivery) or NRML(Carry Forward)
   "samco-trading-segment": "EQUITY", // EQUITY(NSE,BSE) or COMMODITY (MCX)
 
+  // FTX configuration
+  "ftx-api-secret": "",
+  "ftx-api-key": "",
+
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
     // Intrinio account user and password
@@ -422,6 +426,19 @@
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+    },
+    "live-ftx": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "QuantConnect.FTXBrokerage.FTXBrokerage",
+      "data-queue-handler": "QuantConnect.FTXBrokerage.FTXBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": "BrokerageHistoryProvider"
     }
   }
 }

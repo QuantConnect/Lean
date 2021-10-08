@@ -61,7 +61,8 @@ namespace QuantConnect
             Tuple.Create(SGX, 24),
             Tuple.Create(HKFE, 25),
 
-            Tuple.Create(CFE, 33)
+            Tuple.Create(CFE, 33),
+            Tuple.Create(FTX, 34)
         };
 
         static Market()
@@ -205,6 +206,11 @@ namespace QuantConnect
         /// Bittrex
         /// </summary>
         public const string Bittrex = "bittrex";
+
+        /// <summary>
+        /// FTX
+        /// </summary>
+        public const string FTX = "ftx";
 
 
         /// <summary>
