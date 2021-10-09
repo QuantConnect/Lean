@@ -162,23 +162,23 @@ namespace QuantConnect.Brokerages.Binance
                 { "side", ConvertOrderDirection(order.Direction) }
             };
 
-            switch (order.Type)
+            switch (order)
             {
-                case OrderType.Limit:
+                case LimitOrder limitOrder:
                     body["type"] = (order.Properties as BinanceOrderProperties)?.PostOnly == true
                         ? "LIMIT_MAKER"
                         : "LIMIT";
-                    body["price"] = ((LimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    body["price"] = limitOrder.LimitPrice.ToString(CultureInfo.InvariantCulture);
                     // timeInForce is not required for LIMIT_MAKER
                     if (Equals(body["type"], "LIMIT"))
                         body["timeInForce"] = "GTC";
                     break;
-                case OrderType.Market:
+                case MarketOrder:
                     body["type"] = "MARKET";
                     break;
-                case OrderType.StopLimit:
+                case StopLimitOrder stopLimitOrder:
                     var ticker = GetTickerPrice(order);
-                    var stopPrice = ((StopLimitOrder) order).StopPrice;
+                    var stopPrice = stopLimitOrder.StopPrice;
                     if (order.Direction == OrderDirection.Sell)
                     {
                         body["type"] = stopPrice <= ticker ? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
@@ -187,9 +187,10 @@ namespace QuantConnect.Brokerages.Binance
                     {
                         body["type"] = stopPrice <= ticker ? "TAKE_PROFIT_LIMIT" : "STOP_LOSS_LIMIT";
                     }
+
                     body["timeInForce"] = "GTC";
-                    body["stopPrice"] = stopPrice.ToString(CultureInfo.InvariantCulture);
-                    body["price"] = ((StopLimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    body["stopPrice"] = stopPrice.ToStringInvariant();
+                    body["price"] = stopLimitOrder.LimitPrice.ToStringInvariant();
                     break;
                 default:
                     throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");

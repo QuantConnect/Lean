@@ -120,38 +120,41 @@ namespace QuantConnect.Brokerages
         {
             message = null;
 
-            if (!security.HasData)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
-                );
-
-                return false;
-            }
-
             // Binance API provides minimum order size in quote currency
             // and hence we have to check current order size using available price and order quantity
             var quantityIsValid = true;
             switch (order)
             {
                 case LimitOrder limitOrder:
-                    quantityIsValid &= order.AbsoluteQuantity * limitOrder.LimitPrice < security.SymbolProperties.MinimumOrderSize;
+                    quantityIsValid &= IsOrderSizeLargeEnough(limitOrder.LimitPrice);
                     break;
-                case MarketOrder _:
+                case MarketOrder:
+                    if (!security.HasData)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
+                        );
+
+                        return false;
+                    }
+
                     var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
-                    quantityIsValid &= order.AbsoluteQuantity * price < security.SymbolProperties.MinimumOrderSize;
+                    quantityIsValid &= IsOrderSizeLargeEnough(price);
                     break;
                 case StopLimitOrder stopLimitOrder:
-                    quantityIsValid &= order.AbsoluteQuantity * stopLimitOrder.LimitPrice < security.SymbolProperties.MinimumOrderSize;
+                    quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
                     // Binance Trading UI requires this check too...
-                    quantityIsValid &= order.AbsoluteQuantity * stopLimitOrder.StopPrice < security.SymbolProperties.MinimumOrderSize;
+                    quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
                     break;
-                case StopMarketOrder stopMarketOrder:
-                    quantityIsValid &= order.AbsoluteQuantity * stopMarketOrder.StopPrice < security.SymbolProperties.MinimumOrderSize;
-                    break;
+                case StopMarketOrder:
+                    // currently no symbols supporting TAKE_PROFIT or STOP_LOSS orders
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Invariant($"{order.Type} orders are not supported for this symbol. Please check https://api.binance.com/api/v3/exchangeInfo to see supported order types.")
+                    );
+                    return false;
                 default:
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        Invariant($"{order.Type} orders are not supported by Kraken.")
+                        Invariant($"{order.Type} orders are not supported by Binance.")
                     );
                     return false;
             }
@@ -175,6 +178,9 @@ namespace QuantConnect.Brokerages
                 return false;
             }
             return base.CanSubmitOrder(security, order, out message);
+
+            bool IsOrderSizeLargeEnough(decimal price) =>
+                order.AbsoluteQuantity * price > security.SymbolProperties.MinimumOrderSize;
         }
 
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
