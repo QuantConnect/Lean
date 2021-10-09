@@ -107,14 +107,35 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void CannotSubmitMarketOrder_IfPriceNotInitialized()
         {
-            BrokerageMessageEvent message;
-            var order = new Mock<MarketOrder>();
-
-            order.Object.Quantity = 1;
+            var order = new Mock<MarketOrder>
+            {
+                Object =
+                {
+                    Quantity = 1
+                }
+            };
 
             var security = TestsHelpers.GetSecurity(symbol: _btceur.Value, market: _btceur.ID.Market, quoteCurrency: "EUR");
 
-            Assert.AreEqual(false, _binanceBrokerageModel.CanSubmitOrder(security, order.Object, out message));
+            Assert.AreEqual(false, _binanceBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.NotNull(message);
+        }
+
+        [Test]
+        public void CannotSubmitStopMarketOrder_Always()
+        {
+            var order = new Mock<StopMarketOrder>
+            {
+                Object =
+                {
+                    Quantity = 100000,
+                    StopPrice = 100000
+                }
+            };
+
+            var security = TestsHelpers.GetSecurity(symbol: _btceur.Value, market: _btceur.ID.Market, quoteCurrency: "EUR");
+
+            Assert.AreEqual(false, _binanceBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
             Assert.NotNull(message);
         }
     }

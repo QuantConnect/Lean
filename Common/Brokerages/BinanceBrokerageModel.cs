@@ -147,9 +147,13 @@ namespace QuantConnect.Brokerages
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
                     break;
                 case StopMarketOrder:
+                    // despite Binance API allows you to post STOP_LOSS and TAKE_PROFIT order types
+                    // they always fails with the content
+                    // {"code":-1013,"msg":"Take profit orders are not supported for this symbol."}
                     // currently no symbols supporting TAKE_PROFIT or STOP_LOSS orders
+
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        Invariant($"{order.Type} orders are not supported for this symbol. Please check https://api.binance.com/api/v3/exchangeInfo to see supported order types.")
+                        Invariant($"{order.Type} orders are not supported for this symbol. Please check 'https://api.binance.com/api/v3/exchangeInfo?symbol={security.SymbolProperties.MarketTicker}' to see supported order types.")
                     );
                     return false;
                 default:
