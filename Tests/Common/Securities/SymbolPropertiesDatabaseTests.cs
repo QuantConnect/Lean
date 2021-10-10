@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Common.Securities
             var krakenSymbolProperties = db.GetSymbolProperties(krakenSymbol.ID.Market, krakenSymbol, krakenSymbol.SecurityType, "CAD");
 
             Assert.AreEqual(bitfinexSymbolProperties.MinimumOrderSize, 0.00006m);
-            Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 0.00001m);
+            Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 10m); // in quote currency, MIN_NOTIONAL
             Assert.AreEqual(gdaxSymbolProperties.MinimumOrderSize, 0.0001m);
             Assert.AreEqual(krakenSymbolProperties.MinimumOrderSize, 0.0001m);
         }
