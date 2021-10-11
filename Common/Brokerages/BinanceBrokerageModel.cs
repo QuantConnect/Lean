@@ -13,14 +13,15 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -117,12 +118,61 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (!IsValidOrderSize(security, order.Quantity, out message))
+            message = null;
+
+            // Binance API provides minimum order size in quote currency
+            // and hence we have to check current order size using available price and order quantity
+            var quantityIsValid = true;
+            switch (order)
             {
+                case LimitOrder limitOrder:
+                    quantityIsValid &= IsOrderSizeLargeEnough(limitOrder.LimitPrice);
+                    break;
+                case MarketOrder:
+                    if (!security.HasData)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
+                        );
+
+                        return false;
+                    }
+
+                    var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+                    quantityIsValid &= IsOrderSizeLargeEnough(price);
+                    break;
+                case StopLimitOrder stopLimitOrder:
+                    quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
+                    // Binance Trading UI requires this check too...
+                    quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
+                    break;
+                case StopMarketOrder:
+                    // despite Binance API allows you to post STOP_LOSS and TAKE_PROFIT order types
+                    // they always fails with the content
+                    // {"code":-1013,"msg":"Take profit orders are not supported for this symbol."}
+                    // currently no symbols supporting TAKE_PROFIT or STOP_LOSS orders
+
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Invariant($"{order.Type} orders are not supported for this symbol. Please check 'https://api.binance.com/api/v3/exchangeInfo?symbol={security.SymbolProperties.MarketTicker}' to see supported order types.")
+                    );
+                    return false;
+                default:
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Invariant($"{order.Type} orders are not supported by Binance.")
+                    );
+                    return false;
+            }
+
+
+            if (!quantityIsValid)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Invariant($"The minimum order size (in quote currency) for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order quantity was {order.Quantity}.")
+                );
+
                 return false;
             }
 
-            message = null;
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
@@ -132,6 +182,9 @@ namespace QuantConnect.Brokerages
                 return false;
             }
             return base.CanSubmitOrder(security, order, out message);
+
+            bool IsOrderSizeLargeEnough(decimal price) =>
+                order.AbsoluteQuantity * price > security.SymbolProperties.MinimumOrderSize;
         }
 
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
