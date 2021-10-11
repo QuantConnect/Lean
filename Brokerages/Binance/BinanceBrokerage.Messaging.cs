@@ -41,6 +41,11 @@ namespace QuantConnect.Brokerages.Binance
 
             try
             {
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"BinanceBrokerage.OnUserMessage(): {e.Message}");
+                }
+
                 var obj = JObject.Parse(e.Message);
 
                 var objError = obj["error"];
