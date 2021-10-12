@@ -1220,7 +1220,7 @@ actualDictionary.update({'IBM': 5})
                         null
                     ),
                     new DataPermissionManager(),
-                    new DefaultDataProvider()
+                    TestGlobals.DataProvider
                 ),
                 algo,
                 new TimeKeeper(DateTime.UtcNow),
@@ -1230,7 +1230,7 @@ actualDictionary.update({'IBM': 5})
                 new DataPermissionManager()
             ));
 
-            using (var zipDataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider()))
+            using (var zipDataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider))
             {
                 algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
                 algo.HistoryProvider.Initialize(
@@ -1239,8 +1239,8 @@ actualDictionary.update({'IBM': 5})
                         null,
                         null,
                         zipDataCacheProvider,
-                        new LocalDiskMapFileProvider(),
-                        new LocalDiskFactorFileProvider(),
+                        TestGlobals.MapFileProvider,
+                        TestGlobals.FactorFileProvider,
                         (_) => {},
                         false,
                         new DataPermissionManager()));

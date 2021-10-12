@@ -523,7 +523,7 @@ namespace QuantConnect.Tests.Common
             do
             {
                 Console.WriteLine(symbolChain.ToString() + "; Value: " + symbolChain.Value);
-                if (symbolChain.SecurityType == SecurityType.Base || symbolChain.SecurityType.RequiresMapping())
+                if (symbolChain.SecurityType == SecurityType.Base || symbolChain.RequiresMapping())
                 {
                     Assert.AreEqual(mappedTicker, symbolChain.Value);
                 }

@@ -49,8 +49,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly IMapFileProvider _mapFileProvider;
         private readonly bool _enablePriceScaling;
 
-        private CachingFutureChainProvider _cachingFutureChain = new CachingFutureChainProvider(new BacktestingFutureChainProvider());
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataReaderSubscriptionEnumeratorFactory"/> class
         /// </summary>
@@ -89,7 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
             var mapFileResolver = request.Configuration.TickerShouldBeMapped()
-                                    ? _mapFileProvider.Get(request.Security.Symbol.ID.Market)
+                                    ? _mapFileProvider.Get(CorporateActionsKey.Create(request.Security.Symbol))
                                     : MapFileResolver.Empty;
 
             var dataReader = new SubscriptionDataReader(request.Configuration,
@@ -131,26 +129,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 mapFileResolver,
                 request.StartTimeLocal,
                 _enablePriceScaling);
-
-            if (request.Security.Symbol.SecurityType == SecurityType.Future && request.Security.Symbol.IsCanonical())
-            {
-                dataReader.NewTradableDate += (sender, args) =>
-                {
-                    var chain = _cachingFutureChain.GetFutureContractList(request.Security.Symbol, args.Date);
-                    // 'FutureFilterUniverse' could be provided by the user
-                    // volume roll style? history?
-                    var currentSymbol = new FutureFilterUniverse(chain, new Tick(args.Date, request.Security.Symbol, 0, 0))
-                        .Expiration(5, 100).FrontMonth().SingleOrDefault();
-                    if (currentSymbol == null || request.Configuration.Symbol.ID == currentSymbol.ID)
-                    {
-                        return;
-                    }
-                    Log.Trace($"Updating future mapping from {request.Configuration.Symbol.ID} top {currentSymbol.ID}");
-                    request.Configuration.MappedSymbol = currentSymbol.ID.ToString();
-                };
-               // We remap the symbol of the data to the continuous contract & TODO: scale -> same for history
-               result = new ContinuousContractEnumerator(result, request.Security.Symbol);
-            }
 
             return result;
         }

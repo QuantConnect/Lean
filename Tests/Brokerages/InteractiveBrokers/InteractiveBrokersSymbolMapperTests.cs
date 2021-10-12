@@ -16,10 +16,9 @@
 using System;
 using IBApi;
 using NUnit.Framework;
-using QuantConnect.Brokerages.InteractiveBrokers;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Brokerages.InteractiveBrokers;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
@@ -71,7 +70,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [TestCase("NB", "BAC")]
         public void MapCorrectBrokerageSymbol(string ticker, string ibSymbol)
         {
-            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
+            var mapper = new InteractiveBrokersSymbolMapper(TestGlobals.MapFileProvider);
 
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
             var brokerageSymbol = mapper.GetBrokerageSymbol(symbol);
@@ -81,7 +80,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [Test]
         public void ThrowsOnNullOrEmptyOrInvalidSymbol()
         {
-            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
+            var mapper = new InteractiveBrokersSymbolMapper(TestGlobals.MapFileProvider);
 
             Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(null, SecurityType.Forex, Market.FXCM));
 
@@ -161,7 +160,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 Currency = "USD"
             };
 
-            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
+            var mapper = new InteractiveBrokersSymbolMapper(TestGlobals.MapFileProvider);
             var actualContract = mapper.ParseMalformedContractFutureSymbol(malformedContract, SymbolPropertiesDatabase.FromDataFolder());
 
             Assert.AreEqual(expectedContract.Symbol, actualContract.Symbol);

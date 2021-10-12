@@ -113,7 +113,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var dailyFilesNotFound = 0;
             var coarseFilesGenerated = 0;
 
-            var mapFileResolver = _mapFileProvider.Get(_market);
+            var mapFileResolver = _mapFileProvider.Get(new CorporateActionsKey(_market, SecurityType.Equity));
 
             var blackListedTickers = new HashSet<string>();
             if (_blackListedTickersFile.Exists)

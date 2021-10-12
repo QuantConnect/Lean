@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var end = new DateTime(2019, 12, 12);
 
             var mapFileProvider = TestGlobals.MapFileProvider;
-            var mapFileResolver = new MapFileResolver(mapFileProvider.Get(Market.USA));
+            var mapFileResolver = new MapFileResolver(mapFileProvider.Get(CorporateActionsKey.EquityUsa));
 
             var dataReader = new SubscriptionDataReader(
                 new SubscriptionDataConfig(typeof(TradeBar),

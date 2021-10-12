@@ -440,8 +440,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        public Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
-            => _baseAlgorithm.AddSecurity(securityType, symbol, resolution, market, fillDataForward, leverage, extendedMarketHours);
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
+        public Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours,
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
+            => _baseAlgorithm.AddSecurity(securityType, symbol, resolution, market, fillDataForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
