@@ -1171,9 +1171,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                         var quantity = -security.Holdings.Quantity;
 
-                        var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+                        // If the quantity is already 0 for Lean and the brokerage there is nothing else todo here
+                        if (quantity != 0)
+                        {
+                            var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
 
-                        EmitOptionNotificationEvents(security, exerciseOrder);
+                            EmitOptionNotificationEvents(security, exerciseOrder);
+                        }
                     }
                     else
                     {
