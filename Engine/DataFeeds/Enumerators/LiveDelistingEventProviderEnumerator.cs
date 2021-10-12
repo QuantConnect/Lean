@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Knows which security types should create one and determines the appropriate delisting event provider to use
         /// </summary>
         public static bool TryCreate(SubscriptionDataConfig dataConfig, ITimeProvider timeProvider, IDataQueueHandler dataQueueHandler,
-            SecurityCache securityCache, IMapFileProvider mapFileProvider, out IEnumerator<BaseData> enumerator)
+            SecurityCache securityCache, MapFileResolver mapFileResolver, out IEnumerator<BaseData> enumerator)
         {
             enumerator = null;
             var securityType = dataConfig.SecurityType;
@@ -130,7 +130,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 if (securityType == SecurityType.Equity)
                 {
                     delistingEventProvider = new LiveDataBasedDelistingEventProvider(dataConfig, dataQueueHandler);
-                    mapFile = mapFileProvider.Get(dataConfig.Symbol.ID.Market).ResolveMapFile(dataConfig.Symbol, dataConfig.Type);
+                    mapFile = mapFileResolver.ResolveMapFile(dataConfig);
                 }
                 enumerator = new LiveDelistingEventProviderEnumerator(timeProvider, dataConfig, securityCache, delistingEventProvider, mapFile);
                 return true;

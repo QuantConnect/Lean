@@ -40,7 +40,9 @@ namespace QuantConnect.Interfaces
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
-            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
+            uint contractDepthOffset = 0
             );
 
         /// <summary>
@@ -57,7 +59,9 @@ namespace QuantConnect.Interfaces
             bool isInternalFeed = false,
             bool isCustomData = false,
             List<Tuple<Type, TickType>> subscriptionDataTypes = null,
-            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
+            uint contractDepthOffset = 0
             );
 
         /// <summary>

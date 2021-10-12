@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
@@ -183,6 +184,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             try
             {
+                var mapFileResolver = MapFileResolver.Empty;
+                if (request.Configuration.TickerShouldBeMapped())
+                {
+                    mapFileResolver = _mapFileProvider.Get(CorporateActionsKey.Create(request.Configuration.Symbol));
+                    // TODO: MOVE to the mapping event provider, perform daily, we need to refresh the resolver itself!
+                    request.Configuration.MappedSymbol = mapFileResolver
+                        .ResolveMapFile(request.Configuration)
+                        .GetMappedSymbol(request.StartTimeLocal);
+                }
+
                 var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
                 var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
@@ -230,7 +241,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     IEnumerator<BaseData> delistingEnumerator;
-                    if (LiveDelistingEventProviderEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler, request.Security.Cache, _mapFileProvider, out delistingEnumerator))
+                    if (LiveDelistingEventProviderEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler, request.Security.Cache, mapFileResolver, out delistingEnumerator))
                     {
                         auxEnumerators.Add(delistingEnumerator);
                     }

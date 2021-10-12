@@ -14,13 +14,12 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using NodaTime;
-using QuantConnect.Data.Consolidators;
-using QuantConnect.Securities;
 using QuantConnect.Util;
+using System.ComponentModel;
+using QuantConnect.Securities;
+using System.Collections.Generic;
+using QuantConnect.Data.Consolidators;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data
@@ -35,12 +34,12 @@ namespace QuantConnect.Data
         /// <summary>
         /// Type of data
         /// </summary>
-        public readonly Type Type;
+        public Type Type { get; }
 
         /// <summary>
         /// Security type of this data subscription
         /// </summary>
-        public readonly SecurityType SecurityType;
+        public SecurityType SecurityType => Symbol.SecurityType;
 
         /// <summary>
         /// Symbol of the asset we're requesting: this is really a perm tick!!
@@ -50,52 +49,66 @@ namespace QuantConnect.Data
         /// <summary>
         /// Trade, quote or open interest data
         /// </summary>
-        public readonly TickType TickType;
+        public TickType TickType { get; }
 
         /// <summary>
         /// Resolution of the asset we're requesting, second minute or tick
         /// </summary>
-        public readonly Resolution Resolution;
+        public Resolution Resolution { get; }
 
         /// <summary>
         /// Timespan increment between triggers of this data:
         /// </summary>
-        public readonly TimeSpan Increment;
+        public TimeSpan Increment { get; }
 
         /// <summary>
         /// True if wish to send old data when time gaps in data feed.
         /// </summary>
-        public readonly bool FillDataForward;
+        public bool FillDataForward { get; }
 
         /// <summary>
         /// Boolean Send Data from between 4am - 8am (Equities Setting Only)
         /// </summary>
-        public readonly bool ExtendedMarketHours;
+        public bool ExtendedMarketHours { get; }
 
         /// <summary>
         /// True if this subscription was added for the sole purpose of providing currency conversion rates via <see cref="CashBook.EnsureCurrencyDataFeeds"/>
         /// </summary>
-        public readonly bool IsInternalFeed;
+        public bool IsInternalFeed { get; }
 
         /// <summary>
         /// True if this subscription is for custom user data, false for QC data
         /// </summary>
-        public readonly bool IsCustomData;
+        public bool IsCustomData { get; }
 
         /// <summary>
         /// The sum of dividends accrued in this subscription, used for scaling total return prices
         /// </summary>
-        public decimal SumOfDividends;
+        public decimal SumOfDividends{ get; set; }
 
         /// <summary>
         /// Gets the normalization mode used for this subscription
         /// </summary>
-        public DataNormalizationMode DataNormalizationMode = DataNormalizationMode.Adjusted;
+        public DataNormalizationMode DataNormalizationMode { get; set; }
+
+        /// <summary>
+        /// Gets the securities mapping mode used for this subscription
+        /// </summary>
+        /// <remarks>This is particular useful when generating continuous futures</remarks>
+        /// <remarks>TODO: should be move this into class along with <see cref="ContractDepthOffset"/></remarks>
+        public DataMappingMode DataMappingMode { get; }
+
+        /// <summary>
+        /// The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract
+        /// <remarks>TODO: should be move this into class along with <see cref="DataMappingMode"/></remarks>
+        /// </summary>
+        public uint ContractDepthOffset { get; }
 
         /// <summary>
         /// Price Scaling Factor:
         /// </summary>
-        public decimal PriceScaleFactor;
+        public decimal PriceScaleFactor { get; set; }
 
         /// <summary>
         /// Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
@@ -110,34 +123,34 @@ namespace QuantConnect.Data
             }
             set
             {
-                Symbol = Symbol.UpdateMappedSymbol(value);
+                Symbol = Symbol.UpdateMappedSymbol(value, ContractDepthOffset);
             }
         }
 
         /// <summary>
         /// Gets the market / scope of the symbol
         /// </summary>
-        public readonly string Market;
+        public string Market => Symbol.ID.Market;
 
         /// <summary>
         /// Gets the data time zone for this subscription
         /// </summary>
-        public readonly DateTimeZone DataTimeZone;
+        public DateTimeZone DataTimeZone { get; }
 
         /// <summary>
         /// Gets the exchange time zone for this subscription
         /// </summary>
-        public readonly DateTimeZone ExchangeTimeZone;
+        public DateTimeZone ExchangeTimeZone { get; }
 
         /// <summary>
         /// Consolidators that are registred with this subscription
         /// </summary>
-        public readonly ISet<IDataConsolidator> Consolidators;
+        public ISet<IDataConsolidator> Consolidators { get; }
 
         /// <summary>
         /// Gets whether or not this subscription should have filters applied to it (market hours/user filters from security)
         /// </summary>
-        public readonly bool IsFilteredSubscription;
+        public bool IsFilteredSubscription { get; }
 
         /// <summary>
         /// Constructor for Data Subscriptions
@@ -156,6 +169,9 @@ namespace QuantConnect.Data
         /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         public SubscriptionDataConfig(Type objectType,
             Symbol symbol,
             Resolution resolution,
@@ -167,7 +183,9 @@ namespace QuantConnect.Data
             bool isCustom = false,
             TickType? tickType = null,
             bool isFilteredSubscription = true,
-            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
+            uint contractDepthOffset = 0)
         {
             if (objectType == null) throw new ArgumentNullException(nameof(objectType));
             if (symbol == null) throw new ArgumentNullException(nameof(symbol));
@@ -175,7 +193,6 @@ namespace QuantConnect.Data
             if (exchangeTimeZone == null) throw new ArgumentNullException(nameof(exchangeTimeZone));
 
             Type = objectType;
-            SecurityType = symbol.ID.SecurityType;
             Resolution = resolution;
             _sid = symbol.ID;
             Symbol = symbol;
@@ -184,9 +201,10 @@ namespace QuantConnect.Data
             PriceScaleFactor = 1;
             IsInternalFeed = isInternalFeed;
             IsCustomData = isCustom;
-            Market = symbol.ID.Market;
             DataTimeZone = dataTimeZone;
+            DataMappingMode = dataMappingMode;
             ExchangeTimeZone = exchangeTimeZone;
+            ContractDepthOffset = contractDepthOffset;
             IsFilteredSubscription = isFilteredSubscription;
             Consolidators = new ConcurrentSet<IDataConsolidator>();
             DataNormalizationMode = dataNormalizationMode;
@@ -235,6 +253,7 @@ namespace QuantConnect.Data
         /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
@@ -247,7 +266,8 @@ namespace QuantConnect.Data
             bool? isCustom = null,
             TickType? tickType = null,
             bool? isFilteredSubscription = null,
-            DataNormalizationMode? dataNormalizationMode = null)
+            DataNormalizationMode? dataNormalizationMode = null,
+            DataMappingMode? dataMappingMode = null)
             : this(
             objectType ?? config.Type,
             symbol ?? config.Symbol,
@@ -260,7 +280,8 @@ namespace QuantConnect.Data
             isCustom ?? config.IsCustomData,
             tickType ?? config.TickType,
             isFilteredSubscription ?? config.IsFilteredSubscription,
-            dataNormalizationMode ?? config.DataNormalizationMode
+            dataNormalizationMode ?? config.DataNormalizationMode,
+            dataMappingMode ?? config.DataMappingMode
             )
         {
             PriceScaleFactor = config.PriceScaleFactor;
@@ -287,6 +308,7 @@ namespace QuantConnect.Data
                 && IsInternalFeed == other.IsInternalFeed
                 && IsCustomData == other.IsCustomData
                 && DataTimeZone.Equals(other.DataTimeZone)
+                && DataMappingMode == other.DataMappingMode
                 && ExchangeTimeZone.Equals(other.ExchangeTimeZone)
                 && IsFilteredSubscription == other.IsFilteredSubscription;
         }
@@ -324,6 +346,7 @@ namespace QuantConnect.Data
                 hashCode = (hashCode*397) ^ ExtendedMarketHours.GetHashCode();
                 hashCode = (hashCode*397) ^ IsInternalFeed.GetHashCode();
                 hashCode = (hashCode*397) ^ IsCustomData.GetHashCode();
+                hashCode = (hashCode*397) ^ DataMappingMode.GetHashCode();
                 hashCode = (hashCode*397) ^ DataTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ ExchangeTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ IsFilteredSubscription.GetHashCode();
@@ -356,7 +379,8 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
+
+            return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
         }
     }
 }

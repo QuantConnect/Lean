@@ -79,7 +79,7 @@ namespace QuantConnect.Securities.Future
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
             _symbolProperties = symbolProperties;
-            SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
+            SetFilter(TimeSpan.Zero, TimeSpan.Zero);
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace QuantConnect.Securities.Future
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
             _symbolProperties = symbolProperties;
-            SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
+            SetFilter(TimeSpan.Zero, TimeSpan.Zero);
             Underlying = underlying;
         }
 

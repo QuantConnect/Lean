@@ -69,5 +69,10 @@ namespace QuantConnect.Data.Market
         {
             return new SymbolChangedEvent(Symbol, Time, OldSymbol, NewSymbol);
         }
+
+        public override string ToString()
+        {
+            return $"{Time} {OldSymbol}->{NewSymbol}";
+        }
     }
 }

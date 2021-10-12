@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using System.Globalization;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -62,7 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var factorFile = TestGlobals.FactorFileProvider;
 
             var start = new DateTime(1998, 01, 02);
-            dividendProvider.Initialize(config, factorFile.Get(Symbols.AAPL), mapFile.Get(Market.USA).ResolveMapFile(Symbols.AAPL, start), start);
+            dividendProvider.Initialize(config, factorFile.Get(Symbols.AAPL), mapFile.Get(CorporateActionsKey.EquityUsa).ResolveMapFile(Symbols.AAPL, start), start);
 
             var exDividendDate = DateTime.ParseExact(exDividendDateStr, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
@@ -100,9 +99,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new FactorFileRow(row2, 0.77m, 1),
                 new FactorFileRow(row3, 0.85555m, 1)
             }, start);
-            var mapFile = new LocalDiskMapFileProvider();
+            var mapFile = TestGlobals.MapFileProvider;
 
-            dividendProvider.Initialize(config, factorFile, mapFile.Get(Market.USA).ResolveMapFile(Symbols.AAPL, start), start);
+            dividendProvider.Initialize(config, factorFile, mapFile.Get(CorporateActionsKey.EquityUsa).ResolveMapFile(Symbols.AAPL, start), start);
 
             foreach (var row in factorFile.Take(1))
             {
