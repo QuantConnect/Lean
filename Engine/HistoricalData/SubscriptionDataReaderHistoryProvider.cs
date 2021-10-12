@@ -114,9 +114,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var mapFileResolver = MapFileResolver.Empty;
             if (config.TickerShouldBeMapped())
             {
-                mapFileResolver = _mapFileProvider.Get(config.Market);
-                var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
-                config.MappedSymbol = mapFile.GetMappedSymbol(startTimeLocal, config.MappedSymbol);
+                mapFileResolver = _mapFileProvider.Get(CorporateActionsKey.Create(config.Symbol));
             }
 
             // Tradable dates are defined with the data time zone to access the right source

@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
@@ -45,7 +46,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var timeProvider = new ManualTimeProvider(time);
 
             IEnumerator<BaseData> enumerator;
-            Assert.IsTrue(LiveDelistingEventProviderEnumerator.TryCreate(config, timeProvider, null, cache, TestGlobals.MapFileProvider, out enumerator));
+            var mapFileResolver = TestGlobals.MapFileProvider.Get(CorporateActionsKey.Create(config.Symbol));
+            Assert.IsTrue(LiveDelistingEventProviderEnumerator.TryCreate(config, timeProvider, null, cache, mapFileResolver, out enumerator));
 
             Assert.IsFalse(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);

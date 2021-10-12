@@ -63,32 +63,30 @@ namespace QuantConnect.Data.Auxiliary
                 return factorFile;
             }
 
-            var market = symbol.ID.Market;
-
             // we first need to resolve the map file to get a permtick, that's how the factor files are stored
-            var mapFileResolver = _mapFileProvider.Get(market);
+            var mapFileResolver = _mapFileProvider.Get(CorporateActionsKey.Create(symbol));
             if (mapFileResolver == null)
             {
-                return GetFactorFile(symbol, symbol.Value, market);
+                return GetFactorFile(symbol, symbol.Value);
             }
 
-            var mapFile = mapFileResolver.ResolveMapFile(symbol.ID.Symbol, symbol.ID.Date);
+            var mapFile = mapFileResolver.ResolveMapFile(symbol);
             if (mapFile.IsNullOrEmpty())
             {
-                return GetFactorFile(symbol, symbol.Value, market);
+                return GetFactorFile(symbol, symbol.Value);
             }
 
-            return GetFactorFile(symbol, mapFile.Permtick, market);
+            return GetFactorFile(symbol, mapFile.Permtick);
         }
 
         /// <summary>
         /// Checks that the factor file exists on disk, and if it does, loads it into memory
         /// </summary>
-        private FactorFile GetFactorFile(Symbol symbol, string permtick, string market)
+        private FactorFile GetFactorFile(Symbol symbol, string permtick)
         {
             FactorFile factorFile = null;
 
-            var path = Path.Combine(Globals.CacheDataFolder, "equity", market, "factor_files", permtick.ToLowerInvariant() + ".csv");
+            var path = Path.Combine(Globals.CacheDataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market, "factor_files", permtick.ToLowerInvariant() + ".csv");
 
             var factorFileStream = _dataProvider.Fetch(path);
             if (factorFileStream != null)

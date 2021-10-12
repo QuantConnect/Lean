@@ -55,6 +55,7 @@ using NodaTime.TimeZones;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Exceptions;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
@@ -2856,6 +2857,54 @@ namespace QuantConnect
         }
 
         /// <summary>
+        ///
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public static Symbol AdjustSymbolByOffset(this Symbol symbol, uint offset)
+        {
+            var expiration = symbol.ID.Date;
+            for (var i = 0; i < offset; i++)
+            {
+                if (symbol.SecurityType != SecurityType.Future)
+                {
+                    throw new InvalidOperationException("Adjusting a symbol by an offset is currently only supported for futures");
+                }
+
+                var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
+                // for the current expiration we add a day to get the next one
+                expiration = expiryFunction(expiration.AddDays(1));
+                symbol = Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, expiration);
+            }
+
+            return symbol;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="dataProvider"></param>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> ReadLines(this IDataProvider dataProvider, string file)
+        {
+            var stream = dataProvider.Fetch(file);
+            if (stream == null)
+            {
+                yield break;
+            }
+
+            using (var streamReader = new StreamReader(stream))
+            {
+                while (!streamReader.EndOfStream)
+                {
+                    yield return streamReader.ReadLine();
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns the delisted liquidation time for a given delisting warning and exchange hours
         /// </summary>
         /// <param name="delisting">The delisting warning event</param>
@@ -3360,28 +3409,16 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Read all lines from a stream reader
-        /// </summary>
-        /// <param name="reader">Stream reader to read from</param>
-        /// <returns>Enumerable of lines in stream</returns>
-        public static IEnumerable<string> ReadAllLines(this StreamReader reader)
-        {
-            string line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                yield return line;
-            }
-        }
-
-        /// <summary>
         /// Determine if this SecurityType requires mapping
         /// </summary>
-        /// <param name="securityType">Type to check</param>
+        /// <param name="symbol">Type to check</param>
         /// <returns>True if it needs to be mapped</returns>
-        public static bool RequiresMapping(this SecurityType securityType)
+        public static bool RequiresMapping(this Symbol symbol)
         {
-            switch (securityType)
+            switch (symbol.SecurityType)
             {
+                case SecurityType.Future:
+                    return symbol.IsCanonical();
                 case SecurityType.Equity:
                 case SecurityType.Option:
                     return true;

@@ -18,6 +18,7 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Equity;
@@ -33,6 +34,7 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmAddSecurityTests
     {
         private QCAlgorithm _algo;
+        private NullDataFeed _dataFeed;
 
         /// <summary>
         /// Instatiate a new algorithm before each test.
@@ -42,7 +44,11 @@ namespace QuantConnect.Tests.Algorithm
         public void Setup()
         {
             _algo = new QCAlgorithm();
-            _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
+            _dataFeed = new NullDataFeed
+            {
+                ShouldThrow = false
+            };
+            _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_dataFeed, _algo));
         }
 
         [Test, TestCaseSource(nameof(TestAddSecurityWithSymbol))]
@@ -86,9 +92,7 @@ namespace QuantConnect.Tests.Algorithm
 
             if (symbol.IsCanonical())
             {
-                // Throws NotImplementedException because we are using NullDataFeed
-                // We need to call this to add the pending universe additions
-                Assert.Throws<NotImplementedException>(() => _algo.OnEndOfTimeStep());
+                Assert.DoesNotThrow(() => _algo.OnEndOfTimeStep());
 
                 Assert.IsTrue(_algo.UniverseManager.ContainsKey(symbol));
             }

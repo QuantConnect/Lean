@@ -516,7 +516,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     universeSettings.FillForward,
                     universeSettings.ExtendedMarketHours,
                     dataNormalizationMode: universeSettings.DataNormalizationMode,
-                    subscriptionDataTypes: universeSettings.SubscriptionDataTypes);
+                    subscriptionDataTypes: universeSettings.SubscriptionDataTypes,
+                    dataMappingMode: universeSettings.DataMappingMode,
+                    // TODO:
+                    contractDepthOffset: 0);
 
                 security = _securityService.CreateSecurity(symbol, configs, universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
 

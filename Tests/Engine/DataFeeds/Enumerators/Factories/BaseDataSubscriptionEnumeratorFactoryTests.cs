@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var mapFileProvider = TestGlobals.MapFileProvider;
             var fileProvider = TestGlobals.DataProvider;
             var factorFileProvider = TestGlobals.FactorFileProvider;
-            var mapFileResolver = mapFileProvider.Get(security.Symbol.ID.Market);
+            var mapFileResolver = mapFileProvider.Get(CorporateActionsKey.Create(security.Symbol));
 
             var factory = new BaseDataSubscriptionEnumeratorFactory(false, mapFileResolver, factorFileProvider);
 

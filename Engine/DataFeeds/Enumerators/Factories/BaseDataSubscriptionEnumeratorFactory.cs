@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 foreach (var date in _tradableDaysProvider(request))
                 {
-                    if (sourceFactory.RequiresMapping())
+                    if (sourceFactory.RequiresMapping() && _mapFileResolver != null)
                     {
                         request.Configuration.MappedSymbol = GetMappedSymbol(request.Configuration, date);
                     }
@@ -95,8 +95,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
         private string GetMappedSymbol(SubscriptionDataConfig config, DateTime date)
         {
-            return _mapFileResolver.ResolveMapFile(config.Symbol, config.Type)
-                .GetMappedSymbol(date, config.MappedSymbol);
+            return _mapFileResolver.ResolveMapFile(config).GetMappedSymbol(date, config.MappedSymbol);
         }
     }
 }

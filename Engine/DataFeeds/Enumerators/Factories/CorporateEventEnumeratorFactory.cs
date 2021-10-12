@@ -53,11 +53,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             DateTime startTime,
             bool enablePriceScaling = true)
         {
-            if (config.SecurityType == SecurityType.Future)
-            {
-                return rawDataEnumerator;
-            }
-
             var lazyFactorFile =
                 new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
 
@@ -71,7 +66,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
             if (config.Symbol.SecurityType == SecurityType.Equity
                 || config.Symbol.SecurityType == SecurityType.Base
-                || config.Symbol.SecurityType == SecurityType.Option)
+                || config.Symbol.SecurityType == SecurityType.Option
+                || config.Symbol.SecurityType == SecurityType.Future && config.Symbol.IsCanonical())
             {
                 tradableEventProviders.Add(new MappingEventProvider());
             }
@@ -111,7 +107,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 try
                 {
-                    var mapFile = mapFileResolver.ResolveMapFile(config.Symbol, config.Type);
+                    var mapFile = mapFileResolver.ResolveMapFile(config);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any())

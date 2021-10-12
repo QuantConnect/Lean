@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -165,8 +166,7 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            var market = securityDefinition.SecurityIdentifier.Market;
-            var mapFileResolver = _mapFileProvider.Get(market);
+            var mapFileResolver = _mapFileProvider.Get(CorporateActionsKey.Create(securityDefinition.SecurityIdentifier));
             
             // Get the first ticker the symbol traded under, and then lookup the
             // trading date to get the ticker on the trading date.

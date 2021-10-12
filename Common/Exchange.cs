@@ -183,6 +183,12 @@ namespace QuantConnect
             = new("ISE_MERCURY", "J", "International Securities Options Exchange MERCURY", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
+        /// The Chicago Mercantile Exchange (CME), is an organized exchange for the trading of futures and options.
+        /// </summary>
+        public static Exchange CME { get; }
+            = new("CME", "CME", "Futures and Options Chicago Mercantile Exchange", QuantConnect.Market.CME, SecurityType.Future, SecurityType.FutureOption);
+
+        /// <summary>
         /// Exchange description
         /// </summary>
         [JsonIgnore]

@@ -18,18 +18,18 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
-    /// framework you can use for designing an algorithm.
+    ///
     /// </summary>
     public class ContinuousFutureRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Future _continuousFuture;
+        private Future _frontMonth;
         private DateTime _lastDateLog;
 
         /// <summary>
@@ -37,11 +37,24 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 1, 1);
-            SetEndDate(2013, 6, 1);
+            SetStartDate(2013, 7, 1);
+            SetEndDate(2014, 1, 1);
 
-            _continuousFuture = AddFuture("ES");
-            _continuousFuture.SetFilter(0, 0);
+            _frontMonth = AddFuture("ES",
+                dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
+                dataMappingMode: DataMappingMode.FirstDayMonth,
+                contractDepthOffset: 0
+            );
+
+            // TODO: ideally contracts with different offset should be able to live at the same time in the algo
+            // as is today, their symbol will clash -> should the symbol have the offset in it?
+/*
+            _backMonth = AddFuture("ES",
+                dataNormalizationMode: DataNormalizationMode.ForwardPanamaCanal,
+                dataMappingMode: DataMappingMode.OpenInterest,
+                contractDepthOffset: 1
+            );
+*/
         }
 
         /// <summary>
@@ -50,27 +63,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            // make sure that we stop getting data from the previous contract
+
+            foreach (var changedEvent in data.SymbolChangedEvents.Values)
+            {
+                Log($"SymbolChanged event: {changedEvent}");
+            }
+
             if (_lastDateLog.Month != Time.Month)
             {
                 _lastDateLog = Time;
 
                 var quotes = data.Get<QuoteBar>();
-                if (quotes.ContainsKey(_continuousFuture.Symbol))
+                if (quotes.ContainsKey(_frontMonth.Symbol))
                 {
                     //Log($"{Time}-{_continuousFuture.Underlying.Symbol}-V1- {quotes[_continuousFuture.Symbol]}");
                     //Log($"{Time}-{_continuousFuture.Underlying.Symbol}-V2- {Securities[_continuousFuture.Symbol].GetLastData()}");
-                    Log($"{Time}-V1- {quotes[_continuousFuture.Symbol]}");
-                    Log($"{Time}-V2- {Securities[_continuousFuture.Symbol].GetLastData()}");
+                    Log($"{Time}-V1- {quotes[_frontMonth.Symbol]}");
+                    Log($"{Time}-V2- {Securities[_frontMonth.Symbol].GetLastData()}");
                 }
 
                 if (Portfolio.Invested)
                 {
                     Liquidate();
                 }
-                else
+                else if(_frontMonth.HasData)
                 {
                     // This works because we set this contract as tradable, even if it's a canonical security
-                    Buy(_continuousFuture.Symbol, 1);
+                    Buy(_frontMonth.Symbol, 1);
 
                     //Buy(_continuousFuture.Underlying.Symbol, 1); // this works too -> 
                 }
@@ -78,7 +98,21 @@ namespace QuantConnect.Algorithm.CSharp
                 // TODO: internally, once we have the start and end date we could use the 'ContinuousFutureUniverse.SelectSymbols(eachDay, null)' or similar to get the symbol for that date
                 // and create the sub history requests for each contract.
                 // Could do this at the QCAlgorithm side so that we don't need to change the history provider at all, but will mean direct access to the history provider wont work
-                //var response = History(new[] { _continuousFuture.Symbol }, 10000);
+                var response = History(new[] { _frontMonth.Symbol }, 1000000);
+
+                var symbols = new HashSet<Symbol>();
+                foreach (var slice in response)
+                {
+                    foreach (var symbol in slice.Keys.Select(symbol => symbol.Underlying))
+                    {
+                        symbols.Add(symbol);
+                    }
+                }
+
+                if (symbols.Count > 1)
+                {
+                    Log($"History request with Symbols: {string.Join(",", symbols.Select(symbol => symbol.ToString()))}");
+                }
             }
         }
 
