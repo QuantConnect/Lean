@@ -475,7 +475,7 @@ namespace QuantConnect.Algorithm
         /// <returns>Securities historical data</returns>
         public IEnumerable<BaseData> GetLastKnownPrices(Symbol symbol)
         {
-            if (symbol.IsCanonical() || HistoryProvider == null)
+            if (!HistoryRequestValid(symbol) || HistoryProvider == null)
             {
                 return Enumerable.Empty<BaseData>();
             }
@@ -568,7 +568,7 @@ namespace QuantConnect.Algorithm
         {
             var sentMessage = false;
             // filter out any universe securities that may have made it this far
-            var filteredRequests = requests.Where(hr => !UniverseManager.ContainsKey(hr.Symbol)).ToList();
+            var filteredRequests = requests.Where(hr => HistoryRequestValid(hr.Symbol)).ToList();
             for (var i = 0; i < filteredRequests.Count; i++)
             {
                 var request  = filteredRequests[i];
@@ -604,7 +604,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
         {
-            return symbols.Where(x => !x.IsCanonical()).SelectMany(x =>
+            return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
                 var requests = new List<HistoryRequest>();
 
@@ -629,7 +629,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
         {
-            return symbols.Where(x => !x.IsCanonical()).SelectMany(x =>
+            return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
@@ -777,6 +777,15 @@ namespace QuantConnect.Algorithm
             {
                 return resolution ?? UniverseSettings.Resolution;
             }
+        }
+
+        /// <summary>
+        /// Validate a symbol for a history request.
+        /// Universe and canonical symbols are only valid for future security types
+        /// </summary>
+        private bool HistoryRequestValid(Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Future || !UniverseManager.ContainsKey(symbol) && !symbol.IsCanonical();
         }
     }
 }

@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Auxiliary
         private readonly object _lock;
         private IDataProvider _dataProvider;
         private IMapFileProvider _mapFileProvider;
-        private Dictionary<string, bool> _seededMarket;
+        private Dictionary<CorporateActionsKey, bool> _seededMarket;
         private readonly Dictionary<Symbol, FactorFile> _factorFiles;
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace QuantConnect.Data.Auxiliary
         public LocalZipFactorFileProvider()
         {
             _factorFiles = new Dictionary<Symbol, FactorFile>();
-            _seededMarket = new Dictionary<string, bool>();
+            _seededMarket = new Dictionary<CorporateActionsKey, bool>();
             _lock = new object();
         }
 
@@ -75,13 +75,13 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>The resolved factor file, or null if not found</returns>
         public FactorFile Get(Symbol symbol)
         {
-            var market = symbol.ID.Market.ToLowerInvariant();
+            var key = CorporateActionsKey.Create(symbol);
             lock (_lock)
             {
-                if (!_seededMarket.ContainsKey(market))
+                if (!_seededMarket.ContainsKey(key))
                 {
-                    HydrateFactorFileFromLatestZip(market);
-                    _seededMarket[market] = true;
+                    HydrateFactorFileFromLatestZip(key);
+                    _seededMarket[key] = true;
                 }
 
                 FactorFile factorFile;
@@ -104,15 +104,16 @@ namespace QuantConnect.Data.Auxiliary
             lock (_lock)
             {
                 // we clear the seeded markets so they are reloaded
-                _seededMarket = new Dictionary<string, bool>();
+                _seededMarket = new Dictionary<CorporateActionsKey, bool>();
             }
             _ = Task.Delay(CacheRefreshPeriod).ContinueWith(_ => StartExpirationTask());
         }
 
         /// Hydrate the <see cref="_factorFiles"/> from the latest zipped factor file on disk
-        private void HydrateFactorFileFromLatestZip(string market)
+        private void HydrateFactorFileFromLatestZip(CorporateActionsKey key)
         {
-            if (market != QuantConnect.Market.USA.ToLowerInvariant())
+            var market = key.Market;
+            if (market != QuantConnect.Market.USA)
             {
                 // don't explode for other markets which request factor files and we don't have
                 return;
@@ -134,8 +135,8 @@ namespace QuantConnect.Data.Auxiliary
                 // If the file was found we can read the file
                 if (stream != null)
                 {
-                    var mapFileResolver = _mapFileProvider.Get(market);
-                    foreach (var keyValuePair in FactorFileZipHelper.ReadFactorFileZip(stream, mapFileResolver, market))
+                    var mapFileResolver = _mapFileProvider.Get(key);
+                    foreach (var keyValuePair in FactorFileZipHelper.ReadFactorFileZip(stream, mapFileResolver, market, key.SecurityType))
                     {
                         // we merge with existing, this will allow to hold multiple markets
                         _factorFiles[keyValuePair.Key] = keyValuePair.Value;

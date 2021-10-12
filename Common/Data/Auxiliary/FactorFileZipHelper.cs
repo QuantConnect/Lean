@@ -28,7 +28,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads the zip bytes as text and parses as FactorFileRows to create FactorFiles
         /// </summary>
-        public static IEnumerable<KeyValuePair<Symbol, FactorFile>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market)
+        public static IEnumerable<KeyValuePair<Symbol, FactorFile>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market, SecurityType securityType)
         {
             if (file == null || file.Length == 0)
             {
@@ -42,9 +42,7 @@ namespace QuantConnect.Data.Auxiliary
                     let factorFile = SafeRead(filename, lines)
                     let mapFile = mapFileResolver.GetByPermtick(factorFile.Permtick)
                     where mapFile != null
-                    let sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, market)
-                    let symbol = new Symbol(sid, mapFile.Permtick)
-                    select new KeyValuePair<Symbol, FactorFile>(symbol, factorFile)
+                    select new KeyValuePair<Symbol, FactorFile>(GetSymbol(mapFile, market, securityType), factorFile)
                 );
 
             return keyValuePairs;
@@ -67,6 +65,23 @@ namespace QuantConnect.Data.Auxiliary
             {
                 return new FactorFile(permtick, Enumerable.Empty<FactorFileRow>());
             }
+        }
+
+        private static Symbol GetSymbol(MapFile mapFile, string market, SecurityType securityType)
+        {
+            SecurityIdentifier sid;
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, market);
+                    break;
+                case SecurityType.Future:
+                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, mapFile.Permtick, market);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(securityType), securityType, null);
+            }
+            return new Symbol(sid, mapFile.Permtick);
         }
     }
 }

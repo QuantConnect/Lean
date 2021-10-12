@@ -58,6 +58,12 @@ namespace QuantConnect.Data.UniverseSelection
         public DataNormalizationMode DataNormalizationMode;
 
         /// <summary>
+        /// Defines how universe data is mapped together
+        /// </summary>
+        /// <remarks>This is particular useful when generating continuous futures</remarks>
+        public DataMappingMode DataMappingMode;
+
+        /// <summary>
         /// Allows a universe to specify which data types to add for a selected symbol
         /// </summary>
         public List<Tuple<Type, TickType>> SubscriptionDataTypes;
@@ -71,11 +77,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="extendedMarketHours">True to allow extended market hours data, false otherwise</param>
         /// <param name="minimumTimeInUniverse">Defines the minimum amount of time a security must remain in the universe before being removed</param>
         /// <param name="dataNormalizationMode">Defines how universe data is normalized before being send into the algorithm</param>
-        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest)
         {
             Resolution = resolution;
             Leverage = leverage;
             FillForward = fillForward;
+            DataMappingMode = dataMappingMode;
             ExtendedMarketHours = extendedMarketHours;
             MinimumTimeInUniverse = minimumTimeInUniverse;
             DataNormalizationMode = dataNormalizationMode;
@@ -89,6 +98,7 @@ namespace QuantConnect.Data.UniverseSelection
             Resolution = universeSettings.Resolution;
             Leverage = universeSettings.Leverage;
             FillForward = universeSettings.FillForward;
+            DataMappingMode = universeSettings.DataMappingMode;
             ExtendedMarketHours = universeSettings.ExtendedMarketHours;
             MinimumTimeInUniverse = universeSettings.MinimumTimeInUniverse;
             DataNormalizationMode = universeSettings.DataNormalizationMode;

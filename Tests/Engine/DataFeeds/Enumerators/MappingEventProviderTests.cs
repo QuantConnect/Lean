@@ -18,8 +18,8 @@ using System;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             provider.Initialize(_config,
                 null,
-                MapFile.Read("TFCFA", Market.USA),
+                MapFile.Read("TFCFA", _config.Market, _config.SecurityType, TestGlobals.DataProvider),
                 new DateTime(2006, 1, 1));
 
             Assert.AreEqual("NWSA", _config.MappedSymbol);
@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var provider = new MappingEventProvider();
             provider.Initialize(_config,
                 null,
-                MapFile.Read("TFCFA", Market.USA),
+                MapFile.Read("TFCFA", _config.Market, _config.SecurityType, TestGlobals.DataProvider),
                 new DateTime(2006, 1, 1));
 
             Assert.AreEqual("NWSA", _config.MappedSymbol);

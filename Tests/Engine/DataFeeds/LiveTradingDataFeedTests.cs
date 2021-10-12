@@ -2134,9 +2134,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataPermissionManager = new DataPermissionManager();
-            var dataProvider = new DefaultDataProvider();
             var dataManager = new DataManager(_feed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager, dataProvider),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager, TestGlobals.DataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -2175,7 +2174,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, dataProvider,
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
             var cancellationTokenSource = new CancellationTokenSource();
@@ -2241,7 +2240,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     if (securityType == SecurityType.Future)
                     {
-                        Assert.AreEqual(futureSymbols.Count, futureContractCount);
+                        // -1 to remove canonical since it's not part of the chain
+                        Assert.AreEqual(futureSymbols.Count - 1, futureContractCount);
 
                         foreach (var symbol in futureSymbols)
                         {
@@ -2322,7 +2322,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (securityType == SecurityType.Future)
             {
-                Assert.AreEqual(2, futureSymbols.Count, "Future symbols count mismatch");
+                // we add 2 symbols + 1 continuous future
+                Assert.AreEqual(3, futureSymbols.Count, "Future symbols count mismatch");
             }
             else if (securityType == SecurityType.Option)
             {

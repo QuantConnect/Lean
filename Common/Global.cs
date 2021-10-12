@@ -692,7 +692,39 @@ namespace QuantConnect
         /// <summary>
         /// The split adjusted price plus dividends
         /// </summary>
-        TotalReturn
+        TotalReturn,
+
+        /// <summary>
+        ///
+        /// </summary>
+        ForwardPanamaCanal,
+        /// <summary>
+        ///
+        /// </summary>
+        BackwardsPanamaCanal,
+        /// <summary>
+        ///
+        /// </summary>
+        BackwardsRatio
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    public enum DataMappingMode
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        LastTradingDay,
+        /// <summary>
+        ///
+        /// </summary>
+        FirstDayMonth,
+        /// <summary>
+        ///
+        /// </summary>
+        OpenInterest
     }
 
     /// <summary>
@@ -848,6 +880,16 @@ namespace QuantConnect
                     case "W":
                     case "C2":
                         return Exchange.C2;
+                    default:
+                        return Exchange.UNKNOWN;
+                }
+            }
+            else if (securityType == SecurityType.Future || securityType == SecurityType.FutureOption)
+            {
+                switch (exchange.LazyToUpper())
+                {
+                    case "CME":
+                        return Exchange.CME;
                     default:
                         return Exchange.UNKNOWN;
                 }
