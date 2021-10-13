@@ -76,21 +76,21 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
 
-            List<Symbol> symbols = new List<Symbol>();
+            var symbols = new List<Symbol>();
 
             // Futures in cents
-            var keSymbol = Symbol.Create("KE", SecurityType.Future, Market.CBOT);
-            var zcSymbol = Symbol.Create("ZC", SecurityType.Future, Market.CBOT);
-            var zlSymbol = Symbol.Create("ZL", SecurityType.Future, Market.CBOT);
-            var zoSymbol = Symbol.Create("ZO", SecurityType.Future, Market.CBOT);
-            var zsSymbol = Symbol.Create("ZS", SecurityType.Future, Market.CBOT);
-            var zwSymbol = Symbol.Create("ZW", SecurityType.Future, Market.CBOT);
-            var cbSymbol = Symbol.Create("CB", SecurityType.Future, Market.CME);
-            var dySymbol = Symbol.Create("DY", SecurityType.Future, Market.CME);
-            var gfSymbol = Symbol.Create("GF", SecurityType.Future, Market.CME);
-            var gnfSymbol = Symbol.Create("GNF", SecurityType.Future, Market.CME);
-            var heSymbol = Symbol.Create("HE", SecurityType.Future, Market.CME);
-            var leSymbol = Symbol.Create("LE", SecurityType.Future, Market.CME);
+            symbols.Add(Symbol.Create("KE", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZC", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZL", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZO", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZS", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZW", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("CB", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("DY", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("GF", SecurityType.Future, Market.CME));
+            symbols.Add( Symbol.Create("GNF", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("HE", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("LE", SecurityType.Future, Market.CME));
 
             foreach (var symbol in symbols)
             {

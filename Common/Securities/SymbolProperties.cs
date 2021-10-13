@@ -83,8 +83,8 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Allows execution and strike prices to be reported consistently with market data, historical data and the order price
-        /// Apply conversion of prices passing between Lean and IB so that within Lean all prices are USD, and the correct cent prices are sent to the brokerage
+        /// Allows normalizing live asset prices to US Dollars for Lean consumption. In some exchanges, 
+        /// for some securities, data is expressed in cents like for example for corn futures ('ZC').
         /// By default is 1 but for futures assets in cents is 100
         /// </summary>
         public decimal PriceMagnifier
@@ -110,7 +110,12 @@ namespace QuantConnect.Securities
 
             MarketTicker = marketTicker;
             MinimumOrderSize = minimumOrderSize;
+
             PriceMagnifier = priceMagnifier;
+            if (PriceMagnifier <= 0)
+            {
+                throw new ArgumentException("SymbolProprties PriceMagnifier can not be less than or equal to 0");
+            }
         }
 
         /// <summary>
