@@ -85,8 +85,8 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Allows normalizing live asset prices to US Dollars for Lean consumption. In some exchanges, 
         /// for some securities, data is expressed in cents like for example for corn futures ('ZC').
-        /// By default is 1 but for futures assets in cents is 100
         /// </summary>
+        /// <remarks>Default value is 1 but for some futures in cents it's 100</remarks>
         public decimal PriceMagnifier
         {
             get;

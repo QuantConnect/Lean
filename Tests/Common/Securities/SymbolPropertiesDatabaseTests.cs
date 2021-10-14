@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Common.Securities
             symbols.Add(Symbol.Create("CB", SecurityType.Future, Market.CME));
             symbols.Add(Symbol.Create("DY", SecurityType.Future, Market.CME));
             symbols.Add(Symbol.Create("GF", SecurityType.Future, Market.CME));
-            symbols.Add( Symbol.Create("GNF", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("GNF", SecurityType.Future, Market.CME));
             symbols.Add(Symbol.Create("HE", SecurityType.Future, Market.CME));
             symbols.Add(Symbol.Create("LE", SecurityType.Future, Market.CME));
 
@@ -471,6 +471,27 @@ namespace QuantConnect.Tests.Common.Securities
 
             SecurityDatabaseKey key;
             Assert.DoesNotThrow(() => TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out key));
+        }
+
+        [Test]
+        public void HandlesEmptyOrderSizePriceMagnifierCorrectly()
+        {
+            var line = string.Join(",",
+                "usa",
+                "ABC",
+                "equity",
+                "Example Asset",
+                "USD",
+                "100",
+                "0.01",
+                "1",
+                "",
+                "");
+
+            var result = TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out _);
+
+            Assert.IsNull(result.MinimumOrderSize);
+            Assert.AreEqual(1, result.PriceMagnifier);
         }
 
         private class TestingSymbolPropertiesDatabase : SymbolPropertiesDatabase
