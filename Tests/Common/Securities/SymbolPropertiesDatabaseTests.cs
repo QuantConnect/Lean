@@ -94,14 +94,23 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var symbol in symbols)
             {
-                var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, SecurityType.Future, "USD");
-                Assert.AreEqual(symbolProperties.PriceMagnifier, 100);
+                {
+                    var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD");
+                    Assert.AreEqual(100, symbolProperties.PriceMagnifier);
+                }
+
+                {
+                    var futureOption = Symbol.CreateOption(symbol, symbol.ID.Market, OptionStyle.American,
+                        OptionRight.Call, 1, new DateTime(2021, 10, 14));
+                    var symbolProperties = db.GetSymbolProperties(futureOption.ID.Market, futureOption, futureOption.SecurityType, "USD");
+                    Assert.AreEqual(100, symbolProperties.PriceMagnifier);
+                }
             }
 
             // Future not in cents
             var cscSymbol = Symbol.Create("CSC", SecurityType.Future, Market.CME);
             var cscSymbolProperties = db.GetSymbolProperties(Market.CME, cscSymbol, SecurityType.Future, "USD");
-            Assert.AreEqual(cscSymbolProperties.PriceMagnifier, 1);
+            Assert.AreEqual(1, cscSymbolProperties.PriceMagnifier);
         }
 
 
