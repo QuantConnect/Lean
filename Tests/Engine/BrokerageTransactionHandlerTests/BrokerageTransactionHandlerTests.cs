@@ -1292,8 +1292,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, 0) };
             method.Invoke(transactionHandler, parameters);
 
-            transactionHandler.Exit();
-
             var tickets = algorithm.Transactions.GetOrderTickets().ToList();
             Assert.AreEqual(1, tickets.Count);
 
@@ -1305,6 +1303,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             Assert.AreEqual(expectedUnderlyingPosition, algorithm.Portfolio[equity.Symbol].Quantity);
             Assert.AreEqual(expectedOptionPosition, algorithm.Portfolio[optionSymbol].Quantity);
+
+            // let's push the same event again
+            method.Invoke(transactionHandler, parameters);
+            transactionHandler.Exit();
+
+            // we should not see any new orders or events come through
+            tickets = algorithm.Transactions.GetOrderTickets().ToList();
+            Assert.AreEqual(1, tickets.Count);
         }
 
         // Long Call --> ITM (exercised early - full)
@@ -1367,8 +1373,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) };
             method.Invoke(transactionHandler, parameters);
 
-            transactionHandler.Exit();
-
             var tickets = algorithm.Transactions.GetOrderTickets().ToList();
             Assert.AreEqual(1, tickets.Count);
 
@@ -1380,6 +1384,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             Assert.AreEqual(expectedUnderlyingPosition, algorithm.Portfolio[equity.Symbol].Quantity);
             Assert.AreEqual(expectedOptionPosition, algorithm.Portfolio[optionSymbol].Quantity);
+
+            // let's push the same event again
+            method.Invoke(transactionHandler, parameters);
+            transactionHandler.Exit();
+
+            // we should not see any new orders or events come through
+            tickets = algorithm.Transactions.GetOrderTickets().ToList();
+            Assert.AreEqual(1, tickets.Count);
         }
 
         // Short Call --> ITM (assigned early - full)
@@ -1431,8 +1443,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) };
             method.Invoke(transactionHandler, parameters);
 
-            transactionHandler.Exit();
-
             var tickets = algorithm.Transactions.GetOrderTickets().ToList();
             Assert.AreEqual(1, tickets.Count);
 
@@ -1444,6 +1454,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             Assert.AreEqual(expectedUnderlyingPosition, algorithm.Portfolio[equity.Symbol].Quantity);
             Assert.AreEqual(expectedOptionPosition, algorithm.Portfolio[optionSymbol].Quantity);
+
+            // let's push the same event again
+            method.Invoke(transactionHandler, parameters);
+            transactionHandler.Exit();
+
+            // we should not see any new orders or events come through
+            tickets = algorithm.Transactions.GetOrderTickets().ToList();
+            Assert.AreEqual(1, tickets.Count);
         }
 
 
