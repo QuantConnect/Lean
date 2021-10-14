@@ -72,6 +72,40 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void LoadsPriceMagnifier()
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+
+            var symbols = new List<Symbol>();
+
+            // Futures in cents
+            symbols.Add(Symbol.Create("KE", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZC", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZL", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZO", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZS", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("ZW", SecurityType.Future, Market.CBOT));
+            symbols.Add(Symbol.Create("CB", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("DY", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("GF", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("GNF", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("HE", SecurityType.Future, Market.CME));
+            symbols.Add(Symbol.Create("LE", SecurityType.Future, Market.CME));
+
+            foreach (var symbol in symbols)
+            {
+                var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, SecurityType.Future, "USD");
+                Assert.AreEqual(symbolProperties.PriceMagnifier, 100);
+            }
+
+            // Future not in cents
+            var cscSymbol = Symbol.Create("CSC", SecurityType.Future, Market.CME);
+            var cscSymbolProperties = db.GetSymbolProperties(Market.CME, cscSymbol, SecurityType.Future, "USD");
+            Assert.AreEqual(cscSymbolProperties.PriceMagnifier, 1);
+        }
+
+
+        [Test]
         public void LoadsDefaultLotSize()
         {
             var defaultSymbolProperties = SymbolProperties.GetDefault(Currencies.USD);
@@ -437,6 +471,27 @@ namespace QuantConnect.Tests.Common.Securities
 
             SecurityDatabaseKey key;
             Assert.DoesNotThrow(() => TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out key));
+        }
+
+        [Test]
+        public void HandlesEmptyOrderSizePriceMagnifierCorrectly()
+        {
+            var line = string.Join(",",
+                "usa",
+                "ABC",
+                "equity",
+                "Example Asset",
+                "USD",
+                "100",
+                "0.01",
+                "1",
+                "",
+                "");
+
+            var result = TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out _);
+
+            Assert.IsNull(result.MinimumOrderSize);
+            Assert.AreEqual(1, result.PriceMagnifier);
         }
 
         private class TestingSymbolPropertiesDatabase : SymbolPropertiesDatabase
