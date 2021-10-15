@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // define our selection criteria
                 return from d in data
-                       // pick top 2 gainers to bet against
+                           // pick top 2 gainers to bet against
                        where d.TopGainersRank <= 2
                        select d.Symbol;
             });
@@ -111,11 +111,11 @@ namespace QuantConnect.Algorithm.CSharp
                 if (isLiveMode)
                 {
                     // this is actually an html file, we'll handle the parsing accordingly
-                    return new RemoteFileSubscriptionDataSource(@"http://www.wsj.com/mdc/public/page/2_3021-gainnyse-gainer.html");
+                    return new SubscriptionDataSource(@"http://www.wsj.com/mdc/public/page/2_3021-gainnyse-gainer.html", SubscriptionTransportMedium.RemoteFile);
                 }
 
                 // this has data from 2009.01.01 to 2015.10.19 for top 10 nyse gainers
-                return new RemoteFileSubscriptionDataSource(@"https://www.dropbox.com/s/vrn3p38qberw3df/nyse-gainers.csv?dl=1");
+                return new SubscriptionDataSource(@"https://www.dropbox.com/s/vrn3p38qberw3df/nyse-gainers.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
             }
 
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)

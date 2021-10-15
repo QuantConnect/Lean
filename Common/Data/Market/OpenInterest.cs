@@ -98,7 +98,7 @@ namespace QuantConnect.Data.Market
         /// <param name="line">CSV source line of the compressed source</param>
         /// <param name="date">Base date for the open interest (date is stored as int milliseconds since midnight)</param>
         /// <param name="config">Subscription configuration object</param>
-        public OpenInterest(SubscriptionDataConfig config, string line, DateTime date):
+        public OpenInterest(SubscriptionDataConfig config, string line, DateTime date) :
             this(config, config.Symbol, line, date)
         {
         }
@@ -134,7 +134,7 @@ namespace QuantConnect.Data.Market
             if (isLiveMode)
             {
                 // this data type is streamed in live mode
-                return new DataQueueSubscriptionDataSource();
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
@@ -142,7 +142,7 @@ namespace QuantConnect.Data.Market
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }
-            return new LocalFileSubscriptionDataSource(source, FileFormat.Csv);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>

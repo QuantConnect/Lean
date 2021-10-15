@@ -242,7 +242,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             // Remember to add the "?dl=1" for dropbox links
-            return new RemoteFileSubscriptionDataSource("https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1");
+            return new SubscriptionDataSource("https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
         }
 
         /// <summary>

@@ -133,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 var url = isLiveMode ? LiveUrl : BacktestUrl;
-                return new RemoteFileSubscriptionDataSource(url);
+                return new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile);
             }
 
             /// <summary>
@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
                 try
                 {
                     // create a new StockDataSource and set the symbol using config.Symbol
-                    var stocks = new StockDataSource {Symbol = config.Symbol};
+                    var stocks = new StockDataSource { Symbol = config.Symbol };
                     // break our line into csv pieces
                     var csv = line.ToCsv();
                     if (isLiveMode)

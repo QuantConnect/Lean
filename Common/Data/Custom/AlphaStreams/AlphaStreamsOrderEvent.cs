@@ -72,7 +72,7 @@ namespace QuantConnect.Data.Custom.AlphaStreams
                 config.Symbol.Value.ToLowerInvariant(),
                 $"{date:yyyyMMdd}.json"
             );
-            return new LocalFileSubscriptionDataSource(source, FileFormat.Csv);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>

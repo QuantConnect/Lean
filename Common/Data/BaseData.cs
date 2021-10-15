@@ -177,7 +177,7 @@ namespace QuantConnect.Data
             if (isLiveMode)
             {
                 // live trading by default always gets a rest endpoint
-                return new RestSubscriptionDataSource(source, isLiveMode);
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.Rest);
             }
 
             // construct a uri to determine if we have a local or remote file
@@ -185,10 +185,10 @@ namespace QuantConnect.Data
 
             if (uri.IsAbsoluteUri && !uri.IsLoopback)
             {
-                return new RemoteFileSubscriptionDataSource(source);
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
             }
 
-            return new LocalFileSubscriptionDataSource(source);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }
 
         /// <summary>
@@ -340,7 +340,7 @@ namespace QuantConnect.Data
         /// <returns>A clone of the current object</returns>
         public virtual BaseData Clone()
         {
-            return (BaseData) ObjectActivator.Clone((object)this);
+            return (BaseData)ObjectActivator.Clone((object)this);
         }
 
         /// <summary>

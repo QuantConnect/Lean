@@ -143,7 +143,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             }
             else
             {
-                subscription = new LocalFileSubscriptionDataSource("");
+                subscription = new SubscriptionDataSource("", SubscriptionTransportMedium.LocalFile);
             }
             return subscription;
         }
@@ -225,7 +225,8 @@ namespace QuantConnect.Data.Custom.Intrinio
                                                  $"Basic ({Convert.ToBase64String(byteKey)})")
             };
 
-            return new RemoteFileSubscriptionDataSource(url, authorizationHeaders, FileFormat.Csv);
+            return new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv,
+                                              authorizationHeaders);
         }
     }
 }

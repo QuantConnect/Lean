@@ -181,8 +181,9 @@ namespace QuantConnect.Tests.ToolBox
                                                     TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, tickType);
             var factory = new ZipEntryNameSubscriptionDataSourceReader(TestGlobals.DataProvider, config, date, false);
 
-            return factory.Read(new LocalFileSubscriptionDataSource(filePath, FileFormat.ZipEntryName))
+            var result = factory.Read(new SubscriptionDataSource(filePath, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName))
                           .Select(s => s.Symbol).ToList();
+            return result;
         }
 
         private string LoadFutureData(Symbol future, TickType tickType, Resolution res)
@@ -315,7 +316,7 @@ namespace QuantConnect.Tests.ToolBox
 
 
         [Test, TestCaseSource(nameof(OptionAndFuturesCases))]
-        public void ReadLeanFutureAndOptionDataFromFilePath(string composedFilePath, Symbol symbol,  int rowsInfile, double sumValue)
+        public void ReadLeanFutureAndOptionDataFromFilePath(string composedFilePath, Symbol symbol, int rowsInfile, double sumValue)
         {
             // Act
             var ldr = new LeanDataReader(composedFilePath);

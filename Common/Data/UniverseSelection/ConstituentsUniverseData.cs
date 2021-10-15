@@ -63,7 +63,7 @@ namespace QuantConnect.Data.UniverseSelection
                 config.Resolution.ResolutionToLower(),
                 universe,
                 $"{date:yyyyMMdd}.csv");
-            return new LocalFileSubscriptionDataSource(path, FileFormat.Csv);
+            return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>

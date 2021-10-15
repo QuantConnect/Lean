@@ -710,26 +710,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var receivedDelistedWarning = 0;
             var receivedDelisted = 0;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+            {
+                foreach (var delisting in ts.Slice.Delistings)
                 {
-                    foreach (var delisting in ts.Slice.Delistings)
+                    if (delisting.Key != Symbols.SPY_C_192_Feb19_2016)
                     {
-                        if(delisting.Key != Symbols.SPY_C_192_Feb19_2016)
-                        {
-                            throw new Exception($"Unexpected delisting for symbol {delisting.Key}");
-                        }
-
-                        if (delisting.Value.Type == DelistingType.Warning)
-                        {
-                            Interlocked.Increment(ref receivedDelistedWarning);
-                        }
-                        if (delisting.Value.Type == DelistingType.Delisted)
-                        {
-                            Interlocked.Increment(ref receivedDelisted);
-                            // we got what we wanted, end unit test
-                            _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
-                        }
+                        throw new Exception($"Unexpected delisting for symbol {delisting.Key}");
                     }
-                },
+
+                    if (delisting.Value.Type == DelistingType.Warning)
+                    {
+                        Interlocked.Increment(ref receivedDelistedWarning);
+                    }
+                    if (delisting.Value.Type == DelistingType.Delisted)
+                    {
+                        Interlocked.Increment(ref receivedDelisted);
+                        // we got what we wanted, end unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    }
+                }
+            },
                 alwaysInvoke: false,
                 secondsTimeStep: 3600 * 8,
                 endDate: delistingDate.AddDays(2));
@@ -831,7 +831,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }, secondsTimeStep: 60 * 60 * 6, // 6 hour time step
                 alwaysInvoke: true,
                 sendUniverseData: true,
-                endDate:_startDate.AddDays(10));
+                endDate: _startDate.AddDays(10));
 
             Assert.IsNotNull(securityChanges);
             Assert.IsTrue(securityChanges.AddedSecurities.Single().Symbol.Value == "AAPL");
@@ -1267,8 +1267,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var tickTimeUtc = lastTime.AddMinutes(-1);
                 return fdqh.SubscriptionDataConfigs.Where(config => !_algorithm.UniverseManager.ContainsKey(config.Symbol)) // its not a universe
                     .SelectMany(config =>
-                        {
-                            var ticks = new List<Tick>
+                    {
+                        var ticks = new List<Tick>
                             {
                                 new Tick(tickTimeUtc.ConvertFromUtc(config.ExchangeTimeZone), config.Symbol, 1, 2)
                                 {
@@ -1277,8 +1277,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                     TickType = config.TickType
                                 }
                             };
-                            return ticks;
-                        }
+                        return ticks;
+                    }
                     ).ToList();
             });
 
@@ -2457,9 +2457,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return new RestSubscriptionDataSource("localhost:1232/fake",
-                isLiveMode,
-                returnsACollection: FileFormat == FileFormat.Collection);
+            return new SubscriptionDataSource("localhost:1232/fake",
+                SubscriptionTransportMedium.Rest,
+                FileFormat);
         }
     }
 }

@@ -43,7 +43,7 @@ namespace QuantConnect.Data.Auxiliary
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var symbol = LeanData.ReadSymbolFromZipEntry(config.Symbol, config.Resolution, line);
-            return new ZipEntryName {Time = date, Symbol = symbol};
+            return new ZipEntryName { Time = date, Symbol = symbol };
         }
 
         /// <summary>
@@ -57,11 +57,11 @@ namespace QuantConnect.Data.Auxiliary
         {
             if (isLiveMode)
             {
-                return new LocalFileSubscriptionDataSource(string.Empty);
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
-            return new LocalFileSubscriptionDataSource(source, FileFormat.ZipEntryName);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName);
         }
     }
 }

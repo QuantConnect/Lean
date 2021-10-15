@@ -95,7 +95,7 @@ namespace QuantConnect.Data.Custom
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             // be sure to instantiate the correct type
-            var data = (Quandl) Activator.CreateInstance(GetType());
+            var data = (Quandl)Activator.CreateInstance(GetType());
             data.Symbol = config.Symbol;
             var csv = line.Split(',');
 
@@ -138,7 +138,7 @@ namespace QuantConnect.Data.Custom
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var source = $"https://www.quandl.com/api/v3/datasets/{config.Symbol.Value}.csv?order=asc&api_key={_authCode}";
-            return new RemoteFileSubscriptionDataSource(source);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
         }
 
         /// <summary>

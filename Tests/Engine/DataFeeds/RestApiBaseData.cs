@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var remoteFileSource = @"https://www.quantconnect.com/live-test?type=rest&symbols=" + config.Symbol.Value;
             //remoteFileSource = @"http://beta.quantconnect.com/live-test?type=rest&symbols=" + config.Symbol.Value;
-            return new RestSubscriptionDataSource(remoteFileSource, isLiveMode);
+            return new SubscriptionDataSource(remoteFileSource, SubscriptionTransportMedium.Rest, FileFormat.Csv);
         }
 
         private class JsonSerialization
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Symbol = sym,
                     Time = dateTime,
                     EndTime = dateTime.Add(period),
-                    Value = (decimal) alpha
+                    Value = (decimal)alpha
                 };
             }
         }

@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
-namespace QuantConnect.Data.Transport
+namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
     /// <summary>
     /// Represents a stream reader capable of reading lines from disk

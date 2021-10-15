@@ -28,10 +28,10 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.Transport;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -338,7 +338,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // use local file instead of remote file
                 var source = GetLocalFileName(config.Symbol.Value, "test");
 
-                return new RemoteFileSubscriptionDataSource(source);
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
             }
 
             public static string GetLocalFileName(string ticker, string fileExtension)

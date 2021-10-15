@@ -20,8 +20,8 @@ using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
-using QuantConnect.Data.Transport;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {

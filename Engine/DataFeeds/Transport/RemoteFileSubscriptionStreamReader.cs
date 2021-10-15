@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Interfaces;
 
-namespace QuantConnect.Data.Transport
+namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
     /// <summary>
     /// Represents a stream reader capabable of downloading a remote file and then
@@ -47,16 +47,17 @@ namespace QuantConnect.Data.Transport
         /// </summary>
         /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>
         /// <param name="source">The remote url to be downloaded via web client</param>
+        /// <param name="downloadDirectory">The local directory and destination of the download</param>
         /// <param name="headers">Defines header values to add to the request</param>
-        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, IEnumerable<KeyValuePair<string, string>> headers)
+        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory, IEnumerable<KeyValuePair<string, string>> headers)
         {
             // don't use cache if data is ephemeral
             // will be false for live history requests and live subscriptions
             var useCache = !dataCacheProvider.IsDataEphemeral;
 
             // create a hash for a new filename
-            var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString())  + source.GetExtension();
-            var destination = Path.Combine(Globals.Cache, filename);
+            var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString()) + source.GetExtension();
+            var destination = Path.Combine(downloadDirectory, filename);
 
             string contents = null;
             if (useCache)

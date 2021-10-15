@@ -16,6 +16,7 @@
 
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Logging;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,6 @@ using System.Net;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using QuantConnect.Data.Transport;
 
 namespace QuantConnect.ToolBox.IQFeed
 {
@@ -518,7 +518,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                     case "FUTURE":
                         // we are not interested in designated continuous contracts
-                        if ( columns[columnSymbol].EndsWith( "#" ) || columns[columnSymbol].EndsWith( "#C" ) )
+                        if (columns[columnSymbol].EndsWith("#") || columns[columnSymbol].EndsWith("#C"))
                         {
                             continue;
                         }

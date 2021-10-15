@@ -72,7 +72,7 @@ namespace QuantConnect.Data.Fundamental
                     $"equity/{config.Market}/fundamental/fine/{config.Symbol.Value.ToLowerInvariant()}/{date:yyyyMMdd}.zip"
                 ));
 
-            return new LocalFileSubscriptionDataSource(source, FileFormat.Csv);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>

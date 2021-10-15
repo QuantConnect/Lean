@@ -111,12 +111,12 @@ namespace QuantConnect.Data.Custom
             if (isLiveMode)
             {
                 var source = Invariant($"{_baseUrl}&ver={_ver}&sid={_sid}&interval={interval}&offerID={symbolId}");
-                return new RestSubscriptionDataSource(source, isLiveMode);
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.Rest, FileFormat.Csv);
             }
             else
             {
                 var source = GenerateZipFilePath(config, date);
-                return new LocalFileSubscriptionDataSource(source);
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
             }
         }
 

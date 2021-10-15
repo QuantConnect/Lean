@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             // using an already existing file, the file it self and its contents don't really matter. The reader will mock the values
-            return new LocalFileSubscriptionDataSource("./TestData/spy_with_ichimoku.csv", FileFormat.Csv);
+            return new SubscriptionDataSource("./TestData/spy_with_ichimoku.csv", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
     }
 }

@@ -392,7 +392,7 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Cfd:
                         {
                             TickType = TickType.Quote;
-                            Time = date.Date.AddMilliseconds((double) reader.GetDecimal())
+                            Time = date.Date.AddMilliseconds((double)reader.GetDecimal())
                                 .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                             BidPrice = reader.GetDecimal();
                             AskPrice = reader.GetDecimal();
@@ -491,133 +491,133 @@ namespace QuantConnect.Data.Market
                 switch (config.SecurityType)
                 {
                     case SecurityType.Equity:
-                    {
-                        var index = 0;
-                        TickType = config.TickType;
-                        var csv = line.ToCsv(TickType == TickType.Trade ? 6 : 8);
-                        Time = date.Date.AddMilliseconds(csv[index++].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-
-                        if (TickType == TickType.Trade)
                         {
-                            Value = csv[index++].ToDecimal() / scaleFactor;
-                            Quantity = csv[index++].ToDecimal();
-                            if (csv.Count > index)
+                            var index = 0;
+                            TickType = config.TickType;
+                            var csv = line.ToCsv(TickType == TickType.Trade ? 6 : 8);
+                            Time = date.Date.AddMilliseconds(csv[index++].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+
+                            if (TickType == TickType.Trade)
                             {
-                                Exchange = csv[index++];
-                                SaleCondition = csv[index++];
-                                Suspicious = (csv[index++] == "1");
+                                Value = csv[index++].ToDecimal() / scaleFactor;
+                                Quantity = csv[index++].ToDecimal();
+                                if (csv.Count > index)
+                                {
+                                    Exchange = csv[index++];
+                                    SaleCondition = csv[index++];
+                                    Suspicious = (csv[index++] == "1");
+                                }
                             }
-                        }
-                        else if (TickType == TickType.Quote)
-                        {
-                            BidPrice = csv[index++].ToDecimal() / scaleFactor;
-                            BidSize = csv[index++].ToDecimal();
-                            AskPrice = csv[index++].ToDecimal() / scaleFactor;
-                            AskSize = csv[index++].ToDecimal();
-
-                            SetValue();
-
-                            if (csv.Count > index)
+                            else if (TickType == TickType.Quote)
                             {
-                                Exchange = csv[index++];
-                                SaleCondition = csv[index++];
-                                Suspicious = (csv[index++] == "1");
+                                BidPrice = csv[index++].ToDecimal() / scaleFactor;
+                                BidSize = csv[index++].ToDecimal();
+                                AskPrice = csv[index++].ToDecimal() / scaleFactor;
+                                AskSize = csv[index++].ToDecimal();
+
+                                SetValue();
+
+                                if (csv.Count > index)
+                                {
+                                    Exchange = csv[index++];
+                                    SaleCondition = csv[index++];
+                                    Suspicious = (csv[index++] == "1");
+                                }
                             }
+                            else
+                            {
+                                throw new InvalidOperationException($"Tick(): Unexpected tick type {TickType}");
+                            }
+                            break;
                         }
-                        else
-                        {
-                            throw new InvalidOperationException($"Tick(): Unexpected tick type {TickType}");
-                        }
-                        break;
-                    }
 
                     case SecurityType.Forex:
                     case SecurityType.Cfd:
-                    {
-                        var csv = line.ToCsv(3);
-                        TickType = TickType.Quote;
-                        var ticks = (long)(csv[0].ToDecimal() * TimeSpan.TicksPerMillisecond);
-                        Time = date.Date.AddTicks(ticks)
-                            .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-                        BidPrice = csv[1].ToDecimal();
-                        AskPrice = csv[2].ToDecimal();
-
-                        SetValue();
-                        break;
-                    }
-
-                    case SecurityType.Crypto:
-                    {
-                        TickType = config.TickType;
-                        Exchange = config.Market;
-
-                        if (TickType == TickType.Trade)
                         {
                             var csv = line.ToCsv(3);
-                            Time = date.Date.AddMilliseconds((double)csv[0].ToDecimal())
-                                .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-                            Value = csv[1].ToDecimal();
-                            Quantity = csv[2].ToDecimal();
-                            Suspicious = csv.Count >= 4 && csv[3] == "1";
-                        }
-
-                        if (TickType == TickType.Quote)
-                        {
-                            var csv = line.ToCsv(6);
-                            Time = date.Date.AddMilliseconds((double)csv[0].ToDecimal())
+                            TickType = TickType.Quote;
+                            var ticks = (long)(csv[0].ToDecimal() * TimeSpan.TicksPerMillisecond);
+                            Time = date.Date.AddTicks(ticks)
                                 .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                             BidPrice = csv[1].ToDecimal();
-                            BidSize = csv[2].ToDecimal();
-                            AskPrice = csv[3].ToDecimal();
-                            AskSize = csv[4].ToDecimal();
-                            Suspicious = csv.Count >= 6 && csv[5] == "1";
+                            AskPrice = csv[2].ToDecimal();
 
                             SetValue();
+                            break;
                         }
-                        break;
-                    }
+
+                    case SecurityType.Crypto:
+                        {
+                            TickType = config.TickType;
+                            Exchange = config.Market;
+
+                            if (TickType == TickType.Trade)
+                            {
+                                var csv = line.ToCsv(3);
+                                Time = date.Date.AddMilliseconds((double)csv[0].ToDecimal())
+                                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                                Value = csv[1].ToDecimal();
+                                Quantity = csv[2].ToDecimal();
+                                Suspicious = csv.Count >= 4 && csv[3] == "1";
+                            }
+
+                            if (TickType == TickType.Quote)
+                            {
+                                var csv = line.ToCsv(6);
+                                Time = date.Date.AddMilliseconds((double)csv[0].ToDecimal())
+                                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                                BidPrice = csv[1].ToDecimal();
+                                BidSize = csv[2].ToDecimal();
+                                AskPrice = csv[3].ToDecimal();
+                                AskSize = csv[4].ToDecimal();
+                                Suspicious = csv.Count >= 6 && csv[5] == "1";
+
+                                SetValue();
+                            }
+                            break;
+                        }
                     case SecurityType.Future:
                     case SecurityType.Option:
                     case SecurityType.FutureOption:
                     case SecurityType.IndexOption:
-                    {
-                        var csv = line.ToCsv(7);
-                        TickType = config.TickType;
-                        Time = date.Date.AddMilliseconds(csv[0].ToInt64())
-                            .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                        {
+                            var csv = line.ToCsv(7);
+                            TickType = config.TickType;
+                            Time = date.Date.AddMilliseconds(csv[0].ToInt64())
+                                .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
 
-                        if (TickType == TickType.Trade)
-                        {
-                            Value = csv[1].ToDecimal()/scaleFactor;
-                            Quantity = csv[2].ToDecimal();
-                            Exchange = csv[3];
-                            SaleCondition = csv[4];
-                            Suspicious = csv[5] == "1";
-                        }
-                        else if (TickType == TickType.OpenInterest)
-                        {
-                            Value = csv[1].ToDecimal();
-                        }
-                        else
-                        {
-                            if (csv[1].Length != 0)
+                            if (TickType == TickType.Trade)
                             {
-                                BidPrice = csv[1].ToDecimal()/scaleFactor;
-                                BidSize = csv[2].ToDecimal();
+                                Value = csv[1].ToDecimal() / scaleFactor;
+                                Quantity = csv[2].ToDecimal();
+                                Exchange = csv[3];
+                                SaleCondition = csv[4];
+                                Suspicious = csv[5] == "1";
                             }
-                            if (csv[3].Length != 0)
+                            else if (TickType == TickType.OpenInterest)
                             {
-                                AskPrice = csv[3].ToDecimal()/scaleFactor;
-                                AskSize = csv[4].ToDecimal();
+                                Value = csv[1].ToDecimal();
                             }
-                            Exchange = csv[5];
-                            Suspicious = csv[6] == "1";
+                            else
+                            {
+                                if (csv[1].Length != 0)
+                                {
+                                    BidPrice = csv[1].ToDecimal() / scaleFactor;
+                                    BidSize = csv[2].ToDecimal();
+                                }
+                                if (csv[3].Length != 0)
+                                {
+                                    AskPrice = csv[3].ToDecimal() / scaleFactor;
+                                    AskSize = csv[4].ToDecimal();
+                                }
+                                Exchange = csv[5];
+                                Suspicious = csv[6] == "1";
 
-                            SetValue();
+                                SetValue();
+                            }
+
+                            break;
                         }
-
-                        break;
-                    }
                 }
             }
             catch (Exception err)
@@ -677,7 +677,7 @@ namespace QuantConnect.Data.Market
             if (isLiveMode)
             {
                 // this data type is streamed in live mode
-                return new DataQueueSubscriptionDataSource();
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
@@ -685,7 +685,7 @@ namespace QuantConnect.Data.Market
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }
-            return new LocalFileSubscriptionDataSource(source, FileFormat.Csv);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>

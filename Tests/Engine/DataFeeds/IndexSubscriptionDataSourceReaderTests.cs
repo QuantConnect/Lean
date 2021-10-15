@@ -101,13 +101,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public override SubscriptionDataSource GetSourceForAnIndex(SubscriptionDataConfig config, DateTime date, string index, bool isLiveMode)
             {
                 IndexLine = index;
-                return new LocalFileSubscriptionDataSource("",
+                return new SubscriptionDataSource("",
+                    SubscriptionTransportMedium.LocalFile,
                     FileFormat.Csv);
             }
 
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new LocalFileSubscriptionDataSource("",
+                return new SubscriptionDataSource("",
+                    SubscriptionTransportMedium.LocalFile,
                     FileFormat.Csv);
             }
         }

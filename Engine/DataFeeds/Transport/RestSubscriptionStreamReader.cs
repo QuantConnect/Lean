@@ -21,7 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using RestSharp;
 
-namespace QuantConnect.Data.Transport
+namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
     /// <summary>
     /// Represents a stream reader capable of polling a rest client
@@ -66,11 +66,11 @@ namespace QuantConnect.Data.Transport
         }
 
         /// <summary>
-        /// Gets <see cref="SubscriptionTransportMedium.Web"/>
+        /// Gets <see cref="SubscriptionTransportMedium.Rest"/>
         /// </summary>
         public SubscriptionTransportMedium TransportMedium
         {
-            get { return SubscriptionTransportMedium.Web; }
+            get { return SubscriptionTransportMedium.Rest; }
         }
 
         /// <summary>
