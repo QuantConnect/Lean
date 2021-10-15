@@ -39,7 +39,9 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         {
             Market.GDAX,
             Market.Bitfinex,
-            Market.Binance
+            Market.Binance,
+            Market.FTX,
+            Market.Kraken
         }.ToHashSet();
 
         private readonly DirectoryInfo _rawDataFolder;
