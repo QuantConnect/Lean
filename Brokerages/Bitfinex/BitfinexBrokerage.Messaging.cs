@@ -31,6 +31,7 @@ using System.Linq;
 using System.Net;
 using QuantConnect.Brokerages.Bitfinex.Messages;
 using QuantConnect.Packets;
+using QuantConnect.Securities.Crypto;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Bitfinex
@@ -93,7 +94,19 @@ namespace QuantConnect.Brokerages.Bitfinex
             : base(WebSocketUrl, websocket, restClient, apiKey, apiSecret, "Bitfinex")
         {
             _job = job;
-            SubscriptionManager = new BitfinexSubscriptionManager(this, WebSocketUrl, _symbolMapper);
+
+            SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
+                WebSocketUrl,
+                MaximumSymbolsPerConnection,
+                0,
+                null,
+                () => new BitfinexWebSocketWrapper(null),
+                Subscribe,
+                Unsubscribe,
+                OnDataMessage,
+                TimeSpan.Zero,
+                _connectionRateLimiter);
+
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
             _aggregator = aggregator;
@@ -147,7 +160,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Should be empty, Bitfinex brokerage manages his public channels including subscribe/unsubscribe/reconnect methods using <see cref="BitfinexSubscriptionManager"/>
+        /// Should be empty, Bitfinex brokerage manages his public channels including subscribe/unsubscribe/reconnect methods using <see cref="BrokerageMultiWebSocketSubscriptionManager"/>
         /// Not used in master
         /// </summary>
         /// <param name="symbols"></param>
@@ -177,8 +190,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Implementation of the OnMessage event
         /// </summary>
         /// <param name="e"></param>
-        private void OnMessageImpl(WebSocketMessage e)
+        private void OnMessageImpl(WebSocketMessage webSocketMessage)
         {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
+
             try
             {
                 var token = JToken.Parse(e.Message);
@@ -248,8 +263,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     {
                         case "auth":
                             var auth = token.ToObject<AuthResponseMessage>();
-                            var result = string.Equals(auth.Status, "OK", StringComparison.OrdinalIgnoreCase) ? "succeed" : "failed";
-                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Subscribing to authenticated channels {result}");
+                            var result = string.Equals(auth.Status, "OK", StringComparison.OrdinalIgnoreCase) ? "successful" : "failed";
+                            Log.Trace($"BitfinexBrokerage.OnMessage: Subscribing to authenticated channels {result}");
                             return;
 
                         case "info":
@@ -258,11 +273,11 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                         case "error":
                             var error = token.ToObject<ErrorMessage>();
-                            Log.Error($"BitfinexWebsocketsBrokerage.OnMessage: {error.Level}: {error.Message}");
+                            Log.Error($"BitfinexBrokerage.OnMessage: {error.Level}: {error.Message}");
                             return;
 
                         default:
-                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Unexpected message format: {e.Message}");
+                            Log.Error($"BitfinexBrokerage.OnMessage: Unexpected message format: {e.Message}");
                             break;
                     }
                 }
@@ -392,7 +407,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
                     if (order == null)
                     {
-                        Log.Error($"EmitFillOrder(): order not found: BrokerId: {brokerId}");
+                        Log.Error($"BitfinexBrokerage.EmitFillOrder(): order not found: BrokerId: {brokerId}");
                         return;
                     }
                 }
@@ -420,10 +435,24 @@ namespace QuantConnect.Brokerages.Bitfinex
                 if (_algorithm.BrokerageModel.AccountType == AccountType.Cash &&
                     order.Direction == OrderDirection.Buy)
                 {
-                    // fees are debited in the base currency, so we have to subtract them from the filled quantity
-                    fillQuantity -= orderFee.Value.Amount;
+                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market,
+                        symbol,
+                        symbol.SecurityType,
+                        AccountBaseCurrency);
+                    Crypto.DecomposeCurrencyPair(symbol, symbolProperties, out var baseCurrency, out var _);
 
-                    orderFee = new ModifiedFillQuantityOrderFee(orderFee.Value);
+                    if (orderFee.Value.Currency != baseCurrency)
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "UnexpectedFeeCurrency", $"Unexpected fee currency {orderFee.Value.Currency} for symbol {symbol}. OrderId {order.Id}. BrokerageOrderId {brokerId}. " +
+                            "This error can happen because your account is Margin type and Lean is configured to be Cash type or while using Cash type the Bitfinex account fee settings are set to 'Asset Trading Fee' and should be set to 'Currency Exchange Fee'."));
+                    }
+                    else
+                    {
+                        // fees are debited in the base currency, so we have to subtract them from the filled quantity
+                        fillQuantity -= orderFee.Value.Amount;
+
+                        orderFee = new ModifiedFillQuantityOrderFee(orderFee.Value);
+                    }
                 }
 
                 var orderEvent = new OrderEvent
@@ -473,13 +502,16 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Emit stream tick
         /// </summary>
         /// <param name="tick"></param>
-        public void EmitTick(Tick tick)
+        private void EmitTick(Tick tick)
         {
-            _aggregator.Update(tick);
+            lock (TickLocker)
+            {
+                _aggregator.Update(tick);
+            }
         }
 
         /// <summary>
-        /// Should be empty. <see cref="BitfinexSubscriptionManager"/> manages each <see cref="BitfinexWebSocketWrapper"/> individually
+        /// Should be empty. <see cref="BrokerageMultiWebSocketSubscriptionManager"/> manages each <see cref="BitfinexWebSocketWrapper"/> individually
         /// </summary>
         /// <returns></returns>
         protected override IEnumerable<Symbol> GetSubscribed() => new List<Symbol>();

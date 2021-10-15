@@ -5,7 +5,7 @@
 #
 
 # Use base system for cleaning up wayward processes
-FROM phusion/baseimage:bionic-1.0.0
+FROM phusion/baseimage:focal-1.0.0
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -27,14 +27,15 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test \
    && apt-fast clean && apt-get remove -y apt-fast && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
    && rm -rf /var/lib/apt/lists/*
 
-# Install IB Gateway: Installs to /usr/local/ibgateway
-RUN wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v984.1h.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64.v984.1h.sh && \
-    ./ibgateway-latest-standalone-linux-x64.v984.1h.sh -q && \
-    rm ibgateway-latest-standalone-linux-x64.v984.1h.sh
+# Install IB Gateway: Installs to /root/ibgateway
+RUN mkdir -p /root/ibgateway && \
+    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
+    chmod 777 ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
+    ./ibgateway-latest-standalone-linux-x64.v985.1j.sh -q -dir /root/ibgateway && \
+    rm ibgateway-latest-standalone-linux-x64.v985.1j.sh
 
 # Install dotnet 5 sdk & runtime
-RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update; \
     apt-get install -y apt-transport-https && \
@@ -62,10 +63,11 @@ ENV PIP_DEFAULT_TIMEOUT=120
 # Conda install required so that the packages are not
 # overwritten and have their version invalidated by
 # subsequent calls to conda install
-RUN conda install -y                \
-    cython=0.29.17                  \
-    pandas=0.25.3                   \
-    numpy=1.18.1                    \
+RUN conda install -y                                 \
+    cython=0.29.17                                   \
+    pandas=0.25.3                                    \
+    numpy=1.18.1                                     \
+    && conda install -y -c conda-forge fbprophet=0.6 \
     && conda clean -y --all
 
 # Install all packages
@@ -95,7 +97,6 @@ RUN pip install --no-cache-dir      \
     cmdstanpy==0.4                  \
     copulae==0.3.1                  \
     featuretools==0.14.0            \
-    fbprophet==0.6                  \
     PuLP==1.6.8                     \
     pymc3==3.8                      \
     rauth==0.7.3                    \
@@ -137,7 +138,7 @@ RUN pip install --no-cache-dir      \
     gluonts==0.4.3                  \
     gplearn==0.4.1                  \
     jax==0.1.68                     \
-    jaxlib==0.1.47                  \
+    jaxlib==0.1.69                  \
     keras-rl==0.4.2                 \
     pennylane==0.9.0                \
     neural-tangents==0.2.1          \
@@ -165,7 +166,8 @@ RUN pip install --no-cache-dir      \
     dgl==0.6.1                      \
     ruptures==1.1.3                 \
     simpy==4.0.1                    \
-    scikit-learn-extra==0.2.0
+    scikit-learn-extra==0.2.0       \
+    ray==1.5.1
 
 # feature_selector has overly strict dependency version ranges
 # We already installed close-enough versions of all of its dependencies above

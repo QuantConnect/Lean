@@ -48,7 +48,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 request.Configuration,
                 exchangeHours,
                 timeZoneOffsetProvider,
-                enumerator
+                enumerator,
+                request.IsUniverseSubscription
             );
             return new Subscription(request, dataEnumerator, timeZoneOffsetProvider);
         }
@@ -96,7 +97,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         // Use our config filter to see if we should emit this
                         // This currently catches Auxiliary data that we don't want to emit
-                        if (data != null && !config.ShouldEmitData(data))
+                        if (data != null && !config.ShouldEmitData(data, request.IsUniverseSubscription))
                         {
                             continue;
                         }

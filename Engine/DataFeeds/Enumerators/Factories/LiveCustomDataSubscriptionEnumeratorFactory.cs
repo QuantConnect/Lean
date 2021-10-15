@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     enumerator = new RateLimitEnumerator<BaseData>(enumerator, _timeProvider, minimumTimeBetweenCalls);
                 }
 
-                if (source.Format == FileFormat.Collection)
+                if (source.Format == FileFormat.UnfoldingCollection)
                 {
                     // unroll collections into individual data points after fast forward/rate limiting applied
                     enumerator = enumerator.SelectMany(data =>

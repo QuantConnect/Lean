@@ -47,8 +47,8 @@ namespace QuantConnect.ToolBox.OandaDownloader
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                var accessToken = Config.Get("access-token", "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f");
-                var accountId = Config.Get("account-id", "621396");
+                var accessToken = Config.Get("oanda-access-token", "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f");
+                var accountId = Config.Get("oanda-account-id", "621396");
 
                 // Create an instance of the downloader
                 const string market = Market.Oanda;
@@ -79,7 +79,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                         // Save the data (other resolutions)
                         foreach (var res in new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily })
                         {
-                            var resData = downloader.AggregateBars(symbol, bars, res.ToTimeSpan());
+                            var resData = LeanData.AggregateQuoteBars(bars, symbol, res.ToTimeSpan());
 
                             writer = new LeanDataWriter(res, symbol, dataDirectory);
                             writer.Write(resData);

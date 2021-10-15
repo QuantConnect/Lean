@@ -11,14 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from QuantConnect import Resolution
-from QuantConnect.Algorithm.Framework.Alphas import *
+from AlgorithmImports import *
 from EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
-from itertools import groupby
 
 class SectorWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that

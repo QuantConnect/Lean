@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -36,7 +36,6 @@ namespace QuantConnect.Brokerages.Binance
     /// </summary>
     public class BinanceRestApiClient : IDisposable
     {
-        private const string RestApiUrl = "https://api.binance.com";
         private const string UserDataStreamEndpoint = "/api/v3/userDataStream";
 
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper;
@@ -87,11 +86,13 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="securityProvider">The holdings provider.</param>
         /// <param name="apiKey">The Binance API key</param>
         /// <param name="apiSecret">The The Binance API secret</param>
-        public BinanceRestApiClient(SymbolPropertiesDatabaseSymbolMapper symbolMapper, ISecurityProvider securityProvider, string apiKey, string apiSecret)
+        /// <param name="restApiUrl">The Binance API rest url</param>
+        public BinanceRestApiClient(SymbolPropertiesDatabaseSymbolMapper symbolMapper, ISecurityProvider securityProvider,
+            string apiKey, string apiSecret, string restApiUrl)
         {
             _symbolMapper = symbolMapper;
             _securityProvider = securityProvider;
-            _restClient = new RestClient(RestApiUrl);
+            _restClient = new RestClient(restApiUrl);
             ApiKey = apiKey;
             ApiSecret = apiSecret;
         }
@@ -161,23 +162,23 @@ namespace QuantConnect.Brokerages.Binance
                 { "side", ConvertOrderDirection(order.Direction) }
             };
 
-            switch (order.Type)
+            switch (order)
             {
-                case OrderType.Limit:
+                case LimitOrder limitOrder:
                     body["type"] = (order.Properties as BinanceOrderProperties)?.PostOnly == true
                         ? "LIMIT_MAKER"
                         : "LIMIT";
-                    body["price"] = ((LimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    body["price"] = limitOrder.LimitPrice.ToString(CultureInfo.InvariantCulture);
                     // timeInForce is not required for LIMIT_MAKER
                     if (Equals(body["type"], "LIMIT"))
                         body["timeInForce"] = "GTC";
                     break;
-                case OrderType.Market:
+                case MarketOrder:
                     body["type"] = "MARKET";
                     break;
-                case OrderType.StopLimit:
+                case StopLimitOrder stopLimitOrder:
                     var ticker = GetTickerPrice(order);
-                    var stopPrice = ((StopLimitOrder) order).StopPrice;
+                    var stopPrice = stopLimitOrder.StopPrice;
                     if (order.Direction == OrderDirection.Sell)
                     {
                         body["type"] = stopPrice <= ticker ? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
@@ -186,9 +187,10 @@ namespace QuantConnect.Brokerages.Binance
                     {
                         body["type"] = stopPrice <= ticker ? "TAKE_PROFIT_LIMIT" : "STOP_LOSS_LIMIT";
                     }
+
                     body["timeInForce"] = "GTC";
-                    body["stopPrice"] = stopPrice.ToString(CultureInfo.InvariantCulture);
-                    body["price"] = ((StopLimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    body["stopPrice"] = stopPrice.ToStringInvariant();
+                    body["price"] = stopLimitOrder.LimitPrice.ToStringInvariant();
                     break;
                 default:
                     throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
@@ -300,7 +302,8 @@ namespace QuantConnect.Brokerages.Binance
             var symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
             var startMs = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
             var endMs = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
-            var endpoint = $"/api/v3/klines?symbol={symbol}&interval={resolution}&limit=1000";
+            // we always use the real endpoint for history requests
+            var endpoint = $"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={resolution}&limit=1000";
 
             while (endMs - startMs >= resolutionInMs)
             {
@@ -318,11 +321,26 @@ namespace QuantConnect.Brokerages.Binance
                     .Select(entries => new Messages.Kline(entries))
                     .ToList();
 
-                startMs = klines.Last().OpenTime + resolutionInMs;
-
-                foreach (var kline in klines)
+                if (klines.Count > 0)
                 {
-                    yield return kline;
+                    var lastValue = klines[klines.Count - 1];
+                    if (Log.DebuggingEnabled)
+                    {
+                        var windowStartTime = Time.UnixMillisecondTimeStampToDateTime(klines[0].OpenTime);
+                        var windowEndTime = Time.UnixMillisecondTimeStampToDateTime(lastValue.OpenTime + resolutionInMs);
+                        Log.Debug($"BinanceRestApiClient.GetHistory(): Received [{symbol}] data for timeperiod from {windowStartTime.ToStringInvariant()} to {windowEndTime.ToStringInvariant()}..");
+                    }
+                    startMs = lastValue.OpenTime + resolutionInMs;
+
+                    foreach (var kline in klines)
+                    {
+                        yield return kline;
+                    }
+                }
+                else
+                {
+                    // if there is no data just break
+                    break;
                 }
             }
         }
@@ -355,19 +373,17 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public void StopSession()
         {
-            if (string.IsNullOrEmpty(SessionId))
+            if (!string.IsNullOrEmpty(SessionId))
             {
-                throw new Exception("BinanceBrokerage:UserStream. listenKey wasn't allocated or has been refused.");
+                var request = new RestRequest(UserDataStreamEndpoint, Method.DELETE);
+                request.AddHeader(KeyHeader, ApiKey);
+                request.AddParameter(
+                    "application/x-www-form-urlencoded",
+                    Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
+                    ParameterType.RequestBody
+                );
+                ExecuteRestRequest(request);
             }
-
-            var request = new RestRequest(UserDataStreamEndpoint, Method.DELETE);
-            request.AddHeader(KeyHeader, ApiKey);
-            request.AddParameter(
-                "application/x-www-form-urlencoded",
-                Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
-                ParameterType.RequestBody
-            );
-            ExecuteRestRequest(request);
         }
 
         /// <summary>

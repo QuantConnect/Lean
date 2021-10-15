@@ -30,6 +30,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     {
         // save off a strongly typed version of the brokerage
         private BacktestingBrokerage _brokerage;
+        private IAlgorithm _algorithm;
+
+        /// <summary>
+        /// Gets current time UTC. This is here to facilitate testing
+        /// </summary>
+        protected override DateTime CurrentTimeUtc => _algorithm.UtcTime;
 
         /// <summary>
         /// Creates a new BacktestingTransactionHandler using the BacktestingBrokerage
@@ -45,6 +51,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             _brokerage = (BacktestingBrokerage) brokerage;
+            _algorithm = algorithm;
 
             base.Initialize(algorithm, brokerage, resultHandler);
 

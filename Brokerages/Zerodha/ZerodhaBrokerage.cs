@@ -52,7 +52,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// The websockets client instance
         /// </summary>
-        protected ZerodhaWebSocketClientWrapper WebSocket;
+        protected WebSocketClientWrapper WebSocket;
 
         /// <summary>
         /// standard json parsing settings
@@ -87,7 +87,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private readonly ZerodhaSymbolMapper _symbolMapper;
 
-
         private readonly List<string> subscribeInstrumentTokens = new List<string>();
         private readonly List<string> unSubscribeInstrumentTokens = new List<string>();
 
@@ -97,10 +96,12 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly string _wssUrl = "wss://ws.kite.trade/";
 
         private readonly string _tradingSegment;
-        private readonly BrokerageConcurrentMessageHandler<MessageData> _messageHandler;
+        private readonly BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData> _messageHandler;
         private readonly string _zerodhaProductType;
 
         private DateTime _lastTradeTickTime;
+        private bool _historyDataTypeErrorFlag;
+
         #endregion
 
 
@@ -126,8 +127,8 @@ namespace QuantConnect.Brokerages.Zerodha
             _apiKey = apiKey;
             _accessToken = apiSecret;
             _securityProvider = securityProvider;
-             _messageHandler = new BrokerageConcurrentMessageHandler<MessageData>(OnMessageImpl);
-            WebSocket = new ZerodhaWebSocketClientWrapper();
+             _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData>(OnMessageImpl);
+            WebSocket = new WebSocketClientWrapper();
             _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
             WebSocket.Initialize(_wssUrl);
             WebSocket.Message += OnMessage;
@@ -265,12 +266,8 @@ namespace QuantConnect.Brokerages.Zerodha
                     .Value;
                 if (order == null)
                 {
-                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
-                    if (order == null)
-                    {
-                        // not our order, nothing else to do here
-                        return;
-                    }
+                    Log.Error($"ZerodhaBrokerage.OnOrderUpdate(): order not found: BrokerId: {brokerId}");
+                    return;
                 }
 
                 if (orderUpdate.Status == "CANCELLED")
@@ -294,7 +291,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(orderUpdate.InstrumentToken);
                     var fillPrice = orderUpdate.AveragePrice;
-                    var fillQuantity = orderUpdate.FilledQuantity;
+                    decimal cumulativeFillQuantity = orderUpdate.FilledQuantity;
                     var direction = orderUpdate.TransactionType == "SELL" ? OrderDirection.Sell : OrderDirection.Buy;
                     var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
 
@@ -302,27 +299,32 @@ namespace QuantConnect.Brokerages.Zerodha
                     var orderFee = security.FeeModel.GetOrderFee(
                         new OrderFeeParameters(security, order));
 
-                    
                     if (direction == OrderDirection.Sell)
                     {
-                        fillQuantity = -1 * fillQuantity;
+                        cumulativeFillQuantity = -1 * cumulativeFillQuantity;
                     }
+
                     var status = OrderStatus.Filled;
-                    if (fillQuantity != order.Quantity)
+                    if (cumulativeFillQuantity != order.Quantity)
                     {
-                        decimal totalFillQuantity;
-                        _fills.TryGetValue(order.Id, out totalFillQuantity);
-                        totalFillQuantity += fillQuantity;
-                        _fills[order.Id] = totalFillQuantity;
-                        status = totalFillQuantity == order.Quantity
-                            ? OrderStatus.Filled
-                            : OrderStatus.PartiallyFilled;
+                        status = OrderStatus.PartiallyFilled;
                     }
+
+                    decimal totalRegisteredFillQuantity;
+                    _fills.TryGetValue(order.Id, out totalRegisteredFillQuantity);
+                    //async events received from zerodha: https://kite.trade/forum/discussion/comment/34752/#Comment_34752
+                    if (Math.Abs(cumulativeFillQuantity) <= Math.Abs(totalRegisteredFillQuantity))
+                    {
+                        // already filled more quantity
+                        return;
+                    }
+                    _fills[order.Id] = cumulativeFillQuantity;
+                    var fillQuantityInThisEvewnt = cumulativeFillQuantity - totalRegisteredFillQuantity;
 
                     var orderEvent = new OrderEvent
                     (
                         order.Id, symbol, updTime, status,
-                        direction, fillPrice, fillQuantity,
+                        direction, fillPrice, fillQuantityInThisEvewnt,
                         orderFee, $"Zerodha Order Event {direction}"
                     );
 
@@ -416,7 +418,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 var security = _securityProvider.GetSecurity(order.Symbol);
                 var orderFee = security.FeeModel.GetOrderFee(
                             new OrderFeeParameters(security, order));
-                var orderProperties = order.Properties as ZerodhaOrderProperties;
+                var orderProperties = order.Properties as IndiaOrderProperties;
                 var zerodhaProductType = _zerodhaProductType;
                 if (orderProperties == null || orderProperties.Exchange == null)
                 {
@@ -435,7 +437,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
                 try
                 {
-                    orderResponse = _kite.PlaceOrder(orderProperties.Exchange.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(),
+                    orderResponse = _kite.PlaceOrder(orderProperties.Exchange.ToString(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(),
                         orderQuantity, orderPrice, zerodhaProductType, kiteOrderType, null, null, triggerPrice);
                 }
                 catch (Exception ex)
@@ -571,7 +573,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     return;
                 }
 
-                var orderProperties = order.Properties as ZerodhaOrderProperties;
+                var orderProperties = order.Properties as IndiaOrderProperties;
                 var zerodhaProductType = _zerodhaProductType; 
                 if (orderProperties == null || orderProperties.Exchange == null)
                 {
@@ -599,7 +601,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
                     null,
-                    orderProperties.Exchange.ToUpperInvariant(),
+                    orderProperties.Exchange.ToString(),
                     order.Symbol.ID.Symbol,
                     order.Direction.ToString().ToUpperInvariant(),
                     orderQuantity,
@@ -888,11 +890,11 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-            
-            if (request.DataType != typeof(TradeBar))
+            if (request.DataType != typeof(TradeBar) && !_historyDataTypeErrorFlag)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidBarType",
                     $"{request.DataType} type not supported, no history returned"));
+                _historyDataTypeErrorFlag = true;
                 yield break;
             }
             
@@ -917,54 +919,49 @@ namespace QuantConnect.Brokerages.Zerodha
                 yield break;
             }
 
-
-            DateTime latestTime = request.StartTimeUtc;
-            var requests = new List<HistoryRequest>();
-            requests.Add(request);
-
-            foreach (var historyRequest in requests)
+            if (request.Symbol.ID.SecurityType != SecurityType.Equity && request.Symbol.ID.SecurityType != SecurityType.Future && request.Symbol.ID.SecurityType != SecurityType.Option)
             {
-                if (historyRequest.Symbol.ID.SecurityType != SecurityType.Equity && historyRequest.Symbol.ID.SecurityType != SecurityType.Future && historyRequest.Symbol.ID.SecurityType != SecurityType.Option)
+                throw new ArgumentException("Zerodha does not support this security type: " + request.Symbol.ID.SecurityType);
+            }
+
+            if (request.StartTimeUtc >= request.EndTimeUtc)
+            {
+                throw new ArgumentException("Invalid date range specified");
+            }
+
+            var history = Enumerable.Empty<BaseData>();
+            
+            var symbol = request.Symbol;
+            var start = request.StartTimeLocal;
+            var end = request.EndTimeLocal;
+            var resolution = request.Resolution;
+            var exchangeTimeZone = request.ExchangeHours.TimeZone;
+
+            if (Config.GetBool("zerodha-history-subscription"))
+            {
+                switch (resolution)
                 {
-                    throw new ArgumentException("Zerodha does not support this security type: " + historyRequest.Symbol.ID.SecurityType);
+                    case Resolution.Minute:
+                        history = GetHistoryForPeriod(symbol, start, end, exchangeTimeZone, resolution, "minute");
+                        break;
+
+                    case Resolution.Hour:
+                        history = GetHistoryForPeriod(symbol, start, end, exchangeTimeZone, resolution, "60minute");
+                        break;
+
+                    case Resolution.Daily:
+                        history = GetHistoryForPeriod(symbol, start, end, exchangeTimeZone, resolution, "day");
+                        break;
                 }
+            }
 
-                if (historyRequest.StartTimeUtc >= historyRequest.EndTimeUtc)
-                {
-                    throw new ArgumentException("Invalid date range specified");
-                }
-
-                var start = historyRequest.StartTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
-                var end = historyRequest.EndTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
-
-                var history = Enumerable.Empty<BaseData>();
-
-                if (Config.GetBool("zerodha-history-subscription"))
-                {
-                    switch (historyRequest.Resolution)
-                    {
-                        case Resolution.Minute:
-                            history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "minute");
-                            break;
-
-                        case Resolution.Hour:
-                            history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "60minute");
-                            break;
-
-                        case Resolution.Daily:
-                            history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "day");
-                            break;
-                    }
-                }
-
-                foreach (var baseData in history)
-                {
-                    yield return baseData;
-                }
+            foreach (var baseData in history)
+            {
+                yield return baseData;
             }
         }
 
-        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution, string zerodhaResolution)
+        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, DateTimeZone exchangeTimeZone, Resolution resolution, string zerodhaResolution)
         {
             Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
             var scripSymbolTokenList = _symbolMapper.GetZerodhaInstrumentTokenList(symbol.Value);
@@ -982,11 +979,9 @@ namespace QuantConnect.Brokerages.Zerodha
                     $"from {start:s} to {end:s}"));
             }
 
-            var period = resolution.ToTimeSpan();
-
             foreach (var candle in candles)
             {
-                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
+                yield return new TradeBar(candle.TimeStamp.ConvertFromUtc(exchangeTimeZone),symbol,candle.Open,candle.High,candle.Low,candle.Close,candle.Volume,resolution.ToTimeSpan());
             }
         }
 
@@ -1007,21 +1002,22 @@ namespace QuantConnect.Brokerages.Zerodha
             Log.Error($"ZerodhaBrokerage.OnError(): Message: {e.Message} Exception: {e.Exception}");
         }
 
-        private void OnMessage(object sender, MessageData e)
+        private void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
-            _messageHandler.HandleNewMessage(e);
+            _messageHandler.HandleNewMessage(webSocketMessage.Data);
         }
 
         /// <summary>
         /// Implementation of the OnMessage event
         /// </summary>
         /// <param name="e"></param>
-        private void OnMessageImpl(MessageData e)
+        private void OnMessageImpl(WebSocketClientWrapper.MessageData message)
         {
             try
             {
-                if (e.MessageType == WebSocketMessageType.Binary)
+                if (message.MessageType == WebSocketMessageType.Binary)
                 {
+                    var e = (WebSocketClientWrapper.BinaryMessage)message;
                     if (e.Count > 1)
                     {
                         int offset = 0;
@@ -1064,30 +1060,35 @@ namespace QuantConnect.Brokerages.Zerodha
                         }
                     }
                 }
-                else if (e.MessageType == WebSocketMessageType.Text)
+                else if (message.MessageType == WebSocketMessageType.Text)
                 {
-                    string message = Encoding.UTF8.GetString(e.Data.Take(e.Count).ToArray());
+                    var e = (WebSocketClientWrapper.TextMessage)message;
 
-                    JObject messageDict = Utils.JsonDeserialize(message);
+                    JObject messageDict = Utils.JsonDeserialize(e.Message);
                     if ((string)messageDict["type"] == "order")
                     {
                         OnOrderUpdate(new Messages.Order(messageDict["data"]));
                     }
                     else if ((string)messageDict["type"] == "error")
                     {
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Zerodha WSS Error. Data: {e.Data} Exception: {messageDict["data"]}"));
-
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Zerodha WSS Error. Data: {e.Message} Exception: {messageDict["data"]}"));
                     }
-                }
-                else if (e.MessageType == WebSocketMessageType.Close)
-                {
-                    WebSocket.Close();
                 }
             }
             catch (Exception exception)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Data} Exception: {exception}"));
-                throw;
+                if (message.MessageType == WebSocketMessageType.Binary)
+                {
+                    var e = (WebSocketClientWrapper.BinaryMessage)message;
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Data} Exception: {exception}"));
+                    throw;
+                }
+                else
+                {
+                    var e = (WebSocketClientWrapper.TextMessage)message;
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
+                    throw;
+                }
             }
         }
 

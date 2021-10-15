@@ -21,6 +21,7 @@ using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.DukascopyDownloader
 {
@@ -93,7 +94,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                     case Resolution.Minute:
                     case Resolution.Hour:
                     case Resolution.Daily:
-                        foreach (var bar in AggregateTicks(symbol, ticks, resolution.ToTimeSpan()))
+                        foreach (var bar in LeanData.AggregateTicks(ticks, symbol, resolution.ToTimeSpan()))
                         {
                             yield return bar;
                         }
@@ -102,40 +103,6 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
 
                 date = date.AddDays(1);
             }
-        }
-
-        /// <summary>
-        /// Aggregates a list of ticks at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="ticks"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal static IEnumerable<QuoteBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
-        {
-            return
-                from t in ticks
-                group t by t.Time.RoundDown(resolution)
-                into g
-                select new QuoteBar
-                {
-                    Symbol = symbol,
-                    Time = g.Key,
-                    Bid = new Bar
-                    {
-                        Open = g.First().BidPrice,
-                        High = g.Max(b => b.BidPrice),
-                        Low = g.Min(b => b.BidPrice),
-                        Close = g.Last().BidPrice
-                    },
-                    Ask = new Bar
-                    {
-                        Open = g.First().AskPrice,
-                        High = g.Max(b => b.AskPrice),
-                        Low = g.Min(b => b.AskPrice),
-                        Close = g.Last().AskPrice
-                    }
-                };
         }
 
         /// <summary>

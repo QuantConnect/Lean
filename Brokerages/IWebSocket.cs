@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -12,22 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 
 namespace QuantConnect.Brokerages
 {
-
     /// <summary>
     /// Wrapper for WebSocket4Net to enhance testability
     /// </summary>
     public interface IWebSocket
     {
-
         /// <summary>
         /// Wraps constructor
         /// </summary>
-        /// <param name="url"></param>
-        void Initialize(string url);
+        /// <param name="url">The target websocket url</param>
+        /// <param name="sessionToken">The websocket session token</param>
+        void Initialize(string url, string sessionToken = null);
 
         /// <summary>
         /// Wraps send method

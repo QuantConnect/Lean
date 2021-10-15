@@ -20,6 +20,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Brokerages.Oanda;
+using QuantConnect.Util;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.ToolBox.OandaDownloader
@@ -159,47 +160,14 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 case Resolution.Minute:
                 case Resolution.Hour:
                 case Resolution.Daily:
-                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, resolution.ToTimeSpan()))
+                    foreach (var bar in LeanData.AggregateQuoteBars(barsTotalInPeriod, symbol, resolution.ToTimeSpan()))
                     {
                         yield return bar;
                     }
                     break;
             }
         }
-
-        /// <summary>
-        /// Aggregates a list of 5-second bars at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="bars"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal IEnumerable<QuoteBar> AggregateBars(Symbol symbol, IEnumerable<QuoteBar> bars, TimeSpan resolution)
-        {
-            return
-                (from b in bars
-                 group b by b.Time.RoundDown(resolution)
-                     into g
-                 select new QuoteBar
-                 {
-                     Symbol = symbol,
-                     Time = g.Key,
-                     Bid = new Bar
-                     {
-                         Open = g.First().Bid.Open,
-                         High = g.Max(b => b.Bid.High),
-                         Low = g.Min(b => b.Bid.Low),
-                         Close = g.Last().Bid.Close
-                     },
-                     Ask = new Bar
-                     {
-                         Open = g.First().Ask.Open,
-                         High = g.Max(b => b.Ask.High),
-                         Low = g.Min(b => b.Ask.Low),
-                         Close = g.Last().Ask.Close
-                     }
-                 });
-        }
+        
 
         /// <summary>
         /// Groups a list of bars into a dictionary keyed by date

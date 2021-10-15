@@ -49,6 +49,10 @@ namespace QuantConnect.Brokerages.Binance
         {
             { "binance-api-key", Config.Get("binance-api-key")},
             { "binance-api-secret", Config.Get("binance-api-secret")},
+            // paper trading available using https://testnet.binance.vision
+            { "binance-api-url", Config.Get("binance-api-url", "https://api.binance.com")},
+            // paper trading available using wss://testnet.binance.vision/ws
+            { "binance-websocket-url", Config.Get("binance-websocket-url", "wss://stream.binance.com:9443/ws")},
 
             // load holdings if available
             { "live-holdings", Config.Get("live-holdings")},
@@ -68,19 +72,21 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override IBrokerage CreateBrokerage(Packets.LiveNodePacket job, IAlgorithm algorithm)
         {
-            var required = new[] { "binance-api-secret", "binance-api-key" };
+            var required = new[] { "binance-api-secret", "binance-api-key", "binance-api-url", "binance-websocket-url" };
 
             foreach (var item in required)
             {
                 if (string.IsNullOrEmpty(job.BrokerageData[item]))
                 {
-                    throw new Exception($"BinanceBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
+                    throw new ArgumentException($"BinanceBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
                 }
             }
 
             var brokerage = new BinanceBrokerage(
                 job.BrokerageData["binance-api-key"],
                 job.BrokerageData["binance-api-secret"],
+                job.BrokerageData["binance-api-url"],
+                job.BrokerageData["binance-websocket-url"],
                 algorithm,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
                 job);

@@ -108,7 +108,7 @@ namespace QuantConnect.Orders.Fees
                     // The futures options fee model is exactly the same as futures' fees on IB.
                     if (market == Market.Globex || market == Market.NYMEX
                         || market == Market.CBOT || market == Market.ICE
-                        || market == Market.CBOE || market == Market.COMEX
+                        || market == Market.CFE || market == Market.COMEX
                         || market == Market.CME)
                     {
                         // just in case...

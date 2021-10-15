@@ -54,7 +54,8 @@ namespace QuantConnect.Tests
             DateTime? startDate = null,
             DateTime? endDate = null,
             string setupHandler = "RegressionSetupHandlerWrapper",
-            decimal? initialCash = null)
+            decimal? initialCash = null,
+            string algorithmLocation = null)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -86,10 +87,17 @@ namespace QuantConnect.Tests
                 Config.Set("api-handler", "QuantConnect.Api.Api");
                 Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.RegressionResultHandler");
                 Config.Set("algorithm-language", language.ToString());
-                Config.Set("algorithm-location",
-                    language == Language.Python
-                        ? "../../../Algorithm.Python/" + algorithm + ".py"
-                        : "QuantConnect.Algorithm." + language + ".dll");
+                if (string.IsNullOrEmpty(algorithmLocation))
+                {
+                    Config.Set("algorithm-location",
+                        language == Language.Python
+                            ? "../../../Algorithm.Python/" + algorithm + ".py"
+                            : "QuantConnect.Algorithm." + language + ".dll");
+                }
+                else
+                {
+                    Config.Set("algorithm-location", algorithmLocation);
+                }
 
                 // Store initial log variables
                 var initialLogHandler = Log.LogHandler;

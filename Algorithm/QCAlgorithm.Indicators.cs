@@ -1028,6 +1028,56 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an Market Profile indicator for the symbol with Volume Profile (VOL) mode. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose VP we want</param>
+        /// <param name="period">The period of the VP</param>
+        /// <param name="valueAreaVolumePercentage">The percentage of volume contained in the value area</param>
+        /// <param name="priceRangeRoundOff">How many digits you want to round and the precision. i.e 0.01 round to two digits exactly.</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Volume Profile indicator for the given parameters</returns>
+        public VolumeProfile VP(Symbol symbol, int period = 2, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"VP({period})", resolution);
+            var marketProfile = new VolumeProfile(name, period, valueAreaVolumePercentage, priceRangeRoundOff);
+            RegisterIndicator(symbol, marketProfile, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, marketProfile, resolution);
+            }
+
+            return marketProfile;
+        }
+
+        /// <summary>
+        /// Creates an Market Profile indicator for the symbol with Time Price Opportunity (TPO) mode. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TP we want</param>
+        /// <param name="period">The period of the TP</param>
+        /// <param name="valueAreaVolumePercentage">The percentage of volume contained in the value area</param>
+        /// <param name="priceRangeRoundOff">How many digits you want to round and the precision. i.e 0.01 round to two digits exactly.</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Time Profile indicator for the given parameters</returns>
+        public TimeProfile TP(Symbol symbol, int period = 2, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"TP({period})", resolution);
+            var marketProfile = new TimeProfile(name, period, valueAreaVolumePercentage, priceRangeRoundOff);
+            RegisterIndicator(symbol, marketProfile, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, marketProfile, resolution);
+            }
+
+            return marketProfile;
+        }
+
+        /// <summary>
         /// Creates a new Maximum indicator to compute the maximum value
         /// </summary>
         /// <param name="symbol">The symbol whose max we want</param>
@@ -1509,6 +1559,29 @@ namespace QuantConnect.Algorithm
             }
 
             return relativeVigorIndex;
+        }
+
+        /// <summary>
+        /// Creates an RelativeDailyVolume indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose RDV we want</param>
+        /// <param name="period">The period of the RDV</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Relative Volume indicator for the given parameters</returns>
+        public RelativeDailyVolume RDV(Symbol symbol, int period = 2, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RDV({period})", resolution);
+            var relativeDailyVolume = new RelativeDailyVolume(name, period);
+            RegisterIndicator(symbol, relativeDailyVolume, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, relativeDailyVolume, resolution);
+            }
+
+            return relativeDailyVolume;
         }
 
         /// <summary>

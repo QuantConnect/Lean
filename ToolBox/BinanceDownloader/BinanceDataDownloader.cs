@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Brokerages;
+using QuantConnect.Configuration;
 using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.BinanceDownloader
@@ -39,7 +40,9 @@ namespace QuantConnect.ToolBox.BinanceDownloader
         /// </summary>
         public BinanceDataDownloader()
         {
-            _brokerage = new BinanceBrokerage(null, null,null, null, null);
+            var apiUrl = Config.Get("binance-api-url", "https://api.binance.com");
+            var websocketUrl = Config.Get("binance-websocket-url", "wss://stream.binance.com:9443/ws");
+            _brokerage = new BinanceBrokerage(null, null, apiUrl, websocketUrl, null, null, null);
         }
 
         /// <summary>
@@ -92,35 +95,6 @@ namespace QuantConnect.ToolBox.BinanceDownloader
         internal Symbol GetSymbol(string ticker)
         {
             return _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Binance);
-        }
-
-        /// <summary>
-        /// Aggregates a list of minute bars at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="bars"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal IEnumerable<TradeBar> AggregateBars(Symbol symbol, IEnumerable<TradeBar> bars, TimeSpan resolution)
-        {
-            return
-                (from b in bars
-                 group b by b.Time.RoundDown(resolution)
-                     into g
-                 select new TradeBar
-                 {
-                     Symbol = symbol,
-                     Time = g.Key,
-                     Open = g.First().Open,
-                     High = g.Max(b => b.High),
-                     Low = g.Min(b => b.Low),
-                     Close = g.Last().Close,
-                     Volume = g.Sum(b => b.Volume),
-                     Value = g.Last().Close,
-                     DataType = MarketDataType.TradeBar,
-                     Period = resolution,
-                     EndTime = g.Key.AddMilliseconds(resolution.TotalMilliseconds)
-                 });
         }
 
         public void Dispose()

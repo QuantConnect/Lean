@@ -95,6 +95,7 @@ namespace QuantConnect.Algorithm
         private int? _warmupBarCount;
         private Resolution? _warmupResolution;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
+        private SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver;
 
         private readonly HistoryRequestFactory _historyRequestFactory;
 
@@ -124,6 +125,7 @@ namespace QuantConnect.Algorithm
             _timeKeeper = new TimeKeeper(_startDate, new[] { TimeZones.NewYork });
             // set our local time zone
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
+            _securityDefinitionSymbolResolver = new SecurityDefinitionSymbolResolver();
 
             Settings = new AlgorithmSettings();
             DefaultOrderProperties = new OrderProperties();
@@ -557,6 +559,20 @@ namespace QuantConnect.Algorithm
                 Benchmark = BrokerageModel.GetBenchmark(Securities);
             }
 
+            // Check benchmark timezone against algorithm timezone to warn for misaligned statistics
+            if (Benchmark is SecurityBenchmark securityBenchmark)
+            {
+                // Only warn on algorithms subscribed to daily resolution as its statistics will suffer the most
+                var subscription = SubscriptionManager.Subscriptions.OrderByDescending(x => x.Resolution).FirstOrDefault();
+                var benchmarkTimeZone = MarketHoursDatabase.GetDataTimeZone(securityBenchmark.Security.Symbol.ID.Market,
+                    securityBenchmark.Security.Symbol, securityBenchmark.Security.Type);
+                if ((subscription?.Resolution == Resolution.Daily || UniverseSettings.Resolution == Resolution.Daily) && benchmarkTimeZone != TimeZone)
+                {
+                    Log($"QCAlgorithm.PostInitialize(): Warning: Using a security benchmark of a different timezone ({benchmarkTimeZone})" +
+                        $" than the algorithm TimeZone ({TimeZone}) may lead to skewed and incorrect statistics. Use a higher resolution than daily to minimize.");
+                }
+            }
+
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
             OnEndOfTimeStep();
         }
@@ -950,6 +966,7 @@ namespace QuantConnect.Algorithm
 
             // the time rules need to know the default time zone as well
             TimeRules.SetDefaultTimeZone(timeZone);
+            DateRules.SetDefaultTimeZone(timeZone);
 
             // In BackTest mode we reset the Algorithm time to reflect the new timezone
             // startDate is set by the user so we expect it to be for their timezone already
@@ -1507,8 +1524,7 @@ namespace QuantConnect.Algorithm
                 return security;
             }
 
-            AddToUserDefinedUniverse(security, configs);
-            return security;
+            return AddToUserDefinedUniverse(security, configs);
         }
 
         /// <summary>
@@ -1921,8 +1937,10 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                var universe = UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
-                universe?.Remove(symbol);
+                foreach (var universe in UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().Where(x => x.Members.ContainsKey(symbol)))
+                {
+                    universe.Remove(symbol);
+                }
             }
 
             return true;
@@ -2265,8 +2283,7 @@ namespace QuantConnect.Algorithm
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, extendedMarketHours, dataNormalizationMode: UniverseSettings.DataNormalizationMode);
             var security = Securities.CreateSecurity(symbol, configs, leverage);
 
-            AddToUserDefinedUniverse(security, configs);
-            return (T)security;
+            return (T) AddToUserDefinedUniverse(security, configs);
         }
 
         /// <summary>
@@ -2460,6 +2477,66 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Converts an ISIN identifier into a <see cref="Symbol"/>
+        /// </summary>
+        /// <param name="isin">The International Securities Identification Number (ISIN) of an asset</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
+        /// <returns>Symbol corresponding to the ISIN. If no Symbol with a matching ISIN was found, returns null.</returns>
+        public Symbol ISIN(string isin, DateTime? tradingDate = null)
+        {
+            return _securityDefinitionSymbolResolver.ISIN(isin, GetVerifiedTradingDate(tradingDate));
+        }
+
+        /// <summary>
+        /// Converts a composite FIGI identifier into a <see cref="Symbol"/>
+        /// </summary>
+        /// <param name="compositeFigi">The composite Financial Instrument Global Identifier (FIGI) of an asset</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
+        /// <returns>Symbol corresponding to the composite FIGI. If no Symbol with a matching composite FIGI was found, returns null.</returns>
+        /// <remarks>
+        /// The composite FIGI differs from an exchange-level FIGI, in that it identifies
+        /// an asset across all exchanges in a single country that the asset trades in.
+        /// </remarks>
+        public Symbol CompositeFIGI(string compositeFigi, DateTime? tradingDate = null)
+        {
+            return _securityDefinitionSymbolResolver.CompositeFIGI(compositeFigi, GetVerifiedTradingDate(tradingDate));
+        }
+
+        /// <summary>
+        /// Converts a CUSIP identifier into a <see cref="Symbol"/>
+        /// </summary>
+        /// <param name="cusip">The CUSIP number of an asset</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
+        /// <returns>Symbol corresponding to the CUSIP. If no Symbol with a matching CUSIP was found, returns null.</returns>
+        public Symbol CUSIP(string cusip, DateTime? tradingDate = null)
+        {
+            return _securityDefinitionSymbolResolver.CUSIP(cusip, GetVerifiedTradingDate(tradingDate));
+        }
+
+        /// <summary>
+        /// Converts a SEDOL identifier into a <see cref="Symbol"/>
+        /// </summary>
+        /// <param name="sedol">The SEDOL identifier of an asset</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
+        /// <returns>Symbol corresponding to the SEDOL. If no Symbol with a matching SEDOL was found, returns null.</returns>
+        public Symbol SEDOL(string sedol, DateTime? tradingDate = null)
+        {
+            return _securityDefinitionSymbolResolver.SEDOL(sedol, GetVerifiedTradingDate(tradingDate));
+        }
+
+        /// <summary>
         /// Set the properties and exchange hours for a given key into our databases
         /// </summary>
         /// <param name="key">Key for database storage</param>
@@ -2470,6 +2547,29 @@ namespace QuantConnect.Algorithm
             // Add entries to our Symbol Properties DB and MarketHours DB
             SymbolPropertiesDatabase.SetEntry(Market.USA, key, SecurityType.Base, properties);
             MarketHoursDatabase.SetEntry(Market.USA, key, SecurityType.Base, exchangeHours);
+        }
+
+        /// <summary>
+        /// Takes a date, and verifies that it is point-in-time. If null
+        /// time is provided, algorithm time is returned instead.
+        /// </summary>
+        /// <param name="tradingDate">
+        /// The trading date to verify that it is a point-in-time
+        /// date, or before, relative to the algorithm's current trading date.
+        /// </param>
+        /// <returns>The date provided if not null, otherwise the algorithm's current trading date</returns>
+        /// <exception cref="ArgumentException">
+        /// The trading date provided is not null and it is after the algorithm's current trading date
+        /// </exception>
+        private DateTime GetVerifiedTradingDate(DateTime? tradingDate)
+        {
+            tradingDate ??= Time.Date;
+            if (tradingDate > Time.Date)
+            {
+                throw new ArgumentException($"The trading date provided: \"{tradingDate:yyyy-MM-dd}\" is after the current algorithm's trading date: \"{Time:yyyy-MM-dd}\"");
+            }
+
+            return tradingDate.Value;
         }
     }
 }

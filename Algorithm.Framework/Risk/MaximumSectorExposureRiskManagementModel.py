@@ -11,16 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Risk import *
+from AlgorithmImports import *
 from itertools import groupby
 
 class MaximumSectorExposureRiskManagementModel(RiskManagementModel):
@@ -92,7 +83,7 @@ class MaximumSectorExposureRiskManagementModel(RiskManagementModel):
         anyFundamentalData = any([
             kvp.Value.Fundamentals is not None and 
             kvp.Value.Fundamentals.HasFundamentalData for kvp in algorithm.ActiveSecurities
-            ]);
+            ])
 
         if not anyFundamentalData:
             raise Exception("MaximumSectorExposureRiskManagementModel.OnSecuritiesChanged: Please select a portfolio selection model that selects securities with fundamental data.")

@@ -11,15 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("QuantConnect.Algorithm.Framework")
-AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Common")
-
-from QuantConnect import *
-from QuantConnect.Indicators import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from datetime import timedelta
+from AlgorithmImports import *
 
 class HistoricalReturnsAlphaModel(AlphaModel):
     '''Uses Historical returns to create insights.'''

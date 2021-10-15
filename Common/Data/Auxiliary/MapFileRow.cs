@@ -15,10 +15,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -40,54 +39,45 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the mapped symbol
         /// </summary>
-        public PrimaryExchange PrimaryExchange { get; }
+        public Exchange PrimaryExchange { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, char primaryExchange = '\0')
-            : this(date, mappedSymbol, Exchanges.GetPrimaryExchange(primaryExchange))
+        public MapFileRow(DateTime date, string mappedSymbol, string primaryExchange, string market = QuantConnect.Market.USA)
+            : this(date, mappedSymbol, primaryExchange.GetPrimaryExchange(SecurityType.Equity, market))
         { }
         
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, PrimaryExchange primaryExchange)
+        public MapFileRow(DateTime date, string mappedSymbol, Exchange primaryExchange = null)
         {
             Date = date;
             MappedSymbol = mappedSymbol.LazyToUpper();
-            PrimaryExchange = primaryExchange;
+            PrimaryExchange = primaryExchange ?? Exchange.UNKNOWN;
         }
 
         /// <summary>
         /// Reads in the map_file for the specified equity symbol
         /// </summary>
-        public static IEnumerable<MapFileRow> Read(string permtick, string market)
+        public static IEnumerable<MapFileRow> Read(string file, string market)
         {
-            var path = MapFile.GetMapFilePath(permtick, market);
-            return File.Exists(path)
-                ? Read(path)
+            return File.Exists(file)
+                ? File.ReadAllLines(file).Where(l => !string.IsNullOrWhiteSpace(l)).Select(s => Parse(s, market))
                 : Enumerable.Empty<MapFileRow>();
-        }
-
-        /// <summary>
-        /// Reads in the map_file at the specified path
-        /// </summary>
-        public static IEnumerable<MapFileRow> Read(string path)
-        {
-            return File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).Select(Parse);
         }
 
         /// <summary>
         /// Parses the specified line into a MapFileRow
         /// </summary>
-        public static MapFileRow Parse(string line)
+        public static MapFileRow Parse(string line, string market)
         {
             var csv = line.Split(',');
-            var primaryExchange = PrimaryExchange.UNKNOWN;
+            var primaryExchange = Exchange.UNKNOWN;
             if (csv.Length == 3)
             {
-                primaryExchange = Exchanges.GetPrimaryExchange(Convert.ToChar(csv[2], CultureInfo.InvariantCulture));
+                primaryExchange = csv[2].GetPrimaryExchange(SecurityType.Equity, market);
             }
 
             return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], primaryExchange);
@@ -166,7 +156,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            var encodedExchange = PrimaryExchange == PrimaryExchange.UNKNOWN? string.Empty : $",{Convert.ToChar((byte) PrimaryExchange)}";
+            var encodedExchange = PrimaryExchange == Exchange.UNKNOWN? string.Empty : $",{PrimaryExchange.Code}";
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}";
         }
 
@@ -176,7 +166,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>resulting string</returns>
         public override string ToString()
         {
-            var mainExchange = PrimaryExchange == PrimaryExchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange.ToString()}";
+            var mainExchange = PrimaryExchange == Exchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange}";
             return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange;
         }
     }

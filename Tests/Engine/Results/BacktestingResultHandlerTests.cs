@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [TestCase(nameof(BasicTemplateAlgorithm), true)]
-        [TestCase(nameof(BasicTemplateDailyAlgorithm), false)]
+        [TestCase(nameof(BasicTemplateDailyAlgorithm), true)]
         [TestCase(nameof(ResolutionSwitchingAlgorithm), false)]
         public void SamplesNotMisalignedRelative(string algorithm, bool shouldSucceed)
         {
@@ -69,9 +69,9 @@ namespace QuantConnect.Tests.Engine.Results
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
 
-            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
-            var benchmarkPerformance = benchmark.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
-            performance = performance.ResampleEquivalence(dt => dt.Date, s => s.LastValue());
+            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.FirstValue()).PercentChange();
+            var benchmarkPerformance = benchmark.ResampleEquivalence(dt => dt.Date, s => s.FirstValue()).PercentChange();
+            performance = performance.ResampleEquivalence(dt => dt.Date, s => s.FirstValue());
 
             // Uncomment the lines below to simulate a (naive) data cleaning attempt.
             // Remarks: during the development of PR #3979, this was thought to be a solution for misaligned values.
@@ -142,21 +142,12 @@ namespace QuantConnect.Tests.Engine.Results
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
 
-            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
-            var benchmarkPerformance = benchmark.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
+            // Lineup all our samples
+            // Equity and benchmark will need to be converted into performance values
+            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.FirstValue()).PercentChange();
+            var benchmarkPerformance = benchmark.PercentChange();
 
-            // Before 2020-01-10 on master, the following Frame is created:
-            // ====================================================================================
-            // |                           equity               bench                perf         |
-            // | 10/7/2013 12:00:00 AM  -> <missing>            <missing>            2.69427E-05  |
-            // | 10/8/2013 12:00:00 AM  -> -0.0117197546154655  -0.00835040609378598 -0.01171975  |
-            // | 10/9/2013 12:00:00 AM  -> 0.000602640205305941 -0.0117646820298673  0.0006019659 |
-            // | 10/10/2013 12:00:00 AM -> 0.0215615143841935   0.000604537450206063 0.02156151   |
-            // | 10/11/2013 12:00:00 AM -> 0.0063673015777644   0.0216210268330373   0.006367302  |
-            // | 10/12/2013 12:00:00 AM -> 0                    0.00638415728187288  0            |
-            // ====================================================================================
-            //
-            // With some fixes applied + equities taq, we get the following series:
+            // Before 2020-9-30 on master, the following Frame is created:
             // ====================================================================================
             // |                           equity               bench                perf         |
             // | 2013-10-07 20:00:00 -> <missing>            <missing>            -9.20427E-05    |
@@ -169,33 +160,70 @@ namespace QuantConnect.Tests.Engine.Results
             // | 2013-10-11 00:00:00 -> 0.00641960569172269  0.00644312892467460  <missing>       |
             // | 2013-10-11 20:00:00 -> <missing>            <missing>            0.006419605     |
             // ===================================================================================|
+            //
+            // After new adjustments 
+            // ====================================================================================
+            // |                           equity           bench                 perf            |
+            // | 10/7/2013 12:00:00 AM  -> <missing>        <missing>             0               |
+            // | 10/8/2013 12:00:00 AM  -> -0.0002128590    -0.00870388175321252  -0.0002128589   |
+            // | 10/9/2013 12:00:00 AM  -> -0.0115428009    -0.01158779130093582  -0.0115427999   |
+            // | 10/10/2013 12:00:00 AM -> 0.00054174422    0.000543757827876358  0.00054174399   |
+            // | 10/11/2013 12:00:00 AM -> 0.02207915613    0.022165997700413814  0.02207916      |
+            // | 10/11/2013 08:00:00 PM -> <missing>        0.006263266301918913  0.006239327     | <- Only missing equity because converted to daily values, doesn't have an 8pm point
+            // ====================================================================================
 
+            // Verify Benchmark values
             Assert.AreEqual(new DateTime(2013, 10, 8), benchmarkPerformance.DropMissing().FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), benchmarkPerformance.LastKey().Date);
-            Assert.AreEqual(5, benchmarkPerformance.KeyCount);
-            Assert.AreEqual(4, benchmarkPerformance.ValueCount);
-            Assert.AreEqual(Math.Round(-0.011587999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
-            Assert.AreEqual(Math.Round(0.0005440000000000000, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.022166000000000002, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.0062630000000000003, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
+            Assert.AreEqual(6, benchmarkPerformance.KeyCount);
+            Assert.AreEqual(5, benchmarkPerformance.ValueCount); // Is 5 because first point is missing
 
+            var expectedBenchmarkPerformance = new List<double>
+            {
+                0,                          // First sample at start, seen as missing since percent change won't exists for that day
+                -0.0087038817532125255,     // 10/7 - 10/8 
+                -0.011587791300935823,      // 10/8 - 10/9
+                0.00054375782787635836,     // 10/9 - 10/10
+                0.022165997700413814,       // 10/10 - 10/11
+                0.0062632663019189135       // 10/11 12AM - 10/11 8PM
+            };
+
+            Assert.AreEqual(expectedBenchmarkPerformance, benchmarkPerformance.ValuesAll.ToList());
+
+            // Verify Daily Performance values
             Assert.AreEqual(new DateTime(2013, 10, 7), performance.FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), performance.LastKey().Date);
-            Assert.AreEqual(5, performance.ValueCount);
-            Assert.AreEqual(5, performance.KeyCount);
-            Assert.AreEqual(Math.Round(-0.00021300000000000001d, 6), Math.Round(performance.GetAt(0), 6));
-            Assert.AreEqual(Math.Round(-0.011542999999999999d, 6), Math.Round(performance.GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.00054199999999999995, 6), Math.Round(performance.GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.022079000000000001d, 6), Math.Round(performance.GetAt(3), 6));
-            Assert.AreEqual(Math.Round(0.0062389999999999998d, 6), Math.Round(performance.GetAt(4), 6));
+            Assert.AreEqual(6, performance.ValueCount);
+            Assert.AreEqual(6, performance.KeyCount);
 
-            // This is a side-effect of how we calculate performance from the equity series in this test.
+            var expectedPerformance = new List<double>
+            {
+                0,                      // First sample at start, zero because no change has occurred yet
+                -0.0002128589,          // 10/7 - 10/8 <- we buy at open here
+                -0.011542799999999999,  // 10/8 - 10/9
+                0.00054174399999999993, // 10/9 - 10/10
+                0.02207916,             // 10/10 - 10/11
+                0.006239327             // 10/11 12AM - 10/11 8PM
+            };
+
+            Assert.AreEqual(expectedPerformance, performance.Values.ToList());
+
+
+            // Verify equity performance
             Assert.AreEqual(4, equityPerformance.ValueCount);
             Assert.AreEqual(new DateTime(2013, 10, 8), equityPerformance.DropMissing().FirstKey());
             Assert.AreEqual(new DateTime(2013, 10, 11), equityPerformance.LastKey());
 
-            // No need to run TestSampleAlignmentsRelative(...) here, since this algorithm will already have that ran
-            // in the test SamplesNotMisalignedRelative().
+            var expectedEquityPerformance = new List<double>
+            {
+                0,                          // First sample at start, seen as missing since percent change won't exists for that day
+                -0.00021285900000002583,    // 10/7 - 10/8 <- we buy at open here
+                -0.011542800989075775,      // 10/8 - 10/9
+                0.00054174422990819744,     // 10/9 - 10/10
+                0.022079156131712498        // 10/10 - 10/11
+            };
+
+            Assert.AreEqual(expectedEquityPerformance, equityPerformance.ValuesAll.ToList());
         }
 
         [Test]
@@ -210,8 +238,10 @@ namespace QuantConnect.Tests.Engine.Results
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
 
-            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
-            var benchmarkPerformance = benchmark.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
+            // Lineup all our samples
+            // Equity and benchmark will need to be converted into performance values
+            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.FirstValue()).PercentChange();
+            var benchmarkPerformance = benchmark.PercentChange();
 
             // Before 2020-01-10 on master, the following Frame is created:
             // ====================================================================================
@@ -230,29 +260,53 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(new DateTime(2013, 10, 12), benchmarkPerformance.LastKey().Date);
             Assert.AreEqual(6, benchmarkPerformance.KeyCount);
             Assert.AreEqual(5, benchmarkPerformance.ValueCount);
-            Assert.AreEqual(Math.Round(-0.011587999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
-            Assert.AreEqual(Math.Round(0.000544, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.022166000000000002, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.0062630000000000003, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
 
+            var expectedBenchmarkPerformance = new List<double>
+            {
+                0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
+                -0.0087038817532125255,     // 10/7 - 10/8 
+                -0.011587791300935823,      // 10/8 - 10/9
+                0.00054375782787635836,     // 10/9 - 10/10
+                0.022165997700413814,       // 10/10 - 10/11
+                0.0062632663019189135       // 10/11 12AM - 10/11 8PM
+            };
+
+            Assert.AreEqual(expectedBenchmarkPerformance, benchmarkPerformance.ValuesAll.ToList());
+
+            // Verify daily performance
             Assert.AreEqual(new DateTime(2013, 10, 7), performance.FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 12), performance.LastKey().Date);
             Assert.AreEqual(6, performance.ValueCount);
             Assert.AreEqual(6, performance.KeyCount);
-            Assert.AreEqual(0.0, performance.GetAt(0));
-            Assert.AreEqual(0.0, performance.GetAt(1));
-            Assert.AreEqual(Math.Round(-0.011769999999999999, 6), Math.Round(performance.GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.00054299999999999997, 6), Math.Round(performance.GetAt(3), 6));
-            Assert.AreEqual(Math.Round(0.022112, 6), Math.Round(performance.GetAt(4), 6));
-            Assert.AreEqual(Math.Round(0.0062480000000000001, 6), Math.Round(performance.GetAt(5), 6));
 
-            // This is a side-effect of how we calculate performance from the equity series in this test.
+            var expectedPerformance = new List<double>
+            {
+                0,                      // First sample at start 10/7 12AM, zero because no change has occurred yet
+                0,                      // 10/7 - 10/8 <- We get first data at 12AM on 10/8
+                -0.011770290000000001,  // 10/8 - 10/9 <- We buy at with OnMarketOpen order
+                0.0005425408,           // 10/9 - 10/10
+                0.02211161,             // 10/10 - 10/11
+                0.0062483               // 10/11 12AM - 10/11 8PM
+            };
+
+            Assert.AreEqual(expectedPerformance, performance.Values.ToList());
+
+            // Verify equity performance
             Assert.AreEqual(5, equityPerformance.ValueCount);
             Assert.AreEqual(new DateTime(2013, 10, 8), equityPerformance.DropMissing().FirstKey());
             Assert.AreEqual(new DateTime(2013, 10, 12), equityPerformance.LastKey());
 
-            // No need to run TestSampleAlignmentsRelative(...) here, since this algorithm will already have that ran
-            // in the test SamplesNotMisalignedRelative().
+            var expectedEquityPerformance = new List<double>
+            {
+                0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
+                0,                          // 10/7 - 10/8 <- We get first data at 12AM on 10/8
+                -0.011770286000000052,      // 10/8 - 10/9 <- We buy at with OnMarketOpen order
+                0.000542540861101854,       // 10/9 - 10/10
+                0.022111611742941455,       // 10/10 - 10/11
+                0.0062483003408066885       // 10/11 - 10/12
+            };
+
+            Assert.AreEqual(expectedEquityPerformance, equityPerformance.ValuesAll.ToList());
         }
 
         [Test]
@@ -266,8 +320,8 @@ namespace QuantConnect.Tests.Engine.Results
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
 
-            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
-            var benchmarkPerformance = benchmark.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
+            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.FirstValue()).PercentChange();
+            var benchmarkPerformance = benchmark.PercentChange();
 
             // Before 2020-01-10 on master, the following Frame is created:
             // ====================================================================================
@@ -282,32 +336,58 @@ namespace QuantConnect.Tests.Engine.Results
             //
             // Since benchmark is set at daily resolution, the benchmark data gets shifted forward by one day, causing misalignment.
 
+            // Verify benchmark performance
             Assert.AreEqual(new DateTime(2013, 10, 8), benchmarkPerformance.DropMissing().FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), benchmarkPerformance.LastKey().Date);
-            Assert.AreEqual(5, benchmarkPerformance.KeyCount);
-            Assert.AreEqual(4, benchmarkPerformance.ValueCount);
-            Assert.AreEqual(Math.Round(-0.011587999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
-            Assert.AreEqual(Math.Round(0.000544, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.022166000000000002, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.0062630000000000003, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
+            Assert.AreEqual(6, benchmarkPerformance.KeyCount);
+            Assert.AreEqual(5, benchmarkPerformance.ValueCount);
 
+            var expectedBenchmarkPerformance = new List<double>
+            {
+                0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
+                -0.0087038817532125255,     // 10/7 - 10/8 
+                -0.011587791300935823,      // 10/8 - 10/9
+                0.00054375782787635836,     // 10/9 - 10/10
+                0.022165997700413814,       // 10/10 - 10/11
+                0.0062632663019189135       // 10/11 12AM - 10/11 8PM
+            };
+
+            Assert.AreEqual(expectedBenchmarkPerformance, benchmarkPerformance.ValuesAll.ToList());
+
+            // Verify daily performance
             Assert.AreEqual(new DateTime(2013, 10, 7), performance.FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), performance.LastKey().Date);
-            Assert.AreEqual(5, performance.ValueCount);
-            Assert.AreEqual(5, performance.KeyCount);
-            Assert.AreEqual(Math.Round(-0.000213d, 6), Math.Round(performance.GetAt(0), 6));
-            Assert.AreEqual(Math.Round(-0.011908999999999999d, 6), Math.Round(performance.GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.00054199999999999995, 6), Math.Round(performance.GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.022086999999999999d, 6), Math.Round(performance.GetAt(3), 6));
-            Assert.AreEqual(Math.Round(0.0062420000000000002, 6), Math.Round(performance.GetAt(4), 6));
+            Assert.AreEqual(6, performance.ValueCount);
+            Assert.AreEqual(6, performance.KeyCount);
 
-            // This is a side-effect of how we calculate performance from the equity series in this test.
+            var expectedPerformance = new List<double>
+            {
+                0,                      // First sample at start, zero because no change has occurred yet
+                -0.0002128589,          // 10/7 - 10/8 <- we buy at open here
+                -0.01190911,            // 10/8 - 10/9
+                0.0005419449,           // 10/9 - 10/10
+                0.02208734,             // 10/10 - 10/11
+                0.006241589             // 10/11 12AM - 10/11 8PM
+            };
+
+            Assert.AreEqual(expectedPerformance, performance.Values.ToList());
+
+
+            // Verify equity performance
             Assert.AreEqual(4, equityPerformance.ValueCount);
             Assert.AreEqual(new DateTime(2013, 10, 8), equityPerformance.DropMissing().FirstKey());
             Assert.AreEqual(new DateTime(2013, 10, 11), equityPerformance.LastKey());
 
-            // No need to run TestSampleAlignmentsRelative(...) here, since this algorithm will already have that ran
-            // in the SamplesNotMisalignedRelative() test.
+            var expectedEquityPerformance = new List<double>
+            {
+                0,                          // First sample at start, seen as missing since percent change won't exists for that day
+                -0.00021285900000002583,    // 10/7 - 10/8 <- we buy at open here
+                -0.011909110961450057,      // 10/8 - 10/9
+                0.00054194506802551345,     // 10/9 - 10/10
+                0.022087336992789988        // 10/10 - 10/11
+            };
+
+            Assert.AreEqual(expectedEquityPerformance, equityPerformance.ValuesAll.ToList());
         }
 
         [Test]
@@ -322,8 +402,8 @@ namespace QuantConnect.Tests.Engine.Results
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
 
-            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
-            var benchmarkPerformance = benchmark.ResampleEquivalence(dt => dt.Date, s => s.LastValue()).PercentChange();
+            var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.FirstValue()).PercentChange();
+            var benchmarkPerformance = benchmark.PercentChange();
 
             // Before 2020-01-10, the following Frame is created:
             // ==================================================================================
@@ -340,28 +420,57 @@ namespace QuantConnect.Tests.Engine.Results
             // are shifted backwards by 1 with the exception of the value on 10/10/2013 12:00:00 AM.
             Frame.CreateEmpty<DateTime, string>().Join("equity", equityPerformance).Join("bench", benchmarkPerformance).Join("perf", performance).Print();
 
+            // Verify benchmark performance
             Assert.AreEqual(new DateTime(2013, 10, 8), benchmarkPerformance.DropMissing().FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), benchmarkPerformance.LastKey().Date);
-            Assert.AreEqual(5, benchmarkPerformance.KeyCount);
-            Assert.AreEqual(4, benchmarkPerformance.ValueCount);
-            Assert.AreEqual(Math.Round(-0.011587999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
-            Assert.AreEqual(Math.Round(0.000544, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.022166000000000002, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.0062630000000000003, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
+            Assert.AreEqual(6, benchmarkPerformance.KeyCount);
+            Assert.AreEqual(5, benchmarkPerformance.ValueCount);
 
+            var expectedBenchmarkPerformance = new List<double>
+            {
+                0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
+                -0.0087038817532125255,     // 10/7 - 10/8 
+                -0.011587791300935823,      // 10/8 - 10/9
+                0.00054375782787635836,     // 10/9 - 10/10
+                0.022165997700413814,       // 10/10 - 10/11
+                0.0062632663019189135       // 10/11 12AM - 10/11 8PM
+            };
+
+            Assert.AreEqual(expectedBenchmarkPerformance, benchmarkPerformance.ValuesAll.ToList());
+
+            // Verify daily performance
             Assert.AreEqual(new DateTime(2013, 10, 7), performance.FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), performance.LastKey().Date);
-            Assert.AreEqual(5, performance.ValueCount);
-            Assert.AreEqual(5, performance.KeyCount);
-            Assert.AreEqual(0.0, performance.GetAt(0));
-            Assert.AreEqual(0.0, performance.GetAt(1));
-            Assert.AreEqual(Math.Round(-0.011154000000000001, 6), Math.Round(performance.GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.011010000000000001d, 6), Math.Round(performance.GetAt(3), 6));
-            Assert.AreEqual(Math.Round(0.0059680000000000002d, 6), Math.Round(performance.GetAt(4), 6));
+            Assert.AreEqual(6, performance.ValueCount);
+            Assert.AreEqual(6, performance.KeyCount);
 
+            var expectedPerformance = new List<double>
+            {
+                0,                      // First sample at start 10/7 12AM, zero because no change has occurred yet
+                0,                      // 10/7 - 10/8 <- We get first data at 12AM on 10/8
+                -0.01112113,            // 10/8 - 10/9 <- We buy at with OnMarketOpen order
+                -3.291606E-05,          // 10/9 - 10/10
+                0.01100997,             // 10/10 - 10/11
+                0.005968033             // 10/11 12AM - 10/11 8PM
+            };
+
+            Assert.AreEqual(expectedPerformance, performance.Values.ToList());
+
+            // Verify equity performance
             Assert.AreEqual(4, equityPerformance.ValueCount);
             Assert.AreEqual(new DateTime(2013, 10, 8), equityPerformance.DropMissing().FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), equityPerformance.LastKey().Date);
+
+            var expectedEquityPerformance = new List<double>
+            {
+                0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
+                0,                          // 10/7 - 10/8 <- We get first data at 12AM on 10/8
+                -0.011121126999999979,      // 10/8 - 10/9 <- We buy at with OnMarketOpen order
+                -3.29160637250732E-05,      // 10/9 - 10/10
+                0.011009966611364035,       // 10/10 - 10/11
+            };
+
+            Assert.AreEqual(expectedEquityPerformance, equityPerformance.ValuesAll.ToList());
         }
 
         private void TestSampleAlignmentsRelative(
@@ -370,13 +479,20 @@ namespace QuantConnect.Tests.Engine.Results
             Series<DateTime, double> performance,
             bool shouldSucceed)
         {
-            var equityPerformanceContainsExpectedCount = equityPerformance.ValueCount == performance.ValueCount - 1;
+            // Fill our missing values before comparing
+            equityPerformance = equityPerformance.FillMissing(0.0d);
+            benchmarkPerformance = benchmarkPerformance.FillMissing(0.0d);
+            performance = performance.FillMissing(0.0d);
+
+            var equityPerformanceContainsExpectedCount = equityPerformance.ValueCount == performance.ValueCount;
             var equityPerformanceContainsExpectedCountMessage = "Calculated equity performance series or performance series contains more values than expected";
-            var equityPerformanceMatchesPerformance = equityPerformance.Values.Select(x => Math.Round(x, 5)).ToList().SequenceEqual(performance.Values.Skip(1).Select(x => Math.Round(x, 5)).ToList());
+            var equityPerformanceMatchesPerformance = equityPerformance.Values.Select(x => Math.Round(x, 5)).ToList().SequenceEqual(performance.Values.Select(x => Math.Round(x, 5)).ToList());
             var equityPerformanceMatchesPerformanceMessage = "Calculated equity performance value does not match performance series value. This most likely means that the performance series has been sampled more than it should have and is misaligned as a result.";
-            var benchmarkPerformanceAndPerformanceAreAligned = benchmarkPerformance.ValueCount == performance.ValueCount - 1;
+            var benchmarkPerformanceAndPerformanceAreAligned = benchmarkPerformance.ValueCount == performance.ValueCount;
             var benchmarkPerformanceAndPerformanceAreAlignedMessage = "Performance and benchmark performance series are misaligned";
-            var benchmarkPerformanceAndPerformanceDoNotDiverge = (performance - benchmarkPerformance).Values.All(x => x <= 0.0005 && x >= -0.0005);
+
+            // Skip the first 3 because [1] = start of algorithm samples always 0, [2] = first data comes in during this first day, we place our orders for open
+            var benchmarkPerformanceAndPerformanceDoNotDiverge = (performance - benchmarkPerformance).Values.Skip(2).All(x => x <= 0.0005 && x >= -0.0005);
             var benchmarkPerformanceAndPerformanceDoNotDivergeMessage = "Equity performance and benchmark performance have diverging values. This most likely means that the performance and calculated benchmark performance series are misaligned.";
 
             if (!shouldSucceed)

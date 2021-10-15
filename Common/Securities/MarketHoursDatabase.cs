@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -100,8 +100,7 @@ namespace QuantConnect.Securities
         /// <returns>The raw data time zone for the specified security</returns>
         public DateTimeZone GetDataTimeZone(string market, Symbol symbol, SecurityType securityType)
         {
-            var stringSymbol = symbol == null ? string.Empty : symbol.Value;
-            return GetEntry(market, stringSymbol, securityType).DataTimeZone;
+            return GetEntry(market, GetDatabaseSymbolKey(symbol), securityType).DataTimeZone;
         }
 
         /// <summary>
@@ -206,8 +205,7 @@ namespace QuantConnect.Securities
             // Some FOPs have the same symbol properties as their futures counterparts.
             // So, to save ourselves some space, we can fall back on the existing entries
             // so that we don't duplicate the information.
-            if (!TryGetEntry(market, symbol, securityType, out entry) &&
-                !(securityType == SecurityType.FutureOption && TryGetEntry(market, FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)))
+            if (!TryGetEntry(market, symbol, securityType, out entry))
             {
                 var key = new SecurityDatabaseKey(market, symbol, securityType);
                 var keys = string.Join(", ", _entries.Keys);
@@ -257,8 +255,14 @@ namespace QuantConnect.Securities
         public bool TryGetEntry(string market, string symbol, SecurityType securityType, out Entry entry)
         {
             return _entries.TryGetValue(new SecurityDatabaseKey(market, symbol, securityType), out entry)
-                   // now check with null symbol key
-                   || _entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out entry);
+                // now check with null symbol key
+                || _entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out entry)
+                // if FOP check for future
+                || securityType == SecurityType.FutureOption && TryGetEntry(market,
+                    FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)
+                // if custom data type check for type specific entry
+                || (securityType == SecurityType.Base && symbol.TryGetCustomDataType(out var customType)
+                    && _entries.TryGetValue(new SecurityDatabaseKey(market, $"TYPE.{customType}", securityType), out entry));
         }
 
         /// <summary>

@@ -65,8 +65,7 @@ namespace QuantConnect.Brokerages.Tradier
         private readonly Timer _orderFillTimer;
 
         //Tradier Spec:
-        private readonly Dictionary<TradierApiRequestType, TimeSpan> _rateLimitPeriod;
-        private readonly Dictionary<TradierApiRequestType, DateTime> _rateLimitNextRequest;
+        private readonly Dictionary<TradierApiRequestType, RateGate> _rateLimitNextRequest;
 
         //Endpoints:
         private readonly string _requestEndpoint;
@@ -126,24 +125,15 @@ namespace QuantConnect.Brokerages.Tradier
 
             _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
 
-            //Tradier Specific Initialization:
-            _rateLimitPeriod = new Dictionary<TradierApiRequestType, TimeSpan>();
-            _rateLimitNextRequest = new Dictionary<TradierApiRequestType, DateTime>();
-
-            //Go through each API request type and initialize:
-            foreach (TradierApiRequestType requestType in Enum.GetValues(typeof(TradierApiRequestType)))
-            {
-                //Sandbox and most live are 1sec
-                _rateLimitPeriod.Add(requestType, TimeSpan.FromSeconds(1));
-                _rateLimitNextRequest.Add(requestType, new DateTime());
-            }
-
-            //Swap into sandbox end points / modes.
-            _rateLimitPeriod[TradierApiRequestType.Standard] = TimeSpan.FromMilliseconds(500);
-            _rateLimitPeriod[TradierApiRequestType.Data] = TimeSpan.FromMilliseconds(500);
-
             // we can poll orders once a second in sandbox and twice a second in production
             var interval = _useSandbox ? 1000 : 500;
+            _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
+            {
+                { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                { TradierApiRequestType.Orders, new RateGate(1, TimeSpan.FromMilliseconds(1000))},
+            };
+
             _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
 
             _webSocketClient.Initialize(WebSocketUrl);
@@ -155,7 +145,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Execute a authenticated call:
         /// </summary>
-        public T Execute<T>(RestRequest request, TradierApiRequestType type, string rootName = "", int attempts = 0, int max = 10) where T : new()
+        private T Execute<T>(RestRequest request, TradierApiRequestType type, string rootName = "", int attempts = 0, int max = 10) where T : new()
         {
             var response = default(T);
 
@@ -172,16 +162,13 @@ namespace QuantConnect.Brokerages.Tradier
                 var client = new RestClient(_requestEndpoint);
                 client.AddDefaultHeader("Accept", "application/json");
                 client.AddDefaultHeader("Authorization", "Bearer " + _accessToken);
-                //client.AddDefaultHeader("Content-Type", "application/x-www-form-urlencoded");
 
                 //Wait for the API rate limiting
-                while (DateTime.Now < _rateLimitNextRequest[type]) Thread.Sleep(10);
-                _rateLimitNextRequest[type] = DateTime.Now + _rateLimitPeriod[type];
+                _rateLimitNextRequest[type].WaitToProceed();
 
                 //Send the request:
                 var raw = client.Execute(request);
                 _previousResponseRaw = raw.Content;
-                //Log.Trace("TradierBrokerage.Execute: " + raw.Content);
 
                 if (!raw.IsSuccessful)
                 {
@@ -214,8 +201,14 @@ namespace QuantConnect.Brokerages.Tradier
                         return new T();
                     }
 
-                    Log.Trace(method + "(2): Parameters: " + string.Join(",", parameters));
-                    Log.Error(method + "(2): Response: " + raw.Content);
+                    Log.Error($"{method}(2): Parameters: {string.Join(",", parameters)} Response: {raw.Content}");
+                    if (attempts++ < max)
+                    {
+                        Log.Trace(method + "(2): Attempting again...");
+                        // this will retry on time outs and other transport exception
+                        Thread.Sleep(3000);
+                        return Execute<T>(request, type, rootName, attempts, max);
+                    }
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, raw.StatusCode.ToStringInvariant(), raw.Content));
 
                     return default(T);
@@ -363,7 +356,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Get Intraday and pending orders for users account: accounts/{account_id}/orders
         /// </summary>
-        public List<TradierOrder> GetIntradayAndPendingOrders()
+        private List<TradierOrder> GetIntradayAndPendingOrders()
         {
             var request = new RestRequest($"accounts/{_accountId}/orders");
             var ordersContainer = Execute<TradierOrdersContainer>(request, TradierApiRequestType.Standard);
@@ -494,11 +487,12 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Get the historical bars for this period
         /// </summary>
-        public List<TradierTimeSeries> GetTimeSeries(string symbol, DateTime start, DateTime end, TradierTimeSeriesIntervals interval)
+        public List<TradierTimeSeries> GetTimeSeries(Symbol symbol, DateTime start, DateTime end, TradierTimeSeriesIntervals interval)
         {
-            //Send Request:
+            // Create and send request
+            var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
             var request = new RestRequest("markets/timesales", Method.GET);
-            request.AddParameter("symbol", symbol, ParameterType.QueryString);
+            request.AddParameter("symbol", ticker, ParameterType.QueryString);
             request.AddParameter("interval", GetEnumDescription(interval), ParameterType.QueryString);
             request.AddParameter("start", start.ToStringInvariant("yyyy-MM-dd HH:mm"), ParameterType.QueryString);
             request.AddParameter("end", end.ToStringInvariant("yyyy-MM-dd HH:mm"), ParameterType.QueryString);
@@ -509,13 +503,15 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Get full daily, weekly or monthly bars of historical periods:
         /// </summary>
-        public List<TradierHistoryBar> GetHistoricalData(string symbol,
+        public List<TradierHistoryBar> GetHistoricalData(Symbol symbol,
             DateTime start,
             DateTime end,
             TradierHistoricalDataIntervals interval = TradierHistoricalDataIntervals.Daily)
         {
+            // Create and send request
+            var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
             var request = new RestRequest("markets/history", Method.GET);
-            request.AddParameter("symbol", symbol, ParameterType.QueryString);
+            request.AddParameter("symbol", ticker, ParameterType.QueryString);
             request.AddParameter("start", start.ToStringInvariant("yyyy-MM-dd"), ParameterType.QueryString);
             request.AddParameter("end", end.ToStringInvariant("yyyy-MM-dd"), ParameterType.QueryString);
             request.AddParameter("interval", GetEnumDescription(interval));

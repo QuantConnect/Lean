@@ -11,17 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Risk import *
+from AlgorithmImports import *
 
 class TrailingStopRiskManagementModel(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that limits the maximum possible loss
@@ -30,8 +20,8 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
         '''Initializes a new instance of the TrailingStopRiskManagementModel class
         Args:
             maximumDrawdownPercent: The maximum percentage drawdown allowed for algorithm portfolio compared with the highest unrealized profit, defaults to 5% drawdown'''
-        self.maximumDrawdownPercent = -abs(maximumDrawdownPercent)
-        self.trailingHighs = dict()
+        self.maximumDrawdownPercent = abs(maximumDrawdownPercent)
+        self.trailing = dict()
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
@@ -46,24 +36,25 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
 
             # Remove if not invested
             if not security.Invested:
-                self.trailingHighs.pop(symbol, None)
+                self.trailing.pop(symbol, None)
                 continue
+
+            profitPercent = security.Holdings.UnrealizedProfitPercent
 
             # Add newly invested securities
-            if symbol not in self.trailingHighs:
-                self.trailingHighs[symbol] = security.Holdings.AveragePrice   # Set to average holding cost
+            value = self.trailing.get(symbol)
+            if value == None:
+                newValue = profitPercent if profitPercent > 0 else 0
+                self.trailing[symbol] = newValue
                 continue
 
-            # Check for new highs and update - set to tradebar high
-            if self.trailingHighs[symbol] < security.High:
-                self.trailingHighs[symbol] = security.High
+            # Check for new high and update
+            if value < profitPercent:
+                self.trailing[symbol] = profitPercent
                 continue
 
-            # Check for securities past the drawdown limit
-            securityHigh = self.trailingHighs[symbol]
-            drawdown = (security.Low / securityHigh) - 1
-
-            if drawdown < self.maximumDrawdownPercent:
+            # If unrealized profit percent deviates from local max for more than affordable percentage
+            if profitPercent < value - self.maximumDrawdownPercent:
                 # liquidate
                 riskAdjustedTargets.append(PortfolioTarget(symbol, 0))
 

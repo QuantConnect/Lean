@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetWarmup(TimeSpan.FromDays(30));
 
             _spy = AddEquity("SPY", Resolution.Daily).Symbol;
-            var renkoConsolidator = new RenkoConsolidator(2m);
+            var renkoConsolidator = new ClassicRenkoConsolidator(2m);
             renkoConsolidator.DataConsolidated += (sender, consolidated) =>
             {
                 if (IsWarmingUp) return;
@@ -83,18 +83,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "1.200%"},
             {"Expectancy", "0"},
             {"Net Profit", "1.237%"},
-            {"Sharpe Ratio", "1.934"},
-            {"Probabilistic Sharpe Ratio", "63.185%"},
+            {"Sharpe Ratio", "1.822"},
+            {"Probabilistic Sharpe Ratio", "62.380%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.095"},
-            {"Beta", "0.009"},
-            {"Annual Standard Deviation", "0.05"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-1.293"},
-            {"Tracking Error", "0.091"},
-            {"Treynor Ratio", "10.428"},
+            {"Alpha", "0.005"},
+            {"Beta", "0.425"},
+            {"Annual Standard Deviation", "0.047"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "-1.886"},
+            {"Tracking Error", "0.055"},
+            {"Treynor Ratio", "0.203"},
             {"Total Fees", "$3.23"},
             {"Estimated Strategy Capacity", "$600000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},

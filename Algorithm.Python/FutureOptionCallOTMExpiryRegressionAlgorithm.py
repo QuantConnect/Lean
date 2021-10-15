@@ -52,7 +52,7 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
 
         self.expectedContract = Symbol.CreateOption(self.es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3300.0, datetime(2020, 6, 19))
         if self.esOption != self.expectedContract:
-            raise AssertionError(f"Contract {self.expectedContract} was not found in the chain");
+            raise AssertionError(f"Contract {self.expectedContract} was not found in the chain")
 
         self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1), self.ScheduledMarketOrder)
 
@@ -65,11 +65,11 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
         for delisting in data.Delistings.Values:
             if delisting.Type == DelistingType.Warning:
                 if delisting.Time != datetime(2020, 6, 19):
-                    raise AssertionError(f"Delisting warning issued at unexpected date: {delisting.Time}");
+                    raise AssertionError(f"Delisting warning issued at unexpected date: {delisting.Time}")
 
             if delisting.Type == DelistingType.Delisted:
                 if delisting.Time != datetime(2020, 6, 20):
-                    raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}");
+                    raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}")
         
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
@@ -90,21 +90,21 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
         else:
             raise AssertionError(f"Received order event for unknown Symbol: {orderEvent.Symbol}")
 
-        self.Log(f"{orderEvent}");
+        self.Log(f"{orderEvent}")
         
 
     def AssertFutureOptionContractOrder(self, orderEvent: OrderEvent, option: Security):
         if orderEvent.Direction == OrderDirection.Buy and option.Holdings.Quantity != 1:
-            raise AssertionError(f"No holdings were created for option contract {option.Symbol}");
+            raise AssertionError(f"No holdings were created for option contract {option.Symbol}")
 
         if orderEvent.Direction == OrderDirection.Sell and option.Holdings.Quantity != 0:
-            raise AssertionError("Holdings were found after a filled option exercise");
+            raise AssertionError("Holdings were found after a filled option exercise")
 
         if orderEvent.Direction == OrderDirection.Sell and "OTM" not in orderEvent.Message:
-            raise AssertionError("Contract did not expire OTM");
+            raise AssertionError("Contract did not expire OTM")
 
         if "Exercise" in orderEvent.Message:
-            raise AssertionError("Exercised option, even though it expires OTM");
+            raise AssertionError("Exercised option, even though it expires OTM")
 
     def OnEndOfAlgorithm(self):
         if self.Portfolio.Invested:

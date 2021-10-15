@@ -38,12 +38,16 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         private static readonly HashSet<string> SupportedMarkets = new[]
         {
             Market.GDAX,
-            Market.Bitfinex
+            Market.Bitfinex,
+            Market.Binance,
+            Market.FTX,
+            Market.Kraken
         }.ToHashSet();
 
         private readonly DirectoryInfo _rawDataFolder;
         private readonly DirectoryInfo _destinationFolder;
         private readonly DateTime _processingDate;
+        private readonly string _market;
 
         /// <summary>
         /// CoinAPI data converter.
@@ -51,8 +55,13 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="date">the processing date.</param>
         /// <param name="rawDataFolder">path to the raw data folder.</param>
         /// <param name="destinationFolder">destination of the newly generated files.</param>
-        public CoinApiDataConverter(DateTime date, string rawDataFolder, string destinationFolder)
+        /// <param name="market">The market to process (optional). Defaults to processing all markets in parallel.</param>
+        public CoinApiDataConverter(DateTime date, string rawDataFolder, string destinationFolder, string market = null)
         {
+            _market = string.IsNullOrWhiteSpace(market) 
+                ? null 
+                : market.ToLowerInvariant();
+            
             _processingDate = date;
             _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, SecurityType.Crypto.ToLower(), "coinapi"));
             if (!_rawDataFolder.Exists)
@@ -90,17 +99,43 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     "quotes",
                     _processingDate.ToStringInvariant(DateFormat.EightCharacter)));
 
+            var rawMarket = _market != null &&
+                CoinApiSymbolMapper.MapMarketsToExchangeIds.TryGetValue(_market, out var rawMarketValue)
+                    ? rawMarketValue
+                    : null;
+            
             // Distinct by tick type and first two parts of the raw file name, separated by '-'.
             // This prevents us from double processing the same ticker twice, in case we're given
             // two raw data files for the same symbol. Related: https://github.com/QuantConnect/Lean/pull/3262
             var apiDataReader = new CoinApiDataReader(symbolMapper);
-            var fileToProcess = tradesFolder.EnumerateFiles("*.gz")
+            var filesToProcessCandidates = tradesFolder.EnumerateFiles("*.gz")
                 .Concat(quotesFolder.EnumerateFiles("*.gz"))
-                .Where(f => f.Name.Contains("SPOT"))
+                .Where(f => f.Name.Contains("SPOT") && (rawMarket == null || f.Name.Contains(rawMarket)))
                 .Where(f => f.Name.Split('_').Length == 4)
-                .DistinctBy(x => x.Directory.Parent.Name + apiDataReader.GetCoinApiEntryData(x, _processingDate).Symbol.ID);
+                .ToList();
 
-            Parallel.ForEach(fileToProcess,(file, loopState) =>
+            var filesToProcessKeys = new HashSet<string>();
+            var filesToProcess = new List<FileInfo>();
+
+            foreach (var candidate in filesToProcessCandidates)
+            {
+                try
+                {
+                    var key = candidate.Directory.Parent.Name + apiDataReader.GetCoinApiEntryData(candidate, _processingDate).Symbol.ID;
+                    if (filesToProcessKeys.Add(key))
+                    {
+                        // Separate list from HashSet to preserve ordering of viable candidates
+                        filesToProcess.Add(candidate);
+                    }
+                }
+                catch (Exception err)
+                {
+                    // Most likely the exchange isn't supported. Log exception message to avoid excessive stack trace spamming in console output 
+                    Log.Error(err.Message);
+                }
+            }
+
+            Parallel.ForEach(filesToProcess, (file, loopState) =>
                 {
                     Log.Trace($"CoinApiDataConverter(): Starting data conversion from source file: {file.Name}...");
                     try

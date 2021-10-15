@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
 
         /// <summary>
         /// Creates the coarse fundamental universe object.
-        /// This is provided to allow more flexibility when creating coarse universe, such as using algorithm.Universe.DollarVolume.Top(5)
+        /// This is provided to allow more flexibility when creating coarse universe.
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <returns>The coarse fundamental universe</returns>

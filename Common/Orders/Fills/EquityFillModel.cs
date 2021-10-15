@@ -16,12 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QLNet;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fills
@@ -183,13 +184,14 @@ namespace QuantConnect.Orders.Fills
                     if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var askCurrent = GetAskPrice(asset, out endTimeUtc);
+                        var askCurrent = GetBestEffortAskPrice(asset, order.Time, out var fillMessage);
 
                         if (askCurrent <= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = Math.Min(askCurrent, order.LimitPrice);
                             fill.FillQuantity = order.Quantity;
+                            fill.Message = fillMessage;
                         }
                     }
 
@@ -200,13 +202,14 @@ namespace QuantConnect.Orders.Fills
                     if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var bidCurrent = GetBidPrice(asset, out endTimeUtc);
+                        var bidCurrent = GetBestEffortBidPrice(asset, order.Time, out var fillMessage);
 
                         if (bidCurrent >= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = Math.Max(bidCurrent, order.LimitPrice);
                             fill.FillQuantity = order.Quantity;
+                            fill.Message = fillMessage;
                         }
                     }
 
@@ -229,40 +232,30 @@ namespace QuantConnect.Orders.Fills
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // make sure the exchange is open/normal market hours before filling
+            // Make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            // Define the last bid or ask time to set stale prices message
-            var endTime = DateTime.MinValue;
-            fill.Status = OrderStatus.Filled;
-
-            //Calculate the model slippage: e.g. 0.01c
+            // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
-            //Apply slippage
+            var fillMessage = string.Empty;
+
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //Order [fill]price for a buy market order model is the current security ask price
-                    fill.FillPrice = GetAskPrice(asset, out endTime) + slip;
+                    fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage) + slip;
                     break;
                 case OrderDirection.Sell:
                     //Order [fill]price for a buy market order model is the current security bid price
-                    fill.FillPrice = GetBidPrice(asset, out endTime) - slip;
+                    fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage) - slip;
                     break;
-            }
-
-            var endTimeUtc = endTime.ConvertToUtc(asset.Exchange.TimeZone);
-
-            // if the order is filled on stale (fill-forward) data, set a warning message on the order event
-            if (endTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
-            {
-                fill.Message = $"Warning: fill at stale price ({endTime.ToStringInvariant()} {asset.Exchange.TimeZone})";
             }
 
             // assume the order completely filled
             fill.FillQuantity = order.Quantity;
-
+            fill.Message = fillMessage;
+            fill.Status = OrderStatus.Filled;
             return fill;
         }
 
@@ -493,12 +486,86 @@ namespace QuantConnect.Orders.Fills
             // have large gaps, in which case the currentBar.EndTime will be in the past
             // ASUR  | | |      [order]        | | | | | | |
             //  SPY  | | | | | | | | | | | | | | | | | | | |
-            var currentBar = asset.GetLastData();
             var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
-            if (currentBar == null || localOrderTime >= currentBar.EndTime) return fill;
+            var endTime = DateTime.MinValue;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var primaryExchangeCode = ((Equity)asset).PrimaryExchange.Code;
+                var officialOpen = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OfficialOpen);
+                var openingPrints = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OpeningPrints);
+
+                var trades = asset.Cache.GetAll<Tick>()
+                    .Where(x => x.TickType == TickType.Trade && x.Price > 0 && asset.Exchange.DateTimeIsOpen(x.Time))
+                    .OrderBy(x => x.EndTime).ToList();
+
+                // Get the first valid (non-zero) tick of trade type from an open market
+                var tick = trades
+                    .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
+                    .FirstOrDefault(x =>
+                        x.TickType == TickType.Trade && x.Price > 0 && x.ExchangeCode == primaryExchangeCode &&
+                        (x.ParsedSaleCondition == officialOpen || x.ParsedSaleCondition == openingPrints) &&
+                        asset.Exchange.DateTimeIsOpen(x.Time));
+
+                // If there is no OfficialOpen or OpeningPrints in the current list of trades,
+                // we will wait for the next up to 1 minute before accepting the last trade without flags
+                // We will give priority to trade then use quote to get the timestamp
+                // If there are only quotes, we will need to test for the tick type before we assign the fill price
+                if (tick == null)
+                {
+                    var previousOpen = asset.Exchange.Hours
+                        .GetMarketHours(asset.LocalTime)
+                        .GetMarketOpen(TimeSpan.Zero, false);
+
+                    fill.Message = "No trade with the OfficialOpen or OpeningPrints flag within the 1-minute timeout.";
+
+                    tick = trades.LastOrDefault() ?? asset.Cache.GetAll<Tick>().LastOrDefault();
+                    if ((tick?.EndTime.TimeOfDay - previousOpen)?.TotalMinutes < 1)
+                    {
+                        return fill;
+                    }
+
+                    fill.Message += $" Fill with last {tick.TickType} data.";
+                }
+
+                endTime = tick?.EndTime ?? endTime;
+
+                if (tick?.TickType == TickType.Trade)
+                {
+                    fill.FillPrice = tick.Price;
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    // If the order was placed during the bar aggregation, we cannot use its open price
+                    if (tradeBar.Time < localOrderTime) return fill;
+
+                    // We need to verify whether the trade data is from the open market.
+                    if (tradeBar.Period < Resolution.Hour.ToTimeSpan() && !asset.Exchange.DateTimeIsOpen(tradeBar.Time))
+                    {
+                        return fill;
+                    }
+
+                    endTime = tradeBar.EndTime;
+                    fill.FillPrice = tradeBar.Open;
+                }
+            }
+            else
+            {
+                fill.Message = $"Warning: No trade information available at {asset.LocalTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using Quote data";
+            }
+
+            if (localOrderTime >= endTime) return fill;
 
             // if the MOO was submitted during market the previous day, wait for a day to turn over
-            if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == asset.LocalTime.Date)
+            // The date of the order and the trade data end time cannot be the same.
+            // Note that the security local time can be ahead of the data end time.
+            if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == endTime.Date)
             {
                 return fill;
             }
@@ -507,23 +574,35 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Open;
+            // assume the order completely filled
+            fill.FillQuantity = order.Quantity;
             fill.Status = OrderStatus.Filled;
+
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
-            //Apply slippage
+            var bestEffortMessage = "";
+
+            // If there is no trade information, get the bid or ask, then apply the slippage
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
+                    if (fill.FillPrice == 0)
+                    {
+                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage);
+                        fill.Message += bestEffortMessage;
+                    }
+
                     fill.FillPrice += slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
                 case OrderDirection.Sell:
+                    if (fill.FillPrice == 0)
+                    {
+                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage);
+                        fill.Message += bestEffortMessage;
+                    }
+
                     fill.FillPrice -= slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
             }
 
@@ -551,28 +630,100 @@ namespace QuantConnect.Orders.Fills
             {
                 return fill;
             }
-            // make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Close;
-            fill.Status = OrderStatus.Filled;
-            //Calculate the model slippage: e.g. 0.01c
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var primaryExchangeCode = ((Equity)asset).PrimaryExchange.Code;
+                var officialClose = (uint)(TradeConditionFlags.Regular | TradeConditionFlags.OfficialClose);
+                var closingPrints = (uint)(TradeConditionFlags.Regular | TradeConditionFlags.ClosingPrints);
+
+                var trades = asset.Cache.GetAll<Tick>()
+                    .Where(x => x.TickType == TickType.Trade && x.Price > 0)
+                    .OrderBy(x => x.EndTime).ToList();
+
+                // Get the last valid (non-zero) tick of trade type from an close market
+                var tick = trades
+                    .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
+                    .LastOrDefault(x => x.ExchangeCode == primaryExchangeCode &&
+                        (x.ParsedSaleCondition == officialClose || x.ParsedSaleCondition == closingPrints));
+
+                // If there is no OfficialClose or ClosingPrints in the current list of trades,
+                // we will wait for the next up to 1 minute before accepting the last tick without flags
+                // We will give priority to trade then use quote to get the timestamp
+                // If there are only quotes, we will need to test for the tick type before we assign the fill price
+                if (tick == null)
+                {
+                    tick = trades.LastOrDefault() ?? asset.Cache.GetAll<Tick>().LastOrDefault();
+                    if (Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol).IsExtendedMarketHours())
+                    {
+                        fill.Message = "No trade with the OfficialClose or ClosingPrints flag within the 1-minute timeout.";
+
+                        if ((tick?.EndTime - nextMarketClose)?.TotalMinutes < 1)
+                        {
+                            return fill;
+                        }
+                    }
+                    else
+                    {
+                        fill.Message = "No trade with the OfficialClose or ClosingPrints flag for data that does not include extended market hours.";
+                    }
+
+                    fill.Message += $" Fill with last {tick.TickType} data.";
+                }
+
+                if (tick?.TickType == TickType.Trade)
+                {
+                    fill.FillPrice = tick.Price;
+                }
+            }
+            // make sure the exchange is open/normal market hours before filling
+            // It will return true if the last bar opens before the market closes
+            else if (!IsExchangeOpen(asset, false))
+            {
+                return fill;
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                fill.FillPrice = asset.Cache.GetData<TradeBar>()?.Close ?? 0;
+            }
+            else
+            {
+                fill.Message = $"Warning: No trade information available at {asset.LocalTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using Quote data";
+            }
+
+            // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
-            //Apply slippage
+            var bestEffortMessage = "";
+
+            // If there is no trade information, get the bid or ask, then apply the slippage
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
+                    if (fill.FillPrice == 0)
+                    {
+                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage);
+                        fill.Message += bestEffortMessage;
+                    }
+
                     fill.FillPrice += slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
                 case OrderDirection.Sell:
+                    if (fill.FillPrice == 0)
+                    {
+                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage);
+                        fill.Message += bestEffortMessage;
+                    }
+
                     fill.FillPrice -= slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
             }
+
+            // assume the order completely filled
+            fill.FillQuantity = order.Quantity;
+            fill.Status = OrderStatus.Filled;
 
             return fill;
         }
@@ -602,9 +753,18 @@ namespace QuantConnect.Orders.Fills
         /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
-        /// <param name="endTime">Timestamp of the most recent data type</param>
-        private decimal GetAskPrice(Security asset, out DateTime endTime)
+        /// <param name="orderTime">Time the order was submitted</param>
+        /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
+        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message)
         {
+            message = string.Empty;
+            BaseData baseData = null;
+            var bestEffortAskPrice = 0m;
+
+            // Define the cut off time to get the best effort bid or ask and whether the price is stale
+            var localOrderTime = orderTime.ConvertFromUtc(asset.Exchange.TimeZone);
+            var cutOffTime = localOrderTime.Add(-Parameters.StalePriceTimeSpan);
+
             var subscribedTypes = GetSubscribedTypes(asset);
 
             List<Tick> ticks = null;
@@ -617,39 +777,70 @@ namespace QuantConnect.Orders.Fills
                 var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.AskPrice > 0);
                 if (quote != null)
                 {
-                    endTime = quote.EndTime;
-                    return quote.AskPrice;
+                    if (quote.EndTime >= cutOffTime)
+                    {
+                        return quote.AskPrice;
+                    }
+
+                    baseData = quote;
+                    bestEffortAskPrice = quote.AskPrice;
+                    message = $"Warning: fill at stale price ({baseData.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}), using Quote Tick data.";
                 }
             }
 
             if (subscribedTypes.Contains(typeof(QuoteBar)))
             {
                 var quoteBar = asset.Cache.GetData<QuoteBar>();
-                if (quoteBar != null)
+                if (quoteBar != null && (baseData == null || quoteBar.EndTime > baseData.EndTime))
                 {
-                    endTime = quoteBar.EndTime;
-                    return quoteBar.Ask?.Close ?? quoteBar.Close;
+                    if (quoteBar.EndTime >= cutOffTime)
+                    {
+                        return quoteBar.Ask?.Close ?? quoteBar.Close;
+                    }
+
+                    baseData = quoteBar;
+                    bestEffortAskPrice = quoteBar.Ask?.Close ?? quoteBar.Close;
+                    message = $"Warning: fill at stale price ({baseData.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}), using QuoteBar data.";
                 }
             }
 
             if (isTickSubscribed)
             {
                 var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
-                if (trade != null)
+                if (trade != null && (baseData == null || trade.EndTime > baseData.EndTime))
                 {
-                    endTime = trade.EndTime;
-                    return trade.Price;
+                    message = $"Warning: No quote information available at {trade.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using Trade Tick data";
+
+                    if (trade.EndTime >= cutOffTime)
+                    {
+                        return trade.Price;
+                    }
+
+                    baseData = trade;
+                    bestEffortAskPrice = trade.Price;
                 }
             }
 
             if (subscribedTypes.Contains(typeof(TradeBar)))
             {
                 var tradeBar = asset.Cache.GetData<TradeBar>();
-                if (tradeBar != null)
+                if (tradeBar != null && (baseData == null || tradeBar.EndTime > baseData.EndTime))
                 {
-                    endTime = tradeBar.EndTime;
-                    return tradeBar.Close;
+                    message = $"Warning: No quote information available at {tradeBar.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using TradeBar data";
+
+                    if (tradeBar.EndTime >= cutOffTime)
+                    {
+                        return tradeBar.Close;
+                    }
+
+                    baseData = tradeBar;
+                    bestEffortAskPrice = tradeBar.Close;
                 }
+            }
+
+            if (baseData != null)
+            {
+                return bestEffortAskPrice;
             }
 
             throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
@@ -661,9 +852,18 @@ namespace QuantConnect.Orders.Fills
         /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
-        /// <param name="endTime">Timestamp of the most recent data type</param>
-        private decimal GetBidPrice(Security asset, out DateTime endTime)
+        /// <param name="orderTime">Time the order was submitted</param>
+        /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
+        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message)
         {
+            message = string.Empty;
+            BaseData baseData = null;
+            var bestEffortBidPrice = 0m;
+
+            // Define the cut off time to get the best effort bid or ask and whether the price is stale
+            var localOrderTime = orderTime.ConvertFromUtc(asset.Exchange.TimeZone);
+            var cutOffTime = localOrderTime.Add(-Parameters.StalePriceTimeSpan);
+
             var subscribedTypes = GetSubscribedTypes(asset);
 
             List<Tick> ticks = null;
@@ -676,44 +876,74 @@ namespace QuantConnect.Orders.Fills
                 var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.BidPrice > 0);
                 if (quote != null)
                 {
-                    endTime = quote.EndTime;
-                    return quote.BidPrice;
+                    if (quote.EndTime >= cutOffTime)
+                    {
+                        return quote.BidPrice;
+                    }
+
+                    baseData = quote;
+                    bestEffortBidPrice = quote.BidPrice;
+                    message = $"Warning: fill at stale price ({baseData.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}), using Quote Tick data.";
                 }
             }
 
             if (subscribedTypes.Contains(typeof(QuoteBar)))
             {
                 var quoteBar = asset.Cache.GetData<QuoteBar>();
-                if (quoteBar != null)
+                if (quoteBar != null && (baseData == null || quoteBar.EndTime > baseData.EndTime))
                 {
-                    endTime = quoteBar.EndTime;
-                    return quoteBar.Bid?.Close ?? quoteBar.Close;
+                    if (quoteBar.EndTime >= cutOffTime)
+                    {
+                        return quoteBar.Bid?.Close ?? quoteBar.Close;
+                    }
+
+                    baseData = quoteBar;
+                    bestEffortBidPrice = quoteBar.Bid?.Close ?? quoteBar.Close;
+                    message = $"Warning: fill at stale price ({baseData.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}), using QuoteBar data.";
                 }
             }
 
             if (isTickSubscribed)
             {
                 var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
-                if (trade != null)
+                if (trade != null && (baseData == null || trade.EndTime > baseData.EndTime))
                 {
-                    endTime = trade.EndTime;
-                    return trade.Price;
+                    message = $"Warning: No quote information available at {trade.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using Trade Tick data";
+
+                    if (trade.EndTime >= cutOffTime)
+                    {
+                        return trade.Price;
+                    }
+
+                    baseData = trade;
+                    bestEffortBidPrice = trade.Price;
                 }
             }
 
             if (subscribedTypes.Contains(typeof(TradeBar)))
             {
                 var tradeBar = asset.Cache.GetData<TradeBar>();
-                if (tradeBar != null)
+                if (tradeBar != null && (baseData == null || tradeBar.EndTime > baseData.EndTime))
                 {
-                    endTime = tradeBar.EndTime;
-                    return tradeBar.Close;
+                    message = $"Warning: No quote information available at {tradeBar.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using TradeBar data";
+
+                    if (tradeBar.EndTime >= cutOffTime)
+                    {
+                        return tradeBar.Close;
+                    }
+
+                    baseData = tradeBar;
+                    bestEffortBidPrice = tradeBar.Close;
                 }
             }
 
-            throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data subscription were found.");
-        }
+            if (baseData != null)
+            {
+                return bestEffortBidPrice;
+            }
 
+            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
+        }
 
         /// <summary>
         /// This is required due to a limitation in PythonNet to resolved

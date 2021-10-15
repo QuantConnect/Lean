@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -68,17 +69,18 @@ namespace QuantConnect.Tests.Common
                 Assert.Fail("Consume should have started.");
             }
 
-            Thread.Sleep(15);
+            // lets give the monitor time to register the initial time
+            Thread.Sleep(100);
             timeProvider.Advance(TimeSpan.FromSeconds(45));
 
             Assert.AreEqual(0, provider.Invocations.Count);
 
             timeProvider.Advance(TimeSpan.FromSeconds(15));
 
-            int i = 0;
-            while (provider.Invocations.Count == 0 && i++ < 3)
+            var count = 10;
+            while (provider.Invocations.Count == 0 && --count > 0)
             {
-                Thread.Sleep(15);
+                Thread.Sleep(10);
             }
 
             minuteElapsed.Set();
@@ -123,7 +125,7 @@ namespace QuantConnect.Tests.Common
             Action code = () =>
             {
                 // lets give the monitor time to register the initial time
-                Thread.Sleep(50);
+                Thread.Sleep(100);
                 for (int i = 0; i < 4; i++)
                 {
                     timeProvider.AdvanceSeconds(45);
@@ -144,7 +146,17 @@ namespace QuantConnect.Tests.Common
 
         private class FakeIsolatorLimitResultProvider : IIsolatorLimitResultProvider
         {
-            public List<int> Invocations { get; } = new List<int>();
+            private List<int> _ivocations = new List<int>();
+            public List<int> Invocations
+            {
+                get
+                {
+                    lock (_ivocations)
+                    {
+                        return _ivocations.ToList();
+                    }
+                }
+            }
 
             public IsolatorLimitResult IsWithinLimit()
             {
@@ -153,12 +165,18 @@ namespace QuantConnect.Tests.Common
 
             public void RequestAdditionalTime(int minutes)
             {
-                Invocations.Add(minutes);
+                lock (_ivocations)
+                {
+                    _ivocations.Add(minutes);
+                }
             }
 
             public bool TryRequestAdditionalTime(int minutes)
             {
-                Invocations.Add(minutes);
+                lock (_ivocations)
+                {
+                    _ivocations.Add(minutes);
+                }
                 return true;
             }
         }

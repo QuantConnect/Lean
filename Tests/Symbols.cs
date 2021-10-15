@@ -68,6 +68,8 @@ namespace QuantConnect.Tests
         public static readonly Symbol Future_ESZ18_Dec2018 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2018, 12, 21));
         public static readonly Symbol Future_CLF19_Jan2019 = CreateFutureSymbol("CL", new DateTime(2018, 12, 19));
 
+        public static readonly Symbol SPX = CreateIndexSymbol("SPX");
+
         public static readonly ImmutableArray<Symbol> All =
             typeof(Symbols).GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Where(field => field.FieldType == typeof(Symbol))
@@ -122,6 +124,7 @@ namespace QuantConnect.Tests
                 case SecurityType.Future:   return Future_CLF19_Jan2019;
                 case SecurityType.Cfd:      return XAGUSD;
                 case SecurityType.Crypto:   return BTCUSD;
+                case SecurityType.Index:    return SPX;
                 default:
                     throw new NotImplementedException($"Symbols.GetBySecurityType({type}) is not implemented.");
             }
@@ -136,7 +139,7 @@ namespace QuantConnect.Tests
         {
             return Symbol.Create(symbol, SecurityType.Equity, market);
         }
-        private static Symbol CreateFutureSymbol(string symbol, DateTime expiry)
+        internal static Symbol CreateFutureSymbol(string symbol, DateTime expiry)
         {
             string market;
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
@@ -145,13 +148,17 @@ namespace QuantConnect.Tests
             }
             return Symbol.CreateFuture(symbol, market, expiry);
         }
+        internal static Symbol CreateFutureOptionSymbol(Symbol underlying, OptionRight right, decimal strike, DateTime expiry)
+        {
+            return Symbol.CreateOption(underlying, underlying.ID.Market, OptionStyle.American, right, strike, expiry);
+        }
 
         private static Symbol CreateCfdSymbol(string symbol, string market)
         {
             return Symbol.Create(symbol, SecurityType.Cfd, market);
         }
 
-        private static Symbol CreateOptionSymbol(string symbol, OptionRight right, decimal strike, DateTime expiry, string market = Market.USA)
+        internal static Symbol CreateOptionSymbol(string symbol, OptionRight right, decimal strike, DateTime expiry, string market = Market.USA)
         {
             return Symbol.CreateOption(symbol, market, OptionStyle.American, right, strike, expiry);
         }
@@ -174,6 +181,11 @@ namespace QuantConnect.Tests
                 market = DefaultBrokerageModel.DefaultMarketMap[SecurityType.Future];
             }
             return Symbol.Create(ticker, SecurityType.Future, market, "/" + ticker);
+        }
+
+        private static Symbol CreateIndexSymbol(string ticker)
+        {
+            return Symbol.Create(ticker, SecurityType.Index, Market.USA);
         }
     }
 }

@@ -40,8 +40,8 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         futureSP500.SetFilter(timedelta(0), timedelta(182))
         futureGold.SetFilter(0, 182)
 
-        benchmark = self.AddEquity("SPY");
-        self.SetBenchmark(benchmark.Symbol);
+        benchmark = self.AddEquity("SPY")
+        self.SetBenchmark(benchmark.Symbol)
 
 
     def OnData(self,slice):

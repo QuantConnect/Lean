@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             UniverseSettings.Resolution = Resolution.Minute;
 
-            SetStartDate(2014, 06, 05);
+            SetStartDate(2014, 06, 04);
             SetEndDate(2014, 06, 06);
 
             var selectionUniverse = AddUniverse(enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl },
@@ -144,34 +144,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "13"},
-            {"Average Win", "0.65%"},
-            {"Average Loss", "-0.05%"},
-            {"Compounding Annual Return", "79228162514264337593543950335%"},
-            {"Drawdown", "0.500%"},
-            {"Expectancy", "1.393"},
-            {"Net Profit", "149.699%"},
-            {"Sharpe Ratio", "4.743312616499238E+27"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "83%"},
-            {"Win Rate", "17%"},
-            {"Profit-Loss Ratio", "13.36"},
-            {"Alpha", "7.922816251426434E+28"},
-            {"Beta", "304.581"},
-            {"Annual Standard Deviation", "16.703"},
-            {"Annual Variance", "278.995"},
-            {"Information Ratio", "4.75893717482582E+27"},
-            {"Tracking Error", "16.648"},
-            {"Treynor Ratio", "2.6012216611301735E+26"},
-            {"Total Fees", "$13.20"},
-            {"Estimated Strategy Capacity", "$3000000.00"},
-            {"Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X"},
-            {"Fitness Score", "0.18"},
+            {"Fitness Score", "0.12"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.18"},
+            {"Portfolio Turnover", "0.12"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},

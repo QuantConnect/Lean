@@ -392,7 +392,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.Throws<InvalidOperationException>(() => futureSecurity.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
                 new GetMaximumOrderQuantityForTargetBuyingPowerParameters(algorithm.Portfolio,
                     futureSecurity,
-                    target)));
+                    target,
+                    0)));
         }
 
         [TestCase(1)]
@@ -689,7 +690,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.CME)]
         [TestCase(Market.ICE)]
         [TestCase(Market.CBOT)]
-        [TestCase(Market.CBOE)]
+        [TestCase(Market.CFE)]
         [TestCase(Market.COMEX)]
         [TestCase(Market.NYMEX)]
         [TestCase(Market.Globex)]
@@ -753,7 +754,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.CME)]
         [TestCase(Market.ICE)]
         [TestCase(Market.CBOT)]
-        [TestCase(Market.CBOE)]
+        [TestCase(Market.CFE)]
         [TestCase(Market.COMEX)]
         [TestCase(Market.NYMEX)]
         [TestCase(Market.Globex)]
@@ -791,7 +792,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.CME)]
         [TestCase(Market.ICE)]
         [TestCase(Market.CBOT)]
-        [TestCase(Market.CBOE)]
+        [TestCase(Market.CFE)]
         [TestCase(Market.COMEX)]
         //[TestCase(Market.NYMEX)] NYMEX contracts can have volatile margin requirements, since some are tied to a percentage of the contract's value.
         [TestCase(Market.Globex)]
@@ -875,7 +876,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.CME)]
         [TestCase(Market.ICE)]
         [TestCase(Market.CBOT)]
-        [TestCase(Market.CBOE)]
+        [TestCase(Market.CFE)]
         [TestCase(Market.COMEX)]
         [TestCase(Market.NYMEX)]
         [TestCase(Market.Globex)]

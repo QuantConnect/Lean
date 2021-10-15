@@ -86,12 +86,9 @@ namespace QuantConnect.Tests.API
         [TestCase("C:\\Data", "forex\\oanda\\daily\\eurusd.zip")]
         public void FormattingPathForDataRequestsAreCorrect(string dataFolder, string dataToDownload)
         {
-            var api = new Api.Api();
-            api.Initialize(TestAccount, TestToken, dataFolder);
-
             var path = Path.Combine(dataFolder, dataToDownload);
 
-            var result = api.FormatPathForDataRequest(path);
+            var result = Api.Api.FormatPathForDataRequest(path, dataFolder);
             Assert.AreEqual(dataToDownload.Replace("\\", "/", StringComparison.InvariantCulture), result);
         }
     }

@@ -17,7 +17,7 @@ class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
     '''Provides an example where WarmUpIndicator method is used to warm up indicators
     after their security is added and before (Universe Selection scenario)'''
 
-    count = 10;
+    count = 10
     tolerance = 0.01
     targetPercent = 1 / count
     averages = dict()

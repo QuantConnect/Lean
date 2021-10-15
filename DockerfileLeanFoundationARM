@@ -2,7 +2,7 @@
 # Some packages from the AMD image are excluded because they are not available on ARM or take too long to build
 
 # Use base system for cleaning up wayward processes
-FROM phusion/baseimage:bionic-1.0.0
+FROM phusion/baseimage:focal-1.0.0
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -16,22 +16,23 @@ RUN env TZ=UTC
 # Misc tools for running Python.NET and IB inside a headless container.
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test && apt-get update
 RUN add-apt-repository ppa:apt-fast/stable && apt-get update && apt-get -y install apt-fast
-RUN apt-fast install -y git libgtk2.0.0 cmake bzip2 curl unzip wget python3-pip python-opengl zlib1g-dev \
+RUN apt-get update && apt-fast install -y git libgtk2.0.0 cmake bzip2 curl unzip wget python3-pip python-opengl zlib1g-dev \
     xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
     r-base pandoc libcurl4-openssl-dev \
     openjdk-8-jdk openjdk-8-jre bbe \
     && apt-fast clean && apt-get remove -y apt-fast && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Install IB Gateway: Installs to /usr/local/ibgateway
+# Install IB Gateway: Installs to /root/ibgateway
 # We update the install script so it doesn't use the bundled JVM
 # The bundled JVM doesn't work on ARM64, so we update it to use the JVM installed in the previous command
-RUN wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v984.1h.sh && \
+RUN mkdir -p /root/ibgateway && \
+    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
     java_patch_version=$(java -version 2>&1 | head -n 1 | cut -d'_' -f2 | cut -d'"' -f1) && \
-    bbe -e 's|# INSTALL4J_JAVA_HOME_OVERRIDE=|INSTALL4J_JAVA_HOME_OVERRIDE="/usr/lib/jvm/java-1.8.0-openjdk-arm64"|' -e "s|-lt \"152\"|-lt \"$java_patch_version\"|" -e "s|-gt \"152\"|-gt \"$java_patch_version\"|" ibgateway-latest-standalone-linux-x64.v984.1h.sh > ibgateway-stable-standalone-linux-custom-jvm.sh && \
+    bbe -e 's|# INSTALL4J_JAVA_HOME_OVERRIDE=|INSTALL4J_JAVA_HOME_OVERRIDE="/usr/lib/jvm/java-1.8.0-openjdk-arm64"|' -e "s|-lt \"152\"|-lt \"$java_patch_version\"|" -e "s|-gt \"152\"|-gt \"$java_patch_version\"|" ibgateway-latest-standalone-linux-x64.v985.1j.sh > ibgateway-stable-standalone-linux-custom-jvm.sh && \
     chmod 777 ibgateway-stable-standalone-linux-custom-jvm.sh && \
-    ./ibgateway-stable-standalone-linux-custom-jvm.sh -q && \
-    rm ibgateway-latest-standalone-linux-x64.v984.1h.sh ibgateway-stable-standalone-linux-custom-jvm.sh
+    ./ibgateway-stable-standalone-linux-custom-jvm.sh -q -dir /root/ibgateway && \
+    rm ibgateway-latest-standalone-linux-x64.v985.1j.sh ibgateway-stable-standalone-linux-custom-jvm.sh
 
 # Install dotnet 5 sdk & runtime
 # The .deb packages don't support ARM, the install script does

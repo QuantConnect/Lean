@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -132,6 +133,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     subscription.RemovedFromUniverse
                                 );
                             }
+
+                            // If our subscription is a universe, and we get a delisting event emitted for it, then
+                            // the universe itself should be unselected and removed, because the Symbol that the
+                            // universe is based on has been delisted. Doing the disposal here allows us to
+                            // process the delisting at this point in time before emitting out to the algorithm.
+                            // This is very useful for universes that can be delisted, such as ETF constituent
+                            // universes (e.g. for ETF constituent universes, since the ETF itself is used to create
+                            // the universe Symbol (and set as its underlying), once the ETF is delisted, the
+                            // universe should cease to exist, since there are no more constituents of that ETF).
+                            if (subscription.IsUniverseSelectionSubscription && subscription.Current.Data is Delisting)
+                            {
+                                subscription.Universes.Single().Dispose();
+                            }
+
                             packet.Add(subscription.Current.Data);
 
                             if (!subscription.MoveNext())

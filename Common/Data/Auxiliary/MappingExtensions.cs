@@ -36,12 +36,32 @@ namespace QuantConnect.Data.Auxiliary
             Symbol symbol,
             Type dataType)
         {
+            return mapFileResolver.ResolveMapFile(symbol , dataType.Name);
+        }
+
+        /// <summary>
+        /// Helper method to resolve the mapping file to use.
+        /// </summary>
+        /// <remarks>This method is aware of the data type being added for <see cref="SecurityType.Base"/>
+        /// to the <see cref="SecurityIdentifier.Symbol"/> value</remarks>
+        /// <param name="mapFileResolver">The map file resolver</param>
+        /// <param name="symbol">The symbol that we want to map</param>
+        /// <param name="dataType">The string data type name if any</param>
+        /// <returns>The mapping file to use</returns>
+        public static MapFile ResolveMapFile(this MapFileResolver mapFileResolver,
+            Symbol symbol,
+            string dataType = null)
+        {
             // Load the symbol and date to complete the mapFile checks in one statement
             var symbolID = symbol.HasUnderlying ? symbol.Underlying.ID.Symbol : symbol.ID.Symbol;
             var date = symbol.HasUnderlying ? symbol.Underlying.ID.Date : symbol.ID.Date;
 
+            if (dataType == null && symbol.SecurityType == SecurityType.Base)
+            {
+                symbol.ID.Symbol.TryGetCustomDataType(out dataType);
+            }
             return mapFileResolver.ResolveMapFile(
-                symbol.SecurityType == SecurityType.Base ? symbolID.RemoveFromEnd($".{dataType.Name}") : symbolID,
+                symbol.SecurityType == SecurityType.Base && dataType != null ? symbolID.RemoveFromEnd($".{dataType}") : symbolID,
                 date);
         }
     }

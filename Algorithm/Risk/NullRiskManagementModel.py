@@ -11,9 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("QuantConnect.Algorithm")
-from QuantConnect.Algorithm.Framework.Risk import *
+from AlgorithmImports import *
 
 class NullRiskManagementModel(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that does nothing'''

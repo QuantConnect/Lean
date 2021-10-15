@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -276,7 +276,14 @@ namespace QuantConnect.Securities
                 contractMultiplier: csv[5].ToDecimal(),
                 minimumPriceVariation: csv[6].ToDecimalAllowExponent(),
                 lotSize: csv[7].ToDecimal(),
-                marketTicker: csv.Length > 8 ? csv[8] : string.Empty);
+                marketTicker: HasValidValue(csv, 8) ? csv[8] : string.Empty,
+                minimumOrderSize: HasValidValue(csv, 9) ? csv[9].ToDecimal() : null,
+                priceMagnifier: HasValidValue(csv, 10) ? csv[10].ToDecimal() : 1);
+        }
+
+        private static bool HasValidValue(string[] array, uint position)
+        {
+            return array.Length > position && !string.IsNullOrEmpty(array[position]);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
+using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using QuantConnect.Logging;
-using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -32,6 +32,7 @@ namespace QuantConnect.Brokerages
         private const int ReceiveBufferSize = 8192;
 
         private string _url;
+        private string _sessionToken;
         private CancellationTokenSource _cts;
         private ClientWebSocket _client;
         private Task _taskConnect;
@@ -40,10 +41,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Wraps constructor
         /// </summary>
-        /// <param name="url"></param>
-        public void Initialize(string url)
+        /// <param name="url">The target websocket url</param>
+        /// <param name="sessionToken">The websocket session token</param>
+        public void Initialize(string url, string sessionToken = null)
         {
             _url = url;
+            _sessionToken = sessionToken;
         }
 
         /// <summary>
@@ -70,6 +73,8 @@ namespace QuantConnect.Brokerages
                 {
                     _cts = new CancellationTokenSource();
 
+                    _client = null;
+
                     _taskConnect = Task.Factory.StartNew(
                         () =>
                         {
@@ -77,14 +82,7 @@ namespace QuantConnect.Brokerages
 
                             try
                             {
-                                while (!_cts.IsCancellationRequested)
-                                {
-                                    using (var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token))
-                                    {
-                                        HandleConnection(connectionCts).SynchronouslyAwaitTask();
-                                        connectionCts.Cancel();
-                                    }
-                                }
+                                HandleConnection();
                             }
                             catch (Exception e)
                             {
@@ -93,7 +91,18 @@ namespace QuantConnect.Brokerages
 
                             Log.Trace($"WebSocketClientWrapper connection task ended: {_url}");
                         },
-                        _cts.Token);
+                        _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+                    var count = 0;
+                    do
+                    {
+                        // wait for _client to be not null
+                        if (_client != null || _cts.Token.WaitHandle.WaitOne(50))
+                        {
+                            break;
+                        }
+                    }
+                    while (++count < 100);
                 }
             }
         }
@@ -103,24 +112,30 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Close()
         {
-            try
+            lock (_locker)
             {
-                _client?.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", _cts.Token).SynchronouslyAwaitTask();
+                try
+                {
+                    _client?.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", _cts.Token).SynchronouslyAwaitTask();
 
-                _cts?.Cancel();
+                    _cts?.Cancel();
 
-                _taskConnect?.Wait(TimeSpan.FromSeconds(5));
+                    _taskConnect?.Wait(TimeSpan.FromSeconds(5));
 
-                _cts.DisposeSafely();
+                    _cts.DisposeSafely();
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"WebSocketClientWrapper.Close({_url}): {e}");
+                }
+
+                _cts = null;
             }
-            catch (Exception e)
+
+            if (_client != null)
             {
-                Log.Error($"WebSocketClientWrapper.Close({_url}): {e}");
+                OnClose(new WebSocketCloseData(0, string.Empty, true));
             }
-
-            _cts = null;
-
-            OnClose(new WebSocketCloseData(0, string.Empty, true));
         }
 
         /// <summary>
@@ -185,46 +200,65 @@ namespace QuantConnect.Brokerages
             Closed?.Invoke(this, e);
         }
 
-        private async Task HandleConnection(CancellationTokenSource connectionCts)
+        private void HandleConnection()
         {
-            using (_client = new ClientWebSocket())
+            var receiveBuffer = new byte[ReceiveBufferSize];
+
+            while (!_cts.IsCancellationRequested)
             {
                 Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): Connecting...");
 
-                try
+                using (var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token))
                 {
-                    await _client.ConnectAsync(new Uri(_url), connectionCts.Token);
-                    OnOpen();
-
-                    while ((_client.State == WebSocketState.Open || _client.State == WebSocketState.CloseSent) &&
-                        !connectionCts.IsCancellationRequested)
+                    try
                     {
-                        var messageData = await ReceiveMessage(_client, connectionCts.Token);
-
-                        if (messageData.MessageType == WebSocketMessageType.Close)
+                        lock (_locker)
                         {
-                            Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close");
-                            return;
+                            _client.DisposeSafely();
+                            _client = new ClientWebSocket();
+                            if (_sessionToken != null)
+                            {
+                                _client.Options.SetRequestHeader("x-session-token", _sessionToken);
+                            }
+                            _client.ConnectAsync(new Uri(_url), connectionCts.Token).SynchronouslyAwaitTask();
                         }
+                        OnOpen();
 
-                        var message = Encoding.UTF8.GetString(messageData.Data);
-                        OnMessage(new WebSocketMessage(message));
+                        while ((_client.State == WebSocketState.Open || _client.State == WebSocketState.CloseSent) &&
+                            !connectionCts.IsCancellationRequested)
+                        {
+                            var messageData = ReceiveMessage(_client, connectionCts.Token, receiveBuffer);
+
+                            if (messageData == null)
+                            {
+                                break;
+                            }
+
+                            OnMessage(new WebSocketMessage(this, messageData));
+                        }
                     }
-                }
-                catch (OperationCanceledException) { }
-                catch (Exception ex)
-                {
-                    OnError(new WebSocketError(ex.Message, ex));
+                    catch (OperationCanceledException) { }
+                    catch (WebSocketException ex)
+                    {
+                        OnError(new WebSocketError(ex.Message, ex));
+                        connectionCts.Token.WaitHandle.WaitOne(2000);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnError(new WebSocketError(ex.Message, ex));
+                    }
+                    connectionCts.Cancel();
                 }
             }
         }
 
-        private async Task<MessageData> ReceiveMessage(
+        private MessageData ReceiveMessage(
             WebSocket webSocket,
             CancellationToken ct,
+            byte[] receiveBuffer,
             long maxSize = long.MaxValue)
         {
-            var buffer = new ArraySegment<byte>(new byte[ReceiveBufferSize]);
+            var buffer = new ArraySegment<byte>(receiveBuffer);
 
             using (var ms = new MemoryStream())
             {
@@ -232,7 +266,7 @@ namespace QuantConnect.Brokerages
 
                 do
                 {
-                    result = await webSocket.ReceiveAsync(buffer, ct);
+                    result = webSocket.ReceiveAsync(buffer, ct).SynchronouslyAwaitTask();
                     ms.Write(buffer.Array, buffer.Offset, result.Count);
                     if (ms.Length > maxSize)
                     {
@@ -241,20 +275,82 @@ namespace QuantConnect.Brokerages
                 }
                 while (!result.EndOfMessage);
 
-                ms.Seek(0, SeekOrigin.Begin);
-
-                return new MessageData
+                if (result.MessageType == WebSocketMessageType.Binary)
                 {
-                    Data = ms.ToArray(),
-                    MessageType = result.MessageType
-                };
+                    return new BinaryMessage
+                    {
+                        Data = ms.ToArray(),
+                        Count = result.Count,
+                    };
+                }
+                else if (result.MessageType == WebSocketMessageType.Text)
+                {
+                    return new TextMessage
+                    {
+                        Message = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length),
+                    };
+                }
+                else if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length)}");
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Defines a message of websocket data
+        /// </summary>
+        public abstract class MessageData
+        {
+            /// <summary>
+            /// Type of message
+            /// </summary>
+            public WebSocketMessageType MessageType { get; set; }
+        }
+
+        /// <summary>
+        /// Defines a text-Type message of websocket data
+        /// </summary>
+        public class TextMessage : MessageData
+        {
+            /// <summary>
+            /// Data contained in message
+            /// </summary>
+            public string Message { get; set; }
+
+            /// <summary>
+            /// Constructs default instance of the TextMessage
+            /// </summary>
+            public TextMessage()
+            {
+                MessageType = WebSocketMessageType.Text;
             }
         }
 
-        private class MessageData
+        /// <summary>
+        /// Defines a byte-Type message of websocket data
+        /// </summary>
+        public class BinaryMessage : MessageData
         {
+            /// <summary>
+            /// Data contained in message
+            /// </summary>
             public byte[] Data { get; set; }
-            public WebSocketMessageType MessageType { get; set; }
+
+            /// <summary>
+            /// Count of message
+            /// </summary>
+            public int Count { get; set; }
+
+            /// <summary>
+            /// Constructs default instance of the BinaryMessage
+            /// </summary>
+            public BinaryMessage()
+            {
+                MessageType = WebSocketMessageType.Binary;
+            }
         }
     }
 }

@@ -120,7 +120,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _dataSourceReader.Setup(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
                         sds.Source == "rest.collection.source" &&
                         sds.TransportMedium == SubscriptionTransportMedium.Rest &&
-                        sds.Format == FileFormat.Collection))
+                        sds.Format == FileFormat.UnfoldingCollection))
                     )
                     .Returns(Enumerable.Range(0, 100)
                         .Select(i => new BaseDataCollection(_referenceLocal.AddSeconds(i), Symbols.SPY, Enumerable.Range(0, DataPerTimeStep)
@@ -169,7 +169,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNull(_enumerator.Current);
 
-                VerifyGetSourceInvocationCount(_dataSourceReader, 1, "rest.collection.source", SubscriptionTransportMedium.Rest, FileFormat.Collection);
+                VerifyGetSourceInvocationCount(_dataSourceReader, 1, "rest.collection.source", SubscriptionTransportMedium.Rest, FileFormat.UnfoldingCollection);
             }
         }
 
@@ -477,7 +477,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource("rest.collection.source", SubscriptionTransportMedium.Rest, FileFormat.Collection);
+                return new SubscriptionDataSource("rest.collection.source", SubscriptionTransportMedium.Rest, FileFormat.UnfoldingCollection);
             }
         }
 

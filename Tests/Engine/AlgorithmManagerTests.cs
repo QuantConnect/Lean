@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
@@ -42,14 +43,57 @@ using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine
 {
-    [TestFixture, Category("TravisExclude")]
+    [TestFixture]
     public class AlgorithmManagerTests
     {
-        [Test]
+        [TestCase(AlgorithmStatus.Deleted)]
+        [TestCase(AlgorithmStatus.Stopped)]
+        [TestCase(AlgorithmStatus.Liquidated)]
+        [TestCase(AlgorithmStatus.RuntimeError)]
+        public void MonitorsAlgorithmState(AlgorithmStatus algorithmStatus)
+        {
+            AlgorithmManagerAlgorithmStatusTest.Loops = 0;
+            AlgorithmManagerAlgorithmStatusTest.AlgorithmStatus = algorithmStatus;
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("QuantConnect.Tests.Engine.AlgorithmManagerTests+AlgorithmManagerAlgorithmStatusTest",
+                new Dictionary<string, string> {
+                    {"Total Trades", "0"},
+                    {"Average Win", "0%"},
+                    {"Average Loss", "0%"},
+                    {"Compounding Annual Return", "0%"},
+                    {"Drawdown", "0%"},
+                    {"Expectancy", "0"},
+                    {"Net Profit", "0%"},
+                    {"Sharpe Ratio", "0"},
+                    {"Loss Rate", "0%"},
+                    {"Win Rate", "0%"},
+                    {"Profit-Loss Ratio", "0"},
+                    {"Alpha", "0"},
+                    {"Beta", "0"},
+                    {"Annual Standard Deviation", "0"},
+                    {"Annual Variance", "0"},
+                    {"Information Ratio", "0"},
+                    {"Tracking Error", "0"},
+                    {"Treynor Ratio", "0"},
+                    {"Total Fees", "$0.00"}
+                },
+                Language.CSharp,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus,
+                algorithmLocation: "QuantConnect.Tests.dll");
+
+            Assert.AreEqual(1, AlgorithmManagerAlgorithmStatusTest.Loops);
+        }
+
+        [Test, Explicit("TravisExclude")]
         public void TestAlgorithmManagerSpeed()
         {
-            var algorithmManager = new AlgorithmManager(false);
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
+            var algorithmManager = new AlgorithmManager(false);
             var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(AlgorithmManagerTests)}.{nameof(TestAlgorithmManagerSpeed)}");
             var feed = new MockDataFeed();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
@@ -154,6 +198,10 @@ namespace QuantConnect.Tests.Engine
             public void OnAlgorithmEnd()
             {
             }
+
+            public void OnSecuritiesChanged(SecurityChanges changes)
+            {
+            }
         }
 
         class NullResultHandler : IResultHandler
@@ -200,7 +248,7 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            public void Sample(DateTime time, bool force = false)
+            public void Sample(DateTime time)
             {
             }
 
@@ -335,6 +383,21 @@ namespace QuantConnect.Tests.Engine
                     _frontierUtc += _frontierStepSize;
                 }
                 while (_frontierUtc <= _endTimeUtc);
+            }
+        }
+
+        public class AlgorithmManagerAlgorithmStatusTest : BasicTemplateDailyAlgorithm
+        {
+            public static int Loops { get; set; }
+            public static AlgorithmStatus AlgorithmStatus { get; set; }
+
+            public AlgorithmManagerAlgorithmStatusTest() : base()
+            {
+            }
+            public override void OnData(Slice data)
+            {
+                ++Loops;
+                SetStatus(AlgorithmStatus);
             }
         }
     }

@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 5);
+            SetStartDate(2020, 1, 4);
             SetEndDate(2020, 1, 6);
 
             var goldFutures = AddFuture("GC", Resolution.Minute, Market.COMEX);
@@ -105,31 +105,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-8.289%"},
+            {"Compounding Annual Return", "-5.605%"},
             {"Drawdown", "3.500%"},
             {"Expectancy", "0"},
             {"Net Profit", "-0.047%"},
-            {"Sharpe Ratio", "0"},
+            {"Sharpe Ratio", "-10.898"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
+            {"Alpha", "-0.135"},
+            {"Beta", "0.124"},
+            {"Annual Standard Deviation", "0.005"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-14.395"},
-            {"Tracking Error", "0.043"},
-            {"Treynor Ratio", "0"},
+            {"Information Ratio", "-17.984"},
+            {"Tracking Error", "0.038"},
+            {"Treynor Ratio", "-0.467"},
             {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$31000000.00"},
+            {"Estimated Strategy Capacity", "$25000000.00"},
             {"Lowest Capacity Asset", "OG 31BFX0QKBVPGG|GC XE1Y0ZJ8NQ8T"},
-            {"Fitness Score", "0.019"},
+            {"Fitness Score", "0.012"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-194.237"},
-            {"Portfolio Turnover", "0.038"},
+            {"Return Over Maximum Drawdown", "-126.806"},
+            {"Portfolio Turnover", "0.025"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},

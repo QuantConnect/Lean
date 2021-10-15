@@ -25,7 +25,6 @@ using QuantConnect.Data.Custom;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Custom.Fred;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
@@ -209,26 +208,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            // If USEnergyAPI data, set the access token in data factory
-            var energyInformation = _dataFactory as USEnergyAPI;
-            if (energyInformation != null)
-            {
-                if (!USEnergyAPI.IsAuthCodeSet)
-                {
-                    USEnergyAPI.SetAuthCode(Config.Get("us-energy-information-auth-token"));
-                }
-            }
-
-            // If Fred data, set the access token in data factory
-            var fred = _dataFactory as FredApi;
-            if (fred != null)
-            {
-                if (!FredApi.IsAuthCodeSet)
-                {
-                    FredApi.SetAuthCode(Config.Get("fred-auth-token"));
-                }
-            }
-
             _factorFile = new FactorFile(_config.Symbol.Value, new List<FactorFileRow>());
             _mapFile = new MapFile(_config.Symbol.Value, new List<MapFileRow>());
 
@@ -374,33 +353,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // if we move past our current 'date' then we need to do daily things, such
                     // as updating factors and symbol mapping
-                    if (instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
+                    var shouldSkip = false;
+                    while (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
                     {
-                        // this is fairly hacky and could be solved by removing the aux data from this class
-                        // the case is with coarse data files which have many daily sized data points for the
-                        // same date,
-                        if (!_config.IsInternalFeed)
+                        var currentTradeableDate = _tradeableDates.Current;
+                        if (UpdateDataEnumerator(false))
                         {
-                            // lets keep this, it will be advanced by 'ResolveDataEnumerator'
-                            var currentTradeableDate = _tradeableDates.Current;
-
-                            if (UpdateDataEnumerator(false))
+                            shouldSkip = true;
+                            if (_subscriptionFactoryEnumerator == null)
                             {
-                                if (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > currentTradeableDate)
+                                // if null enumerator we have not been mapped into something new, we just ended,
+                                // let's double check this data point should be skipped or not based on current tradeable date
+                                shouldSkip = instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current;
+                                if (shouldSkip)
                                 {
-                                    if (_subscriptionFactoryEnumerator == null)
-                                    {
-                                        // the end
-                                        break;
-                                    }
-                                    // Skip current 'instance' if its start time is beyond the current date, fixes GH issue 3912
-                                    continue;
+                                    // the end, no new enumerator and current instance is beyond current date
+                                    _endOfStream = true;
+                                    return false;
                                 }
-                                // its not beyond 'currentTradeableDate' lets use current instance
                             }
-                            // if we DO NOT get a new enumerator we use current instance, means its a valid source
-                            // even if after 'currentTradeableDate'
+                            break;
                         }
+
+                        if (currentTradeableDate == _tradeableDates.Current)
+                        {
+                            // if tradeable dates did not advanced let's not check again
+                            break;
+                        }
+                    }
+                    if(shouldSkip)
+                    {
+                        // Skip current 'instance' if its start time is beyond the current date, fixes GH issue 3912
+                        continue;
                     }
 
                     // We have to perform this check after refreshing the enumerator, if appropriate
@@ -491,12 +475,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void AttachEventHandlers(ISubscriptionDataSourceReader dataSourceReader, SubscriptionDataSource source)
         {
-            // NOTE: There seems to be some overlap in InvalidSource and CreateStreamReaderError
-            //       this may be worthy of further investigation and potential consolidation of events.
-
-            // handle missing files
             dataSourceReader.InvalidSource += (sender, args) =>
             {
+                if (_config.IsCustomData && !_config.Type.GetBaseDataInstance().IsSparseData())
+                {
+                    OnDownloadFailed(
+                        new DownloadFailedEventArgs(_config.Symbol,
+                            "We could not fetch the requested data. " +
+                            "This may not be valid data, or a failed download of custom data. " +
+                            $"Skipping source ({args.Source.Source})."));
+                    return;
+                }
+
                 switch (args.Source.TransportMedium)
                 {
                     case SubscriptionTransportMedium.LocalFile:
@@ -523,18 +513,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // handle empty files/instantiation errors
                 var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
-                textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
-                {
-                    if (_config.IsCustomData && !_config.Type.GetBaseDataInstance().IsSparseData())
-                    {
-                        OnDownloadFailed(
-                            new DownloadFailedEventArgs(_config.Symbol,
-                                "We could not fetch the requested data. " +
-                                "This may not be valid data, or a failed download of custom data. " +
-                                $"Skipping source ({args.Source.Source})."));
-                    }
-                };
-
                 // handle parser errors
                 textSubscriptionFactory.ReaderError += (sender, args) =>
                 {

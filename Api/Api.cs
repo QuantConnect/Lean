@@ -1188,8 +1188,9 @@ namespace QuantConnect.Api
         /// Helper method to normalize path for api data requests
         /// </summary>
         /// <param name="filePath">Filepath to format</param>
+        /// <param name="dataFolder">The data folder to use</param>
         /// <returns>Normalized path</returns>
-        public string FormatPathForDataRequest(string filePath)
+        public static string FormatPathForDataRequest(string filePath, string dataFolder = null)
         {
             if (filePath == null)
             {
@@ -1197,13 +1198,15 @@ namespace QuantConnect.Api
                 return null;
             }
 
+            dataFolder ??= Globals.DataFolder;
             // Normalize windows paths to linux format
+            dataFolder = dataFolder.Replace("\\", "/", StringComparison.InvariantCulture);
             filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
 
             // First remove data root directory from path for request if included
-            if (filePath.StartsWith(_dataFolder, StringComparison.InvariantCulture))
+            if (filePath.StartsWith(dataFolder, StringComparison.InvariantCulture))
             {
-                filePath = filePath.Substring(_dataFolder.Length);
+                filePath = filePath.Substring(dataFolder.Length);
             }
 
             // Trim '/' from start, this can cause issues for _dataFolders without final directory separator in the config

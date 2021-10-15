@@ -27,7 +27,6 @@ RUN conda install -y -c conda-forge notebook=6.0.3 && conda clean -y --all
 RUN pip install --no-cache-dir clr-loader==0.1.6
 
 ENV LD_LIBRARY_PATH=/lib/
-RUN ln -s /lib/$(uname -m)-linux-gnu/libc.so.6 /lib/$(uname -m)-linux-gnu/libc.so
 
 # Install .NET Interactive to support C# in Jupyter notebooks
 ENV PATH="${PATH}:/root/.dotnet/tools"
@@ -55,7 +54,7 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     \"api-handler\": \"QuantConnect.Api.Api\" }' > ${WORK}Notebooks/config.json; fi && \
     echo \"Starting JupyterLab, access in your browser at localhost:8888\" && \
     jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=\"Notebooks\" --LabApp.token='' " \
-    > start.sh
+    > start.sh && echo "from QuantConnect.AlphaStream import *" >> ${WORK}AlgorithmImports.py
 
 RUN chmod -R 777 ${WORK}
 EXPOSE 8888

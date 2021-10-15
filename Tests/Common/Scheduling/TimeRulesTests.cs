@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -28,6 +29,8 @@ namespace QuantConnect.Tests.Common.Scheduling
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class TimeRulesTests
     {
+        private static DateTime _utcNow = new DateTime(2021, 07, 27, 1, 10, 10, 500);
+
         [Test]
         public void AtSpecificTimeFromUtc()
         {
@@ -213,9 +216,23 @@ namespace QuantConnect.Tests.Common.Scheduling
             }
         }
 
+        [Test]
+        public void SetTimeZone()
+        {
+            var rules = GetTimeRules(TimeZones.NewYork);
+            var nowNewYork = rules.Now.CreateUtcEventTimes(new [] { _utcNow.Date }).Single();
+
+            rules.SetDefaultTimeZone(TimeZones.Utc);
+
+            var nowUtc = rules.Now.CreateUtcEventTimes(new [] { _utcNow.Date }).Single();
+
+            Assert.AreEqual(_utcNow, nowUtc);
+            Assert.AreEqual(nowUtc, nowNewYork);
+        }
+
         private static TimeRules GetTimeRules(DateTimeZone dateTimeZone)
         {
-            var timeKeeper = new TimeKeeper(DateTime.Today, new List<DateTimeZone>());
+            var timeKeeper = new TimeKeeper(_utcNow, new List<DateTimeZone>());
             var manager = new SecurityManager(timeKeeper);
             var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.USA, (string)null, SecurityType.Equity);
             var securityExchangeHours = marketHourDbEntry.ExchangeHours;

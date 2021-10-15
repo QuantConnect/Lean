@@ -112,8 +112,10 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage e)
+        public override void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
+
             try
             {
                 var raw = JsonConvert.DeserializeObject<Messages.BaseMessage>(e.Message, JsonSettings);

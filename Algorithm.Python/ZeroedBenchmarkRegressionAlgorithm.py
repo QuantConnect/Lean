@@ -45,4 +45,4 @@ class TestBrokerageModel(DefaultBrokerageModel):
         return FuncBenchmark(self.func)
 
     def func(self, datetime):
-        return 0;
+        return 0

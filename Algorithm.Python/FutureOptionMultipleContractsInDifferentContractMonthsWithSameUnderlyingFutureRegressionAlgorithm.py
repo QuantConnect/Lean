@@ -26,7 +26,7 @@ class FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFu
             self._createOption(datetime(2020, 2, 25), OptionRight.Put, 1545.0): False
         }
 
-        self.SetStartDate(2020, 1, 5)
+        self.SetStartDate(2020, 1, 4)
         self.SetEndDate(2020, 1, 6)
 
         goldFutures = self.AddFuture("GC", Resolution.Minute, Market.COMEX)

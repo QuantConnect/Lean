@@ -23,6 +23,10 @@ class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
 
         self.UniverseSettings.Resolution = Resolution.Hour
 
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+        # Commented so regression algorithm is more sensitive
+        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+
         self.SetStartDate(2017, 1, 1)
         self.SetEndDate(2017, 2, 1)
 
