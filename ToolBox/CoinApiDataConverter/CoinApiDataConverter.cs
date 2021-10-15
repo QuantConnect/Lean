@@ -121,7 +121,16 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             {
                 try
                 {
-                    var key = candidate.Directory.Parent.Name + apiDataReader.GetCoinApiEntryData(candidate, _processingDate).Symbol.ID;
+                    var entryData = apiDataReader.GetCoinApiEntryData(candidate, _processingDate);
+                    CurrencyPairUtil.DecomposeCurrencyPair(entryData.Symbol, out var baseCurrency,
+                        out var quoteCurrency);
+
+                    if (!candidate.FullName.Contains(baseCurrency) && !candidate.FullName.Contains(quoteCurrency))
+                    {
+                        throw new Exception($"Skipping {candidate.FullName} we have the wrong symbol {entryData.Symbol}!");
+                    }
+
+                    var key = candidate.Directory.Parent.Name + entryData.Symbol.ID;
                     if (filesToProcessKeys.Add(key))
                     {
                         // Separate list from HashSet to preserve ordering of viable candidates
