@@ -457,17 +457,23 @@ namespace QuantConnect.Securities
                 // Start safe check after first loop
                 if (lastOrderQuantity == absOrderQuantity)
                 {
-                    var sign = direction == OrderDirection.Buy ? 1 : -1;
                     var message =
                         Invariant($"GetMaximumOrderQuantityForTargetBuyingPower failed to converge on the target margin: {signedTargetFinalMarginValue}; ") +
-                        Invariant($"the following information can be used to reproduce the issue. Total Portfolio Cash: {parameters.Portfolio.Cash}; ") +
-                        Invariant($"Leverage: {parameters.Security.Leverage}; Order Fee: {orderFees}; Lot Size: {parameters.Security.SymbolProperties.LotSize}; ") +
-                        Invariant($"Per Unit Margin: {absUnitMargin}; Current Holdings: {parameters.Security.Holdings}; Target Percentage: %{parameters.TargetBuyingPower * 100}; ") +
-                        Invariant($"Current Order Target Margin: {absFinalOrderMargin * sign}; Current Order Margin: {absOrderQuantity * absUnitMargin * sign}");
+                        Invariant($"the following information can be used to reproduce the issue. Total Portfolio Cash: {parameters.Portfolio.Cash}; Security : {parameters.Security.Symbol.ID}; ") +
+                        Invariant($"Price : {parameters.Security.Close}; Leverage: {parameters.Security.Leverage}; Order Fee: {orderFees}; Lot Size: {parameters.Security.SymbolProperties.LotSize}; ") +
+                        Invariant($"Current Holdings: {parameters.Security.Holdings.Quantity} @ {parameters.Security.Holdings.AveragePrice}; Target Percentage: %{parameters.TargetBuyingPower * 100};");
+
+                    // Need to add underlying value to message to reproduce with options
+                    if (parameters.Security.Type == SecurityType.Option && parameters.Security is Option.Option option)
+                    {
+                        var underlying = option.Underlying;
+                        message += Invariant($" Underlying Security: {underlying.Symbol.ID}; Underlying Price: {underlying.Close}; Underlying Holdings: {underlying.Holdings.Quantity} @ {underlying.Holdings.AveragePrice};");
+                    }
+
                     throw new ArgumentException(message);
                 }
                 lastOrderQuantity = absOrderQuantity;
-                
+
                 // Update our target holdings margin
                 signedTargetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
             }
@@ -489,6 +495,8 @@ namespace QuantConnect.Securities
         /// <returns>The size of the order to get safely to our target</returns>
         public static decimal GetAmountToOrder(decimal currentMargin, decimal targetMargin, decimal perUnitMargin, decimal lotSize, decimal? currentOrderSize = null)
         {
+
+
             // Determine the amount to order to put us at our target
             var orderSize = (targetMargin - currentMargin) / perUnitMargin;
 
