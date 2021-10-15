@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,10 +22,15 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// Provides a wrapper for <see cref="IndicatorBase{IBaseData}"/> implementations written in python
     /// </summary>
-    public class PythonIndicator : IndicatorBase<IBaseData>
+    public class PythonIndicator : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
     {
         private bool _isReady;
         private dynamic _indicator;
+
+        /// <summary>
+        /// The period of the indicator
+        /// </summary>
+        public int Period { get; protected set; }
 
         /// <summary>
         /// Get the indicator Name. If not defined, use the class name
@@ -45,6 +50,23 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Get the indicator period. If not defined, use 1
+        /// </summary>
+        /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
+        /// <returns>The period of the indicator.</returns>
+        private static int GetIndicatorPeriod(PyObject indicator)
+        {
+            using (Py.GIL())
+            {
+                var period = indicator.HasAttr("Period")
+                    ? indicator.GetAttr("Period")
+                    : 1.ToPython();
+
+                return period.GetAndDispose<int>();
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the PythonIndicator class using the specified name.
         /// </summary>
         /// <remarks>This overload allows inheritance for python classes with no arguments</remarks>
@@ -60,6 +82,7 @@ namespace QuantConnect.Indicators
         public PythonIndicator(params PyObject[] args)
             : base (GetIndicatorName(args[0]))
         {
+            Period = GetIndicatorPeriod(args[1]);
         }
 
         /// <summary>
@@ -69,6 +92,7 @@ namespace QuantConnect.Indicators
         public PythonIndicator(PyObject indicator)
             : base(GetIndicatorName(indicator))
         {
+            Period = GetIndicatorPeriod(indicator);
             SetIndicator(indicator);
         }
 
@@ -107,6 +131,11 @@ namespace QuantConnect.Indicators
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _isReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized
+        /// </summary>
+        public int WarmUpPeriod => Period;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

@@ -24,6 +24,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -45,6 +46,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
         self.Name = name
         self.Value = 0
         self.queue = deque(maxlen=period)
+        self.Period = period
 
     # Update method is mandatory
     def Update(self, input):
@@ -55,7 +57,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
 "
                 );
                 var indicator = module.GetAttr("CustomSimpleMovingAverage")
-                    .Invoke("custom".ToPython(), 14.ToPython());
+                    .Invoke("custom".ToPython(), 13.ToPython());
 
                 return new PythonIndicator(indicator);
             }
@@ -248,6 +250,20 @@ class BadCustomIndicator(PythonIndicator):
 
                 //Test 3: Using a timedelta object; Should convert timedelta to timespan
                 Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, PyIndicator, TimeDelta));
+            }
+        }
+
+        [Test]
+        public void WarmsUpProperly()
+        {
+            var SMAWithWarmUpPeriod = CreateIndicator();
+            var reference = new DateTime(2000, 1, 1, 0, 0, 0);
+            var period = ((IIndicatorWarmUpPeriodProvider)SMAWithWarmUpPeriod).WarmUpPeriod;
+
+            for (var i = 0; i < period; i++)
+            {
+                SMAWithWarmUpPeriod.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
+                Assert.AreEqual(i == period - 1, SMAWithWarmUpPeriod.IsReady);
             }
         }
     }
