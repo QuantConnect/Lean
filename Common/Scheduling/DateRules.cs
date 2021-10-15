@@ -15,12 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using NodaTime;
+using System.Linq;
+using System.Globalization;
 using QuantConnect.Securities;
-using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Scheduling
 {
@@ -29,7 +28,7 @@ namespace QuantConnect.Scheduling
     /// </summary>
     public class DateRules
     {
-        private readonly DateTimeZone _timeZone;
+        private DateTimeZone _timeZone;
         private readonly SecurityManager _securities;
 
         /// <summary>
@@ -41,6 +40,15 @@ namespace QuantConnect.Scheduling
         {
             _timeZone = timeZone;
             _securities = securities;
+        }
+
+        /// <summary>
+        /// Sets the default time zone
+        /// </summary>
+        /// <param name="timeZone">The time zone to use for helper methods that can't resolve a time zone</param>
+        public void SetDefaultTimeZone(DateTimeZone timeZone)
+        {
+            _timeZone = timeZone;
         }
 
         /// <summary>

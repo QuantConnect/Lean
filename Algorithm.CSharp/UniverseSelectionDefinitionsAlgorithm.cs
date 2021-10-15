@@ -42,16 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100*1000);
 
             // add universe for the top 50 stocks by dollar volume
-            AddUniverse(Universe.DollarVolume.Top(50));
-
-            // add universe for the bottom 50 stocks by dollar volume
-            AddUniverse(Universe.DollarVolume.Bottom(50));
-
-            // add universe for the 90th dollar volume percentile
-            AddUniverse(Universe.DollarVolume.Percentile(90));
-
-            // add universe for stocks between the 70th and 80th dollar volume percentile
-            AddUniverse(Universe.DollarVolume.Percentile(70, 80));
+            AddUniverse(Universe.Top(50));
         }
 
         public void OnData(TradeBars data)

@@ -30,8 +30,8 @@ class PortfolioRebalanceOnDateRulesRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2015,1,1)
         self.SetEndDate(2017,1,1)
 
-        self.Settings.RebalancePortfolioOnInsightChanges = False;
-        self.Settings.RebalancePortfolioOnSecurityChanges = False;
+        self.Settings.RebalancePortfolioOnInsightChanges = False
+        self.Settings.RebalancePortfolioOnSecurityChanges = False
 
         self.SetUniverseSelection(CustomUniverseSelectionModel("CustomUniverseSelectionModel", lambda time: [ "AAPL", "IBM", "FB", "SPY" ]))
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, None))
@@ -40,6 +40,6 @@ class PortfolioRebalanceOnDateRulesRegressionAlgorithm(QCAlgorithm):
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Submitted:
-            self.Debug(str(orderEvent));
+            self.Debug(str(orderEvent))
             if self.UtcTime.weekday() != 2:
-                raise ValueError(str(self.UtcTime) + " " + str(orderEvent.Symbol) + " " + str(self.UtcTime.weekday()));
+                raise ValueError(str(self.UtcTime) + " " + str(orderEvent.Symbol) + " " + str(self.UtcTime.weekday()))

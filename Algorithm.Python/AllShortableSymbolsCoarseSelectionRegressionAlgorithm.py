@@ -22,19 +22,19 @@ class AllShortableSymbolsRegressionAlgorithmBrokerageModel(DefaultBrokerageModel
 ### </summary>
 class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self._20140325 = date(2014, 3, 25);
-        self._20140326 = date(2014, 3, 26);
-        self._20140327 = date(2014, 3, 27);
-        self._20140328 = date(2014, 3, 28);
-        self._20140329 = date(2014, 3, 29);
+        self._20140325 = date(2014, 3, 25)
+        self._20140326 = date(2014, 3, 26)
+        self._20140327 = date(2014, 3, 27)
+        self._20140328 = date(2014, 3, 28)
+        self._20140329 = date(2014, 3, 29)
 
-        self.aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-        self.bac = Symbol.Create("BAC", SecurityType.Equity, Market.USA);
-        self.gme = Symbol.Create("GME", SecurityType.Equity, Market.USA);
-        self.goog = Symbol.Create("GOOG", SecurityType.Equity, Market.USA);
-        self.qqq = Symbol.Create("QQQ", SecurityType.Equity, Market.USA);
-        self.spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-        self.lastTradeDate = date(1, 1, 1);
+        self.aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
+        self.bac = Symbol.Create("BAC", SecurityType.Equity, Market.USA)
+        self.gme = Symbol.Create("GME", SecurityType.Equity, Market.USA)
+        self.goog = Symbol.Create("GOOG", SecurityType.Equity, Market.USA)
+        self.qqq = Symbol.Create("QQQ", SecurityType.Equity, Market.USA)
+        self.spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+        self.lastTradeDate = date(1, 1, 1)
 
         self.coarseSelected = {
             self._20140325: False,
@@ -51,14 +51,14 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
             self._20140329: []
         }
 
-        self.SetStartDate(2014, 3, 25);
-        self.SetEndDate(2014, 3, 29);
-        self.SetCash(10000000);
+        self.SetStartDate(2014, 3, 25)
+        self.SetEndDate(2014, 3, 29)
+        self.SetCash(10000000)
 
-        self.AddUniverse(self.CoarseSelectionFunc);
-        self.UniverseSettings.Resolution = Resolution.Daily;
+        self.AddUniverse(self.CoarseSelectionFunc)
+        self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.SetBrokerageModel(AllShortableSymbolsRegressionAlgorithmBrokerageModel());
+        self.SetBrokerageModel(AllShortableSymbolsRegressionAlgorithmBrokerageModel())
 
     def OnData(self, data):
         if self.Time.date() == self.lastTradeDate:
@@ -75,24 +75,24 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
                 self.lastTradeDate = self.Time.date()
 
     def CoarseSelectionFunc(self, coarse):
-        shortableSymbols = self.AllShortableSymbols();
+        shortableSymbols = self.AllShortableSymbols()
         selectedSymbols = list(sorted([x.Symbol for x in coarse if x.Symbol in shortableSymbols and shortableSymbols[x.Symbol] >= 500]))
 
-        expectedMissing = 0;
+        expectedMissing = 0
         if self.Time.date() == self._20140327:
-            gme = Symbol.Create("GME", SecurityType.Equity, Market.USA);
+            gme = Symbol.Create("GME", SecurityType.Equity, Market.USA)
             if gme not in shortableSymbols:
-                raise Exception("Expected unmapped GME in shortable symbols list on 2014-03-27");
+                raise Exception("Expected unmapped GME in shortable symbols list on 2014-03-27")
             if len([x.Symbol.Value for x in coarse if x.Symbol.Value == "GME"]) == 0:
-                raise Exception("Expected mapped GME in coarse symbols on 2014-03-27");
+                raise Exception("Expected mapped GME in coarse symbols on 2014-03-27")
 
-            expectedMissing = 1;
+            expectedMissing = 1
 
         missing = [i for i in self.expectedSymbols[self.Time.date()] if i not in selectedSymbols]
         if (len(missing) != expectedMissing):
             raise Exception(f"Expected Symbols selected on {self.Time.date()} to match expected Symbols, but the following Symbols were missing: {', '.join([str(s) for s in missing])}")
 
-        self.coarseSelected[self.Time.date()] = True;
+        self.coarseSelected[self.Time.date()] = True
         return selectedSymbols
 
     def OnEndOfAlgorithm(self):

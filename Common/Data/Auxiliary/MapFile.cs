@@ -145,7 +145,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public static MapFile Read(string permtick, string market)
         {
-            return new MapFile(permtick, MapFileRow.Read(permtick, market));
+            return new MapFile(permtick, MapFileRow.Read(GetMapFilePath(permtick, market), market));
         }
 
         /// <summary>
@@ -209,8 +209,9 @@ namespace QuantConnect.Data.Auxiliary
         /// Reads all the map files in the specified directory
         /// </summary>
         /// <param name="mapFileDirectory">The map file directory path</param>
+        /// <param name="market">The map file market</param>
         /// <returns>An enumerable of all map files</returns>
-        public static IEnumerable<MapFile> GetMapFiles(string mapFileDirectory)
+        public static IEnumerable<MapFile> GetMapFiles(string mapFileDirectory, string market)
         {
             var mapFiles = new ConcurrentBag<MapFile>();
             Parallel.ForEach(Directory.EnumerateFiles(mapFileDirectory), file =>
@@ -218,7 +219,7 @@ namespace QuantConnect.Data.Auxiliary
                 if (file.EndsWith(".csv"))
                 {
                     var permtick = Path.GetFileNameWithoutExtension(file);
-                    var fileRead = SafeMapFileRowRead(file);
+                    var fileRead = SafeMapFileRowRead(file, market);
                     mapFiles.Add(new MapFile(permtick, fileRead));
                 }
             });
@@ -228,11 +229,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads in the map file at the specified path, returning null if any exceptions are encountered
         /// </summary>
-        private static List<MapFileRow> SafeMapFileRowRead(string file)
+        private static List<MapFileRow> SafeMapFileRowRead(string file, string market)
         {
             try
             {
-                return MapFileRow.Read(file).ToList();
+                return MapFileRow.Read(file, market).ToList();
             }
             catch (Exception err)
             {

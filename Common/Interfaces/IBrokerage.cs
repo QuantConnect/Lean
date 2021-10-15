@@ -39,6 +39,11 @@ namespace QuantConnect.Interfaces
         event EventHandler<OrderEvent> OptionPositionAssigned;
 
         /// <summary>
+        /// Event that fires each time an option position has changed
+        /// </summary>
+        event EventHandler<OptionNotificationEventArgs> OptionNotification;
+
+        /// <summary>
         /// Event that fires each time a user's brokerage account is changed
         /// </summary>
         event EventHandler<AccountEvent> AccountChanged;

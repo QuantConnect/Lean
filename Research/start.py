@@ -1,7 +1,7 @@
 # QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
-# Licensed under the Apache License, Version 2.0 (the "License")
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 #
@@ -29,10 +29,11 @@ set_runtime(clr_loader.get_coreclr(os.path.join(os.path.dirname(os.path.realpath
 
 from AlgorithmImports import *
 
-# Start an instance of an API class
-api = Api()
-api.Initialize(Config.GetInt("job-user-id", 1), 
-    Config.Get("api-access-token", "default"),
-    Config.Get("data-folder"))
+# Used by pythonNet
+AddReference("Fasterflect")
+
+Initializer.Start()
+api = Initializer.GetSystemHandlers().Api
+algorithmHandlers = Initializer.GetAlgorithmHandlers()
 
 get_ipython().run_line_magic('matplotlib', 'inline')

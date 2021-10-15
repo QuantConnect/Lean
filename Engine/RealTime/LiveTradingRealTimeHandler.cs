@@ -116,18 +116,9 @@ namespace QuantConnect.Lean.Engine.RealTime
                     {
                         _isolatorLimitProvider.Consume(scheduledEvent, time, _timeMonitor);
                     }
-                    catch (ScheduledEventException scheduledEventException)
+                    catch (Exception exception)
                     {
-                        var errorMessage = "LiveTradingRealTimeHandler.Run(): There was an error in a scheduled " +
-                                           $"event {scheduledEvent.Name}. The error was {scheduledEventException.Message}";
-
-                        Log.Error(scheduledEventException, errorMessage);
-
-                        ResultHandler.RuntimeError(errorMessage);
-
-                        // Errors in scheduled event should be treated as runtime error
-                        // Runtime errors should end Lean execution
-                        Algorithm.RunTimeError = new Exception(errorMessage);
+                        Algorithm.SetRuntimeError(exception, $"Scheduled event: '{scheduledEvent.Name}' at {time}");
                     }
                 }
             }

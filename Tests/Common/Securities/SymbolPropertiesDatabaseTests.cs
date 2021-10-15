@@ -49,6 +49,58 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void LoadsMinimumOrderSize()
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+
+            var bitfinexSymbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
+            var bitfinexSymbolProperties = db.GetSymbolProperties(bitfinexSymbol.ID.Market, bitfinexSymbol, bitfinexSymbol.SecurityType, "USD");
+
+            var binanceSymbol = Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance);
+            var binanceSymbolProperties = db.GetSymbolProperties(binanceSymbol.ID.Market, binanceSymbol, binanceSymbol.SecurityType, "EUR");
+
+            var gdaxSymbol = Symbol.Create("BTCGBP", SecurityType.Crypto, Market.GDAX);
+            var gdaxSymbolProperties = db.GetSymbolProperties(gdaxSymbol.ID.Market, gdaxSymbol, gdaxSymbol.SecurityType, "GBP");
+
+            var krakenSymbol = Symbol.Create("BTCCAD", SecurityType.Crypto, Market.Kraken);
+            var krakenSymbolProperties = db.GetSymbolProperties(krakenSymbol.ID.Market, krakenSymbol, krakenSymbol.SecurityType, "CAD");
+
+            Assert.AreEqual(bitfinexSymbolProperties.MinimumOrderSize, 0.00006m);
+            Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 10m); // in quote currency, MIN_NOTIONAL
+            Assert.AreEqual(gdaxSymbolProperties.MinimumOrderSize, 0.0001m);
+            Assert.AreEqual(krakenSymbolProperties.MinimumOrderSize, 0.0001m);
+        }
+
+        [TestCase("KE", Market.CBOT, 100)]
+        [TestCase("ZC", Market.CBOT, 100)]
+        [TestCase("ZL", Market.CBOT, 100)]
+        [TestCase("ZO", Market.CBOT, 100)]
+        [TestCase("ZS", Market.CBOT, 100)]
+        [TestCase("ZW", Market.CBOT, 100)]
+
+        [TestCase("CB", Market.CME, 100)]
+        [TestCase("DY", Market.CME, 100)]
+        [TestCase("GF", Market.CME, 100)]
+        [TestCase("GNF", Market.CME, 100)]
+        [TestCase("HE", Market.CME, 100)]
+        [TestCase("LE", Market.CME, 100)]
+
+        [TestCase("CSC", Market.CME, 1)]
+        public void LoadsPriceMagnifier(string ticker, string market, int expectedPriceMagnifier)
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            var symbol = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD");
+            Assert.AreEqual(expectedPriceMagnifier, symbolProperties.PriceMagnifier);
+
+            var futureOption = Symbol.CreateOption(symbol, symbol.ID.Market, OptionStyle.American,
+                OptionRight.Call, 1, new DateTime(2021, 10, 14));
+            var symbolPropertiesFop = db.GetSymbolProperties(futureOption.ID.Market, futureOption, futureOption.SecurityType, "USD");
+            Assert.AreEqual(expectedPriceMagnifier, symbolPropertiesFop.PriceMagnifier);
+        }
+
+        [Test]
         public void LoadsDefaultLotSize()
         {
             var defaultSymbolProperties = SymbolProperties.GetDefault(Currencies.USD);
@@ -93,7 +145,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase(Market.FXCM, SecurityType.Cfd)]
         [TestCase(Market.Oanda, SecurityType.Cfd)]
-        [TestCase(Market.CBOE, SecurityType.Future)]
+        [TestCase(Market.CFE, SecurityType.Future)]
         [TestCase(Market.CBOT, SecurityType.Future)]
         [TestCase(Market.CME, SecurityType.Future)]
         [TestCase(Market.COMEX, SecurityType.Future)]
@@ -414,6 +466,27 @@ namespace QuantConnect.Tests.Common.Securities
 
             SecurityDatabaseKey key;
             Assert.DoesNotThrow(() => TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out key));
+        }
+
+        [Test]
+        public void HandlesEmptyOrderSizePriceMagnifierCorrectly()
+        {
+            var line = string.Join(",",
+                "usa",
+                "ABC",
+                "equity",
+                "Example Asset",
+                "USD",
+                "100",
+                "0.01",
+                "1",
+                "",
+                "");
+
+            var result = TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out _);
+
+            Assert.IsNull(result.MinimumOrderSize);
+            Assert.AreEqual(1, result.PriceMagnifier);
         }
 
         private class TestingSymbolPropertiesDatabase : SymbolPropertiesDatabase

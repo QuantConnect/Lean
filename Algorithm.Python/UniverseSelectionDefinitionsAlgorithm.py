@@ -32,16 +32,7 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
         self.SetCash(100000)            # Set Strategy Cash
 
         # add universe for the top 50 stocks by dollar volume
-        self.AddUniverse(self.Universe.DollarVolume.Top(50))
-
-        # add universe for the bottom 50 stocks by dollar volume
-        self.AddUniverse(self.Universe.DollarVolume.Bottom(50))
-
-        # add universe for the 90th dollar volume percentile
-        self.AddUniverse(self.Universe.DollarVolume.Percentile(90.0))
-
-        # add universe for stocks between the 70th and 80th dollar volume percentile
-        self.AddUniverse(self.Universe.DollarVolume.Percentile(70.0, 80.0))
+        self.AddUniverse(self.Universe.Top(50))
 
         self.changes = None
 

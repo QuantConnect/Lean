@@ -11,26 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Logging")
-AddReference("QuantConnect.Indicators")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Indicators import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Logging import Log
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
+from AlgorithmImports import *
 from Portfolio.MaximumSharpeRatioPortfolioOptimizer import MaximumSharpeRatioPortfolioOptimizer
-from datetime import datetime, timedelta
 from itertools import groupby
-import pandas as pd
-import numpy as np
 from numpy import dot, transpose
 from numpy.linalg import inv
 
@@ -133,7 +116,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                         if self.portfolioBias != PortfolioBias.LongShort and self.sign(weight) != self.portfolioBias:
                             weight = 0
                         targets[insight] = weight
-                        break;
+                        break
 
         return targets
 
@@ -304,7 +287,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
 
         def Add(self, time, value):
             if self.window.Samples > 0 and self.window[0].EndTime == time:
-                return;
+                return
 
             item = IndicatorDataPoint(self.symbol, time, value)
             self.window.Add(item)

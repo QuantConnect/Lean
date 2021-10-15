@@ -22,20 +22,48 @@ using QuantConnect.Logging;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Provides a base type for all indicators
+    /// Abstract Indicator base, meant to contain non-generic fields of indicator base to support non-typed inputs
     /// </summary>
-    /// <typeparam name="T">The type of data input into this indicator</typeparam>
-    [DebuggerDisplay("{ToDetailedString()}")]
-    public abstract partial class IndicatorBase<T> : IIndicator<T>
-        where T : IBaseData
+    public abstract partial class IndicatorBase : IIndicator
     {
-        /// <summary>the most recent input that was given to this indicator</summary>
-        private Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
+        /// <summary>
+        /// Gets the current state of this indicator. If the state has not been updated
+        /// then the time on the value will equal DateTime.MinValue.
+        /// </summary>
+        public IndicatorDataPoint Current { get; protected set; }
+
+        /// <summary>
+        /// Gets a name for this indicator
+        /// </summary>
+        public string Name { get; protected set; }
+
+        /// <summary>
+        /// Gets the number of samples processed by this indicator
+        /// </summary>
+        public long Samples { get; internal set; }
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public abstract bool IsReady { get; }
 
         /// <summary>
         /// Event handler that fires after this indicator is updated
         /// </summary>
         public event IndicatorUpdatedHandler Updated;
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public abstract void Reset();
+
+        /// <summary>
+        /// Initializes a new instance of the Indicator class.
+        /// </summary>
+        protected IndicatorBase()
+        {
+            Current = new IndicatorDataPoint(DateTime.MinValue, 0m);
+        }
 
         /// <summary>
         /// Initializes a new instance of the Indicator class using the specified name.
@@ -48,25 +76,13 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Gets a name for this indicator
+        /// Event invocator for the Updated event
         /// </summary>
-        public string Name { get; private set; }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public abstract bool IsReady { get; }
-
-        /// <summary>
-        /// Gets the current state of this indicator. If the state has not been updated
-        /// then the time on the value will equal DateTime.MinValue.
-        /// </summary>
-        public IndicatorDataPoint Current { get; protected set; }
-
-        /// <summary>
-        /// Gets the number of samples processed by this indicator
-        /// </summary>
-        public long Samples { get; private set; }
+        /// <param name="consolidated">This is the new piece of data produced by this indicator</param>
+        protected virtual void OnUpdated(IndicatorDataPoint consolidated)
+        {
+            Updated?.Invoke(this, consolidated);
+        }
 
         /// <summary>
         /// Updates the state of this indicator with the given value and returns true
@@ -74,7 +90,93 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The value to use to update this indicator</param>
         /// <returns>True if this indicator is ready, false otherwise</returns>
-        public bool Update(IBaseData input)
+        public abstract bool Update(IBaseData input);
+
+        /// <summary>
+        /// ToString Overload for Indicator Base
+        /// </summary>
+        /// <returns>String representation of the indicator</returns>
+        public override string ToString()
+        {
+            return Current.Value.ToStringInvariant("#######0.0####");
+        }
+
+        /// <summary>
+        /// Provides a more detailed string of this indicator in the form of {Name} - {Value}
+        /// </summary>
+        /// <returns>A detailed string of this indicator's current state</returns>
+        public string ToDetailedString()
+        {
+            return $"{Name} - {this}";
+        }
+
+        /// <summary>
+        /// Compares the current object with another object of the same type.
+        /// </summary>
+        /// <returns>
+        /// A value that indicates the relative order of the objects being compared. The return value has the following meanings: Value Meaning Less than zero This object is less than the <paramref name="other"/> parameter.Zero This object is equal to <paramref name="other"/>. Greater than zero This object is greater than <paramref name="other"/>.
+        /// </returns>
+        /// <param name="other">An object to compare with this object.</param>
+        public int CompareTo(IIndicator other)
+        {
+            if (ReferenceEquals(other, null))
+            {
+                // everything is greater than null via MSDN
+                return 1;
+            }
+
+            return Current.CompareTo(other.Current);
+        }
+
+        /// <summary>
+        /// Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object.
+        /// </summary>
+        /// <returns>
+        /// A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="obj"/> in the sort order. Zero This instance occurs in the same position in the sort order as <paramref name="obj"/>. Greater than zero This instance follows <paramref name="obj"/> in the sort order.
+        /// </returns>
+        /// <param name="obj">An object to compare with this instance. </param><exception cref="T:System.ArgumentException"><paramref name="obj"/> is not the same type as this instance. </exception><filterpriority>2</filterpriority>
+        public int CompareTo(object obj)
+        {
+            var other = obj as IndicatorBase;
+            if (other == null)
+            {
+                throw new ArgumentException("Object must be of type " + GetType().GetBetterTypeName());
+            }
+
+            return CompareTo(other);
+        }
+
+    }
+
+    /// <summary>
+    /// Provides a base type for all indicators
+    /// </summary>
+    /// <typeparam name="T">The type of data input into this indicator</typeparam>
+    [DebuggerDisplay("{ToDetailedString()}")]
+    public abstract class IndicatorBase<T> : IndicatorBase
+        where T : IBaseData
+    {
+
+        /// <summary>the most recent input that was given to this indicator</summary>
+        private Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
+
+        /// <summary>
+        /// Initializes a new instance of the Indicator class using the specified name.
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        protected IndicatorBase(string name)
+        {
+            Name = name;
+            Current = new IndicatorDataPoint(DateTime.MinValue, 0m);
+        }
+
+        /// <summary>
+        /// Updates the state of this indicator with the given value and returns true
+        /// if this indicator is ready, false otherwise
+        /// </summary>
+        /// <param name="input">The value to use to update this indicator</param>
+        /// <returns>True if this indicator is ready, false otherwise</returns>
+        public override bool Update(IBaseData input)
         {
             T _previousSymbolInput = default(T);
             if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
@@ -137,7 +239,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
-        public virtual void Reset()
+        public override void Reset()
         {
             Samples = 0;
             _previousInput.Clear();
@@ -145,39 +247,22 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Compares the current object with another object of the same type.
+        /// Computes the next value of this indicator from the given state
         /// </summary>
-        /// <returns>
-        /// A value that indicates the relative order of the objects being compared. The return value has the following meanings: Value Meaning Less than zero This object is less than the <paramref name="other"/> parameter.Zero This object is equal to <paramref name="other"/>. Greater than zero This object is greater than <paramref name="other"/>.
-        /// </returns>
-        /// <param name="other">An object to compare with this object.</param>
-        public int CompareTo(IIndicator<T> other)
-        {
-            if (ReferenceEquals(other, null))
-            {
-                // everything is greater than null via MSDN
-                return 1;
-            }
-
-            return Current.CompareTo(other.Current);
-        }
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected abstract decimal ComputeNextValue(T input);
 
         /// <summary>
-        /// Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object.
+        /// Computes the next value of this indicator from the given state
+        /// and returns an instance of the <see cref="IndicatorResult"/> class
         /// </summary>
-        /// <returns>
-        /// A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="obj"/> in the sort order. Zero This instance occurs in the same position in the sort order as <paramref name="obj"/>. Greater than zero This instance follows <paramref name="obj"/> in the sort order.
-        /// </returns>
-        /// <param name="obj">An object to compare with this instance. </param><exception cref="T:System.ArgumentException"><paramref name="obj"/> is not the same type as this instance. </exception><filterpriority>2</filterpriority>
-        public int CompareTo(object obj)
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>An IndicatorResult object including the status of the indicator</returns>
+        protected virtual IndicatorResult ValidateAndComputeNextValue(T input)
         {
-            var other = obj as IndicatorBase<T>;
-            if (other == null)
-            {
-                throw new ArgumentException("Object must be of type " + GetType().GetBetterTypeName());
-            }
-
-            return CompareTo(other);
+            // default implementation always returns IndicatorStatus.Success
+            return new IndicatorResult(ComputeNextValue(input));
         }
 
         /// <summary>
@@ -229,52 +314,6 @@ namespace QuantConnect.Indicators
         public override int GetHashCode()
         {
             return base.GetHashCode();
-        }
-
-        /// <summary>
-        /// ToString Overload for Indicator Base
-        /// </summary>
-        /// <returns>String representation of the indicator</returns>
-        public override string ToString()
-        {
-            return Current.Value.ToStringInvariant("#######0.0####");
-        }
-
-        /// <summary>
-        /// Provides a more detailed string of this indicator in the form of {Name} - {Value}
-        /// </summary>
-        /// <returns>A detailed string of this indicator's current state</returns>
-        public string ToDetailedString()
-        {
-            return $"{Name} - {this}";
-        }
-
-        /// <summary>
-        /// Computes the next value of this indicator from the given state
-        /// </summary>
-        /// <param name="input">The input given to the indicator</param>
-        /// <returns>A new value for this indicator</returns>
-        protected abstract decimal ComputeNextValue(T input);
-
-        /// <summary>
-        /// Computes the next value of this indicator from the given state
-        /// and returns an instance of the <see cref="IndicatorResult"/> class
-        /// </summary>
-        /// <param name="input">The input given to the indicator</param>
-        /// <returns>An IndicatorResult object including the status of the indicator</returns>
-        protected virtual IndicatorResult ValidateAndComputeNextValue(T input)
-        {
-            // default implementation always returns IndicatorStatus.Success
-            return new IndicatorResult(ComputeNextValue(input));
-        }
-
-        /// <summary>
-        /// Event invocator for the Updated event
-        /// </summary>
-        /// <param name="consolidated">This is the new piece of data produced by this indicator</param>
-        protected virtual void OnUpdated(IndicatorDataPoint consolidated)
-        {
-            Updated?.Invoke(this, consolidated);
         }
     }
 }

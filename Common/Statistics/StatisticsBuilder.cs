@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -95,28 +94,25 @@ namespace QuantConnect.Statistics
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
-            // In very rare circumstances, we might have multiple entries for a single day in backtesting.
-            // These multiple entries will all be located at the end of the `pointsBenchmark` and `pointsPerformance`
-            // collections, since we force sample at the end of the algorithm.
-            // For good measure and to put any alignment issues to rest, let's resample both collections
-            // to daily resolution just in case.
-            var benchmark = ResampleDaily(ChartPointToDictionary(pointsBenchmark, fromDate, toDate));
-            var performance = ResampleDaily(ChartPointToDictionary(pointsPerformance, fromDate, toDate));
+            // Convert our charts to dictionaries
+            // NOTE: Day 0 refers to sample taken at 12AM on StartDate, performance[0] always = 0, benchmark[0] is benchmark value preceding start date.
+            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
+            var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
 
-            // Because the `CreateBenchmarkDifferences(...)` method omits the first value from the
-            // series, we have to also remove the first value from the performance series to re-align
-            // the two series.
-            if (benchmark.Count == performance.Count)
+            // Ensure our series are aligned
+            if (benchmark.Count != performance.Count)
             {
-                performance.Remove(performance.Keys.FirstOrDefault());
-            }
-            else
-            {
-                throw new Exception($"Benchmark and performance series has {Math.Abs(benchmark.Count - performance.Count)} misaligned values.");
+                throw new ArgumentException($"Benchmark and performance series has {Math.Abs(benchmark.Count - performance.Count)} misaligned values.");
             }
 
-            var listPerformance = performance.Values.Select(x => (double)(x / 100)).ToList();
+            // Convert our benchmark values into a percentage daily performance of the benchmark, this will shorten the series by one since
+            // its the percentage change between each entry (No day 0 sample)
             var listBenchmark = CreateDifferences(benchmark, fromDate, toDate);
+
+            // We will skip past day 1 of performance values to deal with the OnOpen orders causing misalignment between benchmark and
+            // algorithm performance. So we drop the first value of listBenchmark (Day 1), and drop two values from performance (Day 0, Day 1)
+            listBenchmark = listBenchmark.Skip(1).ToList();
+            var listPerformance = performance.Values.Skip(2).Select(x => (double)(x / 100)).ToList();
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
@@ -303,16 +299,6 @@ namespace QuantConnect.Statistics
             }
 
             return listPercentage;
-        }
-
-        private static SortedDictionary<DateTime, T> ResampleDaily<T>(SortedDictionary<DateTime, T> points)
-        {
-            // GroupBy(...) is guaranteed to preserve the order the elements are in.
-            // See http://msdn.microsoft.com/en-us/library/bb534501 for more information.
-            return new SortedDictionary<DateTime, T>(
-                points.GroupBy(kvp => kvp.Key.Date)
-                    .Select(x => x.Last())
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
         }
     }
 }

@@ -33,4 +33,4 @@ class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
         self.SetCash(100000)            # Set Strategy Cash
 
         # Add QC500 Universe
-        self.AddUniverse(self.Universe.Index.QC500)
+        self.AddUniverse(self.Universe.QC500)

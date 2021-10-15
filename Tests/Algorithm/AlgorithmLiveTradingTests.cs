@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -76,6 +76,7 @@ namespace QuantConnect.Tests.Algorithm
 #pragma warning disable 0067 // NullBrokerage doesn't use any of these so we will just ignore them
             public event EventHandler<OrderEvent> OrderStatusChanged;
             public event EventHandler<OrderEvent> OptionPositionAssigned;
+            public event EventHandler<OptionNotificationEventArgs> OptionNotification;
             public event EventHandler<AccountEvent> AccountChanged;
             public event EventHandler<BrokerageMessageEvent> Message;
 #pragma warning restore 0067

@@ -23,7 +23,7 @@ class BasicSetAccountCurrencyAlgorithm(QCAlgorithm):
         self.SetStartDate(2018, 4, 4)  #Set Start Date
         self.SetEndDate(2018, 4, 4)    #Set End Date
         # Before setting any cash or adding a Security call SetAccountCurrency
-        self.SetAccountCurrency("EUR");
+        self.SetAccountCurrency("EUR")
         self.SetCash(100000)           #Set Strategy Cash
 
         self._btcEur = self.AddCrypto("BTCEUR").Symbol

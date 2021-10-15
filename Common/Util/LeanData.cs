@@ -71,11 +71,11 @@ namespace QuantConnect.Util
                             var tick = (Tick) data;
                             if (tick.TickType == TickType.Trade)
                             {
-                                return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                                return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
-                                return ToCsv(milliseconds, Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                                return ToCsv(milliseconds, Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             break;
                         case Resolution.Minute:
@@ -234,12 +234,12 @@ namespace QuantConnect.Util
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds,
-                                    Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                                    Scale(tick.LastPrice), tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
                                 return ToCsv(milliseconds,
-                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.ExchangeCode, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.OpenInterest)
                             {
@@ -305,12 +305,12 @@ namespace QuantConnect.Util
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds,
-                                    tick.LastPrice, tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                                    tick.LastPrice, tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
                                 return ToCsv(milliseconds,
-                                    tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                                    tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.ExchangeCode, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.OpenInterest)
                             {
@@ -376,12 +376,12 @@ namespace QuantConnect.Util
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds,
-                                             tick.LastPrice, tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0");
+                                             tick.LastPrice, tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1": "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
                                 return ToCsv(milliseconds,
-                                             tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                                             tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.ExchangeCode, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.OpenInterest)
                             {
@@ -1118,5 +1118,103 @@ namespace QuantConnect.Util
             // split path into components
             return fileName.Split(pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
+
+        /// <summary>
+        /// Aggregates a list of second/minute bars at the requested resolution
+        /// </summary>
+        /// <param name="bars">List of <see cref="TradeBar"/>s</param>
+        /// <param name="symbol">Symbol of all tradeBars</param>
+        /// <param name="resolution">Desired resolution for new <see cref="TradeBar"/>s</param>
+        /// <returns>List of aggregated <see cref="TradeBar"/>s</returns>
+        public static IEnumerable<TradeBar> AggregateTradeBars(IEnumerable<TradeBar> bars, Symbol symbol, TimeSpan resolution)
+        {
+            return
+                from b in bars
+                group b by b.Time.RoundDown(resolution)
+                into g
+                select new TradeBar
+                {
+                    Symbol = symbol,
+                    Time = g.Key,
+                    Open = g.First().Open,
+                    High = g.Max(b => b.High),
+                    Low = g.Min(b => b.Low),
+                    Close = g.Last().Close,
+                    Value = g.Last().Close,
+                    DataType = MarketDataType.TradeBar,
+                    Period = resolution
+                };
+        }
+        
+        /// <summary>
+        /// Aggregates a list of second/minute bars at the requested resolution
+        /// </summary>
+        /// <param name="bars">List of <see cref="QuoteBar"/>s</param>
+        /// <param name="symbol">Symbol of all QuoteBars</param>
+        /// <param name="resolution">Desired resolution for new <see cref="QuoteBar"/>s</param>
+        /// <returns>List of aggregated <see cref="QuoteBar"/>s</returns>
+        public static IEnumerable<QuoteBar> AggregateQuoteBars(IEnumerable<QuoteBar> bars, Symbol symbol, TimeSpan resolution)
+        {
+            return
+                from b in bars
+                    group b by b.Time.RoundDown(resolution)
+                    into g
+                    select new QuoteBar
+                    {
+                        Symbol = symbol,
+                        Time = g.Key,
+                        Bid = new Bar
+                        {
+                            Open = g.First().Bid.Open,
+                            High = g.Max(b => b.Bid.High),
+                            Low = g.Min(b => b.Bid.Low),
+                            Close = g.Last().Bid.Close
+                        },
+                        Ask = new Bar
+                        {
+                            Open = g.First().Ask.Open,
+                            High = g.Max(b => b.Ask.High),
+                            Low = g.Min(b => b.Ask.Low),
+                            Close = g.Last().Ask.Close
+                        },
+                        Period = resolution
+                    };
+        }
+        
+         /// <summary>
+         /// Aggregates a list of ticks at the requested resolution
+         /// </summary>
+         /// <param name="ticks">List of <see cref="QuoteBar"/>s</param>
+         /// <param name="symbol">Symbol of all QuoteBars</param>
+         /// <param name="resolution">Desired resolution for new <see cref="QuoteBar"/>s</param>
+         /// <returns>List of aggregated <see cref="QuoteBar"/>s</returns>
+         public static IEnumerable<QuoteBar> AggregateTicks(IEnumerable<Tick> ticks, Symbol symbol, TimeSpan resolution)
+         {
+             return
+                from t in ticks
+                    group t by t.Time.RoundDown(resolution)
+                    into g
+                    select new QuoteBar
+                    {
+                        Symbol = symbol,
+                        Time = g.Key,
+                        Bid = new Bar
+                        {
+                            Open = g.First().BidPrice,
+                            High = g.Max(b => b.BidPrice),
+                            Low = g.Min(b => b.BidPrice),
+                            Close = g.Last().BidPrice
+                        },
+                        Ask = new Bar
+                        {
+                            Open = g.First().AskPrice,
+                            High = g.Max(b => b.AskPrice),
+                            Low = g.Min(b => b.AskPrice),
+                            Close = g.Last().AskPrice
+                        },
+                        Period = resolution
+                    };
+        }
+    
     }
 }

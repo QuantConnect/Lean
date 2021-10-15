@@ -30,6 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly SubscriptionDataConfig _configuration;
         private readonly SecurityExchangeHours _exchangeHours;
         private readonly TimeZoneOffsetProvider _offsetProvider;
+        private readonly bool _isUniverse;
 
         object IEnumerator.Current => Current;
 
@@ -45,16 +46,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="exchangeHours">The security's exchange hours</param>
         /// <param name="offsetProvider">The subscription's time zone offset provider</param>
         /// <param name="enumerator">The underlying data enumerator</param>
+        /// <param name="isUniverse">The subscription is a universe subscription</param>
         /// <returns>A subscription data enumerator</returns>
         public SubscriptionDataEnumerator(SubscriptionDataConfig configuration,
             SecurityExchangeHours exchangeHours,
             TimeZoneOffsetProvider offsetProvider,
-            IEnumerator<BaseData> enumerator)
+            IEnumerator<BaseData> enumerator,
+            bool isUniverse)
         {
             _enumerator = enumerator;
             _offsetProvider = offsetProvider;
             _exchangeHours = exchangeHours;
             _configuration = configuration;
+            _isUniverse = isUniverse;
         }
 
         /// <summary>
@@ -69,7 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 // Use our config filter to see if we should emit this
                 // This currently catches Auxiliary data that we don't want to emit
-                if (_enumerator.Current != null && !_configuration.ShouldEmitData(_enumerator.Current))
+                if (_enumerator.Current != null && !_configuration.ShouldEmitData(_enumerator.Current, _isUniverse))
                 {
                     // We shouldn't emit this data, so we will MoveNext() again.
                     return MoveNext();

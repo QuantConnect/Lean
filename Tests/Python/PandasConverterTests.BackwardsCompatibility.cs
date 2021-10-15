@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -67,7 +67,13 @@ def Test(df, symbol):
 
         [Test, TestCaseSource(nameof(TestDataFrameOtherParameterFunctions))]
         public void BackwardsCompatibilityDataFrameOtherParameterFunctions(string method, string index, bool cache)
-        {
+        {   
+            // Cannot compare non identically indexed dataframes
+            if (method == ".compare(other)" && _newerPandas)
+            {
+                return;
+            }
+
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
@@ -129,6 +135,12 @@ def Test(df, symbol):
         [Test, TestCaseSource(nameof(TestSeriesOtherParameterFunctions))]
         public void BackwardsCompatibilitySeriesOtherParameterFunctions(string method, string index, bool cache)
         {
+            // Cannot compare non identically indexed dataframes
+            if (method == ".compare(other)" && _newerPandas)
+            {
+                return;
+            }
+
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
@@ -157,23 +169,31 @@ def Test(df, other, symbol):
                     ".agg('mean', axis=0)",
                     ".aggregate('mean', axis=0)",
                     ".clip(100, 200)",
-                    ".clip_lower(100)",
-                    ".clip_upper(200)",
                     ".fillna(value=999)",
                     ".first('2S')",
                     ".isin([100])",
                     ".last('2S')",
                     ".melt()"
+                };
+                
+                if (!IsNewerPandas()){
+                    var additionalFunctions = new[]
+                    {
+                    ".clip_lower(100)",
+                    ".clip_upper(200)",
+                    };
+                    functions.Concat(additionalFunctions);
                 }
-                .SelectMany(x => new[]
+
+                var testCases = functions.SelectMany(x => new[]
                 {
                     new TestCaseData(x, "'SPY'", true),
                     new TestCaseData(x, "symbol", false),
                     new TestCaseData(x, "str(symbol.ID)", false)
                 }).ToList();
 
-                functions.AddRange(_parameterlessFunctions["DataFrame"]);
-                return functions.ToArray();
+                testCases.AddRange(_parameterlessFunctions["DataFrame"]);
+                return testCases.ToArray();
             }
         }
 
@@ -188,14 +208,23 @@ def Test(df, other, symbol):
                     ".agg('mean', axis=0)",
                     ".aggregate('mean', axis=0)",
                     ".clip(100, 200)",
-                    ".clip_lower(100)",
-                    ".clip_upper(200)",
                     ".fillna(value=999)",
                     ".isin([100])",
                     ".searchsorted(200)",
                     ".value_counts()"
+                };
+
+                if (!IsNewerPandas()){
+                    var additionalFunctions = new[]
+                    {
+                    ".clip_lower(100)",
+                    ".clip_upper(200)",
+                    };
+                    functions.Concat(additionalFunctions);
                 }
-                .SelectMany(x => new[]
+
+
+                var testCases = functions.SelectMany(x => new[]
                 {
                     new TestCaseData(x, "'SPY'", true),
                     new TestCaseData(x, "symbol", false),
@@ -203,8 +232,8 @@ def Test(df, other, symbol):
                 })
                 .ToList();
 
-                functions.AddRange(_parameterlessFunctions["Series"]);
-                return functions.ToArray();
+                testCases.AddRange(_parameterlessFunctions["Series"]);
+                return testCases.ToArray();
             }
         }
 
@@ -287,8 +316,13 @@ skipped = [ 'boxplot', 'hist', 'plot',        # <- Graphics
     'to_hdf', 'to_list', 'tolist', 'to_parquet', 'to_period', 'to_pickle', 'to_sql',
     'to_stata', 'to_timestamp', 'to_xarray', 'tshift', 'update', 'value_counts', 'where']
 
+newPandas = int(pandas.__version__.split('.')[0]) >= 1
+
 def getSimpleExceptionTestFunctions(cls):
-    functions = [ 'describe', 'get_dtype_counts', 'get_ftype_counts', 'mode' ]
+    functions = [ 'describe', 'mode']
+    if not newPandas:
+        functions.append('get_dtype_counts')
+        functions.append('get_ftype_counts')
     for name, member in getmembers(cls):
         if isfunction(member) and name.startswith('to') and name not in skipped:
             functions.append(name)

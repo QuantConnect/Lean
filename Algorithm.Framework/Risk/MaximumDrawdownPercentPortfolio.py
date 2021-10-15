@@ -11,17 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Risk import *
+from AlgorithmImports import *
 
 class MaximumDrawdownPercentPortfolio(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that limits the drawdown of the portfolio to the specified percentage.'''
@@ -35,7 +25,7 @@ class MaximumDrawdownPercentPortfolio(RiskManagementModel):
         self.maximumDrawdownPercent = -abs(maximumDrawdownPercent)
         self.isTrailing = isTrailing
         self.initialised = False
-        self.portfolioHigh = 0;
+        self.portfolioHigh = 0
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step

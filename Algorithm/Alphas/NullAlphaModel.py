@@ -11,11 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("QuantConnect.Algorithm")
-
-from QuantConnect.Algorithm.Framework.Alphas import AlphaModel
-
+from AlgorithmImports import *
 
 class NullAlphaModel(AlphaModel):
     '''Provides a null implementation of an alpha model'''

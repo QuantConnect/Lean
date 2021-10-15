@@ -14,9 +14,10 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
-using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Interfaces;
+using System.ComponentModel.Composition;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.Server
 {
@@ -55,5 +56,10 @@ namespace QuantConnect.Lean.Engine.Server
         /// This method is called before algorithm termination
         /// </summary>
         void OnAlgorithmEnd();
+
+        /// <summary>
+        /// Callback fired each time that we add/remove securities from the data feed
+        /// </summary>
+        void OnSecuritiesChanged(SecurityChanges changes);
     }
 }

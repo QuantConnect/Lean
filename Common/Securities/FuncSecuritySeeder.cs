@@ -15,8 +15,10 @@
 */
 
 using System;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Logging;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -25,13 +27,43 @@ namespace QuantConnect.Securities
     /// </summary>
     public class FuncSecuritySeeder : ISecuritySeeder
     {
-        private readonly Func<Security, BaseData> _seedFunction;
+        private readonly Func<Security, IEnumerable<BaseData>> _seedFunction;
+
 
         /// <summary>
         /// Constructor that takes as a parameter the security used to seed the price
         /// </summary>
-        /// <param name="seedFunction"></param>
+        /// <param name="seedFunction">The seed function to use</param>
+        public FuncSecuritySeeder(PyObject seedFunction)
+        {
+            var result = seedFunction.ConvertToDelegate<Func<Security, object>>();
+            _seedFunction = security =>
+            {
+                var dataObject = result(security);
+                var dataPoint = dataObject as BaseData;
+                if (dataPoint != null)
+                {
+                    return new[] { dataPoint };
+                }
+
+                return (IEnumerable<BaseData>)dataObject;
+            };
+        }
+
+        /// <summary>
+        /// Constructor that takes as a parameter the security used to seed the price
+        /// </summary>
+        /// <param name="seedFunction">The seed function to use</param>
         public FuncSecuritySeeder(Func<Security, BaseData> seedFunction)
+         : this(security => { return new []{ seedFunction(security) }; })
+        {
+        }
+
+        /// <summary>
+        /// Constructor that takes as a parameter the security used to seed the price
+        /// </summary>
+        /// <param name="seedFunction">The seed function to use</param>
+        public FuncSecuritySeeder(Func<Security, IEnumerable<BaseData>> seedFunction)
         {
             _seedFunction = seedFunction;
         }
@@ -48,13 +80,15 @@ namespace QuantConnect.Securities
                 // Do not seed canonical symbols
                 if (!security.Symbol.IsCanonical())
                 {
-                    var seedData = _seedFunction(security);
-                    if (seedData != null)
+                    var gotData = false;
+                    foreach (var seedData in _seedFunction(security))
                     {
+                        gotData = true;
                         security.SetMarketPrice(seedData);
-                        Log.Debug($"FuncSecuritySeeder.SeedSecurity(): Seeded security: {seedData.Symbol.Value}: {seedData.Value}");
+                        Log.Debug($"FuncSecuritySeeder.SeedSecurity(): Seeded security: {seedData.Symbol.Value}: {seedData.GetType()} {seedData.Value}");
                     }
-                    else
+
+                    if (!gotData)
                     {
                         Log.Trace($"FuncSecuritySeeder.SeedSecurity(): Unable to seed security: {security.Symbol.Value}");
                         return false;

@@ -82,6 +82,11 @@ namespace QuantConnect.Brokerages
         Zerodha,
 
         /// <summary>
+        /// Transaction and submit/execution rules will use Samco models
+        /// </summary>
+        Samco,
+
+        /// <summary>
         /// Transaction and submit/execution rules will use atreyu models
         /// </summary>
         Atreyu,
@@ -90,6 +95,16 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use TradingTechnologies models
         /// </summary>
         TradingTechnologies,
+        
+        /// <summary>
+        /// Transaction and submit/execution rules will use Kraken models
+        /// </summary>
+        Kraken,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use ftx models
+        /// </summary>
+        FTX,
 
         /// <summary>
         /// Transaction and submit/execution rules will use TdAmeritrade models

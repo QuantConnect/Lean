@@ -61,5 +61,5 @@ class LongOnlyAlphaStreamAlgorithm(QCAlgorithm):
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
             if self.Securities[orderEvent.Symbol].Holdings.IsShort:
-                raise ValueError("Invalid position, should not be short");
+                raise ValueError("Invalid position, should not be short")
             self.Debug(orderEvent)

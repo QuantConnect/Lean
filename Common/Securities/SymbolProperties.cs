@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -73,9 +73,30 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// The minimum order size allowed
+        /// For crypto/forex pairs it's expected to be expressed in base or quote currency
+        /// i.e For BTC/USD the minimum order size allowed with GDAX is 0.0001 BTC
+        /// while on Binance the minimum order size allowed is 10 USD
+        /// </summary>
+        public decimal? MinimumOrderSize
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Allows normalizing live asset prices to US Dollars for Lean consumption. In some exchanges, 
+        /// for some securities, data is expressed in cents like for example for corn futures ('ZC').
+        /// </summary>
+        /// <remarks>Default value is 1 but for some futures in cents it's 100</remarks>
+        public decimal PriceMagnifier
+        {
+            get;
+        }
+
+        /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null, decimal priceMagnifier = 1)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
@@ -89,6 +110,13 @@ namespace QuantConnect.Securities
             }
 
             MarketTicker = marketTicker;
+            MinimumOrderSize = minimumOrderSize;
+
+            PriceMagnifier = priceMagnifier;
+            if (PriceMagnifier <= 0)
+            {
+                throw new ArgumentException("SymbolProprties PriceMagnifier can not be less than or equal to 0");
+            }
         }
 
         /// <summary>

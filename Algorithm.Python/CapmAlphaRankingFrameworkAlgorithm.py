@@ -43,7 +43,7 @@ from Selection.UniverseSelectionModel import UniverseSelectionModel
 class CapmAlphaRankingUniverseSelectionModel(UniverseSelectionModel):
     '''This universe selection model picks stocks with the highest alpha: interception of the linear regression against a benchmark.'''
 
-    period = 21;
+    period = 21
     benchmark = "SPY"
 
     # Symbols of Dow 30 companies.
@@ -101,6 +101,6 @@ class CapmAlphaRankingUniverseSelectionModel(UniverseSelectionModel):
         history = history.close.reset_index(level=0, drop=True).iteritems()
 
         for time, value in history:
-            rateOfChange.Update(time, value);
+            rateOfChange.Update(time, value)
 
         return [ x for x in window]

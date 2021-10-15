@@ -25,6 +25,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Util;
 
@@ -164,6 +165,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage.OptionPositionAssigned += (sender, fill) =>
             {
                 HandlePositionAssigned(fill);
+            };
+
+            _brokerage.OptionNotification += (sender, e) =>
+            {
+                HandleOptionNotification(e);
             };
 
             IsActive = true;
@@ -328,11 +334,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 if (order == null)
                 {
                     // can't update an order that doesn't exist!
+                    Log.Error("BrokerageTransactionHandler.Update(): Cannot update a null order");
                     request.SetResponse(OrderResponse.UnableToFindOrder(request));
+                }
+                else if (order.Status == OrderStatus.New)
+                {
+                    // can't update a pending submit order
+                    Log.Error("BrokerageTransactionHandler.Update(): Cannot update a pending submit order with status " + order.Status);
+                    request.SetResponse(OrderResponse.InvalidNewStatus(request, order));
                 }
                 else if (order.Status.IsClosed())
                 {
                     // can't update a completed order
+                    Log.Error("BrokerageTransactionHandler.Update(): Cannot update closed order with status " + order.Status);
                     request.SetResponse(OrderResponse.InvalidStatus(request, order));
                 }
                 else if (request.Quantity.HasValue && request.Quantity.Value == 0)
@@ -400,9 +414,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     Log.Error("BrokerageTransactionHandler.CancelOrder(): Cannot find this id.");
                     request.SetResponse(OrderResponse.UnableToFindOrder(request));
                 }
+                else if (order.Status == OrderStatus.New)
+                {
+                    Log.Error("BrokerageTransactionHandler.CancelOrder(): Cannot cancel order with status: " + order.Status);
+                    request.SetResponse(OrderResponse.InvalidNewStatus(request, order));
+                }
                 else if (order.Status.IsClosed())
                 {
-                    Log.Error("BrokerageTransactionHandler.CancelOrder(): Order already " + order.Status);
+                    Log.Error("BrokerageTransactionHandler.CancelOrder(): Cannot cancel order already " + order.Status);
                     request.SetResponse(OrderResponse.InvalidStatus(request, order));
                 }
                 else if (_algorithm.IsWarmingUp)
@@ -544,9 +563,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             catch (Exception err)
             {
                 // unexpected error, we need to close down shop
-                Log.Error(err);
-                // quit the algorithm due to error
-                _algorithm.RunTimeError = err;
+                _algorithm.SetRuntimeError(err, "HandleOrderRequest");
             }
 
             if (_processingThread != null)
@@ -814,7 +831,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.UnableToFindOrder(request);
             }
 
-            if (!CanUpdateOrder(order))
+            if (order.Status == OrderStatus.New)
+            {
+                return OrderResponse.InvalidNewStatus(request, order);
+            }
+
+            if (order.Status.IsClosed())
             {
                 return OrderResponse.InvalidStatus(request, order);
             }
@@ -872,18 +894,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Returns true if the specified order can be updated
-        /// </summary>
-        /// <param name="order">The order to check if we can update</param>
-        /// <returns>True if the order can be updated, false otherwise</returns>
-        private bool CanUpdateOrder(Order order)
-        {
-            return order.Status != OrderStatus.Filled
-                && order.Status != OrderStatus.Canceled
-                && order.Status != OrderStatus.Invalid;
-        }
-
-        /// <summary>
         /// Handles a request to cancel an order
         /// </summary>
         private OrderResponse HandleCancelOrderRequest(CancelOrderRequest request)
@@ -895,6 +905,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Error("BrokerageTransactionHandler.HandleCancelOrderRequest(): Unable to cancel order with ID " + request.OrderId + ".");
                 _cancelPendingOrders.RemoveAndFallback(order);
                 return OrderResponse.UnableToFindOrder(request);
+            }
+
+            if (order.Status == OrderStatus.New)
+            {
+                _cancelPendingOrders.RemoveAndFallback(order);
+                return OrderResponse.InvalidNewStatus(request, order);
             }
 
             if (order.Status.IsClosed())
@@ -947,6 +963,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (!_completeOrders.TryGetValue(orderEvent.OrderId, out order))
                 {
                     Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to locate open Order with id " + orderEvent.OrderId);
+                    LogOrderEvent(orderEvent);
                     return;
                 }
 
@@ -957,6 +974,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (!_completeOrderTickets.TryGetValue(orderEvent.OrderId, out ticket))
                 {
                     Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to resolve open ticket: " + orderEvent.OrderId);
+                    LogOrderEvent(orderEvent);
                     return;
                 }
                 _cancelPendingOrders.UpdateOrRemove(order.Id, orderEvent.Status);
@@ -1084,10 +1102,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 catch (Exception err)
                 {
-                    _algorithm.Error("Order Event Handler Error: " + err.Message);
-                    // kill the algorithm
-                    _algorithm.RunTimeError = err;
+                    // unexpected error, we need to close down shop
+                    _algorithm.SetRuntimeError(err, "Order Event Handler");
                 }
+            }
+
+            LogOrderEvent(orderEvent);
+        }
+
+        /// <summary>
+        /// Debug logging helper method, called after HandleOrderEvent has finished updating status, price and quantity
+        /// </summary>
+        /// <param name="e">The order event</param>
+        private static void LogOrderEvent(OrderEvent e)
+        {
+            if (Log.DebuggingEnabled)
+            {
+                Log.Debug("BrokerageTransactionHandler.LogOrderEvent(): " + e);
             }
         }
 
@@ -1120,6 +1151,105 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // informing user algorithm that option position has been assigned
             _algorithm.OnAssignmentOrderEvent(fill);
+        }
+
+        /// <summary>
+        /// Option notification event is received and new order events are generated
+        /// </summary>
+        private void HandleOptionNotification(OptionNotificationEventArgs e)
+        {
+            if (_algorithm.Securities.TryGetValue(e.Symbol, out var security))
+            {
+                if (OptionSymbol.IsOptionContractExpired(e.Symbol, CurrentTimeUtc))
+                {
+                    if (e.Position == 0)
+                    {
+                        Log.Trace(
+                            "BrokerageTransactionHandler.HandleOptionNotification(): clearing position for expired option holding: " +
+                            $"Symbol: {e.Symbol.Value}, " +
+                            $"Quantity: {security.Holdings.Quantity}");
+
+                        var quantity = -security.Holdings.Quantity;
+
+                        // If the quantity is already 0 for Lean and the brokerage there is nothing else todo here
+                        if (quantity != 0)
+                        {
+                            var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+
+                            EmitOptionNotificationEvents(security, exerciseOrder);
+                        }
+                    }
+                    else
+                    {
+                        Log.Error("BrokerageTransactionHandler.HandleOptionNotification(): " +
+                            $"unexpected position ({e.Position} instead of zero) " +
+                            $"for expired option contract: {e.Symbol.Value}");
+                    }
+                }
+                else
+                {
+                    // if position is reduced, could be an early exercise or early assignment
+                    if (Math.Abs(e.Position) < security.Holdings.AbsoluteQuantity)
+                    {
+                        // if we are long the option and there is an open exercise order, assume it's an early exercise
+                        if (security.Holdings.IsLong)
+                        {
+                            if (GetOpenOrders(x =>
+                                    x.Symbol == e.Symbol &&
+                                    x.Type == OrderType.OptionExercise)
+                                .FirstOrDefault() is OptionExerciseOrder exerciseOrder)
+                            {
+                                EmitOptionNotificationEvents(security, exerciseOrder);
+                            }
+                        }
+
+                        // if we are short the option and there are no buy orders, assume it's an early assignment
+                        else if (security.Holdings.IsShort)
+                        {
+                            if (!GetOpenOrders(x =>
+                                    x.Symbol == e.Symbol &&
+                                    x.Direction == OrderDirection.Buy)
+                                .Any())
+                            {
+                                var quantity = e.Position - security.Holdings.Quantity;
+
+                                var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+
+                                EmitOptionNotificationEvents(security, exerciseOrder);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private OptionExerciseOrder GenerateOptionExerciseOrder(Security security, decimal quantity)
+        {
+            // generate new exercise order and ticket for the option
+            var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc)
+            {
+                Id = _algorithm.Transactions.GetIncrementOrderId()
+            };
+
+            var ticket = order.ToOrderTicket(_algorithm.Transactions);
+
+            AddOpenOrder(order, ticket);
+
+            Interlocked.Increment(ref _totalOrderCount);
+
+            return order;
+        }
+
+        private void EmitOptionNotificationEvents(Security security, OptionExerciseOrder order)
+        {
+            // generate the order events reusing the option exercise model
+            var option = (Option)security;
+            var orderEvents = option.OptionExerciseModel.OptionExercise(option, order);
+
+            foreach (var orderEvent in orderEvents)
+            {
+                HandleOrderEvent(orderEvent);
+            }
         }
 
         /// <summary>
@@ -1228,7 +1358,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         }
                     }
                     break;
-                
+
                 case OrderType.LimitIfTouched:
                 {
                     var limitPrice = ((LimitIfTouchedOrder) order).LimitPrice;

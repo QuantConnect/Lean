@@ -45,12 +45,15 @@ from QuantConnect.Securities import *
 from QuantConnect.Indicators import *
 from QuantConnect.Interfaces import *
 from QuantConnect.Scheduling import *
+from QuantConnect.DataSource import *
 from QuantConnect.Orders.Fees import *
 from QuantConnect.Data.Custom import *
 from QuantConnect.Data.Market import *
+from QuantConnect.Lean.Engine import *
 from QuantConnect.Orders.Fills import *
 from QuantConnect.Configuration import *
 from QuantConnect.Notifications import *
+from QuantConnect.Data.Auxiliary import *
 from QuantConnect.Data.Shortable import *
 from QuantConnect.Orders.Slippage import *
 from QuantConnect.Securities.Forex import *
@@ -64,6 +67,7 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Securities.Volatility import *
 from QuantConnect.Securities.Interfaces import *
 from QuantConnect.Data.UniverseSelection import *
+from QuantConnect.Data.Custom.AlphaStreams import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *

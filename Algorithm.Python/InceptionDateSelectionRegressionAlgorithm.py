@@ -30,7 +30,7 @@ class InceptionDateSelectionRegressionAlgorithm(QCAlgorithm):
         # select IBM once a week, empty universe the other days
         self.AddUniverseSelection(CustomUniverseSelectionModel("my-custom-universe", lambda dt: ["IBM"] if dt.day % 7 == 0 else []))
         # Adds SPY 5 days after StartDate and keep it in Universe
-        self.AddUniverseSelection(InceptionDateUniverseSelectionModel("spy-inception", {"SPY": self.StartDate + timedelta(5)}));
+        self.AddUniverseSelection(InceptionDateUniverseSelectionModel("spy-inception", {"SPY": self.StartDate + timedelta(5)}))
 
 
     def OnData(self, slice):

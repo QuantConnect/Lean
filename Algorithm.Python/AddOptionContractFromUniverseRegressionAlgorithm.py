@@ -49,8 +49,8 @@ class AddOptionContractFromUniverseRegressionAlgorithm(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if self._option != None and self.Securities[self._option].Price != 0 and not self._traded:
-            self._traded = True;
-            self.Buy(self._option, 1);
+            self._traded = True
+            self.Buy(self._option, 1)
 
         if self.Time == datetime(2014, 6, 6, 14, 0, 0):
             # liquidate & remove the option

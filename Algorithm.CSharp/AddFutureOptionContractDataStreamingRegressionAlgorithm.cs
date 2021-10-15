@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 5);
+            SetStartDate(2020, 1, 4);
             SetEndDate(2020, 1, 6);
 
             _es20h20 = AddFutureContract(
@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 6, 19)),
                 Resolution.Minute).Symbol;
 
-            var optionChains = OptionChainProvider.GetOptionContractList(_es20h20, Time)
+            var optionChains = OptionChainProvider.GetOptionContractList(_es20h20, Time.AddDays(1))
                 .Concat(OptionChainProvider.GetOptionContractList(_es19m20, Time));
 
             foreach (var optionContract in optionChains)
@@ -168,31 +168,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "217.585%"},
+            {"Compounding Annual Return", "116.059%"},
             {"Drawdown", "0.600%"},
             {"Expectancy", "0"},
             {"Net Profit", "0.635%"},
-            {"Sharpe Ratio", "0"},
+            {"Sharpe Ratio", "17.16"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-14.395"},
-            {"Tracking Error", "0.043"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "2.25"},
+            {"Beta", "-1.665"},
+            {"Annual Standard Deviation", "0.071"},
+            {"Annual Variance", "0.005"},
+            {"Information Ratio", "5.319"},
+            {"Tracking Error", "0.114"},
+            {"Treynor Ratio", "-0.735"},
             {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$28000000.00"},
+            {"Estimated Strategy Capacity", "$24000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UK0MYO1"},
             {"Fitness Score", "1"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "3.199"},
+            {"Portfolio Turnover", "2.133"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},

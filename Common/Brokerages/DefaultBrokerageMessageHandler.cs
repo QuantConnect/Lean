@@ -82,8 +82,8 @@ namespace QuantConnect.Brokerages
                     break;
 
                 case BrokerageMessageType.Error:
-                    _algorithm.Error($"Brokerage Error: {message.Message}");
-                    _algorithm.RunTimeError = new Exception(message.Message);
+                    // unexpected error, we need to close down shop
+                    _algorithm.SetRuntimeError(new Exception(message.Message), "Brokerage Error");
                     break;
 
                 case BrokerageMessageType.Disconnect:
@@ -181,8 +181,7 @@ namespace QuantConnect.Brokerages
             if (!_connected)
             {
                 Log.Error("DefaultBrokerageMessageHandler.Handle(): Still disconnected, goodbye.");
-                _algorithm.Error($"Brokerage Disconnect: {message.Message}");
-                _algorithm.RunTimeError = new Exception(message.Message);
+                _algorithm.SetRuntimeError(new Exception(message.Message), "Brokerage Disconnect");
             }
         }
     }

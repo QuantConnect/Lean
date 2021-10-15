@@ -13,21 +13,26 @@
  * limitations under the License.
 */
 
+using ProtoBuf;
+
 namespace QuantConnect.Securities
 {
     /// <summary>
     /// Represents a cash amount which can be converted to account currency using a currency converter
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public struct CashAmount
     {
         /// <summary>
         /// The amount of cash
         /// </summary>
+        [ProtoMember(1)]
         public decimal Amount { get; }
 
         /// <summary>
         /// The currency in which the cash amount is denominated
         /// </summary>
+        [ProtoMember(2)]
         public string Currency { get; }
 
         /// <summary>

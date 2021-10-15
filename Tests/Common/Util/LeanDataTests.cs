@@ -444,6 +444,75 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", optionZipFilePath);
             Assert.AreEqual($"20200105_og_minute_quote_american_{right.ToLower()}_{strike}0000_{expiry:yyyyMMdd}.csv", optionEntryFilePath);
         }
+        
+        [Test, TestCaseSource(nameof(AggregateTradeBarsTestData))]
+        public void AggregateTradeBarsTest(TimeSpan resolution, TradeBar expectedFirstTradeBar)
+        {
+            var initialTime = new DateTime(2020, 1, 5, 12, 0, 0);
+            var symbol = Symbols.AAPL;
+            var initialBars = new[]
+            {
+                new TradeBar {Time = initialTime, Open = 10, High = 15, Low = 8, Close = 11, Volume = 50, Period = TimeSpan.FromSeconds(1), Symbol = symbol},
+                new TradeBar {Time = initialTime.Add(TimeSpan.FromSeconds(15)), Open = 13, High = 14, Low = 7, Close = 9, Volume = 150, Period = TimeSpan.FromSeconds(1), Symbol = symbol},
+                new TradeBar {Time = initialTime.Add(TimeSpan.FromMinutes(15)), Open = 11, High = 25, Low = 10, Close = 21, Volume = 90, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+                new TradeBar {Time = initialTime.Add(TimeSpan.FromHours(6)), Open = 17, High = 19, Low = 12, Close = 11, Volume = 20, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+            };
+
+            var aggregated = LeanData.AggregateTradeBars(initialBars, symbol, resolution).ToList();
+            
+            Assert.True(aggregated.All(i => i.Period == resolution));
+
+            var firstBar = aggregated.First();
+
+            AssertBarsAreEqual(expectedFirstTradeBar, firstBar);
+
+        }
+        
+        [Test, TestCaseSource(nameof(AggregateQuoteBarsTestData))]
+        public void AggregateQuoteBarsTest(TimeSpan resolution, QuoteBar expectedFirstBar)
+        {
+            var initialTime = new DateTime(2020, 1, 5, 12, 0, 0);
+            var symbol = Symbols.AAPL;
+            var initialBars = new[]
+            {
+                new QuoteBar {Time = initialTime, Ask = new Bar {Open = 10, High = 15, Low = 8, Close = 11}, Bid = {Open = 7, High = 14, Low = 5, Close = 10}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+                new QuoteBar {Time = initialTime.Add(TimeSpan.FromSeconds(15)), Ask = new Bar {Open = 13, High = 14, Low = 7, Close = 9}, Bid = {Open = 10, High = 11, Low = 4, Close = 5}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+                new QuoteBar {Time = initialTime.Add(TimeSpan.FromMinutes(15)), Ask = new Bar {Open = 11, High = 25, Low = 10, Close = 21}, Bid = {Open = 10, High = 22, Low = 9, Close = 20}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+                new QuoteBar {Time = initialTime.Add(TimeSpan.FromHours(6)), Ask = new Bar {Open = 17, High = 19, Low = 12, Close = 11}, Bid = {Open = 16, High = 17, Low = 10, Close = 10}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+            };
+        
+            var aggregated = LeanData.AggregateQuoteBars(initialBars, symbol, resolution).ToList();
+            
+            Assert.True(aggregated.All(i => i.Period == resolution));
+        
+            var firstBar = aggregated.First();
+            
+            AssertBarsAreEqual(expectedFirstBar.Ask, firstBar.Ask);
+            AssertBarsAreEqual(expectedFirstBar.Bid, firstBar.Bid);
+        }
+        
+        [Test, TestCaseSource(nameof(AggregateTickTestData))]
+        public void AggregateTicksTest(TimeSpan resolution, QuoteBar expectedFirstBar)
+        {
+            var initialTime = new DateTime(2020, 1, 5, 12, 0, 0);
+            var symbol = Symbols.AAPL;
+            var initialTicks = new[]
+            {
+                new Tick(initialTime, symbol, string.Empty, string.Empty, 10, 11, 12, 13),
+                new Tick(initialTime.Add(TimeSpan.FromSeconds(1)), symbol, string.Empty, string.Empty, 14, 15, 16, 17),
+                new Tick(initialTime.Add(TimeSpan.FromSeconds(10)), symbol, string.Empty, string.Empty, 18, 19, 20, 21),
+                new Tick(initialTime.Add(TimeSpan.FromSeconds(61)), symbol, string.Empty, string.Empty, 22, 23, 24, 25),
+            };
+
+            var aggregated = LeanData.AggregateTicks(initialTicks, symbol, resolution).ToList();
+
+            Assert.True(aggregated.All(i => i.Period == resolution));
+
+            var firstBar = aggregated.First();
+
+            AssertBarsAreEqual(expectedFirstBar.Ask, firstBar.Ask);
+            AssertBarsAreEqual(expectedFirstBar.Bid, firstBar.Bid);
+        }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
@@ -566,8 +635,8 @@ namespace QuantConnect.Tests.Common.Util
             return new List<LeanDataLineTestParameters>
             {
                 //equity
-                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.SPY, Value = 1, Quantity = 2, TickType = TickType.Trade, Exchange = "EX", SaleCondition = "SC", Suspicious = true}, SecurityType.Equity, Resolution.Tick,
-                    "34200000,10000,2,EX,SC,1"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.SPY, Value = 1, Quantity = 2, TickType = TickType.Trade, Exchange = Exchange.BATS_Y, SaleCondition = "SC", Suspicious = true}, SecurityType.Equity, Resolution.Tick,
+                    "34200000,10000,2,Y,SC,1"),
                 new LeanDataLineTestParameters(new TradeBar(time, Symbols.SPY, 1, 2, 3, 4, 5, TimeSpan.FromMinutes(1)), SecurityType.Equity, Resolution.Minute,
                     "34200000,10000,20000,30000,40000,5"),
                 new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.SPY, 1, 2, 3, 4, 5, TimeSpan.FromDays(1)), SecurityType.Equity, Resolution.Daily,
@@ -582,10 +651,10 @@ namespace QuantConnect.Tests.Common.Util
                     "34200000,10000,20000,30000,40000,5,60000,70000,80000,90000,10"),
                 new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.SPY_P_192_Feb19_2016, new Bar(1, 2, 3, 4), 5, new Bar(6, 7, 8, 9), 10, TimeSpan.FromDays(1)), SecurityType.Option, Resolution.Daily,
                     "20160218 00:00,10000,20000,30000,40000,5,60000,70000,80000,90000,10"),
-                new LeanDataLineTestParameters(new Tick(time, Symbols.SPY_P_192_Feb19_2016, 0, 1, 3) {Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "EX", Suspicious = true}, SecurityType.Option, Resolution.Tick,
-                    "34200000,10000,2,30000,4,EX,1"),
-                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.SPY_P_192_Feb19_2016, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = "EX", SaleCondition = "SC", Suspicious = true}, SecurityType.Option, Resolution.Tick,
-                    "34200000,10000,2,EX,SC,1"),
+                new LeanDataLineTestParameters(new Tick(time, Symbols.SPY_P_192_Feb19_2016, 0, 1, 3) {Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = Exchange.C2, Suspicious = true}, SecurityType.Option, Resolution.Tick,
+                    "34200000,10000,2,30000,4,W,1"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.SPY_P_192_Feb19_2016, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = Exchange.C2, SaleCondition = "SC", Suspicious = true}, SecurityType.Option, Resolution.Tick,
+                    "34200000,10000,2,W,SC,1"),
                 new LeanDataLineTestParameters(new TradeBar(time, Symbols.SPY_P_192_Feb19_2016, 1, 2, 3, 4, 5, TimeSpan.FromMinutes(1)), SecurityType.Option, Resolution.Minute,
                     "34200000,10000,20000,30000,40000,5"),
                 new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.SPY_P_192_Feb19_2016, 1, 2, 3, 4, 5, TimeSpan.FromDays(1)), SecurityType.Option, Resolution.Daily,
@@ -639,6 +708,44 @@ namespace QuantConnect.Tests.Common.Util
                     "20160218 00:00,1,2,3,4,5"),
 
             }.Select(x => new TestCaseData(x).SetName(x.Name)).ToArray();
+        }
+
+        private static TestCaseData[] AggregateTradeBarsTestData
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(TimeSpan.FromMinutes(1), new TradeBar {Open = 10, Close = 9, High = 15, Low = 7, Volume = 200, Period = TimeSpan.FromMinutes(1)}),
+                    new TestCaseData(TimeSpan.FromHours(1), new TradeBar {Open = 10, Close = 21, High = 25, Low = 7, Volume = 290, Period = TimeSpan.FromHours(1)}),
+                    new TestCaseData(TimeSpan.FromDays(1), new TradeBar {Open = 10, Close = 11, High = 25, Low = 7, Volume = 310, Period = TimeSpan.FromDays(1)}),
+                };
+            }
+        }
+        
+        private static TestCaseData[] AggregateQuoteBarsTestData
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(TimeSpan.FromMinutes(1), new QuoteBar {Ask = new Bar {Open = 10, High = 15, Low = 7, Close = 9}, Bid = {Open = 7, High = 14, Low = 4, Close = 5}, Period = TimeSpan.FromMinutes(1)}),
+                    new TestCaseData(TimeSpan.FromHours(1), new QuoteBar {Ask = new Bar {Open = 10, High = 25, Low = 7, Close = 21}, Bid = {Open = 7, High = 22, Low = 4, Close = 20}, Period = TimeSpan.FromMinutes(1)}),
+                    new TestCaseData(TimeSpan.FromDays(1), new QuoteBar {Ask = new Bar {Open = 10, High = 25, Low = 7, Close = 11}, Bid = {Open = 7, High = 22, Low = 4, Close = 10}, Period = TimeSpan.FromMinutes(1)}),
+                };
+            }
+        }
+        
+        private static TestCaseData[] AggregateTickTestData
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(TimeSpan.FromSeconds(1), new QuoteBar {Ask = new Bar {Open = 13, High = 13, Low = 13, Close = 13}, Bid = {Open = 11, High = 11, Low = 11, Close = 11}, Period = TimeSpan.FromSeconds(1)}),
+                    new TestCaseData(TimeSpan.FromMinutes(1), new QuoteBar {Ask = new Bar {Open = 13, High = 21, Low = 13, Close = 21}, Bid = {Open = 11, High = 19, Low = 11, Close = 19}, Period = TimeSpan.FromMinutes(1)}),
+                };
+            }
         }
 
         public class LeanDataTestParameters

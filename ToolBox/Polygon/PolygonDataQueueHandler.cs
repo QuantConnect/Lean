@@ -397,7 +397,7 @@ namespace QuantConnect.ToolBox.Polygon
 
             while (currentDate <= end.Date)
             {
-                Log.Trace($"GetForexQuoteTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
+                Log.Debug($"GetForexQuoteTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
 
                 // If this is a very first iteration set offset exactly as request's start time.
                 // Otherwise use date start as an offset. (!) Make sure to cast to Int64.
@@ -427,7 +427,7 @@ namespace QuantConnect.ToolBox.Polygon
                         break;
                     }
 
-                    Log.Trace($"GetForexQuoteTicks(): Page # {counter}; " +
+                    Log.Debug($"GetForexQuoteTicks(): Page # {counter}; " +
                               $"first: {Time.UnixMillisecondTimeStampToDateTime(quoteTicksList.First().Timestamp)}; " +
                               $"last: {Time.UnixMillisecondTimeStampToDateTime(quoteTicksList.Last().Timestamp)}");
 
@@ -470,7 +470,7 @@ namespace QuantConnect.ToolBox.Polygon
 
             while (currentDate <= end.Date)
             {
-                Log.Trace(
+                Log.Debug(
                     $"GetCryptoTradeTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
 
                 var offset = currentDate == start.Date ? (long)Time.DateTimeToUnixTimeStampMilliseconds(start)
@@ -505,7 +505,7 @@ namespace QuantConnect.ToolBox.Polygon
                         break;
                     }
 
-                    Log.Trace($"GetCryptoTradeTicks(): Page # {counter}; " +
+                    Log.Debug($"GetCryptoTradeTicks(): Page # {counter}; " +
                               $"first: {Time.UnixMillisecondTimeStampToDateTime(tradeTicksList.First().Timestamp)}; " +
                               $"last: {Time.UnixMillisecondTimeStampToDateTime(tradeTicksList.Last().Timestamp)}");
 
@@ -555,7 +555,7 @@ namespace QuantConnect.ToolBox.Polygon
 
             while (currentDate <= end.Date)
             {
-                Log.Trace($"GetEquityQuoteTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
+                Log.Debug($"GetEquityQuoteTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
 
                 // If this is a very first iteration set offset exactly as request's start time. Otherwise use date start as an offset.
                 var offset = currentDate == start.Date
@@ -584,7 +584,7 @@ namespace QuantConnect.ToolBox.Polygon
                         break;
                     }
 
-                    Log.Trace($"GetEquityQuoteTicks(): Page # {counter}; " +
+                    Log.Debug($"GetEquityQuoteTicks(): Page # {counter}; " +
                               $"first: {Time.UnixNanosecondTimeStampToDateTime(quoteTicksList.First().SipTimestamp)}; " +
                               $"last: {Time.UnixNanosecondTimeStampToDateTime(quoteTicksList.Last().SipTimestamp)}");
 
@@ -627,7 +627,7 @@ namespace QuantConnect.ToolBox.Polygon
 
             while (currentDate <= end.Date)
             {
-                Log.Trace($"GetEquityTradeTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
+                Log.Debug($"GetEquityTradeTicks(): Downloading ticks for the date {currentDate:yyyy-MM-dd}; symbol: {request.Symbol.ID.Symbol}");
 
                 // If this is a very first iteration set offset exactly as request's start time. Otherwise use date start as an offset.
                 var offset = currentDate == start.Date
@@ -657,7 +657,7 @@ namespace QuantConnect.ToolBox.Polygon
                         break;
                     }
 
-                    Log.Trace($"GetEquityTradeTicks(): Page # {counter}; " +
+                    Log.Debug($"GetEquityTradeTicks(): Page # {counter}; " +
                               $"first: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.First().SipTimestamp)}; " +
                               $"last: {Time.UnixNanosecondTimeStampToDateTime(tradeTicksList.Last().SipTimestamp)}");
 

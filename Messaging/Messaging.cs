@@ -162,7 +162,11 @@ namespace QuantConnect.Messaging
                 return;
             }
 
-            var algorithmSource = $"../../../Algorithm.CSharp/{_job.AlgorithmId}.cs";
+            var algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"{_job.AlgorithmId}.cs", SearchOption.AllDirectories).SingleOrDefault();
+            if (algorithmSource == null)
+            {
+                algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"*{_job.AlgorithmId}.cs", SearchOption.AllDirectories).Single();
+            }
             var file = File.ReadAllLines(algorithmSource).ToList().GetEnumerator();
             var lines = new List<string>();
             while (file.MoveNext())

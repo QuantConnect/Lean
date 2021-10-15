@@ -58,6 +58,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="dataProvider">DataProvider to use</param>
         public void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider)
         {
+            if (_mapFileProvider != null || _dataProvider != null)
+            {
+                return;
+            }
+            
             _mapFileProvider = mapFileProvider;
             _dataProvider = dataProvider;
             StartExpirationTask();

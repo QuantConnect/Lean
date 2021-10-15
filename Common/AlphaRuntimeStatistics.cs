@@ -86,7 +86,7 @@ namespace QuantConnect
         /// <summary>
         /// The total accumulated estimated value of trading all insights
         /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal TotalAccumulatedEstimatedAlphaValue { get; set; }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>See https://www.quantconnect.com/forum/discussion/6194/insight-scoring-metric/p1.
         /// For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal KellyCriterionEstimate
         {
             get
@@ -112,7 +112,7 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>See https://www.quantconnect.com/forum/discussion/6194/insight-scoring-metric/p1.
         /// For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal KellyCriterionProbabilityValue
         {
             get
@@ -130,7 +130,7 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>See https://www.quantconnect.com/research/3bc40ecee68d36a9424fbd1b338eb227.
         /// For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal FitnessScore
         {
             get
@@ -148,7 +148,7 @@ namespace QuantConnect
         /// Calculated as the sales volume with respect to the average total portfolio value.
         /// </summary>
         /// <remarks>For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal PortfolioTurnover
         {
             get
@@ -166,7 +166,7 @@ namespace QuantConnect
         /// It is calculated by dividing the Portfolio Annualized Return by the Maximum Drawdown seen during the backtest.
         /// </summary>
         /// <remarks>For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal ReturnOverMaxDrawdown
         {
             get
@@ -200,7 +200,7 @@ namespace QuantConnect
         /// <summary>
         /// Suggested Value of the Alpha On A Monthly Basis For Licensing
         /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal EstimatedMonthlyAlphaValue
         {
             get
@@ -235,7 +235,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets the mean estimated insight value
         /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal MeanPopulationEstimatedInsightValue => TotalInsightsClosed > 0 ? TotalAccumulatedEstimatedAlphaValue / TotalInsightsClosed : 0;
 
         /// <summary>

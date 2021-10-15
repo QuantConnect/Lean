@@ -244,22 +244,11 @@ namespace QuantConnect.Scheduling
         /// <param name="triggerTime">The event's time in UTC</param>
         protected void OnEventFired(DateTime triggerTime)
         {
-            try
-            {
-                // don't fire the event if we're turned off
-                if (!Enabled) return;
+            // don't fire the event if we're turned off
+            if (!Enabled) return;
 
-                _callback?.Invoke(Name, _orderedEventUtcTimes.Current);
-                EventFired?.Invoke(Name, triggerTime);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"ScheduledEvent.Scan(): Exception was thrown in OnEventFired: {ex}");
-
-                // This scheduled event failed, so don't repeat the same event
-                _needsMoveNext = true;
-                throw new ScheduledEventException(Name, ex.Message, ex);
-            }
+            _callback?.Invoke(Name, _orderedEventUtcTimes.Current);
+            EventFired?.Invoke(Name, triggerTime);
         }
     }
 }

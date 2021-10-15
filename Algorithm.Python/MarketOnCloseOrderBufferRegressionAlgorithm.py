@@ -39,7 +39,7 @@ class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
 
     def OnEndOfAlgorithm(self):
         # Set it back to default for other regressions
-        MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
+        MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer
 
         if self.validOrderTicket.Status != OrderStatus.Filled:
             raise Exception("Valid order failed to fill")

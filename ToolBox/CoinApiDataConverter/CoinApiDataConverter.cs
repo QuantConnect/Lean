@@ -38,12 +38,14 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         private static readonly HashSet<string> SupportedMarkets = new[]
         {
             Market.GDAX,
-            Market.Bitfinex
+            Market.Bitfinex,
+            Market.Binance
         }.ToHashSet();
 
         private readonly DirectoryInfo _rawDataFolder;
         private readonly DirectoryInfo _destinationFolder;
         private readonly DateTime _processingDate;
+        private readonly string _market;
 
         /// <summary>
         /// CoinAPI data converter.
@@ -51,8 +53,13 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="date">the processing date.</param>
         /// <param name="rawDataFolder">path to the raw data folder.</param>
         /// <param name="destinationFolder">destination of the newly generated files.</param>
-        public CoinApiDataConverter(DateTime date, string rawDataFolder, string destinationFolder)
+        /// <param name="market">The market to process (optional). Defaults to processing all markets in parallel.</param>
+        public CoinApiDataConverter(DateTime date, string rawDataFolder, string destinationFolder, string market = null)
         {
+            _market = string.IsNullOrWhiteSpace(market) 
+                ? null 
+                : market.ToLowerInvariant();
+            
             _processingDate = date;
             _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, SecurityType.Crypto.ToLower(), "coinapi"));
             if (!_rawDataFolder.Exists)
@@ -90,13 +97,18 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     "quotes",
                     _processingDate.ToStringInvariant(DateFormat.EightCharacter)));
 
+            var rawMarket = _market != null &&
+                CoinApiSymbolMapper.MapMarketsToExchangeIds.TryGetValue(_market, out var rawMarketValue)
+                    ? rawMarketValue
+                    : null;
+            
             // Distinct by tick type and first two parts of the raw file name, separated by '-'.
             // This prevents us from double processing the same ticker twice, in case we're given
             // two raw data files for the same symbol. Related: https://github.com/QuantConnect/Lean/pull/3262
             var apiDataReader = new CoinApiDataReader(symbolMapper);
             var filesToProcessCandidates = tradesFolder.EnumerateFiles("*.gz")
                 .Concat(quotesFolder.EnumerateFiles("*.gz"))
-                .Where(f => f.Name.Contains("SPOT"))
+                .Where(f => f.Name.Contains("SPOT") && (rawMarket == null || f.Name.Contains(rawMarket)))
                 .Where(f => f.Name.Split('_').Length == 4)
                 .ToList();
 

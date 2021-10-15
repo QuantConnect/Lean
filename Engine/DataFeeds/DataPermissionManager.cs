@@ -44,6 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace($"LiveTradingDataFeed.GetDataChannelProvider(): will use {liveJob.DataChannelProvider}");
                 DataChannelProvider = Composer.Instance.GetExportedValueByTypeName<IDataChannelProvider>(liveJob.DataChannelProvider);
+                DataChannelProvider.Initialize(liveJob);
             }
         }
 

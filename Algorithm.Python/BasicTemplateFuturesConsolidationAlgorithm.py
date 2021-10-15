@@ -32,7 +32,7 @@ class BasicTemplateFuturesConsolidationAlgorithm(QCAlgorithm):
         # set our expiry filter for this future chain
         # SetFilter method accepts timedelta objects or integer for days.
         # The following statements yield the same filtering criteria
-        futureSP500.SetFilter(0, 182);
+        futureSP500.SetFilter(0, 182)
         # future.SetFilter(timedelta(0), timedelta(182))
 
         self.consolidators = dict()

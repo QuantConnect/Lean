@@ -11,17 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from AlgorithmImports import *
 from clr import GetClrType as typeof
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm.Framework")
 
-from QuantConnect import *
-from QuantConnect.Data import *
-from QuantConnect.Data.Market import *
-from QuantConnect.Securities import *
-from QuantConnect.Algorithm.Framework.Selection import *
 from Selection.UniverseSelectionModel import UniverseSelectionModel
 from itertools import groupby
 
@@ -46,7 +38,7 @@ class ManualUniverseSelectionModel(UniverseSelectionModel):
             if self.universeSettings is not None else algorithm.UniverseSettings
 
         resolution = universeSettings.Resolution
-        type = typeof(Tick) if resolution == Resolution.Tick else typeof(TradeBar);
+        type = typeof(Tick) if resolution == Resolution.Tick else typeof(TradeBar)
 
         universes = list()
 

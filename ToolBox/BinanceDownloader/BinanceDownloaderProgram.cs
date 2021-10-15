@@ -65,7 +65,7 @@ namespace QuantConnect.ToolBox.BinanceDownloader
                             // Save the data (other resolutions)
                             foreach (var res in new[] { Resolution.Hour, Resolution.Daily })
                             {
-                                var resData = downloader.AggregateBars(symbol, bars, res.ToTimeSpan());
+                                var resData = LeanData.AggregateTradeBars(bars, symbol, res.ToTimeSpan());
 
                                 writer = new LeanDataWriter(res, symbol, dataDirectory);
                                 writer.Write(resData);

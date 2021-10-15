@@ -35,7 +35,7 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         self.UniverseSettings.Leverage = 2
 
         self.coarse_count = 10
-        self.averages = { };
+        self.averages = { }
 
         # this add universe method accepts two parameters:
         # - coarse selection function: accepts an IEnumerable<CoarseFundamental> and returns an IEnumerable<Symbol>

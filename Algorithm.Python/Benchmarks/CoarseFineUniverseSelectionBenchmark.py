@@ -60,7 +60,7 @@ class CoarseFineUniverseSelectionBenchmark(QCAlgorithm):
 
         for security in self._changes.AddedSecurities:
             self.SetHoldings(security.Symbol, 0.02)
-        self._changes = None;
+        self._changes = None
 
     def OnSecuritiesChanged(self, changes):
         self._changes = changes

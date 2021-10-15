@@ -21,9 +21,7 @@ using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
-using QuantConnect.Data.Custom.Fred;
 using QuantConnect.Data.Custom.Tiingo;
-using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -203,24 +201,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         Tiingo.SetAuthCode(Config.Get("tiingo-auth-token"));
                     }
 
-                    if (!USEnergyAPI.IsAuthCodeSet)
-                    {
-                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        USEnergyAPI.SetAuthCode(Config.Get("us-energy-information-auth-token"));
-                    }
-
-                    if (!FredApi.IsAuthCodeSet)
-                    {
-                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        FredApi.SetAuthCode(Config.Get("fred-auth-token"));
-                    }
-
-                    if (!TradingEconomicsCalendar.IsAuthCodeSet)
-                    {
-                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        TradingEconomicsCalendar.SetAuthCode(Config.Get("trading-economics-auth-token"));
-                    }
-
                     var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
                     var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
@@ -277,7 +257,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
 
-                var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider, enumerator);
+                var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider, enumerator, request.IsUniverseSubscription);
                 subscription = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
             }
             catch (Exception err)
@@ -320,15 +300,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
             }
-            else if (config.Type == typeof (CoarseFundamental))
+            else if (config.Type == typeof (CoarseFundamental) || config.Type == typeof (ETFConstituentData))
             {
-                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: {config.Symbol.ID}");
+                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating {config.Type.Name} universe: {config.Symbol.ID}");
 
-                // we subscribe using a normalized symbol, without a random GUID,
-                // since the ticker plant will send the coarse data using this symbol
-                var normalizedSymbol = CoarseFundamental.CreateUniverseSymbol(config.Symbol.ID.Market, false);
-
-                // Will try to pull coarse data from the data folder every 10min, file with today's date.
+                // Will try to pull data from the data folder every 10min, file with yesterdays date.
                 // If lean is started today it will trigger initial coarse universe selection
                 var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider,
                     // we adjust time to the previous tradable date
@@ -338,14 +314,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
                 // aggregates each coarse data point into a single BaseDataCollection
-                var aggregator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, normalizedSymbol, true);
-                _customExchange.AddEnumerator(normalizedSymbol, aggregator);
+                var aggregator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol, true);
+                _customExchange.AddEnumerator(config.Symbol, aggregator);
 
                 var enqueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.SetDataHandler(normalizedSymbol, data =>
+                _customExchange.SetDataHandler(config.Symbol, data =>
                 {
-                    var coarseData = data as BaseDataCollection;
-                    enqueable.Enqueue(new BaseDataCollection(coarseData.Time, config.Symbol, coarseData.Data));
+                    enqueable.Enqueue(data);
                     subscription.OnNewDataAvailable();
                 });
                 enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider,
@@ -403,7 +378,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // create the subscription
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider, enumerator);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider, enumerator, request.IsUniverseSubscription);
             subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
 
             // send the subscription for the new symbol through to the data queuehandler

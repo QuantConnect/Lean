@@ -13,9 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -40,11 +41,17 @@ namespace QuantConnect.Algorithm.Framework.Execution
             {
                 foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
                 {
+                    var security = algorithm.Securities[target.Symbol];
+
                     // calculate remaining quantity to be ordered
-                    var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target);
+                    var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security);
                     if (quantity != 0)
                     {
-                        algorithm.MarketOrder(target.Symbol, quantity);
+                        if (security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(security, quantity,
+                            algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage))
+                        {
+                            algorithm.MarketOrder(security, quantity);
+                        }
                     }
                 }
 

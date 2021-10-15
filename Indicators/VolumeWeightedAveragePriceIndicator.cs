@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -31,7 +31,7 @@ namespace QuantConnect.Indicators
         private readonly int _period;
         private readonly Identity _price;
         private readonly Identity _volume;
-        private CompositeIndicator<IndicatorDataPoint> _vwap;
+        private CompositeIndicator _vwap;
 
         /// <summary>
         /// Initializes a new instance of the VWAP class with the default name and period

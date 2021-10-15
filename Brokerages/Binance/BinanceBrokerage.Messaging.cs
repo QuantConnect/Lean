@@ -35,10 +35,17 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         protected readonly object TickLocker = new object();
 
-        private void OnMessageImpl(WebSocketMessage e)
+        private void OnUserMessage(WebSocketMessage webSocketMessage)
         {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
+
             try
             {
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"BinanceBrokerage.OnUserMessage(): {e.Message}");
+                }
+
                 var obj = JObject.Parse(e.Message);
 
                 var objError = obj["error"];
@@ -65,7 +72,41 @@ namespace QuantConnect.Brokerages.Binance
                                 OnFillOrder(upd);
                             }
                             break;
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
+                throw;
+            }
+        }
 
+        private void OnDataMessage(WebSocketMessage webSocketMessage)
+        {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
+
+            try
+            {
+                var obj = JObject.Parse(e.Message);
+
+                var objError = obj["error"];
+                if (objError != null)
+                {
+                    var error = objError.ToObject<ErrorMessage>();
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, error.Code, error.Message));
+                    return;
+                }
+
+                var objData = obj;
+
+                var objEventType = objData["e"];
+                if (objEventType != null)
+                {
+                    var eventType = objEventType.ToObject<string>();
+
+                    switch (eventType)
+                    {
                         case "trade":
                             var trade = objData.ToObject<Trade>();
                             EmitTradeTick(

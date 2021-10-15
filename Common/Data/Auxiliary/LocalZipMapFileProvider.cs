@@ -53,6 +53,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="dataProvider">DataProvider to use</param>
         public void Initialize(IDataProvider dataProvider)
         {
+            if (_dataProvider != null)
+            {
+                return;
+            }
+            
             _dataProvider = dataProvider;
             StartExpirationTask();
         }
@@ -116,7 +121,7 @@ namespace QuantConnect.Data.Auxiliary
                 if (stream != null)
                 {
                     Log.Trace("LocalZipMapFileProvider.Get({0}): Fetched map files for: {1} NY", market, date.ToShortDateString());
-                    var result =  new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream));
+                    var result =  new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream, market));
                     stream.DisposeSafely();
                     return result;
                 }

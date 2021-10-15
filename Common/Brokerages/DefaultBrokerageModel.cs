@@ -15,9 +15,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Benchmarks;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
@@ -30,6 +28,7 @@ using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -400,6 +399,29 @@ namespace QuantConnect.Brokerages
         public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
         {
             return GetBuyingPowerModel(security);
+        }
+
+        /// <summary>
+        /// Checks if the order quantity is valid, it means, the order size is bigger than the minimum size allowed
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="orderQuantity">The quantity of the order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may be invalid</param>
+        /// <returns>True if the order quantity is bigger than the minimum allowed, false otherwise</returns>
+        public static bool IsValidOrderSize(Security security, decimal orderQuantity, out BrokerageMessageEvent message)
+        {
+            var minimumOrderSize = security.SymbolProperties.MinimumOrderSize;
+            if ( minimumOrderSize != null && Math.Abs(orderQuantity) < minimumOrderSize)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}. Order quantity was {orderQuantity}")
+                );
+
+                return false;
+            }
+
+            message = null;
+            return true;
         }
     }
 }

@@ -38,7 +38,8 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(15093000, ms);
             Assert.AreEqual(1456300, tick.LastPrice * 10000m);
             Assert.AreEqual(100, tick.Quantity);
-            Assert.AreEqual("P", tick.Exchange);
+            Assert.AreEqual("P", tick.ExchangeCode);
+            Assert.AreEqual("ARCA", tick.Exchange);
             Assert.AreEqual("T", tick.SaleCondition);
             Assert.AreEqual(false, tick.Suspicious);
         }
@@ -77,7 +78,7 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(86399572, ms);
             Assert.AreEqual(52.62, tick.LastPrice);
             Assert.AreEqual(5, tick.Quantity);
-            Assert.AreEqual("usa", tick.Exchange);
+            Assert.AreEqual("", tick.Exchange);
             Assert.AreEqual("", tick.SaleCondition);
             Assert.AreEqual(false, tick.Suspicious);
         }
@@ -211,9 +212,9 @@ namespace QuantConnect.Tests.Common.Data.Market
 
             var baseDate = new DateTime(2013, 10, 08);
             var tick = new Tick(Symbols.SPY, line, baseDate);
-            Assert.DoesNotThrow(()=> tick.ExchangeCode = (byte)'L');
-            Assert.AreEqual(PrimaryExchange.UNKNOWN, tick.Exchange.GetPrimaryExchange(), "Failed at Exchange Property");
-            Assert.AreEqual((byte)PrimaryExchange.UNKNOWN, tick.ExchangeCode, "Failed at ExchangeCode Property");
+            Assert.DoesNotThrow(()=> tick.ExchangeCode = "L");
+            Assert.AreEqual(Exchange.UNKNOWN, tick.Exchange.GetPrimaryExchange(), "Failed at Exchange Property");
+            Assert.AreEqual((string)Exchange.UNKNOWN, tick.ExchangeCode, "Failed at ExchangeCode Property");
         }
     }
 }
