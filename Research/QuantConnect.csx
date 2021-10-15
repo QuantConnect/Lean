@@ -80,12 +80,8 @@ using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine;
 
-// Loads up a connection to our API for use in the research environment
-Api api = new Api();
-api.Initialize(Config.GetInt("job-user-id", 1), 
-    Config.Get("api-access-token", "default"),
-    Config.Get("data-folder"));
-
-// Loads composer so that we do not get an exception in the jupyter notebook
-Composer.Instance
+Initializer.Start();
+Api api = (Api)Initializer.GetSystemHandlers().Api;
+var algorithmHandlers = Initializer.GetAlgorithmHandlers();
