@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -75,6 +75,20 @@ namespace QuantConnect.Tests.Indicators
         {
             var indicator = new WindowIdentity(14);
             TestHelper.TestIndicator(indicator, "Close", 1e-2); // test file only has
+        }
+
+        [Test]
+        public void WarmsUpProperly()
+        {
+            var windowIdentityIndicator = new WindowIdentity("Example", 13);
+            var time = new DateTime(2020, 8, 1);
+            var period = ((IIndicatorWarmUpPeriodProvider)windowIdentityIndicator).WarmUpPeriod;
+
+            for (var i = 0; i < period; i++)
+            {
+                windowIdentityIndicator.Update(time.AddDays(i), i);
+                Assert.AreEqual(i == period - 1, windowIdentityIndicator.IsReady);
+            }
         }
     }
 }
