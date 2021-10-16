@@ -19,6 +19,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -409,6 +410,61 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(10000m + algorithm.Portfolio.CashBook[Currencies.USD].ValueInAccountCurrency,
                 quantity.Value);
+        }
+
+        [Test]
+        public void Reproduce()
+        {
+            SymbolCache.Clear();
+
+            // Initialize algorithm
+            var algorithm = new QCAlgorithm();
+            algorithm.SetFinishedWarmingUp();
+            algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+
+            algorithm.SetCash(1014678.500);
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            //{SPY XPFJZXLFPOBQ|SPY R735QTJ8XC9X} Security ID.Parse -> Symbol Create/New -> AddOptionContract
+
+            var optionContract = SecurityIdentifier.Parse("SPY XPFJZXLFPOBQ | SPY R735QTJ8XC9X");
+            Symbol optionSymbol = new Symbol(optionContract, optionContract.Symbol);
+            var option = algorithm.AddOptionContract(optionSymbol);
+
+            option.Holdings.SetHoldings(4.74m, -31);
+            option.FeeModel = new ConstantFeeModel(0);
+            option.SetLeverage(1);
+
+            // Update option data
+            var close = 4.78m;
+            option.SetMarketPrice(new TradeBar
+            {
+                Time = DateTime.Now,
+                Symbol = option.Symbol,
+                Open = close,
+                High = close,
+                Low = close,
+                Close = close
+            });
+
+            // Update the underlying data
+            var underlyingClose = 395.51m;
+            option.Underlying.SetMarketPrice(new TradeBar
+            {
+                Time = DateTime.Now,
+                Symbol = option.Underlying.Symbol,
+                Open = underlyingClose,
+                High = underlyingClose,
+                Low = underlyingClose,
+                Close = underlyingClose
+            });
+
+            // Set our target percentage; 
+            var newTarget = -0.0149624947680201388093639063m;
+
+            var model = new OptionMarginModel();
+            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, newTarget, 0);
+            Assert.AreEqual(31, result.Quantity);
         }
     }
 }

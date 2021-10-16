@@ -377,74 +377,56 @@ namespace QuantConnect.Securities
 
             // we use initial margin requirement here to avoid the duplicate PortfolioTarget.Percent situation:
             // PortfolioTarget.Percent(1) -> fills -> PortfolioTarget.Percent(1) _could_ detect free buying power if we use Maintenance requirement here
-            var currentSignedUsedMargin = this.GetInitialMarginRequirement(parameters.Security, parameters.Security.Holdings.Quantity);
+            var signedCurrentUsedMargin = this.GetInitialMarginRequirement(parameters.Security, parameters.Security.Holdings.Quantity);
 
             // remove directionality, we'll work in the land of absolutes
-            var absFinalOrderMargin = Math.Abs(signedTargetFinalMarginValue - currentSignedUsedMargin);
-            var direction = signedTargetFinalMarginValue > currentSignedUsedMargin ? OrderDirection.Buy : OrderDirection.Sell;
+            var absDifferenceOfMargin = Math.Abs(signedTargetFinalMarginValue - signedCurrentUsedMargin);
+            var direction = signedTargetFinalMarginValue > signedCurrentUsedMargin ? OrderDirection.Buy : OrderDirection.Sell;
 
             // determine the unit price in terms of the account currency
             var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
             // determine the margin required for 1 unit, positive since we are working with absolutes
-            var absUnitMargin = this.GetInitialMarginRequirement(parameters.Security, 1);
+            var absUnitMargin = Math.Abs(this.GetInitialMarginRequirement(parameters.Security, Math.Sign(signedTargetFinalMarginValue)));
             if (absUnitMargin == 0)
             {
                 return new GetMaximumOrderQuantityResult(0, parameters.Security.Symbol.GetZeroPriceMessage());
             }
 
-            // compute the initial order quantity
-            var absOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin,
-                parameters.Security.SymbolProperties.LotSize));
-            if (absOrderQuantity == 0)
-            {
-                string reason = null;
-                if (!parameters.SilenceNonErrorReasons)
-                {
-                    reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
-                             "and has been rounded to zero.";
-                }
-                return new GetMaximumOrderQuantityResult(0, reason, false);
-            }
-
             if (!BuyingPowerModelExtensions.AboveMinimumOrderMarginPortfolioPercentage(parameters.Portfolio,
-                parameters.MinimumOrderMarginPortfolioPercentage, absFinalOrderMargin))
+                parameters.MinimumOrderMarginPortfolioPercentage, absDifferenceOfMargin))
             {
                 var minimumValue = totalPortfolioValue * parameters.MinimumOrderMarginPortfolioPercentage;
                 string reason = null;
                 if (!parameters.SilenceNonErrorReasons)
                 {
-                    reason = $"The target order margin {absFinalOrderMargin} is less than the minimum {minimumValue}.";
+                    reason = $"The target order margin {absDifferenceOfMargin} is less than the minimum {minimumValue}.";
                 }
                 return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
             // Use the following loop to converge on a value that places us under our target allocation when adjusted for fees
             var lastOrderQuantity = 0m;     // For safety check
+            var signedTargetHoldingsMargin = 0m;
+            var orderFees = 0m;
+            var orderQuantity = 0m;
 
-            var signedTargetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
-            decimal orderFees = 0;
             do
             {
-                // If our order target holdings is larger than our target margin allocated we need to recalculate our order size
-                if (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue))
-                {
-                    absOrderQuantity = Math.Abs(GetAmountToOrder(currentSignedUsedMargin, signedTargetFinalMarginValue, absUnitMargin,
-                        parameters.Security.SymbolProperties.LotSize, absOrderQuantity * (direction == OrderDirection.Sell ? -1 : 1)));
-                }
-
-                if (absOrderQuantity <= 0)
+                // Calculate our order quantity
+                orderQuantity = GetAmountToOrder(parameters.Security, signedCurrentUsedMargin, signedTargetFinalMarginValue, orderQuantity);
+                if (orderQuantity == 0)
                 {
                     var sign = direction == OrderDirection.Buy ? 1 : -1;
                     return new GetMaximumOrderQuantityResult(0,
                         Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
-                        Invariant($"and has been rounded to zero.Target order margin {absFinalOrderMargin * sign}. Order fees ") +
-                        Invariant($"{orderFees}. Order quantity {absOrderQuantity * sign}. Margin unit {absUnitMargin}."),
+                        Invariant($"and has been rounded to zero. Target order margin {absDifferenceOfMargin * sign}. Order fees ") +
+                        Invariant($"{orderFees}. Order quantity {orderQuantity * sign}."),
                         false
                     );
                 }
 
                 // generate the order
-                var order = new MarketOrder(parameters.Security.Symbol, absOrderQuantity, utcTime);
+                var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, utcTime);
                 var fees = parameters.Security.FeeModel.GetOrderFee(
                     new OrderFeeParameters(parameters.Security,
                         order)).Value;
@@ -452,10 +434,10 @@ namespace QuantConnect.Securities
 
                 // Update our target portfolio margin allocated when considering fees, then calculate the new FinalOrderMargin
                 signedTargetFinalMarginValue = (totalPortfolioValue - orderFees - totalPortfolioValue * RequiredFreeBuyingPowerPercent) * parameters.TargetBuyingPower;
-                absFinalOrderMargin = Math.Abs(signedTargetFinalMarginValue - currentSignedUsedMargin);
+                absDifferenceOfMargin = Math.Abs(signedTargetFinalMarginValue - signedCurrentUsedMargin);
 
-                // Start safe check after first loop
-                if (lastOrderQuantity == absOrderQuantity)
+                // Start safe check after first loop, stops endless recursion
+                if (lastOrderQuantity == orderQuantity)
                 {
                     var message =
                         Invariant($"GetMaximumOrderQuantityForTargetBuyingPower failed to converge on the target margin: {signedTargetFinalMarginValue}; ") +
@@ -464,7 +446,7 @@ namespace QuantConnect.Securities
                         Invariant($"Current Holdings: {parameters.Security.Holdings.Quantity} @ {parameters.Security.Holdings.AveragePrice}; Target Percentage: %{parameters.TargetBuyingPower * 100};");
 
                     // Need to add underlying value to message to reproduce with options
-                    if (parameters.Security.Type == SecurityType.Option && parameters.Security is Option.Option option)
+                    if (parameters.Security is Option.Option option)
                     {
                         var underlying = option.Underlying;
                         message += Invariant($" Underlying Security: {underlying.Symbol.ID}; Underlying Price: {underlying.Close}; Underlying Holdings: {underlying.Holdings.Quantity} @ {underlying.Holdings.AveragePrice};");
@@ -472,16 +454,17 @@ namespace QuantConnect.Securities
 
                     throw new ArgumentException(message);
                 }
-                lastOrderQuantity = absOrderQuantity;
+                lastOrderQuantity = orderQuantity;
 
                 // Update our target holdings margin
-                signedTargetHoldingsMargin = ((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity + parameters.Security.Holdings.Quantity) * absUnitMargin;
+                signedTargetHoldingsMargin = this.GetInitialMarginRequirement(parameters.Security,
+                    orderQuantity + parameters.Security.Holdings.Quantity);
             }
             // Ensure that our target holdings margin will be less than or equal to our target allocated margin
             while (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue));
 
             // add directionality back in
-            return new GetMaximumOrderQuantityResult((direction == OrderDirection.Sell ? -1 : 1) * absOrderQuantity);
+            return new GetMaximumOrderQuantityResult(orderQuantity);
         }
 
         /// <summary>
@@ -490,28 +473,43 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="currentMargin">Current margin</param>
         /// <param name="targetMargin">Target margin</param>
-        /// <param name="perUnitMargin">Margin required for each unit</param>
-        /// <param name="lotSize">Lot size of the security we are ordering</param>
         /// <returns>The size of the order to get safely to our target</returns>
-        public static decimal GetAmountToOrder(decimal currentMargin, decimal targetMargin, decimal perUnitMargin, decimal lotSize, decimal? currentOrderSize = null)
+        public decimal GetAmountToOrder(Security security, decimal currentMargin, decimal targetMargin, decimal? currentOrderSize = null)
         {
-
-
-            // Determine the amount to order to put us at our target
-            var orderSize = (targetMargin - currentMargin) / perUnitMargin;
-
-            // Determine if we are under our target
-            var underTarget = false;
-            // For negative target, we are under if target is a larger negative number
-            if (targetMargin < 0 && targetMargin - currentMargin < 0)
+            if (security == null)
             {
-                underTarget = true;
+                return 0;
             }
-            // For positive target, we are under if target is a larger positive number
-            else if (targetMargin > 0 && targetMargin - currentMargin > 0)
+
+            var lotSize = security.SymbolProperties.LotSize;
+            var marginForOneUnit = this.GetInitialMarginRequirement(security, Math.Sign(targetMargin));
+
+            // Take a first best guess using margin for one unit to determine order size
+            var orderSize = (targetMargin - currentMargin) / Math.Abs(marginForOneUnit);
+
+            // Use our model to calculate this final margin
+            var finalMargin = this.GetInitialMarginRequirement(security,
+                    orderSize + security.Holdings.Quantity);
+
+            // Until our absolute final margin is equal to or below target we need to adjust  
+            while ((targetMargin < 0 && finalMargin < targetMargin) || (targetMargin > 0 && finalMargin > targetMargin))
             {
-                underTarget = true;
+                // We adjust according to the target margin being a short or long
+                orderSize = targetMargin < 0
+                    ? orderSize + lotSize
+                    : orderSize - lotSize;
+
+                // Recalculate final margin with this adjusted orderSize
+                finalMargin = this.GetInitialMarginRequirement(security,
+                    orderSize + security.Holdings.Quantity);
             }
+
+            // Determine if we are under or over our target
+            // For negative target, we are under if target is a larger negative number than current
+            // For positive target, we are under if target is a larger positive number that current
+            var underTarget =
+                (targetMargin < 0 && targetMargin - currentMargin < 0) ||
+                (targetMargin > 0 && targetMargin - currentMargin > 0);
 
             // Determine our rounding mode
             MidpointRounding roundingMode;
