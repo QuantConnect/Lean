@@ -94,7 +94,7 @@ dotnet QuantConnect.Lean.Launcher.dll
 - Install [dotnet 5](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
 - Compile Lean Solution:
 ```
-dotnet QuantConnect.Lean.sln
+dotnet build QuantConnect.Lean.sln
 ```
 - Run Lean:
 ```
