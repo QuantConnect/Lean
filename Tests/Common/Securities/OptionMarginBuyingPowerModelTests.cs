@@ -412,9 +412,16 @@ namespace QuantConnect.Tests.Common.Securities
                 quantity.Value);
         }
 
-        [Test]
-        public void Reproduce()
+        // This test set showcases some odd behaviour by our OptionMarginModel margin requirement calculation
+        // Each test has the same end target of ~-1.5% (~-15K). Yet, if we are already shorted or long we go to 0,
+        // this is because the requirement for a short option position is at base ~-200K, but if we have zero holdings
+        // it allows us to buy -31 contracts for 478 margin requirement per unit.
+        [TestCase(-31, 31)] // Short to Same?
+        [TestCase(0, -31)] // Open Short
+        [TestCase(31, -31)] // Long To Short
+        public void CallOTMShort(int startingHoldings, int expectedOrderSize)
         {
+            // Reproduces issue at https://www.quantconnect.com/forum/discussion/12470/runtime-error-getmaximumorderquantityfortargetbuyingpower-failed
             SymbolCache.Clear();
 
             // Initialize algorithm
@@ -425,13 +432,11 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.SetCash(1014678.500);
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
 
-            //{SPY XPFJZXLFPOBQ|SPY R735QTJ8XC9X} Security ID.Parse -> Symbol Create/New -> AddOptionContract
-
             var optionContract = SecurityIdentifier.Parse("SPY XPFJZXLFPOBQ | SPY R735QTJ8XC9X");
             Symbol optionSymbol = new Symbol(optionContract, optionContract.Symbol);
             var option = algorithm.AddOptionContract(optionSymbol);
 
-            option.Holdings.SetHoldings(4.74m, -31);
+            option.Holdings.SetHoldings(4.74m, startingHoldings);
             option.FeeModel = new ConstantFeeModel(0);
             option.SetLeverage(1);
 
@@ -464,7 +469,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var model = new OptionMarginModel();
             var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, newTarget, 0);
-            Assert.AreEqual(31, result.Quantity);
+            Assert.AreEqual(expectedOrderSize, result.Quantity);
         }
     }
 }

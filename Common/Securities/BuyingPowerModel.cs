@@ -386,7 +386,7 @@ namespace QuantConnect.Securities
             // determine the unit price in terms of the account currency
             var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
             // determine the margin required for 1 unit, positive since we are working with absolutes
-            var absUnitMargin = Math.Abs(this.GetInitialMarginRequirement(parameters.Security, Math.Sign(signedTargetFinalMarginValue)));
+            var absUnitMargin = Math.Abs(this.GetInitialMarginRequirement(parameters.Security, 1));
             if (absUnitMargin == 0)
             {
                 return new GetMaximumOrderQuantityResult(0, parameters.Security.Symbol.GetZeroPriceMessage());
@@ -482,16 +482,43 @@ namespace QuantConnect.Securities
             }
 
             var lotSize = security.SymbolProperties.LotSize;
-            var marginForOneUnit = this.GetInitialMarginRequirement(security, Math.Sign(targetMargin));
+
+            // Use the margin for one unit to make our initial guess, important to use sign of target margin because options
+            // shorts often take much more margin than longs, gives us a more accurate first guess to go off of.
+            var marginForOneUnit = Math.Abs(this.GetInitialMarginRequirement(security, 1));
 
             // Take a first best guess using margin for one unit to determine order size
-            var orderSize = (targetMargin - currentMargin) / Math.Abs(marginForOneUnit);
+            var orderSize = (targetMargin - currentMargin) / marginForOneUnit;
 
-            // Use our model to calculate this final margin
+            // Determine if we are under or over our target
+            // For negative target, we are under if target is a larger negative number than current
+            // For positive target, we are under if target is a larger positive number that current
+            var underTarget =
+                (targetMargin < 0 && targetMargin - currentMargin < 0) ||
+                (targetMargin > 0 && targetMargin - currentMargin > 0);
+
+            // Determine the rounding mode for this order size
+            var roundingMode = underTarget
+                // Increase in holdings
+                // Negative orders need to be rounded towards positive so we don't go over target
+                // Positive orders need to be rounded towards negative so we don't go over target
+                ? orderSize < 0 ? MidpointRounding.ToPositiveInfinity : MidpointRounding.ToNegativeInfinity
+
+                // Reduction of holdings
+                // Negative orders need to be rounded towards negative so we are under our target
+                // Positive orders need to be rounded towards positive so we are under our target
+                : orderSize < 0 ? MidpointRounding.ToNegativeInfinity : MidpointRounding.ToPositiveInfinity;
+
+
+            // Round this order size appropriately
+            orderSize = orderSize.DiscretelyRoundBy(lotSize, roundingMode);
+
+            // Use our model to calculate this final margin as a final check
             var finalMargin = this.GetInitialMarginRequirement(security,
                     orderSize + security.Holdings.Quantity);
 
             // Until our absolute final margin is equal to or below target we need to adjust  
+            // This isn't usually the case, but for non-linear margin per unit cases this may be necessary.
             while ((targetMargin < 0 && finalMargin < targetMargin) || (targetMargin > 0 && finalMargin > targetMargin))
             {
                 // We adjust according to the target margin being a short or long
@@ -504,50 +531,7 @@ namespace QuantConnect.Securities
                     orderSize + security.Holdings.Quantity);
             }
 
-            // Determine if we are under or over our target
-            // For negative target, we are under if target is a larger negative number than current
-            // For positive target, we are under if target is a larger positive number that current
-            var underTarget =
-                (targetMargin < 0 && targetMargin - currentMargin < 0) ||
-                (targetMargin > 0 && targetMargin - currentMargin > 0);
-
-            // Determine our rounding mode
-            MidpointRounding roundingMode;
-            if (underTarget)
-            {
-                // Negative orders need to be rounded "up" so we don't go over target
-                // Positive orders need to be rounded "down" so we don't go over target
-                roundingMode = orderSize < 0
-                    ? MidpointRounding.ToPositiveInfinity
-                    : MidpointRounding.ToNegativeInfinity;
-            }
-            else
-            {
-                // Negative orders need to be rounded "down" so we are under our target
-                // Positive orders need to be rounded "up" so we are under our target
-                roundingMode = orderSize < 0
-                    ? MidpointRounding.ToNegativeInfinity
-                    : MidpointRounding.ToPositiveInfinity;
-            }
-
-            // For handling precision errors in OrderSize calculation
-            if (currentOrderSize.HasValue && orderSize % lotSize == 0 && orderSize == currentOrderSize.Value)
-            {
-                // Force an adjustment
-                if (roundingMode == MidpointRounding.ToPositiveInfinity)
-                {
-                    orderSize += lotSize;
-                }
-                else
-                {
-                    orderSize -= lotSize;
-                }
-
-                return orderSize;
-            }
-
-            // Round this order size appropriately
-            return orderSize.DiscretelyRoundBy(lotSize, roundingMode);
+            return orderSize;
         }
 
         /// <summary>
