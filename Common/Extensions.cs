@@ -2873,8 +2873,8 @@ namespace QuantConnect
                 }
 
                 var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
-                // for the current expiration we add a day to get the next one
-                expiration = expiryFunction(expiration.AddDays(1));
+                // for the current expiration we add a month to get the next one
+                expiration = expiryFunction(expiration.AddMonths(1));
                 symbol = Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, expiration);
             }
 

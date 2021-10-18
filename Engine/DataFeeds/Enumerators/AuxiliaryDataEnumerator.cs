@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -37,15 +38,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Creates a new instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
-        /// <param name="factorFile">The factor file to use</param>
-        /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
+        /// <param name="factorFileProvider">The factor file provider to use</param>
+        /// <param name="mapFileProvider">The <see cref="MapFile"/> provider to use</param>
         /// <param name="tradableDateEventProviders">The tradable dates event providers</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="startTime">Start date for the data request</param>
         public AuxiliaryDataEnumerator(
             SubscriptionDataConfig config,
-            Lazy<FactorFile> factorFile,
-            Lazy<MapFile> mapFile,
+            IFactorFileProvider factorFileProvider,
+            IMapFileProvider mapFileProvider,
             ITradableDateEventProvider []tradableDateEventProviders,
             ITradableDatesNotifier tradableDayNotifier,
             DateTime startTime)
@@ -56,7 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 if (!_initialized)
                 {
-                    Initialize(config, factorFile, mapFile, tradableDateEventProviders, startTime);
+                    Initialize(config, factorFileProvider, mapFileProvider, tradableDateEventProviders, startTime);
                 }
 
                 foreach (var tradableDateEventProvider in tradableDateEventProviders)
@@ -75,8 +76,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// and not in the algorithm thread
         /// </summary>
         private void Initialize(SubscriptionDataConfig config,
-            Lazy<FactorFile> factorFile,
-            Lazy<MapFile> mapFile,
+            IFactorFileProvider factorFileProvider,
+            IMapFileProvider mapFileProvider,
             ITradableDateEventProvider[] tradableDateEventProviders,
             DateTime startTime)
         {
@@ -84,8 +85,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 tradableDateEventProvider.Initialize(
                     config,
-                    factorFile?.Value,
-                    mapFile?.Value,
+                    factorFileProvider,
+                    mapFileProvider,
                     startTime);
             }
             _initialized = true;
