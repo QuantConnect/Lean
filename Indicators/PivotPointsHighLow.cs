@@ -34,6 +34,11 @@ namespace QuantConnect.Indicators
         private readonly RollingWindow<PivotPoint> _windowPivotPoints;
 
         /// <summary>
+        /// Event informs of new pivot point formed with new data update
+        /// </summary>
+        public event EventHandler<PivotPointsEventArgs> NewPivotPointFormed;
+
+        /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _windowHighs.IsReady && _windowLows.IsReady;
@@ -42,11 +47,6 @@ namespace QuantConnect.Indicators
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; protected set; }
-
-        /// <summary>
-        /// Event informs of new pivot point formed with new data update
-        /// </summary>
-        public event EventHandler<PivotPointsEventArgs> NewPivotPointFormed;
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator with an equal high and low length
@@ -86,6 +86,11 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = Math.Max(_windowHighs.Size, _windowLows.Size);
         }
 
+        /// <summary>
+        /// Computes the next value of this indicator from the given state
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _windowHighs.Add(input);
