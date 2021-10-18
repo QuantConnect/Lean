@@ -15,11 +15,13 @@ from AlgorithmImports import *
 from collections import deque
 
 ### <summary>
-### Demonstrates how to warm up a custom python indicator
+### Regression test to check Python indicator is keeping backwards compatibility 
+### with indicators that do not set WarmUpPeriod.
 ### </summary>
 ### <meta name="tag" content="indicators" />
 ### <meta name="tag" content="indicator classes" />
 ### <meta name="tag" content="custom indicator" />
+### <meta name="tag" content="regression test" />
 class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2013,10,7)
