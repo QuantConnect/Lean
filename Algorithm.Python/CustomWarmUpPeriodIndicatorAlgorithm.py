@@ -26,41 +26,52 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)
         self.AddEquity("SPY", Resolution.Second)
 
-        # Create two python indicators one defines Warm Up
+        # Create two python indicators, one defines Warm Up
         self.custom = CSMAWithoutWarmUp('custom', 60)
-        self.customWarmUp = CSMAWithWarmUp('custom', 60)
+        self.customWarmUp = CSMAWithWarmUp('customWarmUp', 60)
 
         # The python custom class must inherit from PythonIndicator to enable Updated event handler
-        self.customWarmUp.Updated += self.CustomUpdated
+        self.customWarmUp.Updated += self.CustomWarmUpUpdated
+        self.custom.Updated += self.CustomUpdated
 
+        self.customWarmUpWindow = RollingWindow[IndicatorDataPoint](5)
         self.customWindow = RollingWindow[IndicatorDataPoint](5)
         self.RegisterIndicator("SPY", self.customWarmUp, Resolution.Minute)
+        self.RegisterIndicator("SPY", self.custom, Resolution.Minute)
 
         self.SetWarmUp(60);
 
-        # Warm Up custom indicator
-        # The purpose of this custom indicator is only to warm up some data
-        # not necessary the data from SPY symbol in the given resolution and period
-        for i in range(60):
-            self.custom.Update(i)
-        if not self.custom.IsReady():
-            raise "custom indicator was expected to be ready"
+    def CustomWarmUpUpdated(self, sender, updated):
+        self.customWarmUpWindow.Add(updated)
 
     def CustomUpdated(self, sender, updated):
         self.customWindow.Add(updated)
 
+    def OnData(self, data):
+        if not self.Portfolio.Invested:
+            self.SetHoldings("SPY", 1)
+
+        if self.Time.second == 0:
+            self.Log(f"   customWarmUp -> IsReady: {self.customWarmUp.IsReady}. Value: {self.customWarmUp.Current.Value}")
+            self.Log(f"custom -> IsReady: {self.custom.IsReady}. Value: {self.custom.Value}")
+
+        # Regression test: test fails with an early quit
+        diff = abs(self.custom.Current.Value - self.customWarmUp.Current.Value)
+        if diff > 1e-10:
+            self.Quit(f"Quit: indicators difference is {diff}")
+
     def OnEndOfAlgorithm(self):
         if not self.customWarmUp.IsReady:
-            raise "customWarmUp indicator was expected to warmed up already"
+            raise "customWarmUp indicator was expected to be warmed up already"
 
 # Python implementation of SimpleMovingAverage.
-# Represents the traditional simple moving average indicator (SMA) With Warm Up Period
+# Represents the traditional simple moving average indicator (SMA) With Warm Up Period parameter defined
 class CSMAWithWarmUp(PythonIndicator):
     def __init__(self, name, period):
         self.Name = name
         self.Value = 0
         self.queue = deque(maxlen=period)
-        self.Period = period
+        self.WarmUpPeriod = period
 
     # Update method is mandatory
     def Update(self, input):
@@ -70,21 +81,16 @@ class CSMAWithWarmUp(PythonIndicator):
         return count == self.queue.maxlen
 
 # Python implementation of SimpleMovingAverage.
-# Represents the traditional simple moving average indicator (SMA) without Warm Up Period
-class CSMAWithoutWarmUp():
+# Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
+class CSMAWithoutWarmUp(PythonIndicator):
     def __init__(self, name, period):
         self.Name = name
         self.Value = 0
         self.queue = deque(maxlen=period)
-        self.Period = period
 
     # Update method is mandatory
     def Update(self, input):
-        self.queue.appendleft(input)
+        self.queue.appendleft(input.Value)
         count = len(self.queue)
         self.Value = np.sum(self.queue) / count
-        return count == self.queue.maxlen
-    # Check wheter the indicator is ready or not
-    def IsReady(self):
-        count = len(self.queue)
         return count == self.queue.maxlen

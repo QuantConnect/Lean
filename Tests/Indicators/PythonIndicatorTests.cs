@@ -46,7 +46,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
         self.Name = name
         self.Value = 0
         self.queue = deque(maxlen=period)
-        self.Period = period
+        #self.WarmUpPeriod = period
 
     # Update method is mandatory
     def Update(self, input):
