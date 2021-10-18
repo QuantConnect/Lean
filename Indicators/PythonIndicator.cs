@@ -56,7 +56,7 @@ namespace QuantConnect.Indicators
             {
                 var period = indicator.HasAttr("WarmUpPeriod")
                     ? indicator.GetAttr("WarmUpPeriod")
-                    : (-1).ToPython();
+                    : 0.ToPython();
 
                 return period.GetAndDispose<int>();
             }
