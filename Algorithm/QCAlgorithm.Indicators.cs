@@ -2452,7 +2452,7 @@ namespace QuantConnect.Algorithm
         {
             var periods = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
-            if (periods.HasValue)
+            if (periods.HasValue && periods != 0)
             {
                 var resolution = timeSpan.ToHigherResolutionEquivalent(false);
                 var resolutionTicks = resolution.ToTimeSpan().Ticks;

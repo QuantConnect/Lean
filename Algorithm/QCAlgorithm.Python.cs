@@ -587,7 +587,7 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
-        /// from the consolidator.
+        /// from the consolidator. Aditionally, warms up the indicator if the variable EnableAutomaticIndicatorWarmUp is set to true
         /// </summary>
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
@@ -616,6 +616,12 @@ namespace QuantConnect.Algorithm
             }
 
             RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+
+            // Check if we can warm up the indicator with WarmUpIndicator method
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, WrapPythonIndicator(indicator), Resolution.Minute);
+            }
         }
 
         /// <summary>

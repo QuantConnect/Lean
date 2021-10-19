@@ -36,12 +36,16 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         self.customWarmUp.Updated += self.CustomWarmUpUpdated
         self.custom.Updated += self.CustomUpdated
 
+        self.EnableAutomaticIndicatorWarmUp = True
+
+        # Register the indicators
         self.customWarmUpWindow = RollingWindow[IndicatorDataPoint](5)
         self.customWindow = RollingWindow[IndicatorDataPoint](5)
         self.RegisterIndicator("SPY", self.customWarmUp, Resolution.Minute)
         self.RegisterIndicator("SPY", self.custom, Resolution.Minute)
 
-        self.SetWarmUp(60);
+        # Helper variable to save the number of samples processed
+        self.Samples = 0
 
     def CustomWarmUpUpdated(self, sender, updated):
         self.customWarmUpWindow.Add(updated)
@@ -50,21 +54,29 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         self.customWindow.Add(updated)
 
     def OnData(self, data):
+        # Check customWarmUp indicator has already warmed up the data
+        if not self.customWarmUp.IsReady:
+            raise "customWarmUp indicator was expected to be ready"
+
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
 
         if self.Time.second == 0:
+            self.Samples += 1
+
             self.Log(f"   customWarmUp -> IsReady: {self.customWarmUp.IsReady}. Value: {self.customWarmUp.Current.Value}")
             self.Log(f"custom -> IsReady: {self.custom.IsReady}. Value: {self.custom.Current.Value}")
+            diff = abs(self.custom.Current.Value - self.customWarmUp.Current.Value)
+            self.Log(f"Samples: {self.Samples}")
 
-        # Regression test: test fails with an early quit
-        diff = abs(self.custom.Current.Value - self.customWarmUp.Current.Value)
-        if diff > 1e-10:
-            self.Quit(f"Quit: indicators difference is {diff}")
+            # Check self.custom indicator is ready when the number of samples is bigger than its WarmUpPeriod
+            if self.custom.IsReady != (self.Samples >= 60):
+                raise "custom indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter"
 
-    def OnEndOfAlgorithm(self):
-        if not self.customWarmUp.IsReady:
-            raise "customWarmUp indicator was expected to be warmed up already"
+            # Check the value of the two custom indicators is the same when both are ready
+            if diff > 1e-10 and self.custom.IsReady == self.customWarmUp.IsReady:
+                self.Quit(f"Quit: indicators difference is {diff}")
+            
 
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) With Warm Up Period parameter defined
