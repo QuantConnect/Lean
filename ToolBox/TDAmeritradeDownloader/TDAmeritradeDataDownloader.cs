@@ -10,8 +10,6 @@ namespace QuantConnect.ToolBox.TDAmeritradeDownloader
 {
     public class TDAmeritradeDataDownloader : IDataDownloader
     {
-        private static TDAmeritradeClient tdClient;
-
         public TDAmeritradeDataDownloader()
         {
             var clientID = Config.Get("td-client-id", "");
