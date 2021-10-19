@@ -71,8 +71,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             );
 
             var dataProvider = TestGlobals.DataProvider;
-            var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(false, TestGlobals.MapFileProvider.Get(CorporateActionsKey.Create(config.Symbol)),
-                TestGlobals.FactorFileProvider);
+            var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(false, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider);
             var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());
             Func<SubscriptionRequest, IEnumerator<BaseData>> underlyingEnumeratorFunc = (req) =>
                 {

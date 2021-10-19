@@ -1533,10 +1533,6 @@ namespace QuantConnect.Algorithm
                     {
                         // allow users to specify negative numbers, we get the abs of it
                         var contractOffset = (uint)Math.Abs(contractDepthOffset);
-                        if (contractOffset > 1)
-                        {
-                            throw new ArgumentException("Future continuous contract offset depth possible values are 0 and 1", nameof(contractDepthOffset));
-                        }
                         security.IsTradable = true;
 
                         var continuousConfigs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,

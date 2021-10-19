@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.IO;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
@@ -113,11 +112,6 @@ namespace QuantConnect.Data.Auxiliary
         private void HydrateFactorFileFromLatestZip(CorporateActionsKey key)
         {
             var market = key.Market;
-            if (market != QuantConnect.Market.USA)
-            {
-                // don't explode for other markets which request factor files and we don't have
-                return;
-            }
             // start the search with yesterday, today's file will be available tomorrow
             var todayNewYork = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).Date;
             var date = todayNewYork.AddDays(-1);
@@ -126,8 +120,7 @@ namespace QuantConnect.Data.Auxiliary
 
             do
             {
-                var zipFileName = $"equity/{market}/factor_files/factor_files_{date:yyyyMMdd}.zip";
-                var factorFilePath = Path.Combine(Globals.DataFolder, zipFileName);
+                var factorFilePath = FactorFileZipHelper.GetFactorFileZipFileName(market, date, key.SecurityType);
 
                 // Fetch a stream for our zip from our data provider
                 var stream = _dataProvider.Fetch(factorFilePath);

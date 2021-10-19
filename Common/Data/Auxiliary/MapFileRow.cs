@@ -90,8 +90,7 @@ namespace QuantConnect.Data.Auxiliary
             }
             if (csv.Length >= 4)
             {
-                // TODO: enum parse is slow, not performant
-                mappingMode = (DataMappingMode)Enum.Parse(typeof(DataMappingMode), csv[3], ignoreCase:true);
+                mappingMode = csv[3].ParseDataMappingMode();
             }
 
             return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], primaryExchange, mappingMode);
@@ -172,7 +171,19 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            var encodedExchange = PrimaryExchange == Exchange.UNKNOWN? string.Empty : $",{PrimaryExchange.Code}";
+            var encodedExchange = string.Empty;
+            if (PrimaryExchange == Exchange.UNKNOWN)
+            {
+                if (DataMappingMode != null)
+                {
+                    // be lazy, only add a comma if we have a mapping mode after
+                    encodedExchange = ",";
+                }
+            }
+            else
+            {
+                encodedExchange = $",{PrimaryExchange.Code}";
+            }
             var mappingMode = DataMappingMode != null ? $",{DataMappingMode}" : string.Empty;
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}{mappingMode}";
         }

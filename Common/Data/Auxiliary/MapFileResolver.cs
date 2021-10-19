@@ -108,7 +108,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 if (entries.Count == 0)
                 {
-                    return new MapFile(symbol, new List<MapFileRow>());
+                    return new MapFile(symbol, Enumerable.Empty<MapFileRow>());
                 }
 
                 // Return value of BinarySearch (from MSDN):
@@ -141,7 +141,7 @@ namespace QuantConnect.Data.Auxiliary
             if (!_mapFilesByPermtick.TryGetValue(symbol, out mapFile)
                 || mapFile.FirstDate > date && date != Time.BeginningOfTime)
             {
-                return new MapFile(symbol, new List<MapFileRow>());
+                return new MapFile(symbol, Enumerable.Empty<MapFileRow>());
             }
             return mapFile;
         }
