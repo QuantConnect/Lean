@@ -380,27 +380,25 @@ namespace QuantConnect.Securities
             // PortfolioTarget.Percent(1) -> fills -> PortfolioTarget.Percent(1) _could_ detect free buying power if we use Maintenance requirement here
             var signedCurrentUsedMargin = this.GetInitialMarginRequirement(parameters.Security, parameters.Security.Holdings.Quantity);
 
-            // remove directionality, we'll work in the land of absolutes
-            var absDifferenceOfMargin = Math.Abs(signedTargetFinalMarginValue - signedCurrentUsedMargin);
-            var direction = signedTargetFinalMarginValue > signedCurrentUsedMargin ? OrderDirection.Buy : OrderDirection.Sell;
-
             // determine the unit price in terms of the account currency
             var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
 
-            // determine the margin required for 1 unit, positive since we are working with absolutes
+            // determine the margin required for 1 unit
             var absUnitMargin = this.GetInitialMarginRequirement(parameters.Security, 1);
             if (absUnitMargin == 0)
             {
                 return new GetMaximumOrderQuantityResult(0, parameters.Security.Symbol.GetZeroPriceMessage());
             }
 
+            // Check that the change of margin is above our models minimum percentage change
+            var absDifferenceOfMargin = Math.Abs(signedTargetFinalMarginValue - signedCurrentUsedMargin);
             if (!BuyingPowerModelExtensions.AboveMinimumOrderMarginPortfolioPercentage(parameters.Portfolio,
                 parameters.MinimumOrderMarginPortfolioPercentage, absDifferenceOfMargin))
             {
-                var minimumValue = totalPortfolioValue * parameters.MinimumOrderMarginPortfolioPercentage;
                 string reason = null;
                 if (!parameters.SilenceNonErrorReasons)
                 {
+                    var minimumValue = totalPortfolioValue * parameters.MinimumOrderMarginPortfolioPercentage;
                     reason = $"The target order margin {absDifferenceOfMargin} is less than the minimum {minimumValue}.";
                 }
                 return new GetMaximumOrderQuantityResult(0, reason, false);
@@ -418,15 +416,12 @@ namespace QuantConnect.Securities
                 orderQuantity = GetAmountToOrder(parameters.Security, signedTargetFinalMarginValue, absUnitMargin);
                 if (orderQuantity == 0)
                 {
-                    absDifferenceOfMargin = Math.Abs(signedTargetFinalMarginValue - signedCurrentUsedMargin);
-                    var sign = direction == OrderDirection.Buy ? 1 : -1;
-
                     string reason = null;
                     if (!parameters.SilenceNonErrorReasons)
                     {
                         reason = Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
-                            Invariant($"and has been rounded to zero. Target order margin {absDifferenceOfMargin * sign}. Order fees ") +
-                            Invariant($"{orderFees}. Order quantity {orderQuantity}.");
+                            Invariant($"and has been rounded to zero. Target order margin {signedTargetFinalMarginValue - signedCurrentUsedMargin}. ") +
+                            Invariant($"Order fees {orderFees}. Order quantity {orderQuantity}.");
                     }
 
                     return new GetMaximumOrderQuantityResult(0, reason, false);
@@ -479,6 +474,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">Security we are determine order size for</param>
         /// <param name="targetMargin">Target margin</param>
+        /// <param name="marginForOneUnit">Margin requirement for one unit; used in our initial order guess</param>
         /// <returns>The size of the order to get safely to our target</returns>
         public decimal GetAmountToOrder([NotNull]Security security, decimal targetMargin, decimal marginForOneUnit)
         {
@@ -506,18 +502,30 @@ namespace QuantConnect.Securities
             var finalMargin = this.GetInitialMarginRequirement(security,
                     orderSize + security.Holdings.Quantity);
 
-            // Until our absolute final margin is equal to or below target we need to adjust  
+            // Until our absolute final margin is equal to or below target we need to adjust; ensures we don't overshoot target
             // This isn't usually the case, but for non-linear margin per unit cases this may be necessary.
-            while ((targetMargin < 0 && finalMargin < targetMargin) || (targetMargin > 0 && finalMargin > targetMargin))
+            // For example https://www.quantconnect.com/forum/discussion/12470, (covered in OptionMarginBuyingPowerModelTests)
+            var marginDifference = finalMargin - targetMargin;
+            while ((targetMargin < 0 && marginDifference < 0) || (targetMargin > 0 && marginDifference > 0))
             {
+                // TODO: Can this be smarter about its adjustment, instead of just stepping by lotsize?
                 // We adjust according to the target margin being a short or long
-                orderSize = targetMargin < 0
-                    ? orderSize + lotSize
-                    : orderSize - lotSize;
+                orderSize += targetMargin < 0 ? lotSize : -lotSize;
 
                 // Recalculate final margin with this adjusted orderSize
                 finalMargin = this.GetInitialMarginRequirement(security,
                     orderSize + security.Holdings.Quantity);
+
+                // Safety check, does not occur in any of our testing, but to be sure we don't enter a endless loop
+                // have this guy check that the difference between the two is not growing.
+                var newDifference = finalMargin - targetMargin;
+                if (Math.Abs(newDifference) > Math.Abs(marginDifference) && Math.Sign(newDifference) == Math.Sign(marginDifference))
+                {
+                    // We have a problem and are correcting in the wrong direction
+                    throw new ArgumentException("BuyingPowerModel(): Margin is being adjusted in the wrong direction");
+                }
+
+                marginDifference = newDifference;
             }
 
             return orderSize;
