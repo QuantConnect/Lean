@@ -518,8 +518,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     dataNormalizationMode: universeSettings.DataNormalizationMode,
                     subscriptionDataTypes: universeSettings.SubscriptionDataTypes,
                     dataMappingMode: universeSettings.DataMappingMode,
-                    // TODO:
-                    contractDepthOffset: 0);
+                    contractDepthOffset: (uint)Math.Abs(universeSettings.ContractDepthOffset));
 
                 security = _securityService.CreateSecurity(symbol, configs, universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
 

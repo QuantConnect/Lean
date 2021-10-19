@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Auxiliary
             var securityType = key.SecurityType;
             var market = key.Market;
 
-            var mapFileDirectory = Path.Combine(Globals.CacheDataFolder, securityType.SecurityTypeToLower(), market, "map_files");
+            var mapFileDirectory =  MapFile.GetMapFilePath(market, securityType);
             if (!Directory.Exists(mapFileDirectory))
             {
                 // only write this message once per application instance

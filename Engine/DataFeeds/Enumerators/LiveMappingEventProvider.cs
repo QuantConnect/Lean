@@ -14,13 +14,24 @@
  *
 */
 
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    ///
+    /// Event provider who will emit <see cref="SymbolChangedEvent"/> events
     /// </summary>
+    /// <remarks>Only special behavior is that it will refresh map file on each new tradable date event</remarks>
     public class LiveMappingEventProvider : MappingEventProvider
     {
+        public override IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
+        {
+            // refresh map file instance
+            InitializeMapFile();
 
+            return base.GetEvents(eventArgs);
+        }
     }
 }

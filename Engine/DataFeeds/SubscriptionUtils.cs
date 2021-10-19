@@ -54,7 +54,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return new Subscription(request, dataEnumerator, timeZoneOffsetProvider);
         }
 
-
         /// <summary>
         /// Setups a new <see cref="Subscription"/> which will consume a blocking <see cref="EnqueueableEnumerator{T}"/>
         /// that will be feed by a worker task
@@ -70,12 +69,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IFactorFileProvider factorFileProvider,
             bool enablePriceScale)
         {
-            var factorFile = GetFactorFileToUse(request.Configuration, factorFileProvider);
             var exchangeHours = request.Security.Exchange.Hours;
             var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
             var config = subscription.Configuration;
+            enablePriceScale = enablePriceScale && config.PricesShouldBeScaled();
             var lastTradableDate = DateTime.MinValue;
             decimal? currentScale = null;
 
@@ -115,6 +114,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // We don't take into account auxiliary data because we don't scale it and because the underlying price data could be fill forwarded
                         if (enablePriceScale && data?.Time.Date > lastTradableDate && data.DataType != MarketDataType.Auxiliary && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))
                         {
+                            var factorFile = factorFileProvider.Get(request.Configuration.Symbol);
                             lastTradableDate = data.Time.Date;
                             currentScale = GetScaleFactor(factorFile, mode, data.Time.Date);
                         }
@@ -166,41 +166,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return subscription;
         }
 
-        /// <summary>
-        /// Gets <see cref="FactorFile"/> for configuration
-        /// </summary>
-        /// <param name="config">Subscription configuration</param>
-        /// <param name="factorFileProvider">The factor file provider</param>
-        /// <returns></returns>
-        public static FactorFile GetFactorFileToUse(
-            SubscriptionDataConfig config,
-            IFactorFileProvider factorFileProvider)
-        {
-            var factorFileToUse = new FactorFile(config.Symbol.Value, new List<FactorFileRow>());
-
-            if (!config.IsCustomData
-                && config.SecurityType == SecurityType.Equity)
-            {
-                try
-                {
-                    var factorFile = factorFileProvider.Get(config.Symbol);
-                    if (factorFile != null)
-                    {
-                        factorFileToUse = factorFile;
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "SubscriptionUtils.GetFactorFileToUse(): Factors File: "
-                        + config.Symbol.ID + ": ");
-                }
-            }
-
-            return factorFileToUse;
-        }
-
         private static decimal GetScaleFactor(FactorFile factorFile, DataNormalizationMode mode, DateTime date)
         {
+            if (factorFile == null)
+            {
+                return 1;
+            }
             switch (mode)
             {
                 case DataNormalizationMode.Raw:

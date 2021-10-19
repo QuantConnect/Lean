@@ -76,8 +76,8 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
             var csvData = new List<string>()
             {
-                "20010101,enrn",
-                "20011202,enrnq"
+                "20010101,enrn,",
+                "20011202,enrnq,"
             };
 
             Assert.True(mapFile.ToCsvLines().SequenceEqual(csvData));

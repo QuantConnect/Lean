@@ -150,11 +150,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 factory = new OptionChainUniverseSubscriptionEnumeratorFactory((req) =>
                 {
-                    var mapFileResolver = req.Security.Symbol.SecurityType == SecurityType.Option
-                        ? _mapFileProvider.Get(CorporateActionsKey.Create(req.Configuration.Symbol))
-                        : null;
-
-                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, mapFileResolver, _factorFileProvider);
+                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _factorFileProvider);
                     return ConfigureEnumerator(req, true, underlyingFactory.CreateEnumerator(req, _dataProvider));
                 });
             }

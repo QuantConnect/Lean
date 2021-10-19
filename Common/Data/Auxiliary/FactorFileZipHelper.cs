@@ -26,6 +26,14 @@ namespace QuantConnect.Data.Auxiliary
     public static class FactorFileZipHelper
     {
         /// <summary>
+        /// Gets the factor file zip filename for the specified date
+        /// </summary>
+        public static string GetFactorFileZipFileName(string market, DateTime date, SecurityType securityType)
+        {
+            return Path.Combine(Globals.DataFolder, $"{securityType.SecurityTypeToLower()}/{market}/factor_files/factor_files_{date:yyyyMMdd}.zip");
+        }
+
+        /// <summary>
         /// Reads the zip bytes as text and parses as FactorFileRows to create FactorFiles
         /// </summary>
         public static IEnumerable<KeyValuePair<Symbol, FactorFile>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market, SecurityType securityType)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,22 +14,24 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Orders;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    ///
+    /// Continuous Futures Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
     /// </summary>
     public class ContinuousFutureRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Future _frontMonth;
+        private List<SymbolChangedEvent> _mappings = new();
+        private Future _continuousContract;
         private DateTime _lastDateLog;
 
         /// <summary>
@@ -40,21 +42,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 7, 1);
             SetEndDate(2014, 1, 1);
 
-            _frontMonth = AddFuture("ES",
+            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.FirstDayMonth,
                 contractDepthOffset: 0
             );
-
-            // TODO: ideally contracts with different offset should be able to live at the same time in the algo
-            // as is today, their symbol will clash -> should the symbol have the offset in it?
-/*
-            _backMonth = AddFuture("ES",
-                dataNormalizationMode: DataNormalizationMode.ForwardPanamaCanal,
-                dataMappingMode: DataMappingMode.OpenInterest,
-                contractDepthOffset: 1
-            );
-*/
         }
 
         /// <summary>
@@ -63,55 +55,42 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            // make sure that we stop getting data from the previous contract
+            if (data.Keys.Count != 1)
+            {
+                throw new Exception($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
+            }
 
             foreach (var changedEvent in data.SymbolChangedEvents.Values)
             {
-                Log($"SymbolChanged event: {changedEvent}");
+                if (changedEvent.Symbol == _continuousContract.Symbol)
+                {
+                    _mappings.Add(changedEvent);
+                    Log($"SymbolChanged event: {changedEvent}");
+                }
             }
 
             if (_lastDateLog.Month != Time.Month)
             {
                 _lastDateLog = Time;
 
-                var quotes = data.Get<QuoteBar>();
-                if (quotes.ContainsKey(_frontMonth.Symbol))
-                {
-                    //Log($"{Time}-{_continuousFuture.Underlying.Symbol}-V1- {quotes[_continuousFuture.Symbol]}");
-                    //Log($"{Time}-{_continuousFuture.Underlying.Symbol}-V2- {Securities[_continuousFuture.Symbol].GetLastData()}");
-                    Log($"{Time}-V1- {quotes[_frontMonth.Symbol]}");
-                    Log($"{Time}-V2- {Securities[_frontMonth.Symbol].GetLastData()}");
-                }
-
+                Log($"{Time}- {Securities[_continuousContract.Symbol].GetLastData()}");
                 if (Portfolio.Invested)
                 {
                     Liquidate();
                 }
-                else if(_frontMonth.HasData)
+                else if(_continuousContract.HasData)
                 {
                     // This works because we set this contract as tradable, even if it's a canonical security
-                    Buy(_frontMonth.Symbol, 1);
-
-                    //Buy(_continuousFuture.Underlying.Symbol, 1); // this works too -> 
+                    Buy(_continuousContract.Symbol, 1);
                 }
 
-                // TODO: internally, once we have the start and end date we could use the 'ContinuousFutureUniverse.SelectSymbols(eachDay, null)' or similar to get the symbol for that date
-                // and create the sub history requests for each contract.
-                // Could do this at the QCAlgorithm side so that we don't need to change the history provider at all, but will mean direct access to the history provider wont work
-                var response = History(new[] { _frontMonth.Symbol }, 1000000);
-
-                var symbols = new HashSet<Symbol>();
-                foreach (var slice in response)
+                if(Time.Month == 1 && Time.Year == 2013)
                 {
-                    foreach (var symbol in slice.Keys.Select(symbol => symbol.Underlying))
+                    var response = History(new[] { _continuousContract.Symbol }, 60 * 24 * 90);
+                    if (!response.Any())
                     {
-                        symbols.Add(symbol);
+                        throw new Exception("Unexpected empty history response");
                     }
-                }
-
-                if (symbols.Count > 1)
-                {
-                    Log($"History request with Symbols: {string.Join(",", symbols.Select(symbol => symbol.ToString()))}");
                 }
             }
         }
@@ -124,6 +103,15 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            var expectedMappingCounts = 2;
+            if (_mappings.Count != expectedMappingCounts)
+            {
+                throw new Exception($"Unexpected symbol changed events: {_mappings.Count}, was expecting {expectedMappingCounts}");
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -132,13 +120,55 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
+            {"Total Trades", "3"},
+            {"Average Win", "1.13%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "2.167%"},
+            {"Drawdown", "1.600%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "1.093%"},
+            {"Sharpe Ratio", "0.701"},
+            {"Probabilistic Sharpe Ratio", "37.572%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.007"},
+            {"Beta", "0.1"},
+            {"Annual Standard Deviation", "0.022"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-2.735"},
+            {"Tracking Error", "0.076"},
+            {"Treynor Ratio", "0.153"},
+            {"Total Fees", "$5.55"},
+            {"Estimated Strategy Capacity", "$45000000.00"},
+            {"Lowest Capacity Asset", "ES 1S1"},
+            {"Fitness Score", "0.011"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "0.492"},
+            {"Return Over Maximum Drawdown", "1.711"},
+            {"Portfolio Turnover", "0.017"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "46f63968bea8d56fc88233e89e8cf4f7"}
         };
     }
 }
