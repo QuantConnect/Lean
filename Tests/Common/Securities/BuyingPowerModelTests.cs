@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Common.Securities
             var currentHoldingsMargin = _model.GetInitialMarginRequirement(spy, spy.Holdings.Quantity);
 
             // Determine the order size to get us to our target margin
-            var orderSize = _model.GetAmountToOrder(spy, targetMargin);
+            var orderSize = _model.GetAmountToOrder(spy, targetMargin, perUnitMargin);
             Assert.AreEqual(expectedOrderSize, orderSize);
 
             // Determine the final margin and assert we have met our target condition
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Determine the adjustment to get us to our target margin and apply it
             // Use our GetAmountToOrder for determining adjustment to reach the end goal
             var orderAdjustment =
-                _model.GetAmountToOrder(spy, targetMargin);
+                _model.GetAmountToOrder(spy, targetMargin, perUnitMargin);
 
             // Apply the change in margin
             var resultMargin = currentHoldingsMargin + (orderAdjustment * perUnitMargin);

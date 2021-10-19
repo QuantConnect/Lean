@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using static QuantConnect.StringExtensions;
@@ -385,8 +386,9 @@ namespace QuantConnect.Securities
 
             // determine the unit price in terms of the account currency
             var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
+
             // determine the margin required for 1 unit, positive since we are working with absolutes
-            var absUnitMargin = Math.Abs(this.GetInitialMarginRequirement(parameters.Security, 1));
+            var absUnitMargin = this.GetInitialMarginRequirement(parameters.Security, 1);
             if (absUnitMargin == 0)
             {
                 return new GetMaximumOrderQuantityResult(0, parameters.Security.Symbol.GetZeroPriceMessage());
@@ -413,17 +415,21 @@ namespace QuantConnect.Securities
             do
             {
                 // Calculate our order quantity
-                orderQuantity = GetAmountToOrder(parameters.Security, signedTargetFinalMarginValue);
+                orderQuantity = GetAmountToOrder(parameters.Security, signedTargetFinalMarginValue, absUnitMargin);
                 if (orderQuantity == 0)
                 {
                     absDifferenceOfMargin = Math.Abs(signedTargetFinalMarginValue - signedCurrentUsedMargin);
                     var sign = direction == OrderDirection.Buy ? 1 : -1;
-                    return new GetMaximumOrderQuantityResult(0,
-                        Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
-                        Invariant($"and has been rounded to zero. Target order margin {absDifferenceOfMargin * sign}. Order fees ") +
-                        Invariant($"{orderFees}. Order quantity {orderQuantity}."),
-                        false
-                    );
+
+                    string reason = null;
+                    if (!parameters.SilenceNonErrorReasons)
+                    {
+                        reason = Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
+                            Invariant($"and has been rounded to zero. Target order margin {absDifferenceOfMargin * sign}. Order fees ") +
+                            Invariant($"{orderFees}. Order quantity {orderQuantity}.");
+                    }
+
+                    return new GetMaximumOrderQuantityResult(0, reason, false);
                 }
 
                 // generate the order
@@ -446,7 +452,7 @@ namespace QuantConnect.Securities
                         Invariant($"Current Holdings: {parameters.Security.Holdings.Quantity} @ {parameters.Security.Holdings.AveragePrice}; Target Percentage: %{parameters.TargetBuyingPower * 100};");
 
                     // Need to add underlying value to message to reproduce with options
-                    if (parameters.Security is Option.Option option)
+                    if (parameters.Security is Option.Option option && option.Underlying != null)
                     {
                         var underlying = option.Underlying;
                         message += Invariant($" Underlying Security: {underlying.Symbol.ID}; Underlying Price: {underlying.Close}; Underlying Holdings: {underlying.Holdings.Quantity} @ {underlying.Holdings.AveragePrice};");
@@ -474,13 +480,8 @@ namespace QuantConnect.Securities
         /// <param name="security">Security we are determine order size for</param>
         /// <param name="targetMargin">Target margin</param>
         /// <returns>The size of the order to get safely to our target</returns>
-        public decimal GetAmountToOrder(Security security, decimal targetMargin)
+        public decimal GetAmountToOrder([NotNull]Security security, decimal targetMargin, decimal marginForOneUnit)
         {
-            if (security == null)
-            {
-                return 0;
-            }
-
             var lotSize = security.SymbolProperties.LotSize;
 
             // Start with order size that puts us back to 0, in theory this means current margin is 0
@@ -489,7 +490,6 @@ namespace QuantConnect.Securities
             var orderSize = -security.Holdings.Quantity;
 
             // Use the margin for one unit to make our initial guess.
-            var marginForOneUnit = Math.Abs(this.GetInitialMarginRequirement(security, 1));
             orderSize += targetMargin / marginForOneUnit;
 
             // Determine the rounding mode for this order size
