@@ -413,7 +413,7 @@ namespace QuantConnect.Securities
             do
             {
                 // Calculate our order quantity
-                orderQuantity = GetAmountToOrder(parameters.Security, signedCurrentUsedMargin, signedTargetFinalMarginValue, orderQuantity);
+                orderQuantity = GetAmountToOrder(parameters.Security, signedCurrentUsedMargin, signedTargetFinalMarginValue);
                 if (orderQuantity == 0)
                 {
                     var sign = direction == OrderDirection.Buy ? 1 : -1;
@@ -471,10 +471,11 @@ namespace QuantConnect.Securities
         /// Helper function that determines the amount to order to get to a given target safely.
         /// Meaning it will either be at or just below target always.
         /// </summary>
+        /// <param name="security">Security we are determine order size for</param>
         /// <param name="currentMargin">Current margin</param>
         /// <param name="targetMargin">Target margin</param>
         /// <returns>The size of the order to get safely to our target</returns>
-        public decimal GetAmountToOrder(Security security, decimal currentMargin, decimal targetMargin, decimal? currentOrderSize = null)
+        public decimal GetAmountToOrder(Security security, decimal currentMargin, decimal targetMargin)
         {
             if (security == null)
             {
@@ -483,9 +484,21 @@ namespace QuantConnect.Securities
 
             var lotSize = security.SymbolProperties.LotSize;
 
-            // Use the margin for one unit to make our initial guess, important to use sign of target margin because options
-            // shorts often take much more margin than longs, gives us a more accurate first guess to go off of.
+            // Use the margin for one unit to make our initial guess.
             var marginForOneUnit = Math.Abs(this.GetInitialMarginRequirement(security, 1));
+
+            // For shorting cases we need to see the margin for one shorted unit as well.
+            if (targetMargin < 0)
+            {
+                var marginForOneShortedUnit = this.GetInitialMarginRequirement(security, -1);
+
+                // Easy case, margin for one shorted unit is larger (greater negative number) than our target
+                // Just sell all of the current holdings
+                if (marginForOneShortedUnit < targetMargin)
+                {
+                    return -security.Holdings.Quantity;
+                }
+            }
 
             // Take a first best guess using margin for one unit to determine order size
             var orderSize = (targetMargin - currentMargin) / marginForOneUnit;
