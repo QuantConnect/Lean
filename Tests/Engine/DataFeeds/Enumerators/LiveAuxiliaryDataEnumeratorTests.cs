@@ -19,14 +19,13 @@ using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
     [TestFixture]
-    public class LiveDelistingEventProviderEnumeratorTests
+    public class LiveAuxiliaryDataEnumeratorTests
     {
         [Test]
         public void EmitsDelistingEventsBasedOnCurrentTime()
@@ -46,10 +45,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var timeProvider = new ManualTimeProvider(time);
 
             IEnumerator<BaseData> enumerator;
-            var mapFileResolver = TestGlobals.MapFileProvider.Get(CorporateActionsKey.Create(config.Symbol));
-            Assert.IsTrue(LiveDelistingEventProviderEnumerator.TryCreate(config, timeProvider, null, cache, mapFileResolver, out enumerator));
+            Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, null, cache, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, config.Symbol.ID.Date, out enumerator));
 
-            Assert.IsFalse(enumerator.MoveNext());
+            Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
             // advance until delisting date, take into account 5 hour offset of NY
@@ -62,7 +60,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(delistingDate, (enumerator.Current as Delisting).Time);
             Assert.AreEqual(15, (enumerator.Current as Delisting).Price);
 
-            Assert.IsFalse(enumerator.MoveNext());
+            Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
             // when the day ends the delisted event will pass through
@@ -75,7 +73,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(delistingDate.AddDays(1), (enumerator.Current as Delisting).Time);
             Assert.AreEqual(30, (enumerator.Current as Delisting).Price);
 
-            Assert.IsFalse(enumerator.MoveNext());
+            Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
         }
     }

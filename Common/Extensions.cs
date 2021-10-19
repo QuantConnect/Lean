@@ -172,7 +172,26 @@ namespace QuantConnect
                 catch (WebException ex)
                 {
                     Log.Error(ex, $"DownloadData(): failed for: '{url}'");
-                    // If server returned an error most likely on this day there is no data we are going to the next cycle
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to download a provided url as a byte array
+        /// </summary>
+        /// <param name="url">The url to download data from</param>
+        public static byte[] DownloadByteArray(this string url)
+        {
+            using (var wc = new HttpClient())
+            {
+                try
+                {
+                    return wc.GetByteArrayAsync(url).Result;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"DownloadByteArray(): failed for: '{url}'");
                     return null;
                 }
             }
@@ -2857,25 +2876,31 @@ namespace QuantConnect
         }
 
         /// <summary>
-        ///
+        /// Helper method that will return a back month, with future expiration, future contract based on the given offset
         /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
+        /// <param name="symbol">The none canonical future symbol</param>
+        /// <param name="offset">The quantity of contracts to move into the future expiration chain</param>
+        /// <returns>A new future expiration symbol instance</returns>
         public static Symbol AdjustSymbolByOffset(this Symbol symbol, uint offset)
         {
+            if (symbol.SecurityType != SecurityType.Future || symbol.IsCanonical())
+            {
+                throw new InvalidOperationException("Adjusting a symbol by an offset is currently only supported for futures");
+            }
+
             var expiration = symbol.ID.Date;
             for (var i = 0; i < offset; i++)
             {
-                if (symbol.SecurityType != SecurityType.Future)
-                {
-                    throw new InvalidOperationException("Adjusting a symbol by an offset is currently only supported for futures");
-                }
-
                 var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
                 // for the current expiration we add a month to get the next one
-                expiration = expiryFunction(expiration.AddMonths(1));
-                symbol = Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, expiration);
+                var monthOffset = 0;
+                DateTime newExpiration;
+                do
+                {
+                    monthOffset++;
+                    newExpiration = expiryFunction(expiration.AddMonths(monthOffset));
+                } while (newExpiration == expiration);
+                symbol = Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, newExpiration);
             }
 
             return symbol;
@@ -3417,6 +3442,8 @@ namespace QuantConnect
         {
             switch (symbol.SecurityType)
             {
+                case SecurityType.Base:
+                    return symbol.HasUnderlying && symbol.Underlying.RequiresMapping();
                 case SecurityType.Future:
                     return symbol.IsCanonical();
                 case SecurityType.Equity:

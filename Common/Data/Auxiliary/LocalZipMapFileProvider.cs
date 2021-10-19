@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.IO;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
@@ -107,7 +106,7 @@ namespace QuantConnect.Data.Auxiliary
             var date = yesterdayNewYork;
             do
             {
-                var zipFileName = Path.Combine(Globals.DataFolder, MapFileZipHelper.GetMapFileZipFileName(market, date, corporateActionsKey.SecurityType));
+                var zipFileName = MapFileZipHelper.GetMapFileZipFileName(market, date, corporateActionsKey.SecurityType);
 
                 // Fetch a stream for our zip from our data provider
                 var stream = _dataProvider.Fetch(zipFileName);

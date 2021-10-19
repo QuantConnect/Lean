@@ -347,10 +347,11 @@ namespace QuantConnect
                     return this;
                 }
                 var id = SecurityIdentifier.Parse(mappedSymbol);
-                var underlying =  new Symbol(id, mappedSymbol, Underlying);
+                var underlying = new Symbol(id, mappedSymbol);
+                underlying = underlying.AdjustSymbolByOffset(contractDepthOffset);
 
                 // we map the underlying
-                return new Symbol(ID, mappedSymbol, underlying.AdjustSymbolByOffset(contractDepthOffset));
+                return new Symbol(ID, underlying.Value, underlying);
             }
 
             // Avoid updating the current instance's underlying Symbol.

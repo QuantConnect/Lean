@@ -121,6 +121,18 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Will determine if price scaling should be used for this subscription configuration
+        /// </summary>
+        /// <param name="config">The subscription data configuration we are processing</param>
+        /// <remarks>One of the objectives of this method is to normalize the 'use price scale'
+        /// check and void code duplication and related issues</remarks>
+        /// <returns>True if ticker prices should be scaled</returns>
+        public static bool PricesShouldBeScaled(this SubscriptionDataConfig config)
+        {
+            return !config.IsCustomData && !config.Symbol.Value.Contains("UNIVERSE") && config.SecurityType == SecurityType.Equity;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BaseData"/> type defined in <paramref name="config"/> with the symbol properly set
         /// </summary>
         public static BaseData GetBaseDataInstance(this SubscriptionDataConfig config)

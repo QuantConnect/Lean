@@ -15,12 +15,11 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
+using System.Collections;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -33,6 +32,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         private readonly Queue<BaseData> _auxiliaryData;
         private bool _initialized;
+        private DateTime _startTime;
+        private IMapFileProvider _mapFileProvider;
+        private IFactorFileProvider _factorFileProvider;
+        private ITradableDateEventProvider[] _tradableDateEventProviders;
+
+        /// <summary>
+        /// The associated data configuration
+        /// </summary>
+        protected SubscriptionDataConfig Config { get; }
 
         /// <summary>
         /// Creates a new instance
@@ -51,47 +59,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             ITradableDatesNotifier tradableDayNotifier,
             DateTime startTime)
         {
+            Config = config;
+            _startTime = startTime;
+            _mapFileProvider = mapFileProvider;
             _auxiliaryData = new Queue<BaseData>();
+            _factorFileProvider = factorFileProvider;
+            _tradableDateEventProviders = tradableDateEventProviders;
 
-            tradableDayNotifier.NewTradableDate += (sender, eventArgs) =>
+            if (tradableDayNotifier != null)
             {
-                if (!_initialized)
-                {
-                    Initialize(config, factorFileProvider, mapFileProvider, tradableDateEventProviders, startTime);
-                }
-
-                foreach (var tradableDateEventProvider in tradableDateEventProviders)
-                {
-                    var newEvents = tradableDateEventProvider.GetEvents(eventArgs).ToList();
-                    foreach (var newEvent in newEvents)
-                    {
-                        _auxiliaryData.Enqueue(newEvent);
-                    }
-                }
-            };
-        }
-
-        /// <summary>
-        /// Late initialization so it is performed in the data feed stack
-        /// and not in the algorithm thread
-        /// </summary>
-        private void Initialize(SubscriptionDataConfig config,
-            IFactorFileProvider factorFileProvider,
-            IMapFileProvider mapFileProvider,
-            ITradableDateEventProvider[] tradableDateEventProviders,
-            DateTime startTime)
-        {
-            foreach (var tradableDateEventProvider in tradableDateEventProviders)
-            {
-                tradableDateEventProvider.Initialize(
-                    config,
-                    factorFileProvider,
-                    mapFileProvider,
-                    startTime);
+                tradableDayNotifier.NewTradableDate += NewTradableDate;
             }
-            _initialized = true;
         }
-
 
         /// <summary>
         /// Advances the enumerator to the next element.
@@ -101,6 +80,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             Current = _auxiliaryData.Count != 0 ? _auxiliaryData.Dequeue() : null;
             return true;
+        }
+
+        /// <summary>
+        /// Handle a new tradable date, drives the <see cref="ITradableDateEventProvider"/> instances
+        /// </summary>
+        protected void NewTradableDate(object sender, NewTradableDateEventArgs eventArgs)
+        {
+            Initialize();
+            for (var i = 0; i < _tradableDateEventProviders.Length; i++)
+            {
+                foreach (var newEvent in _tradableDateEventProviders[i].GetEvents(eventArgs))
+                {
+                    _auxiliaryData.Enqueue(newEvent);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Initializes the underlying tradable data event providers
+        /// </summary>
+        protected void Initialize()
+        {
+            if (!_initialized)
+            {
+                _initialized = true;
+                // Late initialization so it is performed in the data feed stack
+                for (var i = 0; i < _tradableDateEventProviders.Length; i++)
+                {
+                    _tradableDateEventProviders[i].Initialize(Config, _factorFileProvider, _mapFileProvider, _startTime);
+                }
+            }
         }
 
         /// <summary>

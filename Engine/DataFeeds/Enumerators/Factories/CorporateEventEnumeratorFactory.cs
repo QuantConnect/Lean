@@ -53,21 +53,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             DateTime startTime,
             bool enablePriceScaling = true)
         {
-            var lazyFactorFile =
-                new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
 
             var tradableEventProviders = new List<ITradableDateEventProvider>();
 
-            if (config.Symbol.SecurityType == SecurityType.Equity)
+            if (config.PricesShouldBeScaled())
             {
                 tradableEventProviders.Add(new SplitEventProvider());
                 tradableEventProviders.Add(new DividendEventProvider());
             }
 
-            if (config.Symbol.SecurityType == SecurityType.Equity
-                || config.Symbol.SecurityType == SecurityType.Base
-                || config.Symbol.SecurityType == SecurityType.Option
-                || config.Symbol.SecurityType == SecurityType.Future && config.Symbol.IsCanonical())
+            if (config.TickerShouldBeMapped())
             {
                 tradableEventProviders.Add(new MappingEventProvider());
             }
@@ -85,12 +80,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // avoid price scaling for backtesting; calculate it directly in worker
             // and allow subscription to extract the the data depending on config data mode
             var dataEnumerator = rawDataEnumerator;
-            if (enablePriceScaling)
+            if (enablePriceScaling && config.PricesShouldBeScaled())
             {
                 dataEnumerator = new PriceScaleFactorEnumerator(
                     rawDataEnumerator,
                     config,
-                    lazyFactorFile);
+                    factorFileProvider);
             }
 
             return new SynchronizingEnumerator(dataEnumerator, enumerator);

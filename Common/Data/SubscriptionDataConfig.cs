@@ -20,6 +20,7 @@ using System.ComponentModel;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data
@@ -30,6 +31,11 @@ namespace QuantConnect.Data
     public class SubscriptionDataConfig : IEquatable<SubscriptionDataConfig>
     {
         private readonly SecurityIdentifier _sid;
+
+        /// <summary>
+        /// Event fired when there is a new symbol due to mapping
+        /// </summary>
+        public event EventHandler<NewSymbolEventArgs> NewSymbol;
 
         /// <summary>
         /// Type of data
@@ -117,13 +123,25 @@ namespace QuantConnect.Data
         {
             get
             {
-                return Symbol.ID.SecurityType.IsOption() && Symbol.HasUnderlying
-                    ? Symbol.Underlying.Value
-                    : Symbol.Value;
+                if (Symbol.HasUnderlying)
+                {
+                    if (SecurityType == SecurityType.Future)
+                    {
+                        return Symbol.Underlying.ID.ToString();
+                    }
+                    if (SecurityType.IsOption())
+                    {
+                        return Symbol.Underlying.Value;
+                    }
+                }
+                return Symbol.Value;
             }
             set
             {
+                var oldSymbol = Symbol;
                 Symbol = Symbol.UpdateMappedSymbol(value, ContractDepthOffset);
+
+                NewSymbol?.Invoke(this, new NewSymbolEventArgs(Symbol, oldSymbol));
             }
         }
 
@@ -381,6 +399,25 @@ namespace QuantConnect.Data
         {
 
             return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
+        }
+
+        public class NewSymbolEventArgs : EventArgs
+        {
+            /// <summary>
+            /// The old symbol instance
+            /// </summary>
+            public Symbol Old { get; }
+
+            /// <summary>
+            /// The new symbol instance
+            /// </summary>
+            public Symbol New { get; }
+
+            public NewSymbolEventArgs(Symbol @new, Symbol old)
+            {
+                New = @new;
+                Old = old;
+            }
         }
     }
 }

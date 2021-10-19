@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _frontMonth = AddFuture("ES",
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
-                dataMappingMode: DataMappingMode.FirstDayMonth,
+                dataMappingMode: DataMappingMode.LastTradingDay,
                 contractDepthOffset: 0
             );
 

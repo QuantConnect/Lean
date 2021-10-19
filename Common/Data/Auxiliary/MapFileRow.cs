@@ -172,7 +172,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            var encodedExchange = PrimaryExchange == Exchange.UNKNOWN? string.Empty : $",{PrimaryExchange.Code}";
+            var encodedExchange = PrimaryExchange == Exchange.UNKNOWN? "," : $",{PrimaryExchange.Code}";
             var mappingMode = DataMappingMode != null ? $",{DataMappingMode}" : string.Empty;
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}{mappingMode}";
         }

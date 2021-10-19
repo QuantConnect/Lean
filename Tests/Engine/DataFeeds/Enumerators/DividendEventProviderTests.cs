@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using System.Globalization;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -57,11 +58,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.AAPL, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork,
                 false, false, false);
 
-            var mapFile = TestGlobals.MapFileProvider;
-            var factorFile = TestGlobals.FactorFileProvider;
-
             var start = new DateTime(1998, 01, 02);
-            dividendProvider.Initialize(config, factorFile.Get(Symbols.AAPL), mapFile.Get(CorporateActionsKey.EquityUsa).ResolveMapFile(Symbols.AAPL, start), start);
+            dividendProvider.Initialize(config, TestGlobals.FactorFileProvider, TestGlobals.MapFileProvider, start);
 
             var exDividendDate = DateTime.ParseExact(exDividendDateStr, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
@@ -93,17 +91,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var row2 = new DateTime(2001, 01, 02);
             var row3 = new DateTime(2002, 01, 02);
 
-            var factorFile = new FactorFile("AAPL", new []
+            var factorFileProvider = new TestFactorFileProvider
             {
-                new FactorFileRow(row1, 0.693m, 1),
-                new FactorFileRow(row2, 0.77m, 1),
-                new FactorFileRow(row3, 0.85555m, 1)
-            }, start);
-            var mapFile = TestGlobals.MapFileProvider;
+                FactorFile = new FactorFile("AAPL", new []
+                {
+                    new FactorFileRow(row1, 0.693m, 1),
+                    new FactorFileRow(row2, 0.77m, 1),
+                    new FactorFileRow(row3, 0.85555m, 1)
+                }, start)
+            };
 
-            dividendProvider.Initialize(config, factorFile, mapFile.Get(CorporateActionsKey.EquityUsa).ResolveMapFile(Symbols.AAPL, start), start);
+            dividendProvider.Initialize(config, factorFileProvider, TestGlobals.MapFileProvider, start);
 
-            foreach (var row in factorFile.Take(1))
+            foreach (var row in factorFileProvider.FactorFile.Take(1))
             {
                 var lastRawPrice = 100;
                 var events = dividendProvider
@@ -118,6 +118,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                         .GetEvents(new NewTradableDateEventArgs(row.Date.AddDays(1), null, Symbols.AAPL, lastRawPrice))
                         .ToList();
                 });
+            }
+        }
+
+        private class TestFactorFileProvider : IFactorFileProvider
+        {
+            public FactorFile FactorFile { get; set; }
+            public void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider)
+            {
+            }
+
+            public FactorFile Get(Symbol symbol)
+            {
+                return FactorFile;
             }
         }
     }
