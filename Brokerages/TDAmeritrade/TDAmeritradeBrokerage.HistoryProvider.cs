@@ -85,7 +85,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         {
             foreach (var request in requests)
             {
-                var history = GetPriceHistory(tdClient, request.Symbol, request.Resolution, request.StartTimeUtc, request.EndTimeUtc, sliceTimeZone);
+                var history = GetPriceHistory(request.Symbol, request.Resolution, request.StartTimeUtc, request.EndTimeUtc, sliceTimeZone);
 
                 DataPointCount += history.Count();
 
@@ -105,7 +105,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
         /// <param name="startDate"></param>
         /// <param name="endDate"></param>
         /// <returns></returns>
-        public static IEnumerable<TradeBar> GetPriceHistory(TDAmeritradeClient client, Symbol symbol, Resolution resolution, DateTime startDate, DateTime endDate, DateTimeZone sliceTimeZone)
+        public static IEnumerable<TradeBar> GetPriceHistory(Symbol symbol, Resolution resolution, DateTime startDate, DateTime endDate, DateTimeZone sliceTimeZone)
         {
             if (startDate >= endDate)
             {
@@ -124,15 +124,15 @@ namespace QuantConnect.Brokerages.TDAmeritrade
                     break;
 
                 case Resolution.Minute:
-                    history = GetHistoryMinute(client, symbol, start, end);
+                    history = GetHistoryMinute(tdClient, symbol, start, end);
                     break;
 
                 case Resolution.Hour:
-                    history = GetHistoryHour(client, symbol, start, end);
+                    history = GetHistoryHour(tdClient, symbol, start, end);
                     break;
 
                 case Resolution.Daily:
-                    history = GetHistoryDaily(client, symbol, start, end);
+                    history = GetHistoryDaily(tdClient, symbol, start, end);
                     break;
             }
 

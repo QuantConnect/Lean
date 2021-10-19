@@ -64,7 +64,7 @@ namespace QuantConnect.Brokerages.TDAmeritrade
 
         // polling timer for checking for fill events
         private readonly Timer _orderFillTimer;
-        private readonly TDAmeritradeClient tdClient;
+        private static TDAmeritradeClient tdClient;
 
         private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
@@ -99,14 +99,21 @@ namespace QuantConnect.Brokerages.TDAmeritrade
             _accountId = accountId;
             _clientId = clientId;
             _redirectUri = redirectUri;
-            
+
 
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += Subscribe;
             _subscriptionManager.UnsubscribeImpl += Unsubscribe;
+            InitializeClient(clientId, redirectUri, tdCredentials);
+        }
 
-            tdClient = new TDAmeritradeClient(clientId, redirectUri);
-            tdClient.LogIn(tdCredentials).Wait();
+        public static void InitializeClient(string clientId, string redirectUri, ICredentials tdCredentials)
+        {
+            if (tdClient == null)
+            {
+                tdClient = new TDAmeritradeClient(clientId, redirectUri);
+                tdClient.LogIn(tdCredentials).Wait();
+            }
         }
 
         #region IBrokerage implementation
