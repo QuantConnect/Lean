@@ -29,7 +29,7 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         self.AddEquity("SPY", Resolution.Second)
 
         # Create two python indicators, one defines Warm Up
-        self.custom = CSMAWithoutWarmUp('custom', 60)
+        self.custom = CustomSMA('custom', 60)
         self.customWarmUp = CSMAWithWarmUp('customWarmUp', 60)
 
         # The python custom class must inherit from PythonIndicator to enable Updated event handler
@@ -55,7 +55,7 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
 
         if self.Time.second == 0:
             self.Log(f"   customWarmUp -> IsReady: {self.customWarmUp.IsReady}. Value: {self.customWarmUp.Current.Value}")
-            self.Log(f"custom -> IsReady: {self.custom.IsReady}. Value: {self.custom.Value}")
+            self.Log(f"custom -> IsReady: {self.custom.IsReady}. Value: {self.custom.Current.Value}")
 
         # Regression test: test fails with an early quit
         diff = abs(self.custom.Current.Value - self.customWarmUp.Current.Value)
@@ -84,7 +84,7 @@ class CSMAWithWarmUp(PythonIndicator):
 
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
-class CSMAWithoutWarmUp(PythonIndicator):
+class CustomSMA(PythonIndicator):
     def __init__(self, name, period):
         self.Name = name
         self.Value = 0
