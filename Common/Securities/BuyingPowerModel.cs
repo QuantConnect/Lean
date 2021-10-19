@@ -406,9 +406,9 @@ namespace QuantConnect.Securities
 
             // Use the following loop to converge on a value that places us under our target allocation when adjusted for fees
             var lastOrderQuantity = 0m;     // For safety check
-            var signedTargetHoldingsMargin = 0m;
-            var orderFees = 0m;
-            var orderQuantity = 0m;
+            decimal orderFees = 0m;
+            decimal signedTargetHoldingsMargin;
+            decimal orderQuantity;
 
             do
             {
@@ -416,11 +416,12 @@ namespace QuantConnect.Securities
                 orderQuantity = GetAmountToOrder(parameters.Security, signedCurrentUsedMargin, signedTargetFinalMarginValue);
                 if (orderQuantity == 0)
                 {
+                    absDifferenceOfMargin = Math.Abs(signedTargetFinalMarginValue - signedCurrentUsedMargin);
                     var sign = direction == OrderDirection.Buy ? 1 : -1;
                     return new GetMaximumOrderQuantityResult(0,
                         Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
                         Invariant($"and has been rounded to zero. Target order margin {absDifferenceOfMargin * sign}. Order fees ") +
-                        Invariant($"{orderFees}. Order quantity {orderQuantity * sign}."),
+                        Invariant($"{orderFees}. Order quantity {orderQuantity}."),
                         false
                     );
                 }
@@ -434,7 +435,6 @@ namespace QuantConnect.Securities
 
                 // Update our target portfolio margin allocated when considering fees, then calculate the new FinalOrderMargin
                 signedTargetFinalMarginValue = (totalPortfolioValue - orderFees - totalPortfolioValue * RequiredFreeBuyingPowerPercent) * parameters.TargetBuyingPower;
-                absDifferenceOfMargin = Math.Abs(signedTargetFinalMarginValue - signedCurrentUsedMargin);
 
                 // Start safe check after first loop, stops endless recursion
                 if (lastOrderQuantity == orderQuantity)
