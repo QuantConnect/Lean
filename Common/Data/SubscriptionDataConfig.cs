@@ -20,6 +20,7 @@ using System.ComponentModel;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data
@@ -30,6 +31,11 @@ namespace QuantConnect.Data
     public class SubscriptionDataConfig : IEquatable<SubscriptionDataConfig>
     {
         private readonly SecurityIdentifier _sid;
+
+        /// <summary>
+        /// Event fired when there is a new symbol due to mapping
+        /// </summary>
+        public event EventHandler<NewSymbolEventArgs> NewSymbol;
 
         /// <summary>
         /// Type of data
@@ -95,13 +101,11 @@ namespace QuantConnect.Data
         /// Gets the securities mapping mode used for this subscription
         /// </summary>
         /// <remarks>This is particular useful when generating continuous futures</remarks>
-        /// <remarks>TODO: should be move this into class along with <see cref="ContractDepthOffset"/></remarks>
         public DataMappingMode DataMappingMode { get; }
 
         /// <summary>
         /// The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract
-        /// <remarks>TODO: should be move this into class along with <see cref="DataMappingMode"/></remarks>
         /// </summary>
         public uint ContractDepthOffset { get; }
 
@@ -117,13 +121,25 @@ namespace QuantConnect.Data
         {
             get
             {
-                return Symbol.ID.SecurityType.IsOption() && Symbol.HasUnderlying
-                    ? Symbol.Underlying.Value
-                    : Symbol.Value;
+                if (Symbol.HasUnderlying)
+                {
+                    if (SecurityType == SecurityType.Future)
+                    {
+                        return Symbol.Underlying.ID.ToString();
+                    }
+                    if (SecurityType.IsOption())
+                    {
+                        return Symbol.Underlying.Value;
+                    }
+                }
+                return Symbol.Value;
             }
             set
             {
+                var oldSymbol = Symbol;
                 Symbol = Symbol.UpdateMappedSymbol(value, ContractDepthOffset);
+
+                NewSymbol?.Invoke(this, new NewSymbolEventArgs(Symbol, oldSymbol));
             }
         }
 
@@ -254,6 +270,8 @@ namespace QuantConnect.Data
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
@@ -267,7 +285,8 @@ namespace QuantConnect.Data
             TickType? tickType = null,
             bool? isFilteredSubscription = null,
             DataNormalizationMode? dataNormalizationMode = null,
-            DataMappingMode? dataMappingMode = null)
+            DataMappingMode? dataMappingMode = null,
+            uint? contractDepthOffset = null)
             : this(
             objectType ?? config.Type,
             symbol ?? config.Symbol,
@@ -281,7 +300,8 @@ namespace QuantConnect.Data
             tickType ?? config.TickType,
             isFilteredSubscription ?? config.IsFilteredSubscription,
             dataNormalizationMode ?? config.DataNormalizationMode,
-            dataMappingMode ?? config.DataMappingMode
+            dataMappingMode ?? config.DataMappingMode,
+            contractDepthOffset ?? config.ContractDepthOffset
             )
         {
             PriceScaleFactor = config.PriceScaleFactor;
@@ -310,6 +330,7 @@ namespace QuantConnect.Data
                 && DataTimeZone.Equals(other.DataTimeZone)
                 && DataMappingMode == other.DataMappingMode
                 && ExchangeTimeZone.Equals(other.ExchangeTimeZone)
+                && ContractDepthOffset == other.ContractDepthOffset
                 && IsFilteredSubscription == other.IsFilteredSubscription;
         }
 
@@ -349,6 +370,7 @@ namespace QuantConnect.Data
                 hashCode = (hashCode*397) ^ DataMappingMode.GetHashCode();
                 hashCode = (hashCode*397) ^ DataTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ ExchangeTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
+                hashCode = (hashCode*397) ^ ContractDepthOffset.GetHashCode();
                 hashCode = (hashCode*397) ^ IsFilteredSubscription.GetHashCode();
                 return hashCode;
             }
@@ -379,8 +401,26 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
+            return Invariant($"{Symbol.Value},#{ContractDepthOffset},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
+        }
 
-            return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
+        public class NewSymbolEventArgs : EventArgs
+        {
+            /// <summary>
+            /// The old symbol instance
+            /// </summary>
+            public Symbol Old { get; }
+
+            /// <summary>
+            /// The new symbol instance
+            /// </summary>
+            public Symbol New { get; }
+
+            public NewSymbolEventArgs(Symbol @new, Symbol old)
+            {
+                New = @new;
+                Old = old;
+            }
         }
     }
 }

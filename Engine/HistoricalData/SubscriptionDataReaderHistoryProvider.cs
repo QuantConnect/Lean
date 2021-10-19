@@ -111,19 +111,13 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 new SecurityCache()
             );
 
-            var mapFileResolver = MapFileResolver.Empty;
-            if (config.TickerShouldBeMapped())
-            {
-                mapFileResolver = _mapFileProvider.Get(CorporateActionsKey.Create(config.Symbol));
-            }
-
             // Tradable dates are defined with the data time zone to access the right source
             var tradableDates = Time.EachTradeableDayInTimeZone(request.ExchangeHours, startTimeLocal, endTimeLocal, request.DataTimeZone, request.IncludeExtendedMarketHours);
 
             var dataReader = new SubscriptionDataReader(config,
                 startTimeLocal,
                 endTimeLocal,
-                mapFileResolver,
+                _mapFileProvider,
                 _factorFileProvider,
                 tradableDates,
                 false,
@@ -150,7 +144,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 config,
                 _factorFileProvider,
                 dataReader,
-                mapFileResolver,
+                _mapFileProvider,
                 startTimeLocal);
 
             // optionally apply fill forward behavior

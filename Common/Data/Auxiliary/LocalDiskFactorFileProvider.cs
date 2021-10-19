@@ -14,10 +14,10 @@
  *
 */
 
-using System.Collections.Concurrent;
 using System.IO;
-using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Data.Auxiliary
 {

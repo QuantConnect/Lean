@@ -64,6 +64,12 @@ namespace QuantConnect.Data.UniverseSelection
         public DataMappingMode DataMappingMode;
 
         /// <summary>
+        /// The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contra
+        /// </summary>
+        public int ContractDepthOffset;
+
+        /// <summary>
         /// Allows a universe to specify which data types to add for a selected symbol
         /// </summary>
         public List<Tuple<Type, TickType>> SubscriptionDataTypes;
@@ -78,13 +84,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="minimumTimeInUniverse">Defines the minimum amount of time a security must remain in the universe before being removed</param>
         /// <param name="dataNormalizationMode">Defines how universe data is normalized before being send into the algorithm</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
-            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest)
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest, int contractDepthOffset = 0)
         {
             Resolution = resolution;
             Leverage = leverage;
             FillForward = fillForward;
             DataMappingMode = dataMappingMode;
+            ContractDepthOffset = contractDepthOffset;
             ExtendedMarketHours = extendedMarketHours;
             MinimumTimeInUniverse = minimumTimeInUniverse;
             DataNormalizationMode = dataNormalizationMode;
@@ -99,6 +108,7 @@ namespace QuantConnect.Data.UniverseSelection
             Leverage = universeSettings.Leverage;
             FillForward = universeSettings.FillForward;
             DataMappingMode = universeSettings.DataMappingMode;
+            ContractDepthOffset = universeSettings.ContractDepthOffset;
             ExtendedMarketHours = universeSettings.ExtendedMarketHours;
             MinimumTimeInUniverse = universeSettings.MinimumTimeInUniverse;
             DataNormalizationMode = universeSettings.DataNormalizationMode;

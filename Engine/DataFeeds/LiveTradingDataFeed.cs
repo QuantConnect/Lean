@@ -51,6 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IDataQueueHandler _dataQueueHandler;
         private BaseDataExchange _customExchange;
         private SubscriptionCollection _subscriptions;
+        private IFactorFileProvider _factorFileProvider;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private IDataChannelProvider _channelProvider;
 
@@ -86,6 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _timeProvider = dataFeedTimeProvider.TimeProvider;
             _dataProvider = dataProvider;
             _mapFileProvider = mapFileProvider;
+            _factorFileProvider = factorFileProvider;
             _channelProvider = dataChannelProvider;
             _frontierTimeProvider = dataFeedTimeProvider.FrontierTimeProvider;
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
@@ -184,16 +186,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             try
             {
-                var mapFileResolver = MapFileResolver.Empty;
-                if (request.Configuration.TickerShouldBeMapped())
-                {
-                    mapFileResolver = _mapFileProvider.Get(CorporateActionsKey.Create(request.Configuration.Symbol));
-                    // TODO: MOVE to the mapping event provider, perform daily, we need to refresh the resolver itself!
-                    request.Configuration.MappedSymbol = mapFileResolver
-                        .ResolveMapFile(request.Configuration)
-                        .GetMappedSymbol(request.StartTimeLocal);
-                }
-
                 var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
                 var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
@@ -228,27 +220,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
-                    enumerator = _dataQueueHandler.Subscribe(request.Configuration, handler);
-
-                    var securityType = request.Configuration.SecurityType;
                     var auxEnumerators = new List<IEnumerator<BaseData>>();
 
-                    if (securityType == SecurityType.Equity)
+                    if (LiveAuxiliaryDataEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler,
+                        request.Security.Cache, _mapFileProvider, _factorFileProvider, request.StartTimeLocal, out var auxDataEnumator))
+                    {
+                        auxEnumerators.Add(auxDataEnumator);
+                    }
+
+                    EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
+                    enumerator = _dataQueueHandler.Subscribe(request.Configuration, handler);
+
+                    if (request.Configuration.PricesShouldBeScaled())
                     {
                         auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler));
                         auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler));
                     }
 
-                    IEnumerator<BaseData> delistingEnumerator;
-                    if (LiveDelistingEventProviderEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler, request.Security.Cache, mapFileResolver, out delistingEnumerator))
-                    {
-                        auxEnumerators.Add(delistingEnumerator);
-                    }
-
                     if (auxEnumerators.Count > 0)
                     {
-                        enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators.ToArray());
+                        enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators);
                     }
                 }
 

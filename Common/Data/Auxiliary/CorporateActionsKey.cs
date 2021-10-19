@@ -75,6 +75,11 @@ namespace QuantConnect.Data.Auxiliary
                 && other.SecurityType == SecurityType;
         }
 
+        public override string ToString()
+        {
+            return $"{Market}:{SecurityType}";
+        }
+
         /// <summary>
         /// Helper method to create a new instance from a Symbol
         /// </summary>

@@ -49,16 +49,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes this instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
-        /// <param name="factorFile">The factor file to use</param>
-        /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
+        /// <param name="factorFileProvider">The factor file provider to use</param>
+        /// <param name="mapFileProvider">The <see cref="Data.Auxiliary.MapFile"/> provider to use</param>
         /// <param name="startTime">Start date for the data request</param>
         public override void Initialize(
             SubscriptionDataConfig config,
-            FactorFile factorFile,
-            MapFile mapFile,
+            IFactorFileProvider factorFileProvider,
+            IMapFileProvider mapFileProvider,
             DateTime startTime)
         {
-            base.Initialize(config, factorFile, mapFile, startTime);
+            base.Initialize(config, factorFileProvider, mapFileProvider, startTime);
 
             _delistingEnumerator = _dataQueueHandler.Subscribe(_dataConfig, (sender, args) =>
             {

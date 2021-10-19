@@ -15,19 +15,14 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Logging;
-using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -86,14 +81,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            var mapFileResolver = request.Configuration.TickerShouldBeMapped()
-                                    ? _mapFileProvider.Get(CorporateActionsKey.Create(request.Security.Symbol))
-                                    : MapFileResolver.Empty;
-
             var dataReader = new SubscriptionDataReader(request.Configuration,
                 request.StartTimeLocal,
                 request.EndTimeLocal,
-                mapFileResolver,
+                _mapFileProvider,
                 _factorFileProvider,
                 _tradableDaysProvider(request),
                 _isLiveMode,
@@ -126,7 +117,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 request.Configuration,
                 _factorFileProvider,
                 dataReader,
-                mapFileResolver,
+                _mapFileProvider,
                 request.StartTimeLocal,
                 _enablePriceScaling);
 
@@ -170,45 +161,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
 
             _zipDataCacheProvider?.DisposeSafely();
-        }
-    }
-
-    public class ContinuousContractEnumerator : IEnumerator<BaseData>
-    {
-        private IEnumerator<BaseData> _underlying;
-        private Symbol _continuousContract;
-
-        public BaseData Current { get; private set; }
-
-        object IEnumerator.Current => Current;
-
-        public ContinuousContractEnumerator(IEnumerator<BaseData> underlying, Symbol continuousContract)
-        {
-            _underlying = underlying;
-            _continuousContract = continuousContract;
-        }
-
-        public bool MoveNext()
-        {
-            var result = _underlying.MoveNext();
-
-            if (_underlying.Current != null)
-            {
-                Current = _underlying.Current.Clone(false);
-                Current.Symbol = _continuousContract;
-            }
-
-            return result;
-        }
-
-        public void Reset()
-        {
-            _underlying.Reset();
-        }
-
-        public void Dispose()
-        {
-            _underlying.Dispose();
         }
     }
 }

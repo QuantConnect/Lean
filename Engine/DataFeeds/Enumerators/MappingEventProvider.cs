@@ -15,11 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -28,15 +28,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class MappingEventProvider : ITradableDateEventProvider
     {
-        private MapFile _mapFile;
+        private IMapFileProvider _mapFileProvider;
         private SubscriptionDataConfig _config;
+        private MapFile _mapFile;
 
         /// <summary>
         /// Initializes this instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="factorFileProvider">The factor file provider to use</param>
-        /// <param name="mapFileProvider">The <see cref="MapFile"/> provider to use</param>
+        /// <param name="mapFileProvider">The <see cref="Data.Auxiliary.MapFile"/> provider to use</param>
         /// <param name="startTime">Start date for the data request</param>
         public virtual void Initialize(
             SubscriptionDataConfig config,
@@ -44,8 +45,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             IMapFileProvider mapFileProvider,
             DateTime startTime)
         {
-            _mapFile = mapFileProvider.Get(CorporateActionsKey.Create(config.Symbol)).ResolveMapFile(config);
+            _mapFileProvider = mapFileProvider;
             _config = config;
+            InitializeMapFile();
+
             if (_mapFile.HasData(startTime.Date))
             {
                 // initialize mapped symbol using request start date
@@ -58,14 +61,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="eventArgs">The new tradable day event arguments</param>
         /// <returns>New mapping event if any</returns>
-        public IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
+        public virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            var mapfile = GetMapFile();
             if (_config.Symbol == eventArgs.Symbol
-                && mapfile.HasData(eventArgs.Date))
+                && _mapFile.HasData(eventArgs.Date))
             {
                 // check to see if the symbol was remapped
-                var newSymbol = mapfile.GetMappedSymbol(eventArgs.Date, _config.MappedSymbol);
+                var newSymbol = _mapFile.GetMappedSymbol(eventArgs.Date, _config.MappedSymbol);
                 if (newSymbol != _config.MappedSymbol)
                 {
                     var changed = new SymbolChangedEvent(
@@ -79,9 +81,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
         }
 
-        protected virtual MapFile GetMapFile()
+        /// <summary>
+        /// Initializes the map file to use
+        /// </summary>
+        protected void InitializeMapFile()
         {
-            return mapFileProvider.Get(CorporateActionsKey.Create(config.Symbol)).ResolveMapFile(config);;
+            _mapFile = _mapFileProvider.ResolveMapFile(_config);
         }
     }
 }
