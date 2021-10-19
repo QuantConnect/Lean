@@ -472,8 +472,8 @@ namespace QuantConnect.Securities
         /// Helper function that determines the amount to order to get to a given target safely.
         /// Meaning it will either be at or just below target always.
         /// </summary>
-        /// <param name="security">Security we are determine order size for</param>
-        /// <param name="targetMargin">Target margin</param>
+        /// <param name="security">Security we are to determine order size for</param>
+        /// <param name="targetMargin">Target margin allocated</param>
         /// <param name="marginForOneUnit">Margin requirement for one unit; used in our initial order guess</param>
         /// <returns>The size of the order to get safely to our target</returns>
         public decimal GetAmountToOrder([NotNull]Security security, decimal targetMargin, decimal marginForOneUnit)
@@ -522,7 +522,22 @@ namespace QuantConnect.Securities
                 if (Math.Abs(newDifference) > Math.Abs(marginDifference) && Math.Sign(newDifference) == Math.Sign(marginDifference))
                 {
                     // We have a problem and are correcting in the wrong direction
-                    throw new ArgumentException("BuyingPowerModel(): Margin is being adjusted in the wrong direction");
+                    var errorMessage =
+                        "BuyingPowerModel().GetAmountToOrder(): Margin is being adjusted in the wrong direction." +
+                        $"Reproduce this issue with the following variables, Target Margin: {targetMargin}; MarginForOneUnit: {marginForOneUnit};" +
+                        $"Security Holdings: {security.Holdings.Quantity} @ {security.Holdings.AveragePrice};" +
+                        $"LotSize: {security.SymbolProperties.LotSize}; Price: {security.Close}; Leverage: {security.Leverage}";
+
+                    // Need to add underlying value to message to reproduce with options
+                    if (security is Option.Option option && option.Underlying != null)
+                    {
+                        var underlying = option.Underlying;
+                        errorMessage +=
+                            $" Underlying Security: {underlying.Symbol.ID}; Underlying Price: {underlying.Close};" +
+                            $" Underlying Holdings: {underlying.Holdings.Quantity} @ {underlying.Holdings.AveragePrice};";
+                    }
+
+                    throw new ArgumentException(errorMessage);
                 }
 
                 marginDifference = newDifference;
