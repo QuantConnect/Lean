@@ -44,6 +44,10 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         self.RegisterIndicator("SPY", self.customWarmUp, Resolution.Minute)
         self.RegisterIndicator("SPY", self.custom, Resolution.Minute)
 
+        # Try to warm up both indicators
+        self.WarmUpIndicator("SPY", self.customWarmUp, Resolution.Minute)
+        self.WarmUpIndicator("SPY", self.custom, Resolution.Minute)
+
         # Helper variable to save the number of samples processed
         self.Samples = 0
 

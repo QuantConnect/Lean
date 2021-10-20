@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -587,7 +587,7 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
-        /// from the consolidator. Aditionally, warms up the indicator if the variable EnableAutomaticIndicatorWarmUp is set to true
+        /// from the consolidator.
         /// </summary>
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
@@ -616,11 +616,20 @@ namespace QuantConnect.Algorithm
             }
 
             RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+        }
 
-            // Check if we can warm up the indicator with WarmUpIndicator method
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        public void WarmUpIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null)
+        {
             if (EnableAutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(symbol, WrapPythonIndicator(indicator), Resolution.Minute);
+                WarmUpIndicator(symbol, WrapPythonIndicator(indicator), resolution);
             }
         }
 
