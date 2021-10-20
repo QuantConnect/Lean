@@ -415,6 +415,8 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     },
+    
+    // defines the 'live-kraken' environment
     "live-kraken": {
       "live-mode": true,
 
