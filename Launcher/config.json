@@ -193,6 +193,12 @@
   "ftx-api-secret": "",
   "ftx-api-key": "",
 
+  // td ameritrade configuration
+  "tda-account-id": "",
+  "tda-client-id": "",
+  "tda-redirect-uri": "",
+  "tda-credentials-provider": "QuantConnect.Brokerages.TDAmeritrade.TDCliCredentialProvider",
+
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
     // Intrinio account user and password
@@ -433,6 +439,20 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "QuantConnect.FTXBrokerage.FTXBrokerage",
       "data-queue-handler": "QuantConnect.FTXBrokerage.FTXBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": "BrokerageHistoryProvider"
+    },
+
+    "live-tda": {
+      "live-mode": true,
+
+      "live-mode-brokerage": "TDAmeritradeBrokerage",
+      "data-queue-handler": "TDAmeritradeBrokerage",
+
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
