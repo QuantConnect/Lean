@@ -412,29 +412,42 @@ namespace QuantConnect.Tests.Common.Securities
                 quantity.Value);
         }
 
-        // This test set showcases some odd behaviour by our OptionMarginModel margin requirement calculation
-        // Each test has the same end target of ~-1.5% (~-15K). Yet, if we are already shorted or long we reduce holdings to 0,
-        // this is because the requirement for a short option position is at base ~-200K, but the issue is if we have zero holdings
-        // it allows us to buy -31 contracts for 478 margin requirement per unit. This is because the margin requirement seems to be 
-        // contingent upon the current holdings.
-        [TestCase(-31, 31)] // Short to Short (-31 + 31 = 0)
-        [TestCase(0, -31)] // Open Short (0 + -31 = -31)
-        [TestCase(31, -31)] // Long To Short (31 + -31 = 0)
-        public void CallOTMShort_TargetUnderMarginRequirement(int startingHoldings, int expectedOrderSize)
-        {
-            // Reproduces issue at https://www.quantconnect.com/forum/discussion/12470/runtime-error-getmaximumorderquantityfortargetbuyingpower-failed
-            SymbolCache.Clear();
+        // This test set showcases some odd behaviour by our OptionMarginModel margin requirement calculation.
 
+        // ~-1.5% Target (~-15K). If we are already shorted or long we reduce holdings to 0, this is because the requirement for a
+        // short option position is at base ~-200K, but the issue is if we have zero holdings it allows us to buy -31 contracts for
+        // 478 margin requirement per unit. This is because the margin requirement seems to be contingent upon the current holdings.
+        [TestCase(-31, 31, -.015)] // Short to Short (-31 + 31 = 0)
+        [TestCase(0, -31, -.015)] // Open Short (0 + -31 = -31)
+        [TestCase(31, -31, -.015)] // Long To Short (31 + -31 = 0)
+
+        // -40% Target (~-400k), All end up at different allocations.
+        // This is because of the initial margin requirement calculations.
+        [TestCase(-31, -380, -0.40)] // Short to Shorter (-31 + -380 = -411)
+        [TestCase(0, -836, -0.40)] // Open Short (0 + -836 = -836)
+        [TestCase(31, -467, -0.40)] // Long To Short (31 + -467 = -436)
+
+        // 40% Target (~400k), All end up at different allocations.
+        // This is because of the initial margin requirement calculations.
+        [TestCase(-31, 855, 0.40)] // Short to Long (-31 + 855 = 824)
+        [TestCase(0, 836, 0.40)] // Open Long (0 + 836 = 836)
+        [TestCase(31, 818, 0.40)] // Long To Longer (31 + 818 = 849)
+
+        // ~0.04% Target (~400). This is below the needed margin for one unit. We end up at 0 holdings for all cases.
+        [TestCase(-31, 31, 0.0004)] // Short to Long (-31 + 31 = 0)
+        [TestCase(0, 0, 0.0004)] // Open Long (0 + 0 = 0)
+        [TestCase(31, -31, 0.0004)] // Long To Longer (31 + -31 = 0)
+        public void CallOTM_MarginRequirement(int startingHoldings, int expectedOrderSize, decimal targetPercentage)
+        {
             // Initialize algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SetFinishedWarmingUp();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
 
-            algorithm.SetCash(1014678.500);
+            algorithm.SetCash(1000000);
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
 
-            var optionContract = SecurityIdentifier.Parse("SPY XPFJZXLFPOBQ | SPY R735QTJ8XC9X");
-            Symbol optionSymbol = new Symbol(optionContract, optionContract.Symbol);
+            var optionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 411m, DateTime.UtcNow);
             var option = algorithm.AddOptionContract(optionSymbol);
 
             option.Holdings.SetHoldings(4.74m, startingHoldings);
@@ -447,130 +460,8 @@ namespace QuantConnect.Tests.Common.Securities
             // Update the underlying data
             UpdatePrice(option.Underlying, 395.51m);
 
-            // Set our target percentage; 
-            var newTarget = -0.0149624947680201388093639063m;
-
             var model = new OptionMarginModel();
-            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, newTarget, 0);
-            Assert.AreEqual(expectedOrderSize, result.Quantity);
-        }
-
-        // This test set showcases some odd behaviour by our OptionMarginModel margin requirement calculation
-        // Each test has the same end target of ~-40% (~-400K). Yet end up at different allocations. See final holdings 
-        // by test case below. This is because of the initial margin requirement calculations.
-        [TestCase(-31, -393)] // Short to Shorter (-31 + -393 = -424)
-        [TestCase(0, -849)] // Open Short (0 + -849 = -849)
-        [TestCase(31, -479)] // Long To Short (31 + -479 = -448)
-        public void CallOTMShort_TargetOverMarginRequirement(int startingHoldings, int expectedOrderSize)
-        {
-            SymbolCache.Clear();
-
-            // Initialize algorithm
-            var algorithm = new QCAlgorithm();
-            algorithm.SetFinishedWarmingUp();
-            algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-
-            algorithm.SetCash(1014678.500);
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-
-            var optionContract = SecurityIdentifier.Parse("SPY XPFJZXLFPOBQ | SPY R735QTJ8XC9X");
-            Symbol optionSymbol = new Symbol(optionContract, optionContract.Symbol);
-            var option = algorithm.AddOptionContract(optionSymbol);
-
-            option.Holdings.SetHoldings(4.74m, startingHoldings);
-            option.FeeModel = new ConstantFeeModel(0);
-            option.SetLeverage(1);
-
-            // Update option data
-            UpdatePrice(option, 4.78m);
-
-            // Update the underlying data
-            UpdatePrice(option.Underlying, 395.51m);
-
-            // Set our target percentage; 
-            var newTarget = -0.40m;
-
-            var model = new OptionMarginModel();
-            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, newTarget, 0);
-            Assert.AreEqual(expectedOrderSize, result.Quantity);
-        }
-
-        // Each test has the same end target of ~0.04% (~400). This is below the needed margin for one unit.
-        // As a result we end up at 0 holdings for all cases
-        [TestCase(-31, 31)] // Short to Long (-31 + 31 = 0)
-        [TestCase(0, 0)] // Open Long (0 + 0 = 0)
-        [TestCase(31, -31)] // Long To Longer (31 + -31 = 0)
-        public void CallOTMLong_TargetUnderMarginRequirement(int startingHoldings, int expectedOrderSize)
-        {
-            SymbolCache.Clear();
-
-            // Initialize algorithm
-            var algorithm = new QCAlgorithm();
-            algorithm.SetFinishedWarmingUp();
-            algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-
-            algorithm.SetCash(1014678.500);
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-
-            var optionContract = SecurityIdentifier.Parse("SPY XPFJZXLFPOBQ | SPY R735QTJ8XC9X");
-            Symbol optionSymbol = new Symbol(optionContract, optionContract.Symbol);
-            var option = algorithm.AddOptionContract(optionSymbol);
-
-            option.Holdings.SetHoldings(4.74m, startingHoldings);
-            option.FeeModel = new ConstantFeeModel(0);
-            option.SetLeverage(1);
-
-            // Update option data
-            UpdatePrice(option, 4.78m);
-
-            // Update the underlying data
-            UpdatePrice(option.Underlying, 395.51m);
-
-            // Set our target percentage; 
-            var newTarget = 0.0004m;
-
-            var model = new OptionMarginModel();
-            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, newTarget, 0);
-            Assert.AreEqual(expectedOrderSize, result.Quantity);
-        }
-
-        // This test set showcases some odd behaviour by our OptionMarginModel margin requirement calculation
-        // Each test has the same end target of ~40% (~400K). Yet end up at different allocations. See final holdings 
-        // by test case below. This is because of the initial margin requirement calculations.
-        [TestCase(-31, 867)] // Short to Long (-31 + 867 = 836)
-        [TestCase(0, 849)] // Open Long (0 + 849 = 849)
-        [TestCase(31, 830)] // Long To Longer (31 + 830 = 861)
-        public void CallOTMLong_TargetOverMarginRequirement(int startingHoldings, int expectedOrderSize)
-        {
-            SymbolCache.Clear();
-
-            // Initialize algorithm
-            var algorithm = new QCAlgorithm();
-            algorithm.SetFinishedWarmingUp();
-            algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-
-            algorithm.SetCash(1014678.500);
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-
-            var optionContract = SecurityIdentifier.Parse("SPY XPFJZXLFPOBQ | SPY R735QTJ8XC9X");
-            Symbol optionSymbol = new Symbol(optionContract, optionContract.Symbol);
-            var option = algorithm.AddOptionContract(optionSymbol);
-
-            option.Holdings.SetHoldings(4.74m, startingHoldings);
-            option.FeeModel = new ConstantFeeModel(0);
-            option.SetLeverage(1);
-
-            // Update option data
-            UpdatePrice(option, 4.78m);
-
-            // Update the underlying data
-            UpdatePrice(option.Underlying, 395.51m);
-
-            // Set our target percentage; 
-            var newTarget = 0.40m;
-
-            var model = new OptionMarginModel();
-            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, newTarget, 0);
+            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, targetPercentage, 0);
             Assert.AreEqual(expectedOrderSize, result.Quantity);
         }
 

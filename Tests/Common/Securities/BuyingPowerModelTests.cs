@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Common.Securities
             var currentHoldingsMargin = _model.GetInitialMarginRequirement(spy, spy.Holdings.Quantity);
 
             // Determine the order size to get us to our target margin
-            var orderSize = _model.GetAmountToOrder(spy, targetMargin, perUnitMargin);
+            var orderSize = _model.GetAmountToOrder(spy, targetMargin, perUnitMargin, out _);
             Assert.AreEqual(expectedOrderSize, orderSize);
 
             // Determine the final margin and assert we have met our target condition
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Determine the adjustment to get us to our target margin and apply it
             // Use our GetAmountToOrder for determining adjustment to reach the end goal
             var orderAdjustment =
-                _model.GetAmountToOrder(spy, targetMargin, perUnitMargin);
+                _model.GetAmountToOrder(spy, targetMargin, perUnitMargin, out _);
 
             // Apply the change in margin
             var resultMargin = currentHoldingsMargin + (orderAdjustment * perUnitMargin);
@@ -108,8 +108,7 @@ namespace QuantConnect.Tests.Common.Securities
         /// <returns>Equity with the given setup values</returns>
         private static Security SetupSecurity(decimal currentHoldings, decimal lotSize, decimal perUnitMargin)
         {
-            var spySID = SecurityIdentifier.Parse("SPY R735QTJ8XC9X");
-            var spy = new QuantConnect.Securities.Equity.Equity(new Symbol(spySID, spySID.Symbol), SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("$", 0, 1),
+            var spy = new QuantConnect.Securities.Equity.Equity(Symbols.SPY, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("$", 0, 1),
                 new SymbolProperties(null, "$", 1, 0.01m, lotSize, null, 0), null, null, new SecurityCache());
 
             spy.Holdings.SetHoldings(perUnitMargin, currentHoldings);

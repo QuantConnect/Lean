@@ -413,15 +413,14 @@ namespace QuantConnect.Securities
             do
             {
                 // Calculate our order quantity
-                orderQuantity = GetAmountToOrder(parameters.Security, signedTargetFinalMarginValue, absUnitMargin);
+                orderQuantity = GetAmountToOrder(parameters.Security, signedTargetFinalMarginValue, absUnitMargin, out signedTargetHoldingsMargin);
                 if (orderQuantity == 0)
                 {
                     string reason = null;
                     if (!parameters.SilenceNonErrorReasons)
                     {
                         reason = Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
-                            Invariant($"and has been rounded to zero. Target order margin {signedTargetFinalMarginValue - signedCurrentUsedMargin}. ") +
-                            Invariant($"Order fees {orderFees}. Order quantity {orderQuantity}.");
+                            Invariant($"and has been rounded to zero. Target order margin {signedTargetFinalMarginValue - signedCurrentUsedMargin}. ");
                     }
 
                     return new GetMaximumOrderQuantityResult(0, reason, false);
@@ -457,9 +456,6 @@ namespace QuantConnect.Securities
                 }
                 lastOrderQuantity = orderQuantity;
 
-                // Update our target holdings margin
-                signedTargetHoldingsMargin = this.GetInitialMarginRequirement(parameters.Security,
-                    orderQuantity + parameters.Security.Holdings.Quantity);
             }
             // Ensure that our target holdings margin will be less than or equal to our target allocated margin
             while (Math.Abs(signedTargetHoldingsMargin) > Math.Abs(signedTargetFinalMarginValue));
@@ -475,8 +471,9 @@ namespace QuantConnect.Securities
         /// <param name="security">Security we are to determine order size for</param>
         /// <param name="targetMargin">Target margin allocated</param>
         /// <param name="marginForOneUnit">Margin requirement for one unit; used in our initial order guess</param>
+        /// <param name="finalMargin">Output the final margin allocated to this security</param>
         /// <returns>The size of the order to get safely to our target</returns>
-        public decimal GetAmountToOrder([NotNull]Security security, decimal targetMargin, decimal marginForOneUnit)
+        public decimal GetAmountToOrder([NotNull]Security security, decimal targetMargin, decimal marginForOneUnit, out decimal finalMargin)
         {
             var lotSize = security.SymbolProperties.LotSize;
 
@@ -499,7 +496,7 @@ namespace QuantConnect.Securities
             orderSize = orderSize.DiscretelyRoundBy(lotSize, roundingMode);
 
             // Use our model to calculate this final margin as a final check
-            var finalMargin = this.GetInitialMarginRequirement(security,
+            finalMargin = this.GetInitialMarginRequirement(security,
                     orderSize + security.Holdings.Quantity);
 
             // Until our absolute final margin is equal to or below target we need to adjust; ensures we don't overshoot target
