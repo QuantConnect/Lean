@@ -261,7 +261,7 @@ class BadCustomIndicator(PythonIndicator):
             var period = ((IIndicatorWarmUpPeriodProvider)SMAWithWarmUpPeriod).WarmUpPeriod;
 
             // Check is using the value we defined for WarmUpPeriod
-            Assert.AreEqual(14, period);
+            Assert.AreEqual(period, 14);
 
             for (var i = 0; i < period; i++)
             {
