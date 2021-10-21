@@ -260,9 +260,6 @@ class BadCustomIndicator(PythonIndicator):
             var reference = new DateTime(2000, 1, 1, 0, 0, 0);
             var period = ((IIndicatorWarmUpPeriodProvider)SMAWithWarmUpPeriod).WarmUpPeriod;
 
-            // Check is using the value we defined for WarmUpPeriod
-            Assert.AreEqual(14, period);
-
             for (var i = 0; i < period; i++)
             {
                 SMAWithWarmUpPeriod.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
@@ -271,7 +268,7 @@ class BadCustomIndicator(PythonIndicator):
         }
 
         [Test]
-        public void DefaultWarmUpPeriod()
+        public void SetWarmUpPeriod()
         {
             using (Py.GIL())
             {
@@ -286,6 +283,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
         self.Name = name
         self.Value = 0
         self.queue = deque(maxlen=period)
+        self.WarmUpPeriod = period
 
     # Update method is mandatory
     def Update(self, input):
@@ -299,7 +297,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
                     .Invoke("custom".ToPython(), 14.ToPython());
                 var indicator = new PythonIndicator(pythonIndicator);
 
-                Assert.AreEqual(0, indicator.WarmUpPeriod);
+                Assert.AreEqual(14, indicator.WarmUpPeriod);
             }
         }
     }
