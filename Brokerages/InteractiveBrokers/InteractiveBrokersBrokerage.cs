@@ -1969,9 +1969,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Symbol = ibSymbol,
                 Exchange = exchange ?? GetSymbolExchange(symbol),
-                SecType = securityType,
-                Currency = Currencies.USD
+                SecType = securityType
             };
+
+            // workaround to make swedish crypto ETFs work, 'Smart' does not work here
+            if (ibSymbol.Contains("COIN", StringComparison.InvariantCultureIgnoreCase))
+            {
+                contract.Currency = Currencies.EUR;
+                contract.Exchange = "SFB";
+            }
+
             if (symbol.ID.SecurityType == SecurityType.Forex)
             {
                 // forex is special, so rewrite some of the properties to make it work
