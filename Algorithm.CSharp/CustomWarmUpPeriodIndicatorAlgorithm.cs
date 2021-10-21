@@ -18,121 +18,128 @@ using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Indicators;
-using Python.Runtime;
+using QuantConnect.Data;
+using System.Collections;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Custom implementation of SimpleMovingAverage.
+    /// Represents the traditional simple moving average indicator (SMA) with WarmUpPeriod defined
+    /// </summary>
+    public class CSMAWithWarmUp : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
+    {
+        private Queue<IBaseData> _queue;
+        public CSMAWithWarmUp(string name, int period)
+            :base(name)
+        {
+            _queue = new Queue<IBaseData>();
+            WarmUpPeriod = period;
+        }
+        public int WarmUpPeriod { get; private set; }
+
+        public override bool IsReady => _queue.Count == WarmUpPeriod;
+
+        protected override decimal ComputeNextValue(IBaseData input)
+        {
+            _queue.Enqueue(input);
+            if (_queue.Count > WarmUpPeriod)
+            {
+                _queue.Dequeue();
+            }
+            var items = (_queue.ToArray());
+            var sum = 0m;
+            Array.ForEach(items, i => sum += i.Value);
+            return sum / _queue.Count;
+        }
+    }
+
+    /// <summary>
+    /// Custom implementation of SimpleMovingAverage.
+    /// Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
+    /// </summary>
+    public class CustomSMA : IndicatorBase<IBaseData>
+    {
+        private Queue<IBaseData> _queue;
+        private int _period;
+        public CustomSMA(string name, int period)
+            : base(name)
+        {
+            _queue = new Queue<IBaseData>();
+            _period = period;
+        }
+
+        public override bool IsReady => _queue.Count == _period;
+
+        protected override decimal ComputeNextValue(IBaseData input)
+        {
+            _queue.Enqueue(input);
+            if (_queue.Count > _period)
+            {
+                _queue.Dequeue();
+            }
+            var items = (_queue.ToArray());
+            var sum = 0m;
+            Array.ForEach(items, i => sum += i.Value);
+            return sum / _queue.Count;
+        }
+    }
+
     /// <summary>
     /// Regression test to check Python indicator is keeping backwards compatibility 
     /// with indicators that do not set WarmUpPeriod.
     /// </summary>
     public class CustomWarmUpPeriodIndicatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        PyObject rawCustom;
-        PyObject rawCustomWarmUp;
-        PythonIndicator custom;
-        PythonIndicator customWarmUp;
+        CustomSMA custom;
+        CSMAWithWarmUp customWarmUp;
         RollingWindow<IndicatorDataPoint> customWarmUpWindow;
         RollingWindow<IndicatorDataPoint> customWindow;
         int samples;
 
     public override void Initialize()
         {
-            using (Py.GIL())
+            SetStartDate(2013, 10, 7);
+            SetEndDate(2013, 10, 11);
+            AddEquity("SPY", Resolution.Second);
+
+            // Create two python indicators, one defines Warm Up
+            custom = new CustomSMA("custom", 60);
+            customWarmUp = new CSMAWithWarmUp("customWarmUp", 60);
+
+            // The python custom class must inherit from PythonIndicator to enable Updated event handler
+            customWarmUp.Updated += CustomWarmUpUpdated;
+            custom.Updated += CustomUpdated;
+
+            // Register the indicators
+            customWarmUpWindow = new RollingWindow<IndicatorDataPoint>(5);
+            customWindow = new RollingWindow<IndicatorDataPoint>(5);
+            RegisterIndicator("SPY", customWarmUp, Resolution.Minute);
+            RegisterIndicator("SPY", custom, Resolution.Minute);
+
+            // Try to warm up both indicators
+            WarmUpIndicator("SPY", customWarmUp, Resolution.Minute);
+
+            // Check customWarmUp indicator has already warmed up the data
+            if (!customWarmUp.IsReady)
             {
-                // Get the Python module of the custom indicators
-                var module = PythonEngine.ModuleFromString(
-                    Guid.NewGuid().ToString(),
-                    @"
-# Python implementation of SimpleMovingAverage.
-# Represents the traditional simple moving average indicator (SMA) With Warm Up Period parameter defined
-from AlgorithmImports import *
-from collections import deque
-
-# Python implementation of SimpleMovingAverage.
-# Represents the traditional simple moving average indicator (SMA) With Warm Up Period parameter defined
-class CSMAWithWarmUp(PythonIndicator):
-    def __init__(self, name, period):
-        self.Name = name
-        self.Value = 0
-        self.queue = deque(maxlen=period)
-        self.WarmUpPeriod = period
-
-    # Update method is mandatory
-    def Update(self, input):
-        self.queue.appendleft(input.Value)
-        count = len(self.queue)
-        self.Value = np.sum(self.queue) / count
-        return count == self.queue.maxlen
-
-# Python implementation of SimpleMovingAverage.
-# Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
-class CustomSMA(PythonIndicator):
-    def __init__(self, name, period):
-        self.Name = name
-        self.Value = 0
-        self.queue = deque(maxlen=period)
-
-    # Update method is mandatory
-    def Update(self, input):
-        self.queue.appendleft(input.Value)
-        count = len(self.queue)
-        self.Value = np.sum(self.queue) / count
-        return count == self.queue.maxlen
-"
-                );
-
-                SetStartDate(2013, 10, 7);
-                SetEndDate(2013, 10, 11);
-                AddEquity("SPY", Resolution.Second);
-
-                // Create two python indicators, one defines Warm Up
-                rawCustom = module.GetAttr("CustomSMA")
-                    .Invoke("custom".ToPython(), 60.ToPython());
-                custom = new PythonIndicator(rawCustom);
-
-                rawCustomWarmUp = module.GetAttr("CSMAWithWarmUp")
-                    .Invoke("customWarmUp".ToPython(), 60.ToPython());
-                customWarmUp = new PythonIndicator(rawCustomWarmUp);
-
-                // The python custom class must inherit from PythonIndicator to enable Updated event handler
-                customWarmUp.Updated += CustomWarmUpUpdated;
-                custom.Updated += CustomUpdated;
-
-                // Register the indicators
-                customWarmUpWindow = new RollingWindow<IndicatorDataPoint>(5);
-                customWindow = new RollingWindow<IndicatorDataPoint>(5);
-                RegisterIndicator("SPY", customWarmUp, Resolution.Minute);
-                RegisterIndicator("SPY", custom, Resolution.Minute);
-
-                // Try to warm up both indicators
-                WarmUpIndicator("SPY", customWarmUp, Resolution.Minute);
-
-                // Check customWarmUp indicator has already warmed up the data
-                if (!customWarmUp.IsReady)
-                {
-                    throw new Exception("customWarmUp indicator was expected to be ready");
-                }
-                if (customWarmUp.Samples != 60)
-                {
-                    throw new Exception("customWarmUp was expected to have processed datapoints 60 already");
-                }
-
-                WarmUpIndicator("SPY", custom, Resolution.Minute);
-
-                // Check custom indicator is not ready and is using the default WarmUpPeriod value
-                if (custom.IsReady)
-                {
-                    throw new Exception("custom indicator wasn't expected to be warmed up");
-                }
-                if (custom.WarmUpPeriod != 0)
-                {
-                    throw new Exception("custom indicator WarmUpPeriod parameter was expected to be 0");
-                }
-
-                // Helper variable to save the number of samples processed
-                samples = 0;
+                throw new Exception("customWarmUp indicator was expected to be ready");
             }
+            if (customWarmUp.Samples != 60)
+            {
+                throw new Exception("customWarmUp was expected to have processed datapoints 60 already");
+            }
+
+            WarmUpIndicator("SPY", custom, Resolution.Minute);
+
+            // Check custom indicator is not ready and is using the default WarmUpPeriod value
+            if (custom.IsReady)
+            {
+                throw new Exception("custom indicator wasn't expected to be warmed up");
+            }
+
+            // Helper variable to save the number of samples processed
+            samples = 0;
         }
 
         public void CustomUpdated(object sender, IndicatorDataPoint updated)
