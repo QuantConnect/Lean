@@ -45,9 +45,9 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         # Try to warm up both indicators
         self.WarmUpIndicator("SPY", self.customWarmUp, Resolution.Minute)
 
-         # Check customWarmUp indicator has already warmed up the data
+        # Check customWarmUp indicator has already warmed up the data
         assert(self.customWarmUp.IsReady == True), "customWarmUp indicator was expected to be ready"
-        assert(self.customWarmUp.Samples == 60), "customWarmUp was expected to have processed 60 already"
+        assert(self.customWarmUp.Samples == 60), "customWarmUp was expected to have processed 60 datapoints already"
 
         self.WarmUpIndicator("SPY", self.custom, Resolution.Minute)
 
