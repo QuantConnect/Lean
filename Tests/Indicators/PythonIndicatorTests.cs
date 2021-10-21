@@ -261,7 +261,7 @@ class BadCustomIndicator(PythonIndicator):
             var period = ((IIndicatorWarmUpPeriodProvider)SMAWithWarmUpPeriod).WarmUpPeriod;
 
             // Check is using the value we defined for WarmUpPeriod
-            Assert.AreEqual(period, 14);
+            Assert.AreEqual(14, period);
 
             for (var i = 0; i < period; i++)
             {
@@ -299,7 +299,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
                     .Invoke("custom".ToPython(), 14.ToPython());
                 var indicator = new PythonIndicator(pythonIndicator);
 
-                Assert.AreEqual(indicator.WarmUpPeriod, 0);
+                Assert.AreEqual(0, indicator.WarmUpPeriod);
             }
         }
     }
