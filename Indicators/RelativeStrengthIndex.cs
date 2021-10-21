@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -98,7 +100,8 @@ namespace QuantConnect.Indicators
             var averageLoss = AverageLoss < 0 ? 0 : AverageLoss.Current.Value;
             var averageGain = AverageGain < 0 ? 0 : AverageGain.Current.Value;
 
-            if (averageLoss == 0m)
+            // Round AverageLoss to avoid computing RSI with very small numbers that lead to overflow exception on the division operation below
+            if (Math.Round(averageLoss, 10) == 0m)
             {
                 // all up days is 100
                 return 100m;
