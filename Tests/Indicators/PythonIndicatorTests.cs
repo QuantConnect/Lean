@@ -46,7 +46,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
         self.Name = name
         self.Value = 0
         self.queue = deque(maxlen=period)
-        #self.WarmUpPeriod = period
+        self.WarmUpPeriod = period
 
     # Update method is mandatory
     def Update(self, input):
@@ -260,10 +260,46 @@ class BadCustomIndicator(PythonIndicator):
             var reference = new DateTime(2000, 1, 1, 0, 0, 0);
             var period = ((IIndicatorWarmUpPeriodProvider)SMAWithWarmUpPeriod).WarmUpPeriod;
 
+            // Check is using the value we defined for WarmUpPeriod
+            Assert.AreEqual(period, 14);
+
             for (var i = 0; i < period; i++)
             {
                 SMAWithWarmUpPeriod.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
                 Assert.AreEqual(i == period - 1, SMAWithWarmUpPeriod.IsReady);
+            }
+        }
+
+        [Test]
+        public void DefaultWarmUpPeriod()
+        {
+            using (Py.GIL())
+            {
+                var module = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.Name = name
+        self.Value = 0
+        self.queue = deque(maxlen=period)
+
+    # Update method is mandatory
+    def Update(self, input):
+        self.queue.appendleft(input.Value)
+        count = len(self.queue)
+        self.Value = np.sum(self.queue) / count
+        return count == self.queue.maxlen
+"
+                );
+                var pythonIndicator = module.GetAttr("CustomSimpleMovingAverage")
+                    .Invoke("custom".ToPython(), 14.ToPython());
+                var indicator = new PythonIndicator(pythonIndicator);
+
+                Assert.AreEqual(indicator.WarmUpPeriod, 0);
             }
         }
     }

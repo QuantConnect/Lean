@@ -624,13 +624,9 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose indicator we want</param>
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         public void WarmUpIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null)
         {
-            if (EnableAutomaticIndicatorWarmUp)
-            {
-                WarmUpIndicator(symbol, WrapPythonIndicator(indicator), resolution);
-            }
+            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), resolution);
         }
 
         /// <summary>
