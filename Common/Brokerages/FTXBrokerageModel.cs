@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -110,6 +110,42 @@ namespace QuantConnect.Brokerages
             }
 
             message = null;
+
+            if (order.Type is OrderType.StopMarket or OrderType.StopLimit)
+            {
+                var stopPrice = (order as StopMarketOrder)?.StopPrice;
+                if (!stopPrice.HasValue)
+                {
+                    stopPrice = (order as StopLimitOrder)?.StopPrice;
+                }
+
+                switch (order.Direction)
+                {
+                    case OrderDirection.Sell:
+                        if (stopPrice > security.BidPrice)
+                        {
+                            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                                StringExtensions.Invariant($"Trigger price too high: must be below current market price.")
+                            );
+                        }
+                        break;
+
+                    case OrderDirection.Buy:
+                        if (stopPrice < security.AskPrice)
+                        {
+                            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                                StringExtensions.Invariant($"Trigger price too low: must be above current market price.")
+                            );
+                        }
+                        break;
+                }
+
+                if (message != null)
+                {
+                    return false;
+                }
+            }
+
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
