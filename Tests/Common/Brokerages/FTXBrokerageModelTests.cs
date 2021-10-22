@@ -110,10 +110,64 @@ namespace QuantConnect.Tests.Common.Brokerages
             var updateRequestMock = new Mock<UpdateOrderRequest>(DateTime.UtcNow, 1, new UpdateOrderFields());
 
             Assert.False(_brokerageModel.CanUpdateOrder(
-                TestsHelpers.GetSecurity(), 
-                order, 
-                updateRequestMock.Object, 
+                TestsHelpers.GetSecurity(),
+                order,
+                updateRequestMock.Object,
                 out var message));
+            Assert.NotNull(message);
+        }
+
+        [TestCase(-1, 100000)]
+        [TestCase(1, 10000)]
+        public void CannotSubmitStopMarketOrder(decimal quantity, decimal stopPrice)
+        {
+            var order = new Mock<StopMarketOrder>
+            {
+                Object =
+                {
+                    Quantity = quantity,
+                    StopPrice =  stopPrice
+                }
+            };
+            order.SetupGet(s => s.Type).Returns(OrderType.StopMarket);
+
+            CannotSubmitStopOrder_WhenPriceMissingMarketPrice(order.Object);
+        }
+
+        [TestCase(-1, 100000)]
+        [TestCase(1, 10000)]
+        public void CannotSubmitStopLimitOrder(decimal quantity, decimal stopPrice)
+        {
+            var order = new Mock<StopLimitOrder>
+            {
+                Object =
+                {
+                    Quantity = quantity,
+                    StopPrice =  stopPrice
+                }
+            };
+            order.SetupGet(s => s.Type).Returns(OrderType.StopLimit);
+
+
+            CannotSubmitStopOrder_WhenPriceMissingMarketPrice(order.Object);
+        }
+
+        private void CannotSubmitStopOrder_WhenPriceMissingMarketPrice(Order order)
+        {
+            var security = TestsHelpers.GetSecurity(symbol: _symbol.Value, market: _symbol.ID.Market, quoteCurrency: "USD");
+
+            security.Cache.AddData(new Tick
+            {
+                AskPrice = 50001,
+                BidPrice = 49999,
+                Time = DateTime.UtcNow,
+                Symbol = _symbol,
+                TickType = TickType.Quote,
+                AskSize = 1,
+                BidSize = 1
+            });
+
+            Assert.AreEqual(false, _brokerageModel.CanSubmitOrder(security, order, out var message));
             Assert.NotNull(message);
         }
     }
