@@ -170,5 +170,25 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(false, _brokerageModel.CanSubmitOrder(security, order, out var message));
             Assert.NotNull(message);
         }
+
+        [TestCase(OrderType.StopMarket)]
+        [TestCase(OrderType.StopLimit)]
+        public void CannotSubmitMarketOrder_IfPriceNotInitialized(OrderType orderType)
+        {
+            var order = new Mock<StopLimitOrder>
+            {
+                Object =
+                {
+                    Quantity = 1,
+                    StopPrice =  100
+                }
+            };
+            order.SetupGet(s => s.Type).Returns(orderType);
+
+            var security = TestsHelpers.GetSecurity(symbol: _symbol.Value, market: _symbol.ID.Market, quoteCurrency: "USD");
+
+            Assert.AreEqual(false, _brokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.NotNull(message);
+        }
     }
 }

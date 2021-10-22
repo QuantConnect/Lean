@@ -113,6 +113,15 @@ namespace QuantConnect.Brokerages
 
             if (order.Type is OrderType.StopMarket or OrderType.StopLimit)
             {
+                if (!security.HasData)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
+                    );
+
+                    return false;
+                }
+
                 var stopPrice = (order as StopMarketOrder)?.StopPrice;
                 if (!stopPrice.HasValue)
                 {
