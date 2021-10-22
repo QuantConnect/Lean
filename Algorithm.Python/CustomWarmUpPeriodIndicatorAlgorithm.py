@@ -83,22 +83,6 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
             assert(diff <= 1e-10 or self.custom.IsReady != self.customWarmUp.IsReady), f"indicators difference is {diff}"
             
 # Python implementation of SimpleMovingAverage.
-# Represents the traditional simple moving average indicator (SMA) With Warm Up Period parameter defined
-class CSMAWithWarmUp(PythonIndicator):
-    def __init__(self, name, period):
-        self.Name = name
-        self.Value = 0
-        self.queue = deque(maxlen=period)
-        self.WarmUpPeriod = period
-
-    # Update method is mandatory
-    def Update(self, input):
-        self.queue.appendleft(input.Value)
-        count = len(self.queue)
-        self.Value = np.sum(self.queue) / count
-        return count == self.queue.maxlen
-
-# Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
 class CustomSMA(PythonIndicator):
     def __init__(self, name, period):
@@ -112,3 +96,10 @@ class CustomSMA(PythonIndicator):
         count = len(self.queue)
         self.Value = np.sum(self.queue) / count
         return count == self.queue.maxlen
+
+# Python implementation of SimpleMovingAverage.
+# Represents the traditional simple moving average indicator (SMA) With Warm Up Period parameter defined
+class CSMAWithWarmUp(CustomSMA):
+    def __init__(self, name, period):
+        super().__init__(name, period)
+        self.WarmUpPeriod = period

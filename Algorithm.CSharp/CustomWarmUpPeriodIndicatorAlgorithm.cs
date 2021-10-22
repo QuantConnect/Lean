@@ -24,68 +24,6 @@ using System.Collections;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Custom implementation of SimpleMovingAverage.
-    /// Represents the traditional simple moving average indicator (SMA) with WarmUpPeriod defined
-    /// </summary>
-    public class CSMAWithWarmUp : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
-    {
-        private Queue<IBaseData> _queue;
-        public CSMAWithWarmUp(string name, int period)
-            :base(name)
-        {
-            _queue = new Queue<IBaseData>();
-            WarmUpPeriod = period;
-        }
-        public int WarmUpPeriod { get; private set; }
-
-        public override bool IsReady => _queue.Count == WarmUpPeriod;
-
-        protected override decimal ComputeNextValue(IBaseData input)
-        {
-            _queue.Enqueue(input);
-            if (_queue.Count > WarmUpPeriod)
-            {
-                _queue.Dequeue();
-            }
-            var items = (_queue.ToArray());
-            var sum = 0m;
-            Array.ForEach(items, i => sum += i.Value);
-            return sum / _queue.Count;
-        }
-    }
-
-    /// <summary>
-    /// Custom implementation of SimpleMovingAverage.
-    /// Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
-    /// </summary>
-    public class CustomSMA : IndicatorBase<IBaseData>
-    {
-        private Queue<IBaseData> _queue;
-        private int _period;
-        public CustomSMA(string name, int period)
-            : base(name)
-        {
-            _queue = new Queue<IBaseData>();
-            _period = period;
-        }
-
-        public override bool IsReady => _queue.Count == _period;
-
-        protected override decimal ComputeNextValue(IBaseData input)
-        {
-            _queue.Enqueue(input);
-            if (_queue.Count > _period)
-            {
-                _queue.Dequeue();
-            }
-            var items = (_queue.ToArray());
-            var sum = 0m;
-            Array.ForEach(items, i => sum += i.Value);
-            return sum / _queue.Count;
-        }
-    }
-
-    /// <summary>
     /// Regression test to check Python indicator is keeping backwards compatibility 
     /// with indicators that do not set WarmUpPeriod.
     /// </summary>
@@ -180,6 +118,51 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"indicators difference is {diff}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Custom implementation of SimpleMovingAverage.
+        /// Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
+        /// </summary>
+        private class CustomSMA : IndicatorBase<IBaseData>
+        {
+            private Queue<IBaseData> _queue;
+            private int _period;
+            public CustomSMA(string name, int period)
+                : base(name)
+            {
+                _queue = new Queue<IBaseData>();
+                _period = period;
+            }
+
+            public override bool IsReady => _queue.Count == _period;
+
+            protected override decimal ComputeNextValue(IBaseData input)
+            {
+                _queue.Enqueue(input);
+                if (_queue.Count > _period)
+                {
+                    _queue.Dequeue();
+                }
+                var items = (_queue.ToArray());
+                var sum = 0m;
+                Array.ForEach(items, i => sum += i.Value);
+                return sum / _queue.Count;
+            }
+        }
+
+        /// <summary>
+        /// Custom implementation of SimpleMovingAverage.
+        /// Represents the traditional simple moving average indicator (SMA) with WarmUpPeriod defined
+        /// </summary>
+        private class CSMAWithWarmUp : CustomSMA, IIndicatorWarmUpPeriodProvider
+        {
+            public CSMAWithWarmUp(string name, int period)
+                : base(name, period)
+            {
+                WarmUpPeriod = period;
+            }
+            public int WarmUpPeriod { get; private set; }
         }
 
         /// <summary>
