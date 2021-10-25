@@ -111,11 +111,7 @@ namespace QuantConnect.Indicators
             _currentTrailingLowerBand = ((_currentBasicLowerBand > _previousTrailingLowerBand) || (_previousClose < _previousTrailingLowerBand)) ? _currentBasicLowerBand : _previousTrailingLowerBand;
             _currentTrailingUpperBand = ((_currentBasicUpperBand < _previousTrailingUpperBand) || (_previousClose > _previousTrailingUpperBand)) ? _currentBasicUpperBand : _previousTrailingUpperBand;
 
-            if (_prevSuper == -1)
-            {
-                _superTrend = (_currentClose <= _currentTrailingUpperBand) ? _currentTrailingUpperBand : _currentTrailingLowerBand;
-            }
-            else if (_prevSuper == _previousTrailingUpperBand)
+            if ((_prevSuper == -1) || (_prevSuper == _previousTrailingUpperBand))
             {
                 _superTrend = (_currentClose <= _currentTrailingUpperBand) ? _currentTrailingUpperBand : _currentTrailingLowerBand;
             }
