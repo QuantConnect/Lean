@@ -54,8 +54,12 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextChartTrimming;
         private DateTime _nextLogStoreUpdate;
         private DateTime _nextStatisticsUpdate;
-        private DateTime _nextStatusUpdate;
         private DateTime _currentUtcDate;
+
+        /// <summary>
+        /// The earliest time of next dump to the status file 
+        /// </summary>
+        protected DateTime NextStatusUpdate;
 
         //Log Message Store:
         private DateTime _nextSample;
@@ -294,7 +298,7 @@ namespace QuantConnect.Lean.Engine.Results
                         _nextStatisticsUpdate = utcNow.AddMinutes(1);
                     }
 
-                    if (utcNow > _nextStatusUpdate)
+                    if (utcNow > NextStatusUpdate)
                     {
                         var chartComplete = new Dictionary<string, Chart>();
                         lock (ChartLock)
@@ -358,6 +362,15 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Assigns the next earliest status update time
+        /// </summary>
+        protected virtual void SetNextStatusUpdate()
+        {
+            // Update the status json file every hour
+            NextStatusUpdate = DateTime.UtcNow.AddHours(1);
+        }
+
+        /// <summary>
         /// Stores the order events
         /// </summary>
         /// <param name="utcTime">The utc date associated with these order events</param>
@@ -383,12 +396,6 @@ namespace QuantConnect.Lean.Engine.Results
         private List<OrderEvent> GetOrderEventsToStore()
         {
             return TransactionHandler.OrderEvents.Where(orderEvent => orderEvent.UtcTime >= _currentUtcDate).ToList();
-        }
-
-        private void SetNextStatusUpdate()
-        {
-            // Update the status json file every hour
-            _nextStatusUpdate = DateTime.UtcNow.AddHours(1);
         }
 
         /// <summary>
