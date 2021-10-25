@@ -27,7 +27,6 @@ namespace QuantConnect.Indicators
         private bool _isReady;
         private dynamic _indicator;
 
-
         /// <summary>
         /// Get the indicator Name. If not defined, use the class name
         /// </summary>
@@ -46,19 +45,19 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Get the indicator Warm Up period. If not defined, use 0
+        /// Get the indicator WarmUpPeriod parameter. If not defined, use 0
         /// </summary>
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
-        /// <returns>The Warm Up period of the indicator.</returns>
+        /// <returns>The WarmUpPeriod of the indicator.</returns>
         private static int GetIndicatorWarmUpPeriod(PyObject indicator)
         {
             using (Py.GIL())
             {
-                var period = indicator.HasAttr("WarmUpPeriod")
+                var WarmUpPeriod = indicator.HasAttr("WarmUpPeriod")
                     ? indicator.GetAttr("WarmUpPeriod")
                     : 0.ToPython();
 
-                return period.GetAndDispose<int>();
+                return WarmUpPeriod.GetAndDispose<int>();
             }
         }
 
@@ -78,7 +77,6 @@ namespace QuantConnect.Indicators
         public PythonIndicator(params PyObject[] args)
             : base (GetIndicatorName(args[0]))
         {
-            WarmUpPeriod = GetIndicatorWarmUpPeriod(args[1]);
         }
 
         /// <summary>
@@ -86,9 +84,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
         public PythonIndicator(PyObject indicator)
-            : base(GetIndicatorName(indicator))
+            : base (GetIndicatorName(indicator))
         {
-            WarmUpPeriod = GetIndicatorWarmUpPeriod(indicator);
             SetIndicator(indicator);
         }
 
@@ -120,6 +117,7 @@ namespace QuantConnect.Indicators
                 }
             }
 
+            WarmUpPeriod = GetIndicatorWarmUpPeriod(indicator);
             _indicator = indicator;
         }
 

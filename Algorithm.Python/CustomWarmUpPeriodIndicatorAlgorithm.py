@@ -15,7 +15,7 @@ from AlgorithmImports import *
 from collections import deque
 
 ### <summary>
-### Regression test to check Python indicator is keeping backwards compatibility 
+### Regression test to check python indicator is keeping backwards compatibility 
 ### with indicators that do not set WarmUpPeriod.
 ### </summary>
 ### <meta name="tag" content="indicators" />
@@ -28,59 +28,42 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)
         self.AddEquity("SPY", Resolution.Second)
 
-        # Create two python indicators, one defines Warm Up
+        # Create two python indicators, one of them defines WarmUpPeriod parameter
         self.custom = CustomSMA('custom', 60)
         self.customWarmUp = CSMAWithWarmUp('customWarmUp', 60)
 
-        # The python custom class must inherit from PythonIndicator to enable Updated event handler
-        self.customWarmUp.Updated += self.CustomWarmUpUpdated
-        self.custom.Updated += self.CustomUpdated
-
-        # Register the indicators
-        self.customWarmUpWindow = RollingWindow[IndicatorDataPoint](5)
-        self.customWindow = RollingWindow[IndicatorDataPoint](5)
+        # Register the daily data of "SPY" to automatically update both indicators
         self.RegisterIndicator("SPY", self.customWarmUp, Resolution.Minute)
         self.RegisterIndicator("SPY", self.custom, Resolution.Minute)
 
-        # Try to warm up both indicators
+        # Warm up customWarmUp indicator
         self.WarmUpIndicator("SPY", self.customWarmUp, Resolution.Minute)
 
-        # Check customWarmUp indicator has already warmed up the data
-        assert(self.customWarmUp.IsReady == True), "customWarmUp indicator was expected to be ready"
+        # Check customWarmUp indicator has already been warmed up with the requested data
+        assert(self.customWarmUp.IsReady), "customWarmUp indicator was expected to be ready"
         assert(self.customWarmUp.Samples == 60), "customWarmUp was expected to have processed 60 datapoints already"
 
+        # Try to warm up custom indicator. It's expected from LEAN to skip the warm up process
+        # because this indicator doesn't implement IIndicatorWarmUpPeriodProvider
         self.WarmUpIndicator("SPY", self.custom, Resolution.Minute)
 
         # Check custom indicator is not ready and is using the default WarmUpPeriod value
-        assert(self.custom.IsReady == False), "custom indicator wasn't expected to be warmed up"
+        assert(not self.custom.IsReady), "custom indicator wasn't expected to be warmed up"
         assert(self.custom.WarmUpPeriod == 0), "custom indicator WarmUpPeriod parameter was expected to be 0"
-
-        # Helper variable to save the number of samples processed
-        self.Samples = 0
-
-    def CustomWarmUpUpdated(self, sender, updated):
-        self.customWarmUpWindow.Add(updated)
-
-    def CustomUpdated(self, sender, updated):
-        self.customWindow.Add(updated)
 
     def OnData(self, data):
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
 
         if self.Time.second == 0:
-            self.Samples += 1
-
-            self.Log(f"   customWarmUp -> IsReady: {self.customWarmUp.IsReady}. Value: {self.customWarmUp.Current.Value}")
-            self.Log(f"custom -> IsReady: {self.custom.IsReady}. Value: {self.custom.Current.Value}")
+            # Compute the difference between indicators values
             diff = abs(self.custom.Current.Value - self.customWarmUp.Current.Value)
-            self.Log(f"Samples: {self.Samples}")
 
-            # Check self.custom indicator is ready when the number of samples is bigger than its WarmUpPeriod
-            assert(self.custom.IsReady == (self.Samples >= 60)), "custom indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter"
+            # Check self.custom indicator is ready when the number of samples is bigger than its WarmUpPeriod parameter
+            assert(self.custom.IsReady == (self.custom.Samples >= 60)), "custom indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter"
 
-            # Check the value of the two custom indicators is the same when both are ready
-            assert(diff <= 1e-10 or self.custom.IsReady != self.customWarmUp.IsReady), f"indicators difference is {diff}"
+            # Check their values are the same when both are ready
+            assert(diff <= 1e-10 or (not self.custom.IsReady) or (not self.customWarmUp.IsReady)), f"The values of the indicators are not the same. Indicators difference is {diff}"
             
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined

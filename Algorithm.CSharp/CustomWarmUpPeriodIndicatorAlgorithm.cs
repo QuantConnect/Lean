@@ -19,75 +19,54 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Indicators;
 using QuantConnect.Data;
-using System.Collections;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression test to check Python indicator is keeping backwards compatibility 
-    /// with indicators that do not set WarmUpPeriod.
+    /// Regression test to check custom indicators warms up properly
+    /// when one of them define WarmUpPeriod parameter and the other doesn't
     /// </summary>
     public class CustomWarmUpPeriodIndicatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        CustomSMA custom;
-        CSMAWithWarmUp customWarmUp;
-        RollingWindow<IndicatorDataPoint> customWarmUpWindow;
-        RollingWindow<IndicatorDataPoint> customWindow;
-        int samples;
+        private CustomSMA custom;
+        private CSMAWithWarmUp customWarmUp;
 
-    public override void Initialize()
+        public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 11);
             AddEquity("SPY", Resolution.Second);
 
-            // Create two python indicators, one defines Warm Up
+            // Create two custom indicators, where one of them defines WarmUpPeriod parameter
             custom = new CustomSMA("custom", 60);
             customWarmUp = new CSMAWithWarmUp("customWarmUp", 60);
 
-            // The python custom class must inherit from PythonIndicator to enable Updated event handler
-            customWarmUp.Updated += CustomWarmUpUpdated;
-            custom.Updated += CustomUpdated;
-
-            // Register the indicators
-            customWarmUpWindow = new RollingWindow<IndicatorDataPoint>(5);
-            customWindow = new RollingWindow<IndicatorDataPoint>(5);
+            // Register the daily data of "SPY" to automatically update both indicators
             RegisterIndicator("SPY", customWarmUp, Resolution.Minute);
             RegisterIndicator("SPY", custom, Resolution.Minute);
 
-            // Try to warm up both indicators
+            // Warm up customWarmUp indicator
             WarmUpIndicator("SPY", customWarmUp, Resolution.Minute);
 
-            // Check customWarmUp indicator has already warmed up the data
+            // Check customWarmUp indicator has already been warmed up with the requested data
             if (!customWarmUp.IsReady)
             {
                 throw new Exception("customWarmUp indicator was expected to be ready");
             }
             if (customWarmUp.Samples != 60)
             {
-                throw new Exception("customWarmUp was expected to have processed datapoints 60 already");
+                throw new Exception("customWarmUp was expected to have processed 60 datapoints already");
             }
 
+            // Try to warm up custom indicator. It's expected from LEAN to skip the warm up process
+            // because custom indicator doesn't implement IIndicatorWarmUpPeriodProvider
             WarmUpIndicator("SPY", custom, Resolution.Minute);
 
-            // Check custom indicator is not ready and is using the default WarmUpPeriod value
+            // Check custom indicator is not ready, because the warm up process was skipped
             if (custom.IsReady)
             {
                 throw new Exception("custom indicator wasn't expected to be warmed up");
             }
-
-            // Helper variable to save the number of samples processed
-            samples = 0;
-        }
-
-        public void CustomUpdated(object sender, IndicatorDataPoint updated)
-        {
-            customWindow.Add(updated);
-        }
-
-        public void CustomWarmUpUpdated(object sender, IndicatorDataPoint updated)
-        {
-            customWarmUpWindow.Add(updated);
         }
 
         public void OnData(TradeBars data)
@@ -99,30 +78,26 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Time.Second == 0)
             {
-                samples += 1;
-                Log($"   customWarmUp -> IsReady: {customWarmUp.IsReady}. Value: {customWarmUp.Current.Value}");
-                Log($"custom -> IsReady: {custom.IsReady}. Value: {custom.Current.Value}");
-
+                // Compute the difference between the indicators values
                 var diff = Math.Abs(custom.Current.Value - customWarmUp.Current.Value);
-                Log($"Samples: {samples}");
 
-                // Check self.custom indicator is ready when the number of samples is bigger than its WarmUpPeriod
-                if (custom.IsReady != (samples >= 60))
+                // Check self.custom indicator is ready when the number of samples is bigger than its period
+                if (custom.IsReady != (custom.Samples >= 60))
                 {
                     throw new Exception("custom indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter");
                 }
 
-                // Check the value of the two custom indicators is the same when both are ready
+                // Check their values are the same when both are ready
                 if (diff > 1e-10m && custom.IsReady && customWarmUp.IsReady) 
                 {
-                    throw new Exception($"indicators difference is {diff}");
+                    throw new Exception($"The values of the indicators are not the same. The difference is {diff}");
                 }
             }
         }
 
         /// <summary>
         /// Custom implementation of SimpleMovingAverage.
-        /// Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
+        /// Represents the traditional simple moving average indicator (SMA) without WarmUpPeriod parameter defined
         /// </summary>
         private class CustomSMA : IndicatorBase<IBaseData>
         {
