@@ -121,6 +121,4 @@ class CustomSMA():
         self.Value = np.sum(self.queue) / count
         if count == self.queue.maxlen:
             self.IsReady = True
-            return True
-        else:
-            return False
+        return self.IsReady
