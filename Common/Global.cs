@@ -820,11 +820,25 @@ namespace QuantConnect
                         return Exchange.BOSTON;
                     case "BSE":
                         return Exchange.BSE;
+                    case "SBF":
+                        return Exchange.EURONEXT_FRANCE;
+                    case "CHIXDE":
+                        return Exchange.CHIXDE;
+                    case "FWB":
+                        return Exchange.FRANKFURT_STOCK_EXCHANGE;
+                    case "SWB":
+                        return Exchange.STUTTGART_STOCK_EXCHANGE;
                     case "AEB":
                         return Exchange.EURONEXT_NL_STOCKS;
                     case "IBIS":
                     case "IBIS2":
                         return Exchange.XETRA;
+                    case "CHIXEN":
+                        return Exchange.CHIXEN;
+                    case "BM":
+                        return Exchange.BOLSA_DE_MADRID;
+                    case "CHIXUK":
+                        return Exchange.CHIXUK;
                     case "LSE":
                         return Exchange.LSE;
                     case "LSEETF":

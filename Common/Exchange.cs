@@ -183,27 +183,93 @@ namespace QuantConnect
         public static Exchange ISE_MERCURY { get; }
             = new("ISE_MERCURY", "J", "International Securities Options Exchange MERCURY", QuantConnect.Market.USA, SecurityType.Option);
 
-        public static Exchange EURONEXT_NL_STOCKS { get; }
-            = new("EURONEXT_NL_STOCKS", string.Empty, "Euronext NL Stocks (AEB)", QuantConnect.Market.EUR, SecurityType.Equity);
+        /// <summary>
+        /// Euronext France (SBF)
+        /// </summary>
+        public static Exchange EURONEXT_FRANCE { get; }
+            = new("SBF", string.Empty, "Euronext France (SBF)", QuantConnect.Market.EUR, SecurityType.Equity);
 
+        /// <summary>
+        /// CHI-X Europa Ltd Clearstream (CHIXDE)
+        /// </summary>
+        public static Exchange CHIXDE { get; }
+            = new("CHIXDE", string.Empty, "CHI-X Europa Ltd Clearstream (CHIXDE)", QuantConnect.Market.EUR, SecurityType.Equity);
 
+        /// <summary>
+        /// Frankfurt Stock Exchange (FWB)
+        /// </summary>
+        public static Exchange FRANKFURT_STOCK_EXCHANGE { get; }
+            = new("FWB", string.Empty, "Frankfurt Stock Exchange (FWB)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        /// <summary>
+        /// Stuttgart Stock Exchange (SWB)
+        /// </summary>
+        public static Exchange STUTTGART_STOCK_EXCHANGE { get; }
+            = new("SWB", string.Empty, "Stuttgart Stock Exchange (SWB)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        /// <summary>
+        /// XETRA (IBIS)
+        /// </summary>
         public static Exchange XETRA { get; }
-            = new("XETRA", string.Empty, "XETRA (IBIS)", QuantConnect.Market.EUR, SecurityType.Equity);
+            = new("IBIS", string.Empty, "XETRA (IBIS)", QuantConnect.Market.EUR, SecurityType.Equity);
 
+        /// <summary>
+        /// CHI-X Europa Ltd Clearnet (CHIXEN)
+        /// </summary>
+        public static Exchange CHIXEN { get; }
+            = new("CHIXEN", string.Empty, "CHI-X Europa Ltd Clearnet (CHIXEN)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        /// <summary>
+        /// Euronext NL Stocks (AEB)
+        /// </summary>
+        public static Exchange EURONEXT_NL_STOCKS { get; }
+            = new("AEB", string.Empty, "Euronext NL Stocks (AEB)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        /// <summary>
+        /// Bolsa de Madrid (BM)
+        /// </summary>
+        public static Exchange BOLSA_DE_MADRID { get; }
+            = new("BM", string.Empty, "Bolsa de Madrid (BM)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        /// <summary>
+        /// Swedish Stock Exchange (SFB)
+        /// </summary>
+        public static Exchange SWEDISH_STOCK_EXCHANGE { get; }
+            = new("SFB", string.Empty, "Swedish Stock Exchange (SFB)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        /// <summary>
+        /// SIX Swiss Exchange (EBS)
+        /// </summary>
+        public static Exchange SIX_SWISS_EXCHANGE { get; }
+            = new("EBS", string.Empty, "SIX Swiss Exchange (EBS)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        /// <summary>
+        /// CHI-X Europa Ltd Crest (CHIXUK)
+        /// </summary>
+        public static Exchange CHIXUK { get; }
+            = new("CHIXUK", string.Empty, "CHI-X Europa Ltd Crest (CHIXUK)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        /// <summary>
+        /// London Stock Exchange (LSE)
+        /// </summary>
         public static Exchange LSE { get; }
             = new("LSE", string.Empty, "London Stock Exchange (LSE)", QuantConnect.Market.EUR, SecurityType.Equity);
 
+        /// <summary>
+        /// LSE ETF Exchange
+        /// </summary>
         public static Exchange LSE_ETF { get; }
-            = new("LSE_ETF", string.Empty, "LSE ETF Exchange", QuantConnect.Market.EUR, SecurityType.Equity);
+            = new("LSEETF", string.Empty, "LSE ETF Exchange", QuantConnect.Market.EUR, SecurityType.Equity);
 
+        /// <summary>
+        /// LSE International Order Book (LSEIOB1)
+        /// </summary>
         public static Exchange LSE_INTERNATIONAL_ORDER_BOOK { get; }
-            = new("LSE_INTERNATIONAL_ORDER_BOOK", string.Empty, "LSE International Order Book (LSEIOB1)", QuantConnect.Market.EUR, SecurityType.Equity);
+            = new("LSEIOB1", string.Empty, "LSE International Order Book (LSEIOB1)", QuantConnect.Market.EUR, SecurityType.Equity);
 
-        public static Exchange SIX_SWISS_EXCHANGE { get; }
-            = new("SIX_SWISS_EXCHANGE", string.Empty, "SIX Swiss Exchange (EBS)", QuantConnect.Market.EUR, SecurityType.Equity);
 
-        public static Exchange SWEDISH_STOCK_EXCHANGE { get; }
-            = new("SWEDISH_STOCK_EXCHANGE", string.Empty, "Swedish Stock Exchange (SFB)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+
 
         /// <summary>
         /// Exchange description
