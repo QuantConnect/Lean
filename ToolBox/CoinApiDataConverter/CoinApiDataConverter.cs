@@ -179,8 +179,28 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 return;
             }
 
+            var tickData = coinapiDataReader.ProcessCoinApiEntry(entryData, file);
+
+            // in some cases the first data points from '_processingDate' get's included in the previous date file
+            // so we will ready previous date data and drop most of it just to save these midnight ticks
+            var yesterdayDate = _processingDate.AddDays(-1);
+            var yesterdaysFile = new FileInfo(file.FullName.Replace(
+                _processingDate.ToStringInvariant(DateFormat.EightCharacter),
+                    yesterdayDate.ToStringInvariant(DateFormat.EightCharacter)));
+            if (yesterdaysFile.Exists)
+            {
+                var yesterdaysEntryData = coinapiDataReader.GetCoinApiEntryData(yesterdaysFile, yesterdayDate);
+                tickData = tickData.Concat(coinapiDataReader.ProcessCoinApiEntry(yesterdaysEntryData, yesterdaysFile));
+            }
+            else
+            {
+                Log.Error($"CoinApiDataConverter(): yesterdays data file not found '{yesterdaysFile.FullName}'");
+            }
+
             // materialize the enumerable into a list, since we need to enumerate over it twice
-            var ticks = coinapiDataReader.ProcessCoinApiEntry(entryData, file).OrderBy(t => t.Time).ToList();
+            var ticks = tickData.Where(tick => tick.Time.Date == _processingDate)
+                .OrderBy(t => t.Time)
+                .ToList();
 
             var writer = new LeanDataWriter(Resolution.Tick, entryData.Symbol, _destinationFolder.FullName, entryData.TickType);
             writer.Write(ticks);
