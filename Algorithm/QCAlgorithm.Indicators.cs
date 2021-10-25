@@ -2452,7 +2452,7 @@ namespace QuantConnect.Algorithm
         {
             var periods = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
-            if (periods.HasValue)
+            if (periods.HasValue && periods != 0)
             {
                 var resolution = timeSpan.ToHigherResolutionEquivalent(false);
                 var resolutionTicks = resolution.ToTimeSpan().Ticks;
@@ -2472,7 +2472,8 @@ namespace QuantConnect.Algorithm
             }
             else if (!_isEmitWarmupInsightWarningSent)
             {
-                Debug($"Warning: the 'WarmUpIndicator' feature only works with indicators which inherit from '{nameof(IIndicatorWarmUpPeriodProvider)}' and define a warm up period." +
+                Debug($"Warning: the 'WarmUpIndicator' feature only works with indicators which inherit from '{nameof(IIndicatorWarmUpPeriodProvider)}'" +
+                      $" and define a warm up period, setting property 'WarmUpPeriod' with a value > 0." +
                       $" The provided indicator of type '{indicator.GetType().Name}' will not be warmed up.");
                 _isEmitWarmupInsightWarningSent = true;
             }

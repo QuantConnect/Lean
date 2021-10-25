@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -616,6 +616,17 @@ namespace QuantConnect.Algorithm
             }
 
             RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+        }
+
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="resolution">The resolution</param>
+        public void WarmUpIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null)
+        {
+            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), resolution);
         }
 
         /// <summary>
