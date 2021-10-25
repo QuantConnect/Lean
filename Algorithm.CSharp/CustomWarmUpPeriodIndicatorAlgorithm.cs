@@ -28,8 +28,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class CustomWarmUpPeriodIndicatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private CustomSMA custom;
-        private CSMAWithWarmUp customWarmUp;
+        private CustomSMA _customNotWarmUp;
+        private CSMAWithWarmUp _customWarmUp;
 
         public override void Initialize()
         {
@@ -38,34 +38,34 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("SPY", Resolution.Second);
 
             // Create two custom indicators, where one of them defines WarmUpPeriod parameter
-            custom = new CustomSMA("custom", 60);
-            customWarmUp = new CSMAWithWarmUp("customWarmUp", 60);
+            _customNotWarmUp = new CustomSMA("_customNotWarmUp", 60);
+            _customWarmUp = new CSMAWithWarmUp("_customWarmUp", 60);
 
             // Register the daily data of "SPY" to automatically update both indicators
-            RegisterIndicator("SPY", customWarmUp, Resolution.Minute);
-            RegisterIndicator("SPY", custom, Resolution.Minute);
+            RegisterIndicator("SPY", _customWarmUp, Resolution.Minute);
+            RegisterIndicator("SPY", _customNotWarmUp, Resolution.Minute);
 
-            // Warm up customWarmUp indicator
-            WarmUpIndicator("SPY", customWarmUp, Resolution.Minute);
+            // Warm up _customWarmUp indicator
+            WarmUpIndicator("SPY", _customWarmUp, Resolution.Minute);
 
-            // Check customWarmUp indicator has already been warmed up with the requested data
-            if (!customWarmUp.IsReady)
+            // Check _customWarmUp indicator has already been warmed up with the requested data
+            if (!_customWarmUp.IsReady)
             {
-                throw new Exception("customWarmUp indicator was expected to be ready");
+                throw new Exception("_customWarmUp indicator was expected to be ready");
             }
-            if (customWarmUp.Samples != 60)
+            if (_customWarmUp.Samples != 60)
             {
-                throw new Exception("customWarmUp was expected to have processed 60 datapoints already");
+                throw new Exception("_customWarmUp indicator was expected to have processed 60 datapoints already");
             }
 
-            // Try to warm up custom indicator. It's expected from LEAN to skip the warm up process
-            // because custom indicator doesn't implement IIndicatorWarmUpPeriodProvider
-            WarmUpIndicator("SPY", custom, Resolution.Minute);
+            // Try to warm up _customNotWarmUp indicator. It's expected from LEAN to skip the warm up process
+            // because this indicator doesn't implement IIndicatorWarmUpPeriodProvider
+            WarmUpIndicator("SPY", _customNotWarmUp, Resolution.Minute);
 
-            // Check custom indicator is not ready, because the warm up process was skipped
-            if (custom.IsReady)
+            // Check _customNotWarmUp indicator is not ready, because the warm up process was skipped
+            if (_customNotWarmUp.IsReady)
             {
-                throw new Exception("custom indicator wasn't expected to be warmed up");
+                throw new Exception("_customNotWarmUp indicator wasn't expected to be warmed up");
             }
         }
 
@@ -79,16 +79,16 @@ namespace QuantConnect.Algorithm.CSharp
             if (Time.Second == 0)
             {
                 // Compute the difference between the indicators values
-                var diff = Math.Abs(custom.Current.Value - customWarmUp.Current.Value);
+                var diff = Math.Abs(_customNotWarmUp.Current.Value - _customWarmUp.Current.Value);
 
-                // Check self.custom indicator is ready when the number of samples is bigger than its period
-                if (custom.IsReady != (custom.Samples >= 60))
+                // Check _customNotWarmUp indicator is ready when the number of samples is bigger than its period
+                if (_customNotWarmUp.IsReady != (_customNotWarmUp.Samples >= 60))
                 {
-                    throw new Exception("custom indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter");
+                    throw new Exception("_customNotWarmUp indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter");
                 }
 
                 // Check their values are the same when both are ready
-                if (diff > 1e-10m && custom.IsReady && customWarmUp.IsReady) 
+                if (diff > 1e-10m && _customNotWarmUp.IsReady && _customWarmUp.IsReady) 
                 {
                     throw new Exception($"The values of the indicators are not the same. The difference is {diff}");
                 }

@@ -16,7 +16,7 @@ from collections import deque
 
 ### <summary>
 ### Regression test to check python indicator is keeping backwards compatibility 
-### with indicators that do not set WarmUpPeriod.
+### with indicators that do not set WarmUpPeriod or do not inherit from PythonIndicator class.
 ### </summary>
 ### <meta name="tag" content="indicators" />
 ### <meta name="tag" content="indicator classes" />
@@ -28,28 +28,41 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)
         self.AddEquity("SPY", Resolution.Second)
 
-        # Create two python indicators, one of them defines WarmUpPeriod parameter
-        self.custom = CustomSMA('custom', 60)
+        # Create three python indicators
+        # - customNotWarmUp does not define WarmUpPeriod parameter
+        # - customWarmUp defines WarmUpPeriod parameter
+        # - customNotInherit defines WarmUpPeriod parameter but does not inherit from PythonIndicator class
+        self.customNotWarmUp = CSMANotWarmUp('customNotWarmUp', 60)
         self.customWarmUp = CSMAWithWarmUp('customWarmUp', 60)
+        self.customNotInherit = CustomSMA('customNotInherit', 60)
 
-        # Register the daily data of "SPY" to automatically update both indicators
+        # Register the daily data of "SPY" to automatically update the indicators
         self.RegisterIndicator("SPY", self.customWarmUp, Resolution.Minute)
-        self.RegisterIndicator("SPY", self.custom, Resolution.Minute)
+        self.RegisterIndicator("SPY", self.customNotWarmUp, Resolution.Minute)
+        self.RegisterIndicator("SPY", self.customNotInherit, Resolution.Minute)
 
         # Warm up customWarmUp indicator
         self.WarmUpIndicator("SPY", self.customWarmUp, Resolution.Minute)
 
         # Check customWarmUp indicator has already been warmed up with the requested data
         assert(self.customWarmUp.IsReady), "customWarmUp indicator was expected to be ready"
-        assert(self.customWarmUp.Samples == 60), "customWarmUp was expected to have processed 60 datapoints already"
+        assert(self.customWarmUp.Samples == 60), "customWarmUp indicator was expected to have processed 60 datapoints already"
 
-        # Try to warm up custom indicator. It's expected from LEAN to skip the warm up process
-        # because this indicator doesn't implement IIndicatorWarmUpPeriodProvider
-        self.WarmUpIndicator("SPY", self.custom, Resolution.Minute)
+        # Try to warm up customNotWarmUp indicator. It's expected from LEAN to skip the warm up process
+        # because this indicator doesn't define WarmUpPeriod parameter
+        self.WarmUpIndicator("SPY", self.customNotWarmUp, Resolution.Minute)
 
-        # Check custom indicator is not ready and is using the default WarmUpPeriod value
-        assert(not self.custom.IsReady), "custom indicator wasn't expected to be warmed up"
-        assert(self.custom.WarmUpPeriod == 0), "custom indicator WarmUpPeriod parameter was expected to be 0"
+        # Check customNotWarmUp indicator is not ready and is using the default WarmUpPeriod value
+        assert(not self.customNotWarmUp.IsReady), "customNotWarmUp indicator wasn't expected to be warmed up"
+        assert(self.customNotWarmUp.WarmUpPeriod == 0), "customNotWarmUp indicator WarmUpPeriod parameter was expected to be 0"
+
+        # Warm up customNotInherit indicator. Though it does not inherit from PythonIndicator class,
+        # it defines WarmUpPeriod parameter so it's expected to be warmed up from LEAN
+        self.WarmUpIndicator("SPY", self.customNotInherit, Resolution.Minute)
+
+        # Check customNotInherit indicator has already been warmed up with the requested data
+        assert(self.customNotInherit.IsReady), "customNotInherit indicator was expected to be ready"
+        assert(self.customNotInherit.Samples == 60), "customNotInherit indicator was expected to have processed 60 datapoints already"
 
     def OnData(self, data):
         if not self.Portfolio.Invested:
@@ -57,17 +70,19 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
 
         if self.Time.second == 0:
             # Compute the difference between indicators values
-            diff = abs(self.custom.Current.Value - self.customWarmUp.Current.Value)
+            diff = abs(self.customNotWarmUp.Current.Value - self.customWarmUp.Current.Value)
+            diff += abs(self.customNotInherit.Value - self.customNotWarmUp.Current.Value)
+            diff += abs(self.customNotInherit.Value - self.customWarmUp.Current.Value)
 
-            # Check self.custom indicator is ready when the number of samples is bigger than its WarmUpPeriod parameter
-            assert(self.custom.IsReady == (self.custom.Samples >= 60)), "custom indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter"
+            # Check customNotWarmUp indicator is ready when the number of samples is bigger than its WarmUpPeriod parameter
+            assert(self.customNotWarmUp.IsReady == (self.customNotWarmUp.Samples >= 60)), "customNotWarmUp indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter"
 
-            # Check their values are the same when both are ready
-            assert(diff <= 1e-10 or (not self.custom.IsReady) or (not self.customWarmUp.IsReady)), f"The values of the indicators are not the same. Indicators difference is {diff}"
+            # Check their values are the same when all of them are ready
+            assert(diff <= 1e-10 or (not self.customNotWarmUp.IsReady) or (not self.customWarmUp.IsReady) or (not self.customNotInherit.IsReady)), f"The values of the indicators are not the same. Indicators difference is {diff}"
             
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
-class CustomSMA(PythonIndicator):
+class CSMANotWarmUp(PythonIndicator):
     def __init__(self, name, period):
         self.Name = name
         self.Value = 0
@@ -82,7 +97,30 @@ class CustomSMA(PythonIndicator):
 
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) With Warm Up Period parameter defined
-class CSMAWithWarmUp(CustomSMA):
+class CSMAWithWarmUp(CSMANotWarmUp):
     def __init__(self, name, period):
         super().__init__(name, period)
         self.WarmUpPeriod = period
+
+# Custom python implementation of SimpleMovingAverage.
+# Represents the traditional simple moving average indicator (SMA)
+class CustomSMA():
+    def __init__(self, name, period):
+        self.Name = name
+        self.Value = 0
+        self.queue = deque(maxlen=period)
+        self.WarmUpPeriod = period
+        self.IsReady = False
+        self.Samples = 0
+
+    # Update method is mandatory
+    def Update(self, input):
+        self.Samples += 1
+        self.queue.appendleft(input.Value)
+        count = len(self.queue)
+        self.Value = np.sum(self.queue) / count
+        if count == self.queue.maxlen:
+            self.IsReady = True
+            return True
+        else:
+            return False

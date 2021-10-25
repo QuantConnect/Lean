@@ -53,11 +53,11 @@ namespace QuantConnect.Indicators
         {
             using (Py.GIL())
             {
-                var WarmUpPeriod = indicator.HasAttr("WarmUpPeriod")
+                var warmUpPeriod = indicator.HasAttr("WarmUpPeriod")
                     ? indicator.GetAttr("WarmUpPeriod")
                     : 0.ToPython();
 
-                return WarmUpPeriod.GetAndDispose<int>();
+                return warmUpPeriod.GetAndDispose<int>();
             }
         }
 
