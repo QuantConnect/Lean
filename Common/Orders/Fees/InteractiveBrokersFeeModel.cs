@@ -131,6 +131,9 @@ namespace QuantConnect.Orders.Fees
                         case Market.USA:
                             equityFee = new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
                             break;
+                        case Market.EUR:
+                            equityFee = new EquityFee("EUR", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
+                            break;
                         default:
                             throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
                     }

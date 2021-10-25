@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -182,6 +182,28 @@ namespace QuantConnect
         /// </summary>
         public static Exchange ISE_MERCURY { get; }
             = new("ISE_MERCURY", "J", "International Securities Options Exchange MERCURY", QuantConnect.Market.USA, SecurityType.Option);
+
+        public static Exchange EURONEXT_NL_STOCKS { get; }
+            = new("EURONEXT_NL_STOCKS", string.Empty, "Euronext NL Stocks (AEB)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+
+        public static Exchange XETRA { get; }
+            = new("XETRA", string.Empty, "XETRA (IBIS)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        public static Exchange LSE { get; }
+            = new("LSE", string.Empty, "London Stock Exchange (LSE)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        public static Exchange LSE_ETF { get; }
+            = new("LSE_ETF", string.Empty, "LSE ETF Exchange", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        public static Exchange LSE_INTERNATIONAL_ORDER_BOOK { get; }
+            = new("LSE_INTERNATIONAL_ORDER_BOOK", string.Empty, "LSE International Order Book (LSEIOB1)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        public static Exchange SIX_SWISS_EXCHANGE { get; }
+            = new("SIX_SWISS_EXCHANGE", string.Empty, "SIX Swiss Exchange (EBS)", QuantConnect.Market.EUR, SecurityType.Equity);
+
+        public static Exchange SWEDISH_STOCK_EXCHANGE { get; }
+            = new("SWEDISH_STOCK_EXCHANGE", string.Empty, "Swedish Stock Exchange (SFB)", QuantConnect.Market.EUR, SecurityType.Equity);
 
         /// <summary>
         /// Exchange description

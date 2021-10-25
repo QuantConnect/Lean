@@ -820,6 +820,21 @@ namespace QuantConnect
                         return Exchange.BOSTON;
                     case "BSE":
                         return Exchange.BSE;
+                    case "AEB":
+                        return Exchange.EURONEXT_NL_STOCKS;
+                    case "IBIS":
+                    case "IBIS2":
+                        return Exchange.XETRA;
+                    case "LSE":
+                        return Exchange.LSE;
+                    case "LSEETF":
+                        return Exchange.LSE_ETF;
+                    case "LSEIOB1":
+                        return Exchange.LSE_INTERNATIONAL_ORDER_BOOK;
+                    case "EBS":
+                        return Exchange.SIX_SWISS_EXCHANGE;
+                    case "SFB":
+                        return Exchange.SWEDISH_STOCK_EXCHANGE;
                 }
             }
             else if (securityType == SecurityType.Option)
