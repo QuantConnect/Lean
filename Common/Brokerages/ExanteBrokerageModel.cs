@@ -89,18 +89,13 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="security">The security to get a fee model for</param>
         /// <returns>The new fee model for this brokerage</returns>
-        public override IFeeModel GetFeeModel(Security security)
-        {
-            return new ExanteFeeModel(
-                forexCommissionRate: 0.25m
-            );
-        }
+        public override IFeeModel GetFeeModel(Security security) => new ExanteFeeModel();
 
         /// <summary>
         /// Exante global leverage rule
         /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
+        /// <param name="security">The security's whose leverage we seek</param>
+        /// <returns>The leverage for the specified security</returns>
         public override decimal GetLeverage(Security security)
         {
             if (AccountType == AccountType.Cash || security.IsInternalFeed() || security.Type == SecurityType.Base)

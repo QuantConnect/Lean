@@ -152,6 +152,13 @@
   "tt-order-routing-port": "",
   "tt-log-fix-messages": false,
 
+  // Exante live trading configuration
+  "exante-client-id": "",
+  "exante-application-id": "",
+  "exante-shared-key": "",
+  "exante-account-id": "",
+  "exante-platform-type": "",
+
   // Required to access data from Nasdaq
   // To get your access token go to https://data.nasdaq.com/account/profile
   "nasdaq-auth-token": "",
@@ -450,6 +457,10 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "history-provider": "BrokerageHistoryProvider"
+    },
+    
+    "live-exante": {
+      "live-mode": true
     },
 
     // defines the 'live-ftxus' environment

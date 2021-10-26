@@ -35,7 +35,7 @@ namespace QuantConnect.Orders.Fees
         /// Creates a new instance
         /// </summary>
         /// <param name="forexCommissionRate">Commission rate for FX operations</param>
-        public ExanteFeeModel(decimal forexCommissionRate)
+        public ExanteFeeModel(decimal forexCommissionRate = 0.25m)
         {
             _forexCommissionRate = forexCommissionRate;
         }
@@ -62,14 +62,14 @@ namespace QuantConnect.Orders.Fees
                     break;
 
                 case SecurityType.Equity:
-                    var equityFee = ComputeEquityFee("USA", order);
+                    var equityFee = ComputeEquityFee(order);
                     feeResult = equityFee.Amount;
                     feeCurrency = equityFee.Currency;
                     break;
 
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
-                    var optionsFee = ComputeOptionFee(Market.USA, order);
+                    var optionsFee = ComputeOptionFee(order);
                     feeResult = optionsFee.Amount;
                     feeCurrency = optionsFee.Currency;
                     break;
@@ -90,13 +90,12 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Computes fee for equity order
         /// </summary>
-        /// <param name="exchange">exchange of order</param>
         /// <param name="order">LEAN order</param>
-        private static CashAmount ComputeEquityFee(string exchange, Order order)
+        private static CashAmount ComputeEquityFee(Order order)
         {
-            switch (exchange)
+            switch (order.Symbol.ID.Market)
             {
-                case "USA":
+                case Market.USA:
                     return new CashAmount(order.AbsoluteQuantity * 0.02m, Currencies.USD);
 
                 default:
@@ -108,16 +107,15 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Computes fee for option order
         /// </summary>
-        /// <param name="exchange">exchange of order</param>
         /// <param name="order">LEAN order</param>
-        private static CashAmount ComputeOptionFee(string exchange, Order order)
+        private static CashAmount ComputeOptionFee(Order order)
         {
-            return exchange switch
+            return order.Symbol.ID.Market switch
             {
-                "USA" => new CashAmount(order.AbsoluteQuantity * 1.5m, Currencies.USD),
+                Market.USA => new CashAmount(order.AbsoluteQuantity * 1.5m, Currencies.USD),
                 _ =>
                     // ToDo: clarify the value for different exchanges
-                    throw new ArgumentException(Invariant($"Unsupported exchange: ${exchange}"))
+                    throw new ArgumentException(Invariant($"Unsupported exchange: ${order.Symbol.ID.Market}"))
             };
         }
     }
