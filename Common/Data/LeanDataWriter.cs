@@ -87,85 +87,52 @@ namespace QuantConnect.Data
         /// <param name="source">IEnumerable source of the data: sorted from oldest to newest.</param>
         public void Write(IEnumerable<BaseData> source)
         {
-            var lines = new List<string>();
-            var lastTime = new DateTime(); // Track we are sorted
-            var lastFileTime = source.First().Time.Date; // Track when we get a new output file
-
-            // Loop through all the data and write to file as we go
-            foreach (var data in source)
+            // Prime our write loop
+            var dataEnumerator = source?.GetEnumerator();
+            if (dataEnumerator != null && dataEnumerator.MoveNext() && dataEnumerator.Current != null)
             {
-                // Ensure the data is sorted
-                if (data.Time < lastTime) throw new Exception("The data must be pre-sorted from oldest to newest");
+                // Setup needs first piece of data
+                string outputFile = GetZipOutputFileName(_dataDirectory, dataEnumerator.Current.Time);
+                var lastTime = dataEnumerator.Current.Time;
+                var lines = new List<string>();
 
-                // Need to write this data we collected to file before moving on
-                if (RequiresNewFile(lastFileTime, data.Time, _resolution, _securityType))
+                // Iterate through our data and process it
+                do
                 {
-                    // Write and clear the file contents
-                    var outputFile = GetZipOutputFileName(_dataDirectory, lastFileTime);
-                    WriteFile(outputFile, lines, lastTime);
-                    lines.Clear();
+                    // Ensure the data is sorted as a safety check
+                    if (dataEnumerator.Current.Time < lastTime) throw new Exception("The data must be pre-sorted from oldest to newest");
 
-                    // Update our fileTime since we are changing the output
-                    lastFileTime = data.Time.Date;
+                    // Check if our output would have changed
+                    // Only do this on date change, because we know we don't have a any data zips smaller than a day.
+                    if (dataEnumerator.Current.Time.Date != lastTime.Date)
+                    {
+                        // Get the latest file name, if it has changed, we need to write our buffer to the last output file
+                        var latestOutputFile = GetZipOutputFileName(_dataDirectory, dataEnumerator.Current.Time);
+                        if (outputFile != latestOutputFile)
+                        {
+                            WriteFile(outputFile, lines, lastTime);
+                            lines.Clear();
+
+                            outputFile = latestOutputFile;
+                        }
+                    }
+
+                    lastTime = dataEnumerator.Current.Time;
+
+                    // Build the line and append it to our buffer of lines
+                    lines.Add(LeanData.GenerateLine(dataEnumerator.Current, _securityType, _resolution));
+                } 
+                while (dataEnumerator.MoveNext() && dataEnumerator.Current != null);
+
+                // Dispose of our enumerator
+                dataEnumerator.Dispose();
+
+                // Write the last set
+                if (lines.Count > 0)
+                {
+                    WriteFile(outputFile, lines, lastTime);
                 }
 
-                lastTime = data.Time;
-
-                // Build the line and append it to the file
-                lines.Add(LeanData.GenerateLine(data, _securityType, _resolution));
-            }
-
-            // Write the last file
-            if (lines.Count > 0)
-            {
-                var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
-                WriteFile(outputFile, lines, lastTime);
-            }
-        }
-
-        /// <summary>
-        /// Helper method for write to determine if we need to jump to a new file
-        /// TODO: Could be an extension? Part of LeanData?
-        /// </summary>
-        /// <param name="previousTime"></param>
-        /// <param name="currentTime"></param>
-        /// <param name="resolution"></param>
-        /// <param name="securityType"></param>
-        /// <returns></returns>
-        private static bool RequiresNewFile(DateTime previousTime, DateTime currentTime, Resolution resolution, SecurityType securityType)
-        {
-            switch (securityType)
-            {
-                case SecurityType.Option:
-                case SecurityType.IndexOption:
-                case SecurityType.FutureOption:
-                    if (resolution >= Resolution.Hour)
-                    {
-                        // If the year has changed
-                        return previousTime.Year != currentTime.Year;
-                    }
-
-                    // If date has changed
-                    return previousTime.Date < currentTime.Date;
-
-                case SecurityType.Base:
-                case SecurityType.Index:
-                case SecurityType.Equity:
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                case SecurityType.Crypto:
-                case SecurityType.Future:
-                case SecurityType.Commodity:
-                    if (resolution < Resolution.Hour)
-                    {
-                        // If date has changed
-                        return previousTime.Date < currentTime.Date;
-                    }
-
-                    // Daily/Hourly for these types are single file
-                    return false;
-                default:
-                    throw new NotImplementedException($"Security Type is not implemented for LeanWriter: {securityType}");
             }
         }
 
