@@ -268,6 +268,12 @@ namespace QuantConnect.Brokerages.Backtesting
                         _pending.TryRemove(order.Id, out order);
                         continue;
                     }
+                    
+                    if (order.Status == OrderStatus.CancelPending)
+                    {
+                        // the pending CancelOrderRequest will be handled during the next transaction handler run
+                        continue;
+                    }
 
                     // all order fills are processed on the next bar (except for market orders)
                     if (order.Time == Algorithm.UtcTime && order.Type != OrderType.Market && order.Type != OrderType.OptionExercise)
