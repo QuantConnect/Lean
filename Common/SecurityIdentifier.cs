@@ -610,7 +610,7 @@ namespace QuantConnect
 
             var result = new SecurityIdentifier(symbol, otherData, underlying ?? Empty);
 
-            // we already have these so lets set them
+            // we already have these so lets set them. Massive performance improvement!
             switch (securityType)
             {
                 case SecurityType.Base:
@@ -619,6 +619,7 @@ namespace QuantConnect
                     result._date = date;
                     break;
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                 case SecurityType.FutureOption:
                     result._date = date;
                     result._strikePrice = strike;
