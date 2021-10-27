@@ -853,6 +853,24 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Lazy string to lower implementation.
+        /// Will first verify the string is not already lower and avoid
+        /// the call to <see cref="string.ToLowerInvariant()"/> if possible.
+        /// </summary>
+        /// <param name="data">The string to lower</param>
+        /// <returns>The lower string</returns>
+        public static string LazyToLower(this string data)
+        {
+            // for performance only call to lower if required
+            var alreadyLower = true;
+            for (int i = 0; i < data.Length && alreadyLower; i++)
+            {
+                alreadyLower = char.IsLower(data[i]);
+            }
+            return alreadyLower ? data : data.ToLowerInvariant();
+        }
+
+        /// <summary>
         /// Extension method to automatically set the update value to same as "add" value for TryAddUpdate.
         /// This makes the API similar for traditional and concurrent dictionaries.
         /// </summary>
@@ -2097,6 +2115,44 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts the specified string to its corresponding OptionStyle
+        /// </summary>
+        /// <remarks>This method provides faster performance than enum parse</remarks>
+        /// <param name="optionStyle">The OptionStyle string value</param>
+        /// <returns>The OptionStyle value</returns>
+        public static OptionStyle ParseOptionStyle(this string optionStyle)
+        {
+            switch (optionStyle.LazyToLower())
+            {
+                case "american":
+                    return OptionStyle.American;
+                case "european":
+                    return OptionStyle.European;
+                default:
+                    throw new ArgumentException($"Unexpected OptionStyle: {optionStyle}");
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified string to its corresponding OptionRight
+        /// </summary>
+        /// <remarks>This method provides faster performance than enum parse</remarks>
+        /// <param name="optionRight">The optionRight string value</param>
+        /// <returns>The OptionRight value</returns>
+        public static OptionRight ParseOptionRight(this string optionRight)
+        {
+            switch (optionRight.LazyToLower())
+            {
+                case "call":
+                    return OptionRight.Call;
+                case "put":
+                    return OptionRight.Put;
+                default:
+                    throw new ArgumentException($"Unexpected OptionRight: {optionRight}");
+            }
+        }
+
+        /// <summary>
         /// Converts the specified <paramref name="optionRight"/> value to its corresponding string representation
         /// </summary>
         /// <remarks>This method provides faster performance than enum <see cref="Object.ToString"/></remarks>
@@ -2113,6 +2169,44 @@ namespace QuantConnect
                 default:
                     // just in case
                     return optionRight.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified <paramref name="optionRight"/> value to its corresponding lower-case string representation
+        /// </summary>
+        /// <remarks>This method provides faster performance than <see cref="ToLower"/></remarks>
+        /// <param name="optionRight">The optionRight value</param>
+        /// <returns>A lower case string representation of the specified OptionRight value</returns>
+        public static string OptionRightToLower(this OptionRight optionRight)
+        {
+            switch (optionRight)
+            {
+                case OptionRight.Call:
+                    return "call";
+                case OptionRight.Put:
+                    return "put";
+                default:
+                    throw new ArgumentException($"Unexpected OptionRight: {optionRight}");
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified <paramref name="optionStyle"/> value to its corresponding lower-case string representation
+        /// </summary>
+        /// <remarks>This method provides faster performance than <see cref="ToLower"/></remarks>
+        /// <param name="optionStyle">The optionStyle value</param>
+        /// <returns>A lower case string representation of the specified optionStyle value</returns>
+        public static string OptionStyleToLower(this OptionStyle optionStyle)
+        {
+            switch (optionStyle)
+            {
+                case OptionStyle.American:
+                    return "american";
+                case OptionStyle.European:
+                    return "european";
+                default:
+                    throw new ArgumentException($"Unexpected OptionStyle: {optionStyle}");
             }
         }
 
