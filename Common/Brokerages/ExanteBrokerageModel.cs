@@ -103,6 +103,11 @@ namespace QuantConnect.Brokerages
                 return 1m;
             }
 
+            if (security.Type == SecurityType.Forex)
+            {
+                return 1.05m;
+            }
+
             if (security.Type == SecurityType.Equity)
             {
                 return EquityLeverage;
