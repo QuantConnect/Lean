@@ -217,8 +217,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if(!_subscribedToEquityMapAndFactorFiles)
             {
-                throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider" +
-                    "to download Equity data from QuantConnect.");
+                throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider " +
+                    "to download Equity data from QuantConnect. " + 
+                    "Please visit https://www.quantconnect.com/datasets/quantconnect-security-master for details.");
             }
         }
     }
