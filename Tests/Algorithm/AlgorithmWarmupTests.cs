@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,16 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Indicators;
+using QuantConnect.Tests.Engine.DataFeeds;
+using Python.Runtime;
+using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Data.Market;
+using QuantConnect.Tests.Indicators;
+using System.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -30,6 +40,32 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmWarmupTests
     {
         private TestWarmupAlgorithm _algorithm;
+        private QCAlgorithm _algo;
+        private TestHistoryProvider _testHistoryProvider;
+        private IDataProvider _dataProvider;
+        private IMapFileProvider _mapFileProvider;
+        private IFactorFileProvider _factorFileProvider;
+        private IEnumerable<Type> _indicatorTestsTypes;
+
+        [SetUp]
+        public void Setup()
+        {
+            _algo = new QCAlgorithm();
+            _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
+            _algo.HistoryProvider = _testHistoryProvider = new TestHistoryProvider();
+
+            _dataProvider = TestGlobals.DataProvider;
+            _mapFileProvider = TestGlobals.MapFileProvider;
+            _factorFileProvider = TestGlobals.FactorFileProvider;
+
+            _indicatorTestsTypes = from type in GetType().Assembly.GetTypes()
+                where type.IsPublic && !type.IsAbstract
+                where
+                   typeof(CommonIndicatorTests<TradeBar>).IsAssignableFrom(type) ||
+                   typeof(CommonIndicatorTests<IBaseDataBar>).IsAssignableFrom(type) ||
+                   typeof(CommonIndicatorTests<IndicatorDataPoint>).IsAssignableFrom(type)
+                   select type;
+        }
 
         [TearDown]
         public void TearDown()
@@ -165,6 +201,52 @@ namespace QuantConnect.Tests.Algorithm
                         SetHoldings(_symbol, 1);
                     }
                 }
+            }
+        }
+
+        [Test]
+        public void WarmUpPythonIndicatorProperly()
+        {
+            _algo = new QCAlgorithm();
+            _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
+            _algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
+            _algo.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                _dataProvider,
+                zipCacheProvider,
+                _mapFileProvider,
+                _factorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+            _algo.SetStartDate(2013, 10, 08);
+            _algo.AddEquity("SPY", Resolution.Minute);
+
+            PyObject indicator;
+
+            foreach (var type in _indicatorTestsTypes)
+            {
+                var indicatorTest = Activator.CreateInstance(type);
+                if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
+                {
+                    indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).GetIndicatorAsPyObject();
+                }
+                else if (indicatorTest is CommonIndicatorTests<IBaseDataBar>)
+                {
+                    indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).GetIndicatorAsPyObject();
+                }
+                else if (indicatorTest is CommonIndicatorTests<TradeBar>)
+                {
+                    indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).GetIndicatorAsPyObject();
+                }
+                else
+                {
+                    throw new NotSupportedException($"WarmUpIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
+                }
+
+                Assert.DoesNotThrow(() => _algo.WarmUpIndicator("SPY", indicator, Resolution.Minute));
             }
         }
     }

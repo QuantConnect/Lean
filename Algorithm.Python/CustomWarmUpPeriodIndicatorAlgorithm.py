@@ -32,14 +32,17 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         # - customNotWarmUp does not define WarmUpPeriod parameter
         # - customWarmUp defines WarmUpPeriod parameter
         # - customNotInherit defines WarmUpPeriod parameter but does not inherit from PythonIndicator class
+        # - csharpIndicator defines WarmUpPeriod parameter and represents the traditional LEAN C# indicator
         self.customNotWarmUp = CSMANotWarmUp('customNotWarmUp', 60)
         self.customWarmUp = CSMAWithWarmUp('customWarmUp', 60)
         self.customNotInherit = CustomSMA('customNotInherit', 60)
+        self.csharpIndicator = SimpleMovingAverage('csharpIndicator', 60)
 
         # Register the daily data of "SPY" to automatically update the indicators
         self.RegisterIndicator("SPY", self.customWarmUp, Resolution.Minute)
         self.RegisterIndicator("SPY", self.customNotWarmUp, Resolution.Minute)
         self.RegisterIndicator("SPY", self.customNotInherit, Resolution.Minute)
+        self.RegisterIndicator("SPY", self.csharpIndicator, Resolution.Minute)
 
         # Warm up customWarmUp indicator
         self.WarmUpIndicator("SPY", self.customWarmUp, Resolution.Minute)
@@ -64,6 +67,13 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         assert(self.customNotInherit.IsReady), "customNotInherit indicator was expected to be ready"
         assert(self.customNotInherit.Samples == 60), "customNotInherit indicator was expected to have processed 60 datapoints already"
 
+        # Warm up csharpIndicator
+        self.WarmUpIndicator("SPY", self.csharpIndicator, Resolution.Minute)
+
+        # Check csharpIndicator indicator has already been warmed up with the requested data
+        assert(self.csharpIndicator.IsReady), "csharpIndicator indicator was expected to be ready"
+        assert(self.csharpIndicator.Samples == 60), "csharpIndicator indicator was expected to have processed 60 datapoints already"
+
     def OnData(self, data):
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
@@ -73,12 +83,15 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
             diff = abs(self.customNotWarmUp.Current.Value - self.customWarmUp.Current.Value)
             diff += abs(self.customNotInherit.Value - self.customNotWarmUp.Current.Value)
             diff += abs(self.customNotInherit.Value - self.customWarmUp.Current.Value)
+            diff += abs(self.csharpIndicator.Current.Value - self.customWarmUp.Current.Value)
+            diff += abs(self.csharpIndicator.Current.Value - self.customNotWarmUp.Current.Value)
+            diff += abs(self.csharpIndicator.Current.Value - self.customNotInherit.Value)
 
             # Check customNotWarmUp indicator is ready when the number of samples is bigger than its WarmUpPeriod parameter
             assert(self.customNotWarmUp.IsReady == (self.customNotWarmUp.Samples >= 60)), "customNotWarmUp indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter"
 
-            # Check their values are the same when all of them are ready
-            assert(diff <= 1e-10 or (not self.customNotWarmUp.IsReady) or (not self.customWarmUp.IsReady) or (not self.customNotInherit.IsReady)), f"The values of the indicators are not the same. Indicators difference is {diff}"
+            # Check their values are the same. We only need to check if customNotWarmUp indicator is ready because the other ones has already been asserted to be ready
+            assert(diff <= 1e-10 or (not self.customNotWarmUp.IsReady)), f"The values of the indicators are not the same. Indicators difference is {diff}"
             
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
