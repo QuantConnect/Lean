@@ -15,13 +15,13 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -31,8 +31,9 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityDefinitionSymbolResolver
     {
+        private List<SecurityDefinition> _securityDefinitions;
         private readonly IMapFileProvider _mapFileProvider;
-        private readonly List<SecurityDefinition> _securityDefinitions;
+        private readonly string _securitiesDefinitionKey;
         private readonly IDataProvider _dataProvider;
         
         /// <summary>
@@ -42,16 +43,11 @@ namespace QuantConnect.Securities
         /// <param name="securitiesDefinitionKey">Location to read the securities definition data from</param>
         public SecurityDefinitionSymbolResolver(IDataProvider dataProvider = null, string securitiesDefinitionKey = null)
         {
-            securitiesDefinitionKey ??= Path.Combine(Globals.DataFolder, "symbol-properties", "security-database.csv");
+            _securitiesDefinitionKey = securitiesDefinitionKey ?? Path.Combine(Globals.DataFolder, "symbol-properties", "security-database.csv");
             
             _dataProvider = dataProvider ?? 
                 Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
                     Config.Get("data-provider", "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider"));
-            
-            if (!SecurityDefinition.TryRead(_dataProvider, securitiesDefinitionKey, out _securityDefinitions))
-            {
-                Log.Trace($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {securitiesDefinitionKey}");
-            }
 
             _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
             _mapFileProvider.Initialize(_dataProvider);
@@ -76,7 +72,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.CUSIP != null && x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)),
+                GetSecurityDefinitions().FirstOrDefault(x => x.CUSIP != null && x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
         
@@ -99,7 +95,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.CompositeFIGI != null && x.CompositeFIGI.Equals(compositeFigi, StringComparison.InvariantCultureIgnoreCase)),
+                GetSecurityDefinitions().FirstOrDefault(x => x.CompositeFIGI != null && x.CompositeFIGI.Equals(compositeFigi, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
         
@@ -122,7 +118,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.SEDOL != null && x.SEDOL.Equals(sedol, StringComparison.InvariantCultureIgnoreCase)),
+                GetSecurityDefinitions().FirstOrDefault(x => x.SEDOL != null && x.SEDOL.Equals(sedol, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
 
@@ -145,7 +141,7 @@ namespace QuantConnect.Securities
             }
             
             return SecurityDefinitionToSymbol(
-                _securityDefinitions?.FirstOrDefault(x => x.ISIN != null && x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)),
+                GetSecurityDefinitions().FirstOrDefault(x => x.ISIN != null && x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
 
@@ -186,6 +182,24 @@ namespace QuantConnect.Securities
             return string.IsNullOrWhiteSpace(mappedTicker) 
                 ? null 
                 : new Symbol(securityDefinition.SecurityIdentifier, mappedTicker);
+        }
+
+        /// <summary>
+        /// Get's the security definitions using a lazy initialization
+        /// </summary>
+        private IEnumerable<SecurityDefinition> GetSecurityDefinitions()
+        {
+            if (_securityDefinitions != null)
+            {
+                return _securityDefinitions;
+            }
+
+            if (!SecurityDefinition.TryRead(_dataProvider, _securitiesDefinitionKey, out _securityDefinitions))
+            {
+                _securityDefinitions = new List<SecurityDefinition>();
+                Log.Error($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {_securitiesDefinitionKey}");
+            }
+            return _securityDefinitions;
         }
     }
 }
