@@ -75,7 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 entryNames = Compression.GetZipEntryFileNames(stream).ToList();
                 stream.DisposeSafely();
             }
-            catch (ZipException err)
+            catch (Exception err)
             {
                 OnInvalidSource(source, err);
                 yield break;
