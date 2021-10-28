@@ -23,6 +23,8 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Data
 {
@@ -90,6 +92,7 @@ namespace QuantConnect.Data
             var lastTime = DateTime.MinValue;
             var outputFile = string.Empty;
             var currentFileDictionary = new SortedDictionary<DateTime, string>();
+            var writeTasks = new Queue<Task>();
 
             foreach (var data in source)
             {
@@ -106,9 +109,13 @@ namespace QuantConnect.Data
                     {
                         if (!currentFileDictionary.IsNullOrEmpty())
                         {
-                            // TODO: Could task master this so it can continue sorting data by file while writing this one?
-                            //// Would need to await all tasks to complete before returning
-                            MergeAndWriteFile(outputFile, data.Time, currentFileDictionary);
+                            // Launch a write task for the current file and data set
+                            var file = outputFile;
+                            var dictionary = currentFileDictionary;
+                            writeTasks.Enqueue(Task.Run(() =>
+                            {
+                                WriteFile(file, dictionary, data.Time);
+                            }));
                         }
 
                         // Reset our dictionary and store new output file
@@ -128,41 +135,19 @@ namespace QuantConnect.Data
             // Finish off my processing the last file as well
             if (!currentFileDictionary.IsNullOrEmpty())
             {
-                MergeAndWriteFile(outputFile, lastTime, currentFileDictionary);
-            }
-        }
-
-        /// <summary>
-        /// Helper for writing files, merges if it fits the right criteria and file can be loaded, otherwise just writes data
-        /// </summary>
-        /// <param name="outputFile">File to write too</param>
-        /// <param name="lastEntryTime">Final entry time in data, used to generate entry name</param>
-        /// <param name="data"></param>
-        private void MergeAndWriteFile(string outputFile, DateTime lastEntryTime, SortedDictionary<DateTime, string> data)
-        {
-            // Generate this csv entry name <--- TODO: Problematic when we have newer lastEntryTime?
-            var entryName = LeanData.GenerateZipEntryName(_symbol, lastEntryTime, _resolution, _tickType);
-
-            // Only merge on files with hour/daily resolution; files that exist, and can be loaded
-            if (_resolution > Resolution.Hour && File.Exists(outputFile) && TryLoadFile(outputFile, entryName, out var rows))
-            {
-                // Preform merge on loaded rows
-                foreach (var entry in data)
+                writeTasks.Enqueue(Task.Run(() =>
                 {
-                    rows[entry.Key] = entry.Value;
-                }
+                    WriteFile(outputFile, currentFileDictionary, lastTime);
+                }));
             }
-            else
+
+            // Wait for all our write tasks to finish
+            while (writeTasks.Count > 0)
             {
-                // No need to merge for one of the reasons above, just write these rows
-                rows = data;
+                var task = writeTasks.Dequeue();
+                task.Wait();
             }
-
-            // Write to file
-            WriteFile(outputFile, rows.Values, lastEntryTime);
         }
-
-
 
         /// <summary>
         /// Downloads historical data from the brokerage and saves it in LEAN format.
@@ -414,7 +399,6 @@ namespace QuantConnect.Data
         private static bool TryLoadFile(string fileName, string entryName, out SortedDictionary<DateTime, string> rows)
         {
             rows = new SortedDictionary<DateTime, string>();
-
             using (var zip = ZipFile.Read(fileName))
             {
                 // Entry is specified and does not exist, just return empty rows
@@ -423,7 +407,8 @@ namespace QuantConnect.Data
                     return false;
                 }
 
-                using (var stream = new MemoryStream())
+                var guid = Extensions.RentId();
+                using (var stream = Extensions.GetMemoryStream(guid))
                 {
                     // Fetch our entry and read it into our rows
                     zip[entryName].Extract(stream);
@@ -434,11 +419,12 @@ namespace QuantConnect.Data
                         string line;
                         while ((line = reader.ReadLine()) != null)
                         {
-                            var time = Parse.DateTimeExact(line.Substring(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter);
+                            var time = DateTime.ParseExact(line.AsSpan(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
                             rows[time] = line;
                         }
                     }
                 }
+                Extensions.ReturnId(guid);
             }
 
             return true;
@@ -450,29 +436,53 @@ namespace QuantConnect.Data
         /// <param name="filePath">The full path to the new file</param>
         /// <param name="data">The data to write as a string</param>
         /// <param name="date">The date the data represents</param>
-        private void WriteFile(string filePath, IEnumerable<string> data, DateTime date)
+        private void WriteFile(string filePath, SortedDictionary<DateTime, string> data, DateTime date)
         {
+            // Generate this csv entry name
+            var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
+            
+            // Check disk once for this file ahead of time, reuse where possible
+            var fileExists = File.Exists(filePath);
+
+            // Handle merging of files
+            // Only merge on files with hour/daily resolution, that exist, and can be loaded
+            if (_resolution > Resolution.Hour && fileExists && TryLoadFile(filePath, entryName, out var rows))
+            {
+                // Preform merge on loaded rows
+                foreach (var entry in data)
+                {
+                    rows[entry.Key] = entry.Value;
+                }
+            }
+            else
+            {
+                // No need to merge for one of the reasons above, just write these rows
+                rows = data;
+            }
+
             var tempFilePath = filePath + ".tmp";
 
-            if (File.Exists(filePath) && !_appendToZips)
+            if (!_appendToZips && fileExists)
             {
                 File.Delete(filePath);
                 Log.Trace("LeanDataWriter.Write(): Existing deleted: " + filePath);
             }
 
-            // Create the directory if it doesnt exist
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            // If our file doesn't exist its possible the directory doesn't exist, make sure at least the directory exists
+            if (!fileExists)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            }
 
             if (_appendToZips)
             {
-                var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
-                Compression.ZipCreateAppendData(filePath, entryName, string.Join(Environment.NewLine, data), true);
+                Compression.ZipCreateAppendData(filePath, entryName, string.Join(Environment.NewLine, rows.Values), true);
                 Log.Trace($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
             }
             else
             {
                 // Write out this data string to a zip file
-                Compression.ZipData(tempFilePath, LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType), data);
+                Compression.ZipData(tempFilePath, entryName, rows.Values);
 
                 // Move temp file to the final destination with the appropriate name
                 File.Move(tempFilePath, filePath);
