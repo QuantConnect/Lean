@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -281,6 +281,7 @@ namespace QuantConnect.Algorithm
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
             Universe universe;
 
+            // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
             if (pyObject.TryConvert(out universe))
             {
                 return AddUniverse(universe);
@@ -595,6 +596,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         public void RegisterIndicator(Symbol symbol, PyObject indicator, IDataConsolidator consolidator, PyObject selector = null)
         {
+            // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
             IndicatorBase<IndicatorDataPoint> indicatorDataPoint;
             IndicatorBase<IBaseDataBar> indicatorDataBar;
             IndicatorBase<TradeBar> indicatorTradeBar;
@@ -616,6 +618,39 @@ namespace QuantConnect.Algorithm
             }
 
             RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+        }
+
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        public void WarmUpIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
+        {
+            // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
+            IndicatorBase<IndicatorDataPoint> indicatorDataPoint;
+            IndicatorBase<IBaseDataBar> indicatorDataBar;
+            IndicatorBase<TradeBar> indicatorTradeBar;
+
+            if (indicator.TryConvert(out indicatorDataPoint))
+            {
+                WarmUpIndicator(symbol, indicatorDataPoint, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return;
+            }
+            else if (indicator.TryConvert(out indicatorDataBar))
+            {
+                WarmUpIndicator(symbol, indicatorDataBar, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return;
+            }
+            else if (indicator.TryConvert(out indicatorTradeBar))
+            {
+                WarmUpIndicator(symbol, indicatorTradeBar, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return;
+            }
+
+            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
         }
 
         /// <summary>

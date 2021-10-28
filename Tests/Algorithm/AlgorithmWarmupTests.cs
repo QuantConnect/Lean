@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,12 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Indicators;
+using QuantConnect.Tests.Engine.DataFeeds;
+using Python.Runtime;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -103,7 +109,55 @@ namespace QuantConnect.Tests.Algorithm
             Assert.GreaterOrEqual(_algorithm.WarmUpDataCount, estimateExpectedDataCount);
         }
 
-        public class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        [Test]
+        public void WarmUpPythonIndicatorProperly()
+        {
+            var algo = new AlgorithmStub
+            {
+                HistoryProvider = new SubscriptionDataReaderHistoryProvider()
+            };
+            var zipCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
+            algo.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                TestGlobals.DataProvider,
+                zipCacheProvider,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+            algo.SetStartDate(2013, 10, 08);
+            algo.AddEquity("SPY", Resolution.Minute);
+
+            // Different types of indicators
+            var indicatorDataPoint = new SimpleMovingAverage("SPY", 10);
+            var indicatorDataBar = new AverageTrueRange("SPY", 10);
+            var indicatorTradeBar = new VolumeWeightedAveragePriceIndicator("SPY", 10);
+
+            using (Py.GIL())
+            {
+                var sma = indicatorDataPoint.ToPython();
+                var atr = indicatorTradeBar.ToPython();
+                var vwapi = indicatorDataBar.ToPython();
+
+                Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", sma, Resolution.Minute));
+                Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", atr, Resolution.Minute));
+                Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", vwapi, Resolution.Minute));
+
+                var smaIsReady = ((dynamic)sma).IsReady;
+                var atrIsReady = ((dynamic)atr).IsReady;
+                var vwapiIsReady = ((dynamic)vwapi).IsReady;
+
+                Assert.IsTrue(smaIsReady.IsTrue());
+                Assert.IsTrue(atrIsReady.IsTrue());
+                Assert.IsTrue(vwapiIsReady.IsTrue());
+            }
+
+            zipCacheProvider.DisposeSafely();
+        }
+
+        private class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             public static TestWarmupAlgorithm TestAlgorithm { get; set; }
 
@@ -114,7 +168,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        public class TestWarmupAlgorithm : QCAlgorithm
+        private class TestWarmupAlgorithm : QCAlgorithm
         {
             private readonly Resolution _resolution;
             private Symbol _symbol;
