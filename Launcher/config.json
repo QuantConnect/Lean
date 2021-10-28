@@ -193,6 +193,8 @@
   "ftx-account-tier": "Tier1", // accept "Tier1", "Tier2", "Tier3", "Tier4", "Tier5", "Tier6", "VIP1", "VIP2", "VIP3", "MM1", "MM2", "MM3"
   "ftx-api-secret": "",
   "ftx-api-key": "",
+  "ftx-api-url": "https://ftx.com/api", // can be FTX or FTX.US
+  "ftx-websocket-url": "wss://ftx.com/ws/", // can be FTX or FTX.US
 
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
