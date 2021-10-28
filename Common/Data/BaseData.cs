@@ -64,6 +64,11 @@ namespace QuantConnect.Data
         protected static readonly List<Resolution> HighResolution = new List<Resolution> { Resolution.Minute, Resolution.Second, Resolution.Tick };
 
         /// <summary>
+        /// A list of resolutions support by Options
+        /// </summary>
+        protected static readonly List<Resolution> OptionResolutions = new List<Resolution> { Resolution.Daily, Resolution.Hour, Resolution.Minute };
+
+        /// <summary>
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
         /// </summary>
         /// <remarks>Data is classed into two categories - streams of instantaneous prices and groups of OHLC data.</remarks>
@@ -232,7 +237,7 @@ namespace QuantConnect.Data
         /// custom data types can override it</remarks>
         public virtual List<Resolution> SupportedResolutions()
         {
-            if (Symbol.SecurityType.IsOption() || Symbol.SecurityType == SecurityType.Index)
+            if (Symbol.SecurityType == SecurityType.Index)
             {
                 return MinuteResolution;
             }
@@ -240,6 +245,11 @@ namespace QuantConnect.Data
             if (Symbol.SecurityType == SecurityType.Future)
             {
                 return HighResolution;
+            }
+
+            if (Symbol.SecurityType.IsOption())
+            {
+                return OptionResolutions;
             }
 
             return AllResolutions;
