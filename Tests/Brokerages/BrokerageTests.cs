@@ -476,6 +476,7 @@ namespace QuantConnect.Tests.Brokerages
 
             // pick a security with low, but some, volume
             var symbol = Symbols.EURUSD;
+
             var order = new MarketOrder(symbol, qty, DateTime.UtcNow) { Id = 1 };
             OrderProvider.Add(order);
             Brokerage.PlaceOrder(order);
@@ -620,9 +621,9 @@ namespace QuantConnect.Tests.Brokerages
                 false);
         }
 
-        protected void ProcessFeed(IEnumerator<BaseData> enumerator, CancellationTokenSource cancellationToken, Action<BaseData> callback = null)
+        protected static Task ProcessFeed(IEnumerator<BaseData> enumerator, CancellationTokenSource cancellationToken, Action<BaseData> callback = null)
         {
-            Task.Factory.StartNew(() =>
+            return Task.Factory.StartNew(() =>
             {
                 try
                 {
@@ -643,7 +644,7 @@ namespace QuantConnect.Tests.Brokerages
                 {
                     Log.Error(err.Message);
                 }
-            }, cancellationToken.Token);
+            }, cancellationToken.Token, TaskCreationOptions.None, TaskScheduler.Default);
         }
 
     }

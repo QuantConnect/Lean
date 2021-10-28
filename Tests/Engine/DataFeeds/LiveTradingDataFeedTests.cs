@@ -2337,7 +2337,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
     }
 
-    internal class TestableLiveTradingDataFeed : LiveTradingDataFeed
+    public class TestableLiveTradingDataFeed : LiveTradingDataFeed
     {
         public IDataQueueHandler DataQueueHandler;
 
@@ -2371,7 +2371,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     }
 
 
-    internal class TestableLiveSynchronizer : LiveSynchronizer
+    public class TestableLiveSynchronizer : LiveSynchronizer
     {
         private readonly ITimeProvider _timeProvider;
         private readonly int _newLiveDataTimeout;
