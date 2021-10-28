@@ -231,6 +231,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.FTX:
                     return new FTXBrokerageModel(accountType);
 
+                case BrokerageName.FTXUS:
+                    return new FTXUSBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }

@@ -104,6 +104,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use ftx models
         /// </summary>
-        FTX
+        FTX,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use ftx us models
+        /// </summary>
+        FTXUS
     }
 }
