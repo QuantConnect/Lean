@@ -29,10 +29,6 @@ using Python.Runtime;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Data.Market;
-using QuantConnect.Tests.Indicators;
-using System.Linq;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -57,14 +53,6 @@ namespace QuantConnect.Tests.Algorithm
             _dataProvider = TestGlobals.DataProvider;
             _mapFileProvider = TestGlobals.MapFileProvider;
             _factorFileProvider = TestGlobals.FactorFileProvider;
-
-            _indicatorTestsTypes = from type in GetType().Assembly.GetTypes()
-                where type.IsPublic && !type.IsAbstract
-                where
-                   typeof(CommonIndicatorTests<TradeBar>).IsAssignableFrom(type) ||
-                   typeof(CommonIndicatorTests<IBaseDataBar>).IsAssignableFrom(type) ||
-                   typeof(CommonIndicatorTests<IndicatorDataPoint>).IsAssignableFrom(type)
-                   select type;
         }
 
         [TearDown]
@@ -224,29 +212,28 @@ namespace QuantConnect.Tests.Algorithm
             _algo.SetStartDate(2013, 10, 08);
             _algo.AddEquity("SPY", Resolution.Minute);
 
-            PyObject indicator;
+            // Different types of indicators
+            var indicatorDataPoint = new SimpleMovingAverage("SPY", 10);
+            var indicatorDataBar = new AverageTrueRange("SPY", 10);
+            var indicatorTradeBar = new VolumeWeightedAveragePriceIndicator("SPY", 10);
 
-            foreach (var type in _indicatorTestsTypes)
+            using (Py.GIL())
             {
-                var indicatorTest = Activator.CreateInstance(type);
-                if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
-                {
-                    indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).GetIndicatorAsPyObject();
-                }
-                else if (indicatorTest is CommonIndicatorTests<IBaseDataBar>)
-                {
-                    indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).GetIndicatorAsPyObject();
-                }
-                else if (indicatorTest is CommonIndicatorTests<TradeBar>)
-                {
-                    indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).GetIndicatorAsPyObject();
-                }
-                else
-                {
-                    throw new NotSupportedException($"WarmUpIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
-                }
+                var sma = indicatorDataPoint.ToPython();
+                var atr = indicatorTradeBar.ToPython();
+                var vwapi = indicatorDataBar.ToPython();
 
-                Assert.DoesNotThrow(() => _algo.WarmUpIndicator("SPY", indicator, Resolution.Minute));
+                Assert.DoesNotThrow(() => _algo.WarmUpIndicator("SPY", sma, Resolution.Minute));
+                Assert.DoesNotThrow(() => _algo.WarmUpIndicator("SPY", atr, Resolution.Minute));
+                Assert.DoesNotThrow(() => _algo.WarmUpIndicator("SPY", vwapi, Resolution.Minute));
+
+                var smaIsReady = ((dynamic)sma).IsReady;
+                var atrIsReady = ((dynamic)atr).IsReady;
+                var vwapiIsReady = ((dynamic)vwapi).IsReady;
+
+                Assert.IsTrue(smaIsReady.IsTrue());
+                Assert.IsTrue(atrIsReady.IsTrue());
+                Assert.IsTrue(vwapiIsReady.IsTrue());
             }
         }
     }

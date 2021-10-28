@@ -281,6 +281,7 @@ namespace QuantConnect.Algorithm
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
             Universe universe;
 
+            // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
             if (pyObject.TryConvert(out universe))
             {
                 return AddUniverse(universe);
@@ -595,6 +596,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         public void RegisterIndicator(Symbol symbol, PyObject indicator, IDataConsolidator consolidator, PyObject selector = null)
         {
+            // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
             IndicatorBase<IndicatorDataPoint> indicatorDataPoint;
             IndicatorBase<IBaseDataBar> indicatorDataBar;
             IndicatorBase<TradeBar> indicatorTradeBar;
@@ -648,7 +650,7 @@ namespace QuantConnect.Algorithm
                 return;
             }
 
-            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
         }
 
         /// <summary>
