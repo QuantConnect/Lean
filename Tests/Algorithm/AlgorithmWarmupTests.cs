@@ -26,9 +26,9 @@ using QuantConnect.Packets;
 using QuantConnect.Indicators;
 using QuantConnect.Tests.Engine.DataFeeds;
 using Python.Runtime;
-using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -36,24 +36,6 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmWarmupTests
     {
         private TestWarmupAlgorithm _algorithm;
-        private QCAlgorithm _algo;
-        private TestHistoryProvider _testHistoryProvider;
-        private IDataProvider _dataProvider;
-        private IMapFileProvider _mapFileProvider;
-        private IFactorFileProvider _factorFileProvider;
-        private IEnumerable<Type> _indicatorTestsTypes;
-
-        [SetUp]
-        public void Setup()
-        {
-            _algo = new QCAlgorithm();
-            _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
-            _algo.HistoryProvider = _testHistoryProvider = new TestHistoryProvider();
-
-            _dataProvider = TestGlobals.DataProvider;
-            _mapFileProvider = TestGlobals.MapFileProvider;
-            _factorFileProvider = TestGlobals.FactorFileProvider;
-        }
 
         [TearDown]
         public void TearDown()
@@ -127,7 +109,55 @@ namespace QuantConnect.Tests.Algorithm
             Assert.GreaterOrEqual(_algorithm.WarmUpDataCount, estimateExpectedDataCount);
         }
 
-        public class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        [Test]
+        public void WarmUpPythonIndicatorProperly()
+        {
+            var algo = new AlgorithmStub
+            {
+                HistoryProvider = new SubscriptionDataReaderHistoryProvider()
+            };
+            var zipCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
+            algo.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                TestGlobals.DataProvider,
+                zipCacheProvider,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+            algo.SetStartDate(2013, 10, 08);
+            algo.AddEquity("SPY", Resolution.Minute);
+
+            // Different types of indicators
+            var indicatorDataPoint = new SimpleMovingAverage("SPY", 10);
+            var indicatorDataBar = new AverageTrueRange("SPY", 10);
+            var indicatorTradeBar = new VolumeWeightedAveragePriceIndicator("SPY", 10);
+
+            using (Py.GIL())
+            {
+                var sma = indicatorDataPoint.ToPython();
+                var atr = indicatorTradeBar.ToPython();
+                var vwapi = indicatorDataBar.ToPython();
+
+                Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", sma, Resolution.Minute));
+                Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", atr, Resolution.Minute));
+                Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", vwapi, Resolution.Minute));
+
+                var smaIsReady = ((dynamic)sma).IsReady;
+                var atrIsReady = ((dynamic)atr).IsReady;
+                var vwapiIsReady = ((dynamic)vwapi).IsReady;
+
+                Assert.IsTrue(smaIsReady.IsTrue());
+                Assert.IsTrue(atrIsReady.IsTrue());
+                Assert.IsTrue(vwapiIsReady.IsTrue());
+            }
+
+            zipCacheProvider.DisposeSafely();
+        }
+
+        private class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             public static TestWarmupAlgorithm TestAlgorithm { get; set; }
 
@@ -138,7 +168,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        public class TestWarmupAlgorithm : QCAlgorithm
+        private class TestWarmupAlgorithm : QCAlgorithm
         {
             private readonly Resolution _resolution;
             private Symbol _symbol;
@@ -189,51 +219,6 @@ namespace QuantConnect.Tests.Algorithm
                         SetHoldings(_symbol, 1);
                     }
                 }
-            }
-        }
-
-        [Test]
-        public void WarmUpPythonIndicatorProperly()
-        {
-            _algo = new QCAlgorithm();
-            _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
-            _algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
-            _algo.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                _dataProvider,
-                zipCacheProvider,
-                _mapFileProvider,
-                _factorFileProvider,
-                null,
-                false,
-                new DataPermissionManager()));
-            _algo.SetStartDate(2013, 10, 08);
-            _algo.AddEquity("SPY", Resolution.Minute);
-
-            // Different types of indicators
-            var indicatorDataPoint = new SimpleMovingAverage("SPY", 10);
-            var indicatorDataBar = new AverageTrueRange("SPY", 10);
-            var indicatorTradeBar = new VolumeWeightedAveragePriceIndicator("SPY", 10);
-
-            using (Py.GIL())
-            {
-                var sma = indicatorDataPoint.ToPython();
-                var atr = indicatorTradeBar.ToPython();
-                var vwapi = indicatorDataBar.ToPython();
-
-                Assert.DoesNotThrow(() => _algo.WarmUpIndicator("SPY", sma, Resolution.Minute));
-                Assert.DoesNotThrow(() => _algo.WarmUpIndicator("SPY", atr, Resolution.Minute));
-                Assert.DoesNotThrow(() => _algo.WarmUpIndicator("SPY", vwapi, Resolution.Minute));
-
-                var smaIsReady = ((dynamic)sma).IsReady;
-                var atrIsReady = ((dynamic)atr).IsReady;
-                var vwapiIsReady = ((dynamic)vwapi).IsReady;
-
-                Assert.IsTrue(smaIsReady.IsTrue());
-                Assert.IsTrue(atrIsReady.IsTrue());
-                Assert.IsTrue(vwapiIsReady.IsTrue());
             }
         }
     }

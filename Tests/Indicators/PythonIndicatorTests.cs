@@ -253,7 +253,7 @@ class BadCustomIndicator(PythonIndicator):
         }
 
         [Test]
-        public void WarmsUpProperly()
+        public void WarmsUpProperlyPythonIndicator()
         {
             using (Py.GIL())
             {
