@@ -87,54 +87,82 @@ namespace QuantConnect.Data
         /// <param name="source">IEnumerable source of the data: sorted from oldest to newest.</param>
         public void Write(IEnumerable<BaseData> source)
         {
-            // Prime our write loop
-            var dataEnumerator = source?.GetEnumerator();
-            if (dataEnumerator != null && dataEnumerator.MoveNext() && dataEnumerator.Current != null)
+            var lastTime = DateTime.MinValue;
+            var outputFile = string.Empty;
+            var currentFileDictionary = new SortedDictionary<DateTime, string>();
+
+            foreach (var data in source)
             {
-                // Setup needs first piece of data
-                string outputFile = GetZipOutputFileName(_dataDirectory, dataEnumerator.Current.Time);
-                var lastTime = dataEnumerator.Current.Time;
-                var lines = new List<string>();
+                // Ensure the data is sorted as a safety check
+                if (data.Time < lastTime) throw new Exception("The data must be pre-sorted from oldest to newest");
 
-                // Iterate through our data and process it
-                do
+                // Update our output file
+                // Only do this on date change, because we know we don't have a any data zips smaller than a day, saves time
+                if (data.Time.Date != lastTime.Date)
                 {
-                    // Ensure the data is sorted as a safety check
-                    if (dataEnumerator.Current.Time < lastTime) throw new Exception("The data must be pre-sorted from oldest to newest");
-
-                    // Check if our output would have changed
-                    // Only do this on date change, because we know we don't have a any data zips smaller than a day.
-                    if (dataEnumerator.Current.Time.Date != lastTime.Date)
+                    // Get the latest file name, if it has changed, we have entered a new file, write our current data to file
+                    var latestOutputFile = GetZipOutputFileName(_dataDirectory, data.Time);
+                    if (outputFile.IsNullOrEmpty() || outputFile != latestOutputFile)
                     {
-                        // Get the latest file name, if it has changed, we need to write our buffer to the last output file
-                        var latestOutputFile = GetZipOutputFileName(_dataDirectory, dataEnumerator.Current.Time);
-                        if (outputFile != latestOutputFile)
+                        if (!currentFileDictionary.IsNullOrEmpty())
                         {
-                            WriteFile(outputFile, lines, lastTime);
-                            lines.Clear();
-
-                            outputFile = latestOutputFile;
+                            // TODO: Could task master this so it can continue sorting data by file while writing this one?
+                            //// Would need to await all tasks to complete before returning
+                            MergeAndWriteFile(outputFile, data.Time, currentFileDictionary);
                         }
+
+                        // Reset our dictionary and store new output file
+                        currentFileDictionary = new SortedDictionary<DateTime, string>();
+                        outputFile = latestOutputFile;
                     }
-
-                    lastTime = dataEnumerator.Current.Time;
-
-                    // Build the line and append it to our buffer of lines
-                    lines.Add(LeanData.GenerateLine(dataEnumerator.Current, _securityType, _resolution));
-                } 
-                while (dataEnumerator.MoveNext() && dataEnumerator.Current != null);
-
-                // Dispose of our enumerator
-                dataEnumerator.Dispose();
-
-                // Write the last set
-                if (lines.Count > 0)
-                {
-                    WriteFile(outputFile, lines, lastTime);
                 }
 
+                // Add data to our current dictionary
+                var line = LeanData.GenerateLine(data, _securityType, _resolution);
+                currentFileDictionary.Add(data.Time, line);
+
+                // Update our time
+                lastTime = data.Time;
+            }
+
+            // Finish off my processing the last file as well
+            if (!currentFileDictionary.IsNullOrEmpty())
+            {
+                MergeAndWriteFile(outputFile, lastTime, currentFileDictionary);
             }
         }
+
+        /// <summary>
+        /// Helper for writing files, merges if it fits the right criteria and file can be loaded, otherwise just writes data
+        /// </summary>
+        /// <param name="outputFile">File to write too</param>
+        /// <param name="lastEntryTime">Final entry time in data, used to generate entry name</param>
+        /// <param name="data"></param>
+        private void MergeAndWriteFile(string outputFile, DateTime lastEntryTime, SortedDictionary<DateTime, string> data)
+        {
+            // Generate this csv entry name <--- TODO: Problematic when we have newer lastEntryTime?
+            var entryName = LeanData.GenerateZipEntryName(_symbol, lastEntryTime, _resolution, _tickType);
+
+            // Only merge on files with hour/daily resolution; files that exist, and can be loaded
+            if (_resolution > Resolution.Hour && File.Exists(outputFile) && TryLoadFile(outputFile, entryName, out var rows))
+            {
+                // Preform merge on loaded rows
+                foreach (var entry in data)
+                {
+                    rows[entry.Key] = entry.Value;
+                }
+            }
+            else
+            {
+                // No need to merge for one of the reasons above, just write these rows
+                rows = data;
+            }
+
+            // Write to file
+            WriteFile(outputFile, rows.Values, lastEntryTime);
+        }
+
+
 
         /// <summary>
         /// Downloads historical data from the brokerage and saves it in LEAN format.
@@ -381,73 +409,24 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Write out the data in LEAN format (daily or hour resolutions)
-        /// TODO: Retire this function? Replaced by generic Write(), generic write does not handle
-        /// the merge case :/
-        /// </summary>
-        /// <param name="source">IEnumerable source of the data: sorted from oldest to newest.</param>
-        /// <remarks>This function performs a merge (insert/append/overwrite) with the existing Lean zip file</remarks>
-        private void WriteDailyOrHour(IEnumerable<BaseData> source)
-        {
-            var lines = new List<string>();
-            var lastTime = new DateTime();
-
-            // Determine file path
-            var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
-
-            // Load new data rows into a SortedDictionary for easy merge/update
-            var newRows = new SortedDictionary<DateTime, string>(source.ToDictionary(x => x.Time, x => LeanData.GenerateLine(x, _securityType, _resolution)));
-            SortedDictionary<DateTime, string> rows;
-
-            if (File.Exists(outputFile))
-            {
-                // TODO: BAD FOR OPTIONS CASE, LOADS IN FIRST FILE FROM ZIP? WHICH MAY NOT BE THE ENTRY WE WANT!!
-                // STILL NEED TO PULL THIS INTO GENERIC WRITE :/
-                // Could maybe use the entry name as well in Load??
-
-                // If file exists, we load existing data and perform merge
-                rows = LoadHourlyOrDailyFile(outputFile);
-                foreach (var kvp in newRows)
-                {
-                    rows[kvp.Key] = kvp.Value;
-                }
-            }
-            else
-            {
-                // No existing file, just use the new data
-                rows = newRows;
-            }
-
-            // Loop through the SortedDictionary and write to file contents
-            foreach (var kvp in rows)
-            {
-                // Build the line and append it to the file
-                lines.Add(kvp.Value);
-            }
-
-            // Write the file contents
-            if (lines.Count > 0)
-            {
-                WriteFile(outputFile, lines, lastTime);
-            }
-        }
-
-        /// <summary>
         /// Loads an existing hourly or daily Lean zip file into a SortedDictionary
         /// </summary>
-        private SortedDictionary<DateTime, string> LoadHourlyOrDailyFile(string fileName)
+        private static bool TryLoadFile(string fileName, string entryName, out SortedDictionary<DateTime, string> rows)
         {
-            var rows = new SortedDictionary<DateTime, string>();
+            rows = new SortedDictionary<DateTime, string>();
 
             using (var zip = ZipFile.Read(fileName))
             {
+                // Entry is specified and does not exist, just return empty rows
+                if(!zip.ContainsEntry(entryName))
+                {
+                    return false;
+                }
+
                 using (var stream = new MemoryStream())
                 {
-                    //TODO Daily and hourly for options, need to know entry
-                    //var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType); WONT WORK IN STATIC
-
-                    // Assumes that file 0 in zip is the csv we want. Fine for equities, crypto, etc. But not contract based securities with multiple csvs in daily/hourly
-                    zip[0].Extract(stream);
+                    // Fetch our entry and read it into our rows
+                    zip[entryName].Extract(stream);
                     stream.Seek(0, SeekOrigin.Begin);
 
                     using (var reader = new StreamReader(stream))
@@ -462,7 +441,7 @@ namespace QuantConnect.Data
                 }
             }
 
-            return rows;
+            return true;
         }
 
         /// <summary>
