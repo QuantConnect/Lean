@@ -86,6 +86,15 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void RoundTripSerialization_unknown()
+        {
+            var serialized = JsonConvert.SerializeObject(Exchange.UNKNOWN);
+            var deserialized = JsonConvert.DeserializeObject<Exchange>(serialized);
+
+            Assert.AreEqual(Exchange.UNKNOWN, deserialized);
+        }
+
+        [Test]
         public void RoundTripSerialization()
         {
             var serialized = JsonConvert.SerializeObject(Exchange.C2);

@@ -15,6 +15,7 @@
 
 using System.Linq;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -206,7 +207,8 @@ namespace QuantConnect
         /// <summary>
         /// Security types traded in this exchange
         /// </summary>
-        public SecurityType[] SecurityTypes { get; init; }
+        [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
+        public IReadOnlyList<SecurityType> SecurityTypes { get; init; }
 
         /// <summary>
         /// Creates a new empty exchange instance
@@ -224,7 +226,7 @@ namespace QuantConnect
             Name = name;
             Market = market;
             Description = description;
-            SecurityTypes = securityTypes?.ToArray();
+            SecurityTypes = securityTypes?.ToList() ?? new List<SecurityType>();
             Code = string.IsNullOrEmpty(code) ? name : code;
         }
 
@@ -264,7 +266,7 @@ namespace QuantConnect
             return Code == exchange.Code
                 && Market == exchange.Market
                 && SecurityTypes.All(exchange.SecurityTypes.Contains)
-                && SecurityTypes.Length == exchange.SecurityTypes.Length;
+                && SecurityTypes.Count == exchange.SecurityTypes.Count;
         }
 
         /// <summary>
@@ -306,7 +308,7 @@ namespace QuantConnect
             {
                 var hashCode = Code.GetHashCode();
                 hashCode = (hashCode * 397) ^ Market.GetHashCode();
-                for (var i = 0; i < SecurityTypes.Length; i++)
+                for (var i = 0; i < SecurityTypes.Count; i++)
                 {
                     hashCode = (hashCode * 397) ^ SecurityTypes[i].GetHashCode();
                 }
