@@ -1174,6 +1174,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Log.Trace($"InteractiveBrokersBrokerage.GetContractDetails(): contracts found: {contractDetailsList.Count}");
 
+            //having a possibility to hand down the desired currency from the algorithm might be better (e.g. in SecurityIdentifier), for now select by a priority order
             return contractDetailsList.OrderBy(c => c.Contract.Currency == Currencies.USD ? 0 : c.Contract.Currency == Currencies.EUR ? 1 : 2).FirstOrDefault();
         }
 
@@ -1972,13 +1973,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 SecType = securityType
             };
 
-            Log.Trace($"CreateContract(): {symbol} securityType: {symbol.ID.SecurityType}, symbol.ID.Market: {symbol.ID.Market} ");
-
-
-
             if (symbol.ID.SecurityType == SecurityType.Equity)
-            {
-                //having a possibility to hand down the desired currency from the algorithm might be better (e.g. in SecurityIdentifier), for now select by a priority order
+            {                
                 contract.Currency = GetContractDetails(contract, symbol.Value).Contract.Currency;
 
                 //European contracts in USD. If Currency is set to USD, IB Api will only return US contracts, even if there are non-US instruments which have the USD currency https://interactivebrokers.github.io/tws-api/contract_details.html
@@ -2431,9 +2427,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var securityType = ConvertSecurityType(contract);
                 var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
 
-                var market = InteractiveBrokersBrokerageModel.DefaultMarketMap[securityType];
-
-                Log.Trace($"MapSymbol(): contract: {contract} contract.SecType: {contract.SecType} contract.Currency: {contract.Currency} contract.Symbol: {contract.Symbol} contract.Exchange: {contract.Exchange} contract.PrimaryExch: {contract.PrimaryExch}");
+                var market = InteractiveBrokersBrokerageModel.DefaultMarketMap[securityType];               
 
                 if (securityType == SecurityType.Equity)
                 {
@@ -3357,6 +3351,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             : _futuresExchanges[market]
                         : market;
                 case SecurityType.Equity:
+                    //fix swedish crypto ETFs, "Smart" does not work there
                     return string.Equals(market, Market.EUR, StringComparison.OrdinalIgnoreCase) && ticker?.Contains("COIN", StringComparison.OrdinalIgnoreCase) == true
                             ? "SFB"
                             : "Smart";
