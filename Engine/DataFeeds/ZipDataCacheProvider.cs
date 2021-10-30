@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,12 +32,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ZipDataCacheProvider : IDataCacheProvider
     {
-        private const int CacheSeconds = 10;
+        protected int CacheSeconds;
 
         // ZipArchive cache used by the class
-        private readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
-        private readonly IDataProvider _dataProvider;
-        private readonly Timer _cacheCleaner;
+        protected readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
+        protected readonly IDataProvider _dataProvider;
+        protected readonly Timer _cacheCleaner;
 
         /// <summary>
         /// Property indicating the data is temporary in nature and should not be cached.
@@ -47,9 +47,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Constructor that sets the <see cref="IDataProvider"/> used to retrieve data
         /// </summary>
-        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true)
+        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true, int cacheTimer = 10)
         {
             IsDataEphemeral = isDataEphemeral;
+            CacheSeconds = cacheTimer;
             _dataProvider = dataProvider;
             _cacheCleaner = new Timer(state => CleanCache(), null, TimeSpan.FromSeconds(CacheSeconds), Timeout.InfiniteTimeSpan);
         }
@@ -57,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Does not attempt to retrieve any data
         /// </summary>
-        public Stream Fetch(string key)
+        public virtual Stream Fetch(string key)
         {
             string entryName = null; // default to all entries
             var filename = key;
@@ -311,15 +312,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Type for storing zipfile in cache
         /// </summary>
-        private class CachedZipFile : IDisposable
+        public class CachedZipFile : IDisposable
         {
-            private readonly DateTime _dateCached;
-            private readonly Stream _dataStream;
+            protected readonly DateTime _dateCached;
+            protected readonly Stream _dataStream;
 
             /// <summary>
             /// The ZipFile this object represents
             /// </summary>
-            private readonly ZipFile _zipFile;
+            protected readonly ZipFile _zipFile;
 
             /// <summary>
             /// Contains all entries of the zip file by filename
@@ -329,7 +330,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// <summary>
             /// Returns if this cached zip file is disposed
             /// </summary>
-            public bool Disposed { get; private set; }
+            public bool Disposed { get; protected set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="CachedZipFile"/>
@@ -360,7 +361,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// <summary>
             /// Dispose of the ZipFile
             /// </summary>
-            public void Dispose()
+            public virtual void Dispose()
             {
                 if (Disposed)
                 {

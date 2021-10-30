@@ -33,12 +33,12 @@ namespace QuantConnect.Data
     /// </summary>
     public class LeanDataWriter
     {
-        private readonly Symbol _symbol;
-        private readonly string _dataDirectory;
-        private readonly TickType _tickType;
-        private readonly bool _appendToZips;
-        private readonly Resolution _resolution;
-        private readonly SecurityType _securityType;
+        protected readonly Symbol _symbol;
+        protected readonly string _dataDirectory;
+        protected readonly TickType _tickType;
+        protected readonly bool _appendToZips;
+        protected readonly Resolution _resolution;
+        protected readonly SecurityType _securityType;
 
         /// <summary>
         /// Create a new lean data writer to this base data directory.
@@ -396,7 +396,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Loads an existing hourly or daily Lean zip file into a SortedDictionary
         /// </summary>
-        private static bool TryLoadFile(string fileName, string entryName, out SortedDictionary<DateTime, string> rows)
+        protected virtual bool TryLoadFile(string fileName, string entryName, out SortedDictionary<DateTime, string> rows)
         {
             rows = new SortedDictionary<DateTime, string>();
             using (var zip = ZipFile.Read(fileName))
@@ -436,7 +436,7 @@ namespace QuantConnect.Data
         /// <param name="filePath">The full path to the new file</param>
         /// <param name="data">The data to write as a string</param>
         /// <param name="date">The date the data represents</param>
-        private void WriteFile(string filePath, SortedDictionary<DateTime, string> data, DateTime date)
+        protected virtual void WriteFile(string filePath, SortedDictionary<DateTime, string> data, DateTime date)
         {
             // Generate this csv entry name
             var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
@@ -446,7 +446,7 @@ namespace QuantConnect.Data
 
             // Handle merging of files
             // Only merge on files with hour/daily resolution, that exist, and can be loaded
-            if (_resolution > Resolution.Hour && fileExists && TryLoadFile(filePath, entryName, out var rows))
+            if (_resolution >= Resolution.Hour && fileExists && TryLoadFile(filePath, entryName, out var rows))
             {
                 // Preform merge on loaded rows
                 foreach (var entry in data)
