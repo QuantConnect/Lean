@@ -1256,7 +1256,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             foreach (var kvp in Algorithm.Securities
                 // we send non internal, non canonical and tradable securities. When securities are removed they are marked as non tradable
-                .Where(pair => pair.Value.IsTradable && !pair.Value.IsInternalFeed() && !pair.Key.IsCanonical() && (!onlyInvested || pair.Value.Invested))
+                .Where(pair => pair.Value.IsTradable && !pair.Value.IsInternalFeed() && (!pair.Key.IsCanonical() || pair.Key.SecurityType == QuantConnect.SecurityType.Future) && (!onlyInvested || pair.Value.Invested))
                 .OrderBy(x => x.Key.Value))
             {
                 var security = kvp.Value;
