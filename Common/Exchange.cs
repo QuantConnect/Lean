@@ -208,7 +208,7 @@ namespace QuantConnect
         /// Security types traded in this exchange
         /// </summary>
         [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
-        public IReadOnlyList<SecurityType> SecurityTypes { get; init; }
+        public IReadOnlyList<SecurityType> SecurityTypes { get; init; } = new List<SecurityType>();
 
         /// <summary>
         /// Creates a new empty exchange instance
