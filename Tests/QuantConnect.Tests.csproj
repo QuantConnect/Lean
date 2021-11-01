@@ -46,7 +46,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.9.4" />
-    <PackageReference Include="Moq" Version="4.7.63" />
+    <PackageReference Include="Moq" Version="4.16.1" />
     <PackageReference Include="NetMQ" Version="4.0.1.6" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />

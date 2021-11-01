@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var orderProcessor = new Mock<IOrderProcessor>();
             orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((OrderTicket)null)
-                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
 
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var orderProcessor = new Mock<IOrderProcessor>();
             orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
             orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
                 .Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);

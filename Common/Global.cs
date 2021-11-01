@@ -693,36 +693,41 @@ namespace QuantConnect
         /// The split adjusted price plus dividends
         /// </summary>
         TotalReturn,
-
         /// <summary>
-        ///
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices.
         /// </summary>
+        /// <remarks>First contract is the true one, factor 1</remarks>
         ForwardPanamaCanal,
         /// <summary>
-        ///
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices.
         /// </summary>
+        /// <remarks>Last contract is the true one, factor 1</remarks>
         BackwardsPanamaCanal,
         /// <summary>
-        ///
+        /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio.
         /// </summary>
+        /// <remarks>Last contract is the true one, factor 1</remarks>
         BackwardsRatio
     }
 
     /// <summary>
-    ///
+    /// Continuous contracts mapping modes
     /// </summary>
     public enum DataMappingMode
     {
         /// <summary>
-        ///
+        /// The contract maps on the previous day of expiration of the front month.
         /// </summary>
         LastTradingDay,
         /// <summary>
-        ///
+        /// The contract maps on the first date of the delivery month of the front month. If the contract expires prior to this date,
+        /// then it rolls on the contract's last trading date instead.
         /// </summary>
+        /// <remarks>For example Crude Oil WTI (CL) 'DEC 2021 CLZ1' contract expires on Nov 19 2021, so mapping date will be it's expiration date</remarks>
+        /// <remarks>Another example Corn 'DEC 2021 ZCZ1' contract expires on Dec 14 2021, so mapping date will be Dec 1st</remarks>
         FirstDayMonth,
         /// <summary>
-        ///
+        /// The contract maps when the back month contract has a higher volume that the current front month.
         /// </summary>
         OpenInterest
     }
