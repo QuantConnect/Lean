@@ -171,11 +171,6 @@ namespace QuantConnect.Data
                 throw new ArgumentException("DownloadAndSave(): The tick type must be Trade or Quote.");
             }
 
-            if (_securityType != SecurityType.Future && _securityType != SecurityType.Option && _securityType != SecurityType.FutureOption)
-            {
-                throw new ArgumentException($"DownloadAndSave(): The security type must be {SecurityType.Future} or {SecurityType.Option}.");
-            }
-
             if (symbols.Any(x => x.SecurityType != _securityType))
             {
                 throw new ArgumentException($"DownloadAndSave(): All symbols must have {_securityType} security type.");
@@ -198,9 +193,6 @@ namespace QuantConnect.Data
             var exchangeHours = marketHoursDatabase.GetExchangeHours(canonicalSymbol.ID.Market, canonicalSymbol, _securityType);
             var dataTimeZone = marketHoursDatabase.GetDataTimeZone(canonicalSymbol.ID.Market, canonicalSymbol, _securityType);
 
-            var historyBySymbol = new Dictionary<Symbol, List<IGrouping<DateTime, BaseData>>>();
-            var historyBySymbolDailyOrHour = new Dictionary<Symbol, List<BaseData>>();
-
             foreach (var symbol in symbols)
             {
                 var historyRequest = new HistoryRequest(
@@ -222,183 +214,15 @@ namespace QuantConnect.Data
                     .Select(
                         x =>
                         {
+                            // Convert to date timezone before we write it
                             x.Time = x.Time.ConvertTo(exchangeHours.TimeZone, dataTimeZone);
                             return x;
                         })
                     .ToList();
 
-                if (_resolution == Resolution.Daily || _resolution == Resolution.Hour)
-                {
-                    historyBySymbolDailyOrHour.Add(symbol, history);
-                }
-                else
-                {
-                    // group by date in DataTimeZone
-                    var historyByDate = history.GroupBy(x => x.Time.Date).ToList();
-                    historyBySymbol.Add(symbol, historyByDate);
-                }
-            }
-
-            if (_resolution == Resolution.Daily || _resolution == Resolution.Hour)
-            {
-                SaveDailyOrHour(symbols, canonicalSymbol, historyBySymbolDailyOrHour);
-            }
-            else
-            {
-                SaveMinuteOrSecondOrTick(symbols, startTimeUtc, endTimeUtc, canonicalSymbol, historyBySymbol);
-            }
-        }
-
-        /// <summary>
-        /// TODO: MERGE THESE TOGETHER DUPLICATED AS HELL
-        /// </summary>
-        /// <param name="symbols"></param>
-        /// <param name="canonicalSymbol"></param>
-        /// <param name="historyBySymbol"></param>
-        private void SaveDailyOrHour(
-            List<Symbol> symbols,
-            Symbol canonicalSymbol,
-            IReadOnlyDictionary<Symbol, List<BaseData>> historyBySymbol)
-        {
-            var zipFileName = Path.Combine(
-                _dataDirectory,
-                LeanData.GenerateRelativeZipFilePath(canonicalSymbol, DateTime.MinValue, _resolution, _tickType));
-
-            var folder = Path.GetDirectoryName(zipFileName);
-            if (!Directory.Exists(folder))
-            {
-                Directory.CreateDirectory(folder);
-            }
-
-            using (var zip = new ZipFile(zipFileName))
-            {
-                foreach (var symbol in symbols)
-                {
-                    // Load new data rows into a SortedDictionary for easy merge/update
-                    var newRows = new SortedDictionary<DateTime, string>(historyBySymbol[symbol]
-                        .ToDictionary(x => x.Time, x => LeanData.GenerateLine(x, _securityType, _resolution)));
-
-                    var rows = new SortedDictionary<DateTime, string>();
-
-                    var zipEntryName = LeanData.GenerateZipEntryName(symbol, DateTime.MinValue, _resolution, _tickType);
-
-                    if (zip.ContainsEntry(zipEntryName))
-                    {
-                        // If file exists, we load existing data and perform merge
-                        using (var stream = new MemoryStream())
-                        {
-                            zip[zipEntryName].Extract(stream);
-                            stream.Seek(0, SeekOrigin.Begin);
-
-                            using (var reader = new StreamReader(stream))
-                            {
-                                string line;
-                                while ((line = reader.ReadLine()) != null)
-                                {
-                                    var time = Parse.DateTimeExact(line.Substring(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter);
-                                    rows[time] = line;
-                                }
-                            }
-                        }
-
-                        foreach (var kvp in newRows)
-                        {
-                            rows[kvp.Key] = kvp.Value;
-                        }
-                    }
-                    else
-                    {
-                        // No existing file, just use the new data
-                        rows = newRows;
-                    }
-
-                    // Loop through the SortedDictionary and write to zip entry
-                    var sb = new StringBuilder();
-                    foreach (var kvp in rows)
-                    {
-                        // Build the line and append it to the file
-                        sb.AppendLine(kvp.Value);
-                    }
-
-                    // Write the zip entry
-                    if (sb.Length > 0)
-                    {
-                        if (zip.ContainsEntry(zipEntryName))
-                        {
-                            zip.RemoveEntry(zipEntryName);
-                        }
-
-                        zip.AddEntry(zipEntryName, sb.ToString());
-                    }
-                }
-
-                if (zip.Count > 0)
-                {
-                    zip.Save();
-                }
-            }
-        }
-
-        private void SaveMinuteOrSecondOrTick(
-            List<Symbol> symbols,
-            DateTime startTimeUtc,
-            DateTime endTimeUtc,
-            Symbol canonicalSymbol,
-            IReadOnlyDictionary<Symbol, List<IGrouping<DateTime, BaseData>>> historyBySymbol)
-        {
-            var date = startTimeUtc;
-            while (date <= endTimeUtc)
-            {
-                var zipFileName = Path.Combine(
-                    _dataDirectory,
-                    LeanData.GenerateRelativeZipFilePath(canonicalSymbol, date, _resolution, _tickType));
-
-                var folder = Path.GetDirectoryName(zipFileName);
-                if (!Directory.Exists(folder))
-                {
-                    Directory.CreateDirectory(folder);
-                }
-
-                if (File.Exists(zipFileName) && !_appendToZips)
-                {
-                    File.Delete(zipFileName);
-                }
-
-                using (var zip = new ZipFile(zipFileName))
-                {
-                    foreach (var symbol in symbols)
-                    {
-                        var zipEntryName = LeanData.GenerateZipEntryName(symbol, date, _resolution, _tickType);
-
-                        foreach (var group in historyBySymbol[symbol])
-                        {
-                            if (group.Key == date.Date)
-                            {
-                                var sb = new StringBuilder();
-                                foreach (var row in group)
-                                {
-                                    var line = LeanData.GenerateLine(row, _securityType, _resolution);
-                                    sb.AppendLine(line);
-                                }
-
-                                if (_appendToZips && zip.ContainsEntry(zipEntryName))
-                                {
-                                    zip.RemoveEntry(zipEntryName);
-                                }
-
-                                zip.AddEntry(zipEntryName, sb.ToString());
-                                break;
-                            }
-                        }
-                    }
-
-                    if (zip.Count > 0)
-                    {
-                        zip.Save();
-                    }
-                }
-
-                date = date.AddDays(1);
+                // Generate a writer for this data and write it
+                var writer = new LeanDataWriter(_resolution, symbol, _dataDirectory, _tickType);
+                writer.Write(history);
             }
         }
 
@@ -436,7 +260,7 @@ namespace QuantConnect.Data
         /// <param name="filePath">The full path to the new file</param>
         /// <param name="data">The data to write as a string</param>
         /// <param name="date">The date the data represents</param>
-        protected virtual void WriteFile(string filePath, SortedDictionary<DateTime, string> data, DateTime date)
+        private void WriteFile(string filePath, SortedDictionary<DateTime, string> data, DateTime date)
         {
             // Generate this csv entry name
             var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
