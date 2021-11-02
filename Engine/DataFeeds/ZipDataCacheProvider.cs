@@ -60,17 +60,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public virtual Stream Fetch(string key)
         {
-            string entryName = null; // default to all entries
-            var filename = key;
-            var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);
-            if (hashIndex != -1)
-            {
-                entryName = key.Substring(hashIndex + 1);
-                filename = key.Substring(0, hashIndex);
-            }
+            DataCacheProviderExtensions.ParseKey(key, out var filename, out var entryName);
 
             // handles zip files
-            if (filename.EndsWith(".zip"))
+            if (filename.EndsWith(".zip", StringComparison.InvariantCulture))
             {
                 Stream stream = null;
 
@@ -135,16 +128,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             DataCacheProviderExtensions.ParseKey(key, out var fileName, out var entryName);
 
-            // If its not in the cache, and can not be cached we need to create it
-            if (!_zipFileCache.TryGetValue(fileName, out var cachedZip) && !Cache(fileName, out cachedZip))
+            // We only support writing to zips with this provider
+            if (fileName.EndsWith(".zip", StringComparison.InvariantCulture))
             {
-                // Create the zip and cache it
-                Compression.ZipData(fileName, entryName, data);
-                Cache(fileName, out _);
-                return;
-            }
+                // If its not in the cache, and can not be cached we need to create it
+                if (!_zipFileCache.TryGetValue(fileName, out var cachedZip) && !Cache(fileName, out cachedZip))
+                {
+                    // Create the zip, if successful cache it for later use
+                    if (Compression.ZipData(fileName, entryName, data))
+                    {
+                        Cache(fileName, out _);
+                    }
 
-            cachedZip.WriteEntry(entryName, data);
+                    return;
+                }
+
+                cachedZip.WriteEntry(entryName, data);
+            }
         }
 
         /// <summary>
