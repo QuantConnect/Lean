@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly MovingAverageType _movingAverageType;
         private readonly Resolution _resolution;
         private const decimal BounceThresholdPercent = 0.01m;
-        private readonly Dictionary<Symbol, SymbolData> _symbolData;
+        protected readonly Dictionary<Symbol, SymbolData> _symbolData;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MacdAlphaModel"/> class
@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
         }
 
-        class SymbolData
+        public class SymbolData
         {
             public InsightDirection? PreviousDirection { get; set; }
 

@@ -98,6 +98,6 @@ class SymbolData:
 
         self.Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
         algorithm.RegisterIndicator(security.Symbol, self.MACD, self.Consolidator)
-        algorithm.WarmUpIndicator(security.Symbol, self.MACD, self.Consolidator)
+        algorithm.WarmUpIndicator(security.Symbol, self.MACD, resolution)
 
         self.PreviousDirection = None
