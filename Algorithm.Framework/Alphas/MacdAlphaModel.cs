@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -147,6 +147,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 MACD = new MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, signalPeriod, movingAverageType);
 
                 algorithm.RegisterIndicator(security.Symbol, MACD, Consolidator);
+                algorithm.WarmUpIndicator(security.Symbol, MACD, resolution);
             }
         }
     }
