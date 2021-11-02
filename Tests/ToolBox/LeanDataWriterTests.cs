@@ -21,6 +21,13 @@ using QuantConnect.Util;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using NodaTime;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Tests.Algorithm;
+using QuantConnect.ToolBox;
 
 namespace QuantConnect.Tests.ToolBox
 {
@@ -170,6 +177,195 @@ namespace QuantConnect.Tests.ToolBox
             var data = QuantConnect.Compression.Unzip(filePath);
 
             Assert.AreEqual(data.First().Value.Count(), 3);
+        }
+
+        [Explicit("Data copying and reading test")]
+        [TestCase(SecurityType.Equity, TickType.Quote, Resolution.Hour)]
+        [TestCase(SecurityType.Equity, TickType.Quote, Resolution.Minute)]
+        [TestCase(SecurityType.Equity, TickType.Trade, Resolution.Daily)]
+        [TestCase(SecurityType.Equity, TickType.Trade, Resolution.Hour)]
+        [TestCase(SecurityType.Equity, TickType.Trade, Resolution.Minute)]
+        [TestCase(SecurityType.Crypto, TickType.Quote, Resolution.Minute)]
+        [TestCase(SecurityType.Crypto, TickType.Trade, Resolution.Daily)]
+        [TestCase(SecurityType.Crypto, TickType.Trade, Resolution.Minute)]
+        [TestCase(SecurityType.Option, TickType.Quote, Resolution.Minute)]
+        [TestCase(SecurityType.Option, TickType.Trade, Resolution.Minute)]
+        public void CanDownloadAndSave(SecurityType securityType, TickType tickType, Resolution resolution)
+        {
+            var symbol = Symbols.GetBySecurityType(securityType);
+            var startTimeUtc = GetRepoDataDates(securityType, resolution);
+
+            // Override for this case because symbol from Symbols does not have data included
+            if (securityType == SecurityType.Option)
+            {
+                symbol = Symbols.CreateOptionSymbol("GOOG", OptionRight.Call, 770, new DateTime(2015, 12, 24));
+                startTimeUtc = new DateTime(2015, 12, 23);
+            }
+
+            var endTimeUtc = startTimeUtc + TimeSpan.FromDays(resolution >= Resolution.Hour ? 15 : 1);
+
+            var writer = new LeanDataWriter(_dataDirectory, resolution, securityType, tickType);
+            var brokerage = new LocalHistoryBrokerage();
+            var symbols = new List<Symbol>() {symbol};
+
+            // "Download" and write to file
+            writer.DownloadAndSave(brokerage, symbols, startTimeUtc, endTimeUtc);
+
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, startTimeUtc, resolution, tickType);
+            Assert.IsTrue(File.Exists(filePath));
+
+            // Read the file and make sure its in there
+            var reader = new LeanDataReader(filePath);
+            var dataFromFile = reader.Parse().ToList();
+
+            Assert.IsNotEmpty(dataFromFile);
+            Assert.IsTrue(dataFromFile.All(x => x.Symbol == symbol));
+
+            // Get history ourselves to compare
+            var history = GetHistory(brokerage, resolution, securityType, symbol, tickType, startTimeUtc, endTimeUtc);
+
+            CollectionAssert.AreEqual(history.Select(x => x.Time), dataFromFile.Select(x => x.Time));
+            brokerage.Dispose();
+        }
+
+        /// <summary>
+        /// Helper to get history for tests
+        /// </summary>
+        /// <returns></returns>
+        private List<BaseData> GetHistory(IBrokerage brokerage, Resolution resolution, SecurityType securityType, Symbol symbol, TickType tickType, DateTime startTimeUtc, DateTime endTimeUtc)
+        {
+            var dataType = LeanData.GetDataType(resolution, tickType);
+
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
+            var ticker = symbol.ID.Symbol;
+            var market = symbol.ID.Market;
+
+            var canonicalSymbol = Symbol.Create(ticker, securityType, market);
+
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(canonicalSymbol.ID.Market, canonicalSymbol, securityType);
+            var dataTimeZone = marketHoursDatabase.GetDataTimeZone(canonicalSymbol.ID.Market, canonicalSymbol, securityType);
+
+            var historyRequest = new HistoryRequest(
+                startTimeUtc,
+                endTimeUtc,
+                dataType,
+                symbol,
+                resolution,
+                exchangeHours,
+                dataTimeZone,
+                resolution,
+                true,
+                false,
+                DataNormalizationMode.Raw,
+                tickType
+            );
+
+            return brokerage.GetHistory(historyRequest)
+                .Select(
+                    x =>
+                    {
+                        // Convert to date timezone before we write it
+                        x.Time = x.Time.ConvertTo(exchangeHours.TimeZone, dataTimeZone);
+                        return x;
+                    })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Test helper method to get dates for data we have in the repo
+        /// Could possibly be refactored and used in Symbols in a similar way
+        /// </summary>
+        /// <param name="securityType"></param>
+        /// <param name="resolution"></param>
+        /// <returns></returns>
+        private DateTime GetRepoDataDates(SecurityType securityType, Resolution resolution)
+        {
+            var referenceDate = new DateTime(2016, 11, 1);
+
+            // Because we use this with GetBySecurityType here are the symbols we expect
+            // case SecurityType.Equity:   return SPY;
+            // case SecurityType.Option:   return SPY_C_192_Feb19_2016;
+            // case SecurityType.Forex:    return EURUSD;
+            // case SecurityType.Future:   return Future_CLF19_Jan2019;
+            // case SecurityType.Cfd:      return XAGUSD;
+            // case SecurityType.Crypto:   return BTCUSD;
+            // case SecurityType.Index:    return SPX;
+            switch (securityType)
+            {
+                case SecurityType.Equity: // SPY; Daily/Hourly/Minute/Second/Tick
+                    return new DateTime(2013, 10, 7);
+                case SecurityType.Crypto: // GDAX BTCUSD Daily/Minute/Second
+                    if (resolution == Resolution.Hour || resolution == Resolution.Tick)
+                    {
+                        throw new ArgumentException($"GDAX BTC Crypto does not have data for this resolution {resolution}");
+                    }
+                    return new DateTime(2017, 9, 3);
+                case SecurityType.Option: // No Data for the default symbol...
+                    return DateTime.MinValue;
+                default:
+                    throw new NotImplementedException("This has only implemented a few security types (Equity/Crypto/Option)");
+            }
+        }
+
+        /// <summary>
+        /// Fake brokerage that just uses Local Disk Data to do history requests
+        /// </summary>
+        public class LocalHistoryBrokerage : NullBrokerage 
+        {
+            private readonly DefaultDataProvider _dataProvider;
+            private IDataCacheProvider _dataCacheProvider;
+            private IHistoryProvider _historyProvider;
+
+            public LocalHistoryBrokerage()
+            {
+                var mapFileProvider = new LocalDiskMapFileProvider();
+                _dataProvider = new DefaultDataProvider();
+                _dataCacheProvider = new ZipDataCacheProvider(_dataProvider);
+                var factorFileProvider = new LocalDiskFactorFileProvider();
+                var dataPermissionManager = new DataPermissionManager();
+
+                mapFileProvider.Initialize(_dataProvider);
+                factorFileProvider.Initialize(mapFileProvider, _dataProvider);
+
+                _historyProvider = new SubscriptionDataReaderHistoryProvider();
+                _historyProvider.Initialize(
+                    new HistoryProviderInitializeParameters(
+                        null,
+                        null,
+                        _dataProvider,
+                        _dataCacheProvider,
+                        mapFileProvider,
+                        factorFileProvider,
+                        null,
+                        true,
+                        dataPermissionManager
+                    )
+                );
+            }
+
+            public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
+            {
+                var requests = new List<HistoryRequest> {request};
+                var slices = _historyProvider.GetHistory(requests, DateTimeZone.Utc);
+
+                // Grab all the bar values for this
+                switch (request.TickType)
+                {
+                    case TickType.Quote:
+                        return slices.SelectMany(x => x.QuoteBars.Values);
+                    case TickType.Trade:
+                        return slices.SelectMany(x => x.Bars.Values);
+                    default:
+                        throw new NotImplementedException("Only support Trade & Quote bars");
+                }
+            }
+
+            public override void Dispose()
+            {
+                _dataCacheProvider.Dispose();
+                _dataProvider.Dispose();
+            }
         }
     }
 }
