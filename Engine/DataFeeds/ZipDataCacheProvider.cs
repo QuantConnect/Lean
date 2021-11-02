@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Constructor that sets the <see cref="IDataProvider"/> used to retrieve data
         /// </summary>
-        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true, int cacheTimer = 200)
+        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true, int cacheTimer = 10)
         {
             IsDataEphemeral = isDataEphemeral;
             _cacheSeconds = cacheTimer;
@@ -392,6 +392,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// <param name="filePath">Path of the zip file</param>
             public CachedZipFile(Stream dataStream, DateTime utcNow, string filePath)
             {
+                _modified = false;
                 _dataStream = dataStream;
                 _zipFile = ZipFile.Read(dataStream);
                 foreach (var entry in _zipFile.Entries)
@@ -445,10 +446,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // If we changed this zip we need to save
-                var tempFileName = Path.GetTempFileName();
+                string tempFileName = null;
                 if (_modified)
                 {
                     // Write our changes to disk as temp
+                    tempFileName = Path.GetTempFileName();
                     _zipFile.Save(tempFileName);
                 }
 
@@ -457,7 +459,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _dataStream?.DisposeSafely();
 
                 //After disposal we will move it to the final location
-                if (_modified)
+                if (_modified && tempFileName != null)
                 { 
                     File.Move(tempFileName, _filePath, true);
                 }
