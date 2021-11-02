@@ -33,12 +33,13 @@ namespace QuantConnect.Data
     /// </summary>
     public class LeanDataWriter
     {
-        protected readonly Symbol _symbol;
-        protected readonly string _dataDirectory;
-        protected readonly TickType _tickType;
-        protected readonly bool _appendToZips;
-        protected readonly Resolution _resolution;
-        protected readonly SecurityType _securityType;
+        private readonly Symbol _symbol;
+        private readonly string _dataDirectory;
+        private readonly TickType _tickType;
+        private readonly bool _appendToZips;
+        private readonly Resolution _resolution;
+        private readonly SecurityType _securityType;
+        private readonly IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Create a new lean data writer to this base data directory.
@@ -47,11 +48,12 @@ namespace QuantConnect.Data
         /// <param name="dataDirectory">Base data directory</param>
         /// <param name="resolution">Resolution of the desired output data</param>
         /// <param name="tickType">The tick type</param>
-        public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade) : this(
+        public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade, IDataCacheProvider dataCacheProvider = null) : this(
             dataDirectory,
             resolution,
             symbol.ID.SecurityType,
-            tickType
+            tickType,
+            dataCacheProvider
         )
         {
             _symbol = symbol;
@@ -74,13 +76,14 @@ namespace QuantConnect.Data
         /// <param name="resolution">Resolution of the desired output data</param>
         /// <param name="securityType">The security type</param>
         /// <param name="tickType">The tick type</param>
-        public LeanDataWriter(string dataDirectory, Resolution resolution, SecurityType securityType, TickType tickType)
+        public LeanDataWriter(string dataDirectory, Resolution resolution, SecurityType securityType, TickType tickType, IDataCacheProvider dataCacheProvider = null)
         {
             _dataDirectory = dataDirectory;
             _resolution = resolution;
             _securityType = securityType;
             _tickType = tickType;
             _appendToZips = securityType == SecurityType.Future || securityType.IsOption();
+            _dataCacheProvider = dataCacheProvider ?? new DiskDataCacheProvider();
         }
 
         /// <summary>
@@ -246,6 +249,12 @@ namespace QuantConnect.Data
             }
         }
 
+        /// <summary>
+        /// TODO: MERGE THESE TOGETHER DUPLICATED AS HELL
+        /// </summary>
+        /// <param name="symbols"></param>
+        /// <param name="canonicalSymbol"></param>
+        /// <param name="historyBySymbol"></param>
         private void SaveDailyOrHour(
             List<Symbol> symbols,
             Symbol canonicalSymbol,
@@ -399,35 +408,26 @@ namespace QuantConnect.Data
         protected virtual bool TryLoadFile(string fileName, string entryName, out SortedDictionary<DateTime, string> rows)
         {
             rows = new SortedDictionary<DateTime, string>();
-            using (var zip = ZipFile.Read(fileName))
+
+            using (var stream = _dataCacheProvider.Fetch($"{fileName}#{entryName}"))
             {
-                // Entry is specified and does not exist, just return empty rows
-                if(!zip.ContainsEntry(entryName))
+                if (stream == null)
                 {
                     return false;
                 }
 
-                var guid = Extensions.RentId();
-                using (var stream = Extensions.GetMemoryStream(guid))
+                using (var reader = new StreamReader(stream))
                 {
-                    // Fetch our entry and read it into our rows
-                    zip[entryName].Extract(stream);
-                    stream.Seek(0, SeekOrigin.Begin);
-
-                    using (var reader = new StreamReader(stream))
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
                     {
-                        string line;
-                        while ((line = reader.ReadLine()) != null)
-                        {
-                            var time = DateTime.ParseExact(line.AsSpan(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                            rows[time] = line;
-                        }
+                        var time = DateTime.ParseExact(line.AsSpan(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+                        rows[time] = line;
                     }
                 }
-                Extensions.ReturnId(guid);
-            }
 
-            return true;
+                return true;
+            }
         }
 
         /// <summary>
@@ -460,8 +460,6 @@ namespace QuantConnect.Data
                 rows = data;
             }
 
-            var tempFilePath = filePath + ".tmp";
-
             if (!_appendToZips && fileExists)
             {
                 File.Delete(filePath);
@@ -476,12 +474,15 @@ namespace QuantConnect.Data
 
             if (_appendToZips)
             {
-                Compression.ZipCreateAppendData(filePath, entryName, string.Join(Environment.NewLine, rows.Values), true);
+                var bytes = Encoding.UTF8.GetBytes(string.Join("\n", rows.Values));
+                _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
+
                 Log.Trace($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
             }
             else
             {
                 // Write out this data string to a zip file
+                var tempFilePath = filePath + ".tmp";
                 Compression.ZipData(tempFilePath, entryName, rows.Values);
 
                 // Move temp file to the final destination with the appropriate name
@@ -501,5 +502,66 @@ namespace QuantConnect.Data
             return LeanData.GenerateZipFilePath(baseDirectory, _symbol, time, _resolution, _tickType);
         }
 
+    }
+
+    /// <summary>
+    /// Simple data cache provider, writes and reads directly from disk
+    /// Used as default for <see cref="LeanDataWriter"/>
+    /// </summary>
+    public class DiskDataCacheProvider : IDataCacheProvider
+    { 
+        /// <summary>
+        /// Property indicating the data is temporary in nature and should not be cached.
+        /// </summary>
+        public bool IsDataEphemeral { get; }
+
+        /// <summary>
+        /// Simple data cache provider, writes and reads directly from disk
+        /// Used as default for <see cref="LeanDataWriter"/>
+        /// </summary>
+        public DiskDataCacheProvider()
+        {
+            IsDataEphemeral = false;
+        }
+
+        /// <summary>
+        /// Fetch data from the cache
+        /// </summary>
+        /// <param name="key">A string representing the key of the cached data</param>
+        /// <returns>An <see cref="Stream"/> of the cached data</returns>
+        public Stream Fetch(string key)
+        {
+            DataCacheProviderExtensions.ParseKey(key, out var filePath, out var entryName);
+            using (var zip = ZipFile.Read(filePath))
+            {
+                if (!zip.ContainsEntry(entryName))
+                {
+                    return null;
+                }
+
+                var stream = new MemoryStream();
+                zip[entryName].Extract(stream);
+                return stream;
+            }
+        }
+
+        /// <summary>
+        /// Store the data in the cache. Not implemented in this instance of the IDataCacheProvider
+        /// </summary>
+        /// <param name="key">The source of the data, used as a key to retrieve data in the cache</param>
+        /// <param name="data">The data as a byte array</param>
+        public void Store(string key, byte[] data)
+        {
+            DataCacheProviderExtensions.ParseKey(key, out var filePath, out var entryName);
+            Compression.ZipCreateAppendData(filePath, entryName, data);
+        }
+
+        /// <summary>
+        /// Dispose for this class
+        /// </summary>
+        public void Dispose()
+        {
+            //NOP
+        }
     }
 }
