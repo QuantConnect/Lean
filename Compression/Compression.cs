@@ -136,6 +136,32 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Zips the specified byte array into the zipPath
+        /// </summary>
+        /// <param name="zipPath"></param>
+        /// <param name="zipEntry"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static bool ZipData(string zipPath, string zipEntry, byte[] data)
+        {
+            try
+            {
+                using (var stream = new ZipOutputStream(File.Create(zipPath)))
+                {
+                    var entry = new ZipEntry(zipEntry);
+                    stream.PutNextEntry(entry);
+                    stream.Write(data);
+                }
+                return true;
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Zips the specified lines of text into the zipPath
         /// </summary>
         /// <param name="zipPath">The destination zip file path</param>
@@ -174,6 +200,37 @@ namespace QuantConnect
         /// <param name="overrideEntry">True if should override entry if it already exists</param>
         /// <returns>True on success</returns>
         public static bool ZipCreateAppendData(string path, string entry, string data, bool overrideEntry = false)
+        {
+            try
+            {
+                using (var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path))
+                {
+                    if (zip.ContainsEntry(entry) && overrideEntry)
+                    {
+                        zip.RemoveEntry(entry);
+                    }
+
+                    zip.AddEntry(entry, data);
+                    zip.Save();
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Append the zip data to the file-entry specified.
+        /// </summary>
+        /// <param name="path">The zip file path</param>
+        /// <param name="entry">The entry name</param>
+        /// <param name="data">The entry data</param>
+        /// <param name="overrideEntry">True if should override entry if it already exists</param>
+        /// <returns>True on success</returns>
+        public static bool ZipCreateAppendData(string path, string entry, Byte[] data, bool overrideEntry = false)
         {
             try
             {
