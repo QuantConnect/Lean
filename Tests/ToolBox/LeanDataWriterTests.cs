@@ -202,8 +202,11 @@ namespace QuantConnect.Tests.ToolBox
                 startTimeUtc = new DateTime(2015, 12, 23);
             }
 
+            // EndTime based on start, only do 1 day for anything less than hour because we compare datafiles below
+            // and minute and finer resolutions store by day
             var endTimeUtc = startTimeUtc + TimeSpan.FromDays(resolution >= Resolution.Hour ? 15 : 1);
 
+            // Create our writer and LocalHistory brokerage to "download" from
             var writer = new LeanDataWriter(_dataDirectory, resolution, securityType, tickType);
             var brokerage = new LocalHistoryBrokerage();
             var symbols = new List<Symbol>() {symbol};
@@ -211,27 +214,29 @@ namespace QuantConnect.Tests.ToolBox
             // "Download" and write to file
             writer.DownloadAndSave(brokerage, symbols, startTimeUtc, endTimeUtc);
 
+            // Verify the file exists where we expect
             var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, startTimeUtc, resolution, tickType);
             Assert.IsTrue(File.Exists(filePath));
 
-            // Read the file and make sure its in there
+            // Read the file and data
             var reader = new LeanDataReader(filePath);
             var dataFromFile = reader.Parse().ToList();
 
+            // Ensure its not empty and it is actually for this symbol
             Assert.IsNotEmpty(dataFromFile);
             Assert.IsTrue(dataFromFile.All(x => x.Symbol == symbol));
 
-            // Get history ourselves to compare
+            // Get history directly ourselves and compare with the data in the file
             var history = GetHistory(brokerage, resolution, securityType, symbol, tickType, startTimeUtc, endTimeUtc);
-
             CollectionAssert.AreEqual(history.Select(x => x.Time), dataFromFile.Select(x => x.Time));
+
             brokerage.Dispose();
         }
 
         /// <summary>
-        /// Helper to get history for tests
+        /// Helper to get history for tests from a brokerage implementation
         /// </summary>
-        /// <returns></returns>
+        /// <returns>List of data points from history request</returns>
         private List<BaseData> GetHistory(IBrokerage brokerage, Resolution resolution, SecurityType securityType, Symbol symbol, TickType tickType, DateTime startTimeUtc, DateTime endTimeUtc)
         {
             var dataType = LeanData.GetDataType(resolution, tickType);
@@ -276,14 +281,10 @@ namespace QuantConnect.Tests.ToolBox
         /// Test helper method to get dates for data we have in the repo
         /// Could possibly be refactored and used in Symbols in a similar way
         /// </summary>
-        /// <param name="securityType"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        private DateTime GetRepoDataDates(SecurityType securityType, Resolution resolution)
+        /// <returns>Start time where some data included in the repo exists</returns>
+        private static DateTime GetRepoDataDates(SecurityType securityType, Resolution resolution)
         {
-            var referenceDate = new DateTime(2016, 11, 1);
-
-            // Because we use this with GetBySecurityType here are the symbols we expect
+            // Because I intend to use this with GetBySecurityType here are the symbols we expect
             // case SecurityType.Equity:   return SPY;
             // case SecurityType.Option:   return SPY_C_192_Feb19_2016;
             // case SecurityType.Forex:    return EURUSD;
