@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 _algorithm.SetStartDate(2013, 10, 08);
                 _algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
-                // Set alpha model
+                // Create and set alpha model
                 dynamic model = Py.Import("MacdAlphaModel").GetAttr("MacdAlphaModel");
                 var instance = model();
                 _algorithm.SetAlpha(instance);
