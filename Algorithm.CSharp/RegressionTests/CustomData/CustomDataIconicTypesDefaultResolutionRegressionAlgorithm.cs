@@ -69,16 +69,6 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Was expecting resolution to be set to Hour");
             }
 
-            try
-            {
-                AddOption("AAPL", Resolution.Daily);
-                throw new Exception("Was expecting an ArgumentException to be thrown");
-            }
-            catch (ArgumentException)
-            {
-                // expected, options only support minute resolution
-            }
-
             var option = AddOption("AAPL");
             if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(option.Symbol)
                 .Any(config => config.Resolution != Resolution.Minute))
