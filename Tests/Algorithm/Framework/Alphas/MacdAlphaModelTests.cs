@@ -20,10 +20,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Data;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Algorithm;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -62,18 +59,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         [Test]
         public void MacdAlphaModelWarmsUpProperly()
         {
-            SetUpHistoryProvider(_algorithm);
-            _algorithm.SetStartDate(2013, 10, 08);
+            SetUpHistoryProvider();
+            Algorithm.SetStartDate(2013, 10, 08);
 
             // Create a MacdAlphaModel for the test
             var model = new TestMacdAlphaModel();
 
             // Set the alpha model
-            _algorithm.SetAlpha(model);
-            _algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
+            Algorithm.SetAlpha(model);
+            Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
             var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
-            _algorithm.OnFrameworkSecuritiesChanged(changes);
+            Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             // Get the dictionary of macd indicators
             var symbolData = model.GetSymbolData();
@@ -90,6 +87,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.IsTrue(macd.IsReady);
                 Assert.NotZero(macd.Samples);
             }
+
+            ZipCacheProvider.DisposeSafely();
         }
 
         [Test]
@@ -97,17 +96,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         {
             using (Py.GIL())
             {
-                SetUpHistoryProvider(_algorithm);
-                _algorithm.SetStartDate(2013, 10, 08);
-                _algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
+                SetUpHistoryProvider();
+                Algorithm.SetStartDate(2013, 10, 08);
+                Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
                 // Create and set alpha model
                 dynamic model = Py.Import("MacdAlphaModel").GetAttr("MacdAlphaModel");
                 var instance = model();
-                _algorithm.SetAlpha(instance);
+                Algorithm.SetAlpha(instance);
 
                 var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
-                _algorithm.OnFrameworkSecuritiesChanged(changes);
+                Algorithm.OnFrameworkSecuritiesChanged(changes);
 
                 // Get the dictionary of macd indicators
                 var symbolData = instance.symbolData;
@@ -124,27 +123,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     Assert.IsTrue(macd.IsReady.IsTrue());
                     Assert.NotZero(((PyObject)macd.Samples).GetAndDispose<int>());
                 }
-            }
-        }
 
-        /// <summary>
-        /// Set up the history provider for the given algorithm
-        /// </summary>
-        /// <param name="algorithm"></param>
-        private static void SetUpHistoryProvider(QCAlgorithm algorithm)
-        {
-            algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            var zipCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
-            algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                TestGlobals.DataProvider,
-                zipCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager()));
+                ZipCacheProvider.DisposeSafely();
+            }
         }
     }
 }
