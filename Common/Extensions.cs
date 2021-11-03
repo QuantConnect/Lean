@@ -2244,12 +2244,15 @@ namespace QuantConnect
             }
             switch (dataMappingMode.LazyToLower())
             {
-                case "openinterest":
-                    return DataMappingMode.OpenInterest;
-                case "firstdaymonth":
-                    return DataMappingMode.FirstDayMonth;
+                case "0":
                 case "lasttradingday":
                     return DataMappingMode.LastTradingDay;
+                case "1":
+                case "firstdaymonth":
+                    return DataMappingMode.FirstDayMonth;
+                case "2":
+                case "openinterest":
+                    return DataMappingMode.OpenInterest;
                 default:
                     throw new ArgumentException($"Unexpected DataMappingMode: {dataMappingMode}");
             }
@@ -2938,30 +2941,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Normalizes the specified price based on the DataNormalizationMode
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static decimal GetNormalizedPrice(this SubscriptionDataConfig config, decimal price)
-        {
-            switch (config.DataNormalizationMode)
-            {
-                case DataNormalizationMode.Raw:
-                    return price;
-
-                // the price scale factor will be set accordingly based on the mode in update scale factors
-                case DataNormalizationMode.Adjusted:
-                case DataNormalizationMode.SplitAdjusted:
-                    return price * config.PriceScaleFactor;
-
-                case DataNormalizationMode.TotalReturn:
-                    return (price * config.PriceScaleFactor) + config.SumOfDividends;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        /// <summary>
         /// Gets the delisting date for the provided Symbol
         /// </summary>
         /// <param name="symbol">The symbol to lookup the last trading date</param>
@@ -3187,22 +3166,50 @@ namespace QuantConnect
         /// Normalize prices based on configuration
         /// </summary>
         /// <param name="data">Data to be normalized</param>
-        /// <param name="config">Price scale</param>
-        /// <returns></returns>
-        public static BaseData Normalize(this BaseData data, SubscriptionDataConfig config)
+        /// <param name="factor">Price scale</param>
+        /// <param name="normalizationMode">The price scaling normalization mode</param>
+        /// <param name="sumOfDividends">The current dividend sum</param>
+        /// <returns>The provided data point adjusted</returns>
+        public static BaseData Normalize(this BaseData data, decimal factor, DataNormalizationMode normalizationMode, decimal sumOfDividends)
         {
-            return data?.Scale(p => config.GetNormalizedPrice(p), 1/config.PriceScaleFactor);
+            switch (normalizationMode)
+            {
+                case DataNormalizationMode.Adjusted:
+                case DataNormalizationMode.SplitAdjusted:
+                    return data?.Scale(p => p * factor, 1/factor);
+                case DataNormalizationMode.TotalReturn:
+                    return data.Scale(p => p * factor + sumOfDividends, 1/factor);
+
+                case DataNormalizationMode.BackwardsRatio:
+                    return data.Scale(p => p * factor, 1);
+                case DataNormalizationMode.BackwardsPanamaCanal:
+                    return data.Scale(p => p + factor, 1);
+                case DataNormalizationMode.ForwardPanamaCanal:
+                    return data.Scale(p => p + factor, 1);
+
+                case DataNormalizationMode.Raw:
+                default:
+                    return data;
+            }
         }
 
         /// <summary>
-        /// Adjust prices based on price scale
+        /// Helper method to determine the right data normalization mode to use by default
         /// </summary>
-        /// <param name="data">Data to be adjusted</param>
-        /// <param name="scale">Price scale</param>
-        /// <returns></returns>
-        public static BaseData Adjust(this BaseData data, decimal scale)
+        public static DataNormalizationMode GetDefaultNormalizationMode(this UniverseSettings universeSettings, SecurityType securityType)
         {
-            return data?.Scale(p => p * scale, 1/scale);
+            switch (securityType)
+            {
+                case SecurityType.Future:
+                    if (universeSettings.DataNormalizationMode is DataNormalizationMode.BackwardsRatio
+                        or DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal)
+                    {
+                        return universeSettings.DataNormalizationMode;
+                    }
+                    return DataNormalizationMode.BackwardsRatio;
+                default:
+                    return universeSettings.DataNormalizationMode;
+            }
         }
 
         /// <summary>

@@ -66,16 +66,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (_config.Symbol == eventArgs.Symbol
                 && _mapFile.HasData(eventArgs.Date))
             {
-                // check to see if the symbol was remapped
+                var old = _config.MappedSymbol;
                 var newSymbol = _mapFile.GetMappedSymbol(eventArgs.Date, _config.MappedSymbol);
-                if (newSymbol != _config.MappedSymbol)
+                _config.MappedSymbol = newSymbol;
+
+                // check to see if the symbol was remapped
+                if (old != _config.MappedSymbol)
                 {
                     var changed = new SymbolChangedEvent(
                         _config.Symbol,
                         eventArgs.Date,
-                        _config.MappedSymbol,
-                        newSymbol);
-                    _config.MappedSymbol = newSymbol;
+                        old,
+                        _config.MappedSymbol);
                     yield return changed;
                 }
             }

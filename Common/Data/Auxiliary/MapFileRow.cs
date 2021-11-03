@@ -184,7 +184,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 encodedExchange = $",{PrimaryExchange.Code}";
             }
-            var mappingMode = DataMappingMode != null ? $",{DataMappingMode}" : string.Empty;
+            var mappingMode = DataMappingMode != null ? $",{(int)DataMappingMode}" : string.Empty;
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}{mappingMode}";
         }
 

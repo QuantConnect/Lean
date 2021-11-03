@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
             var tradableEventProviders = new List<ITradableDateEventProvider>();
 
-            if (config.PricesShouldBeScaled())
+            if (config.EmitSplitsAndDividends())
             {
                 tradableEventProviders.Add(new SplitEventProvider());
                 tradableEventProviders.Add(new DividendEventProvider());

@@ -97,10 +97,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     _factorFile = _factorFileProvider.Get(_config.Symbol);
                     _lastTradableDate = Current.Time.Date;
-                    UpdateScaleFactor(_factorFile, _lastTradableDate);
+                    _config.PriceScaleFactor = _factorFile.GetPriceScale(_lastTradableDate, _config.DataNormalizationMode, _config.ContractDepthOffset, _config.DataMappingMode);
                 }
 
-                Current = Current.Normalize(_config);
+                Current = Current.Normalize(_config.PriceScaleFactor, _config.DataNormalizationMode, _config.SumOfDividends);
             }
 
             return underlyingReturnValue;
@@ -113,32 +113,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public void Reset()
         {
             throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
-        }
-
-        private void UpdateScaleFactor(FactorFile factorFile, DateTime date)
-        {
-            if (factorFile == null)
-            {
-                return;
-            }
-
-            switch (_config.DataNormalizationMode)
-            {
-                case DataNormalizationMode.Raw:
-                    return;
-
-                case DataNormalizationMode.TotalReturn:
-                case DataNormalizationMode.SplitAdjusted:
-                    _config.PriceScaleFactor = _factorFile.GetSplitFactor(date);
-                    break;
-
-                case DataNormalizationMode.Adjusted:
-                    _config.PriceScaleFactor = _factorFile.GetPriceScaleFactor(date);
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
     }
 }

@@ -696,12 +696,12 @@ namespace QuantConnect
         /// <summary>
         /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices.
         /// </summary>
-        /// <remarks>First contract is the true one, factor 1</remarks>
+        /// <remarks>First contract is the true one, factor 0</remarks>
         ForwardPanamaCanal,
         /// <summary>
         /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices.
         /// </summary>
-        /// <remarks>Last contract is the true one, factor 1</remarks>
+        /// <remarks>Last contract is the true one, factor 0</remarks>
         BackwardsPanamaCanal,
         /// <summary>
         /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio.

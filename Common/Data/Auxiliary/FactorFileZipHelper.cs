@@ -47,32 +47,13 @@ namespace QuantConnect.Data.Auxiliary
                     from kvp in Compression.Unzip(file)
                     let filename = kvp.Key
                     let lines = kvp.Value
-                    let factorFile = SafeRead(filename, lines)
+                    let factorFile = FactorFile.SafeRead(Path.GetFileNameWithoutExtension(filename), lines, securityType)
                     let mapFile = mapFileResolver.GetByPermtick(factorFile.Permtick)
                     where mapFile != null
                     select new KeyValuePair<Symbol, FactorFile>(GetSymbol(mapFile, market, securityType), factorFile)
                 );
 
             return keyValuePairs;
-        }
-
-        /// <summary>
-        /// Parses the contents as a FactorFile, if error returns a new empty factor file
-        /// </summary>
-        public static FactorFile SafeRead(string filename, IEnumerable<string> contents)
-        {
-            var permtick = Path.GetFileNameWithoutExtension(filename);
-            try
-            {
-                DateTime? minimumDate;
-                // FactorFileRow.Parse handles entries with 'inf' and exponential notation and provides the associated minimum tradeable date for these cases
-                // previously these cases were not handled causing an exception and returning an empty factor file
-                return new FactorFile(permtick, FactorFileRow.Parse(contents, out minimumDate), minimumDate);
-            }
-            catch
-            {
-                return new FactorFile(permtick, Enumerable.Empty<FactorFileRow>());
-            }
         }
 
         private static Symbol GetSymbol(MapFile mapFile, string market, SecurityType securityType)

@@ -20,6 +20,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
@@ -37,11 +38,13 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the date associated with this data
         /// </summary>
+        [JsonProperty]
         public DateTime Date { get; private set; }
 
         /// <summary>
         /// Gets the price factor associated with this data
         /// </summary>
+        [JsonIgnore]
         public decimal PriceFactor
         {
             get
@@ -59,6 +62,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the split factor associated with the date
         /// </summary>
+        [JsonIgnore]
         public decimal SplitFactor
         {
             get
@@ -75,11 +79,13 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the combined factor used to create adjusted prices from raw prices
         /// </summary>
+        [JsonIgnore]
         public decimal PriceScaleFactor { get; private set; }
 
         /// <summary>
         /// Gets the raw closing value from the trading date before the updated factor takes effect
         /// </summary>
+        [JsonIgnore]
         public decimal ReferencePrice { get; private set; }
 
         /// <summary>
@@ -94,37 +100,12 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Reads in the factor file for the specified equity symbol
-        /// </summary>
-        public static IEnumerable<FactorFileRow> Read(Stream file, out DateTime? factorFileMinimumDate)
-        {
-            factorFileMinimumDate = null;
-
-            var streamReader = new StreamReader(file, Encoding.UTF8);
-
-            string line;
-            var lines = new List<string>();
-            while (!streamReader.EndOfStream)
-            {
-                line = streamReader.ReadLine();
-                if (!string.IsNullOrWhiteSpace(line))
-                {
-                    lines.Add(line);
-                }
-            }
-
-            streamReader.Dispose();
-
-            return Parse(lines, out factorFileMinimumDate);
-        }
-
-        /// <summary>
         /// Parses the lines as factor files rows while properly handling inf entries
         /// </summary>
         /// <param name="lines">The lines from the factor file to be parsed</param>
         /// <param name="factorFileMinimumDate">The minimum date from the factor file</param>
         /// <returns>An enumerable of factor file rows</returns>
-        public static List<FactorFileRow> Parse(IEnumerable<string> lines, out DateTime? factorFileMinimumDate)
+        public static List<FactorFileRow> Parse(IEnumerable<string> lines, SecurityType securityType, out DateTime? factorFileMinimumDate)
         {
             factorFileMinimumDate = null;
 
@@ -133,20 +114,27 @@ namespace QuantConnect.Data.Auxiliary
             // parse factor file lines
             foreach (var line in lines)
             {
-                // Exponential notation is treated as inf is because of the loss of precision. In
-                // all cases, the significant part has fewer decimals than the needed for a correct
-                // representation, E.g., 1.6e+6 when the correct factor is 1562500.
-                if (line.Contains("inf") || line.Contains("e+"))
+                if(securityType == SecurityType.Future)
                 {
-                    continue;
+                    rows.Add(JsonConvert.DeserializeObject<MappingContractFactorFileRow>(line));
                 }
-
-                var row = Parse(line);
-
-                // ignore zero factor rows
-                if (row.PriceScaleFactor > 0)
+                else
                 {
-                    rows.Add(row);
+                    // Exponential notation is treated as inf is because of the loss of precision. In
+                    // all cases, the significant part has fewer decimals than the needed for a correct
+                    // representation, E.g., 1.6e+6 when the correct factor is 1562500.
+                    if (line.Contains("inf") || line.Contains("e+"))
+                    {
+                        continue;
+                    }
+
+                    var row = Parse(line);
+
+                    // ignore zero factor rows
+                    if (row.PriceScaleFactor > 0)
+                    {
+                        rows.Add(row);
+                    }
                 }
             }
 
@@ -309,9 +297,10 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Writes this row to csv format
+        /// Writes factor file row into it's file format
         /// </summary>
-        public string ToCsv(string source = null)
+        /// <remarks>CSV formatted</remarks>
+        public virtual string GetFileFormat(string source = null)
         {
             source = source == null ? "" : $",{source}";
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)}," +

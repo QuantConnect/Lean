@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_expectedAdjustedVolume.MoveNext() && _expectedAdjustedVolume.Current != aaplData.Volume)
                 {
                     // Our values don't match lets try and give a reason why
-                    var dayFactor = _factorFile.GetSplitFactor(aaplData.Time);
+                    var dayFactor = _factorFile.GetPriceScale(aaplData.Time, DataNormalizationMode.SplitAdjusted);
                     var probableAdjustedVolume = aaplData.Volume / dayFactor;
 
                     if (_expectedAdjustedVolume.Current == probableAdjustedVolume)
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_expectedAdjustedAskSize.MoveNext() && _expectedAdjustedAskSize.Current != aaplQuoteData.LastAskSize)
                 {
                     // Our values don't match lets try and give a reason why
-                    var dayFactor = _factorFile.GetSplitFactor(aaplQuoteData.Time);
+                    var dayFactor = _factorFile.GetPriceScale(aaplQuoteData.Time, DataNormalizationMode.SplitAdjusted);
                     var probableAdjustedAskSize = aaplQuoteData.LastAskSize / dayFactor;
 
                     if (_expectedAdjustedAskSize.Current == probableAdjustedAskSize)
@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_expectedAdjustedBidSize.MoveNext() && _expectedAdjustedBidSize.Current != aaplQuoteData.LastBidSize)
                 {
                     // Our values don't match lets try and give a reason why
-                    var dayFactor = _factorFile.GetSplitFactor(aaplQuoteData.Time);
+                    var dayFactor = _factorFile.GetPriceScale(aaplQuoteData.Time, DataNormalizationMode.SplitAdjusted);
                     var probableAdjustedBidSize = aaplQuoteData.LastBidSize / dayFactor;
 
                     if (_expectedAdjustedBidSize.Current == probableAdjustedBidSize)

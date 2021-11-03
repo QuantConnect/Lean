@@ -1542,7 +1542,7 @@ namespace QuantConnect.Algorithm
                             isFilteredSubscription: false,
                             subscriptionDataTypes: SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future,
                                 GetResolution(symbol, resolution), isCanonical:false),
-                            dataNormalizationMode: dataNormalizationMode ?? UniverseSettings.DataNormalizationMode,
+                            dataNormalizationMode: dataNormalizationMode ?? UniverseSettings.GetDefaultNormalizationMode(symbol.SecurityType),
                             dataMappingMode: dataMappingMode ?? UniverseSettings.DataMappingMode,
                             contractDepthOffset: contractOffset
                             );
