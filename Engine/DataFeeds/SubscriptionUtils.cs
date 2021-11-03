@@ -76,7 +76,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var config = subscription.Configuration;
             enablePriceScale = enablePriceScale && config.PricesShouldBeScaled();
             var lastTradableDate = DateTime.MinValue;
-            decimal? currentScale = null;
 
             Func<int, bool> produce = (workBatchSize) =>
             {
@@ -116,7 +115,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             var factorFile = factorFileProvider.Get(request.Configuration.Symbol);
                             lastTradableDate = data.Time.Date;
-                            currentScale = GetScaleFactor(factorFile, mode, data.Time.Date);
+                            request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(data.Time.Date, mode, config.ContractDepthOffset, config.DataMappingMode);
                         }
 
                         SubscriptionData subscriptionData = SubscriptionData.Create(
@@ -125,7 +124,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             subscription.OffsetProvider,
                             data,
                             mode,
-                            enablePriceScale ? currentScale : null);
+                            enablePriceScale ? request.Configuration.PriceScaleFactor : null);
 
                         // drop the data into the back of the enqueueable
                         enqueueable.Enqueue(subscriptionData);
@@ -165,29 +164,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             return subscription;
         }
-
-        private static decimal GetScaleFactor(FactorFile factorFile, DataNormalizationMode mode, DateTime date)
-        {
-            if (factorFile == null)
-            {
-                return 1;
-            }
-            switch (mode)
-            {
-                case DataNormalizationMode.Raw:
-                    return 1;
-
-                case DataNormalizationMode.TotalReturn:
-                case DataNormalizationMode.SplitAdjusted:
-                    return factorFile.GetSplitFactor(date);
-
-                case DataNormalizationMode.Adjusted:
-                    return factorFile.GetPriceScaleFactor(date);
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
     }
 }

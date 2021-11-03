@@ -136,10 +136,14 @@ namespace QuantConnect.Data
             }
             set
             {
+                var oldMappedValue = MappedSymbol;
                 var oldSymbol = Symbol;
                 Symbol = Symbol.UpdateMappedSymbol(value, ContractDepthOffset);
 
-                NewSymbol?.Invoke(this, new NewSymbolEventArgs(Symbol, oldSymbol));
+                if (MappedSymbol != oldMappedValue)
+                {
+                    NewSymbol?.Invoke(this, new NewSymbolEventArgs(Symbol, oldSymbol));
+                }
             }
         }
 

@@ -57,6 +57,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>The resolved factor file, or null if not found</returns>
         public FactorFile Get(Symbol symbol)
         {
+            symbol = symbol.GetFactorFileSymbol();
             FactorFile factorFile;
             if (_cache.TryGetValue(symbol, out factorFile))
             {
@@ -84,23 +85,10 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         private FactorFile GetFactorFile(Symbol symbol, string permtick)
         {
-            FactorFile factorFile = null;
-
             var path = Path.Combine(Globals.CacheDataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market, "factor_files", permtick.ToLowerInvariant() + ".csv");
 
-            var factorFileStream = _dataProvider.Fetch(path);
-            if (factorFileStream != null)
-            {
-                factorFile = FactorFile.Read(permtick, factorFileStream);
-                factorFileStream.DisposeSafely();
-                _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
-            }
-            else
-            {
-                // add null value to the cache, we don't want to check the disk multiple times
-                // but keep existing value if it exists, just in case
-                _cache.AddOrUpdate(symbol, factorFile, (s, oldValue) => oldValue);
-            }
+            var factorFile = FactorFile.SafeRead(permtick, _dataProvider.ReadLines(path), symbol.SecurityType);
+            _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
             return factorFile;
         }
     }

@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             };
 
             DateTime? factorFileMinimumDate;
-            var factorFile = FactorFileRow.Parse(lines, out factorFileMinimumDate).ToList();
+            var factorFile = FactorFileRow.Parse(lines, SecurityType.Equity, out factorFileMinimumDate).ToList();
 
             Assert.AreEqual(5, factorFile.Count);
 
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             };
 
             DateTime? factorFileMinimumDate;
-            var factorFile = FactorFileRow.Parse(lines, out factorFileMinimumDate).ToList();
+            var factorFile = FactorFileRow.Parse(lines, SecurityType.Equity, out factorFileMinimumDate).ToList();
 
             Assert.AreEqual(3, factorFile.Count);
 
@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
             const string symbol = "n/a";
             var file = GetTestFactorFile(symbol, reference);
-
+            file.DataNormalizationMode = DataNormalizationMode.Adjusted;
             // time price factors should be the price factor * split factor
 
             Assert.AreEqual(1, file.GetPriceScaleFactor(reference));
@@ -330,7 +330,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var expected = GetTestFactorFile("AAPL", reference);
 
             // remove the last entry that contains a split and dividend at the same time
-            var factorFile = new FactorFile("AAPL", expected.SortedFactorFileData.Where(kvp => kvp.Value.PriceFactor >= .8m).Select(kvp => kvp.Value));
+            var factorFile = new FactorFile("AAPL", expected.SortedFactorFileData.Where(kvp => kvp.Value.Single().PriceFactor >= .8m).Select(kvp => kvp.Value.Single()));
             var actual = factorFile.Apply(new List<BaseData>
             {
                 new Split(Symbols.AAPL, reference.AddDays(-364), 100m, 1 / 2m, SplitType.SplitOccurred),
@@ -358,19 +358,19 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
                 "20501231,1.0000000,1"
             };
 
-            var factorFile = FactorFile.Parse("bno", lines);
+            var factorFile = FactorFile.SafeRead("bno", lines, SecurityType.Equity);
 
-            var firstRow = factorFile.SortedFactorFileData[new DateTime(1998, 01, 02)];
+            var firstRow = factorFile.SortedFactorFileData[new DateTime(1998, 01, 02)].Single();
             Assert.AreEqual(1m, firstRow.PriceFactor);
             Assert.AreEqual(0.5m, firstRow.SplitFactor);
             Assert.AreEqual(0m, firstRow.ReferencePrice);
 
-            var secondRow = factorFile.SortedFactorFileData[new DateTime(2013, 08, 28)];
+            var secondRow = factorFile.SortedFactorFileData[new DateTime(2013, 08, 28)].Single();
             Assert.AreEqual(1m, secondRow.PriceFactor);
             Assert.AreEqual(0.5m, secondRow.SplitFactor);
             Assert.AreEqual(0m, firstRow.ReferencePrice);
 
-            var thirdRow = factorFile.SortedFactorFileData[Time.EndOfTime];
+            var thirdRow = factorFile.SortedFactorFileData[Time.EndOfTime].Single();
             Assert.AreEqual(1m, thirdRow.PriceFactor);
             Assert.AreEqual(1m, thirdRow.SplitFactor);
             Assert.AreEqual(0m, firstRow.ReferencePrice);
@@ -386,7 +386,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
                 "20501231,1.0000000,1"
             };
 
-            var factorFile = FactorFile.Parse("bno", lines);
+            var factorFile = FactorFile.SafeRead("bno", lines, SecurityType.Equity);
             Assert.AreEqual(new DateTime(2013, 08, 28), factorFile.MostRecentFactorChange);
         }
 
@@ -397,7 +397,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         {
             var lines = contents.Split('\n').Where(l => !string.IsNullOrWhiteSpace(l));
 
-            var factorFile = FactorFile.Parse("bno", lines);
+            var factorFile = FactorFile.SafeRead("bno", lines, SecurityType.Equity);
             Assert.IsEmpty(factorFile.GetSplitsAndDividends(Symbols.SPY, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)));
         }
 
@@ -430,7 +430,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             DateTime? factorFileMinimumDate;
             var reader = new StreamReader(factorFileContents.ToStream());
             var enumerable = new StreamReaderEnumerable(reader).Where(line => line.Length > 0);
-            var factorFileRows = FactorFileRow.Parse(enumerable, out factorFileMinimumDate);
+            var factorFileRows = FactorFileRow.Parse(enumerable, SecurityType.Equity, out factorFileMinimumDate);
             return new FactorFile("lode", factorFileRows, factorFileMinimumDate);
         }
 
@@ -445,7 +445,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             DateTime? factorFileMinimumDate;
             var reader = new StreamReader(factorFileContents.ToStream());
             var enumerable = new StreamReaderEnumerable(reader).Where(line => line.Length > 0);
-            var factorFileRows = FactorFileRow.Parse(enumerable, out factorFileMinimumDate);
+            var factorFileRows = FactorFileRow.Parse(enumerable, SecurityType.Equity, out factorFileMinimumDate);
             return new FactorFile("lode", factorFileRows, factorFileMinimumDate);
         }
 
@@ -486,7 +486,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             DateTime? factorFileMinimumDate;
             var reader = new StreamReader(factorFileContents.ToStream());
             var enumerable = new StreamReaderEnumerable(reader).Where(line => line.Length > 0);
-            var factorFileRows = FactorFileRow.Parse(enumerable, out factorFileMinimumDate);
+            var factorFileRows = FactorFileRow.Parse(enumerable, SecurityType.Equity, out factorFileMinimumDate);
             return new FactorFile("aapl", factorFileRows, factorFileMinimumDate);
         }
 
@@ -527,7 +527,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             DateTime? factorFileMinimumDate;
             var reader = new StreamReader(factorFileContents.ToStream());
             var enumerable = new StreamReaderEnumerable(reader).Where(line => line.Length > 0);
-            var factorFileRows = FactorFileRow.Parse(enumerable, out factorFileMinimumDate);
+            var factorFileRows = FactorFileRow.Parse(enumerable, SecurityType.Equity, out factorFileMinimumDate);
             return new FactorFile("aapl", factorFileRows, factorFileMinimumDate);
         }
     }

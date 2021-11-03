@@ -52,7 +52,8 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         public void ReturnsNullForNotFound()
         {
             var factorFile = FactorFileProvider.Get(Symbol.Create("not-a-ticker", SecurityType.Equity, QuantConnect.Market.USA));
-            Assert.IsNull(factorFile);
+            Assert.IsNotNull(factorFile);
+            Assert.IsEmpty(factorFile);
         }
 
         [Test, Ignore("This test is meant to be run manually")]

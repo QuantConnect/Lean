@@ -199,7 +199,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     var factorFile = new FactorFile(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
                     var mapFile = new MapFile(symbol.Value, dividendsSplitsMaps.MapRows);
 
-                    factorFile.WriteToCsv(symbol);
+                    factorFile.WriteToFile(symbol);
                     mapFile.WriteToCsv(settings.Market, symbol.SecurityType);
 
                     output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");

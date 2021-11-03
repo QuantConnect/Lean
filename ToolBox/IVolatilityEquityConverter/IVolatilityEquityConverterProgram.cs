@@ -193,7 +193,7 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
             parsedFactors.OrderByDescending(x => x.Time);
 
             var factorFileGenerator = new FactorFileGenerator(symbol, factorFilePath);
-            factorFileGenerator.CreateFactorFile(parsedFactors).WriteToCsv(symbol);
+            factorFileGenerator.CreateFactorFile(parsedFactors).WriteToFile(symbol);
         }
 
         /// <summary>

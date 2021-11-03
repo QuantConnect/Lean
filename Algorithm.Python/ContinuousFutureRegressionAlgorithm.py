@@ -29,7 +29,7 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
         self._lastDateLog = -1
         self._continuousContract = self.AddFuture(Futures.Indices.SP500EMini,
                                                   dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
-                                                  dataMappingMode = DataMappingMode.FirstDayMonth,
+                                                  dataMappingMode = DataMappingMode.LastTradingDay,
                                                   contractDepthOffset= 0)
 
     def OnData(self, data):

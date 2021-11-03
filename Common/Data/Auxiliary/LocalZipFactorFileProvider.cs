@@ -74,6 +74,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>The resolved factor file, or null if not found</returns>
         public FactorFile Get(Symbol symbol)
         {
+            symbol = symbol.GetFactorFileSymbol();
             var key = CorporateActionsKey.Create(symbol);
             lock (_lock)
             {
@@ -84,15 +85,14 @@ namespace QuantConnect.Data.Auxiliary
                 }
 
                 FactorFile factorFile;
-                if (_factorFiles.TryGetValue(symbol, out factorFile))
+                if (!_factorFiles.TryGetValue(symbol, out factorFile))
                 {
-                    return factorFile;
+                    // Could not find factor file for symbol
+                    Log.Error($"LocalZipFactorFileProvider.Get({symbol}): No factor file found.");
+                    _factorFiles[symbol] = factorFile = symbol.GetEmptyFactorFile();
                 }
+                return factorFile;
             }
-
-            // Could not find factor file for symbol
-            Log.Error($"LocalZipFactorFileProvider.Get({symbol}): No factor file found.");
-            return null;
         }
 
         /// <summary>

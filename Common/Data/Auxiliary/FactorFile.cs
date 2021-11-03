@@ -23,7 +23,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -40,7 +39,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// The factor file data rows sorted by date
         /// </summary>
-        public SortedList<DateTime, FactorFileRow> SortedFactorFileData { get; set; }
+        public SortedList<DateTime, List<FactorFileRow>> SortedFactorFileData { get; set; }
 
         /// <summary>
         /// The minimum tradeable date for the symbol
@@ -66,24 +65,32 @@ namespace QuantConnect.Data.Auxiliary
         public string Permtick { get; }
 
         /// <summary>
+        /// Allows the consumer to specify a desired mapping mode
+        /// </summary>
+        public DataMappingMode? DataMappingMode { get; set; }
+
+        /// <summary>
+        /// Allows the consumer to specify a desired normalization mode
+        /// </summary>
+        public DataNormalizationMode? DataNormalizationMode { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FactorFile"/> class.
         /// </summary>
         public FactorFile(string permtick, IEnumerable<FactorFileRow> data, DateTime? factorFileMinimumDate = null)
         {
             Permtick = permtick.LazyToUpper();
 
-            var dictionary = new Dictionary<DateTime, FactorFileRow>();
+            SortedFactorFileData = new SortedList<DateTime, List<FactorFileRow>>();
             foreach (var row in data)
             {
-                if (dictionary.ContainsKey(row.Date))
+                if (!SortedFactorFileData.TryGetValue(row.Date, out var factorFileRows))
                 {
-                    Log.Trace(Invariant($"Skipping duplicate factor file row for symbol: {permtick}, date: {row.Date:yyyyMMdd}"));
-                    continue;
+                    SortedFactorFileData[row.Date] = factorFileRows = new List<FactorFileRow>();
                 }
 
-                dictionary.Add(row.Date, row);
+                factorFileRows.Add(row);
             }
-            SortedFactorFileData = new SortedList<DateTime, FactorFileRow>(dictionary);
 
             _reversedFactorFileDates = new List<DateTime>();
             foreach (var time in SortedFactorFileData.Keys.Reverse())
@@ -95,49 +102,93 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Reads a FactorFile in from the <see cref="Globals.DataFolder"/>.
+        /// Parses the contents as a FactorFile, if error returns a new empty factor file
         /// </summary>
-        public static FactorFile Read(string permtick, Stream file)
+        public static FactorFile SafeRead(string permtick, IEnumerable<string> contents, SecurityType securityType)
         {
-            return new FactorFile(permtick, FactorFileRow.Read(file, out DateTime? factorFileMinimumDate), factorFileMinimumDate);
-        }
+            try
+            {
+                DateTime? minimumDate;
 
-        /// <summary>
-        /// Parses the specified lines as a factor file
-        /// </summary>
-        public static FactorFile Parse(string permtick, IEnumerable<string> lines)
-        {
-            DateTime? factorFileMinimumDate;
-            return new FactorFile(permtick, FactorFileRow.Parse(lines, out factorFileMinimumDate), factorFileMinimumDate);
+                contents = contents.Distinct();
+                // FactorFileRow.Parse handles entries with 'inf' and exponential notation and provides the associated minimum tradeable date for these cases
+                // previously these cases were not handled causing an exception and returning an empty factor file
+                return new FactorFile(permtick, FactorFileRow.Parse(contents, securityType, out minimumDate), minimumDate);
+            }
+            catch
+            {
+                return new FactorFile(permtick, Enumerable.Empty<FactorFileRow>());
+            }
         }
 
         /// <summary>
         /// Gets the price scale factor that includes dividend and split adjustments for the specified search date
         /// </summary>
-        public decimal GetPriceScaleFactor(DateTime searchDate)
+        public decimal GetPriceScaleFactor(DateTime searchDate, uint contractOffset = 0)
         {
-            decimal factor = 1;
-            //Iterate backwards to find the most recent factor:
-            foreach (var splitDate in _reversedFactorFileDates)
+            if (DataNormalizationMode == QuantConnect.DataNormalizationMode.Raw)
             {
-                if (splitDate.Date < searchDate.Date) break;
-                factor = SortedFactorFileData[splitDate].PriceScaleFactor;
+                return 0;
             }
-            return factor;
-        }
 
-        /// <summary>
-        /// Gets the split factor to be applied at the specified date
-        /// </summary>
-        public decimal GetSplitFactor(DateTime searchDate)
-        {
-            decimal factor = 1;
-            //Iterate backwards to find the most recent factor:
-            foreach (var splitDate in _reversedFactorFileDates)
+            var factor = 1m;
+            if (DataNormalizationMode is QuantConnect.DataNormalizationMode.BackwardsPanamaCanal or QuantConnect.DataNormalizationMode.ForwardPanamaCanal)
             {
-                if (splitDate.Date < searchDate.Date) break;
-                factor = SortedFactorFileData[splitDate].SplitFactor;
+                // default value depends on the data mode
+                factor = 0;
             }
+
+            for (var i = 0; i < _reversedFactorFileDates.Count; i++)
+            {
+                var factorDate = _reversedFactorFileDates[i];
+                if (factorDate.Date < searchDate.Date)
+                {
+                    break;
+                }
+
+                var factorFileRow = SortedFactorFileData[factorDate];
+                switch (DataNormalizationMode)
+                {
+                    case QuantConnect.DataNormalizationMode.TotalReturn:
+                    case QuantConnect.DataNormalizationMode.SplitAdjusted:
+                        factor = factorFileRow.First().SplitFactor;
+                        break;
+                    case QuantConnect.DataNormalizationMode.Adjusted:
+                        factor = factorFileRow.First().PriceScaleFactor;
+                        break;
+
+                    case QuantConnect.DataNormalizationMode.BackwardsRatio:
+                    {
+                        var row = factorFileRow.OfType<MappingContractFactorFileRow>().FirstOrDefault(row => row.DataMappingMode == DataMappingMode);
+                        if (row != null && row.BackwardsRatioScale.Count > contractOffset)
+                        {
+                            factor = row.BackwardsRatioScale[(int)contractOffset];
+                        }
+                        break;
+                    }
+                    case QuantConnect.DataNormalizationMode.BackwardsPanamaCanal:
+                    {
+                        var row = factorFileRow.OfType<MappingContractFactorFileRow>().FirstOrDefault(row => row.DataMappingMode == DataMappingMode);
+                        if (row != null && row.BackwardsPanamaCanalScale.Count > contractOffset)
+                        {
+                            factor = row.BackwardsPanamaCanalScale[(int)contractOffset];
+                        }
+                        break;
+                    }
+                    case QuantConnect.DataNormalizationMode.ForwardPanamaCanal:
+                    {
+                        var row = factorFileRow.OfType<MappingContractFactorFileRow>().FirstOrDefault(row => row.DataMappingMode == DataMappingMode);
+                        if (row != null && row.ForwardPanamaCanalScale.Count > contractOffset)
+                        {
+                            factor = row.ForwardPanamaCanalScale[(int)contractOffset];
+                        }
+                        break;
+                    }
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
             return factor;
         }
 
@@ -152,25 +203,10 @@ namespace QuantConnect.Data.Auxiliary
             foreach (var splitDate in _reversedFactorFileDates)
             {
                 if (splitDate.Date < searchDate.Date) break;
-                factors = SortedFactorFileData[splitDate];
+                factors = SortedFactorFileData[splitDate][0];
             }
 
             return factors;
-        }
-
-        /// <summary>
-        /// Checks whether or not a symbol has scaling factors
-        /// </summary>
-        public static bool HasScalingFactors(string permtick, string market)
-        {
-            // check for factor files
-            var path = Path.Combine(Globals.CacheDataFolder, "equity", market, "factor_files", permtick.ToLowerInvariant() + ".csv");
-            if (File.Exists(path))
-            {
-                return true;
-            }
-            Log.Trace($"FactorFile.HasScalingFactors(): Factor file not found: {permtick}");
-            return false;
         }
 
         /// <summary>
@@ -196,8 +232,8 @@ namespace QuantConnect.Data.Auxiliary
             if (index > -1 && index < SortedFactorFileData.Count - 1)
             {
                 // grab the next key to ensure it's a dividend event
-                var thisRow = SortedFactorFileData.Values[index];
-                var nextRow = SortedFactorFileData.Values[index + 1];
+                var thisRow = SortedFactorFileData.Values[index].First();
+                var nextRow = SortedFactorFileData.Values[index + 1].First();
 
                 // if the price factors have changed then it's a dividend event
                 if (thisRow.PriceFactor != nextRow.PriceFactor)
@@ -233,8 +269,8 @@ namespace QuantConnect.Data.Auxiliary
             if (index > -1 && index < SortedFactorFileData.Count - 1)
             {
                 // grab the next key to ensure it's a split event
-                var thisRow = SortedFactorFileData.Values[index];
-                var nextRow = SortedFactorFileData.Values[index + 1];
+                var thisRow = SortedFactorFileData.Values[index].First();
+                var nextRow = SortedFactorFileData.Values[index + 1].First();
 
                 // if the split factors have changed then it's a split event
                 if (thisRow.SplitFactor != nextRow.SplitFactor)
@@ -251,22 +287,19 @@ namespace QuantConnect.Data.Auxiliary
         /// Writes this factor file data to an enumerable of csv lines
         /// </summary>
         /// <returns>An enumerable of lines representing this factor file</returns>
-        public IEnumerable<string> ToCsvLines()
+        public IEnumerable<string> GetFileFormat()
         {
-            foreach (var kvp in SortedFactorFileData)
-            {
-                yield return kvp.Value.ToCsv();
-            }
+            return SortedFactorFileData.SelectMany(kvp => kvp.Value.Select(row => row.GetFileFormat()));
         }
 
         /// <summary>
         /// Write the factor file to the correct place in the default Data folder
         /// </summary>
         /// <param name="symbol">The symbol this factor file represents</param>
-        public void WriteToCsv(Symbol symbol)
+        public void WriteToFile(Symbol symbol)
         {
             var filePath = LeanData.GenerateRelativeFactorFilePath(symbol);
-            File.WriteAllLines(filePath, ToCsvLines());
+            File.WriteAllLines(filePath, GetFileFormat());
         }
 
         /// <summary>
@@ -275,7 +308,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="symbol">The symbol to ues for the dividend and split objects</param>
         /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
         /// <param name="decimalPlaces">The number of decimal places to round the dividend's distribution to, defaulting to 2</param>
-        /// <returns>All splits and diviends represented by this factor file in chronological order</returns>
+        /// <returns>All splits and dividends represented by this factor file in chronological order</returns>
         public List<BaseData> GetSplitsAndDividends(Symbol symbol, SecurityExchangeHours exchangeHours, int decimalPlaces = 2)
         {
             var dividendsAndSplits = new List<BaseData>();
@@ -285,10 +318,10 @@ namespace QuantConnect.Data.Auxiliary
                 return dividendsAndSplits;
             }
 
-            var futureFactorFileRow = SortedFactorFileData.Last().Value;
+            var futureFactorFileRow = SortedFactorFileData.Last().Value.First();
             for (var i = SortedFactorFileData.Count - 2; i >= 0; i--)
             {
-                var row = SortedFactorFileData.Values[i];
+                var row = SortedFactorFileData.Values[i].First();
                 var dividend = row.GetDividend(futureFactorFileRow, symbol, exchangeHours, decimalPlaces);
                 if (dividend.Distribution != 0m)
                 {
@@ -323,8 +356,8 @@ namespace QuantConnect.Data.Auxiliary
             }
 
             var factorFileRows = new List<FactorFileRow>();
-            var firstEntry = SortedFactorFileData.First().Value;
-            var lastEntry = SortedFactorFileData.Last().Value;
+            var firstEntry = SortedFactorFileData.First().Value.First();
+            var lastEntry = SortedFactorFileData.Last().Value.First();
             factorFileRows.Add(lastEntry);
 
             var splitsAndDividends = GetSplitsAndDividends(data[0].Symbol, exchangeHours);
@@ -364,7 +397,12 @@ namespace QuantConnect.Data.Auxiliary
             }
 
             var firstFactorFileRow = new FactorFileRow(firstEntry.Date, factorFileRows.Last().PriceFactor, factorFileRows.Last().SplitFactor, firstEntry.ReferencePrice == 0 ? 0 : firstEntry.ReferencePrice);
-            factorFileRows.Add(firstFactorFileRow);
+            var existing = factorFileRows.FindIndex(row => row.Date == firstFactorFileRow.Date);
+            if (existing == -1)
+            {
+                // only add it if not present
+                factorFileRows.Add(firstFactorFileRow);
+            }
 
             return new FactorFile(Permtick, factorFileRows, FactorFileMinimumDate);
         }
@@ -374,10 +412,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <filterpriority>1</filterpriority>
         public IEnumerator<FactorFileRow> GetEnumerator()
         {
-            foreach (var kvp in SortedFactorFileData)
-            {
-                yield return kvp.Value;
-            }
+            return SortedFactorFileData.SelectMany(kvp => kvp.Value).GetEnumerator();
         }
 
         /// <summary>Returns an enumerator that iterates through a collection.</summary>

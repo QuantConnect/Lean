@@ -21,7 +21,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
-using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 

@@ -252,7 +252,8 @@ namespace QuantConnect.Data.UniverseSelection
                 UniverseSettings.ExtendedMarketHours,
                 dataNormalizationMode: UniverseSettings.DataNormalizationMode,
                 subscriptionDataTypes: UniverseSettings.SubscriptionDataTypes,
-                dataMappingMode: UniverseSettings.DataMappingMode);
+                dataMappingMode: UniverseSettings.DataMappingMode,
+                contractDepthOffset: (uint)Math.Abs(UniverseSettings.ContractDepthOffset));
             return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
                 universe: this,
                 security: security,
