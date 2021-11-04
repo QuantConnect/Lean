@@ -25,8 +25,8 @@ class BasicTemplateOptionsHourlyAlgorithm(QCAlgorithm):
     UnderlyingTicker = "AAPL"
 
     def Initialize(self):
-        self.SetStartDate(2015, 6, 6)
-        self.SetEndDate(2015, 6, 9)
+        self.SetStartDate(2014, 6, 6)
+        self.SetEndDate(2014, 6, 9)
         self.SetCash(100000)
 
         equity = self.AddEquity(self.UnderlyingTicker, Resolution.Hour)
