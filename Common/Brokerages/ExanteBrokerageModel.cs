@@ -103,17 +103,12 @@ namespace QuantConnect.Brokerages
                 return 1m;
             }
 
-            if (security.Type == SecurityType.Forex)
+            return security.Type switch
             {
-                return 1.05m;
-            }
-
-            if (security.Type == SecurityType.Equity)
-            {
-                return EquityLeverage;
-            }
-
-            throw new ArgumentException($"Invalid security type: {security.Type}", nameof(security));
+                SecurityType.Forex => 1.05m,
+                SecurityType.Equity => EquityLeverage,
+                _ => 1.0m,
+            };
         }
     }
 }
