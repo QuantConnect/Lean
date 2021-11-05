@@ -26,7 +26,7 @@ class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2015, 12, 23)
-        self.SetEndDate(2015, 12, 24)
+        self.SetEndDate(2016, 1, 20)
         self.SetCash(100000)
 
         equity = self.AddEquity(self.UnderlyingTicker, Resolution.Daily)
@@ -34,11 +34,7 @@ class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
         self.option_symbol = option.Symbol
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(lambda u: (u.Strikes(-2, +2)
-                                     # Expiration method accepts TimeSpan objects or integer for days.
-                                     # The following statements yield the same filtering criteria
-                                     .Expiration(0, 180)))
-                                     #.Expiration(TimeSpan.Zero, TimeSpan.FromDays(180))))
+        option.SetFilter(lambda u: (u.Strikes(0, 1).Expiration(0, 30)))
 
         # use the underlying equity as the benchmark
         self.SetBenchmark(equity.Symbol)
@@ -50,17 +46,13 @@ class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
         if chain is None:
             return
 
-        # we sort the contracts to find at the money (ATM) contract with farthest expiration
-        contracts = sorted(sorted(sorted(chain, \
-            key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
-            key = lambda x: x.Expiry, reverse=True), \
-            key = lambda x: x.Right, reverse=True)
+        # Grab us the contract nearest expiry
+        contracts = sorted(chain, key = lambda x: x.Expiry)
 
         # if found, trade it
         if len(contracts) == 0: return
         symbol = contracts[0].Symbol
         self.MarketOrder(symbol, 1)
-        self.MarketOnCloseOrder(symbol, -1)
 
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))

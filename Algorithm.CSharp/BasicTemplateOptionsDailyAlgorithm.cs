@@ -40,19 +40,14 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2015, 12, 23);
-            SetEndDate(2015, 12, 24);
+            SetEndDate(2016, 1, 20);
             SetCash(100000);
 
             var equity = AddEquity(UnderlyingTicker, Resolution.Daily);
             var option = AddOption(UnderlyingTicker, Resolution.Daily);
             OptionSymbol = option.Symbol;
 
-            // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.Strikes(-2, +2)
-                                   // Expiration method accepts TimeSpan objects or integer for days.
-                                   // The following statements yield the same filtering criteria
-                                   .Expiration(0, 180));
-            // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
+            option.SetFilter(x => x.CallsOnly().Strikes(0, 1).Expiration(0, 30));
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
@@ -69,22 +64,15 @@ namespace QuantConnect.Algorithm.CSharp
                 OptionChain chain;
                 if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
                 {
-                    // we find at the money (ATM) put contract with farthest expiration
-                    var atmContract = chain
-                        .OrderByDescending(x => x.Expiry)
-                        .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
-                        .ThenByDescending(x => x.Right)
-                        .FirstOrDefault();
+                    // Grab us the contract nearest expiry that is not today
+                    var contractsByExpiration = chain.Where(x => x.Expiry != Time.Date).OrderBy(x => x.Expiry);
+                    var contract = contractsByExpiration.FirstOrDefault();
 
-                    if (atmContract != null)
+                    if (contract != null)
                     {
                         // if found, trade it
-                        MarketOrder(atmContract.Symbol, 1);
+                        MarketOrder(contract.Symbol, 1);
                     }
-                }
-                else
-                {
-                    Liquidate();
                 }
             }
         }
@@ -114,34 +102,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
+            {"Average Loss", "-1.31%"},
+            {"Compounding Annual Return", "-15.304%"},
+            {"Drawdown", "1.300%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-1.311%"},
+            {"Sharpe Ratio", "-3.31"},
+            {"Probabilistic Sharpe Ratio", "0.035%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Annual Standard Deviation", "0.034"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-3.31"},
+            {"Tracking Error", "0.034"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "GOOCV 30AKMEIPOSS1Y|GOOCV VP83T1ZUHROL"},
-            {"Fitness Score", "0.013"},
+            {"Estimated Strategy Capacity", "$18000.00"},
+            {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-174.306"},
-            {"Portfolio Turnover", "0.026"},
+            {"Sortino Ratio", "-1.496"},
+            {"Return Over Maximum Drawdown", "-11.673"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -155,7 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "e3e76efdbaf7c926ac6825af1976a1e4"}
+            {"OrderListHash", "9e67da104e62950d6e299bcabe1bd442"}
         };
     }
 }
