@@ -68,8 +68,8 @@ namespace QuantConnect.Indicators
             _averageTrueRange = new AverageTrueRange(period, movingAverageType);
             _multiplier = multiplier;
             _period = period;
-            _previousTrailingLowerBand = -1;
-            _previousTrailingUpperBand = -1;
+            _previousTrailingLowerBand = 0;
+            _previousTrailingUpperBand = 0;
             _prevSuper = -1;
         }
 
@@ -102,12 +102,6 @@ namespace QuantConnect.Indicators
             _currentBasicLowerBand = ((input.High + input.Low) / 2) - (_multiplier * _averageTrueRange.Current.Value);
             _currentBasicUpperBand = ((input.High + input.Low) / 2) + (_multiplier * _averageTrueRange.Current.Value);
 
-            if ((_previousTrailingLowerBand == -1) && (_previousTrailingUpperBand == -1))
-            {
-                _previousTrailingLowerBand = _currentBasicLowerBand;
-                _previousTrailingUpperBand = _currentBasicUpperBand;
-            }
-
             _currentTrailingLowerBand = ((_currentBasicLowerBand > _previousTrailingLowerBand) || (_previousClose < _previousTrailingLowerBand)) ? _currentBasicLowerBand : _previousTrailingLowerBand;
             _currentTrailingUpperBand = ((_currentBasicUpperBand < _previousTrailingUpperBand) || (_previousClose > _previousTrailingUpperBand)) ? _currentBasicUpperBand : _previousTrailingUpperBand;
 
@@ -135,12 +129,10 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _averageTrueRange.Reset();
-            _previousTrailingLowerBand = -1;
-            _previousTrailingUpperBand = -1;
+            _previousTrailingLowerBand = 0;
+            _previousTrailingUpperBand = 0;
             _prevSuper = -1;
             base.Reset();
         }
     }
 }
-
-
