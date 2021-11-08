@@ -31,9 +31,13 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         private Crypto _ethusd;
         private readonly IFeeModel _feeModel = new FTXFeeModel();
 
+        protected decimal TakerFee;
+        protected decimal MakerFee;
+
         [SetUp]
         public void Initialize()
         {
+            SetBrokerageFees();
             var spdb = SymbolPropertiesDatabase.FromDataFolder();
             var tz = TimeZones.Utc;
             _xrpusdt = new Crypto(
@@ -55,6 +59,12 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 RegisteredSecurityDataTypesProvider.Null
             );
             _ethusd.SetMarketPrice(new Tick(DateTime.UtcNow, _ethusd.Symbol, 100, 100));
+        }
+
+        protected virtual void SetBrokerageFees()
+        {
+            MakerFee = 0.02m;
+            TakerFee = 0.07m;
         }
 
         [TestCase(-1)]
@@ -116,7 +126,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(_ethusd.QuoteCurrency.Symbol, fee.Value.Currency);
             // 100 (price) * 0.0007 (taker fee, in quote currency)
-            Assert.AreEqual(0.07m, fee.Value.Amount);
+            Assert.AreEqual(TakerFee, fee.Value.Amount);
         }
 
         [Test]
@@ -154,7 +164,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(_ethusd.QuoteCurrency.Symbol, fee.Value.Currency);
             // 0.0002 (maker fee, in quote currency)
-            Assert.AreEqual(0.02, fee.Value.Amount);
+            Assert.AreEqual(MakerFee, fee.Value.Amount);
         }
 
         [Test]
@@ -192,7 +202,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(_ethusd.BaseCurrencySymbol, fee.Value.Currency);
             // 0.0002 (maker fee, in base currency)
-            Assert.AreEqual(0.0002, fee.Value.Amount);
+            Assert.AreEqual(MakerFee / 100, fee.Value.Amount);
         }
 
         [Test]
@@ -207,7 +217,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual("USDT", fee.Value.Currency);
             // 100 (price) * 0.0007 (taker fee)
-            Assert.AreEqual(0.07m, fee.Value.Amount);
+            Assert.AreEqual(TakerFee, fee.Value.Amount);
         }
     }
 }

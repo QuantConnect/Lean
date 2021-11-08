@@ -163,7 +163,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {nameof(FTXBrokerageModel)} does not support {security.Type} security type.")
+                    StringExtensions.Invariant($"The {this.GetType().Name} does not support {security.Type} security type.")
                 );
 
                 return false;
