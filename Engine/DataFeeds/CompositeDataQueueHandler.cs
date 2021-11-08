@@ -13,75 +13,60 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// This data provider will wrap and use multiple data providers internally in the provided order
+    /// This is an implementation of <see cref="IDataQueueHandler"/> used to handle multiple live datafeeds
     /// </summary>
     public class CompositeDataQueueHandler : IDataQueueHandler
     {
-        private readonly List<IDataQueueHandler> _dataHandlers;
+        private readonly List<IDataQueueHandler> _dataHandlers = new();
+        private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler;
 
         /// <summary>
-        /// Creates a new instance and initialize data providers used
+        /// Initializes a new instance of the <see cref="CompositeDataQueueHandler"/> class
         /// </summary>
         public CompositeDataQueueHandler()
         {
-            _dataHandlers = new List<IDataQueueHandler>();
-
-            var dataProvidersConfig = Config.Get("composite-data-providers");
-            if (!string.IsNullOrEmpty(dataProvidersConfig))
-            {
-                var dataProviders = JsonConvert.DeserializeObject<List<string>>(dataProvidersConfig);
-                foreach (var dataProvider in dataProviders)
-                {
-                    _dataHandlers.Add(Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(dataProvider));
-                }
-
-                if (_dataHandlers.Count == 0)
-                {
-                    throw new ArgumentException("CompositeDataProvider(): requires at least 1 valid data provider in 'composite-data-providers'");
-                }
-            }
-            else
-            {
-                throw new ArgumentException("CompositeDataProvider(): requires 'composite-data-providers' to be set with a valid type name");
-            }
         }
 
         /// <summary>
-        /// Desktop/Local doesn't support live data from this handler
+        /// Subscribe to the specified configuration
         /// </summary>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            for (var i = 0; i < _dataHandlers.Count; i++)
+            foreach (var dataHandler in _dataHandlers)
             {
-                var enumerator = _dataHandlers[i].Subscribe(dataConfig, newDataAvailableHandler);
-
-                if (enumerator != null)
+                var enumerator = dataHandler.Subscribe(dataConfig, newDataAvailableHandler);
+                // Check if the enumerator is not empty
+                if (enumerator != null && enumerator.MoveNext())
                 {
+                    _dataConfigAndDataHandler.Add(dataConfig, dataHandler);
                     return enumerator;
                 }
             }
-
-            return null;
+            return Enumerable.Empty<BaseData>().GetEnumerator();
         }
 
         /// <summary>
-        /// Desktop/Local doesn't support live data from this handler
+        /// Removes the specified configuration
         /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
         public virtual void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
+            _dataConfigAndDataHandler.TryGetValue(dataConfig, out IDataQueueHandler dataHandler);
+            dataHandler?.Unsubscribe(dataConfig);
         }
 
         /// <summary>
@@ -90,19 +75,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            var dataHandlerName = job.DataQueueHandler;
+            var dataHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(dataHandlerName);
+            dataHandler.SetJob(job);
+            _dataHandlers.Add(dataHandler);
         }
 
         /// <summary>
         /// Returns whether the data provider is connected
         /// </summary>
         /// <returns>true if the data provider is connected</returns>
-        public bool IsConnected => false;
+        public bool IsConnected => true;
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()
         {
+            foreach (var dataHandler in _dataHandlers)
+            {
+                dataHandler.Dispose();
+            }
         }
     }
 }
