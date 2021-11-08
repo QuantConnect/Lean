@@ -57,7 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return enumerator;
                 }
             }
-            return Enumerable.Empty<BaseData>().GetEnumerator();
+            return null;
         }
 
         /// <summary>

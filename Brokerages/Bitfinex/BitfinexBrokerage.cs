@@ -451,7 +451,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             if (symbol.Value.Contains("UNIVERSE") ||
                 !_symbolMapper.IsKnownLeanSymbol(symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
