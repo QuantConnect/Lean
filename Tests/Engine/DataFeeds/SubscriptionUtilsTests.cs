@@ -182,7 +182,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var enumerator = new List<BaseData> { point2, point3 }.GetEnumerator();
             var factorFileProfider = new Mock<IFactorFileProvider>();
 
-            var factorFile = new FactorFile(_security.Symbol.Value, new[]
+            var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
             {
                 new FactorFileRow(referenceTime, 0.5m, 1),
                 new FactorFileRow(referenceTime.AddDays(1), 1m, 1)
@@ -228,7 +228,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var enumerator = new List<BaseData> { point, point2, point3 }.GetEnumerator();
             var factorFileProfider = new Mock<IFactorFileProvider>();
 
-            var factorFile = new FactorFile(_security.Symbol.Value, new[]
+            var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
             {
                 new FactorFileRow(referenceTime, 0.5m, 1),
                 new FactorFileRow(referenceTime.AddDays(1), 1m, 1)

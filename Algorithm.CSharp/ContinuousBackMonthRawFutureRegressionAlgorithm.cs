@@ -26,9 +26,9 @@ using QuantConnect.Securities.Future;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures Back Month #1 Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
+    /// Continuous Back Month Raw Futures Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
     /// </summary>
-    public class ContinuousFutureBackMonthRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ContinuousBackMonthRawFutureRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private List<SymbolChangedEvent> _mappings = new();
         private Future _continuousContract;
@@ -42,23 +42,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 7, 1);
             SetEndDate(2014, 1, 1);
 
-            try
-            {
-                AddFuture(Futures.Indices.SP500EMini,
-                    dataNormalizationMode: DataNormalizationMode.BackwardsPanamaCanal,
-                    dataMappingMode: DataMappingMode.OpenInterest,
-                    contractDepthOffset: 5
-                );
-                throw new Exception("Expected out of rage exception. We don't support that many back months");
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                // expected
-            }
-
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
-                dataNormalizationMode: DataNormalizationMode.BackwardsPanamaCanal,
-                dataMappingMode: DataMappingMode.OpenInterest,
+                dataNormalizationMode: DataNormalizationMode.Raw,
+                dataMappingMode: DataMappingMode.FirstDayMonth,
                 contractDepthOffset: 1
             );
         }
@@ -81,13 +67,14 @@ namespace QuantConnect.Algorithm.CSharp
                     _mappings.Add(changedEvent);
                     Log($"SymbolChanged event: {changedEvent}");
 
-                    var backMonthExpiration = changedEvent.Symbol.Underlying.ID.Date;
-                    var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(_continuousContract.Symbol)(Time.AddMonths(1));
+                    var currentExpiration = changedEvent.Symbol.Underlying.ID.Date;
+                    // +4 months cause we are actually using the back month, es is quarterly contract
+                    var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(_continuousContract.Symbol)(Time.AddMonths(1 + 4));
 
-                    if (backMonthExpiration <= frontMonthExpiration.Date)
+                    if (currentExpiration != frontMonthExpiration.Date)
                     {
-                        throw new Exception($"Unexpected current mapped contract expiration {backMonthExpiration}" +
-                            $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}");
+                        throw new Exception($"Unexpected current mapped contract expiration {currentExpiration}" +
+                            $" @ {Time} it should be AT front month expiration {frontMonthExpiration}");
                     }
                 }
             }
@@ -150,15 +137,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "3"},
+            {"Total Trades", "2"},
             {"Average Win", "1.11%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "2.092%"},
+            {"Compounding Annual Return", "2.199%"},
             {"Drawdown", "1.700%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.055%"},
-            {"Sharpe Ratio", "0.682"},
-            {"Probabilistic Sharpe Ratio", "36.937%"},
+            {"Net Profit", "1.109%"},
+            {"Sharpe Ratio", "0.717"},
+            {"Probabilistic Sharpe Ratio", "38.157%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
@@ -166,18 +153,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0.099"},
             {"Annual Standard Deviation", "0.022"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-2.742"},
+            {"Information Ratio", "-2.732"},
             {"Tracking Error", "0.076"},
-            {"Treynor Ratio", "0.149"},
-            {"Total Fees", "$5.55"},
-            {"Estimated Strategy Capacity", "$190000.00"},
+            {"Treynor Ratio", "0.156"},
+            {"Total Fees", "$3.70"},
+            {"Estimated Strategy Capacity", "$3900000.00"},
             {"Lowest Capacity Asset", "ES 1S1"},
-            {"Fitness Score", "0.01"},
+            {"Fitness Score", "0.007"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.479"},
-            {"Return Over Maximum Drawdown", "1.652"},
-            {"Portfolio Turnover", "0.015"},
+            {"Sortino Ratio", "0.484"},
+            {"Return Over Maximum Drawdown", "1.736"},
+            {"Portfolio Turnover", "0.011"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -191,7 +178,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "9f7574803b8ebfac8f912019c943d27e"}
+            {"OrderListHash", "7d6fb409115f2f8d403c7eb261b9b3b6"}
         };
     }
 }

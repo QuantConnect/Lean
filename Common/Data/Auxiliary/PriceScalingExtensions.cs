@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -34,7 +35,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="dataMappingMode">The data mapping mode used, useful for continuous contracts</param>
         /// <returns>The price scale to use</returns>
         public static decimal GetPriceScale(
-            this FactorFile factorFile,
+            this IFactorProvider factorFile,
             DateTime dateTime,
             DataNormalizationMode normalizationMode,
             uint contractOffset = 0,
@@ -50,10 +51,7 @@ namespace QuantConnect.Data.Auxiliary
                 return 1;
             }
 
-            factorFile.DataNormalizationMode = normalizationMode;
-            factorFile.DataMappingMode = dataMappingMode;
-
-            return factorFile.GetPriceScaleFactor(dateTime, contractOffset);
+            return factorFile.GetPriceScaleFactor(dateTime, normalizationMode, dataMappingMode, contractOffset);
         }
 
         /// <summary>
@@ -68,9 +66,42 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Helper method to return an empty factor file
         /// </summary>
-        public static FactorFile GetEmptyFactorFile(this Symbol symbol)
+        public static IFactorProvider GetEmptyFactorFile(this Symbol symbol)
         {
-            return new FactorFile(symbol.ID.Symbol, Enumerable.Empty<FactorFileRow>());
+            if (symbol.SecurityType == SecurityType.Future)
+            {
+                return new MappingContractFactorProvider(symbol.ID.Symbol, Enumerable.Empty<MappingContractFactorRow>());
+            }
+            return new CorporateFactorProvider(symbol.ID.Symbol, Enumerable.Empty<FactorFileRow>());
+        }
+
+        /// <summary>
+        /// Parses the contents as a FactorFile, if error returns a new empty factor file
+        /// </summary>
+        public static IFactorProvider SafeRead(string permtick, IEnumerable<string> contents, SecurityType securityType)
+        {
+            try
+            {
+                DateTime? minimumDate;
+
+                contents = contents.Distinct();
+
+                if (securityType == SecurityType.Future)
+                {
+                    return new MappingContractFactorProvider(permtick, MappingContractFactorRow.Parse(contents, out minimumDate), minimumDate);
+                }
+                // FactorFileRow.Parse handles entries with 'inf' and exponential notation and provides the associated minimum tradeable date for these cases
+                // previously these cases were not handled causing an exception and returning an empty factor file
+                return new CorporateFactorProvider(permtick, FactorFileRow.Parse(contents, out minimumDate), minimumDate);
+            }
+            catch (Exception e)
+            {
+                if (securityType == SecurityType.Future)
+                {
+                    return new MappingContractFactorProvider(permtick, Enumerable.Empty<MappingContractFactorRow>());
+                }
+                return new CorporateFactorProvider(permtick, Enumerable.Empty<FactorFileRow>());
+            }
         }
     }
 }

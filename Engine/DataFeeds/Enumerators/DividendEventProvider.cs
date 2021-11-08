@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         // and on the next trading day we use this data to produce the dividend instance
         private decimal? _priceFactorRatio;
         private decimal _referencePrice;
-        private FactorFile _factorFile;
+        private CorporateFactorProvider _factorFile;
         private MapFile _mapFile;
         private SubscriptionDataConfig _config;
 
@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             _config = config;
             _mapFile = mapFileProvider.ResolveMapFile(_config);
-            _factorFile = factorFileProvider.Get(_config.Symbol);
+            _factorFile = factorFileProvider.Get(_config.Symbol) as CorporateFactorProvider;
         }
 
         /// <summary>

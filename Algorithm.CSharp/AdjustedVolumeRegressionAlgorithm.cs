@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _aapl;
         private const string Ticker = "AAPL";
-        private FactorFile _factorFile;
+        private CorporateFactorProvider _factorFile;
         private readonly IEnumerator<decimal> _expectedAdjustedVolume = new List<decimal> { 6164842, 3044047, 3680347, 3468303, 2169943, 2652523,
             1499707, 1518215, 1655219, 1510487 }.GetEnumerator();
         private readonly IEnumerator<decimal> _expectedAdjustedAskSize = new List<decimal> { 215600, 5600, 25200, 8400, 5600, 5600, 2800,
@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             factorFileProvider.Initialize(mapFileProvider, dataProvider);
 
 
-            _factorFile = factorFileProvider.Get(_aapl);
+            _factorFile = factorFileProvider.Get(_aapl) as CorporateFactorProvider;
         }
 
         /// <summary>

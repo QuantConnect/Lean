@@ -63,7 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private readonly IMapFileProvider _mapFileProvider;
         private readonly IFactorFileProvider _factorFileProvider;
-        private FactorFile _factorFile;
+        private IFactorProvider _factorFile;
         private MapFile _mapFile;
 
         private bool _pastDelistedDate;
@@ -258,7 +258,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            _factorFile ??= new FactorFile(_config.Symbol.Value, Enumerable.Empty<FactorFileRow>());
+            _factorFile ??= _config.Symbol.GetEmptyFactorFile();
             _mapFile ??= new MapFile(_config.Symbol.Value, Enumerable.Empty<MapFileRow>());
 
             _delistingDate = _config.Symbol.GetDelistingDate(_mapFile);

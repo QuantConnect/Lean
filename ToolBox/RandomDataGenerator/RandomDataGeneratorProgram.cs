@@ -196,7 +196,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     symbol = dividendsSplitsMaps.CurrentSymbol;
 
                     // Write Splits and Dividend events to directory factor_files
-                    var factorFile = new FactorFile(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
+                    var factorFile = new CorporateFactorProvider(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
                     var mapFile = new MapFile(symbol.Value, dividendsSplitsMaps.MapRows);
 
                     factorFile.WriteToFile(symbol);

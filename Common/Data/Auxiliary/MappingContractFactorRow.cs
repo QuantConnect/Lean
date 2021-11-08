@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
@@ -23,8 +24,13 @@ namespace QuantConnect.Data.Auxiliary
     /// <summary>
     /// Collection of factors for continuous contracts and their back months contracts for a specific mapping mode <see cref="DataMappingMode"/> and date
     /// </summary>
-    public class MappingContractFactorFileRow : FactorFileRow
+    public class MappingContractFactorRow : IFactorRow
     {
+        /// <summary>
+        /// Gets the date associated with this data
+        /// </summary>
+        public DateTime Date { get; set; }
+
         /// <summary>
         /// Backwards ratio price scaling factors for the front month [index 0] and it's 'i' back months [index 0 + i]
         /// <see cref="DataNormalizationMode.BackwardsRatio"/>
@@ -51,17 +57,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Empty constructor for json converter
         /// </summary>
-        public MappingContractFactorFileRow()
-            : this(DateTime.MinValue)
-        {
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="date"></param>
-        public MappingContractFactorFileRow(DateTime date)
-            : base(date, 0, 0)
+        public MappingContractFactorRow()
         {
         }
 
@@ -69,9 +65,35 @@ namespace QuantConnect.Data.Auxiliary
         /// Writes factor file row into it's file format
         /// </summary>
         /// <remarks>Json formatted</remarks>
-        public override string GetFileFormat(string source = null)
+        public string GetFileFormat(string source = null)
         {
             return JsonConvert.SerializeObject(this);
+        }
+
+        /// <summary>
+        /// Parses the lines as factor files rows while properly handling inf entries
+        /// </summary>
+        /// <param name="lines">The lines from the factor file to be parsed</param>
+        /// <param name="factorFileMinimumDate">The minimum date from the factor file</param>
+        /// <returns>An enumerable of factor file rows</returns>
+        public static List<MappingContractFactorRow> Parse(IEnumerable<string> lines, out DateTime? factorFileMinimumDate)
+        {
+            factorFileMinimumDate = null;
+
+            var rows = new List<MappingContractFactorRow>();
+
+            // parse factor file lines
+            foreach (var line in lines)
+            {
+                rows.Add(JsonConvert.DeserializeObject<MappingContractFactorRow>(line));
+            }
+
+            if (rows.Count > 0)
+            {
+                factorFileMinimumDate = rows.Min(ffr => ffr.Date).AddDays(-1);
+            }
+
+            return rows;
         }
     }
 }

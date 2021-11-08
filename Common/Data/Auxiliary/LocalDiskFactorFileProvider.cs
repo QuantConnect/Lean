@@ -28,14 +28,14 @@ namespace QuantConnect.Data.Auxiliary
     {
         private IMapFileProvider _mapFileProvider;
         private IDataProvider _dataProvider;
-        private readonly ConcurrentDictionary<Symbol, FactorFile> _cache;
+        private readonly ConcurrentDictionary<Symbol, IFactorProvider> _cache;
 
         /// <summary>
         /// Creates a new instance of the <see cref="LocalDiskFactorFileProvider"/>
         /// </summary>
         public LocalDiskFactorFileProvider()
         {
-            _cache = new ConcurrentDictionary<Symbol, FactorFile>();
+            _cache = new ConcurrentDictionary<Symbol, IFactorProvider>();
         }
 
         /// <summary>
@@ -55,10 +55,10 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="symbol">The security's symbol whose factor file we seek</param>
         /// <returns>The resolved factor file, or null if not found</returns>
-        public FactorFile Get(Symbol symbol)
+        public IFactorProvider Get(Symbol symbol)
         {
             symbol = symbol.GetFactorFileSymbol();
-            FactorFile factorFile;
+            IFactorProvider factorFile;
             if (_cache.TryGetValue(symbol, out factorFile))
             {
                 return factorFile;
@@ -83,11 +83,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Checks that the factor file exists on disk, and if it does, loads it into memory
         /// </summary>
-        private FactorFile GetFactorFile(Symbol symbol, string permtick)
+        private IFactorProvider GetFactorFile(Symbol symbol, string permtick)
         {
             var path = Path.Combine(Globals.CacheDataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market, "factor_files", permtick.ToLowerInvariant() + ".csv");
 
-            var factorFile = FactorFile.SafeRead(permtick, _dataProvider.ReadLines(path), symbol.SecurityType);
+            var factorFile = PriceScalingExtensions.SafeRead(permtick, _dataProvider.ReadLines(path), symbol.SecurityType);
             _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
             return factorFile;
         }
