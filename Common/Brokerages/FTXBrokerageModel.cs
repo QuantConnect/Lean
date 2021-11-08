@@ -30,6 +30,11 @@ namespace QuantConnect.Brokerages
         private const decimal _defaultLeverage = 3m;
 
         /// <summary>
+        /// market name
+        /// </summary>
+        protected virtual string MarketName => Market.FTX;
+
+        /// <summary>
         /// Creates an instance of <see cref="FTXBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
@@ -40,7 +45,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.FTX);
 
 
         /// <summary>
@@ -87,7 +92,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The benchmark for this brokerage</returns>
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
-            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.FTX);
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, MarketName);
             return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
@@ -186,10 +191,10 @@ namespace QuantConnect.Brokerages
             return false;
         }
 
-        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
+        protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string market)
         {
             var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Crypto] = Market.FTX;
+            map[SecurityType.Crypto] = market;
             return map.ToReadOnlyDictionary();
         }
     }

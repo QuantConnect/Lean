@@ -14,8 +14,6 @@
 */
 
 using QuantConnect.Benchmarks;
-using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using System.Collections.Generic;
@@ -28,34 +26,13 @@ namespace QuantConnect.Brokerages
     public class FTXUSBrokerageModel : FTXBrokerageModel
     {
         /// <summary>
+        /// Market name
+        /// </summary>
+        protected override string MarketName => Market.FTXUS;
+
+        /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
-
-        /// <summary>
-        /// Creates an instance of <see cref="FTXBrokerageModel"/> class
-        /// </summary>
-        /// <param name="accountType">Cash or Margin</param>
-        public FTXUSBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
-        {
-        }
-
-        /// <summary>
-        /// Get the benchmark for this model
-        /// </summary>
-        /// <param name="securities">SecurityService to create the security with if needed</param>
-        /// <returns>The benchmark for this brokerage</returns>
-        public override IBenchmark GetBenchmark(SecurityManager securities)
-        {
-            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.FTXUS);
-            return SecurityBenchmark.CreateInstance(securities, symbol);
-        }
-        
-        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
-        {
-            var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Crypto] = Market.FTXUS;
-            return map.ToReadOnlyDictionary();
-        }
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.FTXUS);
     }
 }

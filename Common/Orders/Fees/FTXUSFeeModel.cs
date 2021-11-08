@@ -19,19 +19,19 @@ namespace QuantConnect.Orders.Fees
 {
     /// <summary>
     /// Provides an implementation of <see cref="FeeModel"/> that models FTX order fees
-    /// https://help.ftx.com/hc/en-us/articles/360024479432-Fees
+    /// https://help.ftx.us/hc/en-us/articles/360043579273-Fees
     /// </summary>
-    public class FTXFeeModel : FeeModel
+    public class FTXUSFeeModel : FTXFeeModel
     {
         /// <summary>
         /// Tier 1 maker fees
         /// </summary>
-        public virtual decimal MakerFee => 0.0002m;
+        public override decimal MakerFee => 0.0001m;
         
         /// <summary>
         /// Tier 1 taker fees
         /// </summary>
-        public virtual decimal TakerFee => 0.0007m;
+        public override decimal TakerFee => 0.0004m;
 
         /// <summary>
         /// Get the fee for this order in quote currency
