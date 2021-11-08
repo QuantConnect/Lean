@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [SetUp]
         public void Init()
         {
-            _brokerageModel = new();
+            _brokerageModel = GetBrokerageModel();
             _symbol = Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX);
         }
 
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetCashBuyingPowerModelTest()
         {
-            var model = new FTXBrokerageModel(AccountType.Cash);
+            var model = GetBrokerageModel(AccountType.Cash);
             Assert.IsInstanceOf<CashBuyingPowerModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(1, model.GetLeverage(Security));
         }
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetSecurityMarginModelTest()
         {
-            var model = new FTXBrokerageModel(AccountType.Margin);
+            var model = GetBrokerageModel(AccountType.Margin);
             Assert.IsInstanceOf<SecurityMarginModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(3M, model.GetLeverage(Security));
         }
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase(SecurityType.Crypto)]
-        public void ShouldReturnFTXMarket(SecurityType securityType)
+        public virtual void ShouldReturnProperMarket(SecurityType securityType)
         {
             Assert.AreEqual(Market.FTX, _brokerageModel.DefaultMarkets[securityType]);
         }
@@ -190,5 +190,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(false, _brokerageModel.CanSubmitOrder(security, order.Object, out var message));
             Assert.NotNull(message);
         }
+
+        protected virtual FTXBrokerageModel GetBrokerageModel(AccountType accountType = AccountType.Margin) => new(accountType);
     }
 }

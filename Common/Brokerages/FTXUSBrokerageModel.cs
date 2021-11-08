@@ -25,6 +25,11 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class FTXUSBrokerageModel : FTXBrokerageModel
     {
+        public FTXUSBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
+        {
+
+        }
+
         /// <summary>
         /// Market name
         /// </summary>
