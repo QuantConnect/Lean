@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
@@ -50,7 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var enumerator = dataHandler.Subscribe(dataConfig, newDataAvailableHandler);
                 // Check if the enumerator is not empty
-                if (enumerator != null && enumerator.MoveNext())
+                if (enumerator != null)
                 {
                     _dataConfigAndDataHandler.Add(dataConfig, dataHandler);
                     return enumerator;
@@ -75,10 +76,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
-            var dataHandlerName = job.DataQueueHandler;
-            var dataHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(dataHandlerName);
-            dataHandler.SetJob(job);
-            _dataHandlers.Add(dataHandler);
+            var dataHandlersConfig = job.DataQueueHandler;
+            var dataHandlers = JsonConvert.DeserializeObject<List<string>>(dataHandlersConfig);
+            foreach (var dataHandlerName in dataHandlers)
+            {
+                var dataHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(dataHandlerName);
+                dataHandler.SetJob(job);
+                _dataHandlers.Add(dataHandler);
+            }
         }
 
         /// <summary>
