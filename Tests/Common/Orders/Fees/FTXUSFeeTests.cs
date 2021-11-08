@@ -25,8 +25,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
         protected override void SetBrokerageFees()
         {
-            TakerFee = 0.04m;
-            MakerFee = 0.01m;
+            TakerFee = 0.4m;
+            MakerFee = 0.1m;
         }
     }
 }

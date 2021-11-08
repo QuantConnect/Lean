@@ -26,46 +26,11 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Tier 1 maker fees
         /// </summary>
-        public override decimal MakerFee => 0.0001m;
+        public override decimal MakerFee => 0.001m;
         
         /// <summary>
         /// Tier 1 taker fees
         /// </summary>
-        public override decimal TakerFee => 0.0004m;
-
-        /// <summary>
-        /// Get the fee for this order in quote currency
-        /// </summary>
-        /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
-        /// containing the security and order</param>
-        /// <returns>The cost of the order in quote currency</returns>
-        public override OrderFee GetOrderFee(OrderFeeParameters parameters)
-        {
-            var order = parameters.Order;
-            var security = parameters.Security;
-            var props = order.Properties as FTXOrderProperties;
-
-            //taker by default
-            var fee = TakerFee;
-            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
-            unitPrice *= security.SymbolProperties.ContractMultiplier;
-            var currency = security.QuoteCurrency.Symbol;
-
-            //maker if limit
-            if (order.Type == OrderType.Limit && (props?.PostOnly == true || !order.IsMarketable))
-            {
-                fee =  MakerFee;
-                if (order.Direction == OrderDirection.Buy)
-                {
-                    unitPrice = 1;
-                    currency = ((IBaseCurrencySymbol)security).BaseCurrencySymbol;
-                }
-            }
-
-            // apply fee factor, currently we do not model 30-day volume, so we use the first tier
-            return new OrderFee(new CashAmount(
-                unitPrice * order.AbsoluteQuantity * fee,
-                currency));
-        }
+        public override decimal TakerFee => 0.004m;
     }
 }
