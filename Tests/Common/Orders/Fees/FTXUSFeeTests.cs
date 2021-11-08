@@ -14,19 +14,15 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
-using QuantConnect.Securities.Crypto;
-using System;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
     [TestFixture]
     public class FTXUSFeeTests : FTXFeeTests
     {
+        protected override FTXFeeModel GetFeeModel() => new FTXUSFeeModel();
+
         protected override void SetBrokerageFees()
         {
             TakerFee = 0.04m;

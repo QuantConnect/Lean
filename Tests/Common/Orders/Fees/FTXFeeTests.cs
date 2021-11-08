@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
     {
         private Crypto _xrpusdt;
         private Crypto _ethusd;
-        private readonly IFeeModel _feeModel = new FTXFeeModel();
+        private IFeeModel _feeModel;
 
         protected decimal TakerFee;
         protected decimal MakerFee;
@@ -37,6 +37,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [SetUp]
         public void Initialize()
         {
+            _feeModel = GetFeeModel();
             SetBrokerageFees();
             var spdb = SymbolPropertiesDatabase.FromDataFolder();
             var tz = TimeZones.Utc;
@@ -219,5 +220,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             // 100 (price) * 0.0007 (taker fee)
             Assert.AreEqual(TakerFee, fee.Value.Amount);
         }
+
+        protected virtual FTXFeeModel GetFeeModel() => new();
     }
 }
