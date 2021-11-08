@@ -895,6 +895,16 @@ namespace QuantConnect
                 {
                     case "CME":
                         return Exchange.CME;
+                    case "CBOT":
+                        return Exchange.CBOT;
+                    case "NYMEX":
+                        return Exchange.NYMEX;
+                    case "ICE":
+                        return Exchange.ICE;
+                    case "CFE":
+                        return Exchange.CFE;
+                    case "COMEX":
+                        return Exchange.COMEX;
                     default:
                         return Exchange.UNKNOWN;
                 }

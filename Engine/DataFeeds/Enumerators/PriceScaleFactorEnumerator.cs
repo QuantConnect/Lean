@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly SubscriptionDataConfig _config;
         private readonly IFactorFileProvider _factorFileProvider;
         private DateTime _lastTradableDate;
-        private FactorFile _factorFile;
+        private IFactorProvider _factorFile;
 
         /// <summary>
         /// Explicit interface implementation for <see cref="Current"/>

@@ -1499,6 +1499,14 @@ namespace QuantConnect.Algorithm
         public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
         {
+            // allow users to specify negative numbers, we get the abs of it
+            var contractOffset = (uint)Math.Abs(contractDepthOffset);
+            if (contractOffset > 2)
+            {
+                throw new ArgumentOutOfRangeException(nameof(contractDepthOffset), "'contractDepthOffset' current maximum value is 2." +
+                    " Front month (0) and only 2 back month contracts are currently supported.");
+            }
+
             var isCanonical = symbol.IsCanonical();
 
             // Short-circuit to AddOptionContract because it will add the underlying if required
@@ -1531,8 +1539,6 @@ namespace QuantConnect.Algorithm
                     }
                     else
                     {
-                        // allow users to specify negative numbers, we get the abs of it
-                        var contractOffset = (uint)Math.Abs(contractDepthOffset);
                         security.IsTradable = true;
 
                         var continuousConfigs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,

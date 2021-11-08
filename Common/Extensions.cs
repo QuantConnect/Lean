@@ -2996,7 +2996,7 @@ namespace QuantConnect
                 do
                 {
                     monthOffset++;
-                    newExpiration = expiryFunction(expiration.AddMonths(monthOffset));
+                    newExpiration = expiryFunction(expiration.AddMonths(monthOffset)).Date;
                 } while (newExpiration <= expiration);
 
                 expiration = newExpiration;

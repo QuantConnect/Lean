@@ -36,21 +36,21 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads the zip bytes as text and parses as FactorFileRows to create FactorFiles
         /// </summary>
-        public static IEnumerable<KeyValuePair<Symbol, FactorFile>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market, SecurityType securityType)
+        public static IEnumerable<KeyValuePair<Symbol, IFactorProvider>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market, SecurityType securityType)
         {
             if (file == null || file.Length == 0)
             {
-                return new Dictionary<Symbol, FactorFile>();
+                return new Dictionary<Symbol, IFactorProvider>();
             }
 
             var keyValuePairs = (
                     from kvp in Compression.Unzip(file)
                     let filename = kvp.Key
                     let lines = kvp.Value
-                    let factorFile = FactorFile.SafeRead(Path.GetFileNameWithoutExtension(filename), lines, securityType)
+                    let factorFile = PriceScalingExtensions.SafeRead(Path.GetFileNameWithoutExtension(filename), lines, securityType)
                     let mapFile = mapFileResolver.GetByPermtick(factorFile.Permtick)
                     where mapFile != null
-                    select new KeyValuePair<Symbol, FactorFile>(GetSymbol(mapFile, market, securityType), factorFile)
+                    select new KeyValuePair<Symbol, IFactorProvider>(GetSymbol(mapFile, market, securityType), factorFile)
                 );
 
             return keyValuePairs;

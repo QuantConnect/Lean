@@ -105,9 +105,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // if the config is changed at any point it can emit adjusted data as well
                         // See SubscriptionData.Create() and PrecalculatedSubscriptionData for more
                         var requestMode = config.DataNormalizationMode;
-                        var mode = requestMode != DataNormalizationMode.Raw
-                            ? requestMode
-                            : DataNormalizationMode.Adjusted;
+                        if (config.SecurityType == SecurityType.Equity)
+                        {
+                            requestMode = requestMode != DataNormalizationMode.Raw ? requestMode : DataNormalizationMode.Adjusted;
+                        }
 
                         // We update our price scale factor when the date changes for non fill forward bars or if we haven't initialized yet.
                         // We don't take into account auxiliary data because we don't scale it and because the underlying price data could be fill forwarded
@@ -115,7 +116,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             var factorFile = factorFileProvider.Get(request.Configuration.Symbol);
                             lastTradableDate = data.Time.Date;
-                            request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(data.Time.Date, mode, config.ContractDepthOffset, config.DataMappingMode);
+                            request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(data.Time.Date, requestMode, config.ContractDepthOffset, config.DataMappingMode);
                         }
 
                         SubscriptionData subscriptionData = SubscriptionData.Create(
@@ -123,7 +124,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             exchangeHours,
                             subscription.OffsetProvider,
                             data,
-                            mode,
+                            requestMode,
                             enablePriceScale ? request.Configuration.PriceScaleFactor : null);
 
                         // drop the data into the back of the enqueueable

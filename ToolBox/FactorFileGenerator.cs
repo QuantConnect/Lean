@@ -62,7 +62,7 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="dividendSplitList">List of Dividends and Splits</param>
         /// <returns><see cref="FactorFile"/> instance</returns>
-        public FactorFile CreateFactorFile(List<BaseData> dividendSplitList)
+        public CorporateFactorProvider CreateFactorFile(List<BaseData> dividendSplitList)
         {
             var orderedDividendSplitQueue = new Queue<BaseData>(
                                         CombineIntraDayDividendSplits(dividendSplitList)
@@ -121,13 +121,13 @@ namespace QuantConnect.ToolBox
         /// <param name="orderedDividendSplits">Queue of dividends and splits ordered by date</param>
         /// <param name="factorFileRows">The list of factor file rows</param>
         /// <returns><see cref="FactorFile"/> instance</returns>
-        private FactorFile RecursivlyGenerateFactorFile(Queue<BaseData> orderedDividendSplits, List<FactorFileRow> factorFileRows)
+        private CorporateFactorProvider RecursivlyGenerateFactorFile(Queue<BaseData> orderedDividendSplits, List<FactorFileRow> factorFileRows)
         {
             // If there is no more dividends or splits, return
             if (!orderedDividendSplits.Any())
             {
                 factorFileRows.Add(CreateLastFactorFileRow(factorFileRows, _dailyDataForEquity.Last().Close));
-                return new FactorFile(Symbol.ID.Symbol, factorFileRows);
+                return new CorporateFactorProvider(Symbol.ID.Symbol, factorFileRows);
             }
 
             var nextEvent = orderedDividendSplits.Dequeue();
@@ -137,7 +137,7 @@ namespace QuantConnect.ToolBox
             {
                 decimal initialReferencePrice = 1;
                 factorFileRows.Add(CreateLastFactorFileRow(factorFileRows, initialReferencePrice));
-                return new FactorFile(Symbol.ID.Symbol, factorFileRows);
+                return new CorporateFactorProvider(Symbol.ID.Symbol, factorFileRows);
             }
 
             var nextFactorFileRow = CalculateNextFactorFileRow(factorFileRows, nextEvent);

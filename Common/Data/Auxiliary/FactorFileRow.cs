@@ -15,14 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
-using Newtonsoft.Json;
-using QuantConnect.Data.Market;
+using System.Globalization;
 using QuantConnect.Securities;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Auxiliary
@@ -30,7 +27,7 @@ namespace QuantConnect.Data.Auxiliary
     /// <summary>
     /// Defines a single row in a factor_factor file. This is a csv file ordered as {date, price factor, split factor, reference price}
     /// </summary>
-    public class FactorFileRow
+    public class FactorFileRow : IFactorRow
     {
         private decimal _splitFactor;
         private decimal _priceFactor;
@@ -38,13 +35,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the date associated with this data
         /// </summary>
-        [JsonProperty]
         public DateTime Date { get; private set; }
 
         /// <summary>
         /// Gets the price factor associated with this data
         /// </summary>
-        [JsonIgnore]
         public decimal PriceFactor
         {
             get
@@ -62,7 +57,6 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the split factor associated with the date
         /// </summary>
-        [JsonIgnore]
         public decimal SplitFactor
         {
             get
@@ -79,13 +73,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the combined factor used to create adjusted prices from raw prices
         /// </summary>
-        [JsonIgnore]
         public decimal PriceScaleFactor { get; private set; }
 
         /// <summary>
         /// Gets the raw closing value from the trading date before the updated factor takes effect
         /// </summary>
-        [JsonIgnore]
         public decimal ReferencePrice { get; private set; }
 
         /// <summary>
@@ -105,7 +97,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="lines">The lines from the factor file to be parsed</param>
         /// <param name="factorFileMinimumDate">The minimum date from the factor file</param>
         /// <returns>An enumerable of factor file rows</returns>
-        public static List<FactorFileRow> Parse(IEnumerable<string> lines, SecurityType securityType, out DateTime? factorFileMinimumDate)
+        public static List<FactorFileRow> Parse(IEnumerable<string> lines, out DateTime? factorFileMinimumDate)
         {
             factorFileMinimumDate = null;
 
@@ -114,31 +106,24 @@ namespace QuantConnect.Data.Auxiliary
             // parse factor file lines
             foreach (var line in lines)
             {
-                if(securityType == SecurityType.Future)
+                // Exponential notation is treated as inf is because of the loss of precision. In
+                // all cases, the significant part has fewer decimals than the needed for a correct
+                // representation, E.g., 1.6e+6 when the correct factor is 1562500.
+                if (line.Contains("inf") || line.Contains("e+"))
                 {
-                    rows.Add(JsonConvert.DeserializeObject<MappingContractFactorFileRow>(line));
+                    continue;
                 }
-                else
+
+                var row = Parse(line);
+
+                // ignore zero factor rows
+                if (row.PriceScaleFactor > 0)
                 {
-                    // Exponential notation is treated as inf is because of the loss of precision. In
-                    // all cases, the significant part has fewer decimals than the needed for a correct
-                    // representation, E.g., 1.6e+6 when the correct factor is 1562500.
-                    if (line.Contains("inf") || line.Contains("e+"))
-                    {
-                        continue;
-                    }
-
-                    var row = Parse(line);
-
-                    // ignore zero factor rows
-                    if (row.PriceScaleFactor > 0)
-                    {
-                        rows.Add(row);
-                    }
+                    rows.Add(row);
                 }
             }
 
-            if (factorFileMinimumDate == null && rows.Count > 0)
+            if (rows.Count > 0)
             {
                 factorFileMinimumDate = rows.Min(ffr => ffr.Date).AddDays(-1);
             }
@@ -300,7 +285,7 @@ namespace QuantConnect.Data.Auxiliary
         /// Writes factor file row into it's file format
         /// </summary>
         /// <remarks>CSV formatted</remarks>
-        public virtual string GetFileFormat(string source = null)
+        public string GetFileFormat(string source = null)
         {
             source = source == null ? "" : $",{source}";
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)}," +

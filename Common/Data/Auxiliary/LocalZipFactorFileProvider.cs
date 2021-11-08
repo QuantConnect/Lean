@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Auxiliary
         private IDataProvider _dataProvider;
         private IMapFileProvider _mapFileProvider;
         private Dictionary<CorporateActionsKey, bool> _seededMarket;
-        private readonly Dictionary<Symbol, FactorFile> _factorFiles;
+        private readonly Dictionary<Symbol, IFactorProvider> _factorFiles;
 
         /// <summary>
         /// The cached refresh period for the factor files
@@ -44,7 +44,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public LocalZipFactorFileProvider()
         {
-            _factorFiles = new Dictionary<Symbol, FactorFile>();
+            _factorFiles = new Dictionary<Symbol, IFactorProvider>();
             _seededMarket = new Dictionary<CorporateActionsKey, bool>();
             _lock = new object();
         }
@@ -72,7 +72,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="symbol">The security's symbol whose factor file we seek</param>
         /// <returns>The resolved factor file, or null if not found</returns>
-        public FactorFile Get(Symbol symbol)
+        public IFactorProvider Get(Symbol symbol)
         {
             symbol = symbol.GetFactorFileSymbol();
             var key = CorporateActionsKey.Create(symbol);
@@ -84,7 +84,7 @@ namespace QuantConnect.Data.Auxiliary
                     _seededMarket[key] = true;
                 }
 
-                FactorFile factorFile;
+                IFactorProvider factorFile;
                 if (!_factorFiles.TryGetValue(symbol, out factorFile))
                 {
                     // Could not find factor file for symbol

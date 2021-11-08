@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             var factorFileProvider = new TestFactorFileProvider
             {
-                FactorFile = new FactorFile("AAPL", new []
+                FactorFile = new CorporateFactorProvider("AAPL", new []
                 {
                     new FactorFileRow(row1, 0.693m, 1),
                     new FactorFileRow(row2, 0.77m, 1),
@@ -123,12 +123,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
         private class TestFactorFileProvider : IFactorFileProvider
         {
-            public FactorFile FactorFile { get; set; }
+            public CorporateFactorProvider FactorFile { get; set; }
             public void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider)
             {
             }
 
-            public FactorFile Get(Symbol symbol)
+            public IFactorProvider Get(Symbol symbol)
             {
                 return FactorFile;
             }
