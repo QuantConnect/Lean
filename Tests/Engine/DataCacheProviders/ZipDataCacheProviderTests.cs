@@ -27,23 +27,8 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
     [TestFixture]
     public class ZipDataCacheProviderTests : DataCacheProviderTests
     {
-        private ZipDataCacheProvider _zipDataCacheProvider;
-        private string _tempZipFileEntry;
-        private Random _random;
-
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            _zipDataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
-            _tempZipFileEntry = Path.GetTempFileName() + "#testEntry.csv";
-            _random = new Random();
-        }
-
-        [OneTimeTearDown]
-        public void TearDown()
-        {
-            _zipDataCacheProvider.Dispose();
-        }
+        private readonly string _tempZipFileEntry = Path.GetTempFileName() + "#testEntry.csv";
+        private readonly Random _random = new Random();
 
         public override IDataCacheProvider CreateDataCacheProvider()
         {
@@ -71,11 +56,11 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
 
         private void ReadAndWrite()
         {
-            var read = _zipDataCacheProvider.Fetch(_tempZipFileEntry);
+            var read = DataCacheProvider.Fetch(_tempZipFileEntry);
 
             var data = new byte[20];
             _random.NextBytes(data);
-            _zipDataCacheProvider.Store(_tempZipFileEntry, data);
+            DataCacheProvider.Store(_tempZipFileEntry, data);
         }
     }
 }
