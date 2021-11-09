@@ -27,12 +27,12 @@ namespace QuantConnect.Data.Auxiliary
     /// <summary>
     /// Corporate related factor provider. Factors based on splits and dividends
     /// </summary>
-    public class CorporateFactorProvider : FactorFile<FactorFileRow>
+    public class CorporateFactorProvider : FactorFile<CorporateFactorRow>
     {
         /// <summary>
         ///Creates a new instance
         /// </summary>
-        public CorporateFactorProvider(string permtick, IEnumerable<FactorFileRow> data, DateTime? factorFileMinimumDate = null) : base(permtick, data, factorFileMinimumDate)
+        public CorporateFactorProvider(string permtick, IEnumerable<CorporateFactorRow> data, DateTime? factorFileMinimumDate = null) : base(permtick, data, factorFileMinimumDate)
         {
         }
 
@@ -77,9 +77,9 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets price and split factors to be applied at the specified date
         /// </summary>
-        public FactorFileRow GetScalingFactors(DateTime searchDate)
+        public CorporateFactorRow GetScalingFactors(DateTime searchDate)
         {
-            var factors = new FactorFileRow(searchDate, 1m, 1m, 0m);
+            var factors = new CorporateFactorRow(searchDate, 1m, 1m, 0m);
 
             // Iterate backwards to find the most recent factors
             foreach (var splitDate in _reversedFactorFileDates)
@@ -218,7 +218,7 @@ namespace QuantConnect.Data.Auxiliary
                 return this;
             }
 
-            var factorFileRows = new List<FactorFileRow>();
+            var factorFileRows = new List<CorporateFactorRow>();
             var firstEntry = SortedFactorFileData.First().Value.First();
             var lastEntry = SortedFactorFileData.Last().Value.First();
             factorFileRows.Add(lastEntry);
@@ -231,7 +231,7 @@ namespace QuantConnect.Data.Auxiliary
 
             foreach (var datum in combinedData)
             {
-                FactorFileRow nextEntry = null;
+                CorporateFactorRow nextEntry = null;
                 var split = datum as Split;
                 var dividend = datum as Dividend;
                 if (dividend != null)
@@ -259,7 +259,7 @@ namespace QuantConnect.Data.Auxiliary
                 }
             }
 
-            var firstFactorFileRow = new FactorFileRow(firstEntry.Date, factorFileRows.Last().PriceFactor, factorFileRows.Last().SplitFactor, firstEntry.ReferencePrice == 0 ? 0 : firstEntry.ReferencePrice);
+            var firstFactorFileRow = new CorporateFactorRow(firstEntry.Date, factorFileRows.Last().PriceFactor, factorFileRows.Last().SplitFactor, firstEntry.ReferencePrice == 0 ? 0 : firstEntry.ReferencePrice);
             var existing = factorFileRows.FindIndex(row => row.Date == firstFactorFileRow.Date);
             if (existing == -1)
             {

@@ -27,9 +27,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public List<MapFileRow> MapRows = new List<MapFileRow>();
 
         /// <summary>
-        /// Stores <see cref="FactorFileRow"/> instances
+        /// Stores <see cref="CorporateFactorRow"/> instances
         /// </summary>
-        public List<FactorFileRow> DividendsSplits = new List<FactorFileRow>();
+        public List<CorporateFactorRow> DividendsSplits = new List<CorporateFactorRow>();
         
         /// <summary>
         /// Current symbol value. Can be renamed
@@ -90,7 +90,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // On the first trading day write relevant starting data to factor and map files
                     if (firstTick)
                     {
-                        DividendsSplits.Add(new FactorFileRow(tick.Time,
+                        DividendsSplits.Add(new CorporateFactorRow(tick.Time,
                             previousPriceFactor,
                             previousSplitFactor,
                             tick.Value));
@@ -108,7 +108,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         {
                             if (tick.Time > splitDate)
                             {
-                                DividendsSplits.Add(new FactorFileRow(
+                                DividendsSplits.Add(new CorporateFactorRow(
                                     splitDate,
                                     previousPriceFactor,
                                     previousSplitFactor,
@@ -131,7 +131,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         {
                             if (tick.Time > dividendDate)
                             {
-                                DividendsSplits.Add(new FactorFileRow(
+                                DividendsSplits.Add(new CorporateFactorRow(
                                     dividendDate,
                                     previousPriceFactor,
                                     previousSplitFactor,

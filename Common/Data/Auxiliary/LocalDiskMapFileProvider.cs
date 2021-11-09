@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Auxiliary
     public class LocalDiskMapFileProvider : IMapFileProvider
     {
         private static int _wroteTraceStatement;
-        private readonly ConcurrentDictionary<CorporateActionsKey, MapFileResolver> _cache;
+        private readonly ConcurrentDictionary<AuxiliaryDataKey, MapFileResolver> _cache;
         private IDataProvider _dataProvider;
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public LocalDiskMapFileProvider()
         {
-            _cache = new ConcurrentDictionary<CorporateActionsKey, MapFileResolver>();
+            _cache = new ConcurrentDictionary<AuxiliaryDataKey, MapFileResolver>();
         }
 
         /// <summary>
@@ -53,14 +53,14 @@ namespace QuantConnect.Data.Auxiliary
         /// Gets a <see cref="MapFileResolver"/> representing all the map
         /// files for the specified market
         /// </summary>
-        /// <param name="corporateActionsKey">Key used to fetch a map file resolver. Specifying market and security type</param>
+        /// <param name="auxiliaryDataKey">Key used to fetch a map file resolver. Specifying market and security type</param>
         /// <returns>A <see cref="MapFileRow"/> containing all map files for the specified market</returns>
-        public MapFileResolver Get(CorporateActionsKey corporateActionsKey)
+        public MapFileResolver Get(AuxiliaryDataKey auxiliaryDataKey)
         {
-            return _cache.GetOrAdd(corporateActionsKey, GetMapFileResolver);
+            return _cache.GetOrAdd(auxiliaryDataKey, GetMapFileResolver);
         }
 
-        private MapFileResolver GetMapFileResolver(CorporateActionsKey key)
+        private MapFileResolver GetMapFileResolver(AuxiliaryDataKey key)
         {
             var securityType = key.SecurityType;
             var market = key.Market;

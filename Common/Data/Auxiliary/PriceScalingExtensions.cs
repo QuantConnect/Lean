@@ -72,7 +72,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 return new MappingContractFactorProvider(symbol.ID.Symbol, Enumerable.Empty<MappingContractFactorRow>());
             }
-            return new CorporateFactorProvider(symbol.ID.Symbol, Enumerable.Empty<FactorFileRow>());
+            return new CorporateFactorProvider(symbol.ID.Symbol, Enumerable.Empty<CorporateFactorRow>());
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace QuantConnect.Data.Auxiliary
                 }
                 // FactorFileRow.Parse handles entries with 'inf' and exponential notation and provides the associated minimum tradeable date for these cases
                 // previously these cases were not handled causing an exception and returning an empty factor file
-                return new CorporateFactorProvider(permtick, FactorFileRow.Parse(contents, out minimumDate), minimumDate);
+                return new CorporateFactorProvider(permtick, CorporateFactorRow.Parse(contents, out minimumDate), minimumDate);
             }
             catch (Exception e)
             {
@@ -100,7 +100,7 @@ namespace QuantConnect.Data.Auxiliary
                 {
                     return new MappingContractFactorProvider(permtick, Enumerable.Empty<MappingContractFactorRow>());
                 }
-                return new CorporateFactorProvider(permtick, Enumerable.Empty<FactorFileRow>());
+                return new CorporateFactorProvider(permtick, Enumerable.Empty<CorporateFactorRow>());
             }
         }
     }

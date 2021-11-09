@@ -27,7 +27,7 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class LocalZipMapFileProvider : IMapFileProvider
     {
-        private Dictionary<CorporateActionsKey, MapFileResolver> _cache;
+        private Dictionary<AuxiliaryDataKey, MapFileResolver> _cache;
         private IDataProvider _dataProvider;
         private object _lock;
 
@@ -43,7 +43,7 @@ namespace QuantConnect.Data.Auxiliary
         public LocalZipMapFileProvider()
         {
             _lock = new object();
-            _cache = new Dictionary<CorporateActionsKey, MapFileResolver>();
+            _cache = new Dictionary<AuxiliaryDataKey, MapFileResolver>();
         }
 
         /// <summary>
@@ -64,18 +64,18 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets a <see cref="MapFileResolver"/> representing all the map files for the specified market
         /// </summary>
-        /// <param name="corporateActionsKey">Key used to fetch a map file resolver. Specifying market and security type</param>
+        /// <param name="auxiliaryDataKey">Key used to fetch a map file resolver. Specifying market and security type</param>
         /// <returns>A <see cref="MapFileResolver"/> containing all map files for the specified market</returns>
-        public MapFileResolver Get(CorporateActionsKey corporateActionsKey)
+        public MapFileResolver Get(AuxiliaryDataKey auxiliaryDataKey)
         {
             MapFileResolver result;
             // we use a lock so that only 1 thread loads the map file resolver while the rest wait
             // else we could have multiple threads loading the map file resolver at the same time!
             lock (_lock)
             {
-                if (!_cache.TryGetValue(corporateActionsKey, out result))
+                if (!_cache.TryGetValue(auxiliaryDataKey, out result))
                 {
-                    _cache[corporateActionsKey] = result = GetMapFileResolver(corporateActionsKey);
+                    _cache[auxiliaryDataKey] = result = GetMapFileResolver(auxiliaryDataKey);
                 }
             }
             return result;
@@ -89,14 +89,14 @@ namespace QuantConnect.Data.Auxiliary
             lock (_lock)
             {
                 // we clear the seeded markets so they are reloaded
-                _cache = new Dictionary<CorporateActionsKey, MapFileResolver>();
+                _cache = new Dictionary<AuxiliaryDataKey, MapFileResolver>();
             }
             _ = Task.Delay(CacheRefreshPeriod).ContinueWith(_ => StartExpirationTask());
         }
 
-        private MapFileResolver GetMapFileResolver(CorporateActionsKey corporateActionsKey)
+        private MapFileResolver GetMapFileResolver(AuxiliaryDataKey auxiliaryDataKey)
         {
-            var market = corporateActionsKey.Market;
+            var market = auxiliaryDataKey.Market;
             var timestamp = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
             var todayNewYork = timestamp.Date;
             var yesterdayNewYork = todayNewYork.AddDays(-1);
@@ -106,7 +106,7 @@ namespace QuantConnect.Data.Auxiliary
             var date = yesterdayNewYork;
             do
             {
-                var zipFileName = MapFileZipHelper.GetMapFileZipFileName(market, date, corporateActionsKey.SecurityType);
+                var zipFileName = MapFileZipHelper.GetMapFileZipFileName(market, date, auxiliaryDataKey.SecurityType);
 
                 // Fetch a stream for our zip from our data provider
                 var stream = _dataProvider.Fetch(zipFileName);
@@ -115,7 +115,7 @@ namespace QuantConnect.Data.Auxiliary
                 if (stream != null)
                 {
                     Log.Trace("LocalZipMapFileProvider.Get({0}): Fetched map files for: {1} NY", market, date.ToShortDateString());
-                    var result =  new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream, market, corporateActionsKey.SecurityType));
+                    var result =  new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream, market, auxiliaryDataKey.SecurityType));
                     stream.DisposeSafely();
                     return result;
                 }

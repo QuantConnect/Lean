@@ -251,8 +251,8 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
             foreach (var item in factorFileAfterDividend.Reverse().Zip(actual.Reverse(), (a,e) => new{actual=a, expected=e}))
             {
-                var expected = (FactorFileRow)item.expected;
-                var actualRow = (FactorFileRow)item.actual;
+                var expected = (CorporateFactorRow)item.expected;
+                var actualRow = (CorporateFactorRow)item.actual;
                 Log.Trace($"expected: {item.expected} actual: {item.actual}  diff: {100* (1 - actualRow.PriceFactor/expected.PriceFactor):0.0000}%");
                 Assert.AreEqual(item.expected.Date, item.actual.Date);
                 Assert.AreEqual(expected.ReferencePrice, actualRow.ReferencePrice);
@@ -278,11 +278,11 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.AreEqual(factorFileAfterSplit.Count(), actual.Count());
             Assert.True(actual.First().Date == new DateTime(1998, 01, 02),
                 $"Factor file first row changed from 1998-01-02 to {actual.First().Date:yyyy-MM-dd} after applying new event");
-            Assert.True(((FactorFileRow)actual.First()).SplitFactor == 25m, "Factor File split factor is not computed correctly");
+            Assert.True(((CorporateFactorRow)actual.First()).SplitFactor == 25m, "Factor File split factor is not computed correctly");
             foreach (var item in actual.Reverse().Zip(factorFileAfterSplit.Reverse(), (a, e) => new { actual = a, expected = e }))
             {
-                var expected = (FactorFileRow)item.expected;
-                var actualRow = (FactorFileRow)item.actual;
+                var expected = (CorporateFactorRow)item.expected;
+                var actualRow = (CorporateFactorRow)item.actual;
                 Log.Trace($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - actualRow.PriceFactor / expected.PriceFactor):0.0000}%");
                 Assert.AreEqual(item.expected.Date, item.actual.Date);
                 Assert.AreEqual(expected.ReferencePrice, actualRow.ReferencePrice);
@@ -309,11 +309,11 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.AreEqual(factorFileAfterSplit.Count(), actual.Count());
             Assert.True(actual.First().Date == new DateTime(1998, 01, 02),
                 $"Factor file first row changed from 1998-01-02 to {actual.First().Date:yyyy-MM-dd} after applying new event");
-            Assert.True(((FactorFileRow)actual.First()).SplitFactor == 25m, "Factor File split factor is not computed correctly");
+            Assert.True(((CorporateFactorRow)actual.First()).SplitFactor == 25m, "Factor File split factor is not computed correctly");
             foreach (var item in actual.Reverse().Zip(factorFileAfterSplit.Reverse(), (a, e) => new { actual = a, expected = e }))
             {
-                var expectedRow = (FactorFileRow)item.expected;
-                var actualRow = (FactorFileRow)item.actual;
+                var expectedRow = (CorporateFactorRow)item.expected;
+                var actualRow = (CorporateFactorRow)item.actual;
                 Log.Trace($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - actualRow.PriceFactor / expectedRow.PriceFactor):0.0000}%");
                 Assert.AreEqual(item.expected.Date, item.actual.Date);
                 Assert.AreEqual(expectedRow.ReferencePrice, actualRow.ReferencePrice);
@@ -342,8 +342,8 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
             foreach (var item in actual.Reverse().Zip(expected.Reverse(), (a, e) => new {actual = a, expected = e}))
             {
-                var expectedRow = (FactorFileRow)item.expected;
-                var actualRow = (FactorFileRow)item.actual;
+                var expectedRow = (CorporateFactorRow)item.expected;
+                var actualRow = (CorporateFactorRow)item.actual;
                 Log.Trace($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - actualRow.PriceFactor / expectedRow.PriceFactor):0.0000}%");
                 Assert.AreEqual(item.expected.Date, item.actual.Date);
                 Assert.AreEqual(expectedRow.ReferencePrice, actualRow.ReferencePrice);
@@ -408,14 +408,14 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
         private static CorporateFactorProvider GetTestFactorFile(string symbol, DateTime reference)
         {
-            var file = new CorporateFactorProvider(symbol, new List<FactorFileRow>
+            var file = new CorporateFactorProvider(symbol, new List<CorporateFactorRow>
             {
-                new FactorFileRow(reference, 1, 1),
-                new FactorFileRow(reference.AddDays(-7), .9m, 1, 100m),       // dividend
-                new FactorFileRow(reference.AddDays(-14), .8m, 1, 100m),      // dividend
-                new FactorFileRow(reference.AddDays(-21), .8m, .5m, 100m),    // split
-                new FactorFileRow(reference.AddDays(-90), .8m, .25m, 100m),   // split
-                new FactorFileRow(reference.AddDays(-365), .7m, .125m, 100m)  // split+dividend
+                new CorporateFactorRow(reference, 1, 1),
+                new CorporateFactorRow(reference.AddDays(-7), .9m, 1, 100m),       // dividend
+                new CorporateFactorRow(reference.AddDays(-14), .8m, 1, 100m),      // dividend
+                new CorporateFactorRow(reference.AddDays(-21), .8m, .5m, 100m),    // split
+                new CorporateFactorRow(reference.AddDays(-90), .8m, .25m, 100m),   // split
+                new CorporateFactorRow(reference.AddDays(-365), .7m, .125m, 100m)  // split+dividend
             });
             return file;
         }
@@ -435,7 +435,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             DateTime? factorFileMinimumDate;
             var reader = new StreamReader(factorFileContents.ToStream());
             var enumerable = new StreamReaderEnumerable(reader).Where(line => line.Length > 0);
-            var factorFileRows = FactorFileRow.Parse(enumerable, out factorFileMinimumDate);
+            var factorFileRows = CorporateFactorRow.Parse(enumerable, out factorFileMinimumDate);
             return new CorporateFactorProvider("lode", factorFileRows, factorFileMinimumDate);
         }
 
@@ -450,7 +450,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             DateTime? factorFileMinimumDate;
             var reader = new StreamReader(factorFileContents.ToStream());
             var enumerable = new StreamReaderEnumerable(reader).Where(line => line.Length > 0);
-            var factorFileRows = FactorFileRow.Parse(enumerable, out factorFileMinimumDate);
+            var factorFileRows = CorporateFactorRow.Parse(enumerable, out factorFileMinimumDate);
             return new CorporateFactorProvider("lode", factorFileRows, factorFileMinimumDate);
         }
 
@@ -491,7 +491,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             DateTime? factorFileMinimumDate;
             var reader = new StreamReader(factorFileContents.ToStream());
             var enumerable = new StreamReaderEnumerable(reader).Where(line => line.Length > 0);
-            var factorFileRows = FactorFileRow.Parse(enumerable, out factorFileMinimumDate);
+            var factorFileRows = CorporateFactorRow.Parse(enumerable, out factorFileMinimumDate);
             return new CorporateFactorProvider("aapl", factorFileRows, factorFileMinimumDate);
         }
 
@@ -532,7 +532,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             DateTime? factorFileMinimumDate;
             var reader = new StreamReader(factorFileContents.ToStream());
             var enumerable = new StreamReaderEnumerable(reader).Where(line => line.Length > 0);
-            var factorFileRows = FactorFileRow.Parse(enumerable, out factorFileMinimumDate);
+            var factorFileRows = CorporateFactorRow.Parse(enumerable, out factorFileMinimumDate);
             return new CorporateFactorProvider("aapl", factorFileRows, factorFileMinimumDate);
         }
     }

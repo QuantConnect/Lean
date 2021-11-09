@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Auxiliary
             }
 
             // we first need to resolve the map file to get a permtick, that's how the factor files are stored
-            var mapFileResolver = _mapFileProvider.Get(CorporateActionsKey.Create(symbol));
+            var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
             if (mapFileResolver == null)
             {
                 return GetFactorFile(symbol, symbol.Value);

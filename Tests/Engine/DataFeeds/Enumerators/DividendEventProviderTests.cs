@@ -95,9 +95,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             {
                 FactorFile = new CorporateFactorProvider("AAPL", new []
                 {
-                    new FactorFileRow(row1, 0.693m, 1),
-                    new FactorFileRow(row2, 0.77m, 1),
-                    new FactorFileRow(row3, 0.85555m, 1)
+                    new CorporateFactorRow(row1, 0.693m, 1),
+                    new CorporateFactorRow(row2, 0.77m, 1),
+                    new CorporateFactorRow(row3, 0.85555m, 1)
                 }, start)
             };
 

@@ -284,7 +284,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ticker = symbol.ID.Symbol;
             if (symbol.ID.SecurityType == SecurityType.Equity)
             {
-                var mapFile = _mapFileProvider.Get(CorporateActionsKey.Create(symbol)).ResolveMapFile(symbol);
+                var mapFile = _mapFileProvider.Get(AuxiliaryDataKey.Create(symbol)).ResolveMapFile(symbol);
                 ticker = mapFile.GetMappedSymbol(DateTime.UtcNow, symbol.Value);
             }
 

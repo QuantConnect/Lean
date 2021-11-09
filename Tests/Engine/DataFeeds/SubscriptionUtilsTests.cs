@@ -184,8 +184,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
             {
-                new FactorFileRow(referenceTime, 0.5m, 1),
-                new FactorFileRow(referenceTime.AddDays(1), 1m, 1)
+                new CorporateFactorRow(referenceTime, 0.5m, 1),
+                new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
             }, referenceTime);
 
             factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
@@ -230,8 +230,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
             {
-                new FactorFileRow(referenceTime, 0.5m, 1),
-                new FactorFileRow(referenceTime.AddDays(1), 1m, 1)
+                new CorporateFactorRow(referenceTime, 0.5m, 1),
+                new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
             }, referenceTime);
 
             factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
