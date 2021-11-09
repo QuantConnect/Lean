@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class CompositeDataQueueHandler : IDataQueueHandler
     {
         private readonly List<IDataQueueHandler> _dataHandlers = new();
-        private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler;
+        private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeDataQueueHandler"/> class
