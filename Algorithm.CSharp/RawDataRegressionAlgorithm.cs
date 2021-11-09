@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_expectedRawPrices.Current != googlData.Close)
                 {
                     // Our values don't match lets try and give a reason why
-                    var dayFactor = _factorFile.GetPriceScaleFactor(googlData.Time, DataNormalizationMode.Adjusted);
+                    var dayFactor = _factorFile.GetPriceFactor(googlData.Time, DataNormalizationMode.Adjusted);
                     var probableRawPrice = googlData.Close / dayFactor; // Undo adjustment
 
                     if (_expectedRawPrices.Current == probableRawPrice)

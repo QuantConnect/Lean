@@ -51,7 +51,7 @@ namespace QuantConnect.Data.Auxiliary
                 return 1;
             }
 
-            return factorFile.GetPriceScaleFactor(dateTime, normalizationMode, dataMappingMode, contractOffset);
+            return factorFile.GetPriceFactor(dateTime, normalizationMode, dataMappingMode, contractOffset);
         }
 
         /// <summary>

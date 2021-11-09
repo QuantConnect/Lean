@@ -42,8 +42,8 @@ namespace QuantConnect.Data.Auxiliary
         public DateTime? FactorFileMinimumDate { get; set; }
 
         /// <summary>
-        /// Gets the price scale factor for the specified search date
+        /// Gets the price factor for the specified search date
         /// </summary>
-        decimal GetPriceScaleFactor(DateTime searchDate, DataNormalizationMode dataNormalizationMode, DataMappingMode? dataMappingMode = null, uint contractOffset = 0);
+        decimal GetPriceFactor(DateTime searchDate, DataNormalizationMode dataNormalizationMode, DataMappingMode? dataMappingMode = null, uint contractOffset = 0);
     }
 }

@@ -212,14 +212,14 @@ namespace QuantConnect.Data.Auxiliary
         /// Creates a new dividend from this factor file row and the one chronologically in front of it
         /// This dividend may have a distribution of zero if this row doesn't represent a dividend
         /// </summary>
-        /// <param name="futureCorporateFactorRow">The next factor file row in time</param>
+        /// <param name="nextCorporateFactorRow">The next factor file row in time</param>
         /// <param name="symbol">The symbol to use for the dividend</param>
         /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
         /// <param name="decimalPlaces">The number of decimal places to round the dividend's distribution to, defaulting to 2</param>
         /// <returns>A new dividend instance</returns>
-        public Dividend GetDividend(CorporateFactorRow futureCorporateFactorRow, Symbol symbol, SecurityExchangeHours exchangeHours, int decimalPlaces=2)
+        public Dividend GetDividend(CorporateFactorRow nextCorporateFactorRow, Symbol symbol, SecurityExchangeHours exchangeHours, int decimalPlaces=2)
         {
-            if (futureCorporateFactorRow.PriceFactor == 0m)
+            if (nextCorporateFactorRow.PriceFactor == 0m)
             {
                 throw new InvalidOperationException(Invariant(
                     $"Unable to resolve dividend for '{symbol.ID}' at {Date:yyyy-MM-dd}. Price factor is zero."
@@ -233,7 +233,7 @@ namespace QuantConnect.Data.Auxiliary
                 symbol,
                 previousTradingDay,
                 ReferencePrice,
-                PriceFactor / futureCorporateFactorRow.PriceFactor,
+                PriceFactor / nextCorporateFactorRow.PriceFactor,
                 decimalPlaces
             );
         }
@@ -242,13 +242,13 @@ namespace QuantConnect.Data.Auxiliary
         /// Creates a new split from this factor file row and the one chronologically in front of it
         /// This split may have a split factor of one if this row doesn't represent a split
         /// </summary>
-        /// <param name="futureCorporateFactorRow">The next factor file row in time</param>
+        /// <param name="nextCorporateFactorRow">The next factor file row in time</param>
         /// <param name="symbol">The symbol to use for the split</param>
         /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
         /// <returns>A new split instance</returns>
-        public Split GetSplit(CorporateFactorRow futureCorporateFactorRow, Symbol symbol, SecurityExchangeHours exchangeHours)
+        public Split GetSplit(CorporateFactorRow nextCorporateFactorRow, Symbol symbol, SecurityExchangeHours exchangeHours)
         {
-            if (futureCorporateFactorRow.SplitFactor == 0m)
+            if (nextCorporateFactorRow.SplitFactor == 0m)
             {
                 throw new InvalidOperationException(Invariant(
                     $"Unable to resolve split for '{symbol.ID}' at {Date:yyyy-MM-dd}. Split factor is zero."
@@ -262,7 +262,7 @@ namespace QuantConnect.Data.Auxiliary
                 symbol,
                 previousTradingDay,
                 ReferencePrice,
-                SplitFactor / futureCorporateFactorRow.SplitFactor,
+                SplitFactor / nextCorporateFactorRow.SplitFactor,
                 SplitType.SplitOccurred
             );
         }

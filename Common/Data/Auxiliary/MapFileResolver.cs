@@ -139,7 +139,7 @@ namespace QuantConnect.Data.Auxiliary
             // secondary search for exact mapping, find path than ends with symbol.csv
             MapFile mapFile;
             if (!_mapFilesByPermtick.TryGetValue(symbol, out mapFile)
-                || mapFile.FirstDate > date && date != Time.BeginningOfTime)
+                || mapFile.FirstDate > date && date != SecurityIdentifier.DefaultDate)
             {
                 return new MapFile(symbol, Enumerable.Empty<MapFileRow>());
             }

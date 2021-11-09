@@ -109,16 +109,16 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var file = GetTestFactorFile(symbol, reference);
             // time price factors should be the price factor * split factor
 
-            Assert.AreEqual(1, file.GetPriceScaleFactor(reference, DataNormalizationMode.Adjusted));
-            Assert.AreEqual(1, file.GetPriceScaleFactor(reference.AddDays(-6), DataNormalizationMode.Adjusted));
-            Assert.AreEqual(.9, file.GetPriceScaleFactor(reference.AddDays(-7), DataNormalizationMode.Adjusted));
-            Assert.AreEqual(.9, file.GetPriceScaleFactor(reference.AddDays(-13), DataNormalizationMode.Adjusted));
-            Assert.AreEqual(.8, file.GetPriceScaleFactor(reference.AddDays(-14), DataNormalizationMode.Adjusted));
-            Assert.AreEqual(.8, file.GetPriceScaleFactor(reference.AddDays(-20), DataNormalizationMode.Adjusted));
-            Assert.AreEqual(.8m * .5m, file.GetPriceScaleFactor(reference.AddDays(-21), DataNormalizationMode.Adjusted));
-            Assert.AreEqual(.8m * .5m, file.GetPriceScaleFactor(reference.AddDays(-22), DataNormalizationMode.Adjusted));
-            Assert.AreEqual(.8m * .5m, file.GetPriceScaleFactor(reference.AddDays(-89), DataNormalizationMode.Adjusted));
-            Assert.AreEqual(.8m * .25m, file.GetPriceScaleFactor(reference.AddDays(-91), DataNormalizationMode.Adjusted));
+            Assert.AreEqual(1, file.GetPriceFactor(reference, DataNormalizationMode.Adjusted));
+            Assert.AreEqual(1, file.GetPriceFactor(reference.AddDays(-6), DataNormalizationMode.Adjusted));
+            Assert.AreEqual(.9, file.GetPriceFactor(reference.AddDays(-7), DataNormalizationMode.Adjusted));
+            Assert.AreEqual(.9, file.GetPriceFactor(reference.AddDays(-13), DataNormalizationMode.Adjusted));
+            Assert.AreEqual(.8, file.GetPriceFactor(reference.AddDays(-14), DataNormalizationMode.Adjusted));
+            Assert.AreEqual(.8, file.GetPriceFactor(reference.AddDays(-20), DataNormalizationMode.Adjusted));
+            Assert.AreEqual(.8m * .5m, file.GetPriceFactor(reference.AddDays(-21), DataNormalizationMode.Adjusted));
+            Assert.AreEqual(.8m * .5m, file.GetPriceFactor(reference.AddDays(-22), DataNormalizationMode.Adjusted));
+            Assert.AreEqual(.8m * .5m, file.GetPriceFactor(reference.AddDays(-89), DataNormalizationMode.Adjusted));
+            Assert.AreEqual(.8m * .25m, file.GetPriceFactor(reference.AddDays(-91), DataNormalizationMode.Adjusted));
         }
 
         [Test]

@@ -36,7 +36,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the price scale factor for the specified search date
         /// </summary>
-        public override decimal GetPriceScaleFactor(DateTime searchDate, DataNormalizationMode dataNormalizationMode, DataMappingMode? dataMappingMode = null, uint contractOffset = 0)
+        public override decimal GetPriceFactor(DateTime searchDate, DataNormalizationMode dataNormalizationMode, DataMappingMode? dataMappingMode = null, uint contractOffset = 0)
         {
             if (dataNormalizationMode == DataNormalizationMode.Raw)
             {

@@ -219,7 +219,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(enumerator.MoveNext());
             var factorFile = TestGlobals.FactorFileProvider.Get(_config.Symbol);
-            var expectedFactor = factorFile.GetPriceScaleFactor(dateBeforeUpadate, DataNormalizationMode.Adjusted);
+            var expectedFactor = factorFile.GetPriceFactor(dateBeforeUpadate, DataNormalizationMode.Adjusted);
             var tick = enumerator.Current as Tick;
             Assert.AreEqual(expectedFactor, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor, tick.Price);
@@ -233,7 +233,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 10,
                 10);
             Assert.IsTrue(enumerator.MoveNext());
-            var expectedFactor2 = factorFile.GetPriceScaleFactor(dateAtUpadate, DataNormalizationMode.Adjusted);
+            var expectedFactor2 = factorFile.GetPriceFactor(dateAtUpadate, DataNormalizationMode.Adjusted);
             var tick2 = enumerator.Current as Tick;
             Assert.AreEqual(expectedFactor2, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor2, tick2.Price);
@@ -247,7 +247,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 10,
                 10);
             Assert.IsTrue(enumerator.MoveNext());
-            var expectedFactor3 = factorFile.GetPriceScaleFactor(dateAfterUpadate, DataNormalizationMode.Adjusted);
+            var expectedFactor3 = factorFile.GetPriceFactor(dateAfterUpadate, DataNormalizationMode.Adjusted);
             var tick3 = enumerator.Current as Tick;
             Assert.AreEqual(expectedFactor3, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor3, tick3.Price);

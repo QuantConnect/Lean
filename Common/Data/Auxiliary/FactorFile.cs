@@ -92,7 +92,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the price scale factor for the specified search date
         /// </summary>
-        public abstract decimal GetPriceScaleFactor(
+        public abstract decimal GetPriceFactor(
             DateTime searchDate,
             DataNormalizationMode dataNormalizationMode,
             DataMappingMode? dataMappingMode = null,

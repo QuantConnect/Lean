@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             if (delayed)
             {
                 // we advance to the mapping date, without any new mapFile!
-                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow());
+                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + LiveAuxiliaryDataEnumerator.TradableDateOffset);
             }
             else
             {
@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             else
             {
                 // we advance to the mapping date
-                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow());
+                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + LiveAuxiliaryDataEnumerator.TradableDateOffset);
             }
 
             Assert.IsTrue(enumerator.MoveNext());
@@ -161,9 +161,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
-            // advance until delisting date, take into account 5 hour offset of NY
+            // advance until delisting date, take into account 5 hour offset of NY + TradableDateOffset
             timeProvider.Advance(TimeSpan.FromDays(10));
             timeProvider.Advance(TimeSpan.FromHours(5));
+            timeProvider.Advance(LiveAuxiliaryDataEnumerator.TradableDateOffset);
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual(DelistingType.Warning, (enumerator.Current as Delisting).Type);
@@ -174,8 +175,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
-            // when the day ends the delisted event will pass through
+            // when the day ends the delisted event will pass through, respecting the offset
             timeProvider.Advance(TimeSpan.FromDays(1));
+
             cache.AddData(new Tick(DateTime.UtcNow, config.Symbol, 40, 20));
 
             Assert.IsTrue(enumerator.MoveNext());
