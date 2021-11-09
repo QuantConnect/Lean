@@ -195,6 +195,7 @@
   "ftx-api-key": "",
 
   // FTX.US configuration
+  "ftxus-account-tier": "Tier1", // accept "Tier1", "Tier2", "Tier3", "Tier4", "Tier5", "Tier6", "VIP1", "VIP2", "VIP3", "MM1", "MM2", "MM3"
   "ftxus-api-secret": "",
   "ftxus-api-key": "",
 
