@@ -356,16 +356,43 @@ namespace QuantConnect.Data
         public Stream Fetch(string key)
         {
             LeanData.ParseKey(key, out var filePath, out var entryName);
-            using (var zip = ZipFile.Read(filePath))
-            {
-                if (!zip.ContainsEntry(entryName))
-                {
-                    return null;
-                }
 
-                var stream = new MemoryStream();
-                zip[entryName].Extract(stream);
-                return stream;
+            if (!File.Exists(filePath))
+            {
+                return null;
+            }
+
+            try
+            {
+                using (var zip = ZipFile.Read(filePath))
+                {
+                    ZipEntry entry;
+                    if (entryName.IsNullOrEmpty())
+                    {
+                        // Return the first entry
+                        entry = zip[0];
+                    }
+                    else
+                    {
+                        // Attempt to find our specific entry
+                        if (!zip.ContainsEntry(entryName))
+                        {
+                            return null;
+                        }
+
+                        entry = zip[entryName];
+                    }
+
+                    // Extract our entry and return it
+                    var stream = new MemoryStream();
+                    entry.Extract(stream);
+                    return stream;
+                }
+            }
+            catch (ZipException exception)
+            {
+                Log.Error("DiskDataCacheProvider.Fetch(): Corrupt file: " + key + " Error: " + exception);
+                return null;
             }
         }
 
