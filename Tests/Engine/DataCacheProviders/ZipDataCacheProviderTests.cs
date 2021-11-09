@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
 
         public override IDataCacheProvider CreateDataCacheProvider()
         {
-            return _zipDataCacheProvider;
+            return new ZipDataCacheProvider(TestGlobals.DataProvider);
         }
 
         [Test]

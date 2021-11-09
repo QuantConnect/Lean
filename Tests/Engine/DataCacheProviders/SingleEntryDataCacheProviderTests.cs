@@ -15,7 +15,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 
