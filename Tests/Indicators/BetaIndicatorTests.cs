@@ -39,7 +39,6 @@ namespace QuantConnect.Tests.Indicators
         public override void TimeMovesForward()
         {
             var indicator = new BetaIndicator("testBetaIndicator", 5, Symbols.IBM, Symbols.SPY);
-            var startDate = new DateTime(2019, 1, 1);
 
             for (var i = 10; i > 0; i--)
             {
