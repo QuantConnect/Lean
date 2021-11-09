@@ -145,9 +145,7 @@ namespace QuantConnect.Util
                 if (securityType.IsOption())
                 {
                     // ticker_year_trade_american
-                    var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
-                    var tickerWithoutTickType = tickerWithoutStyle.Substring(0, tickerWithoutStyle.LastIndexOfInvariant("_"));
-                    ticker = tickerWithoutTickType.Substring(0, tickerWithoutTickType.LastIndexOfInvariant("_"));
+                    ticker = ticker.Substring(0, ticker.IndexOf("_", StringComparison.InvariantCulture));
                 }
                 if (securityType == SecurityType.Future)
                 {

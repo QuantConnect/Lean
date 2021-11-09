@@ -312,29 +312,28 @@ namespace QuantConnect.Tests.ToolBox
         /// <summary>
         /// Fake brokerage that just uses Local Disk Data to do history requests
         /// </summary>
-        public class LocalHistoryBrokerage : NullBrokerage 
+        internal class LocalHistoryBrokerage : NullBrokerage 
         {
-            private readonly DefaultDataProvider _dataProvider;
-            private IDataCacheProvider _dataCacheProvider;
-            private IHistoryProvider _historyProvider;
+            private readonly IDataCacheProvider _dataCacheProvider;
+            private readonly IHistoryProvider _historyProvider;
 
             public LocalHistoryBrokerage()
             {
-                var mapFileProvider = new LocalDiskMapFileProvider();
-                _dataProvider = new DefaultDataProvider();
-                _dataCacheProvider = new ZipDataCacheProvider(_dataProvider);
+                var mapFileProvider = TestGlobals.MapFileProvider;
+                var dataProvider = TestGlobals.DataProvider;
+                _dataCacheProvider = new ZipDataCacheProvider(dataProvider);
                 var factorFileProvider = new LocalDiskFactorFileProvider();
                 var dataPermissionManager = new DataPermissionManager();
 
-                mapFileProvider.Initialize(_dataProvider);
-                factorFileProvider.Initialize(mapFileProvider, _dataProvider);
+                mapFileProvider.Initialize(dataProvider);
+                factorFileProvider.Initialize(mapFileProvider, dataProvider);
 
                 _historyProvider = new SubscriptionDataReaderHistoryProvider();
                 _historyProvider.Initialize(
                     new HistoryProviderInitializeParameters(
                         null,
                         null,
-                        _dataProvider,
+                        dataProvider,
                         _dataCacheProvider,
                         mapFileProvider,
                         factorFileProvider,
@@ -365,7 +364,6 @@ namespace QuantConnect.Tests.ToolBox
             public override void Dispose()
             {
                 _dataCacheProvider.Dispose();
-                _dataProvider.Dispose();
             }
         }
     }

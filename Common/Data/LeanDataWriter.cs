@@ -355,7 +355,7 @@ namespace QuantConnect.Data
         /// <returns>An <see cref="Stream"/> of the cached data</returns>
         public Stream Fetch(string key)
         {
-            DataCacheProviderExtensions.ParseKey(key, out var filePath, out var entryName);
+            LeanData.ParseKey(key, out var filePath, out var entryName);
             using (var zip = ZipFile.Read(filePath))
             {
                 if (!zip.ContainsEntry(entryName))
@@ -376,7 +376,7 @@ namespace QuantConnect.Data
         /// <param name="data">The data as a byte array</param>
         public void Store(string key, byte[] data)
         {
-            DataCacheProviderExtensions.ParseKey(key, out var filePath, out var entryName);
+            LeanData.ParseKey(key, out var filePath, out var entryName);
             Compression.ZipCreateAppendData(filePath, entryName, data);
         }
 

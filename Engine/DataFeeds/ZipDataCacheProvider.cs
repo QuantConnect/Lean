@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly int _cacheSeconds;
 
         // ZipArchive cache used by the class
-        private ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
+        private readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
         private readonly IDataProvider _dataProvider;
         private readonly Timer _cacheCleaner;
 
@@ -58,9 +58,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Does not attempt to retrieve any data
         /// </summary>
-        public virtual Stream Fetch(string key)
+        public Stream Fetch(string key)
         {
-            DataCacheProviderExtensions.ParseKey(key, out var filename, out var entryName);
+            LeanData.ParseKey(key, out var filename, out var entryName);
 
             // handles zip files
             if (filename.EndsWith(".zip", StringComparison.InvariantCulture))
@@ -120,13 +120,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Store the data in the cache. Not implemented in this instance of the IDataCacheProvider
+        /// Store the data in the cache.
         /// </summary>
         /// <param name="key">The source of the data, used as a key to retrieve data in the cache</param>
         /// <param name="data">The data as a byte array</param>
         public void Store(string key, byte[] data)
         {
-            DataCacheProviderExtensions.ParseKey(key, out var fileName, out var entryName);
+            LeanData.ParseKey(key, out var fileName, out var entryName);
 
             // We only support writing to zips with this provider
             if (fileName.EndsWith(".zip", StringComparison.InvariantCulture))
@@ -135,7 +135,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (!_zipFileCache.TryGetValue(fileName, out var cachedZip) && !Cache(fileName, out cachedZip))
                 {
                     // Create the zip, if successful cache it for later use
-                    if (Compression.ZipData(fileName, entryName, data))
+                    if (Compression.ZipCreateAppendData(fileName, entryName, data))
                     {
                         Cache(fileName, out _);
                     }
@@ -339,6 +339,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // some other thread could of added it already, lets dispose ours
                         cachedZip.Dispose();
+                        return _zipFileCache.TryGetValue(filename, out cachedZip);
                     }
 
                     return true;
