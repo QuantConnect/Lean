@@ -62,6 +62,16 @@ namespace QuantConnect.Indicators
         private decimal _beta;
 
         /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; private set; }
+
+        /// <summary>
+        /// Gets a flag indicating when the indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => _symbolDataPoints[_stockSymbol].Samples == _symbolDataPoints[_marketIndexSymbol].Samples && _symbolDataPoints[_marketIndexSymbol].Count == WarmUpPeriod;
+
+        /// <summary>
         /// Creates a new BetaIndicator with the specified name, period, stock and 
         /// Market Index values
         /// </summary>
@@ -86,16 +96,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; private set; }
-
-        /// <summary>
-        /// Gets a flag indicating when the indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => _symbolDataPoints[_stockSymbol].Count == WarmUpPeriod && _symbolDataPoints[_marketIndexSymbol].Count == WarmUpPeriod;
-
-        /// <summary>
         /// Computes the next value for this indicator from the given state.
         /// 
         /// As this indicator is receiving data points from two different symbols,
@@ -116,7 +116,7 @@ namespace QuantConnect.Indicators
                 _stockReturns.Add(GetNewReturn(_symbolDataPoints[_stockSymbol]));
                 _marketIndexReturns.Add(GetNewReturn(_symbolDataPoints[_marketIndexSymbol]));
 
-                ComputeBeta(_stockReturns, _marketIndexReturns);
+                ComputeBeta();
             }
             return _beta;
         }
@@ -136,9 +136,7 @@ namespace QuantConnect.Indicators
         /// Computes the beta value of the stock in relation with the Market Index
         /// using the stock and Market Index returns
         /// </summary>
-        /// <param name="stockReturns">The stock's returns list</param>
-        /// <param name="marketIndexReturns">The MarketIndex's returns list</param>
-        private void ComputeBeta(RollingWindow<decimal> stockReturns, RollingWindow<decimal> marketIndexReturns)
+        private void ComputeBeta()
         {
             // Zip both list into a single one to loop over their values at the same time
 
@@ -148,21 +146,21 @@ namespace QuantConnect.Indicators
             var variance = 0m;
 
             // Get the average of both lists
-            var stockAverage = stockReturns.Average();
-            var marketIndexAverage = marketIndexReturns.Average();
+            var stockAverage = _stockReturns.Average();
+            var marketIndexAverage = _marketIndexReturns.Average();
 
             // Compute the covariance of the stock returns and the Market Index returns
             // Compute also the variance of the Market Index returns
-            for (int i = 0; i < stockReturns.Count; i++)
+            for (int i = 0; i < _stockReturns.Count; i++)
             {
-                covariance += (stockReturns[i] - stockAverage) * (marketIndexReturns[i] - marketIndexAverage);
-                variance += (decimal) Math.Pow((double) (marketIndexReturns[i] - marketIndexAverage), 2);
+                covariance += (_stockReturns[i] - stockAverage) * (_marketIndexReturns[i] - marketIndexAverage);
+                variance += (decimal) Math.Pow((double) (_marketIndexReturns[i] - marketIndexAverage), 2);
             }
 
-            covariance = covariance / stockReturns.Count;
+            covariance = covariance / _stockReturns.Count;
 
             // Avoid division by zero
-            variance = variance != 0 ? variance / marketIndexReturns.Count : 1;
+            variance = variance != 0 ? variance / _marketIndexReturns.Count : 1;
 
             _beta = covariance / variance;
         }

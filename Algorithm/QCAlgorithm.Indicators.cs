@@ -356,25 +356,26 @@ namespace QuantConnect.Algorithm
         /// Creates a BetaIndicator for the given stock symbol in relation with the Market Index used. 
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
-        /// <param name="stockSymbol">The stock symbol whose Beta value we want</param>
+        /// <param name="target">The stock symbol whose Beta value we want</param>
         /// <param name="period">The period of the BetaIndicator</param>
         /// <param name="resolution">The resolution</param>
-        /// <param name="marketIndexSymbol">The Market Index symbol to compare with the stock symbol. By default is S&P 500</param>
+        /// <param name="reference">The Market Index symbol to compare with the stock symbol. By default is S&P 500</param>
         /// <returns>The BetaIndicator for the given parameters</returns>
-        public BetaIndicator BI(Symbol stockSymbol, int period, Resolution? resolution = null, string marketIndexSymbol = "SPX")
+        public BetaIndicator B(Symbol target, int period, Resolution? resolution = null, string reference = "SPX")
         {
+            var referenceSymbol = Symbol(reference);
             var name = CreateIndicatorName(QuantConnect.Symbol.None, "BI", resolution);
-            var bi = new BetaIndicator(name, period, stockSymbol, marketIndexSymbol);
-            RegisterIndicator(marketIndexSymbol, bi, resolution);
-            RegisterIndicator(stockSymbol, bi, resolution);
+            var b = new BetaIndicator(name, period, target, referenceSymbol);
+            RegisterIndicator(target, b, resolution);
+            RegisterIndicator(referenceSymbol, b, resolution);
 
             if (EnableAutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(stockSymbol, bi, resolution);
-                WarmUpIndicator(marketIndexSymbol, bi, resolution);
+                WarmUpIndicator(target, b, resolution);
+                WarmUpIndicator(referenceSymbol, b, resolution);
             }
 
-            return bi;
+            return b;
         }
 
         /// <summary>

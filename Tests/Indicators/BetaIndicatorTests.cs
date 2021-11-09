@@ -27,6 +27,8 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestColumnName => "beta";
 
+        private DateTime _reference = new DateTime(2020, 1, 1);
+
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var indicator = new BetaIndicator("testBetaIndicator", 5, "AMZN 2T", "SPX 2T");
@@ -36,15 +38,13 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void TimeMovesForward()
         {
-            var indicator = new BetaIndicator("testBetaIndicator", 5, "IBM", "SPY");
+            var indicator = new BetaIndicator("testBetaIndicator", 5, Symbols.IBM, Symbols.SPY);
             var startDate = new DateTime(2019, 1, 1);
 
             for (var i = 10; i > 0; i--)
             {
-                var stockInput = GetInput("IBM" ,startDate, i);
-                var marketIndexInput = GetInput("SPY", startDate, i);
-                indicator.Update(stockInput);
-                indicator.Update(marketIndexInput);
+                indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
             }
 
             Assert.AreEqual(2, indicator.Samples);
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WarmsUpProperly()
         {
-            var indicator = new BetaIndicator("testBetaIndicator", 5, "IBM", "SPY");
+            var indicator = new BetaIndicator("testBetaIndicator", 5, Symbols.IBM, Symbols.SPY);
             var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (!period.HasValue)
@@ -62,17 +62,41 @@ namespace QuantConnect.Tests.Indicators
                 return;
             }
 
-            var startDate = new DateTime(2019, 1, 1);
-
             for (var i = 0; i < period.Value; i++)
             {
-                var stockInput = GetInput("IBM", startDate, i);
-                var marketIndexInput = GetInput("SPY", startDate, i);
-                indicator.Update(stockInput);
-                indicator.Update(marketIndexInput);
+                indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
             }
 
             Assert.AreEqual(2*period.Value, indicator.Samples);
+        }
+
+        [Test]
+        public void EqualBetaValue()
+        {
+            var indicator = new BetaIndicator("testBetaIndicator", 5, Symbols.AAPL, Symbols.SPX);
+
+            for (int i = 0 ; i < 3 ; i++)
+            {
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = i + 1 ,Time = _reference.AddDays(1 + i) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
+            }
+
+            Assert.AreEqual(1, (double) indicator.Current.Value, 0.0001);
+        }
+
+        [Test]
+        public void NotEqualBetaValue()
+        {
+            var indicator = new BetaIndicator("testBetaIndicator", 5, Symbols.AAPL, Symbols.SPX);
+
+            for (int i = 0; i < 3; i++)
+            {
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = i + 2, Time = _reference.AddDays(1 + i) });
+            }
+
+            Assert.AreNotEqual(1, (double)indicator.Current.Value);
         }
     }
 }
