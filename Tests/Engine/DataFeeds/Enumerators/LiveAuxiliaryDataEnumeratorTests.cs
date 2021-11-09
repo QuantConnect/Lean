@@ -194,7 +194,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             {
             }
 
-            public MapFileResolver Get(CorporateActionsKey corporateActionsKey)
+            public MapFileResolver Get(AuxiliaryDataKey auxiliaryDataKey)
             {
                 return new TestMapFileResolver();
             }

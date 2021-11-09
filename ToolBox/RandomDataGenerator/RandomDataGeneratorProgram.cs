@@ -162,7 +162,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                     if (!willBeDelisted)
                     {
-                        dividendsSplitsMaps.DividendsSplits.Add(new FactorFileRow(new DateTime(2050, 12, 31), 1m, 1m));
+                        dividendsSplitsMaps.DividendsSplits.Add(new CorporateFactorRow(new DateTime(2050, 12, 31), 1m, 1m));
 
                         if (dividendsSplitsMaps.MapRows.Count > 1)
                         {

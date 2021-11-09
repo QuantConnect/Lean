@@ -162,7 +162,7 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            var mapFileResolver = _mapFileProvider.Get(CorporateActionsKey.Create(securityDefinition.SecurityIdentifier));
+            var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(securityDefinition.SecurityIdentifier));
             
             // Get the first ticker the symbol traded under, and then lookup the
             // trading date to get the ticker on the trading date.

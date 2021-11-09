@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
         public void ChecksFirstDate()
         {
             var mapFileProvider = TestGlobals.MapFileProvider;
-            var mapFileResolver = mapFileProvider.Get(CorporateActionsKey.EquityUsa);
+            var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.EquityUsa);
             // QQQ started trading on 19990310
             var mapFile = mapFileResolver.ResolveMapFile("QQQ", new DateTime(1999, 3, 9));
             Assert.IsTrue(mapFile.IsNullOrEmpty());
@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
         public void ResolvesCorrectlyReUsedTicker()
         {
             var mapFileProvider = TestGlobals.MapFileProvider;
-            var mapFileResolver = mapFileProvider.Get(CorporateActionsKey.EquityUsa);
+            var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.EquityUsa);
 
             // FB.1 started trading on 19990929 and ended on 20030328
             var mapFile = mapFileResolver.ResolveMapFile("FB", new DateTime(1999, 9, 28));
@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
         {
             var mapFileProvider = TestGlobals.MapFileProvider;
             var sw = Stopwatch.StartNew();
-            var mapFileresolver = mapFileProvider.Get(CorporateActionsKey.EquityUsa);
+            var mapFileresolver = mapFileProvider.Get(AuxiliaryDataKey.EquityUsa);
             sw.Stop();
             Log.Trace($"elapsed: {sw.Elapsed.TotalSeconds} seconds");
         }

@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Auxiliary
         private readonly object _lock;
         private IDataProvider _dataProvider;
         private IMapFileProvider _mapFileProvider;
-        private Dictionary<CorporateActionsKey, bool> _seededMarket;
+        private Dictionary<AuxiliaryDataKey, bool> _seededMarket;
         private readonly Dictionary<Symbol, IFactorProvider> _factorFiles;
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Auxiliary
         public LocalZipFactorFileProvider()
         {
             _factorFiles = new Dictionary<Symbol, IFactorProvider>();
-            _seededMarket = new Dictionary<CorporateActionsKey, bool>();
+            _seededMarket = new Dictionary<AuxiliaryDataKey, bool>();
             _lock = new object();
         }
 
@@ -75,7 +75,7 @@ namespace QuantConnect.Data.Auxiliary
         public IFactorProvider Get(Symbol symbol)
         {
             symbol = symbol.GetFactorFileSymbol();
-            var key = CorporateActionsKey.Create(symbol);
+            var key = AuxiliaryDataKey.Create(symbol);
             lock (_lock)
             {
                 if (!_seededMarket.ContainsKey(key))
@@ -103,13 +103,13 @@ namespace QuantConnect.Data.Auxiliary
             lock (_lock)
             {
                 // we clear the seeded markets so they are reloaded
-                _seededMarket = new Dictionary<CorporateActionsKey, bool>();
+                _seededMarket = new Dictionary<AuxiliaryDataKey, bool>();
             }
             _ = Task.Delay(CacheRefreshPeriod).ContinueWith(_ => StartExpirationTask());
         }
 
         /// Hydrate the <see cref="_factorFiles"/> from the latest zipped factor file on disk
-        private void HydrateFactorFileFromLatestZip(CorporateActionsKey key)
+        private void HydrateFactorFileFromLatestZip(AuxiliaryDataKey key)
         {
             var market = key.Market;
             // start the search with yesterday, today's file will be available tomorrow

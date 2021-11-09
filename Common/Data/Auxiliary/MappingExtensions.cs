@@ -36,7 +36,7 @@ namespace QuantConnect.Data.Auxiliary
             var resolver = MapFileResolver.Empty;
             if(dataConfig.TickerShouldBeMapped())
             {
-                resolver = mapFileProvider.Get(CorporateActionsKey.Create(dataConfig.Symbol));
+                resolver = mapFileProvider.Get(AuxiliaryDataKey.Create(dataConfig.Symbol));
             }
             return resolver.ResolveMapFile(dataConfig.Symbol , dataConfig.Type.Name, dataConfig.DataMappingMode);
         }

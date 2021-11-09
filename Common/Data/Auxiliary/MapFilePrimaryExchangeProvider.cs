@@ -48,7 +48,7 @@ namespace QuantConnect.Data.Auxiliary
             Exchange primaryExchange;
             if (!_primaryExchangeBySid.TryGetValue(securityIdentifier, out primaryExchange))
             {
-                var mapFile = _mapFileProvider.Get(CorporateActionsKey.Create(securityIdentifier))
+                var mapFile = _mapFileProvider.Get(AuxiliaryDataKey.Create(securityIdentifier))
                     .ResolveMapFile(securityIdentifier.Symbol, securityIdentifier.Date);
                 if (mapFile != null && mapFile.Any())
                 {

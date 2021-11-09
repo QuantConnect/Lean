@@ -62,7 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Symbol mappedSymbol;
             if (underlyingSymbol.RequiresMapping())
             {
-                var mapFileResolver = _mapFileProvider.Get(CorporateActionsKey.Create(underlyingSymbol));
+                var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(underlyingSymbol));
                 var mapFile = mapFileResolver.ResolveMapFile(underlyingSymbol);
                 var ticker = mapFile.GetMappedSymbol(date, underlyingSymbol.Value);
                 mappedSymbol = underlyingSymbol.UpdateMappedSymbol(ticker);

@@ -642,7 +642,7 @@ namespace QuantConnect
         /// <returns>The security's first ticker/date if mapping data available, otherwise, the provided ticker and DefaultDate are returned</returns>
         private static Tuple<string, DateTime> GetFirstTickerAndDate(IMapFileProvider mapFileProvider, string tickerToday, string market, SecurityType securityType, DateTime? mappingResolveDate = null)
         {
-            var resolver = mapFileProvider.Get(new CorporateActionsKey(market, securityType));
+            var resolver = mapFileProvider.Get(new AuxiliaryDataKey(market, securityType));
             var mapFile = resolver.ResolveMapFile(tickerToday, mappingResolveDate ?? DateTime.Today);
 
             // if we have mapping data, use the first ticker/date from there, otherwise use provided ticker and DefaultDate
