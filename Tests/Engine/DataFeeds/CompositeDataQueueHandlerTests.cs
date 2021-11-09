@@ -17,10 +17,8 @@
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Packets;
-using QuantConnect.Util;
 using System;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -34,9 +32,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataHanders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
             var job = new LiveNodePacket
             {
-                UserId = 1,
-                ProjectId = 1,
-                DeployId = "1",
                 Brokerage = "ZerodhaBrokerage",
                 DataQueueHandler = dataHanders
             };
@@ -46,20 +41,40 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void Subscribe()
+        public void SubscribeReturnsNull()
         {
             Subscription subscription = null;
             EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
             var dataConfig = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var compositeDataQueueHandler = new CompositeDataQueueHandler();
             var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, handler);
+            Assert.Null(enumerator);
+            compositeDataQueueHandler.Dispose();
+        }
+
+        [Test]
+        public void SubscribeReturnsNotNull()
+        {
+            var dataHanders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
+            var job = new LiveNodePacket
+            {
+                Brokerage = "ZerodhaBrokerage",
+                DataQueueHandler = dataHanders
+            };
+            var compositeDataQueueHandler = new CompositeDataQueueHandler();
+            compositeDataQueueHandler.SetJob(job);
+            Subscription subscription = null;
+            EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
+            var dataConfig = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, handler);
+            Assert.NotNull(enumerator);
             compositeDataQueueHandler.Dispose();
         }
 
         [Test]
         public void Unsubscribe()
         {
-            var dataConfig = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var dataConfig = new SubscriptionDataConfig(typeof(TradeBar), Symbols.AAPL, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var compositeDataQueueHandler = new CompositeDataQueueHandler();
             compositeDataQueueHandler.Unsubscribe(dataConfig);
             compositeDataQueueHandler.Dispose();
