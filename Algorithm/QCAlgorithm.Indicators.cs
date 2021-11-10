@@ -353,26 +353,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a BetaIndicator for the given stock symbol in relation with the Market Index used. 
+        /// Creates a BetaIndicator for the given target symbol in relation with the reference used. 
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
-        /// <param name="target">The stock symbol whose Beta value we want</param>
+        /// <param name="target">The target symbol whose Beta value we want</param>
+        /// <param name="reference">The reference symbol to compare with the target symbol</param>
         /// <param name="period">The period of the BetaIndicator</param>
         /// <param name="resolution">The resolution</param>
-        /// <param name="reference">The Market Index symbol to compare with the stock symbol. By default is S&P 500</param>
         /// <returns>The BetaIndicator for the given parameters</returns>
-        public BetaIndicator B(Symbol target, int period, Resolution? resolution = null, string reference = "SPX")
+        public BetaIndicator B(Symbol target, Symbol reference, int period, Resolution? resolution = null)
         {
-            var referenceSymbol = Symbol(reference);
-            var name = CreateIndicatorName(QuantConnect.Symbol.None, "BI", resolution);
-            var b = new BetaIndicator(name, period, target, referenceSymbol);
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "B", resolution);
+            var b = new BetaIndicator(name, period, target, reference);
             RegisterIndicator(target, b, resolution);
-            RegisterIndicator(referenceSymbol, b, resolution);
+            RegisterIndicator(reference, b, resolution);
 
             if (EnableAutomaticIndicatorWarmUp)
             {
                 WarmUpIndicator(target, b, resolution);
-                WarmUpIndicator(referenceSymbol, b, resolution);
+                WarmUpIndicator(reference, b, resolution);
             }
 
             return b;

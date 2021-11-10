@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("SPY");
 
             EnableAutomaticIndicatorWarmUp = true;
-            _beta = B("IBM", 3, Resolution.Daily, "SPY");
+            _beta = B("IBM", "SPY", 3, Resolution.Daily);
             _sma = SMA("SPY", 3, Resolution.Daily);
             _lastSMAValue = 0;
 

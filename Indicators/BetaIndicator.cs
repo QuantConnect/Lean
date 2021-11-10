@@ -17,47 +17,48 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
+using MathNet.Numerics.Statistics;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// In technical analysis Beta indicator is used to measure volatility or risk of a stock (ETF) relative to the overall 
-    /// risk (volatility) of the stock market (market indexes). The Beta indicators compares stock's price movement to the 
+    /// In technical analysis Beta indicator is used to measure volatility or risk of a target (ETF) relative to the overall 
+    /// risk (volatility) of the reference (market indexes). The Beta indicators compares target's price movement to the 
     /// movements of the indexes over the same period of time.
     /// 
-    /// It is common practice to use the S&P 500 index as a benchmark of the overall stock market when it comes to Beta 
+    /// It is common practice to use the SPX index as a benchmark of the overall reference market when it comes to Beta 
     /// calculations.
     /// </summary>
     public class BetaIndicator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Dictionary to get the data points collection of the stock symbol
-        /// or the Market Index symbol
+        /// Dictionary to get the data points collection of the target symbol
+        /// or the reference symbol
         /// </summary>
         private Dictionary<Symbol, RollingWindow<decimal>> _symbolDataPoints;
 
         /// <summary>
-        /// Symbol of the Market Index used
+        /// Symbol of the reference used
         /// </summary>
-        private Symbol _marketIndexSymbol;
+        private Symbol _referenceSymbol;
 
         /// <summary>
-        /// Symbol of the stock used
+        /// Symbol of the target used
         /// </summary>
-        private Symbol _stockSymbol;
+        private Symbol _targetSymbol;
 
         /// <summary>
-        /// RollingWindow of returns of the stock symbol in the given period
+        /// RollingWindow of returns of the target symbol in the given period
         /// </summary>
-        private RollingWindow<decimal> _stockReturns;
+        private RollingWindow<double> _targetReturns;
 
         /// <summary>
-        /// RollingWindow of returns of the Market Index symbol in the given period
+        /// RollingWindow of returns of the reference symbol in the given period
         /// </summary>
-        private RollingWindow<decimal> _marketIndexReturns;
+        private RollingWindow<double> _referenceReturns;
 
         /// <summary>
-        /// Beta of the stock used in relation with the Market Index
+        /// Beta of the target used in relation with the reference
         /// </summary>
         private decimal _beta;
 
@@ -69,29 +70,35 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _symbolDataPoints[_stockSymbol].Samples == _symbolDataPoints[_marketIndexSymbol].Samples && _symbolDataPoints[_marketIndexSymbol].Count == WarmUpPeriod;
+        public override bool IsReady => _symbolDataPoints.Values.All(x => x.IsReady);
 
         /// <summary>
-        /// Creates a new BetaIndicator with the specified name, period, stock and 
-        /// Market Index values
+        /// Creates a new BetaIndicator with the specified name, period, target and 
+        /// reference values
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of this indicator</param>
-        /// <param name="stockSymbol">The stock symbol of this indicator</param>
-        /// <param name="marketIndexSymbol">The Market Index symbol of this indicator</param>
-        public BetaIndicator(string name, int period, Symbol stockSymbol, Symbol marketIndexSymbol)
+        /// <param name="targetSymbol">The target symbol of this indicator</param>
+        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
+        public BetaIndicator(string name, int period, Symbol targetSymbol, Symbol referenceSymbol)
             : base(name)
         {
+            // Assert the period is greater than two, otherwise the beta can not be computed
+            if (period < 2)
+            {
+                throw new Exception($"Period parameter for Beta indicator must be greater than 2 but was {period}");
+            }
+
             WarmUpPeriod = period;
-            _marketIndexSymbol = marketIndexSymbol;
-            _stockSymbol = stockSymbol;
+            _referenceSymbol = referenceSymbol;
+            _targetSymbol = targetSymbol;
 
             _symbolDataPoints = new Dictionary<Symbol, RollingWindow<decimal>>();
-            _symbolDataPoints.Add(_marketIndexSymbol, new RollingWindow<decimal>(WarmUpPeriod));
-            _symbolDataPoints.Add(_stockSymbol, new RollingWindow<decimal>(WarmUpPeriod));
+            _symbolDataPoints.Add(_referenceSymbol, new RollingWindow<decimal>(WarmUpPeriod));
+            _symbolDataPoints.Add(_targetSymbol, new RollingWindow<decimal>(WarmUpPeriod));
 
-            _stockReturns = new RollingWindow<decimal>(WarmUpPeriod);
-            _marketIndexReturns = new RollingWindow<decimal>(WarmUpPeriod);
+            _targetReturns = new RollingWindow<double>(WarmUpPeriod);
+            _referenceReturns = new RollingWindow<double>(WarmUpPeriod);
             _beta = 0;
         }
 
@@ -104,17 +111,17 @@ namespace QuantConnect.Indicators
         /// value computed
         /// </summary>
         /// <param name="input">The input value of this indicator on this time step.
-        /// It can be either from the stock or the Market index symbol</param>
-        /// <returns>The beta value of the stock used in relation with the Market Index</returns>
+        /// It can be either from the target or the reference symbol</param>
+        /// <returns>The beta value of the target used in relation with the reference</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
             var inputSymbol = input.Symbol;
             _symbolDataPoints[inputSymbol].Add(input.Close);
 
-            if (_symbolDataPoints[_stockSymbol].Samples == _symbolDataPoints[_marketIndexSymbol].Samples && _symbolDataPoints[_stockSymbol].Samples > 1)
+            if (_symbolDataPoints[_targetSymbol].Samples == _symbolDataPoints[_referenceSymbol].Samples && _symbolDataPoints[_targetSymbol].Samples > 1)
             {
-                _stockReturns.Add(GetNewReturn(_symbolDataPoints[_stockSymbol]));
-                _marketIndexReturns.Add(GetNewReturn(_symbolDataPoints[_marketIndexSymbol]));
+                _targetReturns.Add(GetNewReturn(_symbolDataPoints[_targetSymbol]));
+                _referenceReturns.Add(GetNewReturn(_symbolDataPoints[_referenceSymbol]));
 
                 ComputeBeta();
             }
@@ -127,42 +134,24 @@ namespace QuantConnect.Indicators
         /// <param name="rollingWindow">The collection of data points from which we want
         /// to compute the return</param>
         /// <returns>The returns with the new given data point</returns>
-        private static decimal GetNewReturn(RollingWindow<decimal> rollingWindow)
+        private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
         {
-            return (rollingWindow[1] / rollingWindow[0]) - 1;
+            return (double) ((rollingWindow[1] / rollingWindow[0]) - 1);
         }
 
         /// <summary>
-        /// Computes the beta value of the stock in relation with the Market Index
-        /// using the stock and Market Index returns
+        /// Computes the beta value of the target in relation with the reference
+        /// using the target and reference returns
         /// </summary>
         private void ComputeBeta()
         {
-            // Zip both list into a single one to loop over their values at the same time
+            var targetReturnsList = _targetReturns.ToList();
+            var referenceReturnsList = _referenceReturns.ToList();
 
-            // Initialize the variables used to compute the covariance between the stock returns and the Market Index returns
-            // and to compute the variance of the Market Index returns
-            var covariance = 0m;
-            var variance = 0m;
-
-            // Get the average of both lists
-            var stockAverage = _stockReturns.Average();
-            var marketIndexAverage = _marketIndexReturns.Average();
-
-            // Compute the covariance of the stock returns and the Market Index returns
-            // Compute also the variance of the Market Index returns
-            for (int i = 0; i < _stockReturns.Count; i++)
-            {
-                covariance += (_stockReturns[i] - stockAverage) * (_marketIndexReturns[i] - marketIndexAverage);
-                variance += (decimal) Math.Pow((double) (_marketIndexReturns[i] - marketIndexAverage), 2);
-            }
-
-            covariance = covariance / _stockReturns.Count;
-
-            // Avoid division by zero
-            variance = variance != 0 ? variance / _marketIndexReturns.Count : 1;
-
-            _beta = covariance / variance;
+            // Avoid division with NaN or by zero
+            var variance = !referenceReturnsList.Variance().IsNaNOrZero() ? referenceReturnsList.Variance() : 1;
+            var covariance = !targetReturnsList.Covariance(referenceReturnsList).IsNaNOrZero() ? targetReturnsList.Covariance(referenceReturnsList) : 0;
+            _beta = (decimal) (covariance / variance);
         }
 
         /// <summary>
@@ -170,11 +159,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _symbolDataPoints[_stockSymbol].Reset();
-            _symbolDataPoints[_marketIndexSymbol].Reset();
+            _symbolDataPoints[_targetSymbol].Reset();
+            _symbolDataPoints[_referenceSymbol].Reset();
 
-            _stockReturns.Reset();
-            _marketIndexReturns.Reset();
+            _targetReturns.Reset();
+            _referenceReturns.Reset();
             _beta = 0;
             base.Reset();
         }
