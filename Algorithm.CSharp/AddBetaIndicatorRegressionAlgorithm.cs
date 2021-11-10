@@ -30,6 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
         private BetaIndicator _beta;
         private SimpleMovingAverage _sma;
         private decimal _lastSMAValue;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 07);
@@ -62,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             
             if (_beta.Current.Value < 0m || _beta.Current.Value > 2.80m)
             {
-                throw new Exception($"_beta value was expected to be between 0.20 and 2.80 but was {_beta.Current.Value}");
+                throw new Exception($"_beta value was expected to be between 0 and 2.80 but was {_beta.Current.Value}");
             }
 
             Log($"Beta between IBM and SPY is: {_beta.Current.Value}");
@@ -71,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             var order = Transactions.GetOrderById(orderEvent.OrderId);
-            var goUpwards = _lastSMAValue - _sma.Current.Value < 0;
+            var goUpwards = _lastSMAValue < _sma.Current.Value;
             _lastSMAValue = _sma.Current.Value;
 
             if (order.Status == OrderStatus.Filled)
