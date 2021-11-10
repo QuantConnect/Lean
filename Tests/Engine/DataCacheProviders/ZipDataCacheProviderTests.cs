@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
     [TestFixture]
     public class ZipDataCacheProviderTests : DataCacheProviderTests
     {
-        private readonly string _tempZipFileEntry = Path.GetTempFileName() + "#testEntry.csv";
+        private readonly string _tempZipFileEntry = Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture) + "#testEntry.csv";
         private readonly Random _random = new Random();
 
         public override IDataCacheProvider CreateDataCacheProvider()
@@ -38,29 +38,23 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         [Test]
         public void MultiThreadReadWriteTest()
         {
-            var threadCount = 100;
+            var dataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider, cacheTimer: 0.1);
 
-            Thread[] threads = new Thread[threadCount];
-
-            for (int i = 0; i < threads.Length; i++)
+            Parallel.For(0, 100, (i) =>
             {
-                threads[i] = new Thread(ReadAndWrite);
-            }
+                var data = new byte[300];
+                _random.NextBytes(data);
 
-            Parallel.ForEach(threads, (t) =>
-            {
-                t.Start();
-                t.Join();
+                ReadAndWrite(dataCacheProvider, data);
             });
+
+            dataCacheProvider.Dispose();
         }
 
-        private void ReadAndWrite()
+        private void ReadAndWrite(IDataCacheProvider dataCacheProvider, byte[] data)
         {
-            var read = DataCacheProvider.Fetch(_tempZipFileEntry);
-
-            var data = new byte[20];
-            _random.NextBytes(data);
-            DataCacheProvider.Store(_tempZipFileEntry, data);
+            dataCacheProvider.Fetch(_tempZipFileEntry);
+            dataCacheProvider.Store(_tempZipFileEntry, data);
         }
     }
 }

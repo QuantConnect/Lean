@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ZipDataCacheProvider : IDataCacheProvider
     {
-        private readonly int _cacheSeconds;
+        private readonly double _cacheSeconds;
 
         // ZipArchive cache used by the class
         private readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Constructor that sets the <see cref="IDataProvider"/> used to retrieve data
         /// </summary>
-        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true, int cacheTimer = 10)
+        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true, double cacheTimer = 10)
         {
             IsDataEphemeral = isDataEphemeral;
             _cacheSeconds = cacheTimer;
@@ -129,12 +129,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             LeanData.ParseKey(key, out var fileName, out var entryName);
 
             // We only support writing to zips with this provider
-            if (fileName.EndsWith(".zip", StringComparison.InvariantCulture))
+            if (!fileName.EndsWith(".zip", StringComparison.InvariantCulture))
+            {
+                return;
+            }
+
+            // Only allow one thread at a time to modify our cache
+            lock (_zipFileCache)
             {
                 // If its not in the cache, and can not be cached we need to create it
                 if (!_zipFileCache.TryGetValue(fileName, out var cachedZip) && !Cache(fileName, out cachedZip))
                 {
-                    // Create the zip, if successful cache it for later use
+                    // Create the zip, if successful, cache it for later use
                     if (Compression.ZipCreateAppendData(fileName, entryName, data))
                     {
                         Cache(fileName, out _);
