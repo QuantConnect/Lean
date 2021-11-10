@@ -23,6 +23,7 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Threading.Tasks;
 
@@ -92,7 +93,7 @@ namespace QuantConnect.Data
         {
             var lastTime = DateTime.MinValue;
             var outputFile = string.Empty;
-            var currentFileDictionary = new SortedDictionary<DateTime, string>();
+            var currentFileData = new List<(DateTime, string)>();
             var writeTasks = new Queue<Task>();
 
             foreach (var data in source)
@@ -108,37 +109,37 @@ namespace QuantConnect.Data
                     var latestOutputFile = GetZipOutputFileName(_dataDirectory, data.Time);
                     if (outputFile.IsNullOrEmpty() || outputFile != latestOutputFile)
                     {
-                        if (!currentFileDictionary.IsNullOrEmpty())
+                        if (!currentFileData.IsNullOrEmpty())
                         {
                             // Launch a write task for the current file and data set
                             var file = outputFile;
-                            var dictionary = currentFileDictionary;
+                            var fileData = currentFileData;
                             writeTasks.Enqueue(Task.Run(() =>
                             {
-                                WriteFile(file, dictionary, data.Time);
+                                WriteFile(file, fileData, data.Time);
                             }));
                         }
 
                         // Reset our dictionary and store new output file
-                        currentFileDictionary = new SortedDictionary<DateTime, string>();
+                        currentFileData = new List<(DateTime, string)>();
                         outputFile = latestOutputFile;
                     }
                 }
 
                 // Add data to our current dictionary
                 var line = LeanData.GenerateLine(data, _securityType, _resolution);
-                currentFileDictionary.Add(data.Time, line);
+                currentFileData.Add((data.Time, line));
 
                 // Update our time
                 lastTime = data.Time;
             }
 
             // Finish off my processing the last file as well
-            if (!currentFileDictionary.IsNullOrEmpty())
+            if (!currentFileData.IsNullOrEmpty())
             {
                 writeTasks.Enqueue(Task.Run(() =>
                 {
-                    WriteFile(outputFile, currentFileDictionary, lastTime);
+                    WriteFile(outputFile, currentFileData, lastTime);
                 }));
             }
 
@@ -253,12 +254,18 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Write this file to disk.
+        /// Write this file to disk with the given data.
         /// </summary>
         /// <param name="filePath">The full path to the new file</param>
-        /// <param name="data">The data to write as a string</param>
+        /// <param name="data">The data to write as a list of dates and strings</param>
         /// <param name="date">The date the data represents</param>
-        private void WriteFile(string filePath, SortedDictionary<DateTime, string> data, DateTime date)
+        /// <remarks>The reason we have the data as IEnumerable(DateTime, string) is to support
+        /// a generic write that works for all resolutions. In order to merge in hour/daily case I need the
+        /// date of the data to correctly merge the two. In order to support writing ticks I need to allow
+        /// two data points to have the same time. Thus I cannot use a single list of just strings nor
+        /// a sorted dictionary of DateTimes and strings. Only upon reaching the merge case will I sort and
+        /// merge, or just extract string data from the tuple.</remarks>
+        private void WriteFile(string filePath, IEnumerable<(DateTime, string)> data, DateTime date)
         {
             // Generate this csv entry name
             var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
@@ -268,18 +275,25 @@ namespace QuantConnect.Data
 
             // Handle merging of files
             // Only merge on files with hour/daily resolution, that exist, and can be loaded
+            string finalData;
             if (_resolution >= Resolution.Hour && fileExists && TryLoadFile(filePath, entryName, out var rows))
             {
+                // Load this data into a sorted dictionary so we may commence the merge
+                var sortedNewData = data.ToImmutableSortedDictionary(x => x.Item1, x => x.Item2);
+
                 // Preform merge on loaded rows
-                foreach (var entry in data)
+                foreach (var entry in sortedNewData)
                 {
                     rows[entry.Key] = entry.Value;
                 }
+
+                // Final merged data product
+                finalData = string.Join("\n", rows.Values);
             }
             else
             {
-                // No need to merge for one of the reasons above, just write these rows
-                rows = data;
+                // Otherwise just extract the data from the given list.
+                finalData = string.Join("\n", data.Select(x => x.Item2));
             }
 
             // If our file doesn't exist its possible the directory doesn't exist, make sure at least the directory exists
@@ -288,7 +302,7 @@ namespace QuantConnect.Data
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             }
 
-            var bytes = Encoding.UTF8.GetBytes(string.Join("\n", rows.Values));
+            var bytes = Encoding.UTF8.GetBytes(finalData);
             _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
 
             Log.Trace($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
