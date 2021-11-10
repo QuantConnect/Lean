@@ -14,9 +14,13 @@
  *
 */
 
+using System;
+using System.IO;
+using ICSharpCode.SharpZipLib.Zip;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataCacheProviders
 {
@@ -26,6 +30,31 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         public override IDataCacheProvider CreateDataCacheProvider()
         {
             return new DiskDataCacheProvider();
+        }
+
+        [Test]
+        public void WriteTest()
+        {
+            var entryName = "testEntry.csv";
+            var filePath = Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture);
+            var key = filePath + "#" + entryName;
+
+            var random = new Random();
+            var data = new byte[10];
+            random.NextBytes(data);
+
+            // Write this data to our entry in the temp zip
+            DataCacheProvider.Store(key, data);
+
+            // Verify it exists
+            Assert.IsTrue(File.Exists(filePath));
+
+            // Open the file are verify we have the expected results
+            var zip = new ZipFile(filePath);
+            Assert.AreEqual(1, zip.Count);
+            Assert.IsNotNull(zip.GetEntry(entryName));
+
+            zip.DisposeSafely();
         }
     }
 }
