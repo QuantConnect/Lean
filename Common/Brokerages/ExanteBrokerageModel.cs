@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Reflection;
+using System.Reflection.Emit;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -64,6 +66,22 @@ namespace QuantConnect.Brokerages
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
+
+            if (order == null)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Invariant($"Order is null.")
+                );
+                return false;
+            }
+
+            if (order.Price == 0m)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Invariant($"Price is not set.")
+                );
+                return false;
+            }
 
             if (security.Type != SecurityType.Forex &&
                 security.Type != SecurityType.Equity &&

@@ -29,6 +29,9 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class ExanteFeeModel : FeeModel
     {
+        public const decimal MarketUsaRate = 0.02m;
+        public const decimal DefaultRate = 0.02m;
+        
         private readonly decimal _forexCommissionRate;
 
         /// <summary>
@@ -96,11 +99,10 @@ namespace QuantConnect.Orders.Fees
             switch (order.Symbol.ID.Market)
             {
                 case Market.USA:
-                    return new CashAmount(order.AbsoluteQuantity * 0.02m, Currencies.USD);
+                    return new CashAmount(order.AbsoluteQuantity * MarketUsaRate, Currencies.USD);
 
                 default:
-                    const decimal rate = 0.05m;
-                    return new CashAmount(order.AbsoluteQuantity * order.Price * rate, Currencies.USD);
+                    return new CashAmount(order.AbsoluteQuantity * order.Price * DefaultRate, Currencies.USD);
             }
         }
 
