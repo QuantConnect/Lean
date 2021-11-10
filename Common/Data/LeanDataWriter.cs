@@ -36,7 +36,6 @@ namespace QuantConnect.Data
         private readonly Symbol _symbol;
         private readonly string _dataDirectory;
         private readonly TickType _tickType;
-        private readonly bool _appendToZips;
         private readonly Resolution _resolution;
         private readonly SecurityType _securityType;
         private readonly IDataCacheProvider _dataCacheProvider;
@@ -82,7 +81,6 @@ namespace QuantConnect.Data
             _resolution = resolution;
             _securityType = securityType;
             _tickType = tickType;
-            _appendToZips = securityType == SecurityType.Future || securityType.IsOption();
             _dataCacheProvider = dataCacheProvider ?? new DiskDataCacheProvider();
         }
 
@@ -284,35 +282,16 @@ namespace QuantConnect.Data
                 rows = data;
             }
 
-            if (!_appendToZips && fileExists)
-            {
-                File.Delete(filePath);
-                Log.Trace("LeanDataWriter.Write(): Existing deleted: " + filePath);
-            }
-
             // If our file doesn't exist its possible the directory doesn't exist, make sure at least the directory exists
             if (!fileExists)
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             }
 
-            if (_appendToZips)
-            {
-                var bytes = Encoding.UTF8.GetBytes(string.Join("\n", rows.Values));
-                _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
+            var bytes = Encoding.UTF8.GetBytes(string.Join("\n", rows.Values));
+            _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
 
-                Log.Trace($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
-            }
-            else
-            {
-                // Write out this data string to a zip file
-                var tempFilePath = filePath + ".tmp";
-                Compression.ZipData(tempFilePath, entryName, rows.Values);
-
-                // Move temp file to the final destination with the appropriate name
-                File.Move(tempFilePath, filePath);
-                Log.Trace("LeanDataWriter.Write(): Created: " + filePath);
-            }
+            Log.Trace($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
         }
 
         /// <summary>

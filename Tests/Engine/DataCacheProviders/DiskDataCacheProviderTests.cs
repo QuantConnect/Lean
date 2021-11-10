@@ -56,5 +56,30 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
 
             zip.DisposeSafely();
         }
+
+        [Test]
+        public void OverrideEntry()
+        {
+            var entryName = "testEntry.csv";
+            var filePath = Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture);
+            var key = filePath + "#" + entryName;
+
+            var random = new Random();
+            var data = new byte[10];
+            random.NextBytes(data);
+
+            // Write this data to our entry in the temp zip
+            DataCacheProvider.Store(key, data);
+
+            // Verify it exists
+            Assert.IsTrue(File.Exists(filePath));
+
+            random = new Random();
+            data = new byte[10];
+            random.NextBytes(data);
+
+            // Write this data to our entry in the temp zip
+            DataCacheProvider.Store(key, data);
+        }
     }
 }

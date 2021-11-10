@@ -98,7 +98,7 @@ namespace QuantConnect.Data
         public void Store(string key, byte[] data)
         {
             LeanData.ParseKey(key, out var filePath, out var entryName);
-            Compression.ZipCreateAppendData(filePath, entryName, data);
+            Compression.ZipCreateAppendData(filePath, entryName, data, true);
         }
 
         /// <summary>
