@@ -128,10 +128,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             LeanData.ParseKey(key, out var fileName, out var entryName);
 
-            // We only support writing to zips with this provider
-            // We just return silently because remote file subscription depends on this function
-            // not throwing.
-            if (!fileName.EndsWith(".zip", StringComparison.InvariantCulture))
+            // We only support writing to zips with this provider, we also need an entryName to write
+            // Return silently because RemoteFileSubscriptionStreamReader depends on this function not throwing.
+            if (!fileName.EndsWith(".zip", StringComparison.InvariantCulture) || entryName == null)
             {
                 return;
             }
