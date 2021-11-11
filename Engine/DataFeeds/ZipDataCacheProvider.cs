@@ -131,7 +131,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // We only support writing to zips with this provider
             if (!fileName.EndsWith(".zip", StringComparison.InvariantCulture))
             {
-                return;
+                throw new ArgumentException(
+                    "ZipDataCacheProvider.Store(): This provider only supports writing to zips");
             }
 
             // Only allow one thread at a time to modify our cache

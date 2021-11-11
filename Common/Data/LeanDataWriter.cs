@@ -263,8 +263,7 @@ namespace QuantConnect.Data
         /// a generic write that works for all resolutions. In order to merge in hour/daily case I need the
         /// date of the data to correctly merge the two. In order to support writing ticks I need to allow
         /// two data points to have the same time. Thus I cannot use a single list of just strings nor
-        /// a sorted dictionary of DateTimes and strings. Only upon reaching the merge case will I sort and
-        /// merge, or just extract string data from the tuple.</remarks>
+        /// a sorted dictionary of DateTimes and strings. </remarks>
         private void WriteFile(string filePath, IEnumerable<(DateTime, string)> data, DateTime date)
         {
             // Generate this csv entry name
@@ -278,13 +277,10 @@ namespace QuantConnect.Data
             string finalData;
             if (_resolution >= Resolution.Hour && fileExists && TryLoadFile(filePath, entryName, out var rows))
             {
-                // Load this data into a sorted dictionary so we may commence the merge
-                var sortedNewData = data.ToImmutableSortedDictionary(x => x.Item1, x => x.Item2);
-
                 // Preform merge on loaded rows
-                foreach (var entry in sortedNewData)
+                foreach (var (time, line) in data)
                 {
-                    rows[entry.Key] = entry.Value;
+                    rows[time] = line;
                 }
 
                 // Final merged data product

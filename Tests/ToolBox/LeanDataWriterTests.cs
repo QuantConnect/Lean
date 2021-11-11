@@ -179,8 +179,6 @@ namespace QuantConnect.Tests.ToolBox
             Assert.AreEqual(data.First().Value.Count(), 3);
         }
 
-        [Explicit("Data copying and reading test")]
-        [TestCase(SecurityType.Equity, TickType.Quote, Resolution.Hour)]
         [TestCase(SecurityType.Equity, TickType.Quote, Resolution.Minute)]
         [TestCase(SecurityType.Equity, TickType.Trade, Resolution.Daily)]
         [TestCase(SecurityType.Equity, TickType.Trade, Resolution.Hour)]
@@ -279,7 +277,7 @@ namespace QuantConnect.Tests.ToolBox
 
         /// <summary>
         /// Test helper method to get dates for data we have in the repo
-        /// Could possibly be refactored and used in Symbols in a similar way
+        /// Could possibly be refactored and used in Tests.Symbols in a similar way
         /// </summary>
         /// <returns>Start time where some data included in the repo exists</returns>
         private static DateTime GetRepoDataDates(SecurityType securityType, Resolution resolution)
@@ -322,7 +320,7 @@ namespace QuantConnect.Tests.ToolBox
                 var mapFileProvider = TestGlobals.MapFileProvider;
                 var dataProvider = TestGlobals.DataProvider;
                 _dataCacheProvider = new ZipDataCacheProvider(dataProvider);
-                var factorFileProvider = new LocalDiskFactorFileProvider();
+                var factorFileProvider = TestGlobals.FactorFileProvider;
                 var dataPermissionManager = new DataPermissionManager();
 
                 mapFileProvider.Initialize(dataProvider);

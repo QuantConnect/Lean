@@ -32,6 +32,12 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
             DataCacheProvider = CreateDataCacheProvider();
         }
 
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            DataCacheProvider.Dispose();
+        }
+
         public abstract IDataCacheProvider CreateDataCacheProvider();
 
         [Test]
@@ -40,6 +46,7 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
             var stream = DataCacheProvider.Fetch("../../../Data/equity/usa/minute/aapl/20140606_trade.zip");
 
             Assert.IsNotNull(stream);
+            stream.Dispose();
         }
 
         [Test]
@@ -48,6 +55,7 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
             var stream = DataCacheProvider.Fetch("../../../Data/equity/usa/minute/aapl/19980606_trade.zip");
 
             Assert.IsNull(stream);
+            stream.Dispose();
         }
     }
 }

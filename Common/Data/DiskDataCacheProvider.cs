@@ -31,16 +31,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Property indicating the data is temporary in nature and should not be cached.
         /// </summary>
-        public bool IsDataEphemeral { get; }
-
-        /// <summary>
-        /// Simple data cache provider, writes and reads directly from disk
-        /// Used as default for <see cref="LeanDataWriter"/>
-        /// </summary>
-        public DiskDataCacheProvider()
-        {
-            IsDataEphemeral = false;
-        }
+        public bool IsDataEphemeral => false;
 
         /// <summary>
         /// Fetch data from the cache
