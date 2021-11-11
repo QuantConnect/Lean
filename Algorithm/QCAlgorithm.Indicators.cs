@@ -643,9 +643,9 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The period of the EF</param>
         /// <param name="resolution">The resolution</param>
         /// <returns>The KaufmanEfficiencyRatio indicator for the given parameters</returns>
-        public KaufmanEfficiencyRatio KEF(Symbol symbol, int period = 2, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public KaufmanEfficiencyRatio KER(Symbol symbol, int period = 2, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"KEF({period})", resolution);
+            var name = CreateIndicatorName(symbol, $"KER({period})", resolution);
             var kaufmanEfficiencyRatio = new KaufmanEfficiencyRatio(name, period);
             RegisterIndicator(symbol, kaufmanEfficiencyRatio, resolution, selector);
 

@@ -42,7 +42,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the Kaufman Efficiency Ratio (KEF)</param>
         public KaufmanEfficiencyRatio(int period)
-            : this($"KEF({period})", period)
+            : this($"KER({period})", period)
         {
         }
 
