@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
@@ -56,8 +56,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var length = _random.Next(minLength, maxLength);
             for (int i = 0; i < length; i++)
             {
-                // A=65, Z=90
-                var c = (char)_random.Next(65, 90);
+                // A=65 - inclusive lower bound
+                // Z=90 - inclusive upper bound
+                var c = (char)_random.Next(65, 91);
                 str += c;
             }
 
