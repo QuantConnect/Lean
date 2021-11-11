@@ -55,7 +55,6 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
             var stream = DataCacheProvider.Fetch("../../../Data/equity/usa/minute/aapl/19980606_trade.zip");
 
             Assert.IsNull(stream);
-            stream.Dispose();
         }
     }
 }

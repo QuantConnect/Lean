@@ -129,10 +129,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             LeanData.ParseKey(key, out var fileName, out var entryName);
 
             // We only support writing to zips with this provider
+            // We just return silently because remote file subscription depends on this function
+            // not throwing.
             if (!fileName.EndsWith(".zip", StringComparison.InvariantCulture))
             {
-                throw new ArgumentException(
-                    "ZipDataCacheProvider.Store(): This provider only supports writing to zips");
+                return;
             }
 
             // Only allow one thread at a time to modify our cache

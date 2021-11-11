@@ -301,7 +301,7 @@ namespace QuantConnect.Data
             var bytes = Encoding.UTF8.GetBytes(finalData);
             _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
 
-            Log.Trace($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
+            Log.Debug($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
         }
 
         /// <summary>
