@@ -24,7 +24,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string includeCoarseString,
             string quoteTradeRatioString,
             string randomSeed,
-            string hasIpoPercentageString, 
+            string hasIpoPercentageString,
             string hasRenamePercentageString,
             string hasSplitsPercentageString,
             string hasDividendsPercentageString,
@@ -87,7 +87,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         public static DateTime GetDelistingDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
         {
-            var mid_point = GetDateMidpoint(start, end);            
+            var mid_point = GetDateMidpoint(start, end);
             var delist_Date = randomValueGenerator.NextDate(mid_point, end, null);
 
             //Returns a DateTime object that is a random value between the mid_point and end
@@ -122,9 +122,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var progress = 0d;
             var previousMonth = -1;
 
-            Func<Tick, DateTime> tickDay = (tick => new DateTime(tick.Time.Year, tick.Time.Month, tick.Time.Day));
-            Func<Data.BaseData, DateTime> dataDay = (data => new DateTime(data.Time.Year, data.Time.Month, data.Time.Day));
-
             foreach (var currentSymbol in symbolGenerator.GenerateRandomSymbols())
             {
                 // This is done so that we can update the symbol in the case of a rename event
@@ -149,11 +146,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
 
                 var dividendsSplitsMaps = new DividendSplitMapGenerator(
-                    symbol, 
-                    settings, 
-                    randomValueGenerator, 
-                    random, 
-                    delistDate, 
+                    symbol,
+                    settings,
+                    randomValueGenerator,
+                    random,
+                    delistDate,
                     willBeDelisted);
 
                 if (settings.SecurityType == SecurityType.Equity)
@@ -213,17 +210,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 Symbol previousSymbol = null;
                 var currentCount = 0;
 
-                foreach (var renamed in renamedSymbols) 
+                foreach (var renamed in renamedSymbols)
                 {
                     var previousRenameDate = previousSymbol == null ? new DateTime(1, 1, 1) : renamedSymbols[previousSymbol];
                     var previousRenameDateDay = new DateTime(previousRenameDate.Year, previousRenameDate.Month, previousRenameDate.Day);
                     var renameDate = renamed.Value;
                     var renameDateDay = new DateTime(renameDate.Year, renameDate.Month, renameDate.Day);
 
-                    foreach (var tick in tickHistory.Where(tick => tick.Time >= previousRenameDate && previousRenameDateDay != tickDay(tick)))
+                    foreach (var tick in tickHistory.Where(tick => tick.Time >= previousRenameDate && previousRenameDateDay != TickDay(tick)))
                     {
                         // Prevents the aggregator from being updated with ticks after the rename event
-                        if (tickDay(tick) > renameDateDay)
+                        if (TickDay(tick) > renameDateDay)
                         {
                             break;
                         }
@@ -263,7 +260,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         // lest we likely wouldn't get the last piece of data stuck in the consolidator
                         // Filter out the data we're going to write here because filtering them in the consolidator update phase
                         // makes it write all dates for some unknown reason
-                        writer.Write(item.Flush().Where(data => data.Time > previousRenameDate && previousRenameDateDay != dataDay(data)));
+                        writer.Write(item.Flush().Where(data => data.Time > previousRenameDate && previousRenameDateDay != DataDay(data)));
                     }
 
                     // update progress
@@ -276,6 +273,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
 
             output.Info.WriteLine("Random data generation has completed.");
+
+            DateTime TickDay(Tick tick) => new(tick.Time.Year, tick.Time.Month, tick.Time.Day);
+            DateTime DataDay(BaseData data) => new(data.Time.Year, data.Time.Month, data.Time.Day);
         }
     }
 }
