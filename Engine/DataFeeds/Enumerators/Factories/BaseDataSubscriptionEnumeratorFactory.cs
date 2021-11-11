@@ -87,6 +87,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     var entriesForDate = factory.Read(source);
                     foreach (var entry in entriesForDate)
                     {
+                        // Fix for Daily/Hour options cases when reading in all equity data from daily/hourly file
+                        if (entry.Time.Date != date)
+                        {
+                            continue;
+                        }
+
                         yield return entry;
                     }
                 }

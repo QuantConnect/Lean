@@ -197,6 +197,37 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Append the zip data to the file-entry specified.
+        /// </summary>
+        /// <param name="path">The zip file path</param>
+        /// <param name="entry">The entry name</param>
+        /// <param name="data">The entry data</param>
+        /// <param name="overrideEntry">True if should override entry if it already exists</param>
+        /// <returns>True on success</returns>
+        public static bool ZipCreateAppendData(string path, string entry, byte[] data, bool overrideEntry = false)
+        {
+            try
+            {
+                using (var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path))
+                {
+                    if (overrideEntry && zip.ContainsEntry(entry))
+                    {
+                        zip.RemoveEntry(entry);
+                    }
+
+                    zip.AddEntry(entry, data);
+                    zip.Save();
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Uncompress zip data byte array into a dictionary string array of filename-contents.
         /// </summary>
         /// <param name="zipData">Byte data array of zip compressed information</param>

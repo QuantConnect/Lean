@@ -288,7 +288,7 @@ namespace QuantConnect.Util
                             var bigOpenInterest = data as OpenInterest;
                             if (bigOpenInterest != null)
                             {
-                                return ToCsv(milliseconds, bigOpenInterest.Value);
+                                return ToCsv(longTime, bigOpenInterest.Value);
                             }
                             break;
 
@@ -359,7 +359,7 @@ namespace QuantConnect.Util
                             var bigOpenInterest = data as OpenInterest;
                             if (bigOpenInterest != null)
                             {
-                                return ToCsv(milliseconds, bigOpenInterest.Value);
+                                return ToCsv(longTime, bigOpenInterest.Value);
                             }
                             break;
 
@@ -723,7 +723,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         var optionPath = symbol.Underlying.Value.ToLowerInvariant();
-                        return $"{optionPath}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
+                        return $"{optionPath}_{date.Year}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
                     }
 
                     return $"{formattedDate}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
@@ -732,7 +732,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         var futureOptionPath = symbol.ID.Symbol.ToLowerInvariant();
-                        return $"{futureOptionPath}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
+                        return $"{futureOptionPath}_{date.Year}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
                     }
 
                     return $"{formattedDate}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
@@ -1214,7 +1214,32 @@ namespace QuantConnect.Util
                         },
                         Period = resolution
                     };
-        }
-    
+         }
+
+         /// <summary>
+         /// Helper to separate filename and entry from a given key for DataProviders
+         /// </summary>
+         /// <param name="key">The key to parse</param>
+         /// <param name="fileName">File name extracted</param>
+         /// <param name="entryName">Entry name extracted</param>
+         public static void ParseKey(string key, out string fileName, out string entryName)
+         {
+             // Default scenario, no entryName included in key
+             entryName = null; // default to all entries
+             fileName = key;
+
+             if (key == null)
+             {
+                 return;
+             }
+
+             // Try extracting an entry name; Anything after a # sign
+             var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);
+             if (hashIndex != -1)
+             {
+                 entryName = key.Substring(hashIndex + 1);
+                 fileName = key.Substring(0, hashIndex);
+             }
+         }
     }
 }

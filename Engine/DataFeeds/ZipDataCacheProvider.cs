@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ZipDataCacheProvider : IDataCacheProvider
     {
-        private const int CacheSeconds = 10;
+        private readonly double _cacheSeconds;
 
         // ZipArchive cache used by the class
         private readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
@@ -47,11 +47,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Constructor that sets the <see cref="IDataProvider"/> used to retrieve data
         /// </summary>
-        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true)
+        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true, double cacheTimer = 10)
         {
             IsDataEphemeral = isDataEphemeral;
+            _cacheSeconds = cacheTimer;
             _dataProvider = dataProvider;
-            _cacheCleaner = new Timer(state => CleanCache(), null, TimeSpan.FromSeconds(CacheSeconds), Timeout.InfiniteTimeSpan);
+            _cacheCleaner = new Timer(state => CleanCache(), null, TimeSpan.FromSeconds(_cacheSeconds), Timeout.InfiniteTimeSpan);
         }
 
         /// <summary>
@@ -59,43 +60,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public Stream Fetch(string key)
         {
-            string entryName = null; // default to all entries
-            var filename = key;
-            var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);
-            if (hashIndex != -1)
-            {
-                entryName = key.Substring(hashIndex + 1);
-                filename = key.Substring(0, hashIndex);
-            }
+            LeanData.ParseKey(key, out var filename, out var entryName);
 
             // handles zip files
-            if (filename.EndsWith(".zip"))
+            if (filename.EndsWith(".zip", StringComparison.InvariantCulture))
             {
                 Stream stream = null;
 
                 try
                 {
-                    CachedZipFile existingEntry;
-                    if (!_zipFileCache.TryGetValue(filename, out existingEntry))
+                    CachedZipFile existingZip;
+                    if (!_zipFileCache.TryGetValue(filename, out existingZip))
                     {
-                        stream = CacheAndCreateStream(filename, entryName);
+                        stream = CacheAndCreateEntryStream(filename, entryName);
                     }
                     else
                     {
                         try
                         {
-                            lock (existingEntry)
+                            lock (existingZip)
                             {
-                                if (existingEntry.Disposed)
+                                if (existingZip.Disposed)
                                 {
                                     // bad luck, thread race condition
                                     // it was disposed and removed after we got it
                                     // so lets create it again and add it
-                                    stream = CacheAndCreateStream(filename, entryName);
+                                    stream = CacheAndCreateEntryStream(filename, entryName);
                                 }
                                 else
                                 {
-                                    stream = CreateStream(existingEntry, entryName, filename);
+                                    stream = CreateEntryStream(existingZip, entryName, filename);
                                 }
                             }
                         }
@@ -126,13 +120,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Store the data in the cache. Not implemented in this instance of the IDataCacheProvider
+        /// Store the data in the cache.
         /// </summary>
         /// <param name="key">The source of the data, used as a key to retrieve data in the cache</param>
         /// <param name="data">The data as a byte array</param>
         public void Store(string key, byte[] data)
         {
-            //
+            LeanData.ParseKey(key, out var fileName, out var entryName);
+
+            // We only support writing to zips with this provider, we also need an entryName to write
+            // Return silently because RemoteFileSubscriptionStreamReader depends on this function not throwing.
+            if (!fileName.EndsWith(".zip", StringComparison.InvariantCulture) || entryName == null)
+            {
+                return;
+            }
+
+            // Only allow one thread at a time to modify our cache
+            lock (_zipFileCache)
+            {
+                // If its not in the cache, and can not be cached we need to create it
+                if (!_zipFileCache.TryGetValue(fileName, out var cachedZip) && !Cache(fileName, out cachedZip))
+                {
+                    // Create the zip, if successful, cache it for later use
+                    if (Compression.ZipCreateAppendData(fileName, entryName, data))
+                    {
+                        Cache(fileName, out _);
+                    }
+
+                    return;
+                }
+
+                cachedZip.WriteEntry(entryName, data);
+            }
         }
 
         /// <summary>
@@ -161,7 +180,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var utcNow = DateTime.UtcNow;
             try
             {
-                var clearCacheIfOlderThan = utcNow.AddSeconds(-CacheSeconds);
+                var clearCacheIfOlderThan = utcNow.AddSeconds(-_cacheSeconds);
                 // clean all items that that are older than CacheSeconds than the current date
                 foreach (var zip in _zipFileCache)
                 {
@@ -192,7 +211,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    _cacheCleaner.Change(TimeSpan.FromSeconds(CacheSeconds), Timeout.InfiniteTimeSpan);
+                    _cacheCleaner.Change(TimeSpan.FromSeconds(_cacheSeconds), Timeout.InfiniteTimeSpan);
                 }
                 catch (Exception)
                 {
@@ -201,7 +220,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private Stream CacheAndCreateStream(string filename, string entryName)
+        private Stream CacheAndCreateEntryStream(string filename, string entryName)
         {
             Stream stream = null;
             var dataStream = _dataProvider.Fetch(filename);
@@ -210,11 +229,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    var newItem = new CachedZipFile(dataStream, DateTime.UtcNow);
+                    var newItem = new CachedZipFile(dataStream, DateTime.UtcNow, filename);
 
                     // here we don't need to lock over the cache item
                     // because it was still not added in the cache
-                    stream = CreateStream(newItem, entryName, filename);
+                    stream = CreateEntryStream(newItem, entryName, filename);
 
                     if (!_zipFileCache.TryAdd(filename, newItem))
                     {
@@ -241,7 +260,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="entryName">The name of the entry</param>
         /// <param name="fileName">The name of the zip file on disk</param>
         /// <returns>A <see cref="Stream"/> of the appropriate zip entry</returns>
-        private Stream CreateStream(CachedZipFile zipFile, string entryName, string fileName)
+        private static Stream CreateEntryStream(CachedZipFile zipFile, string entryName, string fileName)
         {
             ZipEntry entry;
             if (entryName == null)
@@ -307,6 +326,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return null;
         }
 
+        /// <summary>
+        /// Cache a Zip
+        /// </summary>
+        /// <param name="filename">Zip to cache</param>
+        /// <param name="cachedZip">The resulting CachedZipFile</param>
+        /// <returns></returns>
+        private bool Cache(string filename, out CachedZipFile cachedZip)
+        {
+            cachedZip = null;
+            var dataStream = _dataProvider.Fetch(filename);
+            if (dataStream != null)
+            {
+                try
+                {
+                    cachedZip = new CachedZipFile(dataStream, DateTime.UtcNow, filename);
+
+                    if (!_zipFileCache.TryAdd(filename, cachedZip))
+                    {
+                        // some other thread could of added it already, lets dispose ours
+                        cachedZip.Dispose();
+                        return _zipFileCache.TryGetValue(filename, out cachedZip);
+                    }
+
+                    return true;
+                }
+                catch (Exception exception)
+                {
+                    if (exception is ZipException || exception is ZlibException)
+                    {
+                        Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + " Error: " + exception);
+                    }
+                    else throw;
+                }
+
+                dataStream.Dispose();
+            }
+
+            return false;
+        }
+
 
         /// <summary>
         /// Type for storing zipfile in cache
@@ -315,6 +374,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             private readonly DateTime _dateCached;
             private readonly Stream _dataStream;
+            private bool _modified;
+            private string _filePath;
 
             /// <summary>
             /// The ZipFile this object represents
@@ -336,8 +397,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// </summary>
             /// <param name="dataStream">Stream containing the zip file</param>
             /// <param name="utcNow">Current utc time</param>
-            public CachedZipFile(Stream dataStream, DateTime utcNow)
+            /// <param name="filePath">Path of the zip file</param>
+            public CachedZipFile(Stream dataStream, DateTime utcNow, string filePath)
             {
+                _modified = false;
                 _dataStream = dataStream;
                 _zipFile = ZipFile.Read(dataStream);
                 foreach (var entry in _zipFile.Entries)
@@ -345,6 +408,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     EntryCache[entry.FileName] = entry;
                 }
                 _dateCached = utcNow;
+                _filePath = filePath;
             }
 
             /// <summary>
@@ -358,6 +422,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             /// <summary>
+            /// Write to this entry, will be updated on disk when uncached
+            /// Meaning either when timer finishes or on dispose
+            /// </summary>
+            /// <param name="entryName">Entry to write this as</param>
+            /// <param name="content">Content of the entry</param>
+            public void WriteEntry(string entryName, byte[] content)
+            {
+                // If the entry already exists remove it 
+                if (_zipFile.ContainsEntry(entryName))
+                {
+                    _zipFile.RemoveEntry(entryName);
+                    EntryCache.Remove(entryName);
+                }
+
+                // Write this entry to zip file
+                var newEntry = _zipFile.AddEntry(entryName, content);
+                EntryCache.Add(entryName, newEntry);
+
+                _modified = true;
+            }
+
+            /// <summary>
             /// Dispose of the ZipFile
             /// </summary>
             public void Dispose()
@@ -366,9 +452,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     return;
                 }
+
+                // If we changed this zip we need to save
+                string tempFileName = null;
+                if (_modified)
+                {
+                    // Write our changes to disk as temp
+                    tempFileName = Path.GetTempFileName();
+                    _zipFile.Save(tempFileName);
+                }
+
                 EntryCache.Clear();
                 _zipFile?.DisposeSafely();
                 _dataStream?.DisposeSafely();
+
+                //After disposal we will move it to the final location
+                if (_modified && tempFileName != null)
+                { 
+                    File.Move(tempFileName, _filePath, true);
+                }
 
                 Disposed = true;
             }
