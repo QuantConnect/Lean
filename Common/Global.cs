@@ -230,28 +230,36 @@ namespace QuantConnect
         Python
     }
 
-
     /// <summary>
     /// User / Algorithm Job Subscription Level
     /// </summary>
     public enum UserPlan
     {
         /// <summary>
-        /// Free User (Backtesting).
+        /// Free User
         /// </summary>
         Free,
 
         /// <summary>
-        /// Hobbyist User with Included 512mb Server.
+        /// Researcher
         /// </summary>
-        Hobbyist,
+        Researcher,
 
         /// <summary>
-        /// Professional plan for financial advisors
+        /// Team
         /// </summary>
-        Professional
-    }
+        Team,
 
+        /// <summary>
+        /// Trading Firm
+        /// </summary>
+        TradingFirm,
+
+        /// <summary>
+        /// Institution
+        /// </summary>
+        Institution,
+    }
 
     /// <summary>
     /// Live server types available through the web IDE. / QC deployment.
