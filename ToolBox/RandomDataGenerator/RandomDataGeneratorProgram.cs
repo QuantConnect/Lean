@@ -112,8 +112,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 settings.SymbolCount = maxSymbolCount;
             }
 
-            var symbolGenerator = new SymbolGenerator(settings, randomValueGenerator);
-            var tickGenerator = new TickGenerator(settings, randomValueGenerator);
+            var dataGenerator = RandomDataGeneratorFactory.CreateGenerator(settings, randomValueGenerator);
+            var symbolGenerator = dataGenerator.CreateSymbolGenerator();
+            var tickGenerator = dataGenerator.CreateTickGenerator();
 
             output.Warn.WriteLine($"Begin data generation of {settings.SymbolCount} randomly generated {settings.SecurityType} assets...");
 

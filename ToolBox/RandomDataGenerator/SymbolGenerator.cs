@@ -1,37 +1,26 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
-    public class SymbolGenerator
+    public abstract class SymbolGenerator
     {
-        private readonly IRandomValueGenerator _random;
-        private readonly RandomDataGeneratorSettings _settings;
+        protected IRandomValueGenerator Random { get; }
+        protected RandomDataGeneratorSettings Settings { get; }
 
-        public SymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+        protected SymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
         {
-            _settings = settings;
-            _random = random;
+            Settings = settings;
+            Random = random;
         }
 
         public IEnumerable<Symbol> GenerateRandomSymbols()
         {
-            for (int i = 0; i < _settings.SymbolCount; i++)
+            for (int i = 0; i < Settings.SymbolCount; i++)
             {
-                switch (_settings.SecurityType)
-                {
-                    case SecurityType.Option:
-                        yield return _random.NextOption(_settings.Market, _settings.Start, _settings.End, 100m, 75m);
-                        break;
-
-                    case SecurityType.Future:
-                        yield return _random.NextFuture(_settings.Market, _settings.Start, _settings.End);
-                        break;
-
-                    default:
-                        yield return _random.NextSymbol(_settings.SecurityType, _settings.Market);
-                        break;
-                }
+                yield return GenerateSingle();
             }
         }
+
+        protected abstract Symbol GenerateSingle();
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
@@ -8,7 +8,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// <summary>
     /// Generates random tick data according to the settings provided
     /// </summary>
-    public class TickGenerator
+    public class TickGenerator : ITickGenerator
     {
         private readonly IRandomValueGenerator _random;
         private readonly RandomDataGeneratorSettings _settings;
@@ -87,7 +87,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     }
 
                 }
-                else if(_settings.TickTypes.Contains(TickType.Trade))
+                else if (_settings.TickTypes.Contains(TickType.Trade))
                 {
                     var nextTrade = _random.NextTick(symbol, next, TickType.Trade, previousValues[TickType.Trade], deviation);
                     previousValues[TickType.Trade] = nextTrade.Value;
@@ -107,7 +107,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         private decimal GetMaximumDeviation(Resolution resolution)
         {
-            var incr = ((int) resolution) + 0.15m;
+            var incr = ((int)resolution) + 0.15m;
             var deviation = incr * incr * 0.1m;
             return deviation;
         }
