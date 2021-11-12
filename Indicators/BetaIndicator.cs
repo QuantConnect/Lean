@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using MathNet.Numerics.Statistics;
@@ -32,10 +31,14 @@ namespace QuantConnect.Indicators
     public class BetaIndicator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Dictionary to get the data points collection of the target symbol
-        /// or the reference symbol
+        /// RollingWindow to store the data points of the target symbol
         /// </summary>
-        private Dictionary<Symbol, RollingWindow<decimal>> _symbolDataPoints;
+        private RollingWindow<decimal> _targetDataPoints;
+
+        /// <summary>
+        /// RollingWindow to store the data points of the reference symbol
+        /// </summary>
+        private RollingWindow<decimal> _referenceDataPoints;
 
         /// <summary>
         /// Symbol of the reference used
@@ -70,7 +73,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _symbolDataPoints.Values.All(x => x.IsReady);
+        public override bool IsReady => _targetDataPoints.Samples >= WarmUpPeriod && _referenceDataPoints.Samples >= WarmUpPeriod;
 
         /// <summary>
         /// Creates a new BetaIndicator with the specified name, period, target and 
@@ -89,16 +92,15 @@ namespace QuantConnect.Indicators
                 throw new Exception($"Period parameter for Beta indicator must be greater than 2 but was {period}");
             }
 
-            WarmUpPeriod = period;
+            WarmUpPeriod = period + 1;
             _referenceSymbol = referenceSymbol;
             _targetSymbol = targetSymbol;
 
-            _symbolDataPoints = new Dictionary<Symbol, RollingWindow<decimal>>();
-            _symbolDataPoints.Add(_referenceSymbol, new RollingWindow<decimal>(WarmUpPeriod));
-            _symbolDataPoints.Add(_targetSymbol, new RollingWindow<decimal>(WarmUpPeriod));
+            _targetDataPoints = new RollingWindow<decimal>(2);
+            _referenceDataPoints = new RollingWindow<decimal>(2);
 
-            _targetReturns = new RollingWindow<double>(WarmUpPeriod);
-            _referenceReturns = new RollingWindow<double>(WarmUpPeriod);
+            _targetReturns = new RollingWindow<double>(period);
+            _referenceReturns = new RollingWindow<double>(period);
             _beta = 0;
         }
 
@@ -116,12 +118,22 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(TradeBar input)
         {
             var inputSymbol = input.Symbol;
-            _symbolDataPoints[inputSymbol].Add(input.Close);
-
-            if (_symbolDataPoints[_targetSymbol].Samples == _symbolDataPoints[_referenceSymbol].Samples && _symbolDataPoints[_targetSymbol].Samples > 1)
+            if (inputSymbol == _targetSymbol)
             {
-                _targetReturns.Add(GetNewReturn(_symbolDataPoints[_targetSymbol]));
-                _referenceReturns.Add(GetNewReturn(_symbolDataPoints[_referenceSymbol]));
+                _targetDataPoints.Add(input.Close);
+            } 
+            else if(inputSymbol == _referenceSymbol)
+            {
+                _referenceDataPoints.Add(input.Close);
+            }else
+            {
+                throw new Exception("The given symbol was not target or reference symbol");
+            }
+
+            if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
+            {
+                _targetReturns.Add(GetNewReturn(_targetDataPoints));
+                _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
 
                 ComputeBeta();
             }
@@ -145,12 +157,12 @@ namespace QuantConnect.Indicators
         /// </summary>
         private void ComputeBeta()
         {
-            var targetReturnsList = _targetReturns.ToList();
-            var referenceReturnsList = _referenceReturns.ToList();
+            var varianceComputed = _referenceReturns.ToList().Variance();
+            var covarianceComputed = _targetReturns.ToList().Covariance(_referenceReturns.ToList());
 
             // Avoid division with NaN or by zero
-            var variance = !referenceReturnsList.Variance().IsNaNOrZero() ? referenceReturnsList.Variance() : 1;
-            var covariance = !targetReturnsList.Covariance(referenceReturnsList).IsNaNOrZero() ? targetReturnsList.Covariance(referenceReturnsList) : 0;
+            var variance = !varianceComputed.IsNaNOrZero() ? varianceComputed : 1;
+            var covariance = !covarianceComputed.IsNaNOrZero() ? covarianceComputed : 0;
             _beta = (decimal) (covariance / variance);
         }
 
@@ -159,8 +171,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _symbolDataPoints[_targetSymbol].Reset();
-            _symbolDataPoints[_referenceSymbol].Reset();
+            _targetDataPoints.Reset();
+            _referenceDataPoints.Reset();
 
             _targetReturns.Reset();
             _referenceReturns.Reset();

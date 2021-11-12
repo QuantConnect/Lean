@@ -364,17 +364,17 @@ namespace QuantConnect.Algorithm
         public BetaIndicator B(Symbol target, Symbol reference, int period, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(QuantConnect.Symbol.None, "B", resolution);
-            var b = new BetaIndicator(name, period, target, reference);
-            RegisterIndicator(target, b, resolution);
-            RegisterIndicator(reference, b, resolution);
+            var betaIndicator = new BetaIndicator(name, period, target, reference);
+            RegisterIndicator(target, betaIndicator, resolution);
+            RegisterIndicator(reference, betaIndicator, resolution);
 
             if (EnableAutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(target, b, resolution);
-                WarmUpIndicator(reference, b, resolution);
+                WarmUpIndicator(target, betaIndicator, resolution);
+                WarmUpIndicator(reference, betaIndicator, resolution);
             }
 
-            return b;
+            return betaIndicator;
         }
 
         /// <summary>

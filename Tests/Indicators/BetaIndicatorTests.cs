@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override string TestFileName => "bi_datatest.csv";
 
-        protected override string TestColumnName => "beta";
+        protected override string TestColumnName => "Beta";
 
         private DateTime _reference = new DateTime(2020, 1, 1);
 
