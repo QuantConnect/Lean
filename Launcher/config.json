@@ -213,7 +213,7 @@
     "backtesting": {
       "live-mode": false,
 
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BacktestingSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
