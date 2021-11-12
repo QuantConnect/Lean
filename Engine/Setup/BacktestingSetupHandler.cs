@@ -232,7 +232,9 @@ namespace QuantConnect.Lean.Engine.Setup
             Log.Trace("SetUp Backtesting: User: " + job.UserId + " ProjectId: " + job.ProjectId + " AlgoId: " + job.AlgorithmId);
             Log.Trace($"Dates: Start: {algorithm.StartDate.ToStringInvariant("d")} " +
                       $"End: {algorithm.EndDate.ToStringInvariant("d")} " +
-                      $"Cash: {StartingPortfolioValue.ToStringInvariant("C")}");
+                      $"Cash: {StartingPortfolioValue.ToStringInvariant("C")} " +
+                      $"MaximumRuntime: {MaximumRuntime} " +
+                      $"MaxOrders: {MaxOrders}");
 
             if (Errors.Count > 0)
             {
