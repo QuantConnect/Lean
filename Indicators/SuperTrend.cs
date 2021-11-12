@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Super trend indicator. 
-    /// Formula can be found for example here via the excel file:
+    /// Formula can be found here via the excel file:
     /// https://tradingtuitions.com/supertrend-indicator-excel-sheet-with-realtime-buy-sell-signals/
     /// </summary>
     public class SuperTrend : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
@@ -41,7 +41,6 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Average true range indicator used to calculate super trend's basic upper and lower bands
-        /// If theres an ATR of 10, 
         /// </summary>
         private readonly AverageTrueRange _averageTrueRange;
 
