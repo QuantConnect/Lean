@@ -71,6 +71,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _brokerage.SimulateMarket();
             _brokerage.Scan();
+
+            // Run our delistings processing
+            if (_algorithm.CurrentSlice != null)
+            {
+                _brokerage.ProcessDelistings(_algorithm.CurrentSlice.Delistings);
+            }
         }
 
         /// <summary>
