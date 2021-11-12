@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Common
 
             timeProvider.Advance(TimeSpan.FromSeconds(15));
 
-            var count = 10;
+            var count = 100;
             while (provider.Invocations.Count == 0 && --count > 0)
             {
                 Thread.Sleep(10);
