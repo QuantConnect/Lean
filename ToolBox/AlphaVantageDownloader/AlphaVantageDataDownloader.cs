@@ -69,8 +69,11 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         /// <param name="startUtc">Start time</param>
         /// <param name="endUtc">End time</param>
         /// <returns></returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, TickType tickType)
         {
+            if (tickType != TickType.Trade)
+                return Enumerable.Empty<BaseData>();
+
             var request = new RestRequest("query", DataFormat.Json);
             request.AddParameter("symbol", symbol.Value);
             request.AddParameter("datatype", "csv");

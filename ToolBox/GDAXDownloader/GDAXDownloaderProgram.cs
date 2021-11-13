@@ -53,7 +53,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 {
                     // Download the data
                     var symbolObject = Symbol.Create(ticker, SecurityType.Crypto, market);
-                    var data = downloader.Get(symbolObject, castResolution, fromDate, toDate);
+                    var data = downloader.Get(symbolObject, castResolution, fromDate, toDate, TickType.Trade);
 
                     // Save the data
                     var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory, TickType.Trade);

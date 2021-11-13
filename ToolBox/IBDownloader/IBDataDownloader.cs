@@ -55,8 +55,11 @@ namespace QuantConnect.ToolBox.IBDownloader
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, TickType tickType)
         {
+            if (tickType != TickType.Quote)
+                yield break;
+
             if (resolution == Resolution.Tick)
             {
                 throw new NotSupportedException("Resolution not available: " + resolution);

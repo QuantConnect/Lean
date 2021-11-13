@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2017 QuantConnect Corporation.
  *
@@ -39,8 +39,11 @@ namespace QuantConnect.ToolBox.KrakenDownloader
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, TickType tickType)
         {
+            if (tickType != TickType.Trade)
+                yield break;
+
             if (endUtc < startUtc)
             {
                 throw new ArgumentException("The end date must be greater or equal than the start date.");

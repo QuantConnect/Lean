@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType);
                     try
                     {
-                        var data = _dataDownloader.Get(symbol, resolution, startTimeUtc, endTimeUtc)
+                        var data = _dataDownloader.Get(symbol, resolution, startTimeUtc, endTimeUtc, tickType)
                             .Where(baseData => symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
                             // for canonical symbols, downloader will return data for all of the chain
                             .GroupBy(baseData => baseData.Symbol);

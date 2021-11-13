@@ -31,7 +31,8 @@ namespace QuantConnect
         /// <param name="resolution">Resolution of the data request</param>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
+        /// <param name="tickType">The type of tick to get</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc);
+        IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, TickType tickType);
     }
 }

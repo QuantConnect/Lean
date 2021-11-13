@@ -58,7 +58,7 @@ namespace QuantConnect.ToolBox.IEX
                     {
                         // Download the data
                         var symbolObject = Symbol.Create(ticker, securityType, market);
-                        var data = downloader.Get(symbolObject, castResolution, startDate, endDate).ToArray();
+                        var data = downloader.Get(symbolObject, castResolution, startDate, endDate, TickType.Trade).ToArray();
 
                         if (data.Length == 0)
                         {
