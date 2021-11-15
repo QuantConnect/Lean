@@ -132,8 +132,8 @@ namespace QuantConnect.Indicators
 
             if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
             {
-                _targetReturns.Add(GetNewReturn(_targetDataPoints));
-                _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
+                _targetReturns.Add(GetNewReturn(ref _targetDataPoints));
+                _referenceReturns.Add(GetNewReturn(ref _referenceDataPoints));
 
                 ComputeBeta();
             }
@@ -146,9 +146,9 @@ namespace QuantConnect.Indicators
         /// <param name="rollingWindow">The collection of data points from which we want
         /// to compute the return</param>
         /// <returns>The returns with the new given data point</returns>
-        private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
+        private static double GetNewReturn(ref RollingWindow<decimal> rollingWindow)
         {
-            return (double) ((rollingWindow[1] / rollingWindow[0]) - 1);
+            return (double) ((rollingWindow[0] / rollingWindow[1]) - 1);
         }
 
         /// <summary>
@@ -157,8 +157,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         private void ComputeBeta()
         {
-            var varianceComputed = _referenceReturns.ToList().Variance();
-            var covarianceComputed = _targetReturns.ToList().Covariance(_referenceReturns.ToList());
+            var varianceComputed = _referenceReturns.Variance();
+            var covarianceComputed = _targetReturns.Covariance(_referenceReturns);
 
             // Avoid division with NaN or by zero
             var variance = !varianceComputed.IsNaNOrZero() ? varianceComputed : 1;
