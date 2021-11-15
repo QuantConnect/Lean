@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IFactorFileProvider _factorFileProvider;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private IDataChannelProvider _channelProvider;
-
+        private readonly string _dataQueueHandlerName = "QuantConnect.Lean.Engine.DataFeeds.CompositeDataQueueHandler";
         /// <summary>
         /// Public flag indicator that the thread is still busy.
         /// </summary>
@@ -170,8 +170,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
-            Log.Trace($"LiveTradingDataFeed.GetDataQueueHandler(): will use {_job.DataQueueHandler}");
-            return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(_job.DataQueueHandler);
+            Log.Trace($"LiveTradingDataFeed.GetDataQueueHandler(): will use {_dataQueueHandlerName}");
+            return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(_dataQueueHandlerName);
         }
 
         /// <summary>
