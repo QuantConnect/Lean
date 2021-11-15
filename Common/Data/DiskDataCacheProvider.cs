@@ -71,6 +71,7 @@ namespace QuantConnect.Data
                     // Extract our entry and return it
                     var stream = new MemoryStream();
                     entry.Extract(stream);
+                    stream.Position = 0;
                     return stream;
                 }
             }

@@ -721,14 +721,27 @@ namespace QuantConnect
         /// <summary>
         /// Unzip a stream that represents a zip file and return the first entry as a stream
         /// </summary>
-        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile)
+        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile, string entryName = null)
         {
             zipFile = ZipFile.Read(zipstream);
 
             try
             {
-                //Read the file entry into buffer:
-                var entry = zipFile.Entries.FirstOrDefault();
+                Ionic.Zip.ZipEntry entry;
+                if (string.IsNullOrEmpty(entryName))
+                {
+                    //Read the file entry into buffer:
+                    entry = zipFile.Entries.FirstOrDefault();
+                }
+                else
+                {
+                    // Attempt to find our specific entry
+                    if (!zipFile.ContainsEntry(entryName))
+                    {
+                        return null;
+                    }
+                    entry = zipFile[entryName];
+                }
 
                 if (entry != null)
                 {

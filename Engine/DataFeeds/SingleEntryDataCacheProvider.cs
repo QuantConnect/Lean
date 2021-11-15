@@ -53,14 +53,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="Stream"/> of the cached data</returns>
         public Stream Fetch(string key)
         {
-            var stream = _dataProvider.Fetch(key);
+            LeanData.ParseKey(key, out var filePath, out var entryName);
+            var stream = _dataProvider.Fetch(filePath);
 
-            if (key.EndsWith(".zip") && stream != null)
+            if (filePath.EndsWith(".zip") && stream != null)
             {
                 // get the first entry from the zip file
                 try
                 {
-                    var entryStream = Compression.UnzipStream(stream, out _zipFile);
+                    var entryStream = Compression.UnzipStream(stream, out _zipFile, entryName);
 
                     // save the file stream so it can be disposed later
                     _zipFileStream = stream;
