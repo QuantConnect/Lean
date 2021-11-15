@@ -98,13 +98,14 @@ namespace QuantConnect.Queues
             //If this isn't a backtesting mode/request, attempt a live job.
             if (_liveMode)
             {
+                var dataQueueHandler = Config.Get("data-queue-handler", DefaultDataQueueHandler);
                 var liveJob = new LiveNodePacket
                 {
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
                     HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
-                    DataQueueHandler = Config.Get("data-queue-handler", DefaultDataQueueHandler),
+                    DataQueueHandler = dataQueueHandler,
                     DataChannelProvider = Config.Get("data-channel-provider", DefaultDataChannelProvider),
                     Channel = AccessToken,
                     UserToken = AccessToken,
@@ -128,7 +129,19 @@ namespace QuantConnect.Queues
                 {
                     Log.Error(err, $"Error resolving BrokerageData for live job for brokerage {liveJob.Brokerage}");
                 }
-
+                var dataHandlers = JsonConvert.DeserializeObject<List<string>>(dataQueueHandler);
+                foreach (var dataHandlerName in dataHandlers)
+                {
+                    var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(dataHandlerName));
+                    var brokerageData = brokerageFactory.BrokerageData;
+                    foreach (var data in brokerageData)
+                    {
+                        if (!liveJob.BrokerageData.ContainsKey(data.Key))
+                        {
+                            liveJob.BrokerageData.Add(data.Key, data.Value);
+                        }
+                    }
+                }
                 return liveJob;
             }
 
