@@ -353,6 +353,31 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a BetaIndicator for the given target symbol in relation with the reference used. 
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol whose Beta value we want</param>
+        /// <param name="reference">The reference symbol to compare with the target symbol</param>
+        /// <param name="period">The period of the BetaIndicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The BetaIndicator for the given parameters</returns>
+        public BetaIndicator B(Symbol target, Symbol reference, int period, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "B", resolution);
+            var betaIndicator = new BetaIndicator(name, period, target, reference);
+            RegisterIndicator(target, betaIndicator, resolution);
+            RegisterIndicator(reference, betaIndicator, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(target, betaIndicator, resolution);
+                WarmUpIndicator(reference, betaIndicator, resolution);
+            }
+
+            return betaIndicator;
+        }
+
+        /// <summary>
         /// Creates a new Balance Of Power indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
