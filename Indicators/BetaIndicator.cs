@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Linq;
 using QuantConnect.Data.Market;
 using MathNet.Numerics.Statistics;
 
@@ -132,8 +131,8 @@ namespace QuantConnect.Indicators
 
             if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
             {
-                _targetReturns.Add(GetNewReturn(ref _targetDataPoints));
-                _referenceReturns.Add(GetNewReturn(ref _referenceDataPoints));
+                _targetReturns.Add(GetNewReturn(_targetDataPoints));
+                _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
 
                 ComputeBeta();
             }
@@ -146,7 +145,7 @@ namespace QuantConnect.Indicators
         /// <param name="rollingWindow">The collection of data points from which we want
         /// to compute the return</param>
         /// <returns>The returns with the new given data point</returns>
-        private static double GetNewReturn(ref RollingWindow<decimal> rollingWindow)
+        private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
         {
             return (double) ((rollingWindow[0] / rollingWindow[1]) - 1);
         }
