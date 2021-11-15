@@ -14,6 +14,7 @@
  *
 */
 
+using System.IO;
 using NUnit.Framework;
 using QuantConnect.Interfaces;
 
@@ -40,13 +41,16 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
 
         public abstract IDataCacheProvider CreateDataCacheProvider();
 
-        [Test]
-        public void CanFetchDataThatExists()
+        [TestCase("../../../Data/equity/usa/minute/aapl/20140606_trade.zip")]
+        [TestCase("../../../Data/equity/usa/daily/aapl.zip#aapl.csv")]
+        [TestCase("../../../Data/equity/usa/daily/aapl.zip")]
+        public void CanFetchDataThatExists(string dataPath)
         {
-            var stream = DataCacheProvider.Fetch("../../../Data/equity/usa/minute/aapl/20140606_trade.zip");
-
-            Assert.IsNotNull(stream);
-            stream.Dispose();
+            using(var stream = DataCacheProvider.Fetch(dataPath))
+            using (var reader = new StreamReader(stream))
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(reader.ReadLine()));
+            }
         }
 
         [Test]
