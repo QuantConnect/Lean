@@ -162,7 +162,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                     if (!willBeDelisted)
                     {
-                        dividendsSplitsMaps.DividendsSplits.Add(new FactorFileRow(new DateTime(2050, 12, 31), 1m, 1m));
+                        dividendsSplitsMaps.DividendsSplits.Add(new CorporateFactorRow(new DateTime(2050, 12, 31), 1m, 1m));
 
                         if (dividendsSplitsMaps.MapRows.Count > 1)
                         {
@@ -196,11 +196,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     symbol = dividendsSplitsMaps.CurrentSymbol;
 
                     // Write Splits and Dividend events to directory factor_files
-                    var factorFile = new FactorFile(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
+                    var factorFile = new CorporateFactorProvider(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
                     var mapFile = new MapFile(symbol.Value, dividendsSplitsMaps.MapRows);
 
-                    factorFile.WriteToCsv(symbol);
-                    mapFile.WriteToCsv(settings.Market);
+                    factorFile.WriteToFile(symbol);
+                    mapFile.WriteToCsv(settings.Market, symbol.SecurityType);
 
                     output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");
                 }

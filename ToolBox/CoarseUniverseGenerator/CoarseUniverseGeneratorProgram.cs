@@ -113,7 +113,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var dailyFilesNotFound = 0;
             var coarseFilesGenerated = 0;
 
-            var mapFileResolver = _mapFileProvider.Get(_market);
+            var mapFileResolver = _mapFileProvider.Get(new AuxiliaryDataKey(_market, SecurityType.Equity));
 
             var blackListedTickers = new HashSet<string>();
             if (_blackListedTickersFile.Exists)
@@ -195,7 +195,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         // Get daily data only for the time the ticker was
                         foreach (var tradeBar in tickerDailyData.Where(tb => tb.Time >= startDate && tb.Time <= endDate))
                         {
-                            var coarseRow = GenerateFactorFileRow(ticker, sidContext, factorFile, tradeBar, fineAvailableDates, _fineFundamentalFolder);
+                            var coarseRow = GenerateFactorFileRow(ticker, sidContext, factorFile as CorporateFactorProvider, tradeBar, fineAvailableDates, _fineFundamentalFolder);
 
                             outputCoarseContent.AddOrUpdate(tradeBar.Time,
                                 new List<string> { coarseRow },
@@ -255,7 +255,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <param name="fineAvailableDates">The fine available dates.</param>
         /// <param name="fineFundamentalFolder">The fine fundamental folder.</param>
         /// <returns></returns>
-        private static string GenerateFactorFileRow(string ticker, SecurityIdentifierContext sidContext, FactorFile factorFile, TradeBar tradeBar, IEnumerable<DateTime> fineAvailableDates, DirectoryInfo fineFundamentalFolder)
+        private static string GenerateFactorFileRow(string ticker, SecurityIdentifierContext sidContext, CorporateFactorProvider factorFile, TradeBar tradeBar, IEnumerable<DateTime> fineAvailableDates, DirectoryInfo fineFundamentalFolder)
         {
             var date = tradeBar.Time;
             var factorFileRow = factorFile?.GetScalingFactors(date);

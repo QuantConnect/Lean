@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using IBApi;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -283,7 +284,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ticker = symbol.ID.Symbol;
             if (symbol.ID.SecurityType == SecurityType.Equity)
             {
-                var mapFile = _mapFileProvider.Get(symbol.ID.Market).ResolveMapFile(symbol.ID.Symbol, symbol.ID.Date);
+                var mapFile = _mapFileProvider.Get(AuxiliaryDataKey.Create(symbol)).ResolveMapFile(symbol);
                 ticker = mapFile.GetMappedSymbol(DateTime.UtcNow, symbol.Value);
             }
 

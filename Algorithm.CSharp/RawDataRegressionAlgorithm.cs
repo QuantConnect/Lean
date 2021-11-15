@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class RawDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string Ticker = "GOOGL";
-        private FactorFile _factorFile;
+        private CorporateFactorProvider _factorFile;
         private readonly IEnumerator<decimal> _expectedRawPrices = new List<decimal> { 1157.93m, 1158.72m,
             1131.97m, 1114.28m, 1120.15m, 1114.51m, 1134.89m, 567.55m, 571.50m, 545.25m, 540.63m }.GetEnumerator();
         private Symbol _googl;
@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             mapFileProvider.Initialize(dataProvider);
             var factorFileProvider = new LocalDiskFactorFileProvider();
             factorFileProvider.Initialize(mapFileProvider, dataProvider);
-            _factorFile = factorFileProvider.Get(_googl);
+            _factorFile = factorFileProvider.Get(_googl) as CorporateFactorProvider;
 
             // Prime our expected values
             _expectedRawPrices.MoveNext();
@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_expectedRawPrices.Current != googlData.Close)
                 {
                     // Our values don't match lets try and give a reason why
-                    var dayFactor = _factorFile.GetPriceScaleFactor(googlData.Time);
+                    var dayFactor = _factorFile.GetPriceFactor(googlData.Time, DataNormalizationMode.Adjusted);
                     var probableRawPrice = googlData.Close / dayFactor; // Undo adjustment
 
                     if (_expectedRawPrices.Current == probableRawPrice)

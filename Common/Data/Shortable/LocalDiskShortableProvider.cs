@@ -59,28 +59,22 @@ namespace QuantConnect.Data.Shortable
             while (i <= 7)
             {
                 var shortableListFile = Path.Combine(_shortableDataDirectory.FullName, "dates", $"{localTime.AddDays(-i):yyyyMMdd}.csv");
-                var stream = _dataProvider.Fetch(shortableListFile);
 
-                if (stream != null)
+                foreach (var line in _dataProvider.ReadLines(shortableListFile))
                 {
-                    using (var streamReader = new StreamReader(stream))
-                    {
-                        foreach (var line in streamReader.ReadAllLines())
-                        {
-                            var csv = line.Split(',');
-                            var ticker = csv[0];
+                    var csv = line.Split(',');
+                    var ticker = csv[0];
 
-                            var symbol =
-                                new Symbol(
-                                    SecurityIdentifier.GenerateEquity(ticker, QuantConnect.Market.USA,
-                                        mappingResolveDate: localTime), ticker);
-                            var quantity = Parse.Long(csv[1]);
+                    var symbol = new Symbol(
+                            SecurityIdentifier.GenerateEquity(ticker, QuantConnect.Market.USA,
+                                mappingResolveDate: localTime), ticker);
+                    var quantity = Parse.Long(csv[1]);
 
-                            allSymbols[symbol] = quantity;
-                        }
-                    }
+                    allSymbols[symbol] = quantity;
+                }
 
-                    stream.Dispose();
+                if (allSymbols.Count > 0)
+                {
                     return allSymbols;
                 }
 
@@ -107,28 +101,16 @@ namespace QuantConnect.Data.Shortable
             // Implicitly trusts that Symbol.Value has been mapped and updated to the latest ticker
             var shortableSymbolFile = Path.Combine(_shortableDataDirectory.FullName, "symbols", $"{symbol.Value.ToLowerInvariant()}.csv");
 
-            using (var stream = _dataProvider.Fetch(shortableSymbolFile))
+            var localDate = localTime.Date;
+            foreach (var line in _dataProvider.ReadLines(shortableSymbolFile))
             {
-                if (stream == null)
-                {
-                    // Don't allow shorting if data is missing for the provided Symbol.
-                    return 0;
-                }
+                var csv = line.Split(',');
+                var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
 
-                var localDate = localTime.Date;
-                using (var streamReader = new StreamReader(stream))
+                if (localDate == date)
                 {
-                    foreach (var line in streamReader.ReadAllLines())
-                    {
-                        var csv = line.Split(',');
-                        var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
-                        
-                        if (localDate == date)
-                        {
-                            var quantity = Parse.Long(csv[1]);
-                            return quantity;
-                        }
-                    }
+                    var quantity = Parse.Long(csv[1]);
+                    return quantity;
                 }
             }
 

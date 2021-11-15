@@ -62,16 +62,16 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="dividendSplitList">List of Dividends and Splits</param>
         /// <returns><see cref="FactorFile"/> instance</returns>
-        public FactorFile CreateFactorFile(List<BaseData> dividendSplitList)
+        public CorporateFactorProvider CreateFactorFile(List<BaseData> dividendSplitList)
         {
             var orderedDividendSplitQueue = new Queue<BaseData>(
                                         CombineIntraDayDividendSplits(dividendSplitList)
                                             .OrderByDescending(x => x.Time));
 
-            var factorFileRows = new List<FactorFileRow>
+            var factorFileRows = new List<CorporateFactorRow>
             {
                 // First Factor Row is set far into the future and by definition has 1 for both price and split factors
-                new FactorFileRow(
+                new CorporateFactorRow(
                     Time.EndOfTime,
                     priceFactor: 1,
                     splitFactor: 1
@@ -121,13 +121,13 @@ namespace QuantConnect.ToolBox
         /// <param name="orderedDividendSplits">Queue of dividends and splits ordered by date</param>
         /// <param name="factorFileRows">The list of factor file rows</param>
         /// <returns><see cref="FactorFile"/> instance</returns>
-        private FactorFile RecursivlyGenerateFactorFile(Queue<BaseData> orderedDividendSplits, List<FactorFileRow> factorFileRows)
+        private CorporateFactorProvider RecursivlyGenerateFactorFile(Queue<BaseData> orderedDividendSplits, List<CorporateFactorRow> factorFileRows)
         {
             // If there is no more dividends or splits, return
             if (!orderedDividendSplits.Any())
             {
                 factorFileRows.Add(CreateLastFactorFileRow(factorFileRows, _dailyDataForEquity.Last().Close));
-                return new FactorFile(Symbol.ID.Symbol, factorFileRows);
+                return new CorporateFactorProvider(Symbol.ID.Symbol, factorFileRows);
             }
 
             var nextEvent = orderedDividendSplits.Dequeue();
@@ -137,7 +137,7 @@ namespace QuantConnect.ToolBox
             {
                 decimal initialReferencePrice = 1;
                 factorFileRows.Add(CreateLastFactorFileRow(factorFileRows, initialReferencePrice));
-                return new FactorFile(Symbol.ID.Symbol, factorFileRows);
+                return new CorporateFactorProvider(Symbol.ID.Symbol, factorFileRows);
             }
 
             var nextFactorFileRow = CalculateNextFactorFileRow(factorFileRows, nextEvent);
@@ -153,10 +153,10 @@ namespace QuantConnect.ToolBox
         /// Represents the earliest date that the daily equity data contains.
         /// </summary>
         /// <param name="factorFileRows">The list of factor file rows</param>
-        /// <returns><see cref="FactorFileRow"/></returns>
-        private FactorFileRow CreateLastFactorFileRow(List<FactorFileRow> factorFileRows, decimal referencePrice)
+        /// <returns><see cref="CorporateFactorRow"/></returns>
+        private CorporateFactorRow CreateLastFactorFileRow(List<CorporateFactorRow> factorFileRows, decimal referencePrice)
         {
-            return new FactorFileRow(
+            return new CorporateFactorRow(
                 _dailyDataForEquity.Last().Time.Date,
                 factorFileRows.Last().PriceFactor,
                 factorFileRows.Last().SplitFactor,
@@ -165,42 +165,42 @@ namespace QuantConnect.ToolBox
         }
 
         /// <summary>
-        /// Calculates the next <see cref="FactorFileRow"/>
+        /// Calculates the next <see cref="CorporateFactorRow"/>
         /// </summary>
         /// <param name="factorFileRows">The current list of factorFileRows</param>
         /// <param name="nextEvent">The next dividend, split or intradayDividendSplit</param>
         /// <returns>A single factor file row</returns>
-        private FactorFileRow CalculateNextFactorFileRow(List<FactorFileRow> factorFileRows, BaseData nextEvent)
+        private CorporateFactorRow CalculateNextFactorFileRow(List<CorporateFactorRow> factorFileRows, BaseData nextEvent)
         {
-            FactorFileRow nextFactorFileRow;
+            CorporateFactorRow nextCorporateFactorRow;
             var t = nextEvent.GetType();
 
             switch (t.Name)
             {
                 case "Dividend":
-                    nextFactorFileRow = CalculateNextDividendFactor(nextEvent, factorFileRows.Last());
+                    nextCorporateFactorRow = CalculateNextDividendFactor(nextEvent, factorFileRows.Last());
                     break;
                 case "Split":
-                    nextFactorFileRow = CalculateNextSplitFactor(nextEvent, factorFileRows.Last());
+                    nextCorporateFactorRow = CalculateNextSplitFactor(nextEvent, factorFileRows.Last());
                     break;
                 case "IntraDayDividendSplit":
-                    nextFactorFileRow = CalculateIntradayDividendSplit((IntraDayDividendSplit)nextEvent, factorFileRows.Last());
+                    nextCorporateFactorRow = CalculateIntradayDividendSplit((IntraDayDividendSplit)nextEvent, factorFileRows.Last());
                     break;
                 default:
                     throw new ArgumentException("Unhandled BaseData type for FactorFileGenerator.");
             }
 
-            return nextFactorFileRow;
+            return nextCorporateFactorRow;
         }
 
         /// <summary>
-        /// Generates the <see cref="FactorFileRow"/> that represents a intraday dividend split.
+        /// Generates the <see cref="CorporateFactorRow"/> that represents a intraday dividend split.
         /// Applies the dividend first.
         /// </summary>
         /// <param name="intraDayDividendSplit"><see cref="IntraDayDividendSplit"/> instance that holds the intraday dividend and split information</param>
-        /// <param name="last">The last <see cref="FactorFileRow"/> generated recursivly</param>
-        /// <returns><see cref="FactorFileRow"/> that represents an intraday dividend and split</returns>
-        private FactorFileRow CalculateIntradayDividendSplit(IntraDayDividendSplit intraDayDividendSplit, FactorFileRow last)
+        /// <param name="last">The last <see cref="CorporateFactorRow"/> generated recursivly</param>
+        /// <returns><see cref="CorporateFactorRow"/> that represents an intraday dividend and split</returns>
+        private CorporateFactorRow CalculateIntradayDividendSplit(IntraDayDividendSplit intraDayDividendSplit, CorporateFactorRow last)
         {
             var row = CalculateNextDividendFactor(intraDayDividendSplit.Dividend, last);
             return CalculateNextSplitFactor(intraDayDividendSplit.Split, row);
@@ -210,9 +210,9 @@ namespace QuantConnect.ToolBox
         /// Calculates the price factor of a <see cref="Dividend"/>
         /// </summary>
         /// <param name="dividend">The next dividend</param>
-        /// <param name="previousFactorFileRow">The previous <see cref="FactorFileRow"/> generated</param>
-        /// <returns><see cref="FactorFileRow"/> that represents the dividend event</returns>
-        private FactorFileRow CalculateNextDividendFactor(BaseData dividend, FactorFileRow previousFactorFileRow)
+        /// <param name="previousCorporateFactorRow">The previous <see cref="CorporateFactorRow"/> generated</param>
+        /// <returns><see cref="CorporateFactorRow"/> that represents the dividend event</returns>
+        private CorporateFactorRow CalculateNextDividendFactor(BaseData dividend, CorporateFactorRow previousCorporateFactorRow)
         {
             var eventDayData = GetDailyDataForDate(dividend.Time);
 
@@ -225,13 +225,13 @@ namespace QuantConnect.ToolBox
             TradeBar previousClosingPrice = FindPreviousTradableDayClosingPrice(eventDayData.Time);
 
             // adjust the dividend for both price and split factors (!)
-            var priceFactor = previousFactorFileRow.PriceFactor *
-                                (1 - dividend.Value * previousFactorFileRow.SplitFactor / previousClosingPrice.Close);
+            var priceFactor = previousCorporateFactorRow.PriceFactor *
+                                (1 - dividend.Value * previousCorporateFactorRow.SplitFactor / previousClosingPrice.Close);
 
-            return new FactorFileRow(
+            return new CorporateFactorRow(
                 previousClosingPrice.Time,
                 priceFactor.RoundToSignificantDigits(7),
-                previousFactorFileRow.SplitFactor,
+                previousCorporateFactorRow.SplitFactor,
                 previousClosingPrice.Close
             );
         }
@@ -240,9 +240,9 @@ namespace QuantConnect.ToolBox
         /// Calculates the split factor of a <see cref="Split"/>
         /// </summary>
         /// <param name="split">The next <see cref="Split"/></param>
-        /// <param name="previousFactorFileRow">The previous <see cref="FactorFileRow"/> generated</param>
-        /// <returns><see cref="FactorFileRow"/>  that represents the split event</returns>
-        private FactorFileRow CalculateNextSplitFactor(BaseData split, FactorFileRow previousFactorFileRow)
+        /// <param name="previousCorporateFactorRow">The previous <see cref="CorporateFactorRow"/> generated</param>
+        /// <returns><see cref="CorporateFactorRow"/>  that represents the split event</returns>
+        private CorporateFactorRow CalculateNextSplitFactor(BaseData split, CorporateFactorRow previousCorporateFactorRow)
         {
             var eventDayData = GetDailyDataForDate(split.Time);
 
@@ -254,10 +254,10 @@ namespace QuantConnect.ToolBox
 
             TradeBar previousClosingPrice = FindPreviousTradableDayClosingPrice(eventDayData.Time);
 
-            return new FactorFileRow(
+            return new CorporateFactorRow(
                     previousClosingPrice.Time,
-                    previousFactorFileRow.PriceFactor,
-                    (previousFactorFileRow.SplitFactor / split.Value).RoundToSignificantDigits(6),
+                    previousCorporateFactorRow.PriceFactor,
+                    (previousCorporateFactorRow.SplitFactor / split.Value).RoundToSignificantDigits(6),
                     previousClosingPrice.Close
                 );
         }
@@ -298,7 +298,7 @@ namespace QuantConnect.ToolBox
         /// <returns>A list of <see cref="TradeBar"/> read from file</returns>
         private static List<TradeBar> ReadDailyEquityData(string pathForDailyEquityData)
         {
-            using (var zipToOpen = new FileStream(pathForDailyEquityData, FileMode.Open))
+            using (var zipToOpen = new FileStream(pathForDailyEquityData, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 using (var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
                 {

@@ -660,6 +660,10 @@ namespace QuantConnect.Util
                         ) + ".csv";
 
                 case SecurityType.Future:
+                    if (symbol.HasUnderlying)
+                    {
+                        symbol = symbol.Underlying;
+                    }
                     var expiryDate = symbol.ID.Date;
                     var monthsToAdd = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(symbol.ID.Symbol, expiryDate.Date);
                     var contractYearMonth = expiryDate.AddMonths(monthsToAdd).ToStringInvariant(DateFormat.YearMonth);

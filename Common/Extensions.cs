@@ -55,6 +55,7 @@ using NodaTime.TimeZones;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Exceptions;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
@@ -171,7 +172,26 @@ namespace QuantConnect
                 catch (WebException ex)
                 {
                     Log.Error(ex, $"DownloadData(): failed for: '{url}'");
-                    // If server returned an error most likely on this day there is no data we are going to the next cycle
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to download a provided url as a byte array
+        /// </summary>
+        /// <param name="url">The url to download data from</param>
+        public static byte[] DownloadByteArray(this string url)
+        {
+            using (var wc = new HttpClient())
+            {
+                try
+                {
+                    return wc.GetByteArrayAsync(url).Result;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"DownloadByteArray(): failed for: '{url}'");
                     return null;
                 }
             }
@@ -2211,6 +2231,34 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts the specified string to its corresponding DataMappingMode
+        /// </summary>
+        /// <remarks>This method provides faster performance than enum parse</remarks>
+        /// <param name="dataMappingMode">The dataMappingMode string value</param>
+        /// <returns>The DataMappingMode value</returns>
+        public static DataMappingMode? ParseDataMappingMode(this string dataMappingMode)
+        {
+            if (string.IsNullOrEmpty(dataMappingMode))
+            {
+                return null;
+            }
+            switch (dataMappingMode.LazyToLower())
+            {
+                case "0":
+                case "lasttradingday":
+                    return DataMappingMode.LastTradingDay;
+                case "1":
+                case "firstdaymonth":
+                    return DataMappingMode.FirstDayMonth;
+                case "2":
+                case "openinterest":
+                    return DataMappingMode.OpenInterest;
+                default:
+                    throw new ArgumentException($"Unexpected DataMappingMode: {dataMappingMode}");
+            }
+        }
+
+        /// <summary>
         /// Converts the specified <paramref name="securityType"/> value to its corresponding lower-case string representation
         /// </summary>
         /// <remarks>This method provides faster performance than <see cref="ToLower"/></remarks>
@@ -2893,30 +2941,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Normalizes the specified price based on the DataNormalizationMode
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static decimal GetNormalizedPrice(this SubscriptionDataConfig config, decimal price)
-        {
-            switch (config.DataNormalizationMode)
-            {
-                case DataNormalizationMode.Raw:
-                    return price;
-
-                // the price scale factor will be set accordingly based on the mode in update scale factors
-                case DataNormalizationMode.Adjusted:
-                case DataNormalizationMode.SplitAdjusted:
-                    return price * config.PriceScaleFactor;
-
-                case DataNormalizationMode.TotalReturn:
-                    return (price * config.PriceScaleFactor) + config.SumOfDividends;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        /// <summary>
         /// Gets the delisting date for the provided Symbol
         /// </summary>
         /// <param name="symbol">The symbol to lookup the last trading date</param>
@@ -2927,7 +2951,7 @@ namespace QuantConnect
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Future:
-                    return symbol.ID.Date;
+                    return symbol.ID.Date == SecurityIdentifier.DefaultDate ? Time.EndOfTime : symbol.ID.Date;
                 case SecurityType.Option:
                     return OptionSymbol.GetLastDayOfTrading(symbol);
                 case SecurityType.FutureOption:
@@ -2947,6 +2971,62 @@ namespace QuantConnect
             return symbol.SecurityType == SecurityType.Base
                 && symbol.ID.Symbol.TryGetCustomDataType(out var type)
                 && type.Equals(typeof(T).Name, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        /// <summary>
+        /// Helper method that will return a back month, with future expiration, future contract based on the given offset
+        /// </summary>
+        /// <param name="symbol">The none canonical future symbol</param>
+        /// <param name="offset">The quantity of contracts to move into the future expiration chain</param>
+        /// <returns>A new future expiration symbol instance</returns>
+        public static Symbol AdjustSymbolByOffset(this Symbol symbol, uint offset)
+        {
+            if (symbol.SecurityType != SecurityType.Future || symbol.IsCanonical())
+            {
+                throw new InvalidOperationException("Adjusting a symbol by an offset is currently only supported for non canonical futures");
+            }
+
+            var expiration = symbol.ID.Date;
+            for (var i = 0; i < offset; i++)
+            {
+                var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
+                DateTime newExpiration;
+                // for the current expiration we add a month to get the next one
+                var monthOffset = 0;
+                do
+                {
+                    monthOffset++;
+                    newExpiration = expiryFunction(expiration.AddMonths(monthOffset)).Date;
+                } while (newExpiration <= expiration);
+
+                expiration = newExpiration;
+                symbol = Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, newExpiration);
+            }
+
+            return symbol;
+        }
+
+        /// <summary>
+        /// Helper method to stream read lines from a file
+        /// </summary>
+        /// <param name="dataProvider">The data provider to use</param>
+        /// <param name="file">The file path to read from</param>
+        /// <returns>Enumeration of lines in file</returns>
+        public static IEnumerable<string> ReadLines(this IDataProvider dataProvider, string file)
+        {
+            var stream = dataProvider.Fetch(file);
+            if (stream == null)
+            {
+                yield break;
+            }
+
+            using (var streamReader = new StreamReader(stream))
+            {
+                while (!streamReader.EndOfStream)
+                {
+                    yield return streamReader.ReadLine();
+                }
+            }
         }
 
         /// <summary>
@@ -3086,22 +3166,50 @@ namespace QuantConnect
         /// Normalize prices based on configuration
         /// </summary>
         /// <param name="data">Data to be normalized</param>
-        /// <param name="config">Price scale</param>
-        /// <returns></returns>
-        public static BaseData Normalize(this BaseData data, SubscriptionDataConfig config)
+        /// <param name="factor">Price scale</param>
+        /// <param name="normalizationMode">The price scaling normalization mode</param>
+        /// <param name="sumOfDividends">The current dividend sum</param>
+        /// <returns>The provided data point adjusted</returns>
+        public static BaseData Normalize(this BaseData data, decimal factor, DataNormalizationMode normalizationMode, decimal sumOfDividends)
         {
-            return data?.Scale(p => config.GetNormalizedPrice(p), 1/config.PriceScaleFactor);
+            switch (normalizationMode)
+            {
+                case DataNormalizationMode.Adjusted:
+                case DataNormalizationMode.SplitAdjusted:
+                    return data?.Scale(p => p * factor, 1/factor);
+                case DataNormalizationMode.TotalReturn:
+                    return data.Scale(p => p * factor + sumOfDividends, 1/factor);
+
+                case DataNormalizationMode.BackwardsRatio:
+                    return data.Scale(p => p * factor, 1);
+                case DataNormalizationMode.BackwardsPanamaCanal:
+                    return data.Scale(p => p + factor, 1);
+                case DataNormalizationMode.ForwardPanamaCanal:
+                    return data.Scale(p => p + factor, 1);
+
+                case DataNormalizationMode.Raw:
+                default:
+                    return data;
+            }
         }
 
         /// <summary>
-        /// Adjust prices based on price scale
+        /// Helper method to determine the right data normalization mode to use by default
         /// </summary>
-        /// <param name="data">Data to be adjusted</param>
-        /// <param name="scale">Price scale</param>
-        /// <returns></returns>
-        public static BaseData Adjust(this BaseData data, decimal scale)
+        public static DataNormalizationMode GetDefaultNormalizationMode(this UniverseSettings universeSettings, SecurityType securityType)
         {
-            return data?.Scale(p => p * scale, 1/scale);
+            switch (securityType)
+            {
+                case SecurityType.Future:
+                    if (universeSettings.DataNormalizationMode is DataNormalizationMode.BackwardsRatio
+                        or DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal)
+                    {
+                        return universeSettings.DataNormalizationMode;
+                    }
+                    return DataNormalizationMode.BackwardsRatio;
+                default:
+                    return universeSettings.DataNormalizationMode;
+            }
         }
 
         /// <summary>
@@ -3454,28 +3562,18 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Read all lines from a stream reader
-        /// </summary>
-        /// <param name="reader">Stream reader to read from</param>
-        /// <returns>Enumerable of lines in stream</returns>
-        public static IEnumerable<string> ReadAllLines(this StreamReader reader)
-        {
-            string line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                yield return line;
-            }
-        }
-
-        /// <summary>
         /// Determine if this SecurityType requires mapping
         /// </summary>
-        /// <param name="securityType">Type to check</param>
+        /// <param name="symbol">Type to check</param>
         /// <returns>True if it needs to be mapped</returns>
-        public static bool RequiresMapping(this SecurityType securityType)
+        public static bool RequiresMapping(this Symbol symbol)
         {
-            switch (securityType)
+            switch (symbol.SecurityType)
             {
+                case SecurityType.Base:
+                    return symbol.HasUnderlying && symbol.Underlying.RequiresMapping();
+                case SecurityType.Future:
+                    return symbol.IsCanonical();
                 case SecurityType.Equity:
                 case SecurityType.Option:
                     return true;

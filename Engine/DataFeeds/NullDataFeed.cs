@@ -27,11 +27,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class NullDataFeed : IDataFeed
     {
+        /// <summary>
+        /// Allows specifying if this implementation should throw always or not
+        /// </summary>
+        public bool ShouldThrow { get; set; } = true;
+
         /// <inheritdoc />
         public bool IsActive
         {
             get
             {
+                if (!ShouldThrow)
+                {
+                    return true;
+                }
                 throw new NotImplementedException("Unexpected usage of null data feed implementation.");
             }
         }
@@ -49,24 +58,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataChannelProvider channelProvider
             )
         {
+            if (!ShouldThrow)
+            {
+                return;
+            }
             throw new NotImplementedException("Unexpected usage of null data feed implementation.");
         }
 
         /// <inheritdoc />
         public Subscription CreateSubscription(SubscriptionRequest request)
         {
+            if (!ShouldThrow)
+            {
+                return null;
+            }
             throw new NotImplementedException("Unexpected usage of null data feed implementation.");
         }
 
         /// <inheritdoc />
         public void RemoveSubscription(Subscription subscription)
         {
+            if (!ShouldThrow)
+            {
+                return;
+            }
             throw new NotImplementedException("Unexpected usage of null data feed implementation.");
         }
 
         /// <inheritdoc />
         public void Exit()
         {
+            if (!ShouldThrow)
+            {
+                return;
+            }
             throw new NotImplementedException("Unexpected usage of null data feed implementation.");
         }
     }

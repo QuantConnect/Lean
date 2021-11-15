@@ -17,6 +17,7 @@
 using System;
 using Newtonsoft.Json;
 using ProtoBuf;
+using QuantConnect.Securities.Future;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -330,12 +331,27 @@ namespace QuantConnect
         /// Creates new symbol with updated mapped symbol. Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
         /// Method returns newly created symbol
         /// </summary>
-        public Symbol UpdateMappedSymbol(string mappedSymbol)
+        public Symbol UpdateMappedSymbol(string mappedSymbol, uint contractDepthOffset = 0)
         {
             // Throw for any option SecurityType that is not for equities, we don't support mapping for them (FOPs and Index Options)
             if (ID.SecurityType.IsOption() && SecurityType != SecurityType.Option)
             {
                 throw new ArgumentException($"SecurityType {ID.SecurityType} can not be mapped.");
+            }
+
+            if(ID.SecurityType == SecurityType.Future)
+            {
+                if (mappedSymbol == Value)
+                {
+                    // futures with no real continuous mapping
+                    return this;
+                }
+                var id = SecurityIdentifier.Parse(mappedSymbol);
+                var underlying = new Symbol(id, mappedSymbol);
+                underlying = underlying.AdjustSymbolByOffset(contractDepthOffset);
+
+                // we map the underlying
+                return new Symbol(ID, underlying.Value, underlying);
             }
 
             // Avoid updating the current instance's underlying Symbol.
@@ -348,14 +364,14 @@ namespace QuantConnect
             // This will ensure that we map all of the underlying Symbol(s) that also require mapping updates.
             if (HasUnderlying)
             {
-                underlyingSymbol = Underlying.UpdateMappedSymbol(mappedSymbol);
+                underlyingSymbol = Underlying.UpdateMappedSymbol(mappedSymbol, contractDepthOffset);
             }
 
             // If this Symbol is not a custom data type, and the security type does not support mapping,
             // then we know for a fact that this Symbol should not be mapped.
             // Custom data types should be mapped, especially if this method is called on them because
             // they can have an underlying that is also mapped.
-            if (SecurityType != SecurityType.Base && !SecurityType.RequiresMapping())
+            if (SecurityType != SecurityType.Base && !this.RequiresMapping())
             {
                 return new Symbol(ID, Value, underlyingSymbol);
             }
