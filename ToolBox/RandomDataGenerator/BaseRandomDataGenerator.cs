@@ -5,7 +5,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         protected RandomDataGeneratorSettings Settings { get; }
         protected RandomValueGenerator Random { get; }
 
-        public BaseRandomDataGenerator(RandomDataGeneratorSettings settings, RandomValueGenerator random)
+        protected BaseRandomDataGenerator(RandomDataGeneratorSettings settings, RandomValueGenerator random)
         {
             Settings = settings;
             Random = random;

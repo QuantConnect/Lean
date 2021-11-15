@@ -105,16 +105,16 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 randomValueGenerator = new RandomValueGenerator(settings.RandomSeed);
             }
 
-            var maxSymbolCount = randomValueGenerator.GetAvailableSymbolCount(settings.SecurityType, settings.Market);
+            var dataGenerator = RandomDataGeneratorFactory.CreateGenerator(settings, randomValueGenerator);
+            var symbolGenerator = dataGenerator.CreateSymbolGenerator();
+            var tickGenerator = dataGenerator.CreateTickGenerator();
+
+            var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount(settings.SecurityType, settings.Market);
             if (settings.SymbolCount > maxSymbolCount)
             {
                 output.Warn.WriteLine($"Limiting symbol count to {maxSymbolCount}, we don't have more {settings.SecurityType} tickers for {settings.Market}");
                 settings.SymbolCount = maxSymbolCount;
             }
-
-            var dataGenerator = RandomDataGeneratorFactory.CreateGenerator(settings, randomValueGenerator);
-            var symbolGenerator = dataGenerator.CreateSymbolGenerator();
-            var tickGenerator = dataGenerator.CreateTickGenerator();
 
             output.Warn.WriteLine($"Begin data generation of {settings.SymbolCount} randomly generated {settings.SecurityType} assets...");
 
@@ -150,6 +150,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     symbol,
                     settings,
                     randomValueGenerator,
+                    symbolGenerator,
                     random,
                     delistDate,
                     willBeDelisted);
