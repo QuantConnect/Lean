@@ -16,8 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -34,6 +36,15 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            Initialize(
+                job.BrokerageData["zerodha-trading-segment"],
+                job.BrokerageData["zerodha-product-type"],
+                job.BrokerageData["zerodha-api-key"],
+                job.BrokerageData["zerodha-access-token"],
+                null,
+                null,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"))
+            );
         }
 
         /// <summary>

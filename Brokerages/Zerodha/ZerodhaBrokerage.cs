@@ -74,37 +74,40 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         protected string ApiKey;
 
-        private readonly ISecurityProvider _securityProvider;
+        private ISecurityProvider _securityProvider;
 
-        private readonly IAlgorithm _algorithm;
+        private IAlgorithm _algorithm;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
 
-        private readonly DataQueueHandlerSubscriptionManager SubscriptionManager;
+        private DataQueueHandlerSubscriptionManager SubscriptionManager;
 
         private ConcurrentDictionary<string, Symbol> _subscriptionsById = new ConcurrentDictionary<string, Symbol>();
 
-        private readonly IDataAggregator _aggregator;
+        private IDataAggregator _aggregator;
 
-        private readonly ZerodhaSymbolMapper _symbolMapper;
+        private ZerodhaSymbolMapper _symbolMapper;
 
         private readonly List<string> subscribeInstrumentTokens = new List<string>();
         private readonly List<string> unSubscribeInstrumentTokens = new List<string>();
 
         private Kite _kite;
-        private readonly string _apiKey;
-        private readonly string _accessToken;
-        private readonly string _wssUrl = "wss://ws.kite.trade/";
+        private string _apiKey;
+        private string _accessToken;
+        private string _wssUrl = "wss://ws.kite.trade/";
 
-        private readonly string _tradingSegment;
-        private readonly BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData> _messageHandler;
-        private readonly string _zerodhaProductType;
+        private string _tradingSegment;
+        private BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData> _messageHandler;
+        private string _zerodhaProductType;
 
         private DateTime _lastTradeTickTime;
         private bool _historyDataTypeErrorFlag;
+        private bool _isInitialized;
 
         #endregion
 
-
+        public ZerodhaBrokerage() : base("Zerodha")
+        {
+        }
 
         /// <summary>
         /// Constructor for brokerage
@@ -119,37 +122,10 @@ namespace QuantConnect.Brokerages.Zerodha
         public ZerodhaBrokerage(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, IAlgorithm algorithm, ISecurityProvider securityProvider, IDataAggregator aggregator)
             : base("Zerodha")
         {
-            _tradingSegment = tradingSegment;
-            _zerodhaProductType = zerodhaProductType;
-            _algorithm = algorithm;
-            _aggregator = aggregator;
-            _kite = new Kite(apiKey, apiSecret);
-            _apiKey = apiKey;
-            _accessToken = apiSecret;
-            _securityProvider = securityProvider;
-             _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData>(OnMessageImpl);
-            WebSocket = new WebSocketClientWrapper();
-            _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
-            WebSocket.Initialize(_wssUrl);
-            WebSocket.Message += OnMessage;
-            WebSocket.Open += (sender, args) =>
+            if (!_isInitialized)
             {
-                Log.Trace($"ZerodhaBrokerage(): WebSocket.Open. Subscribing");
-                Subscribe(GetSubscribed());
-            };
-            WebSocket.Error += OnError;
-            _symbolMapper = new ZerodhaSymbolMapper(_kite);
-
-            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            subscriptionManager.SubscribeImpl += (s, t) =>
-            {
-                Subscribe(s);
-                return true;
-            };
-            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-            SubscriptionManager = subscriptionManager;
-
-            Log.Trace("Start Zerodha Brokerage");
+                Initialize(tradingSegment, zerodhaProductType, apiKey, apiSecret, algorithm, securityProvider, aggregator);
+            }
         }
 
         /// <summary>
@@ -214,7 +190,7 @@ namespace QuantConnect.Brokerages.Zerodha
                         continue;
                     }
                     foreach (var instrumentToken in instrumentTokenList)
-                    {   
+                    {
                         var tokenStringInvariant = instrumentToken.ToStringInvariant();
                         if (!unSubscribeInstrumentTokens.Contains(tokenStringInvariant))
                         {
@@ -346,7 +322,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 throw;
             }
         }
-        
+
 
         #region IBrokerage
 
@@ -409,7 +385,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
 
                 uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
-                JObject orderResponse = new JObject();;
+                JObject orderResponse = new JObject(); ;
 
                 decimal? triggerPrice = GetOrderTriggerPrice(order);
                 decimal? orderPrice = GetOrderPrice(order);
@@ -433,7 +409,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
                 else if (string.IsNullOrEmpty(zerodhaProductType))
                 {
-                    throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
+                    throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties");
                 }
                 try
                 {
@@ -574,7 +550,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
 
                 var orderProperties = order.Properties as IndiaOrderProperties;
-                var zerodhaProductType = _zerodhaProductType; 
+                var zerodhaProductType = _zerodhaProductType;
                 if (orderProperties == null || orderProperties.Exchange == null)
                 {
                     var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Please specify a valid order properties with an exchange value";
@@ -587,16 +563,16 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
                 else if (string.IsNullOrEmpty(zerodhaProductType))
                 {
-                    throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties"); 
+                    throw new ArgumentException("Please set ProductType in config or provide a value in DefaultOrderProperties");
                 }
                 uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
-                JObject orderResponse = new JObject();;
+                JObject orderResponse = new JObject(); ;
                 decimal? triggerPrice = GetOrderTriggerPrice(order);
                 decimal? orderPrice = GetOrderPrice(order);
                 var kiteOrderType = ConvertOrderType(order.Type);
 
                 var orderFee = OrderFee.Zero;
-                
+
                 try
                 {
                     orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
@@ -668,7 +644,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="order">The order to cancel</param>
         /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
         public override bool CancelOrder(Order order)
-        {   
+        {
             var submitted = false;
 
             _messageHandler.WithLockedStream(() =>
@@ -813,12 +789,12 @@ namespace QuantConnect.Brokerages.Zerodha
             var productTypeNRML = KiteProductType.NRML.ToString().ToUpperInvariant();
             var productTypeCNC = KiteProductType.CNC.ToString().ToUpperInvariant();
             // get MIS and NRML Positions
-            if (string.IsNullOrEmpty(_zerodhaProductType) || zerodhaProductTypeUpper == productTypeMIS  || zerodhaProductTypeUpper == productTypeNRML)
+            if (string.IsNullOrEmpty(_zerodhaProductType) || zerodhaProductTypeUpper == productTypeMIS || zerodhaProductTypeUpper == productTypeNRML)
             {
                 var PositionsResponse = _kite.GetPositions();
                 if (PositionsResponse.Day.Count != 0)
                 {
-                    
+
                     foreach (var item in PositionsResponse.Day)
                     {
 
@@ -838,7 +814,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
             }
             // get CNC Positions
-            if (string.IsNullOrEmpty(_zerodhaProductType) || zerodhaProductTypeUpper == productTypeCNC )
+            if (string.IsNullOrEmpty(_zerodhaProductType) || zerodhaProductTypeUpper == productTypeCNC)
             {
                 var HoldingResponse = _kite.GetHoldings();
                 if (HoldingResponse != null)
@@ -897,7 +873,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 _historyDataTypeErrorFlag = true;
                 yield break;
             }
-            
+
             if (request.Symbol.SecurityType != SecurityType.Equity && request.Symbol.SecurityType != SecurityType.Future && request.Symbol.SecurityType != SecurityType.Option)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidSecurityType",
@@ -930,7 +906,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
             var history = Enumerable.Empty<BaseData>();
-            
+
             var symbol = request.Symbol;
             var start = request.StartTimeLocal;
             var end = request.EndTimeLocal;
@@ -959,6 +935,41 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 yield return baseData;
             }
+        }
+
+        private void Initialize(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, IAlgorithm algorithm, ISecurityProvider securityProvider, IDataAggregator aggregator)
+        {
+            _tradingSegment = tradingSegment;
+            _zerodhaProductType = zerodhaProductType;
+            _algorithm = algorithm;
+            _aggregator = aggregator;
+            _kite = new Kite(apiKey, apiSecret);
+            _apiKey = apiKey;
+            _accessToken = apiSecret;
+            _securityProvider = securityProvider;
+            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData>(OnMessageImpl);
+            WebSocket = new WebSocketClientWrapper();
+            _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
+            WebSocket.Initialize(_wssUrl);
+            WebSocket.Message += OnMessage;
+            WebSocket.Open += (sender, args) =>
+            {
+                Log.Trace($"ZerodhaBrokerage(): WebSocket.Open. Subscribing");
+                Subscribe(GetSubscribed());
+            };
+            WebSocket.Error += OnError;
+            _symbolMapper = new ZerodhaSymbolMapper(_kite);
+
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+            SubscriptionManager = subscriptionManager;
+
+            Log.Trace("Start Zerodha Brokerage");
         }
 
         private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, DateTimeZone exchangeTimeZone, Resolution resolution, string zerodhaResolution)

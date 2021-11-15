@@ -29,6 +29,8 @@ using System.Net;
 using QuantConnect.Brokerages.Bitfinex.Messages;
 using QuantConnect.Securities.Crypto;
 using Order = QuantConnect.Orders.Order;
+using QuantConnect.Util;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -437,6 +439,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            Initialize(job.BrokerageData["bitfinex-api-secret"], job.BrokerageData["bitfinex-api-key"]);
+            Initialize(
+                null,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                job);
         }
 
         /// <summary>

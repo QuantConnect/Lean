@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -37,12 +37,17 @@ namespace QuantConnect.Brokerages.Oanda
     public class OandaBrokerage : Brokerage, IDataQueueHandler
     {
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
-        private readonly OandaRestApiBase _api;
+        private OandaRestApiBase _api;
+        private bool _isInitialized;
 
         /// <summary>
         /// The maximum number of bars per historical data request
         /// </summary>
         public const int MaxBarsPerRequest = 5000;
+
+        public OandaBrokerage() : base("Oanda Brokerage")
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
@@ -57,15 +62,10 @@ namespace QuantConnect.Brokerages.Oanda
         public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
             : base("Oanda Brokerage")
         {
-            if (environment != Environment.Trade && environment != Environment.Practice)
-                throw new NotSupportedException("Oanda Environment not supported: " + environment);
-
-            _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
-
-            // forward events received from API
-            _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
-            _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
-            _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
+            if (!_isInitialized)
+            {
+                Initialize(orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent = OandaRestApiBase.OandaAgentDefaultValue);
+            }
         }
 
         #region IBrokerage implementation
@@ -321,6 +321,19 @@ namespace QuantConnect.Brokerages.Oanda
         public IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
             return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
+        }
+
+        public void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
+        {
+            if (environment != Environment.Trade && environment != Environment.Practice)
+                throw new NotSupportedException("Oanda Environment not supported: " + environment);
+
+            _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
+
+            // forward events received from API
+            _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
+            _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
+            _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
         }
     }
 }

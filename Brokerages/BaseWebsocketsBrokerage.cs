@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 using RestSharp;
 using System;
 using System.Collections.Concurrent;
@@ -56,17 +57,23 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The api secret
         /// </summary>
-        protected readonly string ApiSecret;
+        protected string ApiSecret;
 
         /// <summary>
         /// The api key
         /// </summary>
-        protected readonly string ApiKey;
+        protected string ApiKey;
 
         /// <summary>
         /// Count subscribers for each (symbol, tickType) combination
         /// </summary>
         protected DataQueueHandlerSubscriptionManager SubscriptionManager;
+
+        protected virtual void Initialize(string apiSecret, string apiKey)
+        {
+            ApiSecret = apiSecret;
+            ApiKey = apiKey;
+        }
 
         /// <summary>
         /// Creates an instance of a websockets brokerage
@@ -93,8 +100,7 @@ namespace QuantConnect.Brokerages
             };
 
             RestClient = restClient;
-            ApiSecret = apiSecret;
-            ApiKey = apiKey;
+            Initialize(apiSecret, apiKey);
         }
 
         /// <summary>

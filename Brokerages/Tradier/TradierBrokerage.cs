@@ -47,8 +47,8 @@ namespace QuantConnect.Brokerages.Tradier
     [BrokerageFactory(typeof(TradierBrokerageFactory))]
     public partial class TradierBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
     {
-        private readonly bool _useSandbox;
-        private readonly string _accountId;
+        private bool _useSandbox;
+        private string _accountId;
 
         // we're reusing the equity exchange here to grab typical exchange hours
         private static readonly EquityExchange Exchange =
@@ -61,19 +61,20 @@ namespace QuantConnect.Brokerages.Tradier
         private readonly object _lockAccessCredentials = new object();
 
         // polling timer for checking for fill events
-        private readonly Timer _orderFillTimer;
+        private Timer _orderFillTimer;
 
         //Tradier Spec:
-        private readonly Dictionary<TradierApiRequestType, RateGate> _rateLimitNextRequest;
+        private Dictionary<TradierApiRequestType, RateGate> _rateLimitNextRequest;
 
-        private readonly IAlgorithm _algorithm;
-        private readonly IOrderProvider _orderProvider;
-        private readonly ISecurityProvider _securityProvider;
-        private readonly IDataAggregator _aggregator;
+
+        private IAlgorithm _algorithm;
+        private IOrderProvider _orderProvider;
+        private ISecurityProvider _securityProvider;
+        private IDataAggregator _aggregator;
 
         private readonly object _fillLock = new object();
         private readonly DateTime _initializationDateTime = DateTime.Now;
-        private readonly ConcurrentDictionary<long, TradierCachedOpenOrder> _cachedOpenOrdersByTradierOrderID;
+        private ConcurrentDictionary<long, TradierCachedOpenOrder> _cachedOpenOrdersByTradierOrderID;
         // this is used to block reentrance when doing look ups for orders with IDs we don't have cached
         private readonly HashSet<long> _reentranceGuardByTradierOrderID = new HashSet<long>();
         private readonly FixedSizeHashQueue<long> _filledTradierOrderIDs = new FixedSizeHashQueue<long>(10000);
@@ -85,11 +86,19 @@ namespace QuantConnect.Brokerages.Tradier
         private readonly HashSet<long> _unknownTradierOrderIDs = new HashSet<long>();
         private readonly FixedSizeHashQueue<long> _verifiedUnknownTradierOrderIDs = new FixedSizeHashQueue<long>(1000);
         private readonly FixedSizeHashQueue<int> _cancelledQcOrderIDs = new FixedSizeHashQueue<int>(10000);
+        private bool _isInitialized;
 
         /// <summary>
         /// Returns the brokerage account's base currency
         /// </summary>
         public override string AccountBaseCurrency => Currencies.USD;
+
+        /// <summary>
+        /// Create a new Tradier Object:
+        /// </summary>
+        public TradierBrokerage() : base("Tradier Brokerage")
+        {
+        }
 
         /// <summary>
         /// Create a new Tradier Object:
@@ -105,6 +114,21 @@ namespace QuantConnect.Brokerages.Tradier
             : base(WebSocketUrl, new WebSocketClientWrapper(),
                 new RestClient(useSandbox ? "https://sandbox.tradier.com/v1/" : "https://api.tradier.com/v1/"),
                 null, null, "Tradier Brokerage")
+        {
+            if (!_isInitialized)
+            {
+                Initialize(algorithm, orderProvider, securityProvider, aggregator, useSandbox, accountId, accessToken);
+            }
+        }
+
+        public void Initialize(
+            IAlgorithm algorithm,
+            IOrderProvider orderProvider,
+            ISecurityProvider securityProvider,
+            IDataAggregator aggregator,
+            bool useSandbox,
+            string accountId,
+            string accessToken)
         {
             _algorithm = algorithm;
             _orderProvider = orderProvider;
