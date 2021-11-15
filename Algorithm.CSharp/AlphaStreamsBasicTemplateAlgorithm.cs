@@ -13,15 +13,12 @@
  * limitations under the License.
 */
 
-using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
-using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 
@@ -32,8 +29,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AlphaStreamsBasicTemplateAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Dictionary<Symbol, HashSet<Symbol>> _symbolsPerAlpha = new Dictionary<Symbol, HashSet<Symbol>>();
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -42,10 +37,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2018, 04, 04);
             SetEndDate(2018, 04, 06);
 
+            SetAlpha(new AlphaStreamAlphaModule());
             SetExecution(new ImmediateExecutionModel());
             Settings.MinimumOrderMarginPortfolioPercentage = 0.01m;
             SetPortfolioConstruction(new EqualWeightingAlphaStreamsPortfolioConstructionModel());
-
             SetSecurityInitializer(new BrokerageModelSecurityInitializer(BrokerageModel,
                 new FuncSecuritySeeder(GetLastKnownPrices)));
 
@@ -55,75 +50,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
-        {
-            foreach (var portfolioState in data.Get<AlphaStreamsPortfolioState>().Values)
-            {
-                ProcessPortfolioState(portfolioState);
-            }
-        }
-
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Log($"OnOrderEvent: {orderEvent}");
-        }
-
-        public override void OnSecuritiesChanged(SecurityChanges changes)
-        {
-            changes.FilterCustomSecurities = false;
-            foreach (var addedSecurity in changes.AddedSecurities)
-            {
-                if (addedSecurity.Symbol.IsCustomDataType<AlphaStreamsPortfolioState>())
-                {
-                    if (!_symbolsPerAlpha.ContainsKey(addedSecurity.Symbol))
-                    {
-                        _symbolsPerAlpha[addedSecurity.Symbol] = new HashSet<Symbol>();
-                    }
-                    // warmup alpha state, adding target securities
-                    ProcessPortfolioState(addedSecurity.Cache.GetData<AlphaStreamsPortfolioState>());
-                }
-            }
-
-            Log($"OnSecuritiesChanged: {changes}");
-        }
-
-        private bool UsedBySomeAlpha(Symbol asset)
-        {
-            return _symbolsPerAlpha.Any(pair => pair.Value.Contains(asset));
-        }
-
-        private void ProcessPortfolioState(AlphaStreamsPortfolioState portfolioState)
-        {
-            if (portfolioState == null)
-            {
-                return;
-            }
-
-            var alphaId = portfolioState.Symbol;
-            if (!_symbolsPerAlpha.TryGetValue(alphaId, out var currentSymbols))
-            {
-                _symbolsPerAlpha[alphaId] = currentSymbols = new HashSet<Symbol>();
-            }
-
-            var newSymbols = new HashSet<Symbol>(currentSymbols.Count);
-            foreach (var symbol in portfolioState.PositionGroups?.SelectMany(positionGroup => positionGroup.Positions).Select(state => state.Symbol) ?? Enumerable.Empty<Symbol>())
-            {
-                // only add it if it's not used by any alpha (already added check)
-                if (newSymbols.Add(symbol) && !UsedBySomeAlpha(symbol))
-                {
-                    AddSecurity(symbol, resolution: UniverseSettings.Resolution, extendedMarketHours: UniverseSettings.ExtendedMarketHours);
-                }
-            }
-            _symbolsPerAlpha[alphaId] = newSymbols;
-
-            foreach (var symbol in currentSymbols.Where(symbol => !UsedBySomeAlpha(symbol)))
-            {
-                RemoveSecurity(symbol);
-            }
         }
 
         /// <summary>
