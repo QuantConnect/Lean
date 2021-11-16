@@ -552,11 +552,6 @@ namespace QuantConnect.Brokerages.Backtesting
                 }
 
                 var security = Algorithm.Securities[delisting.Symbol];
-                if (security.Holdings.Quantity == 0)
-                {
-                    // We don't need to do anything if 0 holdings
-                    continue;
-                }
 
                 if (security.Symbol.SecurityType.IsOption())
                 {
@@ -565,8 +560,8 @@ namespace QuantConnect.Brokerages.Backtesting
                 }
                 else
                 {
-                    var request = security.CreateDelistedSecurityOrderRequest(Algorithm.UtcTime);
-                    Algorithm.Transactions.ProcessRequest(request);
+                    // Any other type of delisting
+                    OnDelistingNotification(new DelistingNotificationEventArgs(delisting.Symbol));
                 }
 
                 // don't allow users to open a new position once we sent the liquidation order
