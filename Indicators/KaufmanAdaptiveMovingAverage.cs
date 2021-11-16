@@ -34,9 +34,6 @@ namespace QuantConnect.Indicators
 
         public IndicatorBase<IndicatorDataPoint> KER { get; }
 
-        //public KaufmanEfficiencyRatio EfficiencyRatio;
-        //public IndicatorBase<IndicatorDataPoint> EFValue => EF.KEF;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="KaufmanAdaptiveMovingAverage"/> class using the specified name and period.
         /// </summary>
@@ -122,11 +119,11 @@ namespace QuantConnect.Indicators
             _trailingValue = newTrailingValue.Value;
 
             // Calculate the efficiency ratio
-            var KefValue = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);
-            KER.Update(input.Time, (decimal)KefValue);
+            var kefValue = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);
+            KER.Update(input.Time, kefValue);
 
             // Calculate the smoothing constant
-            var smoothingConstant = KefValue * _diffSmoothingFactor + _slowSmoothingFactor;
+            var smoothingConstant = kefValue * _diffSmoothingFactor + _slowSmoothingFactor;
             smoothingConstant *= smoothingConstant;
 
             // Calculate the KAMA like an EMA, using the
