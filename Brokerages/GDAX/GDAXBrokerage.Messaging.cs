@@ -112,7 +112,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage webSocketMessage)
+        protected override void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
             var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
 
@@ -392,7 +392,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Creates websocket message subscriptions for the supplied symbols
         /// </summary>
-        public override void Subscribe(IEnumerable<Symbol> symbols)
+        protected override bool Subscribe(IEnumerable<Symbol> symbols)
         {
             var fullList = GetSubscribed().Union(symbols);
             var pendingSymbols = new List<Symbol>();
@@ -427,7 +427,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             if (payload.product_ids.Length == 0)
             {
-                return;
+                return true;
             }
 
             var token = GetAuthenticationToken(string.Empty, "GET", "/users/self/verify");
@@ -446,6 +446,7 @@ namespace QuantConnect.Brokerages.GDAX
             WebSocket.Send(json);
 
             Log.Trace("GDAXBrokerage.Subscribe: Sent subscribe.");
+            return true;
         }
 
         /// <summary>

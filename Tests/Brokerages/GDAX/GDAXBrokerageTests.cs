@@ -430,6 +430,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, null)
             {
             }
+
+            public void Subscribe(IEnumerable<Symbol> symbols)
+            {
+                base.Subscribe(symbols);
+            }
         }
     }
 }
