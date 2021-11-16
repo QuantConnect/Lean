@@ -937,7 +937,8 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
-        private void Initialize(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, IAlgorithm algorithm, ISecurityProvider securityProvider, IDataAggregator aggregator)
+        private void Initialize(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, 
+            IAlgorithm algorithm, ISecurityProvider securityProvider, IDataAggregator aggregator)
         {
             _tradingSegment = tradingSegment;
             _zerodhaProductType = zerodhaProductType;
@@ -968,6 +969,7 @@ namespace QuantConnect.Brokerages.Zerodha
             };
             subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
             SubscriptionManager = subscriptionManager;
+            _isInitialized = true;
 
             Log.Trace("Start Zerodha Brokerage");
         }

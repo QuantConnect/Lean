@@ -996,6 +996,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Log.Trace($"InteractiveBrokersBrokerage.HandleConnectionClosed(): API client disconnected [Server Version: {_client.ClientSocket.ServerVersion}].");
                 _connectEvent.Set();
             };
+            _isInitialized = true;
         }
 
         /// <summary>

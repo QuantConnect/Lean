@@ -166,6 +166,7 @@ namespace QuantConnect.Brokerages.Tradier
                     _streamSession = null;
                 }
             };
+            _isInitialized = true;
         }
 
         #region Tradier client implementation

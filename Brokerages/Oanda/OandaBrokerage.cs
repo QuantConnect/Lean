@@ -323,7 +323,8 @@ namespace QuantConnect.Brokerages.Oanda
             return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
         }
 
-        public void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
+        public void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, 
+            Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
         {
             if (environment != Environment.Trade && environment != Environment.Practice)
                 throw new NotSupportedException("Oanda Environment not supported: " + environment);
@@ -334,6 +335,7 @@ namespace QuantConnect.Brokerages.Oanda
             _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
             _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
             _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
+            _isInitialized = true;
         }
     }
 }
