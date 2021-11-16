@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using RestSharp;
@@ -37,22 +38,22 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The websockets client instance
         /// </summary>
-        protected readonly IWebSocket WebSocket;
+        protected IWebSocket WebSocket;
 
         /// <summary>
         /// The rest client instance
         /// </summary>
-        protected readonly IRestClient RestClient;
+        protected IRestClient RestClient;
 
         /// <summary>
         /// standard json parsing settings
         /// </summary>
-        protected readonly JsonSerializerSettings JsonSettings;
+        protected JsonSerializerSettings JsonSettings;
 
         /// <summary>
         /// A list of currently active orders
         /// </summary>
-        public readonly ConcurrentDictionary<int, Orders.Order> CachedOrderIDs;
+        public ConcurrentDictionary<int, Orders.Order> CachedOrderIDs;
 
         /// <summary>
         /// The api secret
@@ -69,22 +70,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected DataQueueHandlerSubscriptionManager SubscriptionManager;
 
-        protected virtual void Initialize(string apiSecret, string apiKey)
-        {
-            ApiSecret = apiSecret;
-            ApiKey = apiKey;
-        }
-
-        /// <summary>
-        /// Creates an instance of a websockets brokerage
-        /// </summary>
-        /// <param name="wssUrl">Websockets base url</param>
-        /// <param name="websocket">Websocket client instance</param>
-        /// <param name="restClient">Rest client instance</param>
-        /// <param name="apiKey">Brokerage api auth key</param>
-        /// <param name="apiSecret">Brokerage api auth secret</param>
-        /// <param name="name">Name of brokerage</param>
-        protected BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string name) : base(name)
+        protected virtual void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+            string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
         {
             JsonSettings = new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal };
             CachedOrderIDs = new ConcurrentDictionary<int, Orders.Order>();
@@ -100,7 +87,16 @@ namespace QuantConnect.Brokerages
             };
 
             RestClient = restClient;
-            Initialize(apiSecret, apiKey);
+            ApiSecret = apiSecret;
+            ApiKey = apiKey;
+        }
+
+        /// <summary>
+        /// Creates an instance of a websockets brokerage
+        /// </summary>
+        /// <param name="name">Name of brokerage</param>
+        protected BaseWebsocketsBrokerage(string name) : base(name)
+        {
         }
 
         /// <summary>
