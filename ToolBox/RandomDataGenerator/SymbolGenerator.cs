@@ -37,11 +37,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         public abstract Symbol GenerateSingle();
 
-        public virtual Symbol NextSymbol(SecurityType securityType, string market)
+        public Symbol NextSymbol(SecurityType securityType, string market)
         {
             if (securityType == SecurityType.Option || securityType == SecurityType.Future)
             {
-                throw new ArgumentException("Please use NextOption or NextFuture for SecurityType.Option and SecurityType.Future respectively.");
+                throw new ArgumentException("Please use OptionSymbolGenerator or FutureSymbolGenerator for SecurityType.Option and SecurityType.Future respectively.");
             }
 
             string ticker;
@@ -116,7 +116,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="minLength">The minimum length, inclusive</param>
         /// <param name="maxLength">The maximum length, inclusive</param>
         /// <returns>A new upper case string within the specified lengths</returns>
-        public virtual string NextUpperCaseString(int minLength, int maxLength)
+        public string NextUpperCaseString(int minLength, int maxLength)
         {
             var str = string.Empty;
             var length = Random.NextInt(minLength, maxLength);
