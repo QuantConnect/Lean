@@ -16,9 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 using RestSharp;
 
 namespace QuantConnect.Brokerages.GDAX
@@ -29,6 +31,10 @@ namespace QuantConnect.Brokerages.GDAX
     [BrokerageFactory(typeof(GDAXBrokerageFactory))]
     public class GDAXDataQueueHandler : GDAXBrokerage, IDataQueueHandler
     {
+        public GDAXDataQueueHandler() : base("GDAX")
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
@@ -77,6 +83,14 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            var restApi = job.BrokerageData["gdax-rest-api"];
+            var restClient = new RestClient(restApi);
+            var webSocketClient = new WebSocketClientWrapper();
+            Initialize(job.BrokerageData["gdax-url"], null, webSocketClient,
+                    restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
+                    job.BrokerageData["gdax-passphrase"], null, null,
+                    Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")), 
+                    job);
         }
 
         /// <summary>

@@ -439,10 +439,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
-            Initialize(job.BrokerageData["bitfinex-api-secret"], job.BrokerageData["bitfinex-api-key"]);
-            Initialize(
-                null,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+            Initialize(WebSocketUrl, null, new WebSocketClientWrapper(), new RestClient(RestApiUrl), job.BrokerageData["bitfinex-api-key"], 
+                job.BrokerageData["bitfinex-api-secret"],
+                null, null, null,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")), 
                 job);
         }
 

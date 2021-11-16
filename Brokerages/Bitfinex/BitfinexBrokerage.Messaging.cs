@@ -67,10 +67,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         private bool _isInitialized;
 
         //Needs to call protected virtual void Initialize(string apiKey, string apiSecret)
-        public BitfinexBrokerage() : base(WebSocketUrl, new WebSocketClientWrapper(), new RestClient(RestApiUrl), null, null, "Bitfinex")
+        public BitfinexBrokerage() : base("Bitfinex")
         {
         }
-            
 
         /// <summary>
         /// Constructor for brokerage
@@ -98,11 +97,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="aggregator">consolidate ticks</param>
         /// <param name="job">The live job packet</param>
         public BitfinexBrokerage(IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
-            : base(WebSocketUrl, websocket, restClient, apiKey, apiSecret, "Bitfinex")
+            : base("Bitfinex")
         {
             if (!_isInitialized)
             {
-                Initialize(algorithm, aggregator, job);
+                Initialize(WebSocketUrl, null, websocket, restClient, apiKey, apiSecret, null, algorithm, priceProvider, aggregator, job);
             }
         }
 
@@ -149,11 +148,13 @@ namespace QuantConnect.Brokerages.Bitfinex
             return true;
         }
 
-        private void Initialize(
-            IAlgorithm algorithm,
-            IDataAggregator aggregator,
-            LiveNodePacket job)
+        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, 
+            string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider, 
+            IDataAggregator aggregator, LiveNodePacket job)
         {
+            base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
+                passPhrase, algorithm, priceProvider, aggregator, job);
+
             _job = job;
 
             SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
@@ -185,6 +186,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 SubscribeAuth();
             };
+            _isInitialized = true;
         }
 
         private long GetNextClientOrderId()

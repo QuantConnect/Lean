@@ -44,18 +44,18 @@ namespace QuantConnect.Brokerages.GDAX
         /// Collection of partial split messages
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
-        private readonly string _passPhrase;
-        private readonly IAlgorithm _algorithm;
+        private string _passPhrase;
+        private IAlgorithm _algorithm;
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
-        private readonly bool _isDataQueueHandler;
+        private bool _isDataQueueHandler;
         private LiveNodePacket _job;
 
         /// <summary>
         /// Data Aggregator
         /// </summary>
-        protected readonly IDataAggregator _aggregator;
+        protected IDataAggregator _aggregator;
 
         // GDAX has different rate limits for public and private endpoints
         // https://docs.gdax.com/#rate-limits
@@ -63,13 +63,14 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly RateGate _publicEndpointRateLimiter = new RateGate(6, TimeSpan.FromSeconds(1));
         private readonly RateGate _privateEndpointRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
 
-        private readonly IPriceProvider _priceProvider;
+        private IPriceProvider _priceProvider;
 
         private readonly CancellationTokenSource _ctsFillMonitor = new CancellationTokenSource();
-        private readonly Task _fillMonitorTask;
+        private Task _fillMonitorTask;
         private readonly AutoResetEvent _fillMonitorResetEvent = new AutoResetEvent(false);
         private readonly int _fillMonitorTimeout = Config.GetInt("gdax-fill-monitor-timeout", 500);
         private readonly ConcurrentDictionary<string, PendingOrder> _pendingOrders = new ConcurrentDictionary<string, PendingOrder>();
+        private bool _isInitialized;
 
         #endregion
 
@@ -77,6 +78,14 @@ namespace QuantConnect.Brokerages.GDAX
         /// The list of websocket channels to subscribe
         /// </summary>
         protected virtual string[] ChannelNames { get; } = { "heartbeat" };
+
+        /// <summary>
+        /// Constructor for brokerage
+        /// </summary>
+        /// <param name="name">Name of brokerage</param>
+        public GDAXBrokerage(string name) : base(name)
+        {
+        }
 
         /// <summary>
         /// Constructor for brokerage
@@ -93,18 +102,12 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="job">The live job packet</param>
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
             IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, "GDAX")
+            : base("GDAX")
         {
-            _job = job;
-            FillSplit = new ConcurrentDictionary<long, GDAXFill>();
-            _passPhrase = passPhrase;
-            _algorithm = algorithm;
-            _priceProvider = priceProvider;
-            _aggregator = aggregator;
-
-            _isDataQueueHandler = this is GDAXDataQueueHandler;
-
-            _fillMonitorTask = Task.Factory.StartNew(FillMonitorAction, _ctsFillMonitor.Token);
+            if (!_isInitialized)
+            {
+                Initialize(wssUrl, null, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job);
+            }
         }
 
         /// <summary>
@@ -165,6 +168,25 @@ namespace QuantConnect.Brokerages.GDAX
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
                 throw;
             }
+        }
+
+        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, 
+            string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider, 
+            IDataAggregator aggregator, LiveNodePacket job)
+        {
+            base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
+                passPhrase, algorithm, priceProvider, aggregator, job);
+            _job = job;
+            FillSplit = new ConcurrentDictionary<long, GDAXFill>();
+            _passPhrase = passPhrase;
+            _algorithm = algorithm;
+            _priceProvider = priceProvider;
+            _aggregator = aggregator;
+
+            _isDataQueueHandler = this is GDAXDataQueueHandler;
+
+            _fillMonitorTask = Task.Factory.StartNew(FillMonitorAction, _ctsFillMonitor.Token);
+            _isInitialized = true;
         }
 
         private void OnSnapshot(string data)

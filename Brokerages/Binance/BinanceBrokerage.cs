@@ -29,6 +29,7 @@ using Newtonsoft.Json.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
+using RestSharp;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -57,7 +58,7 @@ namespace QuantConnect.Brokerages.Binance
         private const int MaximumSymbolsPerConnection = 512;
         private bool _isInitialized;
 
-        public BinanceBrokerage() : base(null, new WebSocketClientWrapper(), null, null, null, "Binance")
+        public BinanceBrokerage() : base("Binance")
         {
         }
 
@@ -72,11 +73,11 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
         public BinanceBrokerage(string apiKey, string apiSecret, string restApiUrl, string webSocketBaseUrl, IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
-            : base(webSocketBaseUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, "Binance")
+            : base("Binance")
         {
             if (!_isInitialized)
             {
-                Initialize(apiKey, apiSecret, restApiUrl, webSocketBaseUrl, algorithm, aggregator, job);
+                Initialize(webSocketBaseUrl, restApiUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, null, algorithm, null, aggregator, job);
             }
         }
 
@@ -304,6 +305,11 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            Initialize(job.BrokerageData["binance-websocket-url"], job.BrokerageData["binance-api-url"], new WebSocketClientWrapper(), 
+                null, job.BrokerageData["binance-api-key"], job.BrokerageData["binance-api-secret"],
+                null, null, null,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")), 
+                job);
         }
 
         /// <summary>
@@ -368,26 +374,23 @@ namespace QuantConnect.Brokerages.Binance
             return true;
         }
 
-        private void Initialize(
-            string apiKey, 
-            string apiSecret, 
-            string restApiUrl, 
-            string webSocketBaseUrl, 
-            IAlgorithm algorithm, 
-            IDataAggregator aggregator, 
-            LiveNodePacket job)
+        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient,
+            string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider,
+            IDataAggregator aggregator, LiveNodePacket job)
         {
+            base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret, 
+                passPhrase, algorithm, priceProvider, aggregator, job);
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;
-            _webSocketBaseUrl = webSocketBaseUrl;
+            _webSocketBaseUrl = wssUrl;
             _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnUserMessage);
 
             var maximumWebSocketConnections = Config.GetInt("binance-maximum-websocket-connections");
             var symbolWeights = maximumWebSocketConnections > 0 ? FetchSymbolWeights() : null;
 
             var subscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
-                webSocketBaseUrl,
+                wssUrl,
                 MaximumSymbolsPerConnection,
                 maximumWebSocketConnections,
                 symbolWeights,
@@ -436,6 +439,7 @@ namespace QuantConnect.Brokerages.Binance
                 Log.Trace("Daily websocket restart: connect");
                 Connect();
             };
+            _isInitialized = true;
         }
 
         /// <summary>
