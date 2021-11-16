@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
@@ -20,8 +21,11 @@ using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.GDAX;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
@@ -122,7 +126,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             }
         }
 
-        private static GDAXDataQueueHandler GetDataQueueHandler()
+        private static TestGDAXDataQueueHandler GetDataQueueHandler()
         {
             var wssUrl = Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com");
             var webSocketClient = new WebSocketClientWrapper();
@@ -136,10 +140,10 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var priceProvider = new ApiPriceProvider(userId, userToken);
             var aggregator = new AggregationManager();
 
-            return new GDAXDataQueueHandler(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, null);
+            return new TestGDAXDataQueueHandler(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, null);
         }
 
-        private static GDAXBrokerage GetBrokerage()
+        private static TestGDAXDataQueueHandler GetBrokerage()
         {
             var wssUrl = Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com");
             var webSocketClient = new WebSocketClientWrapper();
@@ -153,7 +157,27 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var priceProvider = new ApiPriceProvider(userId, userToken);
             var aggregator = new AggregationManager();
 
-            return new GDAXBrokerage(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, null);
+            return new TestGDAXDataQueueHandler(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, null);
+        }
+
+        private class TestGDAXDataQueueHandler : GDAXDataQueueHandler
+        {
+            public TestGDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey,
+                string apiSecret,
+                string passPhrase,
+                IAlgorithm algorithm,
+                IPriceProvider priceProvider,
+                IDataAggregator aggregator,
+                LiveNodePacket job
+                )
+                : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job)
+            {
+            }
+
+            public void Subscribe(IEnumerable<Symbol> symbols)
+            {
+                base.Subscribe(symbols);
+            }
         }
     }
 }

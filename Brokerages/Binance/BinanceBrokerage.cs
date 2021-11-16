@@ -339,7 +339,7 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage e)
+        protected override void OnMessage(object sender, WebSocketMessage e)
         {
             _messageHandler.HandleNewMessage(e);
         }
@@ -412,9 +412,10 @@ namespace QuantConnect.Brokerages.Binance
         /// <summary>
         /// Not used
         /// </summary>
-        public override void Subscribe(IEnumerable<Symbol> symbols)
+        protected override bool Subscribe(IEnumerable<Symbol> symbols)
         {
             // NOP
+            return true;
         }
 
         /// <summary>

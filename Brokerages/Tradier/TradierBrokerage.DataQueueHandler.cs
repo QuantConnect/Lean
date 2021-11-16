@@ -18,7 +18,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
@@ -37,11 +36,7 @@ namespace QuantConnect.Brokerages.Tradier
         #region IDataQueueHandler implementation
 
         private const string WebSocketUrl = "wss://ws.tradier.com/v1/markets/events";
-        private const int ConnectionTimeout = 30000;
 
-        private readonly WebSocketClientWrapper _webSocketClient = new WebSocketClientWrapper();
-
-        private bool _isDataQueueHandlerInitialized;
         private TradierStreamSession _streamSession;
 
         private readonly ConcurrentDictionary<string, Symbol> _subscribedTickers = new ConcurrentDictionary<string, Symbol>();
@@ -69,36 +64,13 @@ namespace QuantConnect.Brokerages.Tradier
                     "TradierBrokerage.DataQueueHandler.Subscribe(): The sandbox does not support data streaming.");
             }
 
-            // initialize data queue handler on-demand
-            if (!_isDataQueueHandlerInitialized)
-            {
-                _isDataQueueHandlerInitialized = true;
-
-                _streamSession = CreateStreamSession();
-
-                using (var resetEvent = new ManualResetEvent(false))
-                {
-                    EventHandler triggerEvent = (o, args) => resetEvent.Set();
-                    _webSocketClient.Open += triggerEvent;
-
-                    _webSocketClient.Connect();
-
-                    if (!resetEvent.WaitOne(ConnectionTimeout))
-                    {
-                        throw new TimeoutException("Websockets connection timeout.");
-                    }
-
-                    _webSocketClient.Open -= triggerEvent;
-                }
-            }
-
             if (!CanSubscribe(dataConfig.Symbol))
             {
                 return Enumerable.Empty<BaseData>().GetEnumerator();
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            _subscriptionManager.Subscribe(dataConfig);
+            SubscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -115,11 +87,11 @@ namespace QuantConnect.Brokerages.Tradier
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            _subscriptionManager.Unsubscribe(dataConfig);
+            SubscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
 
-        private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        protected override bool Subscribe(IEnumerable<Symbol> symbols)
         {
             var symbolsAdded = false;
 
@@ -144,7 +116,7 @@ namespace QuantConnect.Brokerages.Tradier
             return true;
         }
 
-        private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
             var symbolsRemoved = false;
 
@@ -179,7 +151,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             var obj = new
             {
-                sessionid = _streamSession.SessionId,
+                sessionid = GetStreamSession().SessionId,
                 symbols = tickers,
                 filter = new[] { "trade", "quote" },
                 linebreak = true
@@ -187,10 +159,10 @@ namespace QuantConnect.Brokerages.Tradier
 
             var json = JsonConvert.SerializeObject(obj);
 
-            _webSocketClient.Send(json);
+            WebSocket.Send(json);
         }
 
-        private void OnMessage(object sender, WebSocketMessage webSocketMessage)
+        protected override void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
             var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
             var obj = JObject.Parse(e.Message);
@@ -255,12 +227,17 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
-        /// Get the current market status
+        /// Get the current Tradier stream session
         /// </summary>
-        private TradierStreamSession CreateStreamSession()
+        private TradierStreamSession GetStreamSession()
         {
-            var request = new RestRequest("markets/events/session", Method.POST);
-            return Execute<TradierStreamSession>(request, TradierApiRequestType.Data, "stream");
+            if (_streamSession == null)
+            {
+                var request = new RestRequest("markets/events/session", Method.POST);
+                _streamSession = Execute<TradierStreamSession>(request, TradierApiRequestType.Data, "stream");
+            }
+
+            return _streamSession;
         }
 
         #endregion

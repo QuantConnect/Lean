@@ -131,7 +131,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage e)
+        protected override void OnMessage(object sender, WebSocketMessage e)
         {
             OnMessageImpl(e);
         }
@@ -164,7 +164,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Not used in master
         /// </summary>
         /// <param name="symbols"></param>
-        public override void Subscribe(IEnumerable<Symbol> symbols) { }
+        protected override bool Subscribe(IEnumerable<Symbol> symbols)
+        {
+            return true;
+        }
 
         private long GetNextClientOrderId()
         {

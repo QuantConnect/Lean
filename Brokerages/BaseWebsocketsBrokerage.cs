@@ -102,7 +102,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public abstract void OnMessage(object sender, WebSocketMessage e);
+        protected abstract void OnMessage(object sender, WebSocketMessage e);
 
         /// <summary>
         /// Creates wss connection, monitors for disconnection and re-connects when necessary
@@ -121,7 +121,7 @@ namespace QuantConnect.Brokerages
         /// Handles the creation of websocket subscriptions
         /// </summary>
         /// <param name="symbols"></param>
-        public abstract void Subscribe(IEnumerable<Symbol> symbols);
+        protected abstract bool Subscribe(IEnumerable<Symbol> symbols);
 
         /// <summary>
         /// Gets a list of current subscriptions
