@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,6 +32,11 @@ namespace QuantConnect.Indicators
         private decimal _prevKama;
         private decimal _trailingValue;
 
+        public IndicatorBase<IndicatorDataPoint> KER { get; }
+
+        //public KaufmanEfficiencyRatio EfficiencyRatio;
+        //public IndicatorBase<IndicatorDataPoint> EFValue => EF.KEF;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="KaufmanAdaptiveMovingAverage"/> class using the specified name and period.
         /// </summary>
@@ -46,6 +51,7 @@ namespace QuantConnect.Indicators
             _slowSmoothingFactor = 2m / (slowEmaPeriod + 1m);
             // Difference between the smoothing factor of the fast and slow EMA
             _diffSmoothingFactor = 2m / (fastEmaPeriod + 1m) - _slowSmoothingFactor;
+            KER = new SimpleMovingAverage(1);
         }
 
         /// <summary>
@@ -116,10 +122,11 @@ namespace QuantConnect.Indicators
             _trailingValue = newTrailingValue.Value;
 
             // Calculate the efficiency ratio
-            var efficiencyRatio = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);
+            var KefValue = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);
+            KER.Update(input.Time, (decimal)KefValue);
 
             // Calculate the smoothing constant
-            var smoothingConstant = efficiencyRatio * _diffSmoothingFactor + _slowSmoothingFactor;
+            var smoothingConstant = KefValue * _diffSmoothingFactor + _slowSmoothingFactor;
             smoothingConstant *= smoothingConstant;
 
             // Calculate the KAMA like an EMA, using the
@@ -138,6 +145,7 @@ namespace QuantConnect.Indicators
             _periodRoc = 0;
             _prevKama = 0;
             _trailingValue = 0;
+            KER.Reset();
             base.Reset();
         }
     }

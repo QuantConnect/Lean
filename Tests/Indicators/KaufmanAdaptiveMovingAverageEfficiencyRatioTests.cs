@@ -21,11 +21,11 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class KaufmanEfficiencyRatioTests : CommonIndicatorTests<IndicatorDataPoint>
+    public class KaufmanAdaptiveMovingAverageEfficiencyRatioTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            return new KaufmanEfficiencyRatio(10);
+            return new KaufmanAdaptiveMovingAverage(10);
         }
 
         protected override string TestFileName => "spy_ker.txt";
@@ -34,22 +34,9 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 0.001); }
+            get { return (indicator, expected) => Assert.AreEqual(expected, (double)((KaufmanAdaptiveMovingAverage)indicator).KER.Current.Value, 0.001); }
         }
+       
 
-        [Test]
-        public override void ResetsProperly()
-        {
-            var kef = new KaufmanEfficiencyRatio(2);
-            var reference = System.DateTime.Today;
-
-            kef.Update(reference.AddDays(1), 1.0m);
-            kef.Update(reference.AddDays(2), 2.0m);
-            kef.Update(reference.AddDays(3), 3.0m);
-            Assert.IsTrue(kef.IsReady);
-
-            kef.Reset();
-            TestHelper.AssertIndicatorIsInDefaultState(kef);
-        }
     }
 }
