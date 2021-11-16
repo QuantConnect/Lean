@@ -154,13 +154,15 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        // TODO: Don't use CreateDelistedSecurityOrder, use OnOptionNotification
         public void OptionExersiceWhenFullyInvested()
         {
             var algorithm = new AlgorithmStub();
             algorithm.SetFinishedWarmingUp();
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
+            var brokerage = new BacktestingBrokerage(algorithm);
             algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
-            backtestingTransactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new TestResultHandler());
+            backtestingTransactionHandler.Initialize(algorithm, brokerage, new TestResultHandler());
 
             const decimal price = 2600m;
             var time = new DateTime(2020, 10, 14);

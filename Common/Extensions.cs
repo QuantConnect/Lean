@@ -197,6 +197,7 @@ namespace QuantConnect
             }
         }
 
+        // TODO: Not used anymore
         /// <summary>
         /// Helper method to create an order request to liquidate a delisted asset
         /// </summary>
@@ -2973,6 +2974,7 @@ namespace QuantConnect
                 && type.Equals(typeof(T).Name, StringComparison.InvariantCultureIgnoreCase);
         }
 
+        // TODO: Not used anymore
         /// <summary>
         /// Helper method that will return a back month, with future expiration, future contract based on the given offset
         /// </summary>
