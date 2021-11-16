@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             _maximumStrikePriceDeviation = maximumStrikePriceDeviation;
         }
 
-        protected override Symbol GenerateSingle()
+        public override Symbol GenerateSingle()
         {
             // first generate the underlying
             var underlying = NextSymbol(SecurityType.Equity, _market);
@@ -60,5 +60,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             // when providing a null option w/ an expiry, it will automatically create the OSI ticker string for the Value
             return Symbol.CreateOption(underlying, _market, OptionStyle.American, optionRight, strike, expiry);
         }
+
+        public override int GetAvailableSymbolCount() => int.MaxValue;
     }
 }

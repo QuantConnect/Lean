@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -20,12 +21,27 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// <returns>A new symbol object of the specified security type</returns>
     public class SpotSymbolGenerator : SymbolGenerator
     {
+        private readonly string _market;
+        private readonly SecurityType _securityType;
+
         public SpotSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
             : base(settings, random)
         {
+            _market = settings.Market;
+            _securityType = settings.SecurityType;
         }
 
-        protected override Symbol GenerateSingle()
+        public override Symbol GenerateSingle()
             => NextSymbol(Settings.SecurityType, Settings.Market);
+
+        public override int GetAvailableSymbolCount()
+        {
+            // check the symbol properties database to determine how many symbols we can generate
+            // if there is a wildcard entry, we can generate as many symbols as we want
+            // if there is no wildcard entry, we can only generate as many symbols as there are entries
+            return SymbolPropertiesDatabase.ContainsKey(_market, SecurityDatabaseKey.Wildcard, _securityType)
+                ? int.MaxValue
+                : SymbolPropertiesDatabase.GetSymbolPropertiesList(_market, _securityType).Count();
+        }
     }
 }

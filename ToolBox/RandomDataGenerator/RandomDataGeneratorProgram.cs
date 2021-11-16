@@ -109,7 +109,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var symbolGenerator = dataGenerator.CreateSymbolGenerator();
             var tickGenerator = dataGenerator.CreateTickGenerator();
 
-            var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount(settings.SecurityType, settings.Market);
+            var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount();
             if (settings.SymbolCount > maxSymbolCount)
             {
                 output.Warn.WriteLine($"Limiting symbol count to {maxSymbolCount}, we don't have more {settings.SecurityType} tickers for {settings.Market}");

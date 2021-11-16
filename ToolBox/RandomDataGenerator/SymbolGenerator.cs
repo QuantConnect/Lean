@@ -35,7 +35,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
         }
 
-        protected abstract Symbol GenerateSingle();
+        public abstract Symbol GenerateSingle();
 
         public virtual Symbol NextSymbol(SecurityType securityType, string market)
         {
@@ -135,23 +135,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// Returns the number of symbols with the specified parameters can be generated.
         /// Returns int.MaxValue if there is no limit for the given parameters.
         /// </summary>
-        /// <param name="securityType">The security type of the generated symbols</param>
-        /// <param name="market">The market of the generated symbols</param>
         /// <returns>The number of available symbols for the given parameters, or int.MaxValue if no limit</returns>
-        public virtual int GetAvailableSymbolCount(SecurityType securityType, string market)
-        {
-            // there is no limit to the number of option/future contracts we can generate
-            if (securityType == SecurityType.Option || securityType == SecurityType.Future)
-            {
-                return int.MaxValue;
-            }
-
-            // check the symbol properties database to determine how many symbols we can generate
-            // if there is a wildcard entry, we can generate as many symbols as we want
-            // if there is no wildcard entry, we can only generate as many symbols as there are entries
-            return SymbolPropertiesDatabase.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType)
-                ? int.MaxValue
-                : SymbolPropertiesDatabase.GetSymbolPropertiesList(market, securityType).Count();
-        }
+        public abstract int GetAvailableSymbolCount();
     }
 }

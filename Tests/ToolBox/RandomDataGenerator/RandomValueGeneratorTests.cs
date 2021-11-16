@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.RandomDataGenerator;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -161,61 +160,6 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        public void NextOptionSymbol_CreatesOptionSymbol_WithCorrectSecurityTypeAndEquityUnderlying()
-        {
-            var minExpiry = new DateTime(2000, 01, 01);
-            var maxExpiry = new DateTime(2001, 01, 01);
-            var symbol = randomValueGenerator.NextOption(Market.USA, minExpiry, maxExpiry, 100m, 50);
-
-            Assert.AreEqual(SecurityType.Option, symbol.SecurityType);
-
-            var underlying = symbol.Underlying;
-            Assert.AreEqual(Market.USA, underlying.ID.Market);
-            Assert.AreEqual(SecurityType.Equity, underlying.SecurityType);
-        }
-
-        [Test]
-        public void NextOptionSymbol_CreatesOptionSymbol_WithinSpecifiedExpiration_OnFriday()
-        {
-            var minExpiry = new DateTime(2000, 01, 01);
-            var maxExpiry = new DateTime(2001, 01, 01);
-            var symbol = randomValueGenerator.NextOption(Market.USA, minExpiry, maxExpiry, 100m, 50);
-
-            var expiration = symbol.ID.Date;
-            Assert.LessOrEqual(minExpiry, expiration);
-            Assert.GreaterOrEqual(maxExpiry, expiration);
-        }
-
-        [Test]
-        public void NextOptionSymbol_CreatesOptionSymbol_WithRequestedMarket()
-        {
-            for (int i = 0; i < 50; i++)
-            {
-                var minExpiry = new DateTime(2000, 01, 01);
-                var maxExpiry = new DateTime(2001, 01, 01);
-                var price = randomValueGenerator.NextPrice(SecurityType.Equity, Market.USA, 100m, 100m);
-                var symbol = randomValueGenerator.NextOption(Market.USA, minExpiry, maxExpiry, price, 50);
-
-                Assert.AreEqual(Market.USA, symbol.ID.Market);
-            }
-        }
-
-        [Test]
-        public void NextOptionSymbol_CreatesOptionSymbol_WithinSpecifiedStrikePriceDeviation()
-        {
-            var underlyingPrice = 100m;
-            var maximumStrikePriceDeviation = 50m;
-            var minExpiry = new DateTime(2000, 01, 01);
-            var maxExpiry = new DateTime(2001, 01, 01);
-            var symbol = randomValueGenerator.NextOption(Market.USA, minExpiry, maxExpiry, underlyingPrice, maximumStrikePriceDeviation);
-
-            var strikePrice = symbol.ID.StrikePrice;
-            var maximumDeviation = underlyingPrice * (maximumStrikePriceDeviation / 100m);
-            Assert.LessOrEqual(underlyingPrice - maximumDeviation, strikePrice);
-            Assert.GreaterOrEqual(underlyingPrice + maximumDeviation, strikePrice);
-        }
-
-        [Test]
         public void NextTick_CreatesTradeTick_WithPriceAndQuantity()
         {
             var dateTime = new DateTime(2000, 01, 01);
@@ -351,61 +295,6 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 default:
                     throw new ArgumentOutOfRangeException(nameof(density), density, null);
             }
-        }
-
-        [Test]
-        public void NextFuture_CreatesSymbol_WithFutureSecurityTypeAndRequestedMarket()
-        {
-            var minExpiry = new DateTime(2000, 01, 01);
-            var maxExpiry = new DateTime(2001, 01, 01);
-            var symbol = randomValueGenerator.NextFuture(Market.CME, minExpiry, maxExpiry);
-
-            Assert.AreEqual(Market.CME, symbol.ID.Market);
-            Assert.AreEqual(SecurityType.Future, symbol.SecurityType);
-        }
-
-        [Test]
-        public void NextFuture_CreatesSymbol_WithFutureWithValidFridayExpiry()
-        {
-            var minExpiry = new DateTime(2000, 01, 01);
-            var maxExpiry = new DateTime(2001, 01, 01);
-            var symbol = randomValueGenerator.NextFuture(Market.CME, minExpiry, maxExpiry);
-
-            var expiry = symbol.ID.Date;
-            Assert.Greater(expiry, minExpiry);
-            Assert.LessOrEqual(expiry, maxExpiry);
-            Assert.AreEqual(DayOfWeek.Friday, expiry.DayOfWeek);
-        }
-
-        [Test]
-        public void NextFuture_CreatesSymbol_WithEntryInSymbolPropertiesDatabase()
-        {
-            var minExpiry = new DateTime(2000, 01, 01);
-            var maxExpiry = new DateTime(2001, 01, 01);
-            var symbol = randomValueGenerator.NextFuture(Market.CME, minExpiry, maxExpiry);
-
-            var db = SymbolPropertiesDatabase.FromDataFolder();
-            Assert.IsTrue(db.ContainsKey(Market.CME, symbol, SecurityType.Future));
-        }
-
-        [Test]
-        [TestCase(SecurityType.Equity, Market.USA, true)]
-        [TestCase(SecurityType.Cfd, Market.FXCM, false)]
-        [TestCase(SecurityType.Cfd, Market.Oanda, false)]
-        [TestCase(SecurityType.Forex, Market.FXCM, false)]
-        [TestCase(SecurityType.Forex, Market.Oanda, false)]
-        [TestCase(SecurityType.Crypto, Market.GDAX, false)]
-        [TestCase(SecurityType.Crypto, Market.Bitfinex, false)]
-        [TestCase(SecurityType.Option, Market.USA, true)]
-        [TestCase(SecurityType.Future, Market.CME, true)]
-        [TestCase(SecurityType.Future, Market.CBOE, true)]
-        public void GetAvailableSymbolCount(SecurityType securityType, string market, bool expectInfinity)
-        {
-            var expected = expectInfinity
-                ? int.MaxValue
-                : SymbolPropertiesDatabase.FromDataFolder().GetSymbolPropertiesList(market, securityType).Count();
-
-            Assert.AreEqual(expected, randomValueGenerator.GetAvailableSymbolCount(securityType, market));
         }
     }
 }
