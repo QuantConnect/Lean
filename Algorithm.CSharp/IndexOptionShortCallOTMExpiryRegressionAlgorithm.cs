@@ -183,7 +183,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0"},
             {"Information Ratio", "-0.32"},
             {"Tracking Error", "0.138"},
-            {"Treynor Ratio", "-3.277"},
+            {"Treynor Ratio", "-9.479"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$22000.00"},
             {"Lowest Capacity Asset", "SPX XL80P59H5E6M|SPX 31"},
@@ -206,7 +206,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "b55e2b2bd35bc3200e228b4e6e77dd90"}
+            {"OrderListHash", "76ffdfc100ba7778009e35966bd92cfc"}
         };
     }
 }
