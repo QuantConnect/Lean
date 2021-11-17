@@ -61,8 +61,8 @@ class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
         # Check for our expected OTM option expiry
         if orderEvent.Message == "OTM":
         
-            # Assert it is at midnight (5AM UTC)
-            if orderEvent.UtcTime is not datetime(2016, 1, 16, 5, 0, 0):
+            # Assert it is at midnight 1/16 (5AM UTC)
+            if orderEvent.UtcTime.month != 1 and orderEvent.UtcTime.day != 16 and orderEvent.UtcTime.hour != 5:
                 raise AssertionError(f"Expiry event was not at the correct time, {orderEvent.UtcTime}")
 
             self.optionExpired = True
