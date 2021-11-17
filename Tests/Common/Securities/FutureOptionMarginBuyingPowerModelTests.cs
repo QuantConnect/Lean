@@ -154,8 +154,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        // TODO: Don't use CreateDelistedSecurityOrder, use OnOptionNotification
-        public void OptionExersiceWhenFullyInvested()
+        public void OptionExerciseWhenFullyInvested()
         {
             var algorithm = new AlgorithmStub();
             algorithm.SetFinishedWarmingUp();
@@ -180,11 +179,8 @@ namespace QuantConnect.Tests.Common.Securities
             optionSecurity.Underlying.SetMarketPrice(new Tick { Value = price, Time = time });
             optionSecurity.SetMarketPrice(new Tick { Value = 150, Time = time });
             optionSecurity.Holdings.SetHoldings(1.5m, 10);
-
-            var request = optionSecurity.CreateDelistedSecurityOrderRequest(algorithm.UtcTime);
-
-            var ticket = algorithm.Transactions.AddOrder(request);
-
+            
+            var ticket = algorithm.ExerciseOption(optionSecurity.Symbol, 10, true);
             Assert.AreEqual(OrderStatus.Filled, ticket.Status);
         }
 
