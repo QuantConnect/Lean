@@ -103,14 +103,24 @@ namespace QuantConnect.Queues
             //If this isn't a backtesting mode/request, attempt a live job.
             if (_liveMode)
             {
-                var dataQueueHandler = Config.Get("data-queue-handler", DefaultDataQueueHandler);
+                List<string> dataHandlers = new();
+                var dataQueueHandlersJson = Config.Get("data-queue-handler", DefaultDataQueueHandler);
+                try
+                {
+                    dataHandlers = JsonConvert.DeserializeObject<List<string>>(dataQueueHandlersJson);
+                }
+                catch (Exception err)
+                {
+                    dataHandlers.Add(dataQueueHandlersJson);
+                    dataQueueHandlersJson = JsonConvert.SerializeObject(new[] { dataQueueHandlersJson });
+                }
                 var liveJob = new LiveNodePacket
                 {
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
                     HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
-                    DataQueueHandler = dataQueueHandler,
+                    DataQueueHandler = dataQueueHandlersJson,
                     DataChannelProvider = Config.Get("data-channel-provider", DefaultDataChannelProvider),
                     Channel = AccessToken,
                     UserToken = AccessToken,
@@ -136,7 +146,7 @@ namespace QuantConnect.Queues
                 {
                     Log.Error(err, $"Error resolving BrokerageData for live job for brokerage {liveJob.Brokerage}");
                 }
-                var dataHandlers = JsonConvert.DeserializeObject<List<string>>(dataQueueHandler);
+
                 foreach (var dataHandlerName in dataHandlers)
                 {
                     var brokerageFactoryForDataHandler = GetFactoryFromDataQueueHandler(dataHandlerName);
@@ -153,7 +163,12 @@ namespace QuantConnect.Queues
                     var brokerageData = brokerageFactoryForDataHandler.BrokerageData;
                     foreach (var data in brokerageData)
                     {
-                        if (!liveJob.BrokerageData.ContainsKey(data.Key))
+                        if (data.Key == "live-holdings")
+                        {
+                            //live-holdings not required for data handler
+                            continue;
+                        }
+                        else if (!liveJob.BrokerageData.ContainsKey(data.Key))
                         {
                             liveJob.BrokerageData.Add(data.Key, data.Value);
                         }
