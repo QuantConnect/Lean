@@ -481,7 +481,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.OpenOrder += clientOnOpenOrder;
             _client.OpenOrderEnd += clientOnOpenOrderEnd;
-            
+
             CheckRateLimiting();
 
             if (all)
