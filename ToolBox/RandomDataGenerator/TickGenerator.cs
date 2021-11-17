@@ -28,20 +28,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
-        /// <summary>
-        /// Generates a random <see cref="Tick"/> that is at most the specified <paramref name="maximumPercentDeviation"/> away from the
-        /// <paramref name="previousValue"/> and is of the requested <paramref name="tickType"/>
-        /// </summary>
-        /// <param name="symbol">The symbol of the generated tick</param>
-        /// <param name="dateTime">The time of the generated tick</param>
-        /// <param name="tickType">The type of <see cref="Tick"/> to be generated</param>
-        /// <param name="previousValue">The previous price, used as a reference for generating
-        /// new random prices for the next time step</param>
-        /// <param name="maximumPercentDeviation">The maximum percentage to deviate from the
-        /// <paramref name="previousValue"/>, for example, 1 would indicate a maximum of 1% deviation from the
-        /// <paramref name="previousValue"/>. For a previous price of 100, this would yield a price between 99 and 101 inclusive</param>
-        /// <returns>A random <see cref="Tick"/> value that is within the specified <paramref name="maximumPercentDeviation"/>
-        /// from the <paramref name="previousValue"/></returns>
         public IEnumerable<Tick> GenerateTicks(Symbol symbol)
         {
             var previousValues = new Dictionary<TickType, decimal>
