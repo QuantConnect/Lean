@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
+using QuantConnect.Interfaces;
+
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// 
+    /// Event arguments class for the <see cref="IBrokerage.DelistingNotification"/> event
     /// </summary>
     public class DelistingNotificationEventArgs
     {

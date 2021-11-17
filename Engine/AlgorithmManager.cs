@@ -558,22 +558,26 @@ namespace QuantConnect.Lean.Engine
                     algorithm.SetRuntimeError(err, "Dividends/Splits/Delistings");
                     return;
                 }
-
-                // Keep this up to date even though we don't process delistings here anymore
-                foreach(var delisting in timeSlice.Slice.Delistings.Values)
+                
+                // Only track pending delistings in non-live mode.
+                if (!algorithm.LiveMode)
                 {
-                    if (delisting.Type == DelistingType.Warning)
+                    // Keep this up to date even though we don't process delistings here anymore
+                    foreach(var delisting in timeSlice.Slice.Delistings.Values)
                     {
-                        // Store our delistings warnings because they are still used by ProcessSplitSymbols above
-                        pendingDelistings.Add(delisting);
-                    }
-                    else
-                    {
-                        // If we have an actual delisting event, remove it from pending delistings
-                        var index = pendingDelistings.FindIndex(x => x.Symbol == delisting.Symbol);
-                        if (index != -1)
+                        if (delisting.Type == DelistingType.Warning)
                         {
-                            pendingDelistings.RemoveAt(index);
+                            // Store our delistings warnings because they are still used by ProcessSplitSymbols above
+                            pendingDelistings.Add(delisting);
+                        }
+                        else
+                        {
+                            // If we have an actual delisting event, remove it from pending delistings
+                            var index = pendingDelistings.FindIndex(x => x.Symbol == delisting.Symbol);
+                            if (index != -1)
+                            {
+                                pendingDelistings.RemoveAt(index);
+                            }
                         }
                     }
                 }
