@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data.Market;
-
 
 namespace QuantConnect.Indicators
 {
@@ -37,7 +35,7 @@ namespace QuantConnect.Indicators
         private decimal _previousTrailingLowerBand;
         private decimal _previousClose;
         private decimal _prevSuper;
-        private int _period;
+        private readonly int _period;
 
         /// <summary>
         /// Average true range indicator used to calculate super trend's basic upper and lower bands
@@ -47,7 +45,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples >= _period;
+        public override bool IsReady => _averageTrueRange.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -67,8 +65,6 @@ namespace QuantConnect.Indicators
             _averageTrueRange = new AverageTrueRange(period, movingAverageType);
             _multiplier = multiplier;
             _period = period;
-            _previousTrailingLowerBand = 0;
-            _previousTrailingUpperBand = 0;
             _prevSuper = -1;
         }
 
@@ -90,8 +86,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _averageTrueRange.Update(input);
-            if (!IsReady)
+            if (!_averageTrueRange.Update(input))
             {
                 _previousClose = input.Close;
                 return 0m;
