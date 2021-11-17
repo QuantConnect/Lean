@@ -1610,6 +1610,28 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new SuperTrend indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose SuperTrend indicator we want.</param>
+        /// <param name="period">The smoothing period for average true range.</param>
+        /// <param name="multiplier">Multiplier to calculate basic upper and lower bands width.</param>
+        /// <param name="movingAverageType">Smoother type for average true range, defaults to Wilders.</param>
+        /// <param name="resolution">The resolution.</param>
+        public SuperTrend STR(Symbol symbol, int period, decimal multiplier, MovingAverageType movingAverageType = MovingAverageType.Wilders, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, $"STR({period},{multiplier})", resolution);
+            var strend = new SuperTrend(name, period, multiplier, movingAverageType);
+            RegisterIndicator(symbol, strend, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, strend, resolution);
+            }
+
+            return strend;
+        }
+
+        /// <summary>
         /// Creates a new RollingSharpeRatio indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose RSR we want</param>
