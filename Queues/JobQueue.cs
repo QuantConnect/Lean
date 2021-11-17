@@ -13,16 +13,20 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
+using Fasterflect;
 using Newtonsoft.Json;
-using QuantConnect.Python;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Python;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace QuantConnect.Queues
 {
@@ -33,6 +37,7 @@ namespace QuantConnect.Queues
     {
         // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
         private static readonly TextWriter Console = System.Console.Out;
+
         private const string PaperBrokerageTypeName = "PaperBrokerage";
         private const string DefaultHistoryProvider = "SubscriptionDataReaderHistoryProvider";
         private const string DefaultDataQueueHandler = "LiveDataQueue";
@@ -43,7 +48,7 @@ namespace QuantConnect.Queues
         private static readonly int UserId = Config.GetInt("job-user-id", 0);
         private static readonly int ProjectId = Config.GetInt("job-project-id", 0);
         private readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
-        private readonly Language Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language"), ignoreCase:true);
+        private readonly Language Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language"), ignoreCase: true);
 
         /// <summary>
         /// Physical location of Algorithm DLL.
@@ -90,7 +95,7 @@ namespace QuantConnect.Queues
                 SecondLimit = Config.GetInt("symbol-second-limit", 10000),
                 TickLimit = Config.GetInt("symbol-tick-limit", 10000),
                 RamAllocation = int.MaxValue,
-                MaximumDataPointsPerChartSeries =  Config.GetInt("maximum-data-points-per-chart-series", 4000)
+                MaximumDataPointsPerChartSeries = Config.GetInt("maximum-data-points-per-chart-series", 4000)
             };
 
             var algorithmId = Config.Get("algorithm-id", AlgorithmTypeName);
@@ -119,10 +124,12 @@ namespace QuantConnect.Queues
                     Controls = controls
                 };
 
+                Type brokerageName = null;
                 try
                 {
                     // import the brokerage data for the configured brokerage
                     var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                    brokerageName = brokerageFactory.BrokerageType;
                     liveJob.BrokerageData = brokerageFactory.BrokerageData;
                 }
                 catch (Exception err)
@@ -132,13 +139,27 @@ namespace QuantConnect.Queues
                 var dataHandlers = JsonConvert.DeserializeObject<List<string>>(dataQueueHandler);
                 foreach (var dataHandlerName in dataHandlers)
                 {
-                    var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(dataHandlerName));
-                    var brokerageData = brokerageFactory.BrokerageData;
+                    var brokerageFactoryForDataHandler = GetFactoryFromDataQueueHandler(dataHandlerName);
+                    if (brokerageFactoryForDataHandler == null)
+                    {
+                        Log.Error($"JobQueue.NextJob(): Not able to fetch data handler with name: {dataHandlerName}");
+                        continue;
+                    }
+                    if (brokerageFactoryForDataHandler.BrokerageType == brokerageName)
+                    {
+                        //Don't need to add brokearageData again if added by brokerage
+                        continue;
+                    }
+                    var brokerageData = brokerageFactoryForDataHandler.BrokerageData;
                     foreach (var data in brokerageData)
                     {
                         if (!liveJob.BrokerageData.ContainsKey(data.Key))
                         {
                             liveJob.BrokerageData.Add(data.Key, data.Value);
+                        }
+                        else
+                        {
+                            throw new ArgumentException($"JobQueue.NextJob(): Key already exists in BrokerageData -- {data.Key}");
                         }
                     }
                 }
@@ -146,7 +167,7 @@ namespace QuantConnect.Queues
             }
 
             //Default run a backtesting job.
-            var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] {}, "local")
+            var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] { }, "local")
             {
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
@@ -164,6 +185,24 @@ namespace QuantConnect.Queues
             };
 
             return backtestJob;
+        }
+
+        private static IBrokerageFactory GetFactoryFromDataQueueHandler(string dataQueueHandler)
+        {
+            var dataQueueHandlerType = Assembly.GetAssembly(typeof(Brokerage))
+                .GetTypes()
+                .FirstOrDefault(x =>
+                    x.FullName != null &&
+                    x.FullName.EndsWith(dataQueueHandler) &&
+                    x.HasAttribute(typeof(BrokerageFactoryAttribute)));
+
+            if (dataQueueHandlerType != null)
+            {
+                var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
+                var brokerageFactory = (BrokerageFactory)Activator.CreateInstance(attribute.Type);
+                return brokerageFactory;
+            }
+            return null;
         }
 
         /// <summary>
@@ -203,5 +242,4 @@ namespace QuantConnect.Queues
             }
         }
     }
-
 }
