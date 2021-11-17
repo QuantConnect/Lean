@@ -29,6 +29,8 @@ for file in os.listdir(path):
         AddReference(file.replace(".dll", ""))
 
 from System import *
+from System.Drawing import *
+
 from QuantConnect import *
 from QuantConnect.Api import *
 from QuantConnect.Util import *
