@@ -36,6 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private const string UnderlyingTicker = "GOOG";
         public Symbol OptionSymbol;
+        private bool _optionExpired;
 
         public override void Initialize()
         {
@@ -85,6 +86,27 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Log(orderEvent.ToString());
+
+            // Check for our expected OTM option expiry
+            if (orderEvent.Message == "OTM")
+            {
+                // Assert it is at midnight (5AM UTC)
+                if (orderEvent.UtcTime != new DateTime(2016, 1, 16, 5, 0, 0))
+                {
+                    throw new ArgumentException($"Expiry event was not at the correct time, {orderEvent.UtcTime}");
+                }
+
+                _optionExpired = true;
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            // Assert we had our option expire and fill a liquidation order
+            if (_optionExpired != true)
+            {
+                throw new ArgumentException("Algorithm did not process the option expiration like expected");
+            }
         }
 
         /// <summary>
@@ -143,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "9e67da104e62950d6e299bcabe1bd442"}
+            {"OrderListHash", "c6d089f1fb86379c74a7413a9c2f8553"}
         };
     }
 }

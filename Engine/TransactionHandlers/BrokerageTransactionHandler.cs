@@ -172,6 +172,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandleOptionNotification(e);
             };
 
+            _brokerage.DelistingNotification += (sender, e) =>
+            {
+                HandleDelistingNotification(e);
+            };
+
             IsActive = true;
 
             _algorithm = algorithm;
@@ -1153,6 +1158,39 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _algorithm.OnAssignmentOrderEvent(fill);
         }
 
+        private void HandleDelistingNotification(DelistingNotificationEventArgs e)
+        {
+            if (_algorithm.Securities.TryGetValue(e.Symbol, out var security))
+            {
+                Log.Trace(
+                    "BrokerageTransactionHandler.HandleDelistingNotification(): clearing position for delisted holding: " +
+                    $"Symbol: {e.Symbol.Value}, " +
+                    $"Quantity: {security.Holdings.Quantity}");
+
+                // Only submit an order if we have holdings
+                var quantity = -security.Holdings.Quantity;
+                if (quantity != 0)
+                {
+                    var tag = "Liquidate from delisting";
+
+                    // Create our order and add it
+                    var order = new MarketOrder(security.Symbol, quantity, _algorithm.UtcTime, tag);
+                    AddBrokerageOrder(order);
+
+                    // Create our fill with the latest price
+                    var fill = new OrderEvent(order, _algorithm.UtcTime, OrderFee.Zero)
+                    {
+                        FillPrice = security.Price,
+                        Status = OrderStatus.Filled,
+                        FillQuantity = order.Quantity
+                    };
+
+                    // Process this order event
+                    HandleOrderEvent(fill);
+                }
+            }
+        }
+
         /// <summary>
         /// Option notification event is received and new order events are generated
         /// </summary>
@@ -1226,18 +1264,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private OptionExerciseOrder GenerateOptionExerciseOrder(Security security, decimal quantity)
         {
             // generate new exercise order and ticket for the option
-            var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc)
-            {
-                Id = _algorithm.Transactions.GetIncrementOrderId()
-            };
+            var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc);
+            AddBrokerageOrder(order);
+            return order;
+        }
+
+        /// <summary>
+        /// Helper to process internally created orders for delistings/exercise orders
+        /// </summary>
+        /// <param name="order">order to </param>
+        private void AddBrokerageOrder(Order order)
+        {
+            order.Id = _algorithm.Transactions.GetIncrementOrderId();
 
             var ticket = order.ToOrderTicket(_algorithm.Transactions);
-
             AddOpenOrder(order, ticket);
-
             Interlocked.Increment(ref _totalOrderCount);
-
-            return order;
         }
 
         private void EmitOptionNotificationEvents(Security security, OptionExerciseOrder order)
@@ -1245,10 +1287,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // generate the order events reusing the option exercise model
             var option = (Option)security;
             var orderEvents = option.OptionExerciseModel.OptionExercise(option, order);
-
+            
             foreach (var orderEvent in orderEvents)
             {
                 HandleOrderEvent(orderEvent);
+                
+                if (orderEvent.IsAssignment)
+                {
+                    orderEvent.Message = order.Tag;
+                    HandlePositionAssigned(orderEvent);
+                }
             }
         }
 

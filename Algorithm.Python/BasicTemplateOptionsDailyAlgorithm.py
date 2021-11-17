@@ -28,6 +28,7 @@ class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
         self.SetStartDate(2015, 12, 23)
         self.SetEndDate(2016, 1, 20)
         self.SetCash(100000)
+        self.optionExpired = False
 
         equity = self.AddEquity(self.UnderlyingTicker, Resolution.Daily)
         option = self.AddOption(self.UnderlyingTicker, Resolution.Daily)
@@ -56,3 +57,17 @@ class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
 
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))
+        
+        # Check for our expected OTM option expiry
+        if orderEvent.Message == "OTM":
+        
+            # Assert it is at midnight 1/16 (5AM UTC)
+            if orderEvent.UtcTime.month != 1 and orderEvent.UtcTime.day != 16 and orderEvent.UtcTime.hour != 5:
+                raise AssertionError(f"Expiry event was not at the correct time, {orderEvent.UtcTime}")
+
+            self.optionExpired = True
+    
+    def OnEndOfAlgorithm(self):
+        # Assert we had our option expire and fill a liquidation order
+        if not self.optionExpired:
+            raise AssertionError("Algorithm did not process the option expiration like expected")

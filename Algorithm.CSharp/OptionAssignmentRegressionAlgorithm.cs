@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2015, 12, 23);
-            SetEndDate(2015, 12, 24);
+            SetEndDate(2015, 12, 28);
             SetCash(100000);
             Stock = AddEquity("GOOG", Resolution.Minute);
 
@@ -78,33 +78,33 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "24"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
+            {"Average Win", "9.60%"},
+            {"Average Loss", "-16.86%"},
+            {"Compounding Annual Return", "-75.533%"},
+            {"Drawdown", "2.300%"},
+            {"Expectancy", "0.046"},
+            {"Net Profit", "-2.162%"},
+            {"Sharpe Ratio", "-6.761"},
+            {"Probabilistic Sharpe Ratio", "1.125%"},
+            {"Loss Rate", "33%"},
+            {"Win Rate", "67%"},
+            {"Profit-Loss Ratio", "0.57"},
+            {"Alpha", "-0.01"},
+            {"Beta", "0.455"},
+            {"Annual Standard Deviation", "0.014"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
+            {"Information Ratio", "6.047"},
+            {"Tracking Error", "0.015"},
+            {"Treynor Ratio", "-0.207"},
             {"Total Fees", "$12.00"},
-            {"Estimated Strategy Capacity", "$310000.00"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Fitness Score", "0.5"},
+            {"Estimated Strategy Capacity", "$1100000.00"},
+            {"Lowest Capacity Asset", "GOOCV 305RBQ20WHPNQ|GOOCV VP83T1ZUHROL"},
+            {"Fitness Score", "0.057"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-50.725"},
-            {"Portfolio Turnover", "8.14"},
+            {"Sortino Ratio", "-3.876"},
+            {"Return Over Maximum Drawdown", "-35.706"},
+            {"Portfolio Turnover", "3.258"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "58557574cf0489dd38fb37768f509ca1"}
+            {"OrderListHash", "a0e8eeee1c31968b773ebdf47bb996df"}
         };
     }
 }

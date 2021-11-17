@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
         {
-            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 19, 20, 0, 0);
+            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 20, 4, 0, 0);
 
             if (orderEvent.Direction == OrderDirection.Sell && future.Holdings.Quantity != 0)
             {
@@ -203,13 +203,13 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},
-            {"Average Win", "1.22%"},
-            {"Average Loss", "-7.42%"},
-            {"Compounding Annual Return", "-12.482%"},
+            {"Average Win", "1.26%"},
+            {"Average Loss", "-7.41%"},
+            {"Compounding Annual Return", "-12.424%"},
             {"Drawdown", "6.300%"},
-            {"Expectancy", "-0.417"},
-            {"Net Profit", "-6.282%"},
-            {"Sharpe Ratio", "-1.225"},
+            {"Expectancy", "-0.415"},
+            {"Net Profit", "-6.252%"},
+            {"Sharpe Ratio", "-1.226"},
             {"Probabilistic Sharpe Ratio", "0.002%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
@@ -218,12 +218,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0.004"},
             {"Annual Standard Deviation", "0.07"},
             {"Annual Variance", "0.005"},
-            {"Information Ratio", "-0.284"},
+            {"Information Ratio", "-0.283"},
             {"Tracking Error", "0.379"},
-            {"Treynor Ratio", "-23.801"},
-            {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$180000000.00"},
-            {"Lowest Capacity Asset", "ES XFH59UK0MYO1"},
+            {"Treynor Ratio", "-23.811"},
+            {"Total Fees", "$1.85"},
+            {"Estimated Strategy Capacity", "$270000000.00"},
+            {"Lowest Capacity Asset", "ES XFH59UPBIJ7O|ES XFH59UK0MYO1"},
             {"Fitness Score", "0.008"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -243,7 +243,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "c59d790b89d76f1ad3bb7738b28567c9"}
+            {"OrderListHash", "b738fdaf1dae6849884df9e51eb6482b"}
         };
     }
 }

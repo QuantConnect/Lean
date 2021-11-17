@@ -198,25 +198,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Helper method to create an order request to liquidate a delisted asset
-        /// </summary>
-        public static SubmitOrderRequest CreateDelistedSecurityOrderRequest(this Security security, DateTime utcTime)
-        {
-            var orderType = OrderType.Market;
-            var tag = "Liquidate from delisting";
-            if (security.Type.IsOption())
-            {
-                // tx handler will determine auto exercise/assignment
-                tag = "Option Expired";
-                orderType = OrderType.OptionExercise;
-            }
-
-            // submit an order to liquidate on market close or exercise (for options)
-            return new SubmitOrderRequest(orderType, security.Type, security.Symbol,
-                -security.Holdings.Quantity, 0, 0, utcTime, tag);
-        }
-
-        /// <summary>
         /// Safe multiplies a decimal by 100
         /// </summary>
         /// <param name="value">The decimal to multiply</param>
@@ -3027,42 +3008,6 @@ namespace QuantConnect
                     yield return streamReader.ReadLine();
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns the delisted liquidation time for a given delisting warning and exchange hours
-        /// </summary>
-        /// <param name="delisting">The delisting warning event</param>
-        /// <param name="exchangeHours">The securities exchange hours to use</param>
-        /// <returns>The securities liquidation time</returns>
-        public static DateTime GetLiquidationTime(this Delisting delisting, SecurityExchangeHours exchangeHours)
-        {
-            if (delisting.Type != DelistingType.Warning)
-            {
-                throw new ArgumentException("GetLiquidationTime can only be called with the liquidate warning event", nameof(delisting));
-            }
-
-            var delistingWarning = delisting.Time.Date;
-
-            // by default liquidation/exercise will happen a few min before the end of the last trading day
-            var liquidationTime = delistingWarning.AddDays(1).Add(DelistingMarketCloseOffsetSpan);
-
-            // if the market is open today (most probably should), we will determine the market close and liquidate a few min before instead
-            if (exchangeHours.IsDateOpen(delistingWarning))
-            {
-                var marketOpen = delistingWarning;
-                if (!exchangeHours.IsOpen(marketOpen, false))
-                {
-                    // if the market isn't open at 0:00 we get next market open
-                    marketOpen = exchangeHours.GetNextMarketOpen(delistingWarning, false);
-                }
-
-                // using current market open we will get next market close which should be today and we will liquidate a few min before
-                liquidationTime = exchangeHours.GetNextMarketClose(marketOpen, false)
-                    .Add(DelistingMarketCloseOffsetSpan);
-            }
-
-            return liquidationTime;
         }
 
         /// <summary>

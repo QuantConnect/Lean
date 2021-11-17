@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private readonly DateTime _expectedExpiryWarningTime = new DateTime(2020, 6, 19);
         private readonly DateTime _expectedExpiryDelistingTime = new DateTime(2020, 6, 20);
-        private readonly DateTime _expectedLiquidationTime = new DateTime(2020, 6, 19, 16, 0, 0);
+        private readonly DateTime _expectedLiquidationTime = new DateTime(2020, 6, 20);
 
         public override void Initialize()
         {
@@ -183,15 +183,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "10.15%"},
             {"Average Loss", "-11.34%"},
-            {"Compounding Annual Return", "-2.578%"},
+            {"Compounding Annual Return", "-2.573%"},
             {"Drawdown", "2.300%"},
-            {"Expectancy", "-0.053"},
-            {"Net Profit", "-2.345%"},
+            {"Expectancy", "-0.052"},
+            {"Net Profit", "-2.341%"},
             {"Sharpe Ratio", "-0.867"},
             {"Probabilistic Sharpe Ratio", "0.001%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.89"},
+            {"Profit-Loss Ratio", "0.90"},
             {"Alpha", "-0.014"},
             {"Beta", "0.001"},
             {"Annual Standard Deviation", "0.016"},
@@ -199,7 +199,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "-0.603"},
             {"Tracking Error", "0.291"},
             {"Treynor Ratio", "-13.292"},
-            {"Total Fees", "$7.40"},
+            {"Total Fees", "$3.70"},
             {"Estimated Strategy Capacity", "$45000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UK0MYO1"},
             {"Fitness Score", "0.005"},
@@ -221,7 +221,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "0128b145984582f5eba7e95881d9b62d"}
+            {"OrderListHash", "67d8ad460ff796937ee252c3e4340e62"}
         };
     }
 }

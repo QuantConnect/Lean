@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2021, 1, 4);
-            SetEndDate(2021, 1, 15);
+            SetEndDate(2021, 1, 18);
             SetCash(1000000);
 
             // Use indicator for signal; but it cannot be traded
@@ -114,31 +114,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "-53.10%"},
-            {"Compounding Annual Return", "-96.172%"},
+            {"Compounding Annual Return", "-92.544%"},
             {"Drawdown", "10.100%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-9.915%"},
-            {"Sharpe Ratio", "-4.068"},
-            {"Probabilistic Sharpe Ratio", "0.055%"},
+            {"Sharpe Ratio", "-3.845"},
+            {"Probabilistic Sharpe Ratio", "0.053%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.745"},
-            {"Beta", "0.432"},
-            {"Annual Standard Deviation", "0.126"},
-            {"Annual Variance", "0.016"},
-            {"Information Ratio", "-7.972"},
-            {"Tracking Error", "0.132"},
-            {"Treynor Ratio", "-1.189"},
+            {"Alpha", "-0.558"},
+            {"Beta", "0.313"},
+            {"Annual Standard Deviation", "0.112"},
+            {"Annual Variance", "0.013"},
+            {"Information Ratio", "-6.652"},
+            {"Tracking Error", "0.125"},
+            {"Treynor Ratio", "-1.379"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$14000000.00"},
+            {"Estimated Strategy Capacity", "$13000000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Fitness Score", "0.044"},
+            {"Fitness Score", "0.039"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.96"},
-            {"Return Over Maximum Drawdown", "-10.171"},
-            {"Portfolio Turnover", "0.34"},
+            {"Sortino Ratio", "-1.763"},
+            {"Return Over Maximum Drawdown", "-9.371"},
+            {"Portfolio Turnover", "0.278"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -152,7 +152,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "52521ab779446daf4d38a7c9bbbdd893"}
+            {"OrderListHash", "0668385036aba3e95127607dfc2f1a59"}
         };
     }
 }
