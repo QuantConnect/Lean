@@ -481,7 +481,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.OpenOrder += clientOnOpenOrder;
             _client.OpenOrderEnd += clientOnOpenOrderEnd;
-
+            
             CheckRateLimiting();
 
             if (all)
@@ -3022,6 +3022,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         Currencies.USD);
 
                     contract.Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant();
+                    contract.Currency = symbolProperties.QuoteCurrency;
                 }
 
                 // processing request
