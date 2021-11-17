@@ -531,18 +531,12 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <summary>
         /// Process delistings
         /// </summary>
-        /// <param name="delistings"></param>
+        /// <param name="delistings">Delistings to process</param>
         public void ProcessDelistings(Delistings delistings)
         {
-            // We have nothing to do
-            if (delistings.IsNullOrEmpty())
-            {
-                return;
-            }
-
             // Process our delistings, important to do options first because of possibility of having future options contracts
             // and underlying future delisting at the same time.
-            foreach (var delisting in delistings.Values.OrderBy(x => !x.Symbol.SecurityType.IsOption()))
+            foreach (var delisting in delistings?.Values.OrderBy(x => !x.Symbol.SecurityType.IsOption()))
             {
                 Log.Trace($"BacktestingBrokerage.ProcessDelistings(): Delisting {delisting.Type}: {delisting.Symbol.Value}, UtcTime: {Algorithm.UtcTime}, DelistingTime: {delisting.Time}");
                 if (delisting.Type == DelistingType.Warning)
