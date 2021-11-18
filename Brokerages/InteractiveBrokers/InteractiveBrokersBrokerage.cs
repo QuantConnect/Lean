@@ -2989,15 +2989,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 lookupName = symbol.Underlying.ID.Symbol;
             }
 
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                        symbol.ID.Market,
+                        symbol,
+                        symbol.SecurityType,
+                        _algorithm.Portfolio.CashBook.AccountCurrency);
+
             // setting up lookup request
             var contract = new Contract
             {
                 Symbol = _symbolMapper.GetBrokerageRootSymbol(lookupName),
-                Currency = securityCurrency ?? Currencies.USD,
+                Currency = securityCurrency ?? symbolProperties.QuoteCurrency,
                 Exchange = exchangeSpecifier,
                 SecType = ConvertSecurityType(symbol.SecurityType),
-                IncludeExpired = includeExpired
-            };
+                IncludeExpired = includeExpired,
+                Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant()
+        };
 
             Log.Trace($"InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list for {contract.Symbol} ...");
 
@@ -3012,18 +3019,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             else if (symbol.SecurityType == SecurityType.Future)
             {
-                string market;
-                if (_symbolPropertiesDatabase.TryGetMarket(lookupName, symbol.SecurityType, out market))
-                {
-                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
-                        market,
-                        symbol,
-                        symbol.SecurityType,
-                        Currencies.USD);
-
-                    contract.Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant();
-                }
-
                 // processing request
                 var results = FindContracts(contract, contract.Symbol);
 
