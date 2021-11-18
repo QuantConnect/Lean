@@ -71,6 +71,29 @@ namespace QuantConnect.Queues
         }
 
         /// <summary>
+        /// Gets Brokerage Factory for provided IDQH
+        /// </summary>
+        /// <param name="dataQueueHandler"></param>
+        /// <returns>An Instance of Brokearage Factory if possible, otherwise null</returns>
+        public static IBrokerageFactory GetFactoryFromDataQueueHandler(string dataQueueHandler)
+        {
+            var dataQueueHandlerType = Assembly.GetAssembly(typeof(Brokerage))
+                .GetTypes()
+                .FirstOrDefault(x =>
+                    x.FullName != null &&
+                    x.FullName.EndsWith(dataQueueHandler) &&
+                    x.HasAttribute(typeof(BrokerageFactoryAttribute)));
+
+            if (dataQueueHandlerType != null)
+            {
+                var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
+                var brokerageFactory = (BrokerageFactory)Activator.CreateInstance(attribute.Type);
+                return brokerageFactory;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Desktop/Local Get Next Task - Get task from the Algorithm folder of VS Solution.
         /// </summary>
         /// <returns></returns>
@@ -200,24 +223,6 @@ namespace QuantConnect.Queues
             };
 
             return backtestJob;
-        }
-
-        private static IBrokerageFactory GetFactoryFromDataQueueHandler(string dataQueueHandler)
-        {
-            var dataQueueHandlerType = Assembly.GetAssembly(typeof(Brokerage))
-                .GetTypes()
-                .FirstOrDefault(x =>
-                    x.FullName != null &&
-                    x.FullName.EndsWith(dataQueueHandler) &&
-                    x.HasAttribute(typeof(BrokerageFactoryAttribute)));
-
-            if (dataQueueHandlerType != null)
-            {
-                var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
-                var brokerageFactory = (BrokerageFactory)Activator.CreateInstance(attribute.Type);
-                return brokerageFactory;
-            }
-            return null;
         }
 
         /// <summary>
