@@ -31,14 +31,16 @@ namespace QuantConnect.ToolBox.Polygon
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
-        /// <param name="tickType">The tick type (Trade or Quote)</param>
+        /// <param name="dataDownloaderGetParameters">model class for passing in parameters for historical data</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, TickType tickType)
+        public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
+            Symbol symbol = dataDownloaderGetParameters.Symbol;
+            Resolution resolution = dataDownloaderGetParameters.Resolution;
+            DateTime startUtc = dataDownloaderGetParameters.StartUtc;
+            DateTime endUtc = dataDownloaderGetParameters.EndUtc;
+            TickType tickType = dataDownloaderGetParameters.TickType;
+
             if (symbol.SecurityType != SecurityType.Equity &&
                 symbol.SecurityType != SecurityType.Forex && 
                 symbol.SecurityType != SecurityType.Crypto)

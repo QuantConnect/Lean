@@ -44,7 +44,7 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
 
                 // Download the data
                 var symbol = Symbol.Create("BTCUSD", SecurityType.Forex, market);
-                var data = downloader.Get(symbol, Resolution.Daily, fromDate, DateTime.UtcNow, TickType.Trade);
+                var data = downloader.Get(new DataDownloaderGetParameters(symbol, Resolution.Daily, fromDate, DateTime.UtcNow));
 
                 // Save the data
                 var writer = new LeanDataWriter(Resolution.Daily, symbol, dataDirectory, TickType.Trade);

@@ -85,7 +85,7 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                  {
                      // Download the data
                      var symbol = Symbol.Create(request.Ticker, SecurityType.Equity, market);
-                     var data = downloader.Get(symbol, request.Resolution, startDate, endDate, TickType.Trade);
+                     var data = downloader.Get(new DataDownloaderGetParameters(symbol, request.Resolution, startDate, endDate));
 
                      // Write the data
                      var writer = new LeanDataWriter(request.Resolution, symbol, dataDirectory);
@@ -93,7 +93,7 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
 
                      if (request.Resolution == Resolution.Tick)
                      {
-                         var quotes = quoteDownloader.Get(symbol, request.Resolution, startDate, endDate, TickType.Quote);
+                         var quotes = quoteDownloader.Get(new DataDownloaderGetParameters(symbol, request.Resolution, startDate, endDate, TickType.Quote));
                          var quoteWriter = new LeanDataWriter(request.Resolution, symbol, dataDirectory, TickType.Quote);
                          quoteWriter.Write(quotes);
                      }
