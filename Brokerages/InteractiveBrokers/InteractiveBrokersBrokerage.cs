@@ -2993,7 +2993,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         symbol.ID.Market,
                         symbol,
                         symbol.SecurityType,
-                        _algorithm.Portfolio.CashBook.AccountCurrency);
+                        Currencies.USD);
 
             // setting up lookup request
             var contract = new Contract
@@ -3003,22 +3003,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Exchange = exchangeSpecifier,
                 SecType = ConvertSecurityType(symbol.SecurityType),
                 IncludeExpired = includeExpired,
-                //Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant()
-            };
+                Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant()
+        };
 
-            Log.Trace($"InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list for {contract.Symbol} - {contract.Currency} - {contract.Exchange} - {contract.SecType} ...");
+            Log.Trace($"InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list for {contract.Symbol} ...");
 
             var symbols = new List<Symbol>();
 
-            if (symbol.SecurityType == SecurityType.Option)
+            if (symbol.SecurityType.IsOption())
             {
                 // IB requests for full option chains are rate limited and responses can be delayed up to a minute for each underlying,
                 // so we fetch them from the OCC website instead of using the IB API.
                 // For futures options, we fetch the option chain from CME.
-                Log.Trace("Please help me!!!!!!!!!!!!!");
-                symbols.AddRange(_algorithm.OptionChainProvider.GetOptionContractList(symbol.Underlying.Value, DateTime.Today));
+                symbols.AddRange(_algorithm.OptionChainProvider.GetOptionContractList(symbol.Underlying, DateTime.Today));
             }
-            else if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.FutureOption)
+            else if (symbol.SecurityType == SecurityType.Future)
             {
                 // processing request
                 var results = FindContracts(contract, contract.Symbol);
