@@ -2993,7 +2993,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         symbol.ID.Market,
                         symbol,
                         symbol.SecurityType,
-                        Currencies.USD);
+                        _algorithm.Portfolio.CashBook.AccountCurrency);
 
             // setting up lookup request
             var contract = new Contract
