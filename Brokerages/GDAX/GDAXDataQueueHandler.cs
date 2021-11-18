@@ -31,6 +31,8 @@ namespace QuantConnect.Brokerages.GDAX
     [BrokerageFactory(typeof(GDAXBrokerageFactory))]
     public class GDAXDataQueueHandler : GDAXBrokerage, IDataQueueHandler
     {
+        private bool _isInitialized;
+
         public GDAXDataQueueHandler() : base("GDAX")
         {
         }
@@ -42,15 +44,10 @@ namespace QuantConnect.Brokerages.GDAX
             IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job)
         {
-            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            subscriptionManager.SubscribeImpl += (s,t) =>
+            if (!_isInitialized)
             {
-                Subscribe(s);
-                return true;
-            };
-            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-
-            SubscriptionManager = subscriptionManager;
+                Initialize(wssUrl, null, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job);
+            }
         }
 
         /// <summary>
@@ -101,6 +98,24 @@ namespace QuantConnect.Brokerages.GDAX
         {
             SubscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
+        }
+
+        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient,
+            string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider,
+            IDataAggregator aggregator, LiveNodePacket job)
+        {
+            base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
+                passPhrase, algorithm, priceProvider, aggregator, job);
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+
+            SubscriptionManager = subscriptionManager;
+            _isInitialized = true;
         }
 
         /// <summary>

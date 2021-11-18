@@ -70,7 +70,6 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly AutoResetEvent _fillMonitorResetEvent = new AutoResetEvent(false);
         private readonly int _fillMonitorTimeout = Config.GetInt("gdax-fill-monitor-timeout", 500);
         private readonly ConcurrentDictionary<string, PendingOrder> _pendingOrders = new ConcurrentDictionary<string, PendingOrder>();
-        private bool _isInitialized;
 
         #endregion
 
@@ -104,10 +103,7 @@ namespace QuantConnect.Brokerages.GDAX
             IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
             : base("GDAX")
         {
-            if (!_isInitialized)
-            {
-                Initialize(wssUrl, null, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job);
-            }
+            Initialize(wssUrl, null, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job);
         }
 
         /// <summary>
@@ -186,7 +182,6 @@ namespace QuantConnect.Brokerages.GDAX
             _isDataQueueHandler = this is GDAXDataQueueHandler;
 
             _fillMonitorTask = Task.Factory.StartNew(FillMonitorAction, _ctsFillMonitor.Token);
-            _isInitialized = true;
         }
 
         private void OnSnapshot(string data)
