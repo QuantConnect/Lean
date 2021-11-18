@@ -1,4 +1,5 @@
 using System;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -24,7 +25,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 throw new ArgumentException("Please use TickGenerator for non options.");
             }
             var sid = symbol.ID;
-            return Convert.ToDecimal(BlackScholes(sid.OptionRight, Convert.ToDouble(referencePrice), Convert.ToDouble(sid.StrikePrice), 1, 1, 1));
+            return Convert.ToDecimal(BlackScholes(
+                sid.OptionRight,
+                Convert.ToDouble(referencePrice),
+                Convert.ToDouble(sid.StrikePrice),
+                (sid.Date - DateTime.UtcNow).TotalDays / 365,
+                Convert.ToDouble(PortfolioStatistics.GetRiskFreeRate()),
+                1));
         }
 
         /// <summary>
@@ -35,7 +42,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// more details https://cseweb.ucsd.edu/~goguen/courses/130/SayBlackScholes.html
         /// </summary>
         /// <param name="CallPutFlag"></param>
-        /// <param name="S">Stock price</param>
+        /// <param name="S">Underlying price</param>
         /// <param name="X">Strike price</param>
         /// <param name="T">Years to maturity</param>
         /// <param name="r">Risk-free rate</param>
