@@ -29683,23 +29683,6 @@
         "4/14/2017"
       ]
     },
-    /*
-    Oanda CFDs
-    Trading hours source:
-    - https://www.oanda.com/uk-en/trading/hours-of-operation/
-    - https://www.oanda.com/eu-en/trading/hours-of-operation/
-
-    Remarks:
-    - Opted to use UK times format for rounding up 4 & 9's to 5 & 10 respectively. Seems like
-    and inconsistency in their write up and has never been a issue before.
-    - When reading values from the schedule such as *Sun - Fri 19:00 - 07:45; 08:30 - 13:20* I interpreted them to have hard
-    the limits around the days given. EX: Sundays first time is 19:00 and Fridays last time is 13:20
-    - Certain markets end and open times are affected by DST, in these cases I opted to include the most inclusive
-    values for the markets. The specific instruments that are affected by this are as follows:
-      AU200AUD -> Last session end time is 7AM; DST 8AM
-      DE10YBEUR -> Open time is 1:15AM; DST 2:15AM
-      DE30EUR -> Open time is 1:15AM; DST 2:15AM 
-    */
     "Cfd-oanda-[*]": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
@@ -37531,6 +37514,6 @@
         }
       ],
       "holidays": []
-    },
+    }
   }
 }
