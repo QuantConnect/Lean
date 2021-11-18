@@ -3,7 +3,7 @@ using System;
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
     /// <summary>
-    /// https://cseweb.ucsd.edu/~goguen/courses/130/SayBlackScholes.html
+    /// Pricing model used to determine the fair price or theoretical value for a call or a put option based
     /// </summary>
     public class BlackScholesTickGenerator : TickGenerator
     {
@@ -17,11 +17,22 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         {
         }
 
+        public override decimal NextValue(Symbol symbol, decimal referencePrice)
+        {
+            if (symbol.SecurityType != SecurityType.Option)
+            {
+                throw new ArgumentException("Please use TickGenerator for non options.");
+            }
+            var sid = symbol.ID;
+            return Convert.ToDecimal(BlackScholes(sid.OptionRight, Convert.ToDouble(referencePrice), Convert.ToDouble(sid.StrikePrice), 1, 1, 1));
+        }
+
         /// <summary>
         /// The Black and Scholes (1973) Stock option formula
         /// C# Implementation
         /// uses the C# Math.PI field rather than a constant as in the C++ implementaion
         /// the value of Pi is 3.14159265358979323846
+        /// more details https://cseweb.ucsd.edu/~goguen/courses/130/SayBlackScholes.html
         /// </summary>
         /// <param name="CallPutFlag"></param>
         /// <param name="S">Stock price</param>
@@ -30,8 +41,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="r">Risk-free rate</param>
         /// <param name="v">Volatility</param>
         /// <returns></returns>
-        public double BlackScholes(OptionRight CallPutFlag, double S, double X,
-            double T, double r, double v)
+        private double BlackScholes(OptionRight CallPutFlag, double S, double X, double T, double r, double v)
         {
             double d1 = (Math.Log(S / X) + (r + v * v / 2.0) * T) / (v * Math.Sqrt(T));
             double d2 = d1 - v * Math.Sqrt(T);
@@ -48,11 +58,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         }
 
         /// <summary>
-        /// cumulative normal distribution
+        /// Cumulative normal distribution
         /// </summary>
         /// <param name="X"></param>
         /// <returns></returns>
-        public double CND(double X)
+        private double CND(double X)
         {
             const double a1 = 0.31938153;
             const double a2 = -0.356563782;

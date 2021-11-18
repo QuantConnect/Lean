@@ -11,6 +11,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             => new OptionSymbolGenerator(Settings, Random, 100m, 75m);
 
         public override ITickGenerator CreateTickGenerator()
-            => new TickGenerator(Settings, Random);
+            => new BlackScholesTickGenerator(Settings, Random);
     }
 }
