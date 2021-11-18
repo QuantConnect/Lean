@@ -75,10 +75,7 @@ namespace QuantConnect.Brokerages.Binance
         public BinanceBrokerage(string apiKey, string apiSecret, string restApiUrl, string webSocketBaseUrl, IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
             : base("Binance")
         {
-            if (!_isInitialized)
-            {
-                Initialize(webSocketBaseUrl, restApiUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, null, algorithm, null, aggregator, job);
-            }
+            Initialize(webSocketBaseUrl, restApiUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, null, algorithm, null, aggregator, job);
         }
 
         #region IBrokerage
@@ -378,68 +375,71 @@ namespace QuantConnect.Brokerages.Binance
             string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider,
             IDataAggregator aggregator, LiveNodePacket job)
         {
-            base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret, 
+            if (!_isInitialized)
+            {
+                base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
                 passPhrase, algorithm, priceProvider, aggregator, job);
-            _job = job;
-            _algorithm = algorithm;
-            _aggregator = aggregator;
-            _webSocketBaseUrl = wssUrl;
-            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnUserMessage);
+                _job = job;
+                _algorithm = algorithm;
+                _aggregator = aggregator;
+                _webSocketBaseUrl = wssUrl;
+                _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnUserMessage);
 
-            var maximumWebSocketConnections = Config.GetInt("binance-maximum-websocket-connections");
-            var symbolWeights = maximumWebSocketConnections > 0 ? FetchSymbolWeights() : null;
+                var maximumWebSocketConnections = Config.GetInt("binance-maximum-websocket-connections");
+                var symbolWeights = maximumWebSocketConnections > 0 ? FetchSymbolWeights() : null;
 
-            var subscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
-                wssUrl,
-                MaximumSymbolsPerConnection,
-                maximumWebSocketConnections,
-                symbolWeights,
-                () => new BinanceWebSocketWrapper(null),
-                Subscribe,
-                Unsubscribe,
-                OnDataMessage,
-                new TimeSpan(23, 45, 0));
+                var subscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
+                    wssUrl,
+                    MaximumSymbolsPerConnection,
+                    maximumWebSocketConnections,
+                    symbolWeights,
+                    () => new BinanceWebSocketWrapper(null),
+                    Subscribe,
+                    Unsubscribe,
+                    OnDataMessage,
+                    new TimeSpan(23, 45, 0));
 
-            SubscriptionManager = subscriptionManager;
+                SubscriptionManager = subscriptionManager;
 
-            _apiClient = new BinanceRestApiClient(_symbolMapper,
-                algorithm?.Portfolio,
-                apiKey,
-                apiSecret,
-                restApiUrl);
+                _apiClient = new BinanceRestApiClient(_symbolMapper,
+                    algorithm?.Portfolio,
+                    apiKey,
+                    apiSecret,
+                    restApiUrl);
 
-            _apiClient.OrderSubmit += (s, e) => OnOrderSubmit(e);
-            _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
-            _apiClient.Message += (s, e) => OnMessage(e);
+                _apiClient.OrderSubmit += (s, e) => OnOrderSubmit(e);
+                _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
+                _apiClient.Message += (s, e) => OnMessage(e);
 
-            // User data streams will close after 60 minutes. It's recommended to send a ping about every 30 minutes.
-            // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/user-data-stream.md#pingkeep-alive-a-listenkey
-            _keepAliveTimer = new Timer
-            {
-                // 30 minutes
-                Interval = 30 * 60 * 1000
-            };
-            _keepAliveTimer.Elapsed += (s, e) => _apiClient.SessionKeepAlive();
+                // User data streams will close after 60 minutes. It's recommended to send a ping about every 30 minutes.
+                // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/user-data-stream.md#pingkeep-alive-a-listenkey
+                _keepAliveTimer = new Timer
+                {
+                    // 30 minutes
+                    Interval = 30 * 60 * 1000
+                };
+                _keepAliveTimer.Elapsed += (s, e) => _apiClient.SessionKeepAlive();
 
-            WebSocket.Open += (s, e) => { _keepAliveTimer.Start(); };
-            WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
+                WebSocket.Open += (s, e) => { _keepAliveTimer.Start(); };
+                WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
 
-            // A single connection to stream.binance.com is only valid for 24 hours; expect to be disconnected at the 24 hour mark
-            // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#general-wss-information
-            _reconnectTimer = new Timer
-            {
-                // 23.5 hours
-                Interval = 23.5 * 60 * 60 * 1000
-            };
-            _reconnectTimer.Elapsed += (s, e) =>
-            {
-                Log.Trace("Daily websocket restart: disconnect");
-                Disconnect();
+                // A single connection to stream.binance.com is only valid for 24 hours; expect to be disconnected at the 24 hour mark
+                // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#general-wss-information
+                _reconnectTimer = new Timer
+                {
+                    // 23.5 hours
+                    Interval = 23.5 * 60 * 60 * 1000
+                };
+                _reconnectTimer.Elapsed += (s, e) =>
+                {
+                    Log.Trace("Daily websocket restart: disconnect");
+                    Disconnect();
 
-                Log.Trace("Daily websocket restart: connect");
-                Connect();
-            };
-            _isInitialized = true;
+                    Log.Trace("Daily websocket restart: connect");
+                    Connect();
+                };
+                _isInitialized = true;
+            }
         }
 
         /// <summary>

@@ -115,10 +115,7 @@ namespace QuantConnect.Brokerages.Tradier
                 new RestClient(useSandbox ? "https://sandbox.tradier.com/v1/" : "https://api.tradier.com/v1/"),
                 null, null, "Tradier Brokerage")
         {
-            if (!_isInitialized)
-            {
-                Initialize(algorithm, orderProvider, securityProvider, aggregator, useSandbox, accountId, accessToken);
-            }
+            Initialize(algorithm, orderProvider, securityProvider, aggregator, useSandbox, accountId, accessToken);
         }
 
         public void Initialize(
@@ -130,12 +127,14 @@ namespace QuantConnect.Brokerages.Tradier
             string accountId,
             string accessToken)
         {
-            _algorithm = algorithm;
-            _orderProvider = orderProvider;
-            _securityProvider = securityProvider;
-            _aggregator = aggregator;
-            _useSandbox = useSandbox;
-            _accountId = accountId;
+            if (!_isInitialized)
+            {
+                _algorithm = algorithm;
+                _orderProvider = orderProvider;
+                _securityProvider = securityProvider;
+                _aggregator = aggregator;
+                _useSandbox = useSandbox;
+                _accountId = accountId;
 
             RestClient.AddDefaultHeader("Accept", "application/json");
             RestClient.AddDefaultHeader("Authorization", $"Bearer {accessToken}");
@@ -145,11 +144,11 @@ namespace QuantConnect.Brokerages.Tradier
             subscriptionManager.UnsubscribeImpl += (symbols, _) => Unsubscribe(symbols);
             SubscriptionManager = subscriptionManager;
 
-            _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
+                _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
 
-            // we can poll orders once a second in sandbox and twice a second in production
-            var interval = _useSandbox ? 1000 : 500;
-            _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
+                // we can poll orders once a second in sandbox and twice a second in production
+                var interval = _useSandbox ? 1000 : 500;
+                _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
             {
                 { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
                 { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},

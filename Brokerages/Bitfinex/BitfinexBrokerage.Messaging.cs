@@ -99,10 +99,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public BitfinexBrokerage(IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
             : base("Bitfinex")
         {
-            if (!_isInitialized)
-            {
-                Initialize(WebSocketUrl, null, websocket, restClient, apiKey, apiSecret, null, algorithm, priceProvider, aggregator, job);
-            }
+            Initialize(WebSocketUrl, null, websocket, restClient, apiKey, apiSecret, null, algorithm, priceProvider, aggregator, job);
         }
 
         /// <summary>
@@ -152,41 +149,44 @@ namespace QuantConnect.Brokerages.Bitfinex
             string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider, 
             IDataAggregator aggregator, LiveNodePacket job)
         {
-            base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
+            if (!_isInitialized)
+            {
+                base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
                 passPhrase, algorithm, priceProvider, aggregator, job);
 
-            _job = job;
+                _job = job;
 
-            SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
-                WebSocketUrl,
-                MaximumSymbolsPerConnection,
-                0,
-                null,
-                () => new BitfinexWebSocketWrapper(null),
-                Subscribe,
-                Unsubscribe,
-                OnDataMessage,
-                TimeSpan.Zero,
-                _connectionRateLimiter);
+                SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
+                    WebSocketUrl,
+                    MaximumSymbolsPerConnection,
+                    0,
+                    null,
+                    () => new BitfinexWebSocketWrapper(null),
+                    Subscribe,
+                    Unsubscribe,
+                    OnDataMessage,
+                    TimeSpan.Zero,
+                    _connectionRateLimiter);
 
-            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
-            _algorithm = algorithm;
-            _aggregator = aggregator;
+                _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+                _algorithm = algorithm;
+                _aggregator = aggregator;
 
-            // load currency map
-            using (var wc = new WebClient())
-            {
-                var json = wc.DownloadString("https://api-pub.bitfinex.com/v2/conf/pub:map:currency:sym");
-                var rows = JsonConvert.DeserializeObject<List<List<List<string>>>>(json)[0];
-                _currencyMap = rows
-                    .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
+                // load currency map
+                using (var wc = new WebClient())
+                {
+                    var json = wc.DownloadString("https://api-pub.bitfinex.com/v2/conf/pub:map:currency:sym");
+                    var rows = JsonConvert.DeserializeObject<List<List<List<string>>>>(json)[0];
+                    _currencyMap = rows
+                        .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
+                }
+
+                WebSocket.Open += (sender, args) =>
+                {
+                    SubscribeAuth();
+                };
+                _isInitialized = true;
             }
-
-            WebSocket.Open += (sender, args) =>
-            {
-                SubscribeAuth();
-            };
-            _isInitialized = true;
         }
 
         private long GetNextClientOrderId()

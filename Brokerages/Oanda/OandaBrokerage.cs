@@ -62,10 +62,7 @@ namespace QuantConnect.Brokerages.Oanda
         public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
             : base("Oanda Brokerage")
         {
-            if (!_isInitialized)
-            {
-                Initialize(orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent = OandaRestApiBase.OandaAgentDefaultValue);
-            }
+            Initialize(orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent = OandaRestApiBase.OandaAgentDefaultValue);
         }
 
         #region IBrokerage implementation
@@ -326,16 +323,19 @@ namespace QuantConnect.Brokerages.Oanda
         public void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, 
             Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
         {
-            if (environment != Environment.Trade && environment != Environment.Practice)
-                throw new NotSupportedException("Oanda Environment not supported: " + environment);
+            if (!_isInitialized)
+            {
+                if (environment != Environment.Trade && environment != Environment.Practice)
+                    throw new NotSupportedException("Oanda Environment not supported: " + environment);
 
-            _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
+                _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
 
-            // forward events received from API
-            _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
-            _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
-            _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
-            _isInitialized = true;
+                // forward events received from API
+                _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
+                _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
+                _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
+                _isInitialized = true;
+            }
         }
     }
 }

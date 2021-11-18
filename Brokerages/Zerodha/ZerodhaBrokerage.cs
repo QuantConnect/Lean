@@ -122,10 +122,7 @@ namespace QuantConnect.Brokerages.Zerodha
         public ZerodhaBrokerage(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, IAlgorithm algorithm, ISecurityProvider securityProvider, IDataAggregator aggregator)
             : base("Zerodha")
         {
-            if (!_isInitialized)
-            {
-                Initialize(tradingSegment, zerodhaProductType, apiKey, apiSecret, algorithm, securityProvider, aggregator);
-            }
+            Initialize(tradingSegment, zerodhaProductType, apiKey, apiSecret, algorithm, securityProvider, aggregator);
         }
 
         /// <summary>
@@ -940,38 +937,41 @@ namespace QuantConnect.Brokerages.Zerodha
         private void Initialize(string tradingSegment, string zerodhaProductType, string apiKey, string apiSecret, 
             IAlgorithm algorithm, ISecurityProvider securityProvider, IDataAggregator aggregator)
         {
-            _tradingSegment = tradingSegment;
-            _zerodhaProductType = zerodhaProductType;
-            _algorithm = algorithm;
-            _aggregator = aggregator;
-            _kite = new Kite(apiKey, apiSecret);
-            _apiKey = apiKey;
-            _accessToken = apiSecret;
-            _securityProvider = securityProvider;
-            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData>(OnMessageImpl);
-            WebSocket = new WebSocketClientWrapper();
-            _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
-            WebSocket.Initialize(_wssUrl);
-            WebSocket.Message += OnMessage;
-            WebSocket.Open += (sender, args) =>
+            if (!_isInitialized)
             {
-                Log.Trace($"ZerodhaBrokerage(): WebSocket.Open. Subscribing");
-                Subscribe(GetSubscribed());
-            };
-            WebSocket.Error += OnError;
-            _symbolMapper = new ZerodhaSymbolMapper(_kite);
+                _tradingSegment = tradingSegment;
+                _zerodhaProductType = zerodhaProductType;
+                _algorithm = algorithm;
+                _aggregator = aggregator;
+                _kite = new Kite(apiKey, apiSecret);
+                _apiKey = apiKey;
+                _accessToken = apiSecret;
+                _securityProvider = securityProvider;
+                _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketClientWrapper.MessageData>(OnMessageImpl);
+                WebSocket = new WebSocketClientWrapper();
+                _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
+                WebSocket.Initialize(_wssUrl);
+                WebSocket.Message += OnMessage;
+                WebSocket.Open += (sender, args) =>
+                {
+                    Log.Trace($"ZerodhaBrokerage(): WebSocket.Open. Subscribing");
+                    Subscribe(GetSubscribed());
+                };
+                WebSocket.Error += OnError;
+                _symbolMapper = new ZerodhaSymbolMapper(_kite);
 
-            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            subscriptionManager.SubscribeImpl += (s, t) =>
-            {
-                Subscribe(s);
-                return true;
-            };
-            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-            SubscriptionManager = subscriptionManager;
-            _isInitialized = true;
+                var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+                subscriptionManager.SubscribeImpl += (s, t) =>
+                {
+                    Subscribe(s);
+                    return true;
+                };
+                subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+                SubscriptionManager = subscriptionManager;
+                _isInitialized = true;
 
-            Log.Trace("Start Zerodha Brokerage");
+                Log.Trace("ZerodhaBrokerage(): Zerodha Brokerage initialized");
+            }
         }
 
         private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, DateTimeZone exchangeTimeZone, Resolution resolution, string zerodhaResolution)

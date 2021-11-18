@@ -44,10 +44,7 @@ namespace QuantConnect.Brokerages.GDAX
             IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job)
         {
-            if (!_isInitialized)
-            {
-                Initialize(wssUrl, null, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job);
-            }
+            Initialize(wssUrl, null, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job);
         }
 
         /// <summary>
@@ -104,18 +101,21 @@ namespace QuantConnect.Brokerages.GDAX
             string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider,
             IDataAggregator aggregator, LiveNodePacket job)
         {
-            base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
-                passPhrase, algorithm, priceProvider, aggregator, job);
-            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            subscriptionManager.SubscribeImpl += (s, t) =>
+            if (!_isInitialized)
             {
-                Subscribe(s);
-                return true;
-            };
-            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+                base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
+                passPhrase, algorithm, priceProvider, aggregator, job);
+                var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+                subscriptionManager.SubscribeImpl += (s, t) =>
+                {
+                    Subscribe(s);
+                    return true;
+                };
+                subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
 
-            SubscriptionManager = subscriptionManager;
-            _isInitialized = true;
+                SubscriptionManager = subscriptionManager;
+                _isInitialized = true;
+            }
         }
 
         /// <summary>
