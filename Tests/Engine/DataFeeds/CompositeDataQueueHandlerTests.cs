@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Packets;
+using QuantConnect.Queues;
 using System;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -26,17 +27,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class CompositeDataQueueHandlerTests
     {
+        [TestCase("ZerodhaBrokerage")]
+        [TestCase("SamcoBrokerage")]
+        [TestCase("TradierBrokerage")]
+        [TestCase("QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage")]
+        [TestCase("OandaBrokerage")]
+        [TestCase("GDAXDataQueueHandler")]
+        [TestCase("BitfinexBrokerage")] 
+        [TestCase("BinanceBrokerage")]
+        public void GetFactoryFromIDQH(string IDQH)
+        {
+            var factory = JobQueue.GetFactoryFromDataQueueHandler(IDQH);
+            Assert.NotNull(factory);
+        }
+
         [Test]
         public void SetJob()
         {
+            //Array IDQH
             var dataHanders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
-            var job = new LiveNodePacket
+            var jobWithArrayIDQH = new LiveNodePacket
             {
                 Brokerage = "ZerodhaBrokerage",
                 DataQueueHandler = dataHanders
             };
             var compositeDataQueueHandler = new CompositeDataQueueHandler();
-            compositeDataQueueHandler.SetJob(job);
+            compositeDataQueueHandler.SetJob(jobWithArrayIDQH);
             compositeDataQueueHandler.Dispose();
         }
 
