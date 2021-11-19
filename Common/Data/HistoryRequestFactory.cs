@@ -13,11 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using NodaTime;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Util;
-using System;
 
 namespace QuantConnect.Data
 {
@@ -52,17 +51,14 @@ namespace QuantConnect.Data
             SecurityExchangeHours exchangeHours,
             Resolution? resolution)
         {
-            resolution = resolution ?? subscription.Resolution;
-
-            // find the correct data type for the history request
-            var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
+            resolution ??= subscription.Resolution;
 
             var request = new HistoryRequest(subscription,
                 exchangeHours,
                 startAlgoTz.ConvertToUtc(_algorithm.TimeZone),
                 endAlgoTz.ConvertToUtc(_algorithm.TimeZone))
             {
-                DataType = dataType,
+                DataType = subscription.Type,
                 Resolution = resolution.Value,
                 FillForwardResolution = subscription.FillDataForward ? resolution : null,
                 TickType = subscription.TickType
