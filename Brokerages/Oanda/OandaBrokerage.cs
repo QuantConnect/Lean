@@ -13,11 +13,8 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using NodaTime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -25,6 +22,11 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Order = QuantConnect.Orders.Order;
 
@@ -241,7 +243,7 @@ namespace QuantConnect.Brokerages.Oanda
             }
         }
 
-        #endregion
+        #endregion IBrokerage implementation
 
         #region IDataQueueHandler implementation
 
@@ -251,6 +253,19 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            Enum.TryParse(job.BrokerageData["oanda-environment"], out Environment environment);
+            var accessToken = job.BrokerageData["oanda-access-token"];
+            var accountId = job.BrokerageData["oanda-account-id"];
+            var agent = job.BrokerageData["oanda-agent"];
+
+            Initialize(
+                null,
+                null,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                environment,
+                accessToken,
+                accountId,
+                agent);
             _api.SetJob(job);
         }
 
@@ -274,7 +289,7 @@ namespace QuantConnect.Brokerages.Oanda
             _api.Unsubscribe(dataConfig);
         }
 
-        #endregion
+        #endregion IDataQueueHandler implementation
 
         /// <summary>
         /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
@@ -333,7 +348,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        public void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, 
+        private void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator,
             Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
         {
             if (!_isInitialized)
