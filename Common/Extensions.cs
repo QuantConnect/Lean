@@ -3343,7 +3343,9 @@ namespace QuantConnect
                 request.IsCustomData,
                 request.TickType,
                 isFilteredSubscription,
-                request.DataNormalizationMode
+                request.DataNormalizationMode,
+                request.DataMappingMode,
+                request.ContractDepthOffset
             );
         }
 
@@ -3372,7 +3374,7 @@ namespace QuantConnect
             }
 
             // Check our config type first to be lazy about using data.GetType() unless required
-            var configTypeFilter = (config.Type == typeof(TradeBar) ||
+            var configTypeFilter = (config.Type == typeof(TradeBar) || config.Type == typeof(ZipEntryName) ||
                 config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
 
             if (!configTypeFilter)
