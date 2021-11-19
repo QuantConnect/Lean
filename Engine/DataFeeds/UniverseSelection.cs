@@ -178,7 +178,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 lock (fineCollection.Data)
                                 {
-                                    fineCollection.Data.Add(enumerator.Current);
+                                    fineCollection.Add(enumerator.Current);
                                 }
                             }
                         }
@@ -228,7 +228,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             fine.Value = coarse.Value;
                         }
 
-                        universeData.Data.Add(fundamentals);
+                        universeData.Add(fundamentals);
                     }
 
                     // END -- HACK ATTACK -- END

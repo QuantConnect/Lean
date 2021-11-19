@@ -75,7 +75,8 @@ namespace QuantConnect.Tests.Python
                         new TradeBar(new DateTime(2020, 1, 2), Symbols.IBM, 101m, 102m, 100m, 101m, 10m),
                         new TradeBar(new DateTime(2020, 1, 3), Symbols.IBM, 101m, 102m, 100m, 101m, 20m),
                     },
-                    Symbol = Symbols.IBM
+                    Symbol = Symbols.IBM,
+                    Time = new DateTime(2020, 1, 1)
                 }
             };
 
@@ -91,13 +92,8 @@ namespace QuantConnect.Tests.Python
                 var count = subDataFrame.__len__().AsManagedObject(typeof(int));
                 Assert.AreEqual(1, count);
 
-                for (var i = 0; i < count; i++)
-                {
-                    var index = subDataFrame.index[i];
-                    var dataList = subDataFrame.loc[index].data;
-                    var dataCount = dataList.__len__().AsManagedObject(typeof(int));
-                    Assert.AreEqual(2, dataCount);
-                }
+                var dataCount = subDataFrame.values[0][0].__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(2, dataCount);
             }
         }
 
