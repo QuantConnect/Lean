@@ -3141,13 +3141,14 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to determine the right data normalization mode to use by default
         /// </summary>
-        public static DataNormalizationMode GetDefaultNormalizationMode(this UniverseSettings universeSettings, SecurityType securityType)
+        public static DataNormalizationMode GetUniverseNormalizationModeOrDefault(this UniverseSettings universeSettings, SecurityType securityType)
         {
             switch (securityType)
             {
                 case SecurityType.Future:
                     if (universeSettings.DataNormalizationMode is DataNormalizationMode.BackwardsRatio
-                        or DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal)
+                        or DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal
+                        or DataNormalizationMode.Raw)
                     {
                         return universeSettings.DataNormalizationMode;
                     }
