@@ -729,7 +729,7 @@ namespace QuantConnect.Algorithm
                         false,
                         x.Item2,
                         true,
-                        UniverseSettings.DataNormalizationMode));
+                        UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType)));
             }
         }
 
