@@ -39,20 +39,22 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
         }
 
         /// <summary>
-        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
+        /// Get historical data enumerable for Bitfinex from Quandl
         /// </summary>
         /// <param name="dataDownloaderGetParameters">model class for passing in parameters for historical data</param>
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
-            Symbol symbol = dataDownloaderGetParameters.Symbol;
-            Resolution resolution = dataDownloaderGetParameters.Resolution;
-            DateTime startUtc = dataDownloaderGetParameters.StartUtc;
-            DateTime endUtc = dataDownloaderGetParameters.EndUtc;
-            TickType tickType = dataDownloaderGetParameters.TickType;
+            var symbol = dataDownloaderGetParameters.Symbol;
+            var resolution = dataDownloaderGetParameters.Resolution;
+            var startUtc = dataDownloaderGetParameters.StartUtc;
+            var endUtc = dataDownloaderGetParameters.EndUtc;
+            var tickType = dataDownloaderGetParameters.TickType;
 
             if (tickType != TickType.Trade)
+            {
                 yield break;
+            }
 
             if (resolution != Resolution.Daily)
             {

@@ -50,14 +50,16 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
-            Symbol symbol = dataDownloaderGetParameters.Symbol;
-            Resolution resolution = dataDownloaderGetParameters.Resolution;
-            DateTime startUtc = dataDownloaderGetParameters.StartUtc;
-            DateTime endUtc = dataDownloaderGetParameters.EndUtc;
-            TickType tickType = dataDownloaderGetParameters.TickType;
+            var symbol = dataDownloaderGetParameters.Symbol;
+            var resolution = dataDownloaderGetParameters.Resolution;
+            var startUtc = dataDownloaderGetParameters.StartUtc;
+            var endUtc = dataDownloaderGetParameters.EndUtc;
+            var tickType = dataDownloaderGetParameters.TickType;
 
-            if (tickType != TickType.Quote)
+            if (tickType != TickType.Trade)
+            {
                 return Enumerable.Empty<BaseData>();
+            }
 
             if (resolution == Resolution.Tick || resolution == Resolution.Second)
                 throw new ArgumentException($"Resolution not available: {resolution}");
@@ -80,7 +82,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
                 false,
                 false,
                 DataNormalizationMode.Adjusted,
-                TickType.Quote);
+                TickType.Trade);
 
             var data = _brokerage.GetHistory(historyRequest);
 

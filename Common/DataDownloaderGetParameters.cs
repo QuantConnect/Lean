@@ -14,10 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect
 {
@@ -58,7 +54,7 @@ namespace QuantConnect
         /// <param name="resolution">Resolution of the data request</param>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
-        /// <param name="tickType">[Optional] The type of tick to get. Defaults to <see cref="TickType.Trade"/></param>
+        /// <param name="tickType">[Optional] The type of tick to get. Defaults to <see cref="QuantConnect.TickType.Trade"/></param>
         public DataDownloaderGetParameters(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, TickType? tickType = null)
         {
             Symbol = symbol;
@@ -67,6 +63,5 @@ namespace QuantConnect
             EndUtc = endUtc;
             TickType = tickType ?? TickType.Trade;
         }
-
     }
 }

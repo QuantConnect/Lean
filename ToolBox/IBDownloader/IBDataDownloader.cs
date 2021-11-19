@@ -54,14 +54,16 @@ namespace QuantConnect.ToolBox.IBDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
-            Symbol symbol = dataDownloaderGetParameters.Symbol;
-            Resolution resolution = dataDownloaderGetParameters.Resolution;
-            DateTime startUtc = dataDownloaderGetParameters.StartUtc;
-            DateTime endUtc = dataDownloaderGetParameters.EndUtc;
-            TickType tickType = dataDownloaderGetParameters.TickType;
+            var symbol = dataDownloaderGetParameters.Symbol;
+            var resolution = dataDownloaderGetParameters.Resolution;
+            var startUtc = dataDownloaderGetParameters.StartUtc;
+            var endUtc = dataDownloaderGetParameters.EndUtc;
+            var tickType = dataDownloaderGetParameters.TickType;
 
             if (tickType != TickType.Quote)
+            {
                 yield break;
+            }
 
             if (resolution == Resolution.Tick)
             {
