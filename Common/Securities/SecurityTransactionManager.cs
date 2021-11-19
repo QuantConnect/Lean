@@ -21,6 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using static QuantConnect.StringExtensions;
+using Python.Runtime;
 
 namespace QuantConnect.Securities
 {
@@ -178,7 +179,7 @@ namespace QuantConnect.Securities
             }
 
             var cancelledOrders = new List<OrderTicket>();
-            foreach (var ticket in GetOpenOrderTickets())
+            foreach (var ticket in GetOpenOrderTickets(x => true))
             {
                 ticket.Cancel($"Canceled by CancelOpenOrders() at {_algorithm.UtcTime:o}");
                 cancelledOrders.Add(ticket);
@@ -229,6 +230,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets an enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The Pyhton function filter used to find the required order tickets</param>
+        /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOrderTickets(PyObject filter = null)
+        {
+            return _orderProcessor.GetOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>() ?? (x => true));
+        }
+
+        /// <summary>
         /// Get an enumerable of open <see cref="OrderTicket"/> for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol for which to return the order tickets</param>
@@ -249,11 +260,32 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets an enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The Python function filter used to find the required order tickets</param>
+        /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOpenOrderTickets(PyObject filter = null)
+        {
+            return _orderProcessor.GetOpenOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>() ?? (x => true));
+        }
+
+        /// <summary>
         /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
         /// </summary>
         /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
         /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
         public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
+        {
+            return GetOpenOrderTickets(filter)
+                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+        }
+
+        /// <summary>
+        /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
+        /// </summary>
+        /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
+        /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
+        public decimal GetOpenOrdersRemainingQuantity(PyObject filter = null)
         {
             return GetOpenOrderTickets(filter)
                 .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
@@ -333,6 +365,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets open orders matching the specified filter. Specifying null will return an enumerable
+        /// of all open orders.
+        /// </summary>
+        /// <param name="filter">Python function object used to filter the orders</param>
+        /// <returns>All filtered open orders this order provider currently holds</returns>
+        public List<Order> GetOpenOrders(PyObject filter = null)
+        {
+             Func<Order, bool> csharpFilter = filter.ConvertToDelegate<Func<Order, bool>>() ?? (x => true);
+            return _orderProcessor.GetOpenOrders(x => csharpFilter(x));
+        }
+
+        /// <summary>
         /// Gets the current number of orders that have been processed
         /// </summary>
         public int OrdersCount
@@ -369,6 +413,17 @@ namespace QuantConnect.Securities
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
         {
             return _orderProcessor.GetOrders(filter);
+        }
+
+        /// <summary>
+        /// Gets all orders matching the specified filter. Specifying null will return an enumerable
+        /// of all orders.
+        /// </summary>
+        /// <param name="filter">Python function object used to filter the orders</param>
+        /// <returns>All orders this order provider currently holds by the specified filter</returns>
+        public IEnumerable<Order> GetOrders(PyObject filter)
+        {
+            return _orderProcessor.GetOrders(filter.ConvertToDelegate<Func<Order, bool>>());
         }
 
         /// <summary>
