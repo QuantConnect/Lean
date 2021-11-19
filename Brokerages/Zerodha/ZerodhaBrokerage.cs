@@ -105,6 +105,9 @@ namespace QuantConnect.Brokerages.Zerodha
 
         #endregion
 
+        /// <summary>
+        /// Constructor for brokerage
+        /// </summary>
         public ZerodhaBrokerage() : base("Zerodha")
         {
         }

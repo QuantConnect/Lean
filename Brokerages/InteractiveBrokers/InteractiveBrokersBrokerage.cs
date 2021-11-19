@@ -161,6 +161,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return account.Contains("F");
         }
 
+        /// <summary>
+        /// Creates a new InteractiveBrokersBrokerage using values from configuration
+        /// </summary>
         public InteractiveBrokersBrokerage() : base("Interactive Brokers Brokerage")
         {
         }
@@ -904,6 +907,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _messagingRateLimiter.Dispose();
         }
 
+        /// <summary>
+        /// Initialize the instance of this class
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
+        /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
+        /// <param name="aggregator">consolidate ticks</param>
+        /// <param name="mapFileProvider">representing all the map files</param>
+        /// <param name="account">The Interactive Brokers account name</param>
+        /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
+        /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
+        /// <param name="ibDirectory">The IB Gateway root directory</param>
+        /// <param name="ibVersion">The IB Gateway version</param>
+        /// <param name="userName">The login user name</param>
+        /// <param name="password">The login password</param>
+        /// <param name="tradingMode">The trading mode: 'live' or 'paper'</param>
+        /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
+        /// <param name="loadExistingHoldings">False will ignore existing security holdings from being loaded.</param>
         private void Initialize(
             IAlgorithm algorithm,
             IOrderProvider orderProvider,

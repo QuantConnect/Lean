@@ -21,9 +21,11 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 using RestSharp;
 
 namespace QuantConnect.Brokerages.Tradier
@@ -47,6 +49,18 @@ namespace QuantConnect.Brokerages.Tradier
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            var useSandbox = job.BrokerageData["tradier-use-sandbox"];
+            var accountId = job.BrokerageData["tradier-account-id"];
+            var accessToken = job.BrokerageData["tradier-access-token"];
+
+            Initialize(
+                null,
+                null,
+                null,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                bool.Parse(useSandbox),
+                accountId,
+                accessToken);
         }
 
         /// <summary>

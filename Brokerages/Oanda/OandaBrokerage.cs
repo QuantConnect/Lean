@@ -45,6 +45,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public const int MaxBarsPerRequest = 5000;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
+        /// </summary>
         public OandaBrokerage() : base("Oanda Brokerage")
         {
         }
@@ -320,6 +323,16 @@ namespace QuantConnect.Brokerages.Oanda
             return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the class.
+        /// </summary>
+        /// <param name="orderProvider">The order provider.</param>
+        /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="aggregator">consolidate ticks</param>
+        /// <param name="environment">The Oanda environment (Trade or Practice)</param>
+        /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
+        /// <param name="accountId">The account identifier.</param>
+        /// <param name="agent">The Oanda agent string</param>
         public void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, 
             Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
         {

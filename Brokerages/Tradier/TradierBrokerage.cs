@@ -1799,6 +1799,53 @@ namespace QuantConnect.Brokerages.Tradier
 
         #endregion
 
+        /// <summary>
+        /// Initailze the instance of this class 
+        /// </summary>
+        private void Initialize(
+            IAlgorithm algorithm,
+            IOrderProvider orderProvider,
+            ISecurityProvider securityProvider,
+            IDataAggregator aggregator,
+            bool useSandbox,
+            string accountId,
+            string accessToken)
+        {
+            if (!_isInitialized)
+            {
+                _algorithm = algorithm;
+                _orderProvider = orderProvider;
+                _securityProvider = securityProvider;
+                _aggregator = aggregator;
+                _useSandbox = useSandbox;
+                _accountId = accountId;
+                _accessToken = accessToken;
+
+                _requestEndpoint = useSandbox ? "https://sandbox.tradier.com/v1/" : "https://api.tradier.com/v1/";
+
+                _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+                _subscriptionManager.SubscribeImpl += Subscribe;
+                _subscriptionManager.UnsubscribeImpl += Unsubscribe;
+
+                _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
+
+                // we can poll orders once a second in sandbox and twice a second in production
+                var interval = _useSandbox ? 1000 : 500;
+                _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
+            {
+                { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                { TradierApiRequestType.Orders, new RateGate(1, TimeSpan.FromMilliseconds(1000))},
+            };
+
+                _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
+
+                _webSocketClient.Initialize(WebSocketUrl);
+                _webSocketClient.Message += OnMessage;
+                _isInitialized = true;
+            }
+        }
+
         private readonly HashSet<string> ErrorsDuringMarketHours = new HashSet<string>
         {
             "CheckForFillsError", "UnknownIdResolution", "ContingentOrderError", "NullResponse", "PendingOrderNotReturned"
