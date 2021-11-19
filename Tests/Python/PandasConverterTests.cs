@@ -63,6 +63,41 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void HandlesEnumerableDataType()
+        {
+            var converter = new PandasConverter();
+            var data = new []
+            {
+                new EnumerableData
+                {
+                    Data = new List<BaseData>
+                    {
+                        new TradeBar(new DateTime(2020, 1, 2), Symbols.IBM, 101m, 102m, 100m, 101m, 10m),
+                        new TradeBar(new DateTime(2020, 1, 3), Symbols.IBM, 101m, 102m, 100m, 101m, 20m),
+                    },
+                    Symbol = Symbols.IBM,
+                    Time = new DateTime(2020, 1, 1)
+                }
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[Symbols.IBM];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(1, count);
+
+                var dataCount = subDataFrame.values[0][0].__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(2, dataCount);
+            }
+        }
+
+        [Test]
         public void HandlesEmptyEnumerable()
         {
             var converter = new PandasConverter();
@@ -3571,6 +3606,11 @@ def Test(dataFrame, symbol):
             public CustomQuandl() : base("Value")
             {
             }
+        }
+
+        internal class EnumerableData : BaseDataCollection
+        {
+
         }
     }
 }

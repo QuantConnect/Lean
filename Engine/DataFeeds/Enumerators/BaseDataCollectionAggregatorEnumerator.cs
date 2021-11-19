@@ -185,7 +185,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="current">The data to be added</param>
         protected virtual void Add(T collection, BaseData current)
         {
-            collection.Data.Add(current);
+            collection.Add(current);
         }
 
         /// <summary>

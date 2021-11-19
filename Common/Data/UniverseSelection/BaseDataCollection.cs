@@ -89,6 +89,24 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Adds a new data point to this collection
+        /// </summary>
+        /// <param name="newDataPoint">The new data point to add</param>
+        public virtual void Add(BaseData newDataPoint)
+        {
+            Data.Add(newDataPoint);
+        }
+
+        /// <summary>
+        /// Adds a new data points to this collection
+        /// </summary>
+        /// <param name="newDataPoints">The new data points to add</param>
+        public virtual void AddRange(IEnumerable<BaseData> newDataPoints)
+        {
+            Data.AddRange(newDataPoints);
+        }
+
+        /// <summary>
         /// Return a new instance clone of this object, used in fill forward
         /// </summary>
         /// <remarks>

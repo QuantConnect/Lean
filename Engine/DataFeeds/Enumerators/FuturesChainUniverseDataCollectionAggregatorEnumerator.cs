@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (current is ZipEntryName)
             {
-                collection.Data.Add(current);
+                collection.Add(current);
                 return;
             }
         }
