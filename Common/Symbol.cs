@@ -183,6 +183,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Simple method to create the canonical option symbol for any given underlying symbol
+        /// </summary>
+        /// <param name="underlyingSymbol"></param>
+        /// <param name="market"></param>
+        /// <returns></returns>
+        public static Symbol CreateCanonicalOption(Symbol underlyingSymbol, string market = null)
+        {
+            var optionType = GetOptionTypeFromUnderlying(underlyingSymbol);
+            market ??= underlyingSymbol.ID.Market;
+            
+            return CreateOption(
+                underlyingSymbol,
+                market,
+                optionType.DefaultOptionStyle(),
+                default(OptionRight),
+                0,
+                SecurityIdentifier.DefaultDate);
+        }
+        
+
+        /// <summary>
         /// Provides a convenience method for creating a future Symbol.
         /// </summary>
         /// <param name="ticker">The ticker</param>
@@ -228,7 +249,7 @@ namespace QuantConnect
                 {
                     if (SecurityType.IsOption())
                     {
-                        _canonical = CreateOption(Underlying, ID.Market, SecurityType.DefaultOptionStyle(), default(OptionRight), 0m, SecurityIdentifier.DefaultDate);
+                        _canonical = CreateCanonicalOption(Underlying, ID.Market);
                     }
                     else if (SecurityType == SecurityType.Future)
                     {
