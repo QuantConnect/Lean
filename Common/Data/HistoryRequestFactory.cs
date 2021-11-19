@@ -54,15 +54,12 @@ namespace QuantConnect.Data
         {
             resolution = resolution ?? subscription.Resolution;
 
-            // find the correct data type for the history request
-            var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
-
             var request = new HistoryRequest(subscription,
                 exchangeHours,
                 startAlgoTz.ConvertToUtc(_algorithm.TimeZone),
                 endAlgoTz.ConvertToUtc(_algorithm.TimeZone))
             {
-                DataType = dataType,
+                DataType = subscription.Type,
                 Resolution = resolution.Value,
                 FillForwardResolution = subscription.FillDataForward ? resolution : null,
                 TickType = subscription.TickType

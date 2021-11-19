@@ -89,7 +89,7 @@ namespace QuantConnect.Data.Auxiliary
                         break;
                     }
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(dataNormalizationMode));
                 }
             }
 

@@ -3343,7 +3343,9 @@ namespace QuantConnect
                 request.IsCustomData,
                 request.TickType,
                 isFilteredSubscription,
-                request.DataNormalizationMode
+                request.DataNormalizationMode,
+                request.DataMappingMode,
+                request.ContractDepthOffset
             );
         }
 
