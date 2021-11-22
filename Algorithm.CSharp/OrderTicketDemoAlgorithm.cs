@@ -488,10 +488,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var filledOrderTickets = Transactions.GetOrderTickets(x => x.Status == OrderStatus.Filled);
-
+            Log("Order ticket types");
             foreach (var ticket in filledOrderTickets)
             {
-                Log($"Ticket symbol: {ticket.Symbol}");
+                Log($"Order ticket type: {ticket.OrderType}");
             }
         }
 

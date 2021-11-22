@@ -353,5 +353,6 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         assert(not len(openOrders))
 
         filledOrderTickets = self.Transactions.GetOrderTickets(lambda x: x.Status == OrderStatus.Filled)
+        self.Log("Order ticket types")
         for ticket in filledOrderTickets:
-            self.Log("Ticket symbol: " + str(ticket.Symbol))
+            self.Log("Order ticket type: " + str(ticket.OrderType))
