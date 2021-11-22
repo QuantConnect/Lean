@@ -440,8 +440,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         public void SetJob(LiveNodePacket job)
         {
             var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
-            var apiKey = job.BrokerageData["binance-api-key"];
-            var apiSecret = job.BrokerageData["binance-api-secret"];
+            var apiKey = job.BrokerageData["bitfinex-api-key"];
+            var apiSecret = job.BrokerageData["bitfinex-api-secret"];
             var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
                 Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
             
