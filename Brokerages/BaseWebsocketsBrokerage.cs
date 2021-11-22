@@ -75,19 +75,11 @@ namespace QuantConnect.Brokerages
         /// Initialize the instance of this class
         /// </summary>
         /// <param name="wssUrl">The web socket base url</param>
-        /// <param name="restApiUrl">The rest api url</param>
         /// <param name="websocket">instance of websockets client</param>
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
-        /// <param name="passPhrase">pass phrase</param>
-        /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
-        /// <param name="aggregator">the aggregator for consolidating ticks</param>
-        /// <param name="job">The live job packet</param>
-        protected virtual void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
-            string accountId, string accessToken, string passPhrase, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
-            ISecurityProvider securityProvider, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+        protected virtual void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret)
         {
             JsonSettings = new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal };
             CachedOrderIDs = new ConcurrentDictionary<int, Orders.Order>();
