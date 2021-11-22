@@ -56,7 +56,6 @@ namespace QuantConnect.Brokerages.Binance
         private BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
 
         private const int MaximumSymbolsPerConnection = 512;
-        private bool _isInitialized;
 
         /// <summary>
         /// Constructor for brokerage
@@ -85,14 +84,7 @@ namespace QuantConnect.Brokerages.Binance
                 restClient: null,
                 apiKey: apiKey,
                 apiSecret: apiSecret,
-                accountId: null,
-                accessToken: null,
-                passPhrase: null,
-                useSandbox: false,
                 algorithm: algorithm,
-                orderProvider: null,
-                securityProvider: null,
-                priceProvider: null,
                 aggregator: aggregator,
                 job: job
             );
@@ -336,14 +328,7 @@ namespace QuantConnect.Brokerages.Binance
                 restClient: null,
                 apiKey: apiKey,
                 apiSecret: apiSecret,
-                accountId: null,
-                accessToken: null,
-                passPhrase: null,
-                useSandbox: false,
                 algorithm: null,
-                orderProvider: null,
-                securityProvider: null,
-                priceProvider: null,
                 aggregator: aggregator,
                 job: job
             );
@@ -420,40 +405,15 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
-        /// <param name="accountId">account id</param>
-        /// <param name="accessToken">access token</param>
-        /// <param name="passPhrase">pass phrase</param>
-        /// <param name="useSandbox">use sandbox</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        /// <param name="orderProvider">order provider instance</param>
-        /// <param name="securityProvider">security provider instance</param>
-        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
-            string accountId, string accessToken, string passPhrase, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
-            ISecurityProvider securityProvider, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+        protected void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+            IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
         {
-            if (!_isInitialized)
+            if (!IsInitialized)
             {
-                base.Initialize(
-                    wssUrl: wssUrl,
-                    restApiUrl: restApiUrl,
-                    websocket: websocket,
-                    restClient: restClient,
-                    apiKey: apiKey,
-                    apiSecret: apiSecret,
-                    accountId: accountId,
-                    accessToken: accessToken,
-                    passPhrase: passPhrase,
-                    useSandbox: useSandbox,
-                    algorithm: algorithm,
-                    orderProvider: orderProvider,
-                    securityProvider: securityProvider,
-                    priceProvider: priceProvider,
-                    aggregator: aggregator,
-                    job: job
-                );
+                base.Initialize(wssUrl: wssUrl, websocket: websocket, restClient: restClient, apiKey: apiKey, apiSecret: apiSecret);
                 _job = job;
                 _algorithm = algorithm;
                 _aggregator = aggregator;
@@ -513,7 +473,6 @@ namespace QuantConnect.Brokerages.Binance
                     Log.Trace("Daily websocket restart: connect");
                     Connect();
                 };
-                _isInitialized = true;
             }
         }
 

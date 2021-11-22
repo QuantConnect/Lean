@@ -64,7 +64,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Locking object for the Ticks list in the data queue handler
         /// </summary>
         public readonly object TickLocker = new object();
-        private bool _isInitialized;
 
         /// <summary>
         /// Constructor for brokerage
@@ -180,30 +179,13 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+        protected void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
             string accountId, string accessToken, string passPhrase, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
             ISecurityProvider securityProvider, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
         {
-            if (!_isInitialized)
+            if (!IsInitialized)
             {
-                base.Initialize(
-                    wssUrl: wssUrl,
-                    restApiUrl: restApiUrl,
-                    websocket: websocket,
-                    restClient: restClient,
-                    apiKey: apiKey,
-                    apiSecret: apiSecret,
-                    accountId: accountId,
-                    accessToken: accessToken,
-                    passPhrase: passPhrase,
-                    useSandbox: useSandbox,
-                    algorithm: algorithm,
-                    orderProvider: orderProvider,
-                    securityProvider: securityProvider,
-                    priceProvider: priceProvider,
-                    aggregator: aggregator,
-                    job: job
-                );
+                base.Initialize(wssUrl: wssUrl, websocket: websocket, restClient: restClient, apiKey: apiKey, apiSecret: apiSecret);
                 _job = job;
                 SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
                     WebSocketUrl,
@@ -234,7 +216,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     SubscribeAuth();
                 };
-                _isInitialized = true;
             }
         }
 

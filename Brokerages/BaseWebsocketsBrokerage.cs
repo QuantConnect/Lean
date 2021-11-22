@@ -15,10 +15,7 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
-using QuantConnect.Securities;
 using RestSharp;
 using System;
 using System.Collections.Concurrent;
@@ -35,6 +32,11 @@ namespace QuantConnect.Brokerages
     public abstract class BaseWebsocketsBrokerage : Brokerage
     {
         private const int ConnectionTimeout = 30000;
+
+        /// <summary>
+        ///
+        /// </summary>
+        protected bool IsInitialized;
 
         /// <summary>
         /// The websockets client instance
@@ -79,8 +81,13 @@ namespace QuantConnect.Brokerages
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
-        protected virtual void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret)
+        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret)
         {
+            if (IsInitialized)
+            {
+                return;
+            }
+            IsInitialized = true;
             JsonSettings = new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal };
             CachedOrderIDs = new ConcurrentDictionary<int, Orders.Order>();
 

@@ -57,22 +57,17 @@ namespace QuantConnect.Brokerages.Tradier
 
             Initialize(
                 wssUrl: WebSocketUrl,
-                restApiUrl: null,
                 websocket: new WebSocketClientWrapper(),
                 restClient: restClient,
                 apiKey: null,
                 apiSecret: null,
                 accountId: accountId,
                 accessToken: accessToken,
-                passPhrase: null,
                 useSandbox: useSandbox,
                 algorithm: null,
                 orderProvider: null,
                 securityProvider: null,
-                priceProvider: null,
-                aggregator: aggregator,
-                job: job
-            );
+                aggregator: aggregator);
         }
 
         /// <summary>

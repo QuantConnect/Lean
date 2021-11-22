@@ -92,7 +92,6 @@ namespace QuantConnect.Brokerages.Tradier
         private readonly HashSet<long> _unknownTradierOrderIDs = new HashSet<long>();
         private readonly FixedSizeHashQueue<long> _verifiedUnknownTradierOrderIDs = new FixedSizeHashQueue<long>(1000);
         private readonly FixedSizeHashQueue<int> _cancelledQcOrderIDs = new FixedSizeHashQueue<int>(10000);
-        private bool _isInitialized;
         private string _restApiUrl = "https://api.tradier.com/v1/";
         private string _restApiSandboxUrl = "https://sandbox.tradier.com/v1/";
 
@@ -124,21 +123,17 @@ namespace QuantConnect.Brokerages.Tradier
             var restClient = new RestClient(useSandbox ? _restApiSandboxUrl : _restApiUrl);
             Initialize(
                 wssUrl: WebSocketUrl,
-                restApiUrl: null,
                 websocket: new WebSocketClientWrapper(),
                 restClient: restClient,
                 apiKey: null,
                 apiSecret: null,
                 accountId: accountId,
                 accessToken: accessToken,
-                passPhrase: null,
                 useSandbox: useSandbox,
                 algorithm: algorithm,
                 orderProvider: orderProvider,
                 securityProvider: securityProvider,
-                priceProvider: null,
-                aggregator: aggregator,
-                job: null
+                aggregator: aggregator
             );
         }
 
@@ -1782,29 +1777,18 @@ namespace QuantConnect.Brokerages.Tradier
         /// Initailze the instance of this class
         /// </summary>
 
-        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
-            string accountId, string accessToken, string passPhrase, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
-            ISecurityProvider securityProvider, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+            string accountId, string accessToken, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
+            ISecurityProvider securityProvider, IDataAggregator aggregator)
         {
-            if (!_isInitialized)
+            if (!IsInitialized)
             {
                 base.Initialize(
                     wssUrl: wssUrl,
-                    restApiUrl: restApiUrl,
                     websocket: websocket,
                     restClient: restClient,
                     apiKey: apiKey,
-                    apiSecret: apiSecret,
-                    accountId: accountId,
-                    accessToken: accessToken,
-                    passPhrase: passPhrase,
-                    useSandbox: useSandbox,
-                    algorithm: algorithm,
-                    orderProvider: orderProvider,
-                    securityProvider: securityProvider,
-                    priceProvider: priceProvider,
-                    aggregator: aggregator,
-                    job: job
+                    apiSecret: apiSecret
                 );
                 _algorithm = algorithm;
                 _orderProvider = orderProvider;
@@ -1842,7 +1826,6 @@ namespace QuantConnect.Brokerages.Tradier
                         _streamSession = null;
                     }
                 };
-                _isInitialized = true;
             }
         }
 
