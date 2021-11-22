@@ -1,5 +1,11 @@
 using System;
+using QLNet;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
+
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -8,6 +14,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public class BlackScholesTickGenerator : TickGenerator
     {
+        private readonly IOptionPriceModel _optionPriceModel;
+        private readonly ISecurityService _securityService;
+        private static IQLUnderlyingVolatilityEstimator _underlyingVolEstimator = new ConstantQLUnderlyingVolatilityEstimator();
+        private static IQLRiskFreeRateEstimator _riskFreeRateEstimator = new ConstantQLRiskFreeRateEstimator();
+        private static IQLDividendYieldEstimator _dividendYieldEstimator = new ConstantQLDividendYieldEstimator(Convert.ToDouble(PortfolioStatistics.GetRiskFreeRate()));
+
         public BlackScholesTickGenerator(RandomDataGeneratorSettings settings)
             : base(settings)
         {
@@ -16,6 +28,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public BlackScholesTickGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
             : base(settings, random)
         {
+            _optionPriceModel = new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
+                _underlyingVolEstimator,
+                _riskFreeRateEstimator,
+                _dividendYieldEstimator);
         }
 
         public override decimal NextValue(Symbol symbol, decimal referencePrice)
@@ -24,69 +40,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 throw new ArgumentException("Please use TickGenerator for non options.");
             }
-            var sid = symbol.ID;
-            return Convert.ToDecimal(BlackScholes(
-                sid.OptionRight,
-                Convert.ToDouble(referencePrice),
-                Convert.ToDouble(sid.StrikePrice),
-                (sid.Date - DateTime.UtcNow).TotalDays / 365,
-                Convert.ToDouble(PortfolioStatistics.GetRiskFreeRate()),
-                1));
-        }
-
-        /// <summary>
-        /// The Black and Scholes (1973) Stock option formula
-        /// C# Implementation
-        /// uses the C# Math.PI field rather than a constant as in the C++ implementaion
-        /// the value of Pi is 3.14159265358979323846
-        /// more details https://cseweb.ucsd.edu/~goguen/courses/130/SayBlackScholes.html
-        /// </summary>
-        /// <param name="CallPutFlag"></param>
-        /// <param name="S">Underlying price</param>
-        /// <param name="X">Strike price</param>
-        /// <param name="T">Years to maturity</param>
-        /// <param name="r">Risk-free rate</param>
-        /// <param name="v">Volatility</param>
-        /// <returns></returns>
-        private double BlackScholes(OptionRight CallPutFlag, double S, double X, double T, double r, double v)
-        {
-            double d1 = (Math.Log(S / X) + (r + v * v / 2.0) * T) / (v * Math.Sqrt(T));
-            double d2 = d1 - v * Math.Sqrt(T);
-            double dBlackScholes;
-            if (CallPutFlag == OptionRight.Call)
-            {
-                dBlackScholes = S * CND(d1) - X * Math.Exp(-r * T) * CND(d2);
-            }
-            else
-            {
-                dBlackScholes = X * Math.Exp(-r * T) * CND(-d2) - S * CND(-d1);
-            }
-            return dBlackScholes;
-        }
-
-        /// <summary>
-        /// Cumulative normal distribution
-        /// </summary>
-        /// <param name="X"></param>
-        /// <returns></returns>
-        private double CND(double X)
-        {
-            const double a1 = 0.31938153;
-            const double a2 = -0.356563782;
-            const double a3 = 1.781477937;
-            const double a4 = -1.821255978;
-            const double a5 = 1.330274429;
-            double L = Math.Abs(X);
-            double K = 1.0 / (1.0 + 0.2316419 * L);
-            double dCND = 1.0 - 1.0 / Math.Sqrt(2 * Convert.ToDouble(Math.PI.ToString())) *
-                Math.Exp(-L * L / 2.0) * (a1 * K + a2 * K * K + a3 * Math.Pow(K, 3.0) + a4 * Math.Pow(K, 4.0) + a5 * Math.Pow(K, 5.0));
-
-            if (X < 0)
-            {
-                return 1.0 - dCND;
-            }
-
-            return dCND;
+            
+            var underlyingSecurity = _securityService.CreateSecurity(
+                symbol.Underlying,
+                new SubscriptionDataConfig(typeof(QuoteBar), symbol.Underlying, Settings.Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false));
+            var security = _securityService.CreateSecurity(
+                symbol,
+                new SubscriptionDataConfig(typeof(QuoteBar), symbol, Settings.Resolution, TimeZones.Utc, TimeZones.Utc,
+                    false, true, false),
+                addToSymbolCache: false,
+                underlying: underlyingSecurity);
+            return _optionPriceModel.Evaluate(security, null, null)
+                .TheoreticalPrice;
         }
     }
 }
