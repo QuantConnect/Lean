@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -471,6 +472,27 @@ namespace QuantConnect.Algorithm.CSharp
         private bool TimeIs(int day, int hour, int minute)
         {
             return Time.Day == day && Time.Hour == hour && Time.Minute == minute;
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            var filledOrders = Transactions.GetOrders(x => x.Status == OrderStatus.Filled);
+            var openOrders = Transactions.GetOpenOrders(x => true);
+            if (filledOrders.Count() != 8)
+            {
+                throw new Exception($"There were expected 8 filled orders but there were only {filledOrders.Count()}");
+            }
+            if (openOrders.Count != 0)
+            {
+                throw new Exception($"No open order was expected but there were {openOrders.Count} orders");
+            }
+
+            var filledOrderTickets = Transactions.GetOrderTickets(x => x.Status == OrderStatus.Filled);
+
+            foreach (var ticket in filledOrderTickets)
+            {
+                Log($"Ticket symbol: {ticket.Symbol}");
+            }
         }
 
         /// <summary>

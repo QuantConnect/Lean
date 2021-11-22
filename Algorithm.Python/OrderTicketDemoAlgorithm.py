@@ -341,3 +341,17 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
     def TimeIs(self, day, hour, minute):
         return self.Time.day == day and self.Time.hour == hour and self.Time.minute == minute
+
+    def OnEndOfAlgorithm(self):
+        filledOrders = self.Transactions.GetOrders(lambda x: x.Status == OrderStatus.Filled)
+        openOrders = self.Transactions.GetOpenOrders(lambda x: True)
+
+        # The type returned by self.Transactions.GetOrders() is iterable and not a list
+        # that's why we use sum() to get the size of the iterable object type
+        filledOrdersSize = sum(1 for order in filledOrders)
+        assert(filledOrdersSize == 8)
+        assert(not len(openOrders))
+
+        filledOrderTickets = self.Transactions.GetOrderTickets(lambda x: x.Status == OrderStatus.Filled)
+        for ticket in filledOrderTickets:
+            self.Log("Ticket symbol: " + str(ticket.Symbol))
