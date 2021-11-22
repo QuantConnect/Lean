@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Util;
@@ -232,12 +231,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
-                    enumerator = new LiveSubscriptionEnumerator(request.Configuration, _dataQueueHandler, handler);
+                    enumerator = Subscribe(request.Configuration, handler);
 
                     if (request.Configuration.EmitSplitsAndDividends())
                     {
-                        auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler));
-                        auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler));
+                        auxEnumerators.Add(Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler));
+                        auxEnumerators.Add(Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler));
                     }
 
                     if (auxEnumerators.Count > 0)
@@ -275,12 +274,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            var enumerator = _dataQueueHandler.Subscribe(dataConfig, newDataAvailableHandler);
-            if (enumerator != null)
-            {
-                return enumerator;
-            }
-            return Enumerable.Empty<BaseData>().GetEnumerator();
+            return new LiveSubscriptionEnumerator(dataConfig, _dataQueueHandler, newDataAvailableHandler);
         }
 
         /// <summary>
