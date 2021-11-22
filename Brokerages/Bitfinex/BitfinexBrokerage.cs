@@ -439,11 +439,30 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
-            Initialize(WebSocketUrl, null, new WebSocketClientWrapper(), new RestClient(RestApiUrl), job.BrokerageData["bitfinex-api-key"], 
-                job.BrokerageData["bitfinex-api-secret"],
-                null, null, null,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")), 
-                job);
+            var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
+            var apiKey = job.BrokerageData["binance-api-key"];
+            var apiSecret = job.BrokerageData["binance-api-secret"];
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+            
+            Initialize(
+                wssUrl: WebSocketUrl,
+                restApiUrl: null,
+                websocket: new WebSocketClientWrapper(),
+                restClient: new RestClient(RestApiUrl),
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                accountId: null,
+                accessToken: null,
+                passPhrase: null,
+                useSandbox: false,
+                algorithm: null,
+                orderProvider: null,
+                securityProvider: null,
+                priceProvider: priceProvider,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         /// <summary>

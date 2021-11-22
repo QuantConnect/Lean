@@ -78,7 +78,24 @@ namespace QuantConnect.Brokerages.Binance
         public BinanceBrokerage(string apiKey, string apiSecret, string restApiUrl, string webSocketBaseUrl, IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
             : base("Binance")
         {
-            Initialize(webSocketBaseUrl, restApiUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, null, algorithm, null, aggregator, job);
+            Initialize(
+                wssUrl: webSocketBaseUrl,
+                restApiUrl: restApiUrl,
+                websocket: new WebSocketClientWrapper(),
+                restClient: null,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                accountId: null,
+                accessToken: null,
+                passPhrase: null,
+                useSandbox: false,
+                algorithm: algorithm,
+                orderProvider: null,
+                securityProvider: null,
+                priceProvider: null,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         #region IBrokerage
@@ -305,11 +322,31 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
-            Initialize(job.BrokerageData["binance-websocket-url"], job.BrokerageData["binance-api-url"], new WebSocketClientWrapper(), 
-                null, job.BrokerageData["binance-api-key"], job.BrokerageData["binance-api-secret"],
-                null, null, null,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")), 
-                job);
+            var webSocketBaseUrl = job.BrokerageData["binance-websocket-url"];
+            var restApiUrl = job.BrokerageData["binance-api-url"];
+            var apiKey = job.BrokerageData["binance-api-key"];
+            var apiSecret = job.BrokerageData["binance-api-secret"];
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+
+            Initialize(
+                wssUrl: webSocketBaseUrl,
+                restApiUrl: restApiUrl,
+                websocket: new WebSocketClientWrapper(),
+                restClient: null,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                accountId: null,
+                accessToken: null,
+                passPhrase: null,
+                useSandbox: false,
+                algorithm: null,
+                orderProvider: null,
+                securityProvider: null,
+                priceProvider: null,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         /// <summary>
@@ -383,19 +420,40 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
+        /// <param name="accountId">account id</param>
+        /// <param name="accessToken">access token</param>
         /// <param name="passPhrase">pass phrase</param>
+        /// <param name="useSandbox">use sandbox</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
+        /// <param name="orderProvider">order provider instance</param>
+        /// <param name="securityProvider">security provider instance</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient,
-            string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider,
-            IDataAggregator aggregator, LiveNodePacket job)
+        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+            string accountId, string accessToken, string passPhrase, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
+            ISecurityProvider securityProvider, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
         {
             if (!_isInitialized)
             {
-                base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
-                passPhrase, algorithm, priceProvider, aggregator, job);
+                base.Initialize(
+                    wssUrl: wssUrl,
+                    restApiUrl: restApiUrl,
+                    websocket: websocket,
+                    restClient: restClient,
+                    apiKey: apiKey,
+                    apiSecret: apiSecret,
+                    accountId: accountId,
+                    accessToken: accessToken,
+                    passPhrase: passPhrase,
+                    useSandbox: useSandbox,
+                    algorithm: algorithm,
+                    orderProvider: orderProvider,
+                    securityProvider: securityProvider,
+                    priceProvider: priceProvider,
+                    aggregator: aggregator,
+                    job: job
+                );
                 _job = job;
                 _algorithm = algorithm;
                 _aggregator = aggregator;

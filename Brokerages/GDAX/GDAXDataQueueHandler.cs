@@ -20,6 +20,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 using RestSharp;
 
@@ -47,7 +48,24 @@ namespace QuantConnect.Brokerages.GDAX
             IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job)
         {
-            Initialize(wssUrl, null, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job);
+            Initialize(
+                wssUrl: wssUrl,
+                restApiUrl: null,
+                websocket: websocket,
+                restClient: restClient,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                accountId: null,
+                accessToken: null,
+                passPhrase: passPhrase,
+                useSandbox: false,
+                algorithm: algorithm,
+                orderProvider: null,
+                securityProvider: null,
+                priceProvider: priceProvider,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         /// <summary>
@@ -80,14 +98,35 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            var wssUrl = job.BrokerageData["gdax-url"];
             var restApi = job.BrokerageData["gdax-rest-api"];
             var restClient = new RestClient(restApi);
             var webSocketClient = new WebSocketClientWrapper();
-            Initialize(job.BrokerageData["gdax-url"], null, webSocketClient,
-                    restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
-                    job.BrokerageData["gdax-passphrase"], null, null,
-                    Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")), 
-                    job);
+            var passPhrase = job.BrokerageData["gdax-passphrase"];
+            var apiKey = job.BrokerageData["gdax-api-key"];
+            var apiSecret = job.BrokerageData["gdax-api-secret"];
+            var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+
+            Initialize(
+                wssUrl: wssUrl,
+                restApiUrl: null,
+                websocket: webSocketClient,
+                restClient: restClient,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                accountId: null,
+                accessToken: null,
+                passPhrase: passPhrase,
+                useSandbox: false,
+                algorithm: null,
+                orderProvider: null,
+                securityProvider: null,
+                priceProvider: priceProvider,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         /// <summary>
@@ -109,19 +148,40 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
+        /// <param name="accountId">account id</param>
+        /// <param name="accessToken">access token</param>
         /// <param name="passPhrase">pass phrase</param>
+        /// <param name="useSandbox">use sandbox</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
+        /// <param name="orderProvider">order provider instance</param>
+        /// <param name="securityProvider">security provider instance</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient,
-            string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider,
-            IDataAggregator aggregator, LiveNodePacket job)
+        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+            string accountId, string accessToken, string passPhrase, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
+            ISecurityProvider securityProvider, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
         {
             if (!_isInitialized)
             {
-                base.Initialize(wssUrl, restApiUrl, websocket, restClient, apiKey, apiSecret,
-                passPhrase, algorithm, priceProvider, aggregator, job);
+                base.Initialize(
+                    wssUrl: wssUrl,
+                    restApiUrl: restApiUrl,
+                    websocket: websocket,
+                    restClient: restClient,
+                    apiKey: apiKey,
+                    apiSecret: apiSecret,
+                    accountId: accountId,
+                    accessToken: accessToken,
+                    passPhrase: passPhrase,
+                    useSandbox: useSandbox,
+                    algorithm: algorithm,
+                    orderProvider: orderProvider,
+                    securityProvider: securityProvider,
+                    priceProvider: priceProvider,
+                    aggregator: aggregator,
+                    job: job
+                );
                 var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
                 subscriptionManager.SubscribeImpl += (s, t) =>
                 {

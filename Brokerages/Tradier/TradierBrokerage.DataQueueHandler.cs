@@ -55,9 +55,24 @@ namespace QuantConnect.Brokerages.Tradier
             var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
             var restClient = new RestClient(useSandbox ? _restApiSandboxUrl : _restApiUrl);
 
-            Initialize(WebSocketUrl, null, new WebSocketClientWrapper(), restClient, null, null,
-            accountId, accessToken, null, useSandbox, null, null,
-            null, null, aggregator, null);
+            Initialize(
+                wssUrl: WebSocketUrl,
+                restApiUrl: null,
+                websocket: new WebSocketClientWrapper(),
+                restClient: restClient,
+                apiKey: null,
+                apiSecret: null,
+                accountId: accountId,
+                accessToken: accessToken,
+                passPhrase: null,
+                useSandbox: useSandbox,
+                algorithm: null,
+                orderProvider: null,
+                securityProvider: null,
+                priceProvider: null,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         /// <summary>

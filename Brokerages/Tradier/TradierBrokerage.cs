@@ -122,9 +122,24 @@ namespace QuantConnect.Brokerages.Tradier
             : base("Tradier Brokerage")
         {
             var restClient = new RestClient(useSandbox ? _restApiSandboxUrl : _restApiUrl);
-            Initialize(WebSocketUrl, null, new WebSocketClientWrapper(), restClient, null, null,
-            accountId, accessToken, null, useSandbox, algorithm, orderProvider,
-            securityProvider, null, aggregator, null);
+            Initialize(
+                wssUrl: WebSocketUrl,
+                restApiUrl: null,
+                websocket: new WebSocketClientWrapper(),
+                restClient: restClient,
+                apiKey: null,
+                apiSecret: null,
+                accountId: accountId,
+                accessToken: accessToken,
+                passPhrase: null,
+                useSandbox: useSandbox,
+                algorithm: algorithm,
+                orderProvider: orderProvider,
+                securityProvider: securityProvider,
+                priceProvider: null,
+                aggregator: aggregator,
+                job: null
+            );
         }
 
         #region Tradier client implementation
@@ -1773,6 +1788,24 @@ namespace QuantConnect.Brokerages.Tradier
         {
             if (!_isInitialized)
             {
+                base.Initialize(
+                    wssUrl: wssUrl,
+                    restApiUrl: restApiUrl,
+                    websocket: websocket,
+                    restClient: restClient,
+                    apiKey: apiKey,
+                    apiSecret: apiSecret,
+                    accountId: accountId,
+                    accessToken: accessToken,
+                    passPhrase: passPhrase,
+                    useSandbox: useSandbox,
+                    algorithm: algorithm,
+                    orderProvider: orderProvider,
+                    securityProvider: securityProvider,
+                    priceProvider: priceProvider,
+                    aggregator: aggregator,
+                    job: job
+                );
                 _algorithm = algorithm;
                 _orderProvider = orderProvider;
                 _securityProvider = securityProvider;
