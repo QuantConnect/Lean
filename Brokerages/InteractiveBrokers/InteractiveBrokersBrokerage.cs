@@ -2633,6 +2633,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return null;
             }
 
+            if (!IsConnected)
+            {
+                Connect();
+            }
+
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             _subscriptionManager.Subscribe(dataConfig);
 

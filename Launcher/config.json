@@ -6,7 +6,7 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "live-tradier", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
   "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
@@ -70,26 +70,26 @@
   "live-holdings": "[]",
 
   // interactive brokers configuration
-  "ib-account": "",
-  "ib-user-name": "",
-  "ib-password": "",
+  "ib-account": "U7593634",
+  "ib-user-name": "ronitjain",
+  "ib-password": "Ronitjain1@",
   "ib-host": "127.0.0.1",
   "ib-port": "4002",
   "ib-agent-description": "Individual",
   "ib-tws-dir": "C:\\Jts",
   "ib-trading-mode": "paper",
   "ib-enable-delayed-streaming-data": false,
-  "ib-version": "974",
+  "ib-version": "981",
 
   // tradier configuration
-  "tradier-use-sandbox": true,
-  "tradier-account-id": "",
-  "tradier-access-token": "",
+  "tradier-use-sandbox": false,
+  "tradier-account-id": "6YA19757",
+  "tradier-access-token": "WwRJyYoW98GJ5cNd6AsUMPAIR776",
 
   // oanda configuration
   "oanda-environment": "Practice",
-  "oanda-access-token": "",
-  "oanda-account-id": "",
+  "oanda-access-token": "sdfs",
+  "oanda-account-id": "sdfdsf",
 
   // fxcm configuration
   "fxcm-server": "http://www.fxcorporate.com/Hosts.jsp",
@@ -106,17 +106,17 @@
   "iqfeed-version": "1.0",
 
   // gdax configuration
-  "gdax-api-secret": "",
-  "gdax-api-key": "",
-  "gdax-passphrase": "",
+  "gdax-api-secret": "aTc6x9YzPBAf2P8GuorikdoFVc687x/uA8CjabF7zpOMUshLSjRomKuNExAMoWOZMP9LDOyv30H8rPVQNZ8YDQ==",
+  "gdax-api-key": "7a5efba90520fb08cac71e36daaf19c0",
+  "gdax-passphrase": "sy1gn7l63yp",
 
   // bitfinex configuration
-  "bitfinex-api-secret": "",
-  "bitfinex-api-key": "",
+  "bitfinex-api-secret": "vBOvOVxd6ZFbYvf7AtDxkRiu01k8UP1eKtj3bsLL0Jk",
+  "bitfinex-api-key": "OJQtZqcebYw9uJra53MX853yptrHRcFufjGU26vEGx4",
 
   // binance configuration
-  "binance-api-secret": "",
-  "binance-api-key": "",
+  "binance-api-secret": "Hll0Z7nzTTytEKZGkaCyQHJ6CiBWwHBfr9E4O84SOyMidiDcD1jQuMrg8RUwFoBM",
+  "binance-api-key": "lB9DnQ7ylSlImdpSezfugHcPiSQJnOFuTorzw3a2NJuydalLqNKl1GRsYfLMxZTY",
   "binance-api-url": "https://api.binance.com",
   "binance-websocket-url": "wss://stream.binance.com:9443/ws",
 
@@ -176,16 +176,16 @@
   "polygon-api-key": "",
 
   // zerodha configuration goto https://kite.trade
-  "zerodha-access-token": "",
-  "zerodha-api-key": "",
+  "zerodha-access-token": "sfd",
+  "zerodha-api-key": "sdf",
   "zerodha-product-type": "MIS", //MIS(Intraday) or CNC(Delivery) or NRML(Carry Forward)
   "zerodha-trading-segment": "EQUITY", // EQUITY(NSE,BSE) or COMMODITY (MCX)
   "zerodha-history-subscription": false, // Enable this if History API Subscription available
 
   //samco configuration go to https://www.samco.in/stocknote-api
-  "samco-client-id": "",
-  "samco-client-password": "",
-  "samco-year-of-birth": "",
+  "samco-client-id": "DR42712",
+  "samco-client-password": "Ronitjain1#",
+  "samco-year-of-birth": "1998",
   "samco-product-type": "MIS", //MIS(Intraday) or CNC(Delivery) or NRML(Carry Forward)
   "samco-trading-segment": "EQUITY", // EQUITY(NSE,BSE) or COMMODITY (MCX)
 
@@ -231,7 +231,7 @@
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
+      "data-queue-handler": [ "SamcoBrokerage", "TradierBrokerage" ],
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
     },
@@ -242,7 +242,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "ZerodhaBrokerage",
-      "data-queue-handler": "ZerodhaBrokerage",
+      "data-queue-handler": [ "SamcoBrokerage" ],
 
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
@@ -258,7 +258,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "SamcoBrokerage",
-      "data-queue-handler": "SamcoBrokerage",
+      "data-queue-handler": [ "SamcoBrokerage" ],
 
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
@@ -278,7 +278,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "TradierBrokerage",
-      "data-queue-handler": "TradierBrokerage",
+      "data-queue-handler": [ "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage" ],
 
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
@@ -296,7 +296,7 @@
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage",
+      "data-queue-handler": [ "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage" ],
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "history-provider": "BrokerageHistoryProvider"
@@ -352,7 +352,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "GDAXBrokerage",
-      "data-queue-handler": "GDAXDataQueueHandler",
+      "data-queue-handler": [ "BinanceBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -366,7 +366,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "BitfinexBrokerage",
-      "data-queue-handler": "BitfinexBrokerage",
+      "data-queue-handler": [ "GDAXDataQueueHandler" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -380,7 +380,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "BinanceBrokerage",
-      "data-queue-handler": "BinanceBrokerage",
+      "data-queue-handler": [ "BinanceBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -418,7 +418,7 @@
     },
 
     // defines the 'live-kraken' environment
-    "live-kraken": {
+    "live-C": {
       "live-mode": true,
 
       // real brokerage implementations require the BrokerageTransactionHandler
