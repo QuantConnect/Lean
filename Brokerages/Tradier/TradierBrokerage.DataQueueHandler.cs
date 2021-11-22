@@ -187,6 +187,10 @@ namespace QuantConnect.Brokerages.Tradier
 
             var json = JsonConvert.SerializeObject(obj);
 
+            if (!WebSocket.IsOpen)
+            {
+                Connect();
+            }
             WebSocket.Send(json);
         }
 
