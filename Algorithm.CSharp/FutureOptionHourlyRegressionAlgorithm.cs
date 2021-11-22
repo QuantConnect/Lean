@@ -1,0 +1,163 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
+
+namespace QuantConnect.Algorithm.CSharp
+{
+    /// <summary>
+    /// This regression algorithm tests using FutureOptions hourly resolution
+    /// </summary>
+    public class FutureOptionHourlyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    {
+        private OrderTicket ticket;
+        
+        public override void Initialize()
+        {
+            SetStartDate(2012, 1, 3);
+            SetEndDate(2012, 1, 4);
+            var resolution = Resolution.Hour;
+            
+            // Add our underlying future contract
+            var dc = AddFutureContract(
+                QuantConnect.Symbol.CreateFuture(
+                    Futures.Dairy.ClassIIIMilk,
+                    Market.CME,
+                    new DateTime(2012, 4, 1)),
+                resolution).Symbol;
+
+            // Attempt to fetch a specific future option contract
+            var dcOption = OptionChainProvider.GetOptionContractList(dc, Time)
+                .Where(x => x.ID.StrikePrice == 17m && x.ID.OptionRight == OptionRight.Call)
+                .Select(x => AddFutureOptionContract(x, resolution).Symbol)
+                .FirstOrDefault();
+            
+            // Validate it is the expected contract
+            var expectedContract = QuantConnect.Symbol.CreateOption(dc, Market.CME, OptionStyle.American,
+                OptionRight.Call, 17m,
+                new DateTime(2012, 4, 01));
+            
+            if (dcOption != expectedContract)
+            {
+                throw new Exception($"Contract {dcOption} was not the expected contract {expectedContract}");
+            }
+            
+            // Schedule a purchase of this contract at Noon
+            Schedule.On(DateRules.Today, TimeRules.Noon, () =>
+            {
+                ticket = MarketOrder(dcOption, 1);
+            });
+            
+            // Schedule liquidation at 6PM
+            Schedule.On(DateRules.Today, TimeRules.At(18,0,0), () =>
+            {
+                Liquidate();
+            });
+        }
+
+        public override void OnData(Slice slice)
+        {
+            // Assert we are only getting data only hourly intervals
+            if (slice.Time.Minute != 0)
+            {
+                throw new ArgumentException($"Expected data only on hourly intervals; instead was {slice.Time}");
+            }
+        }
+
+        /// <summary>
+        /// Ran at the end of the algorithm to ensure the algorithm has no holdings
+        /// </summary>
+        /// <exception cref="Exception">The algorithm has holdings</exception>
+        public override void OnEndOfAlgorithm()
+        {
+            if (Portfolio.Invested)
+            {
+                throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+            }
+
+            if (ticket.Status != OrderStatus.Filled)
+            {
+                throw new Exception("Future option order failed to fill correctly");
+            }
+        }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "2"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$3.70"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", "DC V5E8P9VAH3IC|DC V5E8P9SH0U0X"},
+            {"Fitness Score", "0.01"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-101.911"},
+            {"Portfolio Turnover", "0.02"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "665d06e4f758724b5b9576b14fd18743"}
+        };
+    }
+}
+
