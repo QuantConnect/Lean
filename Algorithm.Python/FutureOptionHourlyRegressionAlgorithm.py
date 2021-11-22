@@ -16,7 +16,7 @@ from AlgorithmImports import *
 ### <summary>
 ### This regression algorithm tests using FutureOptions daily resolution
 ### </summary>
-class FutureOptionDailyRegressionAlgorithm(QCAlgorithm):
+class FutureOptionHourlyRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2012, 1, 3)

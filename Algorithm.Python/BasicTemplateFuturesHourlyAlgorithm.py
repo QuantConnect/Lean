@@ -19,7 +19,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="benchmarks" />
 ### <meta name="tag" content="futures" />
-class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
+class BasicTemplateFuturesHourlyAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2013, 10, 8)
