@@ -86,7 +86,7 @@ namespace QuantConnect.ToolBox.IBDownloader
 
                         while (startDate < auxEndDate)
                         {
-                            var data = downloader.Get(symbol, castResolution, startDate, auxEndDate);
+                            var data = downloader.Get(new DataDownloaderGetParameters(symbol, castResolution, startDate, auxEndDate, TickType.Quote));
                             var bars = data.Cast<QuoteBar>().ToList();
 
                             if (allResolutions)

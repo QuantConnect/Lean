@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -72,7 +72,7 @@ namespace QuantConnect.ToolBox.Polygon
                         foreach (var tickType in tickTypes)
                         {
                             // Download the data
-                            var data = downloader.Get(symbol, resolution, startDate, endDate, tickType)
+                            var data = downloader.Get(new DataDownloaderGetParameters(symbol, resolution, startDate, endDate, tickType))
                                 .Select(x =>
                                     {
                                         x.Time = x.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
