@@ -29,6 +29,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
@@ -87,6 +88,8 @@ namespace QuantConnect.Brokerages.Tradier
         private readonly FixedSizeHashQueue<long> _verifiedUnknownTradierOrderIDs = new FixedSizeHashQueue<long>(1000);
         private readonly FixedSizeHashQueue<int> _cancelledQcOrderIDs = new FixedSizeHashQueue<int>(10000);
         private bool _isInitialized;
+        private string _restApiUrl = "https://api.tradier.com/v1/";
+        private string _restApiSandboxUrl = "https://sandbox.tradier.com/v1/";
 
         /// <summary>
         /// Returns the brokerage account's base currency
@@ -111,61 +114,12 @@ namespace QuantConnect.Brokerages.Tradier
             bool useSandbox,
             string accountId,
             string accessToken)
-            : base(WebSocketUrl, new WebSocketClientWrapper(),
-                new RestClient(useSandbox ? "https://sandbox.tradier.com/v1/" : "https://api.tradier.com/v1/"),
-                null, null, "Tradier Brokerage")
+            : base("Tradier Brokerage")
         {
-            Initialize(algorithm, orderProvider, securityProvider, aggregator, useSandbox, accountId, accessToken);
-        }
-
-        public void Initialize(
-            IAlgorithm algorithm,
-            IOrderProvider orderProvider,
-            ISecurityProvider securityProvider,
-            IDataAggregator aggregator,
-            bool useSandbox,
-            string accountId,
-            string accessToken)
-        {
-            if (!_isInitialized)
-            {
-                _algorithm = algorithm;
-                _orderProvider = orderProvider;
-                _securityProvider = securityProvider;
-                _aggregator = aggregator;
-                _useSandbox = useSandbox;
-                _accountId = accountId;
-
-            RestClient.AddDefaultHeader("Accept", "application/json");
-            RestClient.AddDefaultHeader("Authorization", $"Bearer {accessToken}");
-
-            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            subscriptionManager.SubscribeImpl += (symbols, _) => Subscribe(symbols);
-            subscriptionManager.UnsubscribeImpl += (symbols, _) => Unsubscribe(symbols);
-            SubscriptionManager = subscriptionManager;
-
-                _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
-
-                // we can poll orders once a second in sandbox and twice a second in production
-                var interval = _useSandbox ? 1000 : 500;
-                _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
-            {
-                { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
-                { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
-                { TradierApiRequestType.Orders, new RateGate(1, TimeSpan.FromMilliseconds(1000))},
-            };
-
-            _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
-            WebSocket.Error += (sender, error) =>
-            {
-                if (!WebSocket.IsOpen)
-                {
-                    // on error we clear our state, on Open we will re susbscribe
-                    _subscribedTickers.Clear();
-                    _streamSession = null;
-                }
-            };
-            _isInitialized = true;
+            var restClient = new RestClient(useSandbox ? _restApiSandboxUrl : _restApiUrl);
+            Initialize(WebSocketUrl, null, new WebSocketClientWrapper(), restClient, null, null,
+            accountId, accessToken, null, useSandbox, algorithm, orderProvider,
+            securityProvider, null, aggregator, null);
         }
 
         #region Tradier client implementation
@@ -1802,14 +1756,11 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Initailze the instance of this class 
         /// </summary>
-        private void Initialize(
-            IAlgorithm algorithm,
-            IOrderProvider orderProvider,
-            ISecurityProvider securityProvider,
-            IDataAggregator aggregator,
-            bool useSandbox,
-            string accountId,
-            string accessToken)
+
+
+        protected override void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+            string accountId, string accessToken, string passPhrase, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
+            ISecurityProvider securityProvider, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
         {
             if (!_isInitialized)
             {
@@ -1819,29 +1770,36 @@ namespace QuantConnect.Brokerages.Tradier
                 _aggregator = aggregator;
                 _useSandbox = useSandbox;
                 _accountId = accountId;
-                _accessToken = accessToken;
 
-                _requestEndpoint = useSandbox ? "https://sandbox.tradier.com/v1/" : "https://api.tradier.com/v1/";
+                RestClient.AddDefaultHeader("Accept", "application/json");
+                RestClient.AddDefaultHeader("Authorization", $"Bearer {accessToken}");
 
-                _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-                _subscriptionManager.SubscribeImpl += Subscribe;
-                _subscriptionManager.UnsubscribeImpl += Unsubscribe;
+                var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+                subscriptionManager.SubscribeImpl += (symbols, _) => Subscribe(symbols);
+                subscriptionManager.UnsubscribeImpl += (symbols, _) => Unsubscribe(symbols);
+                SubscriptionManager = subscriptionManager;
 
                 _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
 
                 // we can poll orders once a second in sandbox and twice a second in production
                 var interval = _useSandbox ? 1000 : 500;
                 _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
-            {
-                { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
-                { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
-                { TradierApiRequestType.Orders, new RateGate(1, TimeSpan.FromMilliseconds(1000))},
-            };
+                {
+                    { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                    { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                    { TradierApiRequestType.Orders, new RateGate(1, TimeSpan.FromMilliseconds(1000))},
+                };
 
                 _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
-
-                _webSocketClient.Initialize(WebSocketUrl);
-                _webSocketClient.Message += OnMessage;
+                WebSocket.Error += (sender, error) =>
+                {
+                    if (!WebSocket.IsOpen)
+                    {
+                        // on error we clear our state, on Open we will re susbscribe
+                        _subscribedTickers.Clear();
+                        _streamSession = null;
+                    }
+                };
                 _isInitialized = true;
             }
         }

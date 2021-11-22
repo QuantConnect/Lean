@@ -49,18 +49,15 @@ namespace QuantConnect.Brokerages.Tradier
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
-            var useSandbox = job.BrokerageData["tradier-use-sandbox"];
+            var useSandbox = bool.Parse(job.BrokerageData["tradier-use-sandbox"]);
             var accountId = job.BrokerageData["tradier-account-id"];
             var accessToken = job.BrokerageData["tradier-access-token"];
-
-            Initialize(
-                null,
-                null,
-                null,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
-                bool.Parse(useSandbox),
-                accountId,
-                accessToken);
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+            var restClient = new RestClient(useSandbox ? _restApiSandboxUrl : _restApiUrl);
+            
+            Initialize(WebSocketUrl, null, new WebSocketClientWrapper(), restClient, null, null,
+            accountId, accessToken, null, useSandbox, null, null,
+            null, null, aggregator, null);
         }
 
         /// <summary>
