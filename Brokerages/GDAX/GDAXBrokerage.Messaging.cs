@@ -512,10 +512,6 @@ namespace QuantConnect.Brokerages.GDAX
                 signature = token.Signature,
             });
 
-            if (!WebSocket.IsOpen)
-            {
-                Connect();
-            }
             WebSocket.Send(json);
 
             Log.Trace("GDAXBrokerage.Subscribe: Sent subscribe.");

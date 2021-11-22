@@ -86,6 +86,11 @@ namespace QuantConnect.Brokerages.GDAX
                 return null;
             }
 
+            if (!WebSocket.IsOpen)
+            {
+                Connect();
+            }
+
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             SubscriptionManager.Subscribe(dataConfig);
 

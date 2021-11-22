@@ -95,6 +95,11 @@ namespace QuantConnect.Brokerages.Tradier
                 return null;
             }
 
+            if (!WebSocket.IsOpen)
+            {
+                Connect();
+            }
+
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             SubscriptionManager.Subscribe(dataConfig);
 
@@ -187,10 +192,6 @@ namespace QuantConnect.Brokerages.Tradier
 
             var json = JsonConvert.SerializeObject(obj);
 
-            if (!WebSocket.IsOpen)
-            {
-                Connect();
-            }
             WebSocket.Send(json);
         }
 
