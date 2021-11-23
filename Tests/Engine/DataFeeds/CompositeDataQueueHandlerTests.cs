@@ -28,7 +28,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class CompositeDataQueueHandlerTests
     {
         [TestCase("ZerodhaBrokerage")]
-        [TestCase("SamcoBrokerage")]
         [TestCase("TradierBrokerage")]
         [TestCase("QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage")]
         [TestCase("OandaBrokerage")]
