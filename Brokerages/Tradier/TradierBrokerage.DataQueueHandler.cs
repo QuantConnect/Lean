@@ -78,7 +78,9 @@ namespace QuantConnect.Brokerages.Tradier
         private bool CanSubscribe(Symbol symbol)
         {
             return (symbol.ID.SecurityType == SecurityType.Equity || symbol.ID.SecurityType == SecurityType.Option)
-                && !symbol.Value.Contains("-UNIVERSE-");
+                && !symbol.Value.Contains("-UNIVERSE-")
+                // continuous futures and canonical symbols not supported
+                && !symbol.IsCanonical();
         }
 
         /// <summary>
