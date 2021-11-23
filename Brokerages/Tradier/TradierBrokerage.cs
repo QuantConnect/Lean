@@ -21,7 +21,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
@@ -1775,8 +1774,8 @@ namespace QuantConnect.Brokerages.Tradier
         /// Initailze the instance of this class
         /// </summary>
 
-        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, 
-            string accountId, string accessToken, bool useSandbox, IAlgorithm algorithm, 
+        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient,
+            string accountId, string accessToken, bool useSandbox, IAlgorithm algorithm,
             IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator)
         {
             if (IsInitialized)

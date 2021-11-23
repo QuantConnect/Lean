@@ -14,25 +14,25 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Packets;
+using QuantConnect.Securities;
+using QuantConnect.Util;
+using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using System.Threading;
-using RestSharp;
-using QuantConnect.Configuration;
-using QuantConnect.Logging;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
-using QuantConnect.Util;
-using QuantConnect.Data;
-using QuantConnect.Packets;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -44,6 +44,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// Collection of partial split messages
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
+
         private string _passPhrase;
         private IAlgorithm _algorithm;
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
@@ -59,7 +60,9 @@ namespace QuantConnect.Brokerages.GDAX
 
         // GDAX has different rate limits for public and private endpoints
         // https://docs.gdax.com/#rate-limits
-        internal enum GdaxEndpointType { Public, Private }
+        internal enum GdaxEndpointType
+        { Public, Private }
+
         private readonly RateGate _publicEndpointRateLimiter = new RateGate(6, TimeSpan.FromSeconds(1));
         private readonly RateGate _privateEndpointRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
 
@@ -71,7 +74,7 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly int _fillMonitorTimeout = Config.GetInt("gdax-fill-monitor-timeout", 500);
         private readonly ConcurrentDictionary<string, PendingOrder> _pendingOrders = new ConcurrentDictionary<string, PendingOrder>();
 
-        #endregion
+        #endregion Declarations
 
         /// <summary>
         /// The list of websocket channels to subscribe
@@ -298,7 +301,6 @@ namespace QuantConnect.Brokerages.GDAX
                             orderBook.UpdateAskRow(price, size);
                         }
                     }
-
                 }
             }
             catch (Exception e)

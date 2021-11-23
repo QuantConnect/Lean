@@ -14,6 +14,8 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Brokerages.Bitfinex.Messages;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -21,16 +23,14 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
+using QuantConnect.Util;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using QuantConnect.Brokerages.Bitfinex.Messages;
-using QuantConnect.Securities.Crypto;
 using Order = QuantConnect.Orders.Order;
-using QuantConnect.Util;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -43,6 +43,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Bitfinex);
 
         #region IBrokerage
+
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
         /// </summary>
@@ -429,7 +430,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             } while (startTimeStamp < endTimeStamp);
         }
 
-        #endregion
+        #endregion IBrokerage
 
         #region IDataQueueHandler
 
@@ -444,7 +445,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             var apiSecret = job.BrokerageData["bitfinex-api-secret"];
             var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
                 Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
-            
+
             Initialize(
                 wssUrl: WebSocketUrl,
                 websocket: new WebSocketClientWrapper(),
@@ -489,7 +490,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             _aggregator.Remove(dataConfig);
         }
 
-        #endregion
+        #endregion IDataQueueHandler
 
         /// <summary>
         /// Event invocator for the Message event

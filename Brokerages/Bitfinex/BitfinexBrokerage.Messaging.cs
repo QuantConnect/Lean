@@ -15,13 +15,16 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Brokerages.Bitfinex.Messages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
 using QuantConnect.Util;
 using RestSharp;
 using System;
@@ -29,9 +32,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using QuantConnect.Brokerages.Bitfinex.Messages;
-using QuantConnect.Packets;
-using QuantConnect.Securities.Crypto;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Bitfinex
@@ -54,6 +54,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         // map Bitfinex ClientOrderId -> LEAN order (only used for orders submitted in PlaceOrder, not for existing orders)
         private readonly ConcurrentDictionary<long, Order> _orderMap = new ConcurrentDictionary<long, Order>();
+
         private readonly object _clientOrderIdLocker = new object();
         private long _nextClientOrderId;
 
@@ -165,8 +166,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, 
-            string apiSecret,IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey,
+            string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
         {
             if (IsInitialized)
             {

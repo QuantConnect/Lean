@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -20,16 +23,12 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using QuantConnect.Configuration;
-using QuantConnect.Util;
 using Timer = System.Timers.Timer;
-using RestSharp;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -39,13 +38,13 @@ namespace QuantConnect.Brokerages.Binance
     [BrokerageFactory(typeof(BinanceBrokerageFactory))]
     public partial class BinanceBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
-
         private IAlgorithm _algorithm;
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Binance);
 
         // Binance allows 5 messages per second, but we still get rate limited if we send a lot of messages at that rate
         // By sending 3 messages per second, evenly spaced out, we can keep sending messages without being limited
         private readonly RateGate _webSocketRateLimiter = new RateGate(1, TimeSpan.FromMilliseconds(330));
+
         private long _lastRequestId;
 
         private LiveNodePacket _job;
@@ -168,18 +167,22 @@ namespace QuantConnect.Brokerages.Binance
                     case "MARKET":
                         order = new MarketOrder { Price = item.Price };
                         break;
+
                     case "LIMIT":
                     case "LIMIT_MAKER":
                         order = new LimitOrder { LimitPrice = item.Price };
                         break;
+
                     case "STOP_LOSS":
                     case "TAKE_PROFIT":
                         order = new StopMarketOrder { StopPrice = item.StopPrice, Price = item.Price };
                         break;
+
                     case "STOP_LOSS_LIMIT":
                     case "TAKE_PROFIT_LIMIT":
                         order = new StopLimitOrder { StopPrice = item.StopPrice, LimitPrice = item.Price };
                         break;
+
                     default:
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1,
                             "BinanceBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
@@ -303,7 +306,7 @@ namespace QuantConnect.Brokerages.Binance
             _messageHandler.HandleNewMessage(e);
         }
 
-        #endregion
+        #endregion IBrokerage
 
         #region IDataQueueHandler
 
@@ -372,7 +375,7 @@ namespace QuantConnect.Brokerages.Binance
                    symbol.SecurityType == SecurityType.Crypto;
         }
 
-        #endregion
+        #endregion IDataQueueHandler
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

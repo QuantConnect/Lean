@@ -13,16 +13,14 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 using QuantConnect.Util;
 using RestSharp;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.GDAX
 {
