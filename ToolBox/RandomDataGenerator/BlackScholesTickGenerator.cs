@@ -1,8 +1,10 @@
 using System;
 using QLNet;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 
@@ -28,6 +30,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public BlackScholesTickGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
             : base(settings, random)
         {
+            var securityManager = new SecurityManager(new TimeKeeper(Settings.Start, new[] { TimeZones.NewYork }));
+            _securityService = new SecurityService(
+                new CashBook(),
+                MarketHoursDatabase.FromDataFolder(Globals.DataFolder),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                null,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(
+                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
+                new MapFilePrimaryExchangeProvider(new LocalDiskMapFileProvider())
+                );
+
             _optionPriceModel = new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
                 _underlyingVolEstimator,
                 _riskFreeRateEstimator,
@@ -40,7 +54,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 throw new ArgumentException("Please use TickGenerator for non options.");
             }
-            
+
             var underlyingSecurity = _securityService.CreateSecurity(
                 symbol.Underlying,
                 new SubscriptionDataConfig(typeof(QuoteBar), symbol.Underlying, Settings.Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false));
