@@ -185,9 +185,9 @@ namespace QuantConnect
         /// <summary>
         /// Simple method to create the canonical option symbol for any given underlying symbol
         /// </summary>
-        /// <param name="underlyingSymbol"></param>
-        /// <param name="market"></param>
-        /// <returns></returns>
+        /// <param name="underlyingSymbol">Underlying of this option</param>
+        /// <param name="market">Market for this option</param>
+        /// <returns>New Canonical Option</returns>
         public static Symbol CreateCanonicalOption(Symbol underlyingSymbol, string market = null)
         {
             var optionType = GetOptionTypeFromUnderlying(underlyingSymbol);

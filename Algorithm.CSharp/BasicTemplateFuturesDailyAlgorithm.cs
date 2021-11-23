@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateFuturesDailyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _contractSymbol;
+        protected virtual Resolution Resolution => Resolution.Daily;
 
         // S&P 500 EMini futures
         private const string RootSP500 = Futures.Indices.SP500EMini;
@@ -48,8 +49,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 10);
             SetCash(1000000);
 
-            var futureSP500 = AddFuture(RootSP500, Resolution.Daily);
-            var futureGold = AddFuture(RootGold, Resolution.Daily);
+            var futureSP500 = AddFuture(RootSP500, Resolution);
+            var futureGold = AddFuture(RootGold, Resolution);
 
             // set our expiry filter for this futures chain
             // SetFilter method accepts TimeSpan objects or integer for days.
@@ -92,17 +93,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public virtual bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "6"},
             {"Average Win", "0%"},

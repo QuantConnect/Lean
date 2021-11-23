@@ -19,6 +19,7 @@ using System.Linq;
 using System.Reflection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -28,11 +29,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FutureOptionDailyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected OrderTicket Ticket;
+        protected Symbol DcOption;
+        protected virtual Resolution Resolution => Resolution.Daily;
+        
         public override void Initialize()
         {
             SetStartDate(2012, 1, 3);
             SetEndDate(2012, 1, 4);
-            var resolution = Resolution.Daily;
 
             // Add our underlying future contract
             var dc = AddFutureContract(
@@ -40,12 +44,12 @@ namespace QuantConnect.Algorithm.CSharp
                     Futures.Dairy.ClassIIIMilk,
                     Market.CME,
                     new DateTime(2012, 4, 1)),
-                resolution).Symbol;
+                Resolution).Symbol;
 
             // Attempt to fetch a specific future option contract
-            var dcOption = OptionChainProvider.GetOptionContractList(dc, Time)
+            DcOption = OptionChainProvider.GetOptionContractList(dc, Time)
                 .Where(x => x.ID.StrikePrice == 17m && x.ID.OptionRight == OptionRight.Call)
-                .Select(x => AddFutureOptionContract(x, resolution).Symbol)
+                .Select(x => AddFutureOptionContract(x, Resolution).Symbol)
                 .FirstOrDefault();
             
             // Validate it is the expected contract
@@ -53,15 +57,20 @@ namespace QuantConnect.Algorithm.CSharp
                 OptionRight.Call, 17m,
                 new DateTime(2012, 4, 01));
             
-            if (dcOption != expectedContract)
+            if (DcOption != expectedContract)
             {
-                throw new Exception($"Contract {dcOption} was not the expected contract {expectedContract}");
+                throw new Exception($"Contract {DcOption} was not the expected contract {expectedContract}");
             }
             
+            ScheduleBuySell();
+        }
+        
+        protected virtual void ScheduleBuySell()
+        {
             // Schedule a purchase of this contract tomorrow at 1AM
             Schedule.On(DateRules.Tomorrow, TimeRules.At(1,0,0), () =>
             {
-                MarketOrder(dcOption, 1);
+                Ticket = MarketOrder(DcOption, 1);
             });
             
             // Schedule liquidation tomorrow at 6PM
@@ -90,22 +99,27 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
+            
+            if (Ticket.Status != OrderStatus.Filled)
+            {
+                throw new Exception("Future option order failed to fill correctly");
+            }
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public virtual bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},

@@ -24,85 +24,30 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This example demonstrates how to add futures with hourly resolution.
+    /// This regressions tests the BasicTemplateFuturesDailyAlgorithm with hour data
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="benchmarks" />
     /// <meta name="tag" content="futures" />
-    public class BasicTemplateFuturesHourlyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateFuturesHourlyAlgorithm : BasicTemplateFuturesDailyAlgorithm
     {
         private Symbol _contractSymbol;
-
-        // S&P 500 EMini futures
-        private const string RootSP500 = Futures.Indices.SP500EMini;
-
-        // Gold futures
-        private const string RootGold = Futures.Metals.Gold;
-
-        /// <summary>
-        /// Initialize your algorithm and add desired assets.
-        /// </summary>
-        public override void Initialize()
-        {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 10, 10);
-            SetCash(1000000);
-
-            var futureSP500 = AddFuture(RootSP500, Resolution.Hour);
-            var futureGold = AddFuture(RootGold, Resolution.Hour);
-
-            // set our expiry filter for this futures chain
-            // SetFilter method accepts TimeSpan objects or integer for days.
-            // The following statements yield the same filtering criteria 
-            futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
-            futureGold.SetFilter(0, 182);
-        }
-
-        /// <summary>
-        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
-        /// </summary>
-        /// <param name="slice">The current slice of data keyed by symbol string</param>
-        public override void OnData(Slice slice)
-        {
-            if (!Portfolio.Invested)
-            {
-                foreach(var chain in slice.FutureChains)
-                {
-                    // find the front contract expiring no earlier than in 90 days
-                    var contract = (
-                        from futuresContract in chain.Value.OrderBy(x => x.Expiry)
-                        where futuresContract.Expiry > Time.Date.AddDays(90)
-                        select futuresContract
-                    ).FirstOrDefault();
-
-                    // if found, trade it
-                    if (contract != null)
-                    {
-                        _contractSymbol = contract.Symbol;
-                        MarketOrder(_contractSymbol, 1);
-                    }
-                }
-            }
-            else
-            {
-                Liquidate();
-            }
-        }
+        protected override Resolution Resolution => Resolution.Hour;
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public override bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public override Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "140"},
             {"Average Win", "0.01%"},

@@ -1083,12 +1083,8 @@ namespace QuantConnect.Util
                     market = info[startIndex + 1];
                     ticker = info[startIndex + 3];
                     
-                    // Remove the ticktype from the ticker 
-                    // TODO: This seems very poor, addresses hour and daily resolution paths where ticker is only in the zip file name.
-                    if (securityType == SecurityType.Crypto || securityType == SecurityType.Future)
-                    {
-                        ticker = ticker.Split('_').First();
-                    }
+                    // Remove the ticktype from the ticker (Only exists in Crypto and Future data but causes no issues)
+                    ticker = ticker.Split('_').First();
 
                     // If resolution is Daily or Hour, we do not need to set the date
                     if (resolution < Resolution.Hour)
@@ -1106,8 +1102,7 @@ namespace QuantConnect.Util
                     var underlyingFutureExpiryDate = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
 
                     // Create our underlying future and then the Canonical option for this future
-                    var sid = SecurityIdentifier.GenerateFuture(underlyingFutureExpiryDate, ticker, market);
-                    var underlyingFuture = new Symbol(sid, ticker);
+                    var underlyingFuture = Symbol.CreateFuture(ticker, market, underlyingFutureExpiryDate);
                     symbol = Symbol.CreateCanonicalOption(underlyingFuture);
                 }
                 else

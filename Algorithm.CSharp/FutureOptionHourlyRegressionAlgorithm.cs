@@ -27,44 +27,16 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This regression algorithm tests using FutureOptions hourly resolution
     /// </summary>
-    public class FutureOptionHourlyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureOptionHourlyRegressionAlgorithm : FutureOptionDailyRegressionAlgorithm
     {
-        private OrderTicket ticket;
-        
-        public override void Initialize()
-        {
-            SetStartDate(2012, 1, 3);
-            SetEndDate(2012, 1, 4);
-            var resolution = Resolution.Hour;
-            
-            // Add our underlying future contract
-            var dc = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(
-                    Futures.Dairy.ClassIIIMilk,
-                    Market.CME,
-                    new DateTime(2012, 4, 1)),
-                resolution).Symbol;
+        protected override Resolution Resolution => Resolution.Hour;
 
-            // Attempt to fetch a specific future option contract
-            var dcOption = OptionChainProvider.GetOptionContractList(dc, Time)
-                .Where(x => x.ID.StrikePrice == 17m && x.ID.OptionRight == OptionRight.Call)
-                .Select(x => AddFutureOptionContract(x, resolution).Symbol)
-                .FirstOrDefault();
-            
-            // Validate it is the expected contract
-            var expectedContract = QuantConnect.Symbol.CreateOption(dc, Market.CME, OptionStyle.American,
-                OptionRight.Call, 17m,
-                new DateTime(2012, 4, 01));
-            
-            if (dcOption != expectedContract)
-            {
-                throw new Exception($"Contract {dcOption} was not the expected contract {expectedContract}");
-            }
-            
+        protected override void ScheduleBuySell()
+        {
             // Schedule a purchase of this contract at Noon
             Schedule.On(DateRules.Today, TimeRules.Noon, () =>
             {
-                ticket = MarketOrder(dcOption, 1);
+                Ticket = MarketOrder(DcOption, 1);
             });
             
             // Schedule liquidation at 6PM
@@ -84,36 +56,19 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Ran at the end of the algorithm to ensure the algorithm has no holdings
-        /// </summary>
-        /// <exception cref="Exception">The algorithm has holdings</exception>
-        public override void OnEndOfAlgorithm()
-        {
-            if (Portfolio.Invested)
-            {
-                throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
-            }
-
-            if (ticket.Status != OrderStatus.Filled)
-            {
-                throw new Exception("Future option order failed to fill correctly");
-            }
-        }
-
-        /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public override bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public override Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
