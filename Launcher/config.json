@@ -231,7 +231,7 @@
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
+      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
     },
@@ -242,7 +242,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "ZerodhaBrokerage",
-      "data-queue-handler": "ZerodhaBrokerage",
+      "data-queue-handler": [ "ZerodhaBrokerage" ],
 
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
@@ -258,7 +258,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "SamcoBrokerage",
-      "data-queue-handler": "SamcoBrokerage",
+      "data-queue-handler": [ "SamcoBrokerage" ],
 
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
@@ -278,7 +278,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "TradierBrokerage",
-      "data-queue-handler": "TradierBrokerage",
+      "data-queue-handler": [ "TradierBrokerage" ],
 
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
@@ -296,7 +296,7 @@
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage",
+      "data-queue-handler": [ "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage" ],
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "history-provider": "BrokerageHistoryProvider"
@@ -311,7 +311,7 @@
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler",
+      "data-queue-handler": [ "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler" ],
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "history-provider": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler"
@@ -323,7 +323,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "FxcmBrokerage",
-      "data-queue-handler": "FxcmBrokerage",
+      "data-queue-handler": [ "FxcmBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -338,7 +338,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "OandaBrokerage",
-      "data-queue-handler": "OandaBrokerage",
+      "data-queue-handler": [ "OandaBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -352,7 +352,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "GDAXBrokerage",
-      "data-queue-handler": "GDAXDataQueueHandler",
+      "data-queue-handler": [ "GDAXDataQueueHandler" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -366,7 +366,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "BitfinexBrokerage",
-      "data-queue-handler": "BitfinexBrokerage",
+      "data-queue-handler": [ "BitfinexBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -380,7 +380,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "BinanceBrokerage",
-      "data-queue-handler": "BinanceBrokerage",
+      "data-queue-handler": [ "BinanceBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -395,7 +395,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "QuantConnect.Atreyu.AtreyuBrokerage",
-      "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
+      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -409,7 +409,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "TradingTechnologiesBrokerage",
-      "data-queue-handler": "TradingTechnologiesBrokerage",
+      "data-queue-handler": [ "TradingTechnologiesBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -423,7 +423,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "KrakenBrokerage",
-      "data-queue-handler": "KrakenBrokerage",
+      "data-queue-handler": [ "KrakenBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
@@ -436,7 +436,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "QuantConnect.FTXBrokerage.FTXBrokerage",
-      "data-queue-handler": "QuantConnect.FTXBrokerage.FTXBrokerage",
+      "data-queue-handler": [ "QuantConnect.FTXBrokerage.FTXBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
