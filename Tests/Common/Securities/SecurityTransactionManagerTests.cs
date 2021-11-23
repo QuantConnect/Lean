@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -26,25 +25,14 @@ using QuantConnect.Tests.Engine;
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results;
 using Python.Runtime;
-using QuantConnect.Logging;
+using System.Threading;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
     public class SecurityTransactionManagerTests
     {
-        private static TimeKeeper TimeKeeper
-        {
-            get { return new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }); }
-        }
-
-        private static SubscriptionDataConfig CreateTradeBarDataConfig(Symbol symbol)
-        {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
-        }
-
-        private static readonly SecurityExchangeHours SecurityExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
-
         private IResultHandler _resultHandler;
 
         [SetUp]
@@ -57,67 +45,43 @@ namespace QuantConnect.Tests.Common.Securities
         public void WorksProperlyWithPyObjects()
         {
             var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var spySecurity = algorithm.AddEquity("SPY");
+            var ibmSecurity = algorithm.AddEquity("IBM");
+            spySecurity.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            ibmSecurity.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            spySecurity.SetMarketPrice(new Tick { Value = 270m });
+            ibmSecurity.SetMarketPrice(new Tick { Value = 270m });
+            algorithm.SetFinishedWarmingUp();
 
-            algorithm.Securities = securities;
+            var transactionHandler = new BrokerageTransactionHandler();
+
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
+            Thread.Sleep(250);
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
-            // Adding cash: strike price times number of shares
-            portfolio.SetCash(192 * 100);
+            var spy = spySecurity.Symbol;
+            var ibm = ibmSecurity.Symbol;
 
-            securities.Add(
-                Symbols.SPY,
-                new Security(
-                    SecurityExchangeHours,
-                    CreateTradeBarDataConfig(Symbols.SPY),
-                    new Cash(Currencies.USD, 0, 1m),
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                )
-            );
-            securities.Add(
-                Symbols.IBM,
-                new Security(
-                    SecurityExchangeHours,
-                    CreateTradeBarDataConfig(Symbols.IBM),
-                    new Cash(Currencies.USD, 0, 1m),
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                )
-            );
-            securities[Symbols.IBM].Holdings.SetHoldings(1, 1);
-            securities[Symbols.SPY].Holdings.SetHoldings(1, 1);
-
-            var holdings = securities[Symbols.IBM].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.IBM, -holdings, 0, 0, securities.UtcTime, ""));
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.SPY, -holdings, 0, 0, securities.UtcTime, ""));
+            // this order should timeout (no fills received within 5 seconds)
+            algorithm.SetHoldings(spy, 0.5m);
+            algorithm.SetHoldings(ibm, 0.5m);
+            Thread.Sleep(2000);      
 
             Func<Order, bool> basicOrderFilter = x => true;
             Func<OrderTicket, bool> basicOrderTicketFilter = x => true;
             using (Py.GIL())
             {
-                var orders = transactions.GetOrders(basicOrderFilter.ToPython());
-                var orderTickets = transactions.GetOrderTickets(basicOrderTicketFilter.ToPython());
-                var openOrders = transactions.GetOpenOrders(basicOrderFilter.ToPython());
-                var openOrdersTickets = transactions.GetOpenOrderTickets(basicOrderTicketFilter.ToPython());
-                var openOrdersRemaining = transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter.ToPython());
+                var orders = algorithm.Transactions.GetOrders(basicOrderFilter.ToPython());
+                var orderTickets = algorithm.Transactions.GetOrderTickets(basicOrderTicketFilter.ToPython());
+                var openOrders = algorithm.Transactions.GetOpenOrders(basicOrderFilter.ToPython());
+                var openOrdersTickets = algorithm.Transactions.GetOpenOrderTickets(basicOrderTicketFilter.ToPython());
+                var openOrdersRemaining = algorithm.Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter.ToPython());
                 Assert.AreEqual(2, orders.Count());
                 Assert.AreEqual(2, orderTickets.Count());
-                Assert.AreEqual(0, openOrders.Count);
-                Assert.AreEqual(0, openOrdersTickets.Count());
-                Assert.AreEqual(0, openOrdersRemaining);
-                foreach(var ticket in orderTickets)
-                {
-                    Log.Trace($"Ticket symbol: {ticket.Symbol} - Status: {ticket.Status}");
-                }
+                Assert.AreEqual(2, openOrders.Count);
+                Assert.AreEqual(2, openOrdersTickets.Count());
+                Assert.AreEqual(368, openOrdersRemaining);
             }
         }
     }

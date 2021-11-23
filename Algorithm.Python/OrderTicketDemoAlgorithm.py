@@ -343,16 +343,19 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         return self.Time.day == day and self.Time.hour == hour and self.Time.minute == minute
 
     def OnEndOfAlgorithm(self):
-        filledOrders = self.Transactions.GetOrders(lambda x: x.Status == OrderStatus.Filled)
-        openOrders = self.Transactions.GetOpenOrders(lambda x: True)
+        basicOrderTicketFilter = lambda x: x.Symbol == self.spy;
+
+        filledOrders = self.Transactions.GetOrders(lambda x: x.Status == OrderStatus.Filled);
+        orderTickets = self.Transactions.GetOrderTickets(basicOrderTicketFilter);
+        openOrders = self.Transactions.GetOpenOrders(lambda x: x.Symbol == symbol);
+        openOrderTickets = self.Transactions.GetOpenOrderTickets(basicOrderTicketFilter);
+        remainingOpenOrders = self.Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter);
 
         # The type returned by self.Transactions.GetOrders() is iterable and not a list
         # that's why we use sum() to get the size of the iterable object type
         filledOrdersSize = sum(1 for order in filledOrders)
-        assert(filledOrdersSize == 8)
-        assert(not len(openOrders))
-
-        filledOrderTickets = self.Transactions.GetOrderTickets(lambda x: x.Status == OrderStatus.Filled)
-        self.Log("Order ticket types")
-        for ticket in filledOrderTickets:
-            self.Log("Order ticket type: " + str(ticket.OrderType))
+        orderTicketsSize = sum(1 for ticket in orderTickets)
+        openOrderTicketsSize = sum(1 for ticket in openOrderTickets)
+        assert(filledOrdersSize == 8 and orderTicketsSize == 10), "There were expected 8 filled orders and 10 order tickets"
+        assert(not (len(openOrders) or openOrderTicketsSize)), "No open orders or tickets were expected"
+        assert(not remainingOpenOrders), "No remaining quantiy to be filled from open orders was expected"

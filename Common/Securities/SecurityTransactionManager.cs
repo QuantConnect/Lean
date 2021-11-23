@@ -365,15 +365,25 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets open orders matching the specified filter. Specifying null will return an enumerable
-        /// of all open orders.
+        /// Gets open orders matching the specified filter. However this method can be confused with the
+        /// override that takes a Symbol as parameter. For this reason it first checks if it can convert
+        /// the parameter into a symbol. If that conversion cannot be aplied it assumes the parameter is
+        /// a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">Python function object used to filter the orders</param>
         /// <returns>All filtered open orders this order provider currently holds</returns>
         public List<Order> GetOpenOrders(PyObject filter)
         {
-             Func<Order, bool> csharpFilter = filter.ConvertToDelegate<Func<Order, bool>>();
-            return _orderProcessor.GetOpenOrders(x => csharpFilter(x));
+            Symbol pythonSymbol;
+            if (filter.TryConvert(out pythonSymbol))
+            {
+                return GetOpenOrders(pythonSymbol);
+            }
+            else
+            {
+                Func<Order, bool> csharpFilter = filter.ConvertToDelegate<Func<Order, bool>>();
+                return _orderProcessor.GetOpenOrders(x => csharpFilter(x));
+            }
         }
 
         /// <summary>
@@ -410,14 +420,13 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="filter">Delegate used to filter the orders</param>
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
-        public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
+        public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
         {
-            return _orderProcessor.GetOrders(filter);
+            return _orderProcessor.GetOrders(filter ?? (x => true));
         }
 
         /// <summary>
-        /// Gets all orders matching the specified filter. Specifying null will return an enumerable
-        /// of all orders.
+        /// Gets all orders matching the specified filter.
         /// </summary>
         /// <param name="filter">Python function object used to filter the orders</param>
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
