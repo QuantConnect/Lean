@@ -76,11 +76,6 @@ namespace QuantConnect.Brokerages.GDAX
                 return null;
             }
 
-            if (!IsConnected)
-            {
-                Connect();
-            }
-
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             SubscriptionManager.Subscribe(dataConfig);
 
@@ -116,6 +111,11 @@ namespace QuantConnect.Brokerages.GDAX
                 aggregator: aggregator,
                 job: job
             );
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
