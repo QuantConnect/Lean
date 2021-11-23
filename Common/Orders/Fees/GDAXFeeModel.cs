@@ -61,11 +61,15 @@ namespace QuantConnect.Orders.Fees
             // Tier 1 fees
             // https://pro.coinbase.com/orders/fees
             // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
+            // https://blog.coinbase.com/updates-to-coinbase-pro-fee-structure-b3d9ee586108
 
             if (utcTime < new DateTime(2019, 3, 23, 1, 30, 0))
                 return isMaker ? 0m : 0.003m;
+                
+            else if (utcTime < new DateTime(2019, 10, 8, 0, 30, 0))
+                return isMaker ? 0.0015m : 0.0025m;
 
-            return isMaker ? 0.0015m : 0.0025m;
+            return isMaker ? 0.005m : 0.005m;
         }
     }
 }
