@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,7 +19,6 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Data;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -43,17 +42,17 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2016, 10, 7);  //Set Start Date
             SetEndDate(2016, 10, 7);    //Set End Date
             SetCash(100000);            //Set Strategy Cash
-            
+
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
 
             // set algorithm framework models
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Binance)));
+            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX)));
             SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
-            SetPortfolioConstruction(new NullPortfolioConstructionModel());
-            SetExecution(new NullExecutionModel());
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+            SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }
 
@@ -64,10 +63,5 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"Purchased Stock: {orderEvent.Symbol}");
             }
         }
-
-        public override void OnData(Slice data)
-        {
-        }
-
     }
 }
