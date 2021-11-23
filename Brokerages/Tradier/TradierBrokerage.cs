@@ -1781,52 +1781,53 @@ namespace QuantConnect.Brokerages.Tradier
             string accountId, string accessToken, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
             ISecurityProvider securityProvider, IDataAggregator aggregator)
         {
-            if (!IsInitialized)
+            if (IsInitialized)
             {
-                base.Initialize(
-                    wssUrl: wssUrl,
-                    websocket: websocket,
-                    restClient: restClient,
-                    apiKey: apiKey,
-                    apiSecret: apiSecret
-                );
-                _algorithm = algorithm;
-                _orderProvider = orderProvider;
-                _securityProvider = securityProvider;
-                _aggregator = aggregator;
-                _useSandbox = useSandbox;
-                _accountId = accountId;
-
-                RestClient.AddDefaultHeader("Accept", "application/json");
-                RestClient.AddDefaultHeader("Authorization", $"Bearer {accessToken}");
-
-                var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-                subscriptionManager.SubscribeImpl += (symbols, _) => Subscribe(symbols);
-                subscriptionManager.UnsubscribeImpl += (symbols, _) => Unsubscribe(symbols);
-                SubscriptionManager = subscriptionManager;
-
-                _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
-
-                // we can poll orders once a second in sandbox and twice a second in production
-                var interval = _useSandbox ? 1000 : 500;
-                _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
-                {
-                    { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
-                    { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
-                    { TradierApiRequestType.Orders, new RateGate(1, TimeSpan.FromMilliseconds(1000))},
-                };
-
-                _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
-                WebSocket.Error += (sender, error) =>
-                {
-                    if (!WebSocket.IsOpen)
-                    {
-                        // on error we clear our state, on Open we will re susbscribe
-                        _subscribedTickers.Clear();
-                        _streamSession = null;
-                    }
-                };
+                return;
             }
+            base.Initialize(
+                wssUrl: wssUrl,
+                websocket: websocket,
+                restClient: restClient,
+                apiKey: apiKey,
+                apiSecret: apiSecret
+            );
+            _algorithm = algorithm;
+            _orderProvider = orderProvider;
+            _securityProvider = securityProvider;
+            _aggregator = aggregator;
+            _useSandbox = useSandbox;
+            _accountId = accountId;
+
+            RestClient.AddDefaultHeader("Accept", "application/json");
+            RestClient.AddDefaultHeader("Authorization", $"Bearer {accessToken}");
+
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (symbols, _) => Subscribe(symbols);
+            subscriptionManager.UnsubscribeImpl += (symbols, _) => Unsubscribe(symbols);
+            SubscriptionManager = subscriptionManager;
+
+            _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
+
+            // we can poll orders once a second in sandbox and twice a second in production
+            var interval = _useSandbox ? 1000 : 500;
+            _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
+            {
+                { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                { TradierApiRequestType.Orders, new RateGate(1, TimeSpan.FromMilliseconds(1000))},
+            };
+
+            _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
+            WebSocket.Error += (sender, error) =>
+            {
+                if (!WebSocket.IsOpen)
+                {
+                    // on error we clear our state, on Open we will re susbscribe
+                    _subscribedTickers.Clear();
+                    _streamSession = null;
+                }
+            };
         }
 
         private readonly HashSet<string> ErrorsDuringMarketHours = new HashSet<string>

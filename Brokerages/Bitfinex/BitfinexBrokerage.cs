@@ -447,18 +447,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             
             Initialize(
                 wssUrl: WebSocketUrl,
-                restApiUrl: null,
                 websocket: new WebSocketClientWrapper(),
                 restClient: new RestClient(RestApiUrl),
                 apiKey: apiKey,
                 apiSecret: apiSecret,
-                accountId: null,
-                accessToken: null,
-                passPhrase: null,
-                useSandbox: false,
                 algorithm: null,
-                orderProvider: null,
-                securityProvider: null,
                 priceProvider: priceProvider,
                 aggregator: aggregator,
                 job: job

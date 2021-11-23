@@ -78,7 +78,7 @@ namespace QuantConnect.Brokerages.GDAX
                 return null;
             }
 
-            if (!WebSocket.IsOpen)
+            if (!IsConnected)
             {
                 Connect();
             }
@@ -146,30 +146,31 @@ namespace QuantConnect.Brokerages.GDAX
         protected override void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
             string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
         {
-            if (!IsInitialized)
+            if (IsInitialized)
             {
-                base.Initialize(
-                    wssUrl: wssUrl,
-                    websocket: websocket,
-                    restClient: restClient,
-                    apiKey: apiKey,
-                    apiSecret: apiSecret,
-                    passPhrase: passPhrase,
-                    algorithm: algorithm,
-                    priceProvider: priceProvider,
-                    aggregator: aggregator,
-                    job: job
-                );
-                var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-                subscriptionManager.SubscribeImpl += (s, t) =>
-                {
-                    Subscribe(s);
-                    return true;
-                };
-                subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-
-                SubscriptionManager = subscriptionManager;
+                return;
             }
+            base.Initialize(
+                wssUrl: wssUrl,
+                websocket: websocket,
+                restClient: restClient,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                passPhrase: passPhrase,
+                algorithm: algorithm,
+                priceProvider: priceProvider,
+                aggregator: aggregator,
+                job: job
+            );
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+
+            SubscriptionManager = subscriptionManager;
         }
 
         /// <summary>

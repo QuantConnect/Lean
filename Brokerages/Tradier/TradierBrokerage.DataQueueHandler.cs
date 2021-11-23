@@ -90,7 +90,7 @@ namespace QuantConnect.Brokerages.Tradier
                 return null;
             }
 
-            if (!WebSocket.IsOpen)
+            if (!IsConnected)
             {
                 Connect();
             }

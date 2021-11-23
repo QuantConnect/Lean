@@ -102,18 +102,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             Initialize(
                 wssUrl: WebSocketUrl,
-                restApiUrl: null,
                 websocket: websocket,
                 restClient: restClient,
                 apiKey: apiKey,
                 apiSecret: apiSecret,
-                accountId: null,
-                accessToken: null,
-                passPhrase: null,
-                useSandbox: false,
                 algorithm: algorithm,
-                orderProvider: null,
-                securityProvider: null,
                 priceProvider: priceProvider,
                 aggregator: aggregator,
                 job: job
@@ -164,59 +157,52 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <param name="wssUrl">The web socket base url</param>
-        /// <param name="restApiUrl">The rest api url</param>
         /// <param name="websocket">instance of websockets client</param>
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
-        /// <param name="accountId">account id</param>
-        /// <param name="accessToken">access token</param>
-        /// <param name="passPhrase">pass phrase</param>
-        /// <param name="useSandbox">use sandbox</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        /// <param name="orderProvider">order provider instance</param>
-        /// <param name="securityProvider">security provider instance</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
-            string accountId, string accessToken, string passPhrase, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
-            ISecurityProvider securityProvider, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, 
+            string apiSecret,IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
         {
-            if (!IsInitialized)
+            if (IsInitialized)
             {
-                base.Initialize(wssUrl: wssUrl, websocket: websocket, restClient: restClient, apiKey: apiKey, apiSecret: apiSecret);
-                _job = job;
-                SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
-                    WebSocketUrl,
-                    MaximumSymbolsPerConnection,
-                    0,
-                    null,
-                    () => new BitfinexWebSocketWrapper(null),
-                    Subscribe,
-                    Unsubscribe,
-                    OnDataMessage,
-                    TimeSpan.Zero,
-                    _connectionRateLimiter);
-
-                _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
-                _algorithm = algorithm;
-                _aggregator = aggregator;
-
-                // load currency map
-                using (var wc = new WebClient())
-                {
-                    var json = wc.DownloadString("https://api-pub.bitfinex.com/v2/conf/pub:map:currency:sym");
-                    var rows = JsonConvert.DeserializeObject<List<List<List<string>>>>(json)[0];
-                    _currencyMap = rows
-                        .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
-                }
-
-                WebSocket.Open += (sender, args) =>
-                {
-                    SubscribeAuth();
-                };
+                return;
             }
+            base.Initialize(wssUrl: wssUrl, websocket: websocket, restClient: restClient, apiKey: apiKey, apiSecret: apiSecret);
+            _job = job;
+            SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
+                WebSocketUrl,
+                MaximumSymbolsPerConnection,
+                0,
+                null,
+                () => new BitfinexWebSocketWrapper(null),
+                Subscribe,
+                Unsubscribe,
+                OnDataMessage,
+                TimeSpan.Zero,
+                _connectionRateLimiter);
+
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+            _algorithm = algorithm;
+            _aggregator = aggregator;
+
+            // load currency map
+            using (var wc = new WebClient())
+            {
+                var json = wc.DownloadString("https://api-pub.bitfinex.com/v2/conf/pub:map:currency:sym");
+                var rows = JsonConvert.DeserializeObject<List<List<List<string>>>>(json)[0];
+                _currencyMap = rows
+                    .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
+            }
+
+            WebSocket.Open += (sender, args) =>
+            {
+                SubscribeAuth();
+            };
         }
 
         private long GetNextClientOrderId()
