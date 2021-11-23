@@ -59,8 +59,6 @@ namespace QuantConnect.Brokerages.Tradier
                 wssUrl: WebSocketUrl,
                 websocket: new WebSocketClientWrapper(),
                 restClient: restClient,
-                apiKey: null,
-                apiSecret: null,
                 accountId: accountId,
                 accessToken: accessToken,
                 useSandbox: useSandbox,

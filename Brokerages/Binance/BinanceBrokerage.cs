@@ -81,7 +81,6 @@ namespace QuantConnect.Brokerages.Binance
                 wssUrl: webSocketBaseUrl,
                 restApiUrl: restApiUrl,
                 websocket: new WebSocketClientWrapper(),
-                restClient: null,
                 apiKey: apiKey,
                 apiSecret: apiSecret,
                 algorithm: algorithm,
@@ -325,7 +324,6 @@ namespace QuantConnect.Brokerages.Binance
                 wssUrl: webSocketBaseUrl,
                 restApiUrl: restApiUrl,
                 websocket: new WebSocketClientWrapper(),
-                restClient: null,
                 apiKey: apiKey,
                 apiSecret: apiSecret,
                 algorithm: null,
@@ -402,20 +400,19 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="wssUrl">The web socket base url</param>
         /// <param name="restApiUrl">The rest api url</param>
         /// <param name="websocket">instance of websockets client</param>
-        /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+        protected void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, string apiKey, string apiSecret,
             IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
         {
             if (IsInitialized)
             {
                 return;
             }
-            base.Initialize(wssUrl: wssUrl, websocket: websocket, restClient: restClient, apiKey: apiKey, apiSecret: apiSecret);
+            base.Initialize(wssUrl, websocket, null, apiKey, apiSecret);
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;

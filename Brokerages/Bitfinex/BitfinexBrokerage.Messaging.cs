@@ -172,7 +172,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 return;
             }
-            base.Initialize(wssUrl: wssUrl, websocket: websocket, restClient: restClient, apiKey: apiKey, apiSecret: apiSecret);
+            base.Initialize(wssUrl, websocket, restClient, apiKey, apiSecret);
             _job = job;
             SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
                 WebSocketUrl,

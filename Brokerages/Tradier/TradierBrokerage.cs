@@ -125,8 +125,6 @@ namespace QuantConnect.Brokerages.Tradier
                 wssUrl: WebSocketUrl,
                 websocket: new WebSocketClientWrapper(),
                 restClient: restClient,
-                apiKey: null,
-                apiSecret: null,
                 accountId: accountId,
                 accessToken: accessToken,
                 useSandbox: useSandbox,
@@ -1777,21 +1775,15 @@ namespace QuantConnect.Brokerages.Tradier
         /// Initailze the instance of this class
         /// </summary>
 
-        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
-            string accountId, string accessToken, bool useSandbox, IAlgorithm algorithm, IOrderProvider orderProvider,
-            ISecurityProvider securityProvider, IDataAggregator aggregator)
+        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, 
+            string accountId, string accessToken, bool useSandbox, IAlgorithm algorithm, 
+            IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator)
         {
             if (IsInitialized)
             {
                 return;
             }
-            base.Initialize(
-                wssUrl: wssUrl,
-                websocket: websocket,
-                restClient: restClient,
-                apiKey: apiKey,
-                apiSecret: apiSecret
-            );
+            base.Initialize(wssUrl, websocket, restClient, null, null);
             _algorithm = algorithm;
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
