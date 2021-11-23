@@ -187,8 +187,10 @@ namespace QuantConnect
         /// </summary>
         /// <param name="underlyingSymbol">Underlying of this option</param>
         /// <param name="market">Market for this option</param>
+        /// <param name="alias">An alias to be used for the symbol cache. Required when
+        /// adding the same security from different markets</param>
         /// <returns>New Canonical Option</returns>
-        public static Symbol CreateCanonicalOption(Symbol underlyingSymbol, string market = null)
+        public static Symbol CreateCanonicalOption(Symbol underlyingSymbol, string market = null, string alias = null)
         {
             var optionType = GetOptionTypeFromUnderlying(underlyingSymbol);
             market ??= underlyingSymbol.ID.Market;
@@ -199,7 +201,8 @@ namespace QuantConnect
                 optionType.DefaultOptionStyle(),
                 default(OptionRight),
                 0,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate,
+                alias);
         }
         
 

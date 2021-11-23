@@ -1633,7 +1633,7 @@ namespace QuantConnect.Algorithm
                 canonicalSymbol.ID.Market != market ||
                 !canonicalSymbol.SecurityType.IsOption())
             {
-                canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(underlying, market);
+                canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(underlying, market, alias);
             }
 
             return (Option)AddSecurity(canonicalSymbol, resolution, fillDataForward, leverage);
