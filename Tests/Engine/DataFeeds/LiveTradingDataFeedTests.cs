@@ -896,7 +896,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (securityType == SecurityType.Future)
             {
-                _algorithm.AddFuture(Futures.Metals.Gold);
+                _algorithm.AddFuture(Futures.Indices.SP500EMini);
             }
             else
             {
@@ -1290,7 +1290,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction, lookupSymbolsFunction, canPerformSelection, _manualTimeProvider);
 
             _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
-            var fileProvider = new DefaultDataProvider();
+            var fileProvider = TestGlobals.DataProvider;
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(_algorithm.Portfolio));
@@ -1313,7 +1313,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TestGlobals.FactorFileProvider, fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
 
             _algorithm.PostInitialize();
-            Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
             return _feed;
         }
 
@@ -2322,8 +2321,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (securityType == SecurityType.Future)
             {
-                // we add 2 symbols + 1 continuous future
-                Assert.AreEqual(3, futureSymbols.Count, "Future symbols count mismatch");
+                // we add 2 symbols + 1 continuous future + 1 continuous future mapped symbol
+                Assert.AreEqual(4, futureSymbols.Count, "Future symbols count mismatch");
             }
             else if (securityType == SecurityType.Option)
             {

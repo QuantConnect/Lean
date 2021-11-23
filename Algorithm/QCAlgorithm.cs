@@ -45,6 +45,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Selection;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Storage;
 using Index = QuantConnect.Securities.Index.Index;
@@ -1532,7 +1533,8 @@ namespace QuantConnect.Algorithm
                 Universe universe;
                 if (!UniverseManager.TryGetValue(symbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != symbol))
                 {
-                    var settings = new UniverseSettings(configs.First().Resolution, leverage, true, false, TimeSpan.Zero);
+                    var canonicalConfig = configs.First();
+                    var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, true, false, TimeSpan.Zero);
                     if (symbol.SecurityType.IsOption())
                     {
                         universe = new OptionChainUniverse((Option)security, settings, LiveMode);
@@ -1541,18 +1543,28 @@ namespace QuantConnect.Algorithm
                     {
                         security.IsTradable = true;
 
+                        // add the expected configurations of the canonical symbol, will allow it to warmup and indicators register to them
+                        var dataTypes = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future,
+                            GetResolution(symbol, resolution), isCanonical: false);
                         var continuousConfigs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
                             resolution,
                             fillDataForward,
                             extendedMarketHours,
-                            isFilteredSubscription: false,
-                            subscriptionDataTypes: SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future,
-                                GetResolution(symbol, resolution), isCanonical:false),
+                            isFilteredSubscription: true,
+                            subscriptionDataTypes: dataTypes,
                             dataNormalizationMode: dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
                             dataMappingMode: dataMappingMode ?? UniverseSettings.DataMappingMode,
                             contractDepthOffset: contractOffset
-                            );
-                        AddToUserDefinedUniverse(security, continuousConfigs);
+                        );
+
+                        AddUniverse(new ContinuousContractUniverse(security, new UniverseSettings(settings)
+                            {
+                                DataMappingMode = continuousConfigs.First().DataMappingMode,
+                                DataNormalizationMode = continuousConfigs.DataNormalizationMode(),
+                                ContractDepthOffset = (int)continuousConfigs.First().ContractDepthOffset,
+                                SubscriptionDataTypes = dataTypes
+                            }, LiveMode,
+                            new SubscriptionDataConfig(canonicalConfig, symbol: UserDefinedUniverse.CreateSymbol(security.Type, security.Symbol.ID.Market))));
 
                         universe = new FuturesChainUniverse((Future)security, settings);
                     }

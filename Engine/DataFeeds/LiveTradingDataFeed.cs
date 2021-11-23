@@ -15,24 +15,23 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Custom;
-using QuantConnect.Data.Custom.Tiingo;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
-using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using System.Threading.Tasks;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Data.Custom;
+using QuantConnect.Data.Market;
+using QuantConnect.Configuration;
+using System.Collections.Generic;
+using QuantConnect.Data.Custom.Tiingo;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -187,7 +186,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
-                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
+                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
                 IEnumerator<BaseData> enumerator;
                 if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
@@ -229,7 +228,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
-                    enumerator = _dataQueueHandler.Subscribe(request.Configuration, handler);
+                    enumerator = new LiveSubscriptionEnumerator(request.Configuration, _dataQueueHandler, handler);
 
                     if (request.Configuration.EmitSplitsAndDividends())
                     {
@@ -283,7 +282,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // grab the relevant exchange hours
             var config = request.Universe.Configuration;
             var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
-            var tzOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
+            var tzOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
             IEnumerator<BaseData> enumerator = null;
 

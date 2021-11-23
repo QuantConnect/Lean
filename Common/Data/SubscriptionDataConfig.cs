@@ -20,7 +20,6 @@ using System.ComponentModel;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data

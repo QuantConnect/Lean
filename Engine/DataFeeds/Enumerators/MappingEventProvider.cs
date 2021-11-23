@@ -30,7 +30,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         private IMapFileProvider _mapFileProvider;
         private SubscriptionDataConfig _config;
-        private MapFile _mapFile;
+
+        /// <summary>
+        /// The current instance being used
+        /// </summary>
+        protected MapFile MapFile { get; private set; }
 
         /// <summary>
         /// Initializes this instance
@@ -49,10 +53,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _config = config;
             InitializeMapFile();
 
-            if (_mapFile.HasData(startTime.Date))
+            if (MapFile.HasData(startTime.Date))
             {
                 // initialize mapped symbol using request start date
-                _config.MappedSymbol = _mapFile.GetMappedSymbol(startTime.Date, _config.MappedSymbol);
+                _config.MappedSymbol = MapFile.GetMappedSymbol(startTime.Date, _config.MappedSymbol);
             }
         }
 
@@ -64,10 +68,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
             if (_config.Symbol == eventArgs.Symbol
-                && _mapFile.HasData(eventArgs.Date))
+                && MapFile.HasData(eventArgs.Date))
             {
                 var old = _config.MappedSymbol;
-                var newSymbol = _mapFile.GetMappedSymbol(eventArgs.Date, _config.MappedSymbol);
+                var newSymbol = MapFile.GetMappedSymbol(eventArgs.Date, _config.MappedSymbol);
                 _config.MappedSymbol = newSymbol;
 
                 // check to see if the symbol was remapped
@@ -88,7 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         protected void InitializeMapFile()
         {
-            _mapFile = _mapFileProvider.ResolveMapFile(_config);
+            MapFile = _mapFileProvider.ResolveMapFile(_config);
         }
     }
 }
