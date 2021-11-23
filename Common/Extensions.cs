@@ -3141,13 +3141,14 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to determine the right data normalization mode to use by default
         /// </summary>
-        public static DataNormalizationMode GetDefaultNormalizationMode(this UniverseSettings universeSettings, SecurityType securityType)
+        public static DataNormalizationMode GetUniverseNormalizationModeOrDefault(this UniverseSettings universeSettings, SecurityType securityType)
         {
             switch (securityType)
             {
                 case SecurityType.Future:
                     if (universeSettings.DataNormalizationMode is DataNormalizationMode.BackwardsRatio
-                        or DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal)
+                        or DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal
+                        or DataNormalizationMode.Raw)
                     {
                         return universeSettings.DataNormalizationMode;
                     }
@@ -3343,7 +3344,9 @@ namespace QuantConnect
                 request.IsCustomData,
                 request.TickType,
                 isFilteredSubscription,
-                request.DataNormalizationMode
+                request.DataNormalizationMode,
+                request.DataMappingMode,
+                request.ContractDepthOffset
             );
         }
 
@@ -3372,7 +3375,7 @@ namespace QuantConnect
             }
 
             // Check our config type first to be lazy about using data.GetType() unless required
-            var configTypeFilter = (config.Type == typeof(TradeBar) ||
+            var configTypeFilter = (config.Type == typeof(TradeBar) || config.Type == typeof(ZipEntryName) ||
                 config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
 
             if (!configTypeFilter)

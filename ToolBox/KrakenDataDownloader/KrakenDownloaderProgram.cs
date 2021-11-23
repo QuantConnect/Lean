@@ -50,7 +50,7 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                 {
                     // Download data
                     var pairObject = Symbol.Create(pair, SecurityType.Crypto, Market.Kraken);
-                    var data = downloader.Get(pairObject, castResolution, startDate, endDate);
+                    var data = downloader.Get(new DataDownloaderGetParameters(pairObject, castResolution, startDate, endDate));
 
                     // Write data
                     var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);

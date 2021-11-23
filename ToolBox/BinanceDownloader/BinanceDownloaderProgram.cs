@@ -51,9 +51,8 @@ namespace QuantConnect.ToolBox.BinanceDownloader
                     foreach (var ticker in tickers)
                     {
                         // Download the data
-                        var startDate = fromDate;
                         var symbol = downloader.GetSymbol(ticker);
-                        var data = downloader.Get(symbol, castResolution, fromDate, toDate);
+                        var data = downloader.Get(new DataDownloaderGetParameters(symbol, castResolution, fromDate, toDate));
                         var bars = data.Cast<TradeBar>().ToList();
 
                         // Save the data (single resolution)

@@ -176,7 +176,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 if (universeData != null
                                     && universeData.TryGetValue(subscription.Universes.Single(), out collection))
                                 {
-                                    collection.Data.AddRange(packetData);
+                                    collection.AddRange(packetData);
                                 }
                                 else
                                 {
