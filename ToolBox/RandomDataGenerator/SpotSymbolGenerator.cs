@@ -35,7 +35,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             => NextSymbol(Settings.SecurityType, Settings.Market);
 
         protected override ITickGenerator GenerateTickGenerator(Symbol symbol)
-            => new TickGenerator(Settings, symbol);
+            => new TickGenerator(Settings, Random, symbol);
 
         public override int GetAvailableSymbolCount()
         {
