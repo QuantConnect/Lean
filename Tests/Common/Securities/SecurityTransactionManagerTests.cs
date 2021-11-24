@@ -48,8 +48,7 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             var spySecurity = algorithm.AddEquity("SPY");
             var ibmSecurity = algorithm.AddEquity("IBM");
-            spySecurity.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
-            ibmSecurity.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            algorithm.SetTimeZone(TimeZones.NewYork);
             spySecurity.SetMarketPrice(new Tick { Value = 270m });
             ibmSecurity.SetMarketPrice(new Tick { Value = 270m });
             algorithm.SetFinishedWarmingUp();
@@ -57,7 +56,6 @@ namespace QuantConnect.Tests.Common.Securities
             var transactionHandler = new BrokerageTransactionHandler();
 
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
-            Thread.Sleep(250);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             var spy = spySecurity.Symbol;
@@ -65,8 +63,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // this order should timeout (no fills received within 5 seconds)
             algorithm.SetHoldings(spy, 0.5m);
-            algorithm.SetHoldings(ibm, 0.5m);
-            Thread.Sleep(2000);      
+            algorithm.SetHoldings(ibm, 0.5m);     
 
             Func<Order, bool> basicOrderFilter = x => true;
             Func<OrderTicket, bool> basicOrderTicketFilter = x => true;
@@ -77,11 +74,27 @@ namespace QuantConnect.Tests.Common.Securities
                 var openOrders = algorithm.Transactions.GetOpenOrders(basicOrderFilter.ToPython());
                 var openOrdersTickets = algorithm.Transactions.GetOpenOrderTickets(basicOrderTicketFilter.ToPython());
                 var openOrdersRemaining = algorithm.Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter.ToPython());
+
                 Assert.AreEqual(2, orders.Count());
                 Assert.AreEqual(2, orderTickets.Count());
                 Assert.AreEqual(2, openOrders.Count);
                 Assert.AreEqual(2, openOrdersTickets.Count());
                 Assert.AreEqual(368, openOrdersRemaining);
+
+                var ibmOpenOrders = algorithm.Transactions.GetOpenOrders(ibm.ToPython()).Count;
+                var ibmOpenOrderTickets = algorithm.Transactions.GetOpenOrderTickets(ibm.ToPython()).Count();
+                var ibmOpenOrdersRemainingQuantity = algorithm.Transactions.GetOpenOrdersRemainingQuantity(ibm.ToPython());
+                var spyOpenOrders = algorithm.Transactions.GetOpenOrders(spy.ToPython()).Count;
+                var spyOpenOrderTickets = algorithm.Transactions.GetOpenOrderTickets(spy.ToPython()).Count();
+                var spyOpenOrdersRemainingQuantity = algorithm.Transactions.GetOpenOrdersRemainingQuantity(spy.ToPython());
+
+                Assert.AreEqual(1, ibmOpenOrders);
+                Assert.AreEqual(1, ibmOpenOrderTickets);
+                Assert.AreEqual(184, ibmOpenOrdersRemainingQuantity);
+
+                Assert.AreEqual(1, spyOpenOrders);
+                Assert.AreEqual(1, spyOpenOrderTickets);
+                Assert.AreEqual(184, spyOpenOrdersRemainingQuantity);
             }
         }
     }

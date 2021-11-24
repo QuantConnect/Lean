@@ -261,11 +261,19 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets an enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason 
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it 
+        /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">The Python function filter used to find the required order tickets</param>
         /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOpenOrderTickets(PyObject filter)
         {
+            Symbol pythonSymbol;
+            if (filter.TryConvert(out pythonSymbol))
+            {
+                return GetOpenOrderTickets(pythonSymbol);
+            }
             return _orderProcessor.GetOpenOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>());
         }
 
@@ -282,11 +290,20 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
+        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason 
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it 
+        /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
         /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
         public decimal GetOpenOrdersRemainingQuantity(PyObject filter)
         {
+            Symbol pythonSymbol;
+            if (filter.TryConvert(out pythonSymbol))
+            {
+                return GetOpenOrdersRemainingQuantity(pythonSymbol);
+            }
+
             return GetOpenOrderTickets(filter)
                 .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
         }
@@ -365,7 +382,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets open orders matching the specified filter. However this method can be confused with the
+        /// Gets open orders matching the specified filter. However, this method can be confused with the
         /// override that takes a Symbol as parameter. For this reason it first checks if it can convert
         /// the parameter into a symbol. If that conversion cannot be aplied it assumes the parameter is
         /// a Python function object and not a Python representation of a Symbol.
@@ -379,11 +396,8 @@ namespace QuantConnect.Securities
             {
                 return GetOpenOrders(pythonSymbol);
             }
-            else
-            {
-                Func<Order, bool> csharpFilter = filter.ConvertToDelegate<Func<Order, bool>>();
-                return _orderProcessor.GetOpenOrders(x => csharpFilter(x));
-            }
+            Func<Order, bool> csharpFilter = filter.ConvertToDelegate<Func<Order, bool>>();
+            return _orderProcessor.GetOpenOrders(x => csharpFilter(x));
         }
 
         /// <summary>

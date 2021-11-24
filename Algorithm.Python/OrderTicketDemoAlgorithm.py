@@ -347,7 +347,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
         filledOrders = self.Transactions.GetOrders(lambda x: x.Status == OrderStatus.Filled);
         orderTickets = self.Transactions.GetOrderTickets(basicOrderTicketFilter);
-        openOrders = self.Transactions.GetOpenOrders(lambda x: x.Symbol == symbol);
+        openOrders = self.Transactions.GetOpenOrders(lambda x: x.Symbol == self.spy);
         openOrderTickets = self.Transactions.GetOpenOrderTickets(basicOrderTicketFilter);
         remainingOpenOrders = self.Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter);
 
@@ -356,6 +356,15 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         filledOrdersSize = sum(1 for order in filledOrders)
         orderTicketsSize = sum(1 for ticket in orderTickets)
         openOrderTicketsSize = sum(1 for ticket in openOrderTickets)
+
         assert(filledOrdersSize == 8 and orderTicketsSize == 10), "There were expected 8 filled orders and 10 order tickets"
         assert(not (len(openOrders) or openOrderTicketsSize)), "No open orders or tickets were expected"
         assert(not remainingOpenOrders), "No remaining quantiy to be filled from open orders was expected"
+
+        spyOpenOrders = self.Transactions.GetOpenOrders(self.spy)
+        spyOpenOrderTickets = self.Transactions.GetOpenOrderTickets(self.spy)
+        spyOpenOrderTicketsSize = sum(1 for tickets in spyOpenOrderTickets)
+        spyOpenOrdersRemainingQuantity = self.Transactions.GetOpenOrdersRemainingQuantity(self.spy)
+
+        assert(not (len(spyOpenOrders) or spyOpenOrderTicketsSize)), "No open orders or tickets were expected"
+        assert(not spyOpenOrdersRemainingQuantity), "No remaining quantiy to be filled from open orders was expected"
