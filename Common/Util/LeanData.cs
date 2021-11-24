@@ -532,7 +532,7 @@ namespace QuantConnect.Util
                     var futureOptionPath = Path.Combine(symbol.ID.Symbol, symbol.Underlying.ID.Date.ToStringInvariant(DateFormat.EightCharacter))
                         .ToLowerInvariant();
 
-                    return !isHourOrDaily ? Path.Combine(directory, futureOptionPath) : directory;
+                    return Path.Combine(directory, futureOptionPath);
 
                 case SecurityType.Future:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLowerInvariant()) : directory;
@@ -1082,20 +1082,34 @@ namespace QuantConnect.Util
                     // Gather components used to create the security
                     market = info[startIndex + 1];
                     ticker = info[startIndex + 3];
+                    
+                    // Remove the ticktype from the ticker (Only exists in Crypto and Future data but causes no issues)
+                    ticker = ticker.Split('_').First();
 
-                    // If resolution is Daily or Hour, we do not need to set the date and tick type
+                    // If resolution is Daily or Hour, we do not need to set the date
                     if (resolution < Resolution.Hour)
                     {
-                        date = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
-                    }
-
-                    if (securityType == SecurityType.Crypto)
-                    {
-                        ticker = ticker.Split('_').First();
+                        // Future options are special and have the following format Market/Resolution/Ticker/FutureExpiry/Date
+                        var dateIndex = securityType == SecurityType.FutureOption ? startIndex + 5 : startIndex + 4;
+                        date = Parse.DateTimeExact(info[dateIndex].Substring(0, 8), DateFormat.EightCharacter);
                     }
                 }
 
-                symbol = Symbol.Create(ticker, securityType, market);
+                // Future Options cannot use Symbol.Create
+                if (securityType == SecurityType.FutureOption)
+                {
+                    // Future options have underlying FutureExpiry date as the parent dir for the zips, we need this for our underlying
+                    var underlyingFutureExpiryDate = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
+
+                    // Create our underlying future and then the Canonical option for this future
+                    var underlyingFuture = Symbol.CreateFuture(ticker, market, underlyingFutureExpiryDate);
+                    symbol = Symbol.CreateCanonicalOption(underlyingFuture);
+                }
+                else
+                {
+                    symbol = Symbol.Create(ticker, securityType, market);
+                }
+
             }
             catch (Exception ex)
             {

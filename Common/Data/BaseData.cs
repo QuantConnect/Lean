@@ -242,11 +242,6 @@ namespace QuantConnect.Data
                 return MinuteResolution;
             }
 
-            if (Symbol.SecurityType == SecurityType.Future)
-            {
-                return HighResolution;
-            }
-
             if (Symbol.SecurityType.IsOption())
             {
                 return OptionResolutions;
