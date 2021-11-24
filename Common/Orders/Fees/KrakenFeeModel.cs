@@ -31,19 +31,19 @@ namespace QuantConnect.Orders.Fees
         /// We don't use 30 day model, so using only tier1 fees.
         /// https://www.kraken.com/features/fee-schedule#kraken-pro
         /// </summary>
-        public const decimal MakerTier1CryptoFee = 0.16m;
+        public const decimal MakerTier1CryptoFee = 0.0016m;
         
         /// <summary>
         /// We don't use 30 day model, so using only tier1 fees.
         /// https://www.kraken.com/features/fee-schedule#kraken-pro
         /// </summary>
-        public const decimal TakerTier1CryptoFee = 0.26m;
+        public const decimal TakerTier1CryptoFee = 0.0026m;
         
         /// <summary>
         /// We don't use 30 day model, so using only tier1 fees.
         /// https://www.kraken.com/features/fee-schedule#stablecoin-fx-pairs
         /// </summary>
-        public const decimal Tier1FxFee = 0.2m;
+        public const decimal Tier1FxFee = 0.002m;
 
         /// <summary>
         /// Fiats and stablecoins list that have own fee.
