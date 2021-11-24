@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AddBetaIndicatorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private BetaIndicator _beta;
+        private Beta _beta;
         private SimpleMovingAverage _sma;
         private decimal _lastSMAValue;
 

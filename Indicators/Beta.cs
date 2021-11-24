@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators
     /// It is common practice to use the SPX index as a benchmark of the overall reference market when it comes to Beta 
     /// calculations.
     /// </summary>
-    public class BetaIndicator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class Beta : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// RollingWindow to store the data points of the target symbol
@@ -75,14 +75,14 @@ namespace QuantConnect.Indicators
         public override bool IsReady => _targetDataPoints.Samples >= WarmUpPeriod && _referenceDataPoints.Samples >= WarmUpPeriod;
 
         /// <summary>
-        /// Creates a new BetaIndicator with the specified name, period, target and 
+        /// Creates a new Beta indicator with the specified name, period, target and 
         /// reference values
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of this indicator</param>
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
-        public BetaIndicator(string name, int period, Symbol targetSymbol, Symbol referenceSymbol)
+        public Beta(string name, int period, Symbol targetSymbol, Symbol referenceSymbol)
             : base(name)
         {
             // Assert the period is greater than two, otherwise the beta can not be computed
