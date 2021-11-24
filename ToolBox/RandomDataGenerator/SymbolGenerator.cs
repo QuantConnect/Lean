@@ -1,9 +1,8 @@
+using QuantConnect.Securities;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -57,7 +56,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return new()
             {
                 Symbol = symbol,
-                TickGenerator = GenerateTickGenerator(symbol)
+                TickGenerator = CreateTickGenerator(symbol)
             };
         }
 
@@ -100,7 +99,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         protected abstract Symbol GenerateSymbol();
 
-        protected abstract ITickGenerator GenerateTickGenerator(Symbol symbol);
+        protected abstract ITickGenerator CreateTickGenerator(Symbol symbol);
 
         protected string NextTickerFromSymbolPropertiesDatabase(SecurityType securityType, string market)
         {

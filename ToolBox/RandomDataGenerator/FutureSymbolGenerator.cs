@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return Symbol.CreateFuture(ticker, _market, expiry);
         }
 
-        protected override ITickGenerator GenerateTickGenerator(Symbol symbol)
+        protected override ITickGenerator CreateTickGenerator(Symbol symbol)
             => new TickGenerator(Settings, Random, symbol);
 
         public override int GetAvailableSymbolCount() => int.MaxValue;

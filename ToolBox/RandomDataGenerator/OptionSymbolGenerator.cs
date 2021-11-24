@@ -64,7 +64,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return Symbol.CreateOption(underlying, _market, OptionStyle.American, optionRight, strike, expiry);
         }
 
-        protected override ITickGenerator GenerateTickGenerator(Symbol symbol)
+        protected override ITickGenerator CreateTickGenerator(Symbol symbol)
             => new BlackScholesTickGenerator(Settings, Random, _securityProvider.GetSecurity(symbol));
 
         public override int GetAvailableSymbolCount() => int.MaxValue;
