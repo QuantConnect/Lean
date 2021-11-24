@@ -45,6 +45,11 @@ namespace QuantConnect.Brokerages.Zerodha
                 null,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"))
             );
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>

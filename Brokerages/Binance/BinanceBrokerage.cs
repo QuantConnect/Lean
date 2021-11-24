@@ -333,6 +333,11 @@ namespace QuantConnect.Brokerages.Binance
                 aggregator: aggregator,
                 job: job
             );
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>

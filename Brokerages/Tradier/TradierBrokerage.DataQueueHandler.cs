@@ -66,6 +66,11 @@ namespace QuantConnect.Brokerages.Tradier
                 orderProvider: null,
                 securityProvider: null,
                 aggregator: aggregator);
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
@@ -86,11 +91,6 @@ namespace QuantConnect.Brokerages.Tradier
             if (!CanSubscribe(dataConfig.Symbol))
             {
                 return null;
-            }
-
-            if (!IsConnected)
-            {
-                Connect();
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);

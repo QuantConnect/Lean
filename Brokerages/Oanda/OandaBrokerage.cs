@@ -266,6 +266,12 @@ namespace QuantConnect.Brokerages.Oanda
                 accessToken,
                 accountId,
                 agent);
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
+
             _api.SetJob(job);
         }
 
@@ -351,19 +357,20 @@ namespace QuantConnect.Brokerages.Oanda
         private void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator,
             Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
         {
-            if (!_isInitialized)
+            if (_isInitialized)
             {
-                if (environment != Environment.Trade && environment != Environment.Practice)
-                    throw new NotSupportedException("Oanda Environment not supported: " + environment);
-
-                _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
-
-                // forward events received from API
-                _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
-                _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
-                _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
-                _isInitialized = true;
+                return;
             }
+            _isInitialized = true;
+            if (environment != Environment.Trade && environment != Environment.Practice)
+                throw new NotSupportedException("Oanda Environment not supported: " + environment);
+
+            _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
+
+            // forward events received from API
+            _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
+            _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
+            _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
         }
     }
 }

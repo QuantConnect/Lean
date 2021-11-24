@@ -942,82 +942,83 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             string agentDescription = IB.AgentDescription.Individual,
             bool loadExistingHoldings = true)
         {
-            if (!_isInitialized)
+            if (_isInitialized)
             {
-                _loadExistingHoldings = loadExistingHoldings;
-                _algorithm = algorithm;
-                _orderProvider = orderProvider;
-                _securityProvider = securityProvider;
-                _aggregator = aggregator;
-                _account = account;
-                _host = host;
-                _port = port;
-                _ibVersion = Convert.ToInt32(ibVersion, CultureInfo.InvariantCulture);
-                _agentDescription = agentDescription;
-
-                _symbolMapper = new InteractiveBrokersSymbolMapper(mapFileProvider);
-
-                _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-                _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
-                _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-
-                Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
-
-                // start IB Gateway
-                var exportIbGatewayLogs = Config.GetBool("ib-export-ibgateway-logs");
-                _ibAutomater = new IBAutomater.IBAutomater(ibDirectory, ibVersion, userName, password, tradingMode, port, exportIbGatewayLogs);
-                _ibAutomater.OutputDataReceived += OnIbAutomaterOutputDataReceived;
-                _ibAutomater.ErrorDataReceived += OnIbAutomaterErrorDataReceived;
-                _ibAutomater.Exited += OnIbAutomaterExited;
-                _ibAutomater.Restarted += OnIbAutomaterRestarted;
-
-                CheckIbAutomaterError(_ibAutomater.Start(false));
-
-                Log.Trace($"InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}");
-
-                _client = new IB.InteractiveBrokersClient(_signal);
-
-                // set up event handlers
-                _client.UpdatePortfolio += HandlePortfolioUpdates;
-                _client.OrderStatus += HandleOrderStatusUpdates;
-                _client.OpenOrder += HandleOpenOrder;
-                _client.OpenOrderEnd += HandleOpenOrderEnd;
-                _client.UpdateAccountValue += HandleUpdateAccountValue;
-                _client.AccountSummary += HandleAccountSummary;
-                _client.ManagedAccounts += HandleManagedAccounts;
-                _client.FamilyCodes += HandleFamilyCodes;
-                _client.ExecutionDetails += HandleExecutionDetails;
-                _client.CommissionReport += HandleCommissionReport;
-                _client.Error += HandleError;
-                _client.TickPrice += HandleTickPrice;
-                _client.TickSize += HandleTickSize;
-                _client.CurrentTimeUtc += HandleBrokerTime;
-
-                // we need to wait until we receive the next valid id from the server
-                _client.NextValidId += (sender, e) =>
-                {
-                    lock (_nextValidIdLocker)
-                    {
-                        Log.Trace($"InteractiveBrokersBrokerage.HandleNextValidID(): updating nextValidId from {_nextValidId} to {e.OrderId}");
-
-                        _nextValidId = e.OrderId;
-                        _waitForNextValidId.Set();
-                    }
-                };
-
-                _client.ConnectAck += (sender, e) =>
-                {
-                    Log.Trace($"InteractiveBrokersBrokerage.HandleConnectAck(): API client connected [Server Version: {_client.ClientSocket.ServerVersion}].");
-                    _connectEvent.Set();
-                };
-
-                _client.ConnectionClosed += (sender, e) =>
-                {
-                    Log.Trace($"InteractiveBrokersBrokerage.HandleConnectionClosed(): API client disconnected [Server Version: {_client.ClientSocket.ServerVersion}].");
-                    _connectEvent.Set();
-                };
-                _isInitialized = true;
+                return;
             }
+            _isInitialized = true;
+            _loadExistingHoldings = loadExistingHoldings;
+            _algorithm = algorithm;
+            _orderProvider = orderProvider;
+            _securityProvider = securityProvider;
+            _aggregator = aggregator;
+            _account = account;
+            _host = host;
+            _port = port;
+            _ibVersion = Convert.ToInt32(ibVersion, CultureInfo.InvariantCulture);
+            _agentDescription = agentDescription;
+
+            _symbolMapper = new InteractiveBrokersSymbolMapper(mapFileProvider);
+
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+
+            Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
+
+            // start IB Gateway
+            var exportIbGatewayLogs = Config.GetBool("ib-export-ibgateway-logs");
+            _ibAutomater = new IBAutomater.IBAutomater(ibDirectory, ibVersion, userName, password, tradingMode, port, exportIbGatewayLogs);
+            _ibAutomater.OutputDataReceived += OnIbAutomaterOutputDataReceived;
+            _ibAutomater.ErrorDataReceived += OnIbAutomaterErrorDataReceived;
+            _ibAutomater.Exited += OnIbAutomaterExited;
+            _ibAutomater.Restarted += OnIbAutomaterRestarted;
+
+            CheckIbAutomaterError(_ibAutomater.Start(false));
+
+            Log.Trace($"InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}");
+
+            _client = new IB.InteractiveBrokersClient(_signal);
+
+            // set up event handlers
+            _client.UpdatePortfolio += HandlePortfolioUpdates;
+            _client.OrderStatus += HandleOrderStatusUpdates;
+            _client.OpenOrder += HandleOpenOrder;
+            _client.OpenOrderEnd += HandleOpenOrderEnd;
+            _client.UpdateAccountValue += HandleUpdateAccountValue;
+            _client.AccountSummary += HandleAccountSummary;
+            _client.ManagedAccounts += HandleManagedAccounts;
+            _client.FamilyCodes += HandleFamilyCodes;
+            _client.ExecutionDetails += HandleExecutionDetails;
+            _client.CommissionReport += HandleCommissionReport;
+            _client.Error += HandleError;
+            _client.TickPrice += HandleTickPrice;
+            _client.TickSize += HandleTickSize;
+            _client.CurrentTimeUtc += HandleBrokerTime;
+
+            // we need to wait until we receive the next valid id from the server
+            _client.NextValidId += (sender, e) =>
+            {
+                lock (_nextValidIdLocker)
+                {
+                    Log.Trace($"InteractiveBrokersBrokerage.HandleNextValidID(): updating nextValidId from {_nextValidId} to {e.OrderId}");
+
+                    _nextValidId = e.OrderId;
+                    _waitForNextValidId.Set();
+                }
+            };
+
+            _client.ConnectAck += (sender, e) =>
+            {
+                Log.Trace($"InteractiveBrokersBrokerage.HandleConnectAck(): API client connected [Server Version: {_client.ClientSocket.ServerVersion}].");
+                _connectEvent.Set();
+            };
+
+            _client.ConnectionClosed += (sender, e) =>
+            {
+                Log.Trace($"InteractiveBrokersBrokerage.HandleConnectionClosed(): API client disconnected [Server Version: {_client.ClientSocket.ServerVersion}].");
+                _connectEvent.Set();
+            };
         }
 
         /// <summary>
@@ -2618,6 +2619,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 tradingMode,
                 agentDescription,
                 loadExistingHoldings);
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
@@ -2631,11 +2637,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (!CanSubscribe(dataConfig.Symbol))
             {
                 return null;
-            }
-
-            if (!IsConnected)
-            {
-                Connect();
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);

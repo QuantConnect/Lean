@@ -457,6 +457,11 @@ namespace QuantConnect.Brokerages.Bitfinex
                 aggregator: aggregator,
                 job: job
             );
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
