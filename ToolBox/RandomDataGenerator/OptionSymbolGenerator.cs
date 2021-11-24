@@ -1,9 +1,10 @@
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
     /// <summary>
-    /// Generates a new random option <see cref="Symbol"/>. The generated option contract symbol will have an
+    /// Generates a new random option <see cref="Symbol"/>. The generated option contract Symbol will have an
     /// expiry between the specified <paramref name="minExpiry"/> and <paramref name="maxExpiry"/>. The strike
     /// price will be within the specified <paramref name="maximumStrikePriceDeviation"/> of the <paramref name="underlyingPrice"/>
     /// and should be rounded to reasonable value for the given price. For example, a price of 100 dollars would round
@@ -13,12 +14,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// Standard contracts expiry on the third Friday.
     /// Weekly contracts expiry every week on Friday
     /// </remarks>
-    /// <param name="market">The market of the generated symbol</param>
+    /// <param name="market">The market of the generated Symbol</param>
     /// <param name="minExpiry">The minimum expiry date, inclusive</param>
     /// <param name="maxExpiry">The maximum expiry date, inclusive</param>
     /// <param name="underlyingPrice">The option's current underlying price</param>
     /// <param name="maximumStrikePriceDeviation">The strike price's maximum percent deviation from the underlying price</param>
-    /// <returns>A new option contract symbol within the specified expiration and strike price parameters</returns>
+    /// <returns>A new option contract Symbol within the specified expiration and strike price parameters</returns>
     public class OptionSymbolGenerator : SymbolGenerator
     {
         private readonly DateTime _minExpiry;
@@ -26,8 +27,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly string _market;
         private readonly decimal _underlyingPrice;
         private readonly decimal _maximumStrikePriceDeviation;
+        private readonly ISecurityProvider _securityProvider;
 
-        public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, decimal underlyingPrice, decimal maximumStrikePriceDeviation)
+        public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, decimal underlyingPrice, decimal maximumStrikePriceDeviation, ISecurityProvider securityProvider)
             : base(settings, random)
         {
             _minExpiry = settings.Start;
@@ -35,9 +37,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             _market = settings.Market;
             _underlyingPrice = underlyingPrice;
             _maximumStrikePriceDeviation = maximumStrikePriceDeviation;
+            _securityProvider = securityProvider;
         }
 
-        public override Symbol GenerateSingle()
+        protected override Symbol GenerateSymbol()
         {
             // first generate the underlying
             var underlying = NextSymbol(SecurityType.Equity, _market);
@@ -60,6 +63,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             // when providing a null option w/ an expiry, it will automatically create the OSI ticker string for the Value
             return Symbol.CreateOption(underlying, _market, OptionStyle.American, optionRight, strike, expiry);
         }
+
+        protected override ITickGenerator GenerateTickGenerator(Symbol symbol)
+            => new BlackScholesTickGenerator(Settings, Random, _securityProvider.GetSecurity(symbol));
 
         public override int GetAvailableSymbolCount() => int.MaxValue;
     }

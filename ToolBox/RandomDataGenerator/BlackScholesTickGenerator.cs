@@ -7,6 +7,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
+using Option = QLNet.Option;
 
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -18,29 +19,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     {
         private readonly IOptionPriceModel _optionPriceModel;
         private readonly ISecurityService _securityService;
+        private readonly Securities.Option.Option _option;
         private static IQLUnderlyingVolatilityEstimator _underlyingVolEstimator = new ConstantQLUnderlyingVolatilityEstimator();
         private static IQLRiskFreeRateEstimator _riskFreeRateEstimator = new ConstantQLRiskFreeRateEstimator();
         private static IQLDividendYieldEstimator _dividendYieldEstimator = new ConstantQLDividendYieldEstimator(Convert.ToDouble(PortfolioStatistics.GetRiskFreeRate()));
-
-        public BlackScholesTickGenerator(RandomDataGeneratorSettings settings)
-            : base(settings)
+        
+        public BlackScholesTickGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, Security security)
+            : base(settings, random, security.Symbol)
         {
-        }
-
-        public BlackScholesTickGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
-            : base(settings, random)
-        {
-            var securityManager = new SecurityManager(new TimeKeeper(Settings.Start, new[] { TimeZones.NewYork }));
-            _securityService = new SecurityService(
-                new CashBook(),
-                MarketHoursDatabase.FromDataFolder(Globals.DataFolder),
-                SymbolPropertiesDatabase.FromDataFolder(),
-                null,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(
-                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
-                new MapFilePrimaryExchangeProvider(new LocalDiskMapFileProvider())
-                );
+            _option = security as Securities.Option.Option;
 
             _optionPriceModel = new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
                 _underlyingVolEstimator,
@@ -48,23 +35,24 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 _dividendYieldEstimator);
         }
 
-        public override decimal NextValue(Symbol symbol, decimal referencePrice)
+        public override decimal NextValue(decimal referencePrice)
         {
-            if (symbol.SecurityType != SecurityType.Option)
+            if (Symbol.SecurityType != SecurityType.Option)
             {
                 throw new ArgumentException("Please use TickGenerator for non options.");
             }
 
             var underlyingSecurity = _securityService.CreateSecurity(
-                symbol.Underlying,
-                new SubscriptionDataConfig(typeof(QuoteBar), symbol.Underlying, Settings.Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false));
+                Symbol.Underlying,
+                new SubscriptionDataConfig(typeof(QuoteBar), Symbol.Underlying, Settings.Resolution, TimeZones.Utc, TimeZones.NewYork, false, true, false));
             var security = _securityService.CreateSecurity(
-                symbol,
-                new SubscriptionDataConfig(typeof(QuoteBar), symbol, Settings.Resolution, TimeZones.Utc, TimeZones.Utc,
+                Symbol,
+                new SubscriptionDataConfig(typeof(QuoteBar), Symbol, Settings.Resolution, TimeZones.Utc, TimeZones.NewYork,
                     false, true, false),
                 addToSymbolCache: false,
                 underlying: underlyingSecurity);
-            return _optionPriceModel.Evaluate(security, null, null)
+
+            return (security as Securities.Option.Option).PriceModel.Evaluate(security, null, null)
                 .TheoreticalPrice;
         }
     }

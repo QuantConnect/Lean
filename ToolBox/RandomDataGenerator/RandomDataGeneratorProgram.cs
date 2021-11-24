@@ -4,6 +4,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -105,14 +106,25 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 randomValueGenerator = new RandomValueGenerator(settings.RandomSeed);
             }
 
-            var dataGenerator = RandomDataGeneratorFactory.CreateGenerator(settings, randomValueGenerator);
-            var symbolGenerator = dataGenerator.CreateSymbolGenerator();
-            var tickGenerator = dataGenerator.CreateTickGenerator();
+            //var securityManager = new SecurityManager(new TimeKeeper(Settings.Start, new[] { TimeZones.Utc }));
+            //var securityService = new SecurityService(
+            //    new CashBook(),
+            //    MarketHoursDatabase.FromDataFolder(Globals.DataFolder),
+            //    SymbolPropertiesDatabase.FromDataFolder(),
+            //    new(),
+            //    RegisteredSecurityDataTypesProvider.Null,
+            //    new SecurityCacheProvider(
+            //        new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
+            //    new MapFilePrimaryExchangeProvider(new LocalDiskMapFileProvider())
+            //);
+
+            ISecurityProvider securityProvider = null;
+            var symbolGenerator = SymbolGenerator.Create(settings, randomValueGenerator, securityProvider);
 
             var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount();
             if (settings.SymbolCount > maxSymbolCount)
             {
-                output.Warn.WriteLine($"Limiting symbol count to {maxSymbolCount}, we don't have more {settings.SecurityType} tickers for {settings.Market}");
+                output.Warn.WriteLine($"Limiting Symbol count to {maxSymbolCount}, we don't have more {settings.SecurityType} tickers for {settings.Market}");
                 settings.SymbolCount = maxSymbolCount;
             }
 
@@ -125,9 +137,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             foreach (var currentSymbol in symbolGenerator.GenerateRandomSymbols())
             {
-                // This is done so that we can update the symbol in the case of a rename event
+                // This is done so that we can update the Symbol in the case of a rename event
                 var delistDate = GetDelistingDate(settings.Start, settings.End, randomValueGenerator);
-                var symbol = currentSymbol;
+                var symbol = currentSymbol.Symbol;
                 var willBeDelisted = randomValueGenerator.NextBool(1.0);
                 var monthsTrading = 0;
 
@@ -138,7 +150,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                 // define aggregators via settings
                 var aggregators = settings.CreateAggregators().ToList();
-                var tickHistory = tickGenerator.GenerateTicks(symbol).ToList();
+                var tickHistory = currentSymbol.GenerateTicks().ToList();
 
                 // Companies rarely IPO then disappear within 6 months
                 if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() <= 6)
@@ -171,15 +183,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         dividendsSplitsMaps.MapRows.Add(new MapFileRow(new DateTime(2050, 12, 31), dividendsSplitsMaps.CurrentSymbol.Value));
                     }
 
-                    // If the symbol value has changed, update the current symbol
+                    // If the Symbol value has changed, update the current Symbol
                     if (symbol != dividendsSplitsMaps.CurrentSymbol)
                     {
-                        // Add all symbol rename events to dictionary
+                        // Add all Symbol rename events to dictionary
                         // We skip the first row as it contains the listing event instead of a rename event
                         foreach (var renameEvent in dividendsSplitsMaps.MapRows.Skip(1))
                         {
-                            // Symbol.UpdateMappedSymbol does not update the underlying security ID symbol, which 
-                            // is used to create the hash code. Create a new equity symbol from scratch instead.
+                            // Symbol.UpdateMappedSymbol does not update the underlying security ID Symbol, which 
+                            // is used to create the hash code. Create a new equity Symbol from scratch instead.
                             symbol = Symbol.Create(renameEvent.MappedSymbol, SecurityType.Equity, settings.Market);
                             renamedSymbols.Add(symbol, renameEvent.Date);
 
@@ -188,7 +200,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     }
                     else
                     {
-                        // This ensures that ticks will be written for the current symbol up until 9999-12-31
+                        // This ensures that ticks will be written for the current Symbol up until 9999-12-31
                         renamedSymbols.Add(symbol, new DateTime(9999, 12, 31));
                     }
 
@@ -205,7 +217,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
                 else
                 {
-                    // This ensures that ticks will be written for the current symbol up until 9999-12-31
+                    // This ensures that ticks will be written for the current Symbol up until 9999-12-31
                     renamedSymbols.Add(symbol, new DateTime(9999, 12, 31));
                 }
 
@@ -247,7 +259,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         }
                     }
 
-                    // count each stage as a point, so total points is 2*symbol-count
+                    // count each stage as a point, so total points is 2*Symbol-count
                     // and the current progress is twice the current, but less one because we haven't finished writing data yet
                     progress = 100 * (2 * count - 1) / (2.0 * settings.SymbolCount);
 

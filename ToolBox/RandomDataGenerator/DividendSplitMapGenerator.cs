@@ -32,7 +32,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public List<CorporateFactorRow> DividendsSplits = new List<CorporateFactorRow>();
 
         /// <summary>
-        /// Current symbol value. Can be renamed
+        /// Current Symbol value. Can be renamed
         /// </summary>
         public Symbol CurrentSymbol { get; private set; }
 

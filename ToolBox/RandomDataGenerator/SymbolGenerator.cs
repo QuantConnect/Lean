@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -27,7 +28,22 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
-        public IEnumerable<Symbol> GenerateRandomSymbols()
+        public static SymbolGenerator Create(RandomDataGeneratorSettings settings, IRandomValueGenerator random, ISecurityProvider securityProvider)
+        {
+            switch (settings.SecurityType)
+            {
+                case SecurityType.Option:
+                    return new OptionSymbolGenerator(settings, random, 100m, 75m, securityProvider);
+
+                case SecurityType.Future:
+                    return new FutureSymbolGenerator(settings, random);
+
+                default:
+                    return new SpotSymbolGenerator(settings, random);
+            }
+        }
+
+        public IEnumerable<SymbolDataGenerator> GenerateRandomSymbols()
         {
             for (int i = 0; i < Settings.SymbolCount; i++)
             {
@@ -35,7 +51,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
         }
 
-        public abstract Symbol GenerateSingle();
+        public SymbolDataGenerator GenerateSingle()
+        {
+            var symbol = GenerateSymbol();
+            return new()
+            {
+                Symbol = symbol,
+                TickGenerator = GenerateTickGenerator(symbol)
+            };
+        }
 
         public Symbol NextSymbol(SecurityType securityType, string market)
         {
@@ -46,8 +70,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             string ticker;
 
-            // we must return a symbol matching an entry in the symbol properties database
-            // if there is a wildcard entry, we can generate a truly random symbol
+            // we must return a Symbol matching an entry in the Symbol properties database
+            // if there is a wildcard entry, we can generate a truly random Symbol
             // if there is no wildcard entry, the symbols we can generate are limited by the entries in the database
             if (SymbolPropertiesDatabase.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType))
             {
@@ -61,7 +85,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             // by chance we may generate a ticker that actually exists, and if map files exist that match this
             // ticker then we'll end up resolving the first trading date for use in the SID, otherwise, all
-            // generated symbol will have a date equal to SecurityIdentifier.DefaultDate
+            // generated Symbol will have a date equal to SecurityIdentifier.DefaultDate
             var symbol = Symbol.Create(ticker, securityType, market);
             if (_symbols.Add(symbol))
             {
@@ -74,19 +98,23 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return NextSymbol(securityType, market);
         }
 
+        protected abstract Symbol GenerateSymbol();
+
+        protected abstract ITickGenerator GenerateTickGenerator(Symbol symbol);
+
         protected string NextTickerFromSymbolPropertiesDatabase(SecurityType securityType, string market)
         {
-            // prevent returning a ticker matching any previously generated symbol
+            // prevent returning a ticker matching any previously generated Symbol
             var existingTickers = _symbols
                 .Where(sym => sym.ID.Market == market && sym.ID.SecurityType == securityType)
                 .Select(sym => sym.Value);
 
-            // get the available tickers from the symbol properties database and remove previously generated tickers
+            // get the available tickers from the Symbol properties database and remove previously generated tickers
             var availableTickers = Enumerable.Except(SymbolPropertiesDatabase.GetSymbolPropertiesList(market, securityType)
                     .Select(kvp => kvp.Key.Symbol), existingTickers)
                 .ToList();
 
-            // there is a limited number of entries in the symbol properties database so we may run out of tickers
+            // there is a limited number of entries in the Symbol properties database so we may run out of tickers
             if (availableTickers.Count == 0)
             {
                 throw new NoTickersAvailableException(securityType, market);
@@ -101,7 +129,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var expiry = Random.NextDate(minExpiry, maxExpiry, DayOfWeek.Friday);
 
             // check to see if we're open on this date and if not, back track until we are
-            // we're using the equity market hours as a proxy since we haven't generated the option symbol yet
+            // we're using the equity market hours as a proxy since we haven't generated the option Symbol yet
             while (!marketHours.IsDateOpen(expiry))
             {
                 expiry = expiry.AddDays(-1);
