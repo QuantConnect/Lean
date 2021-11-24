@@ -268,12 +268,6 @@ namespace QuantConnect.Brokerages.Backtesting
                         _pending.TryRemove(order.Id, out order);
                         continue;
                     }
-                    
-                    if (order.Status == OrderStatus.CancelPending)
-                    {
-                        // the pending CancelOrderRequest will be handled during the next transaction handler run
-                        continue;
-                    }
 
                     // all order fills are processed on the next bar (except for market orders)
                     if (order.Time == Algorithm.UtcTime && order.Type != OrderType.Market && order.Type != OrderType.OptionExercise)
@@ -403,6 +397,11 @@ namespace QuantConnect.Brokerages.Backtesting
                             Log.Error(err);
                             Algorithm.Error($"Order Error: id: {order.Id}, Transaction model failed to fill for order type: {order.Type} with error: {err.Message}");
                         }
+                    }
+                    else if (order.Status == OrderStatus.CancelPending)
+                    {
+                        // the pending CancelOrderRequest will be handled during the next transaction handler run
+                        continue;
                     }
                     else
                     {
