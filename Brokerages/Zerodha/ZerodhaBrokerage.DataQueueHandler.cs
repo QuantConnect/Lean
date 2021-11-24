@@ -13,13 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Packets;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -82,7 +81,6 @@ namespace QuantConnect.Brokerages.Zerodha
             _aggregator.Remove(dataConfig);
         }
 
-
         /// <summary>
         /// Returns true if this data provide can handle the specified symbol
         /// </summary>
@@ -98,6 +96,7 @@ namespace QuantConnect.Brokerages.Zerodha
             return
                 (securityType == SecurityType.Equity) && (market == Market.India);
         }
-        #endregion
+
+        #endregion IDataQueueHandler implementation
     }
 }

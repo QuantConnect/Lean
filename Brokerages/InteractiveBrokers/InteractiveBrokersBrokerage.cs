@@ -13,6 +13,24 @@
  * limitations under the License.
 */
 
+using IBApi;
+using NodaTime;
+using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.IBAutomater;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Packets;
+using QuantConnect.Securities;
+using QuantConnect.Securities.FutureOption;
+using QuantConnect.Securities.Index;
+using QuantConnect.Securities.IndexOption;
+using QuantConnect.Securities.Option;
+using QuantConnect.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -21,28 +39,10 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using QuantConnect.Configuration;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Orders;
-using QuantConnect.Packets;
-using QuantConnect.Securities;
-using QuantConnect.Util;
-using Order = QuantConnect.Orders.Order;
-using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
-using IBApi;
-using NodaTime;
-using QuantConnect.IBAutomater;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.TimeInForces;
-using QuantConnect.Securities.FutureOption;
-using QuantConnect.Securities.Index;
-using QuantConnect.Securities.IndexOption;
-using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
+using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -61,10 +61,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         // Existing orders created in TWS can *only* be cancelled/modified when connected with ClientId = 0
         private const int ClientId = 0;
+
         private const string _futuresCmeCrypto = "CMECRYPTO";
 
         // next valid order id (or request id, or ticker id) for this client
         private int _nextValidId;
+
         private readonly object _nextValidIdLocker = new object();
 
         private int _port;
@@ -92,8 +94,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         // tracks requested order updates, so we can flag Submitted order events as updates
         private readonly ConcurrentDictionary<int, int> _orderUpdates = new ConcurrentDictionary<int, int>();
+
         // tracks executions before commission reports, map: execId -> execution
         private readonly ConcurrentDictionary<string, IB.ExecutionDetailsEventArgs> _orderExecutions = new ConcurrentDictionary<string, IB.ExecutionDetailsEventArgs>();
+
         // tracks commission reports before executions, map: execId -> commission report
         private readonly ConcurrentDictionary<string, CommissionReport> _commissionReports = new ConcurrentDictionary<string, CommissionReport>();
 
@@ -134,6 +138,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // when unsubscribing symbols immediately after subscribing IB returns an error (Can't find EId with tickerId:nnn),
         // so we track subscription times to ensure symbols are not unsubscribed before a minimum time span has elapsed
         private readonly Dictionary<int, DateTime> _subscriptionTimes = new Dictionary<int, DateTime>();
+
         private readonly TimeSpan _minimumTimespanBeforeUnsubscribe = TimeSpan.FromMilliseconds(500);
 
         private readonly bool _enableDelayedStreamingData = Config.GetBool("ib-enable-delayed-streaming-data");
@@ -1916,7 +1921,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     {
                         // order for an account profile
                         ibOrder.FaProfile = orderProperties.FaProfile;
-
                     }
                     else if (!string.IsNullOrWhiteSpace(orderProperties.FaGroup))
                     {
@@ -2138,7 +2142,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (direction)
             {
-                case OrderDirection.Buy:  return IB.ActionSide.Buy;
+                case OrderDirection.Buy: return IB.ActionSide.Buy;
                 case OrderDirection.Sell: return IB.ActionSide.Sell;
                 case OrderDirection.Hold: return IB.ActionSide.Undefined;
                 default:
@@ -2153,13 +2157,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (type)
             {
-                case OrderType.Market:          return IB.OrderType.Market;
-                case OrderType.Limit:           return IB.OrderType.Limit;
-                case OrderType.StopMarket:      return IB.OrderType.Stop;
-                case OrderType.StopLimit:       return IB.OrderType.StopLimit;
-                case OrderType.LimitIfTouched:  return IB.OrderType.LimitIfTouched;
-                case OrderType.MarketOnOpen:    return IB.OrderType.Market;
-                case OrderType.MarketOnClose:   return IB.OrderType.MarketOnClose;
+                case OrderType.Market: return IB.OrderType.Market;
+                case OrderType.Limit: return IB.OrderType.Limit;
+                case OrderType.StopMarket: return IB.OrderType.Stop;
+                case OrderType.StopLimit: return IB.OrderType.StopLimit;
+                case OrderType.LimitIfTouched: return IB.OrderType.LimitIfTouched;
+                case OrderType.MarketOnOpen: return IB.OrderType.Market;
+                case OrderType.MarketOnClose: return IB.OrderType.MarketOnClose;
                 default:
                     throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(OrderType));
             }
@@ -2172,11 +2176,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (order.OrderType)
             {
-                case IB.OrderType.Limit:            return OrderType.Limit;
-                case IB.OrderType.Stop:             return OrderType.StopMarket;
-                case IB.OrderType.StopLimit:        return OrderType.StopLimit;
-                case IB.OrderType.LimitIfTouched:   return OrderType.LimitIfTouched;
-                case IB.OrderType.MarketOnClose:    return OrderType.MarketOnClose;
+                case IB.OrderType.Limit: return OrderType.Limit;
+                case IB.OrderType.Stop: return OrderType.StopMarket;
+                case IB.OrderType.StopLimit: return OrderType.StopLimit;
+                case IB.OrderType.LimitIfTouched: return OrderType.LimitIfTouched;
+                case IB.OrderType.MarketOnClose: return OrderType.MarketOnClose;
 
                 case IB.OrderType.Market:
                     if (order.Tif == IB.TimeInForce.MarketOnOpen)
@@ -2333,7 +2337,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
-                     return IB.SecurityType.Option;
+                    return IB.SecurityType.Option;
 
                 case SecurityType.Index:
                     return IB.SecurityType.Index;
@@ -2915,6 +2919,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case SecurityType.Equity:
                     // Effective in TWS version 985 and later, for US stocks the bid, ask, and last size quotes are shown in shares (not in lots).
                     return _ibVersion < 985 ? size * 100 : size;
+
                 default:
                     return size;
             }
@@ -3113,7 +3118,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 SecType = ConvertSecurityType(symbol.SecurityType),
                 IncludeExpired = includeExpired,
                 Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant()
-        };
+            };
 
             Log.Trace($"InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list for {contract.Symbol} ...");
 
@@ -3642,5 +3647,4 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             1100, 1101, 1102, 2103, 2104, 2105, 2106, 2107, 2108, 2119, 2157, 2158, 10197
         };
     }
-
 }
