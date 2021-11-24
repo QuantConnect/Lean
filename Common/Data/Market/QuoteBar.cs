@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Market
     [ProtoContract(SkipConstructor = true)]
     public class QuoteBar : BaseData, IBaseDataBar
     {
-        // scale factor used in QC equity/forex data files
+        // scale factor used in QC equity/option/indexOption data files
         private const decimal _scaleFactor = 1 / 10000m;
 
         /// <summary>
