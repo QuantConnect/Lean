@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using QuantConnect.Data.Custom;
+using QuantConnect.DataSource;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 
