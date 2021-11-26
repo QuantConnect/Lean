@@ -22,6 +22,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
+using QuantConnect.DataSource;
 using QuantConnect.Indicators;
 using QuantConnect.Python;
 
