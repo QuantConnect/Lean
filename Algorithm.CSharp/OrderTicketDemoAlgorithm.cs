@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -471,6 +472,62 @@ namespace QuantConnect.Algorithm.CSharp
         private bool TimeIs(int day, int hour, int minute)
         {
             return Time.Day == day && Time.Hour == hour && Time.Minute == minute;
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            Func<OrderTicket, bool> basicOrderTicketFilter = x => x.Symbol == symbol;
+
+            var filledOrders = Transactions.GetOrders(x => x.Status == OrderStatus.Filled);
+            var orderTickets = Transactions.GetOrderTickets(basicOrderTicketFilter);
+            var openOrders = Transactions.GetOpenOrders(x => x.Symbol == symbol);
+            var openOrderTickets = Transactions.GetOpenOrderTickets(basicOrderTicketFilter);
+            var remainingOpenOrders = Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter);
+
+            if (filledOrders.Count() != 8 || orderTickets.Count() != 10)
+            {
+                throw new Exception($"There were expected 8 filled orders and 10 order tickets");
+            }
+            if (openOrders.Count != 0 || openOrderTickets.Any())
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (remainingOpenOrders != 0m)
+            {
+                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+            }
+
+            var symbolOpenOrders = Transactions.GetOpenOrders(symbol).Count;
+            var symbolOpenOrdersTickets = Transactions.GetOpenOrderTickets(symbol).Count();
+            var symbolOpenOrdersRemainingQuantity = Transactions.GetOpenOrdersRemainingQuantity(symbol);
+
+            if (symbolOpenOrders != 0 || symbolOpenOrdersTickets != 0)
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (symbolOpenOrdersRemainingQuantity != 0)
+            {
+                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+            }
+
+            var defaultOrders = Transactions.GetOrders();
+            var defaultOrderTickets = Transactions.GetOrderTickets();
+            var defaultOpenOrders = Transactions.GetOpenOrders();
+            var defaultOpenOrderTickets = Transactions.GetOpenOrderTickets();
+            var defaultOpenOrdersRemaining = Transactions.GetOpenOrdersRemainingQuantity();
+
+            if (defaultOrders.Count() != 10 || defaultOrderTickets.Count() != 10)
+            {
+                throw new Exception($"There were expected 10 orders and 10 order tickets");
+            }
+            if (defaultOpenOrders.Count != 0 || defaultOpenOrderTickets.Any())
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (defaultOpenOrdersRemaining != 0m)
+            {
+                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+            }
         }
 
         /// <summary>

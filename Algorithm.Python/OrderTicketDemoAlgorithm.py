@@ -341,3 +341,44 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
     def TimeIs(self, day, hour, minute):
         return self.Time.day == day and self.Time.hour == hour and self.Time.minute == minute
+
+    def OnEndOfAlgorithm(self):
+        basicOrderTicketFilter = lambda x: x.Symbol == self.spy;
+
+        filledOrders = self.Transactions.GetOrders(lambda x: x.Status == OrderStatus.Filled);
+        orderTickets = self.Transactions.GetOrderTickets(basicOrderTicketFilter);
+        openOrders = self.Transactions.GetOpenOrders(lambda x: x.Symbol == self.spy);
+        openOrderTickets = self.Transactions.GetOpenOrderTickets(basicOrderTicketFilter);
+        remainingOpenOrders = self.Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter);
+
+        # The type returned by self.Transactions.GetOrders() is iterable and not a list
+        # that's why we use sum() to get the size of the iterable object type
+        filledOrdersSize = sum(1 for order in filledOrders)
+        orderTicketsSize = sum(1 for ticket in orderTickets)
+        openOrderTicketsSize = sum(1 for ticket in openOrderTickets)
+
+        assert(filledOrdersSize == 8 and orderTicketsSize == 10), "There were expected 8 filled orders and 10 order tickets"
+        assert(not (len(openOrders) or openOrderTicketsSize)), "No open orders or tickets were expected"
+        assert(not remainingOpenOrders), "No remaining quantiy to be filled from open orders was expected"
+
+        spyOpenOrders = self.Transactions.GetOpenOrders(self.spy)
+        spyOpenOrderTickets = self.Transactions.GetOpenOrderTickets(self.spy)
+        spyOpenOrderTicketsSize = sum(1 for tickets in spyOpenOrderTickets)
+        spyOpenOrdersRemainingQuantity = self.Transactions.GetOpenOrdersRemainingQuantity(self.spy)
+
+        assert(not (len(spyOpenOrders) or spyOpenOrderTicketsSize)), "No open orders or tickets were expected"
+        assert(not spyOpenOrdersRemainingQuantity), "No remaining quantiy to be filled from open orders was expected"
+
+        defaultOrders = self.Transactions.GetOrders();
+        defaultOrderTickets = self.Transactions.GetOrderTickets();
+        defaultOpenOrders = self.Transactions.GetOpenOrders();
+        defaultOpenOrderTickets = self.Transactions.GetOpenOrderTickets();
+        defaultOpenOrdersRemaining = self.Transactions.GetOpenOrdersRemainingQuantity();
+
+        defaultOrdersSize = sum(1 for order in defaultOrders)
+        defaultOrderTicketsSize = sum(1 for ticket in defaultOrderTickets)
+        defaultOpenOrderTicketsSize = sum(1 for ticket in defaultOpenOrderTickets)
+
+        assert(defaultOrdersSize == 10 and defaultOrderTicketsSize == 10), "There were expected 10 orders and 10 order tickets"
+        assert(not (len(defaultOpenOrders) or defaultOpenOrderTicketsSize)), "No open orders or tickets were expected"
+        assert(not defaultOpenOrdersRemaining), "No remaining quantiy to be filled from open orders was expected"
