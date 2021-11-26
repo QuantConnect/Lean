@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -28,6 +28,7 @@ namespace QuantConnect.Scheduling
     {
         private readonly List<TimeConsumer> _timeConsumers;
         private readonly Timer _timer;
+        public AutoResetEvent TimeMonitorEvent;
 
         /// <summary>
         /// Returns the number of time consumers currently being monitored
@@ -49,6 +50,7 @@ namespace QuantConnect.Scheduling
         public TimeMonitor(int monitorIntervalMs = 100)
         {
             _timeConsumers = new List<TimeConsumer>();
+            TimeMonitorEvent = new AutoResetEvent(false);
             _timer = new Timer(state =>
             {
                 lock (_timeConsumers)
@@ -76,6 +78,8 @@ namespace QuantConnect.Scheduling
                                 // pass
                             }
                         }
+
+                        TimeMonitorEvent.Set();
                     }
                 }
             }, null, monitorIntervalMs, monitorIntervalMs);

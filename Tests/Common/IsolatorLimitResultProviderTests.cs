@@ -118,19 +118,21 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        [Repeat(1000)]
         public void ConsumesMultipleMinutes()
         {
             var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
+
             var provider = new FakeIsolatorLimitResultProvider();
             Action code = () =>
             {
                 // lets give the monitor time to register the initial time
-                Thread.Sleep(100);
+                _timeMonitor.TimeMonitorEvent.WaitOne();
                 for (int i = 0; i < 4; i++)
                 {
                     timeProvider.AdvanceSeconds(45);
                     // give the monitoring task time to request more time
-                    Thread.Sleep(100);
+                    _timeMonitor.TimeMonitorEvent.WaitOne();
                 }
             };
 
@@ -140,7 +142,7 @@ namespace QuantConnect.Tests.Common
             Assert.IsTrue(provider.Invocations.TrueForAll(invoc => invoc == 1));
 
             // give time to the monitor to register the time consumer ended
-            Thread.Sleep(50);
+            Thread.Sleep(100);
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
