@@ -21,7 +21,7 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
-from QuantConnect.Data.Custom import *
+from QuantConnect.DataSource import *
 from QuantConnect.Python import PythonQuandl
 from datetime import datetime, timedelta
 
