@@ -30,36 +30,39 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indexes" />
     public class BasicTemplateIndexAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spx;
-        private Symbol _spxOption;
+        protected Symbol Spx;
+        protected Symbol SpxOption;
         private ExponentialMovingAverage _emaSlow;
         private ExponentialMovingAverage _emaFast;
+        
+        protected virtual Resolution Resolution => Resolution.Minute;
+        protected virtual int StartDay => 4;
 
         /// <summary>
         /// Initialize your algorithm and add desired assets.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 4);
+            SetStartDate(2021, 1, StartDay);
             SetEndDate(2021, 1, 18);
             SetCash(1000000);
 
             // Use indicator for signal; but it cannot be traded
-            _spx = AddIndex("SPX", Resolution.Minute).Symbol;
+            Spx = AddIndex("SPX", Resolution).Symbol;
 
             // Trade on SPX ITM calls
-            _spxOption = QuantConnect.Symbol.CreateOption(
-                _spx,
+            SpxOption = QuantConnect.Symbol.CreateOption(
+                Spx,
                 Market.USA,
                 OptionStyle.European,
                 OptionRight.Call,
                 3200m,
                 new DateTime(2021, 1, 15));
 
-            AddIndexOptionContract(_spxOption, Resolution.Minute);
+            AddIndexOptionContract(SpxOption, Resolution);
 
-            _emaSlow = EMA(_spx, 80);
-            _emaFast = EMA(_spx, 200);
+            _emaSlow = EMA(Spx, 80);
+            _emaFast = EMA(Spx, 200);
         }
 
         /// <summary>
@@ -67,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnData(Slice slice)
         {
-            if (!slice.Bars.ContainsKey(_spx) || !slice.Bars.ContainsKey(_spxOption))
+            if (!slice.Bars.ContainsKey(Spx) || !slice.Bars.ContainsKey(SpxOption))
             {
                 return;
             }
@@ -80,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_emaFast > _emaSlow)
             {
-                SetHoldings(_spxOption, 1);
+                SetHoldings(SpxOption, 1);
             }
             else
             {
@@ -90,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (Portfolio[_spx].TotalSaleVolume > 0)
+            if (Portfolio[Spx].TotalSaleVolume > 0)
             {
                 throw new Exception("Index is not tradable.");
             }
@@ -99,17 +102,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public virtual bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "4"},
             {"Average Win", "0%"},

@@ -30,20 +30,22 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _spx;
         private ExponentialMovingAverage _emaSlow;
         private ExponentialMovingAverage _emaFast;
+        protected virtual Resolution Resolution => Resolution.Minute;
+        protected virtual int StartDay => 4;
 
         /// <summary>
         /// Initialize your algorithm and add desired assets.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 4);
+            SetStartDate(2021, 1, StartDay);
             SetEndDate(2021, 2, 1);
             SetCash(1000000);
 
             // Use indicator for signal; but it cannot be traded.
             // We will instead trade on SPX options
-            _spx = AddIndex("SPX", Resolution.Minute).Symbol;
-            var spxOptions = AddIndexOption(_spx, Resolution.Minute);
+            _spx = AddIndex("SPX", Resolution).Symbol;
+            var spxOptions = AddIndexOption(_spx, Resolution);
             spxOptions.SetFilter(filterFunc => filterFunc.CallsOnly());
 
             _emaSlow = EMA(_spx, 80);
@@ -122,17 +124,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = false;
+        public virtual bool CanRunLocally { get; } = false;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "8220"},
             {"Average Win", "0.00%"},
