@@ -24,6 +24,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Custom import *
+from QuantConnect.DataSource import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Python import PythonQuandl
 
