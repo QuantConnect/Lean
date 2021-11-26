@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.Common
                 {
                     timeProvider.AdvanceSeconds(45);
                     // give the monitoring task time to request more time
-                    Thread.Sleep(20);
+                    Thread.Sleep(100);
                 }
             };
 
