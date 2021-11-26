@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Moq;
 using NUnit.Framework;
@@ -36,6 +37,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     {
         private Security _security;
         private SubscriptionDataConfig _config;
+        private IFactorFileProvider _factorFileProvider;
 
         [SetUp]
         public void SetUp()
@@ -55,6 +57,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true, true, false);
+
+            _factorFileProvider = TestGlobals.FactorFileProvider;
         }
 
         [Test]
@@ -62,8 +66,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPoints = 10;
             var enumerator = new TestDataEnumerator { MoveNextTrueCount = dataPoints };
-            var factorFileProfider = new Mock<IFactorFileProvider>();
-            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, _config.Market));
 
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -75,7 +77,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProfider.Object,
+                _factorFileProvider,
                 false);
 
             var count = 0;
@@ -96,8 +98,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void ThrowingEnumeratorStackDisposesOfSubscription()
         {
             var enumerator = new TestDataEnumerator { MoveNextTrueCount = 10, ThrowException = true};
-            var factorFileProfider = new Mock<IFactorFileProvider>();
-            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, _config.Market));
 
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProfider.Object,
+                _factorFileProvider,
                 false);
 
             var count = 0;
@@ -146,8 +146,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var dataPoints = 10;
 
                 var enumerator = new TestDataEnumerator {MoveNextTrueCount = dataPoints};
-                var factorFileProfider = new Mock<IFactorFileProvider>();
-                factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, _config.Market));
 
                 var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                     new SubscriptionRequest(
@@ -159,7 +157,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Time.EndOfTime
                     ),
                     enumerator,
-                    factorFileProfider.Object,
+                    _factorFileProvider,
                     false);
 
                 for (var j = 0; j < dataPoints; j++)
@@ -168,6 +166,148 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 Assert.IsFalse(subscription.MoveNext());
                 subscription.DisposeSafely();
+            }
+        }
+
+        [Test]
+        public void PriceScaleFirstFillForwardBar()
+        {
+            var referenceTime = new DateTime(2020, 08, 06);
+            var point = new Tick(referenceTime, Symbols.SPY, 1, 2);
+            var point2 = point.Clone(true);
+            point2.Time = referenceTime;
+            var point3 = point.Clone(false);
+            point3.Time = referenceTime.AddDays(1);
+            ;
+            var enumerator = new List<BaseData> { point2, point3 }.GetEnumerator();
+            var factorFileProfider = new Mock<IFactorFileProvider>();
+
+            var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
+            {
+                new CorporateFactorRow(referenceTime, 0.5m, 1),
+                new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
+            }, referenceTime);
+
+            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
+
+            var subscription = SubscriptionUtils.CreateAndScheduleWorker(
+                new SubscriptionRequest(
+                    false,
+                    null,
+                    _security,
+                    _config,
+                    referenceTime,
+                    Time.EndOfTime
+                ),
+                enumerator,
+                factorFileProfider.Object,
+                true);
+
+            Assert.IsTrue(subscription.MoveNext());
+            // we do expect it to pick up the prev factor file scale
+            Assert.AreEqual(1, (subscription.Current.Data as Tick).AskPrice);
+            Assert.IsTrue((subscription.Current.Data as Tick).IsFillForward);
+
+            Assert.IsTrue(subscription.MoveNext());
+            Assert.AreEqual(2, (subscription.Current.Data as Tick).AskPrice);
+            Assert.IsFalse((subscription.Current.Data as Tick).IsFillForward);
+
+            subscription.DisposeSafely();
+        }
+
+        [Test]
+        public void PriceScaleDoesNotUpdateForFillForwardBar()
+        {
+            var referenceTime = new DateTime(2020, 08, 06);
+            var point = new Tick(referenceTime, Symbols.SPY, 1, 2);
+            var point2 = point.Clone(true);
+            point2.Time = referenceTime.AddDays(1);
+            var point3 = point.Clone(false);
+            point3.Time = referenceTime.AddDays(2);
+            ;
+            var enumerator = new List<BaseData> { point, point2, point3 }.GetEnumerator();
+            var factorFileProfider = new Mock<IFactorFileProvider>();
+
+            var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
+            {
+                new CorporateFactorRow(referenceTime, 0.5m, 1),
+                new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
+            }, referenceTime);
+
+            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
+
+            var subscription = SubscriptionUtils.CreateAndScheduleWorker(
+                new SubscriptionRequest(
+                    false,
+                    null,
+                    _security,
+                    _config,
+                    referenceTime,
+                    Time.EndOfTime
+                ),
+                enumerator,
+                factorFileProfider.Object,
+                true);
+
+            Assert.IsTrue(subscription.MoveNext());
+            Assert.AreEqual(1, (subscription.Current.Data as Tick).AskPrice);
+            Assert.IsFalse((subscription.Current.Data as Tick).IsFillForward);
+
+            Assert.IsTrue(subscription.MoveNext());
+            Assert.AreEqual(1, (subscription.Current.Data as Tick).AskPrice);
+            Assert.IsTrue((subscription.Current.Data as Tick).IsFillForward);
+
+            Assert.IsTrue(subscription.MoveNext());
+            Assert.AreEqual(2, (subscription.Current.Data as Tick).AskPrice);
+            Assert.IsFalse((subscription.Current.Data as Tick).IsFillForward);
+
+            subscription.DisposeSafely();
+        }
+
+        [TestCase(typeof(TradeBar), true)]
+        [TestCase(typeof(OpenInterest), false)]
+        [TestCase(typeof(QuoteBar), false)]
+        public void SubscriptionEmitsAuxData(Type typeOfConfig, bool shouldReceiveAuxData)
+        {
+            var config = new SubscriptionDataConfig(typeOfConfig, _security.Symbol, Resolution.Hour, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+
+            var totalPoints = 8;
+            var time = new DateTime(2010, 1, 1);
+            var enumerator = Enumerable.Range(0, totalPoints).Select(x => new Delisting { Time = time.AddHours(x) }).GetEnumerator();
+            var subscription = SubscriptionUtils.CreateAndScheduleWorker(
+                new SubscriptionRequest(
+                    false,
+                    null,
+                    _security,
+                    config,
+                    DateTime.UtcNow,
+                    Time.EndOfTime
+                ),
+                enumerator,
+                _factorFileProvider,
+                false);
+
+            // Test our subscription stream to see if it emits the aux data it should be filtered
+            // by the SubscriptionUtils produce function if the config isn't for a TradeBar
+            int dataReceivedCount = 0;
+            while (subscription.MoveNext())
+            {
+                dataReceivedCount++;
+                if (subscription.Current != null && subscription.Current.Data.DataType == MarketDataType.Auxiliary)
+                {
+                    Assert.IsTrue(shouldReceiveAuxData);
+                }
+            }
+
+            // If it should receive aux data it should have emitted all points
+            // otherwise none should have been emitted
+            if (shouldReceiveAuxData)
+            {
+                Assert.AreEqual(totalPoints, dataReceivedCount);
+            }
+            else
+            {
+                Assert.AreEqual(0, dataReceivedCount);
             }
         }
 

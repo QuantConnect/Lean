@@ -71,11 +71,11 @@ namespace QuantConnect.Util
                             var tick = (Tick) data;
                             if (tick.TickType == TickType.Trade)
                             {
-                                return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                                return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
-                                return ToCsv(milliseconds, Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                                return ToCsv(milliseconds, Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             break;
                         case Resolution.Minute:
@@ -119,15 +119,15 @@ namespace QuantConnect.Util
                             var tick = data as Tick;
                             if (tick == null)
                             {
-                                throw new ArgumentException("Cryto tick could not be created", nameof(data));
+                                throw new ArgumentException("Crypto tick could not be created", nameof(data));
                             }
                             if (tick.TickType == TickType.Trade)
                             {
-                                return ToCsv(milliseconds, tick.LastPrice, tick.Quantity);
+                                return ToCsv(milliseconds, tick.LastPrice, tick.Quantity, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
-                                return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize);
+                                return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Suspicious ? "1" : "0");
                             }
                             throw new ArgumentException("Cryto tick could not be created");
                         case Resolution.Second:
@@ -204,7 +204,29 @@ namespace QuantConnect.Util
                     }
                     break;
 
+                case SecurityType.Index:
+                    switch (resolution)
+                    {
+                        case Resolution.Tick:
+                            var tick = (Tick) data;
+                            return ToCsv(milliseconds, tick.LastPrice, tick.Quantity, string.Empty, string.Empty, "0");
+                        case Resolution.Second:
+                        case Resolution.Minute:
+                            var bar = data as TradeBar;
+                            if (bar == null)
+                            {
+                                throw new ArgumentException("Expected data of type 'TradeBar'", nameof(data));
+                            }
+                            return ToCsv(milliseconds, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
+                        case Resolution.Hour:
+                        case Resolution.Daily:
+                            var bigTradeBar = data as TradeBar;
+                            return ToCsv(longTime, bigTradeBar.Open, bigTradeBar.High, bigTradeBar.Low, bigTradeBar.Close, bigTradeBar.Volume);
+                    }
+                    break;
+
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                     switch (resolution)
                     {
                         case Resolution.Tick:
@@ -212,12 +234,12 @@ namespace QuantConnect.Util
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds,
-                                    Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                                    Scale(tick.LastPrice), tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
                                 return ToCsv(milliseconds,
-                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.ExchangeCode, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.OpenInterest)
                             {
@@ -266,7 +288,7 @@ namespace QuantConnect.Util
                             var bigOpenInterest = data as OpenInterest;
                             if (bigOpenInterest != null)
                             {
-                                return ToCsv(milliseconds, bigOpenInterest.Value);
+                                return ToCsv(longTime, bigOpenInterest.Value);
                             }
                             break;
 
@@ -274,6 +296,78 @@ namespace QuantConnect.Util
                             throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
                     }
                     break;
+
+                case SecurityType.FutureOption:
+                    switch (resolution)
+                    {
+                        case Resolution.Tick:
+                            var tick = (Tick)data;
+                            if (tick.TickType == TickType.Trade)
+                            {
+                                return ToCsv(milliseconds,
+                                    tick.LastPrice, tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                            }
+                            if (tick.TickType == TickType.Quote)
+                            {
+                                return ToCsv(milliseconds,
+                                    tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.ExchangeCode, tick.Suspicious ? "1" : "0");
+                            }
+                            if (tick.TickType == TickType.OpenInterest)
+                            {
+                                return ToCsv(milliseconds, tick.Value);
+                            }
+                            break;
+
+                        case Resolution.Second:
+                        case Resolution.Minute:
+                            // option and future data can be quote or trade bars
+                            var quoteBar = data as QuoteBar;
+                            if (quoteBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    ToNonScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToNonScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                            }
+                            var tradeBar = data as TradeBar;
+                            if (tradeBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
+                            }
+                            var openInterest = data as OpenInterest;
+                            if (openInterest != null)
+                            {
+                                return ToCsv(milliseconds, openInterest.Value);
+                            }
+                            break;
+
+                        case Resolution.Hour:
+                        case Resolution.Daily:
+                            // option and future data can be quote or trade bars
+                            var bigQuoteBar = data as QuoteBar;
+                            if (bigQuoteBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    ToNonScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToNonScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                            }
+                            var bigTradeBar = data as TradeBar;
+                            if (bigTradeBar != null)
+                            {
+                                return ToCsv(longTime, ToNonScaledCsv(bigTradeBar), bigTradeBar.Volume);
+                            }
+                            var bigOpenInterest = data as OpenInterest;
+                            if (bigOpenInterest != null)
+                            {
+                                return ToCsv(longTime, bigOpenInterest.Value);
+                            }
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
+                    }
+                    break;
+
                 case SecurityType.Future:
                     switch (resolution)
                     {
@@ -282,12 +376,12 @@ namespace QuantConnect.Util
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds,
-                                             tick.LastPrice, tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0");
+                                             tick.LastPrice, tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1": "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
                                 return ToCsv(milliseconds,
-                                             tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                                             tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.ExchangeCode, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.OpenInterest)
                             {
@@ -411,7 +505,8 @@ namespace QuantConnect.Util
         public static string GenerateRelativeZipFileDirectory(Symbol symbol, Resolution resolution)
         {
             var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
-            var securityType = symbol.ID.SecurityType.SecurityTypeToLower();
+            var securityType = symbol.SecurityType.SecurityTypeToLower();
+
             var market = symbol.ID.Market.ToLowerInvariant();
             var res = resolution.ResolutionToLower();
             var directory = Path.Combine(securityType, market, res);
@@ -419,14 +514,25 @@ namespace QuantConnect.Util
             {
                 case SecurityType.Base:
                 case SecurityType.Equity:
+                case SecurityType.Index:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                 case SecurityType.Crypto:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLowerInvariant()) : directory;
 
                 case SecurityType.Option:
-                    // options uses the underlying symbol for pathing
+                case SecurityType.IndexOption:
+                    // options uses the underlying symbol for pathing.
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLowerInvariant()) : directory;
+
+                case SecurityType.FutureOption:
+                    // For futures options, we use the canonical option ticker plus the underlying's expiry
+                    // since it can differ from the underlying's ticker. We differ from normal futures
+                    // because the option chain can be extraordinarily large compared to equity option chains.
+                    var futureOptionPath = Path.Combine(symbol.ID.Symbol, symbol.Underlying.ID.Date.ToStringInvariant(DateFormat.EightCharacter))
+                        .ToLowerInvariant();
+
+                    return Path.Combine(directory, futureOptionPath);
 
                 case SecurityType.Future:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLowerInvariant()) : directory;
@@ -483,6 +589,7 @@ namespace QuantConnect.Util
             {
                 case SecurityType.Base:
                 case SecurityType.Equity:
+                case SecurityType.Index:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                 case SecurityType.Crypto:
@@ -499,13 +606,16 @@ namespace QuantConnect.Util
                     return Invariant($"{formattedDate}_{symbol.Value.ToLowerInvariant()}_{resolution.ResolutionToLower()}_{tickType.TickTypeToLower()}.csv");
 
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
+                    var optionPath = symbol.Underlying.Value.ToLowerInvariant();
+
                     if (isHourOrDaily)
                     {
                         return string.Join("_",
-                            symbol.Underlying.Value.ToLowerInvariant(), // underlying
+                            optionPath,
                             tickType.TickTypeToLower(),
-                            symbol.ID.OptionStyle.ToLower(),
-                            symbol.ID.OptionRight.ToLower(),
+                            symbol.ID.OptionStyle.OptionStyleToLower(),
+                            symbol.ID.OptionRight.OptionRightToLower(),
                             Scale(symbol.ID.StrikePrice),
                             symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter)
                             ) + ".csv";
@@ -513,18 +623,49 @@ namespace QuantConnect.Util
 
                     return string.Join("_",
                         formattedDate,
-                        symbol.Underlying.Value.ToLowerInvariant(), // underlying
+                        optionPath,
                         resolution.ResolutionToLower(),
                         tickType.TickTypeToLower(),
-                        symbol.ID.OptionStyle.ToLower(),
-                        symbol.ID.OptionRight.ToLower(),
+                        symbol.ID.OptionStyle.OptionStyleToLower(),
+                        symbol.ID.OptionRight.OptionRightToLower(),
+                        Scale(symbol.ID.StrikePrice),
+                        symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter)
+                        ) + ".csv";
+
+                case SecurityType.FutureOption:
+                    // We want the future option ticker as the lookup name inside the ZIP file
+                    var futureOptionPath = symbol.ID.Symbol.ToLowerInvariant();
+
+                    if (isHourOrDaily)
+                    {
+                        return string.Join("_",
+                            futureOptionPath,
+                            tickType.TickTypeToLower(),
+                            symbol.ID.OptionStyle.OptionStyleToLower(),
+                            symbol.ID.OptionRight.OptionRightToLower(),
+                            Scale(symbol.ID.StrikePrice),
+                            symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter)
+                            ) + ".csv";
+                    }
+
+                    return string.Join("_",
+                        formattedDate,
+                        futureOptionPath,
+                        resolution.ResolutionToLower(),
+                        tickType.TickTypeToLower(),
+                        symbol.ID.OptionStyle.OptionStyleToLower(),
+                        symbol.ID.OptionRight.OptionRightToLower(),
                         Scale(symbol.ID.StrikePrice),
                         symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter)
                         ) + ".csv";
 
                 case SecurityType.Future:
+                    if (symbol.HasUnderlying)
+                    {
+                        symbol = symbol.Underlying;
+                    }
                     var expiryDate = symbol.ID.Date;
-                    var monthsToAdd = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(symbol.ID.Symbol); 
+                    var monthsToAdd = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(symbol.ID.Symbol, expiryDate.Date);
                     var contractYearMonth = expiryDate.AddMonths(monthsToAdd).ToStringInvariant(DateFormat.YearMonth);
 
                     if (isHourOrDaily)
@@ -564,6 +705,7 @@ namespace QuantConnect.Util
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Base:
+                case SecurityType.Index:
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
@@ -581,13 +723,23 @@ namespace QuantConnect.Util
 
                     return $"{formattedDate}_{tickTypeString}.zip";
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
                     if (isHourOrDaily)
                     {
-                        //               underlying
-                        return $"{symbol.Underlying.Value.ToLowerInvariant()}_{tickTypeString}_{symbol.ID.OptionStyle.ToLower()}.zip";
+                        var optionPath = symbol.Underlying.Value.ToLowerInvariant();
+                        return $"{optionPath}_{date.Year}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
                     }
 
-                    return $"{formattedDate}_{tickTypeString}_{symbol.ID.OptionStyle.ToLower()}.zip";
+                    return $"{formattedDate}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
+
+                case SecurityType.FutureOption:
+                    if (isHourOrDaily)
+                    {
+                        var futureOptionPath = symbol.ID.Symbol.ToLowerInvariant();
+                        return $"{futureOptionPath}_{date.Year}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
+                    }
+
+                    return $"{formattedDate}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
 
                 case SecurityType.Future:
                     if (isHourOrDaily)
@@ -614,7 +766,18 @@ namespace QuantConnect.Util
             }
 
             var zipFileName = date.ToStringInvariant(DateFormat.EightCharacter);
-            tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd ? TickType.Quote : TickType.Trade);
+
+            if (tickType == null)
+            {
+                if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd) {
+                    tickType = TickType.Quote;
+                }
+                else
+                {
+                    tickType = TickType.Trade;
+                }
+            }
+
             var suffix = Invariant($"_{tickType.Value.TickTypeToLower()}.zip");
             return zipFileName + suffix;
         }
@@ -647,18 +810,20 @@ namespace QuantConnect.Util
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
+                case SecurityType.IndexOption:
                     if (isHourlyOrDaily)
                     {
-                        var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), parts[2], true);
-                        var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[3], true);
+                        var style = parts[2].ParseOptionStyle();
+                        var right = parts[3].ParseOptionRight();
                         var strike = Parse.Decimal(parts[4]) / 10000m;
                         var expiry = Parse.DateTimeExact(parts[5], DateFormat.EightCharacter);
                         return Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, style, right, strike, expiry);
                     }
                     else
                     {
-                        var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), parts[4], true);
-                        var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[5], true);
+                        var style = parts[4].ParseOptionStyle();
+                        var right = parts[5].ParseOptionRight();
                         var strike = Parse.Decimal(parts[6]) / 10000m;
                         var expiry = DateTime.ParseExact(parts[7], DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                         return Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, style, right, strike, expiry);
@@ -767,8 +932,8 @@ namespace QuantConnect.Util
             }
             if (type == typeof(Tick))
             {
-                if (securityType == SecurityType.Forex || 
-                    securityType == SecurityType.Cfd || 
+                if (securityType == SecurityType.Forex ||
+                    securityType == SecurityType.Cfd ||
                     securityType == SecurityType.Crypto)
                 {
                     return TickType.Quote;
@@ -797,6 +962,74 @@ namespace QuantConnect.Util
         /// Parses file name into a <see cref="Security"/> and DateTime
         /// </summary>
         /// <param name="fileName">File name to be parsed</param>
+        /// <param name="securityType">The securityType as parsed from the fileName</param>
+        public static bool TryParseSecurityType(string fileName, out SecurityType securityType)
+        {
+            securityType = SecurityType.Base;
+
+            try
+            {
+                var info = SplitDataPath(fileName);
+
+                // find the securityType and parse it
+                var typeString = info.Find(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
+                securityType = ParseDataSecurityType(typeString);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"LeanData.TryParsePath(): Error encountered while parsing the path {fileName}. Error: {e.GetBaseException()}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Parses file name into a <see cref="Security"/> and DateTime
+        /// </summary>
+        /// <param name="filePath">File path to be parsed</param>
+        /// <param name="symbol">The symbol as parsed from the fileName</param>
+        /// <param name="date">Date of data in the file path. Only returned if the resolution is lower than Hourly</param>
+        /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
+        /// <param name="tickType">The tick type</param>
+        /// <param name="dataType">The data type</param>
+        public static bool TryParsePath(string filePath, out Symbol symbol, out DateTime date,
+            out Resolution resolution, out TickType tickType, out Type dataType)
+        {
+            symbol = default;
+            tickType = default;
+            dataType = default;
+            date = default;
+            resolution = default;
+
+            try
+            {
+                if (!TryParsePath(filePath, out symbol, out date, out resolution))
+                {
+                    return false;
+                }
+
+                tickType = GetCommonTickType(symbol.SecurityType);
+                var fileName = Path.GetFileNameWithoutExtension(filePath);
+                if (fileName.Contains("_"))
+                {
+                    tickType = (TickType)Enum.Parse(typeof(TickType), fileName.Split('_')[1], true);
+                }
+
+                dataType = GetDataType(resolution, tickType);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"LeanData.TryParsePath(): Error encountered while parsing the path {filePath}. Error: {ex.GetBaseException()}");
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Parses file name into a <see cref="Security"/> and DateTime
+        /// </summary>
+        /// <param name="fileName">File name to be parsed</param>
         /// <param name="symbol">The symbol as parsed from the fileName</param>
         /// <param name="date">Date of data in the file path. Only returned if the resolution is lower than Hourly</param>
         /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
@@ -806,21 +1039,9 @@ namespace QuantConnect.Util
             resolution = Resolution.Daily;
             date = default(DateTime);
 
-            var pathSeparators = new[] { '/', '\\' };
-
             try
             {
-                // Removes file extension
-                fileName = fileName.Replace(fileName.GetExtension(), "");
-
-                // remove any relative file path
-                while (fileName.First() == '.' || pathSeparators.Any(x => x == fileName.First()))
-                {
-                    fileName = fileName.Remove(0, 1);
-                }
-
-                // split path into components
-                var info = fileName.Split(pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToList();
+                var info = SplitDataPath(fileName);
 
                 // find where the useful part of the path starts - i.e. the securityType
                 var startIndex = info.FindIndex(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
@@ -861,28 +1082,182 @@ namespace QuantConnect.Util
                     // Gather components used to create the security
                     market = info[startIndex + 1];
                     ticker = info[startIndex + 3];
+                    
+                    // Remove the ticktype from the ticker (Only exists in Crypto and Future data but causes no issues)
+                    ticker = ticker.Split('_').First();
 
-                    // If resolution is Daily or Hour, we do not need to set the date and tick type
+                    // If resolution is Daily or Hour, we do not need to set the date
                     if (resolution < Resolution.Hour)
                     {
-                        date = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
-                    }
-
-                    if (securityType == SecurityType.Crypto)
-                    {
-                        ticker = ticker.Split('_').First();
+                        // Future options are special and have the following format Market/Resolution/Ticker/FutureExpiry/Date
+                        var dateIndex = securityType == SecurityType.FutureOption ? startIndex + 5 : startIndex + 4;
+                        date = Parse.DateTimeExact(info[dateIndex].Substring(0, 8), DateFormat.EightCharacter);
                     }
                 }
 
-                symbol = Symbol.Create(ticker, securityType, market);
+                // Future Options cannot use Symbol.Create
+                if (securityType == SecurityType.FutureOption)
+                {
+                    // Future options have underlying FutureExpiry date as the parent dir for the zips, we need this for our underlying
+                    var underlyingFutureExpiryDate = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
+
+                    // Create our underlying future and then the Canonical option for this future
+                    var underlyingFuture = Symbol.CreateFuture(ticker, market, underlyingFutureExpiryDate);
+                    symbol = Symbol.CreateCanonicalOption(underlyingFuture);
+                }
+                else
+                {
+                    symbol = Symbol.Create(ticker, securityType, market);
+                }
+
             }
             catch (Exception ex)
             {
-                Log.Error($"LeanData.TryParsePath(): Error encountered while parsing the path {fileName}. Error: {ex.GetBaseException()}");
+                Log.Debug($"LeanData.TryParsePath(): Error encountered while parsing the path {fileName}. Error: {ex.GetBaseException()}");
                 return false;
             }
 
             return true;
         }
+
+        private static List<string> SplitDataPath(string fileName)
+        {
+            var pathSeparators = new[] { '/', '\\' };
+
+            // Removes file extension
+            fileName = fileName.Replace(fileName.GetExtension(), string.Empty);
+
+            // remove any relative file path
+            while (fileName.First() == '.' || pathSeparators.Any(x => x == fileName.First()))
+            {
+                fileName = fileName.Remove(0, 1);
+            }
+
+            // split path into components
+            return fileName.Split(pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToList();
+        }
+
+        /// <summary>
+        /// Aggregates a list of second/minute bars at the requested resolution
+        /// </summary>
+        /// <param name="bars">List of <see cref="TradeBar"/>s</param>
+        /// <param name="symbol">Symbol of all tradeBars</param>
+        /// <param name="resolution">Desired resolution for new <see cref="TradeBar"/>s</param>
+        /// <returns>List of aggregated <see cref="TradeBar"/>s</returns>
+        public static IEnumerable<TradeBar> AggregateTradeBars(IEnumerable<TradeBar> bars, Symbol symbol, TimeSpan resolution)
+        {
+            return
+                from b in bars
+                group b by b.Time.RoundDown(resolution)
+                into g
+                select new TradeBar
+                {
+                    Symbol = symbol,
+                    Time = g.Key,
+                    Open = g.First().Open,
+                    High = g.Max(b => b.High),
+                    Low = g.Min(b => b.Low),
+                    Close = g.Last().Close,
+                    Value = g.Last().Close,
+                    DataType = MarketDataType.TradeBar,
+                    Period = resolution
+                };
+        }
+        
+        /// <summary>
+        /// Aggregates a list of second/minute bars at the requested resolution
+        /// </summary>
+        /// <param name="bars">List of <see cref="QuoteBar"/>s</param>
+        /// <param name="symbol">Symbol of all QuoteBars</param>
+        /// <param name="resolution">Desired resolution for new <see cref="QuoteBar"/>s</param>
+        /// <returns>List of aggregated <see cref="QuoteBar"/>s</returns>
+        public static IEnumerable<QuoteBar> AggregateQuoteBars(IEnumerable<QuoteBar> bars, Symbol symbol, TimeSpan resolution)
+        {
+            return
+                from b in bars
+                    group b by b.Time.RoundDown(resolution)
+                    into g
+                    select new QuoteBar
+                    {
+                        Symbol = symbol,
+                        Time = g.Key,
+                        Bid = new Bar
+                        {
+                            Open = g.First().Bid.Open,
+                            High = g.Max(b => b.Bid.High),
+                            Low = g.Min(b => b.Bid.Low),
+                            Close = g.Last().Bid.Close
+                        },
+                        Ask = new Bar
+                        {
+                            Open = g.First().Ask.Open,
+                            High = g.Max(b => b.Ask.High),
+                            Low = g.Min(b => b.Ask.Low),
+                            Close = g.Last().Ask.Close
+                        },
+                        Period = resolution
+                    };
+        }
+        
+         /// <summary>
+         /// Aggregates a list of ticks at the requested resolution
+         /// </summary>
+         /// <param name="ticks">List of <see cref="QuoteBar"/>s</param>
+         /// <param name="symbol">Symbol of all QuoteBars</param>
+         /// <param name="resolution">Desired resolution for new <see cref="QuoteBar"/>s</param>
+         /// <returns>List of aggregated <see cref="QuoteBar"/>s</returns>
+         public static IEnumerable<QuoteBar> AggregateTicks(IEnumerable<Tick> ticks, Symbol symbol, TimeSpan resolution)
+         {
+             return
+                from t in ticks
+                    group t by t.Time.RoundDown(resolution)
+                    into g
+                    select new QuoteBar
+                    {
+                        Symbol = symbol,
+                        Time = g.Key,
+                        Bid = new Bar
+                        {
+                            Open = g.First().BidPrice,
+                            High = g.Max(b => b.BidPrice),
+                            Low = g.Min(b => b.BidPrice),
+                            Close = g.Last().BidPrice
+                        },
+                        Ask = new Bar
+                        {
+                            Open = g.First().AskPrice,
+                            High = g.Max(b => b.AskPrice),
+                            Low = g.Min(b => b.AskPrice),
+                            Close = g.Last().AskPrice
+                        },
+                        Period = resolution
+                    };
+         }
+
+         /// <summary>
+         /// Helper to separate filename and entry from a given key for DataProviders
+         /// </summary>
+         /// <param name="key">The key to parse</param>
+         /// <param name="fileName">File name extracted</param>
+         /// <param name="entryName">Entry name extracted</param>
+         public static void ParseKey(string key, out string fileName, out string entryName)
+         {
+             // Default scenario, no entryName included in key
+             entryName = null; // default to all entries
+             fileName = key;
+
+             if (key == null)
+             {
+                 return;
+             }
+
+             // Try extracting an entry name; Anything after a # sign
+             var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);
+             if (hashIndex != -1)
+             {
+                 entryName = key.Substring(hashIndex + 1);
+                 fileName = key.Substring(0, hashIndex);
+             }
+         }
     }
 }

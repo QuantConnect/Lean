@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// Represents an indicator that can receive data updates and emit events when the value of
     /// the indicator has changed.
     /// </summary>
-    public interface IIndicator<T> : IComparable<IIndicator<T>>, IComparable, IIndicator
+    public interface IIndicator<T> : IComparable<IIndicator<T>>, IIndicator
         where T : IBaseData
     {
     }
@@ -32,7 +32,7 @@ namespace QuantConnect.Indicators
     /// Represents an indicator that can receive data updates and emit events when the value of
     /// the indicator has changed.
     /// </summary>
-    public interface IIndicator
+    public interface IIndicator : IComparable
     {
         /// <summary>
         /// Event handler that fires after this indicator is updated

@@ -9,27 +9,42 @@ FROM quantconnect/lean:$LEAN_TAG
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
 # Install Tini
-RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini && \
-    echo "1361527f39190a7338a0b434bd8c88ff7233ce7b9a4876f3315c22fce7eca1b0 *tini" | sha256sum -c - && \
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+        tini_binary="tini-arm64"; \
+        tini_sha256="07952557df20bfd2a95f9bef198b445e006171969499a1d361bd9e6f8e5e0e81"; \
+    else \
+        tini_binary="tini-amd64"; \
+        tini_sha256="93dcc18adc78c65a028a84799ecf8ad40c936fdfc5f2a57b1acda5a8117fa82c"; \
+    fi && \
+    wget --quiet -O tini "https://github.com/krallin/tini/releases/download/v0.19.0/${tini_binary}" && \
+    echo "${tini_sha256} *tini" | sha256sum -c - && \
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-# Install Lean/PythonToolbox
-RUN git clone https://github.com/QuantConnect/Lean.git && cd Lean/PythonToolbox && \
-    python setup.py install && cd ../.. && rm -irf Lean
+RUN conda install -y -c conda-forge notebook=6.0.3 && conda clean -y --all
 
-RUN conda install -y -c conda-forge notebook=6.0.3
+# Install clr-loader for PythonNet
+RUN pip install --no-cache-dir clr-loader==0.1.6
 
-#Install ICSharp (Jupyter C# Kernel)
-RUN wget https://cdn.quantconnect.com/icsharp/ICSharp.Kernel.20180820.zip && \
-    unzip ICSharp.Kernel.20180820.zip -d / && rm -irf ICSharp.Kernel.20180820.zip && cd /icsharp && \
-    jupyter kernelspec install kernel-spec --name=csharp
+ENV LD_LIBRARY_PATH=/lib/
+
+# Install .NET Interactive to support C# in Jupyter notebooks
+ENV PATH="${PATH}:/root/.dotnet/tools"
+RUN dotnet tool install -g --no-cache --version 1.0.255902 --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
+    dotnet interactive jupyter install
 
 # Setting some environment variables
 ENV WORK /Lean/Launcher/bin/Debug/
 ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 
-RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'decimal.py' -delete
+# Clone Lean; Link Python startup file to profile; Install Lean/PythonToolbox; Remove extra files
+RUN git clone https://github.com/QuantConnect/Lean.git && \
+    mkdir -p /root/.ipython/profile_default/startup/ && \
+    ln -s /Lean/Launcher/bin/Debug/start.py /root/.ipython/profile_default/startup/start.py && \
+    cd Lean/PythonToolbox && python setup.py install \
+    && cd ../.. && rm -irf Lean
+
+RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'QuantConnect.Lean.Launcher.runtimeconfig.json' -not -name 'decimal.py' -delete
 
 #Create initialize script
 RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
@@ -37,17 +52,11 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     \"composer-dll-directory\": \"$WORK\", \"algorithm-language\": \"Python\", \
     \"messaging-handler\": \"QuantConnect.Messaging.Messaging\", \"job-queue-handler\": \"QuantConnect.Queues.JobQueue\", \
     \"api-handler\": \"QuantConnect.Api.Api\" }' > ${WORK}Notebooks/config.json; fi && \
-    echo \"Starting Jupter lab, access in your browser at localhost:8888\" && \
+    echo \"Starting JupyterLab, access in your browser at localhost:8888\" && \
     jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=\"Notebooks\" --LabApp.token='' " \
-    > start.sh
+    > start.sh && echo "from QuantConnect.AlphaStream import *" >> ${WORK}AlgorithmImports.py
 
-# We keep this pythonnet used for C# -> Py (C# kernels)
-# We copy the pythonnet used for the Py kernels
-RUN mkdir ${WORK}pythonnet && \
-    mv -f ${WORK}Python.Runtime.dll ${WORK}pythonnet/Python.Runtime.dll && \
-    mv -f ${WORK}jupyter/* ${WORK} && \
-    chmod -R 777 ${WORK}
-
+RUN chmod -R 777 ${WORK}
 EXPOSE 8888
 WORKDIR $WORK
 

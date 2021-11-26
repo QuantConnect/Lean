@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,8 +33,6 @@ namespace QuantConnect.Securities
         private readonly IAlgorithm _algorithm;
         private int _orderId;
         private readonly SecurityManager _securities;
-        private const decimal _minimumOrderSize = 0;
-        private const int _minimumOrderQuantity = 1;
         private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
 
         private IOrderProcessor _orderProcessor;
@@ -81,25 +79,15 @@ namespace QuantConnect.Securities
         /// Configurable minimum order value to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is $0 value</remarks>
-        public decimal MinimumOrderSize
-        {
-            get
-            {
-                return _minimumOrderSize;
-            }
-        }
+        [Obsolete("MinimumOrderSize is obsolete and will not be used, please use Settings.MinimumOrderMarginPortfolioPercentage instead")]
+        public decimal MinimumOrderSize { get; }
 
         /// <summary>
         /// Configurable minimum order size to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is 0 shares</remarks>
-        public int MinimumOrderQuantity
-        {
-            get
-            {
-                return _minimumOrderQuantity;
-            }
-        }
+        [Obsolete("MinimumOrderQuantity is obsolete and will not be used, please use Settings.MinimumOrderMarginPortfolioPercentage instead")]
+        public int MinimumOrderQuantity { get; }
 
         /// <summary>
         /// Get the last order id.
@@ -261,6 +249,27 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
+        /// </summary>
+        /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
+        /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
+        public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
+        {
+            return GetOpenOrderTickets(filter)
+                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+        }
+
+        /// <summary>
+        /// Gets the remaining quantity to be filled from open orders for a Symbol, i.e. order size minus quantity filled
+        /// </summary>
+        /// <param name="symbol">Symbol to get the remaining quantity of currently open orders</param>
+        /// <returns>Total quantity that hasn't been filled yet for orders matching the Symbol</returns>
+        public decimal GetOpenOrdersRemainingQuantity(Symbol symbol)
+        {
+            return GetOpenOrdersRemainingQuantity(t => t.Symbol == symbol);
+        }
+
+        /// <summary>
         /// Gets the order ticket for the specified order id. Returns null if not found
         /// </summary>
         /// <param name="orderId">The order's id</param>
@@ -379,7 +388,6 @@ namespace QuantConnect.Securities
         {
             _orderProcessor = orderProvider;
         }
-
 
         /// <summary>
         /// Record the transaction value and time in a list to later be processed for statistics creation.

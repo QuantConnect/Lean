@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
@@ -29,12 +30,11 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
-    [Ignore("These tests require the IBGateway to be installed.")]
+    [Explicit("These tests require the IBGateway to be installed.")]
     public class InteractiveBrokersBrokerageTests
     {
         private readonly List<Order> _orders = new List<Order>();
@@ -45,6 +45,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [SetUp]
         public void InitializeBrokerage()
         {
+            Log.LogHandler = new NUnitLogHandler();
+
             // grabs account info from configuration
             var securityProvider = new SecurityProvider();
             securityProvider[Symbols.USDJPY] = new Security(
@@ -67,10 +69,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             );
 
             _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(
-                new QCAlgorithm(), 
-                new OrderProvider(_orders), 
+                new QCAlgorithm(),
+                new OrderProvider(_orders),
                 securityProvider,
-                new AggregationManager());
+                new AggregationManager(),
+                TestGlobals.MapFileProvider);
             _interactiveBrokersBrokerage.Connect();
         }
 
@@ -447,7 +450,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             foreach (var holding in previousHoldings)
             {
-                Console.WriteLine(holding.Value);
+                Log.Trace(holding.Value.ToString());
             }
 
             var hasSymbol = previousHoldings.ContainsKey(Symbols.USDJPY);
@@ -497,7 +500,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.IsTrue(cashBalance.Any(x => x.Currency == Currencies.USD));
             foreach (var cash in cashBalance)
             {
-                Console.WriteLine(cash);
+                Log.Trace(cash.ToString());
                 if (cash.Currency == Currencies.USD)
                 {
                     Assert.AreNotEqual(0m, cashBalance.Single(x => x.Currency == Currencies.USD));
@@ -590,7 +593,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var executions = ib.GetExecutions(null, null, null, DateTime.UtcNow.AddDays(-1), null);
 
             stopwatch.Stop();
-            Console.WriteLine("Total executions fetched: {0}, elapsed time: {1} ms", executions.Count, stopwatch.ElapsedMilliseconds);
+            Log.Trace("Total executions fetched: {0}, elapsed time: {1} ms", executions.Count, stopwatch.ElapsedMilliseconds);
 
             Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.Execution.OrderId == Parse.Int(id)))));
         }
@@ -630,9 +633,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var tenMinutes = TimeSpan.FromMinutes(10);
 
-            Console.WriteLine("------");
-            Console.WriteLine("Waiting for internet disconnection ");
-            Console.WriteLine("------");
+            Log.Trace("------");
+            Log.Trace("Waiting for internet disconnection ");
+            Log.Trace("------");
 
             // spin while we manually disconnect the internet
             while (ib.IsConnected)
@@ -643,9 +646,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var stopwatch = Stopwatch.StartNew();
 
-            Console.WriteLine("------");
-            Console.WriteLine("Trying to reconnect ");
-            Console.WriteLine("------");
+            Log.Trace("------");
+            Log.Trace("Trying to reconnect ");
+            Log.Trace("------");
 
             // spin until we're reconnected
             while (!ib.IsConnected && stopwatch.Elapsed < tenMinutes)

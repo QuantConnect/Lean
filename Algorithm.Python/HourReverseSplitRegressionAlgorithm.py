@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,15 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-
+from AlgorithmImports import *
 
 ### <summary>
 ### Regression test for consistency of hour data over a reverse split event in US equities.
@@ -34,7 +26,7 @@ class HourReverseSplitRegressionAlgorithm(QCAlgorithm):
         self.SetCash(100000)
         self.SetBenchmark(lambda x: 0)
 
-        self.symbol = self.AddEquity("VXX", Resolution.Hour).Symbol
+        self.symbol = self.AddEquity("VXX.1", Resolution.Hour).Symbol
     
     def OnData(self, slice):
         if slice.Bars.Count == 0: return

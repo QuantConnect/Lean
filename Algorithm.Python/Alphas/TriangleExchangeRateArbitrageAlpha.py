@@ -11,24 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data.Market import TradeBar
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Risk import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Selection import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWeightingPortfolioConstructionModel
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Orders.Slippage import ConstantSlippageModel
-from datetime import datetime, timedelta
+from AlgorithmImports import *
 
 #
 # In a perfect market, you could buy 100 EUR worth of USD, sell 100 EUR worth of GBP,
@@ -43,7 +26,7 @@ from datetime import datetime, timedelta
 # This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 #
 
-class TriangleExchangeRateArbitrageAlgorithm(QCAlgorithm):
+class TriangleExchangeRateArbitrageAlpha(QCAlgorithm):
 
     def Initialize(self):
 

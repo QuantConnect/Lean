@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -39,18 +39,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void CoarseUniverseRotatesActiveSecurity()
         {
             var startDate = new DateTime(2014, 3, 24);
-            var endDate = new DateTime(2014, 3, 29);
+            var endDate = new DateTime(2014, 3, 31);
 
             var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
             timeProvider.SetCurrentTime(startDate);
 
             var coarseTimes = new List<DateTime>
             {
+                // coarse files go from the 24th (Monday) to the 28th (Friday)
+                // they are emitted in the next day, excluding saturday
                 new DateTime(2014, 3, 25, 5, 0, 0, 0),
                 new DateTime(2014, 3, 26, 5, 0, 0, 0),
                 new DateTime(2014, 3, 27, 5, 0, 0, 0),
                 new DateTime(2014, 3, 28, 5, 0, 0, 0),
-                new DateTime(2014, 3, 29, 5, 0, 0, 0)
+                // 29th is Saturday
+                new DateTime(2014, 3, 30, 5, 0, 0, 0)
             }.ToHashSet();
 
             var coarseSymbols = new List<Symbol> { Symbols.SPY, Symbols.AAPL, Symbols.MSFT };
@@ -70,9 +73,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var synchronizer = new TestableLiveSynchronizer(timeProvider);
             synchronizer.Initialize(algorithm, algorithm.DataManager);
 
-            var mapFileProvider = new LocalDiskMapFileProvider();
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(), algorithm.DataManager, synchronizer, new DataChannelProvider());
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, new DataChannelProvider());
 
             var symbolIndex = 0;
             var coarseUniverseSelectionCount = 0;

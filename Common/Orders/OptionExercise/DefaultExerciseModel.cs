@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities.Option;
+using static QuantConnect.Extensions;
 
 namespace QuantConnect.Orders.OptionExercise
 {
@@ -32,52 +33,52 @@ namespace QuantConnect.Orders.OptionExercise
         /// <param name="order">Order to update</param>
         public IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
         {
+            var underlying = option.Underlying;
             var utcTime = option.LocalTime.ConvertToUtc(option.Exchange.TimeZone);
 
-            var optionQuantity = order.Quantity;
-            var assignment = order.Quantity < 0;
-            var underlying = option.Underlying;
-            var exercisePrice = order.Price;
-            var fillQuantity = option.GetExerciseQuantity(order.Quantity);
-            var exerciseQuantity =
-                    option.Symbol.ID.OptionRight == OptionRight.Call ? fillQuantity : -fillQuantity;
-            var exerciseDirection = assignment?
-                    (option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Sell : OrderDirection.Buy):
-                    (option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Buy : OrderDirection.Sell);
+            var inTheMoney = option.IsAutoExercised(underlying.Close);
+            var isAssignment = inTheMoney && option.Holdings.IsShort;
 
-            var addUnderlyingEvent = new OrderEvent(order.Id,
-                            underlying.Symbol,
-                            utcTime,
-                            OrderStatus.Filled,
-                            exerciseDirection,
-                            exercisePrice,
-                            exerciseQuantity,
-                            OrderFee.Zero,
-                            "Option Exercise/Assignment");
+            yield return new OrderEvent(
+                order.Id,
+                option.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                GetOrderDirection(order.Quantity),
+                0.0m,
+                order.Quantity,
+                OrderFee.Zero,
+                GetContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment)
+            ) { IsAssignment = isAssignment };
 
-            var optionRemoveEvent = new OrderEvent(order.Id,
-                            option.Symbol,
-                            utcTime,
-                            OrderStatus.Filled,
-                            assignment ? OrderDirection.Buy : OrderDirection.Sell,
-                            0.0m,
-                            -optionQuantity,
-                            OrderFee.Zero,
-                            "Adjusting(or removing) the exercised/assigned option");
-
-            if (optionRemoveEvent.FillQuantity > 0)
+            // TODO : Support Manual Exercise of OTM contracts [ inTheMoney = false ]
+            if (inTheMoney && option.ExerciseSettlement == SettlementType.PhysicalDelivery)
             {
-                optionRemoveEvent.IsAssignment = true;
-            }
+                var exerciseQuantity = option.GetExerciseQuantity(order.Quantity);
 
-            if (option.ExerciseSettlement == SettlementType.PhysicalDelivery &&
-                option.IsAutoExercised(underlying.Close))
-            {
-                return new[] { optionRemoveEvent, addUnderlyingEvent };
+                yield return new OrderEvent(
+                    order.Id,
+                    underlying.Symbol,
+                    utcTime,
+                    OrderStatus.Filled,
+                    GetOrderDirection(exerciseQuantity),
+                    order.Price,
+                    exerciseQuantity,
+                    OrderFee.Zero,
+                    isAssignment ? "Option Assignment" : "Option Exercise"
+                );
             }
-
-            return new[] { optionRemoveEvent };
         }
 
+        private static string GetContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment)
+        {
+            var action = isAssignment ? "Assignment" : "Exercise";
+            if (inTheMoney)
+            {
+                return $"Automatic {action}";
+            }
+
+            return "OTM";
+        }
     }
 }

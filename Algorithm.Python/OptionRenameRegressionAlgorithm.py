@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,15 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from datetime import datetime, timedelta
+from AlgorithmImports import *
 
 ### <summary>
 ### This is an option split regression algorithm
@@ -33,12 +25,12 @@ class OptionRenameRegressionAlgorithm(QCAlgorithm):
         self.SetCash(1000000)
         self.SetStartDate(2013,6,28)
         self.SetEndDate(2013,7,2)
-        option = self.AddOption("FOXA")
+        option = self.AddOption("TFCFA")
 
         # set our strike/expiry filter for this option chain
         option.SetFilter(-1, 1, timedelta(0), timedelta(3650))
         # use the underlying equity as the benchmark
-        self.SetBenchmark("FOXA")
+        self.SetBenchmark("TFCFA")
 
     def OnData(self, slice):
         ''' Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event

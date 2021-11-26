@@ -78,7 +78,7 @@ namespace QuantConnect.Indicators
             if (_ema2.IsReady)
                 _ema3.Update(_ema2.Current);
 
-            return IsReady ? 3m * _ema1 - 3m * _ema2 + _ema3 : 0m;
+            return IsReady ? 3m * _ema1.Current.Value - 3m * _ema2.Current.Value + _ema3.Current.Value : 0m;
         }
 
         /// <summary>

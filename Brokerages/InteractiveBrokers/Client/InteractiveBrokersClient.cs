@@ -56,6 +56,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         public event EventHandler ConnectionClosed;
 
         /// <summary>
+        /// AccountSummary event handler
+        /// </summary>
+        public event EventHandler<AccountSummaryEventArgs> AccountSummary;
+
+        /// <summary>
         /// AccountSummaryEnd event handler
         /// </summary>
         public event EventHandler<RequestEndEventArgs> AccountSummaryEnd;
@@ -144,6 +149,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// ConnectAck event handler
         /// </summary>
         public event EventHandler ConnectAck;
+
+        /// <summary>
+        /// ManagedAccounts event handler
+        /// </summary>
+        public event EventHandler<ManagedAccountsEventArgs> ManagedAccounts;
+
+        /// <summary>
+        /// FamilyCodes event handler
+        /// </summary>
+        public event EventHandler<FamilyCodesEventArgs> FamilyCodes;
 
         #endregion
 
@@ -256,6 +271,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         public override void connectionClosed()
         {
             OnConnectionClosed();
+        }
+
+        /// <summary>
+        /// Receives the account information.
+        /// </summary>
+        /// <param name="reqId">The request's identifier.</param>
+        /// <param name="account">The account id</param>
+        /// <param name="tag">The account's attribute being received.</param>
+        /// <param name="value">The account's attribute's value.</param>
+        /// <param name="currency">The currency on which the value is expressed.</param>
+        public override void accountSummary(int reqId, string account, string tag, string value, string currency)
+        {
+            OnAccountSummary(new AccountSummaryEventArgs(reqId, account, tag, value, currency));
         }
 
         /// <summary>
@@ -456,6 +484,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
             OnConnectAck();
         }
 
+        /// <summary>
+        /// Receives a comma-separated string with the managed account ids. Occurs automatically on initial API client connection.
+        /// </summary>
+        /// <param name="accountList">A comma-separated string with the managed account ids.</param>
+        public override void managedAccounts(string accountList)
+        {
+            OnManagedAccounts(new ManagedAccountsEventArgs(accountList));
+        }
+
+        /// <summary>
+        /// Returns array of family codes
+        /// </summary>
+        /// <param name="familyCodes">An array of family codes.</param>
+        public override void familyCodes(FamilyCode[] familyCodes)
+        {
+            OnFamilyCodes(new FamilyCodesEventArgs(familyCodes));
+        }
+
         #endregion
 
         #region Event Invocators
@@ -506,6 +552,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         protected virtual void OnConnectionClosed()
         {
             ConnectionClosed?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// AccountSummary event invocator
+        /// </summary>
+        protected virtual void OnAccountSummary(AccountSummaryEventArgs e)
+        {
+            AccountSummary?.Invoke(this, e);
         }
 
         /// <summary>
@@ -650,6 +704,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         protected virtual void OnConnectAck()
         {
             ConnectAck?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// ManagedAccounts event invocator
+        /// </summary>
+        protected virtual void OnManagedAccounts(ManagedAccountsEventArgs e)
+        {
+            ManagedAccounts?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// FamilyCodes event invocator
+        /// </summary>
+        protected virtual void OnFamilyCodes(FamilyCodesEventArgs e)
+        {
+            FamilyCodes?.Invoke(this, e);
         }
 
         #endregion

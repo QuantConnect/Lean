@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -132,6 +133,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     subscription.RemovedFromUniverse
                                 );
                             }
+
+                            // If our subscription is a universe, and we get a delisting event emitted for it, then
+                            // the universe itself should be unselected and removed, because the Symbol that the
+                            // universe is based on has been delisted. Doing the disposal here allows us to
+                            // process the delisting at this point in time before emitting out to the algorithm.
+                            // This is very useful for universes that can be delisted, such as ETF constituent
+                            // universes (e.g. for ETF constituent universes, since the ETF itself is used to create
+                            // the universe Symbol (and set as its underlying), once the ETF is delisted, the
+                            // universe should cease to exist, since there are no more constituents of that ETF).
+                            if (subscription.IsUniverseSelectionSubscription && subscription.Current.Data is Delisting)
+                            {
+                                subscription.Universes.Single().Dispose();
+                            }
+
                             packet.Add(subscription.Current.Data);
 
                             if (!subscription.MoveNext())
@@ -161,7 +176,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 if (universeData != null
                                     && universeData.TryGetValue(subscription.Universes.Single(), out collection))
                                 {
-                                    collection.Data.AddRange(packetData);
+                                    collection.AddRange(packetData);
                                 }
                                 else
                                 {
@@ -191,6 +206,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (subscription.IsUniverseSelectionSubscription
                             && subscription.Universes.Single().DisposeRequested)
                         {
+                            var universe = subscription.Universes.Single();
+                            // check if a universe selection isn't already scheduled for this disposed universe
+                            if (universeData == null || !universeData.ContainsKey(universe))
+                            {
+                                if (universeData == null)
+                                {
+                                    universeData = new Dictionary<Universe, BaseDataCollection>();
+                                }
+                                // we force trigger one last universe selection for this disposed universe, so it deselects all subscriptions it added
+                                universeData[universe] = new BaseDataCollection(frontierUtc, subscription.Configuration.Symbol);
+                            }
+
                             // we need to do this after all usages of subscription.Universes
                             OnSubscriptionFinished(subscription);
                         }
@@ -237,8 +264,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         protected virtual void OnSubscriptionFinished(Subscription subscription)
         {
-            var handler = SubscriptionFinished;
-            if (handler != null) handler(this, subscription);
+            SubscriptionFinished?.Invoke(this, subscription);
         }
 
         /// <summary>

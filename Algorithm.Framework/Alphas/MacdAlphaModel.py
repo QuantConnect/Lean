@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,18 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-AddReference("QuantConnect.Indicators")
-
-from QuantConnect import *
-from QuantConnect.Indicators import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-
+from AlgorithmImports import *
 
 class MacdAlphaModel(AlphaModel):
     '''Defines a custom alpha model that uses MACD crossovers. The MACD signal line
@@ -109,5 +98,6 @@ class SymbolData:
 
         self.Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
         algorithm.RegisterIndicator(security.Symbol, self.MACD, self.Consolidator)
+        algorithm.WarmUpIndicator(security.Symbol, self.MACD, resolution)
 
         self.PreviousDirection = None

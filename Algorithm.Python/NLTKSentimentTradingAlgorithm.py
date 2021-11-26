@@ -11,16 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import clr
-clr.AddReference("System")
-clr.AddReference("QuantConnect.Algorithm")
-clr.AddReference("QuantConnect.Common")
+from AlgorithmImports import *
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-
-import pandas as pd
 import nltk
 # for details of NLTK, please visit https://www.nltk.org/index.html
 

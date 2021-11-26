@@ -116,10 +116,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err);
                     // notify the algorithm about the error, so it can be reported to the user
-                    Algorithm.RunTimeError = err;
-                    Algorithm.Status = AlgorithmStatus.RuntimeError;
+                    Algorithm.SetRuntimeError(err, "LiveSynchronizer");
                     shouldSendExtraEmptyPacket = true;
                     break;
                 }
@@ -181,7 +179,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The <see cref="ITimeProvider"/> to use</returns>
         protected override ITimeProvider GetTimeProvider()
         {
-            return new RealTimeProvider();
+            return RealTimeProvider.Instance;
         }
 
         /// <summary>
@@ -193,6 +191,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return 1000 - now.Millisecond + _batchingDelay;
         }
 
+        /// <summary>
+        /// Trigger new data event
+        /// </summary>
+        /// <param name="sender">Sender of the event</param>
+        /// <param name="args">Event information</param>
         protected virtual void OnSubscriptionNewDataAvailable(object sender, EventArgs args)
         {
             _newLiveDataEmitted.Set();

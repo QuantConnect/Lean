@@ -73,13 +73,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var port = Config.GetInt("ib-port", 4001);
             var host = Config.Get("ib-host", "127.0.0.1");
             var twsDirectory = Config.Get("ib-tws-dir", "C:\\Jts");
-            var ibVersion = Config.Get("ib-version", "974");
+            var ibVersion = Config.Get("ib-version", InteractiveBrokersBrokerage.DefaultVersion);
 
             var account = Read<string>(job.BrokerageData, "ib-account", errors);
             var userId = Read<string>(job.BrokerageData, "ib-user-name", errors);
             var password = Read<string>(job.BrokerageData, "ib-password", errors);
             var tradingMode = Read<string>(job.BrokerageData, "ib-trading-mode", errors);
             var agentDescription = Read<string>(job.BrokerageData, "ib-agent-description", errors);
+
+            var loadExistingHoldings = true;
+            if (job.BrokerageData.ContainsKey("load-existing-holdings"))
+            {
+                loadExistingHoldings = Convert.ToBoolean(job.BrokerageData["load-existing-holdings"]);
+            }
 
             if (errors.Count != 0)
             {
@@ -97,6 +103,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 algorithm.Transactions,
                 algorithm.Portfolio,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider")),
                 account,
                 host,
                 port,
@@ -105,7 +112,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 userId,
                 password,
                 tradingMode,
-                agentDescription);
+                agentDescription,
+                loadExistingHoldings);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
 
             return ib;

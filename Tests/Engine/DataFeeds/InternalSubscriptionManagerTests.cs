@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,8 +27,8 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -38,6 +38,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class InternalSubscriptionManagerTests
     {
+        private IResultHandler _resultHandler;
         private Synchronizer _synchronizer;
         private DataManager _dataManager;
         private QCAlgorithm _algorithm;
@@ -54,6 +55,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             _dataFeed.Exit();
             _dataManager.RemoveAllSubscriptions();
+            _resultHandler.Exit();
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
@@ -216,20 +218,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
-                Thread.Sleep(25);
+                Thread.Sleep(50);
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested);
             Assert.AreNotEqual(0, internalDataCount);
         }
 
-        [Test]
+        [Test, Category("TravisExclude")]
         public void UniverseSelectionAddAndRemove()
         {
             _algorithm.SetLiveMode(true);
             _algorithm.UniverseSettings.Resolution = Resolution.Hour;
             _algorithm.UniverseSettings.MinimumTimeInUniverse = TimeSpan.Zero;
             var added = false;
-            var first = true;
+            var manualEvent = new ManualResetEvent(false);
             var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
             {
@@ -243,30 +245,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             _algorithm.UniverseSettings,
                             time =>
                             {
-                                return first ? new[] { "IBM" } : new[] { "AAPL" };
+                                return !manualEvent.WaitOne(0) ? new[] { "IBM" } : new[] { "AAPL" };
                             }
                     );
                 }
                 else if (!timeSlice.IsTimePulse)
                 {
-                    if (first)
+                    if (!manualEvent.WaitOne(0))
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any());
-                        first = false;
+                            .GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second),
+                            "IBM subscription was not found");
+                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(),
+                            "Unexpected AAPL subscription was found");
+                        manualEvent.Set();
                     }
                     else
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any());
+                            .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second),
+                            "AAPL subscription was not found");
+                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(),
+                            "Unexpected IBM subscription was found");
                         break;
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
             }
-            Assert.IsFalse(tokenSource.IsCancellationRequested);
+            Assert.IsFalse(tokenSource.IsCancellationRequested, "Test timed out");
         }
 
         private static TestCaseData[] DataTypeTestCases
@@ -321,6 +327,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataFeed = new TestableLiveTradingDataFeed(dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? new AggregationManager()));
             _algorithm = new AlgorithmStub(createDataManager: false);
             _synchronizer = synchronizer ?? new LiveSynchronizer();
+
+
             var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook,
                 MarketHoursDatabase.FromDataFolder(),
@@ -332,20 +340,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _algorithm,
                 securityService,
                 new DataPermissionManager(),
-                new DefaultDataProvider(),
+                TestGlobals.DataProvider,
                 Resolution.Second);
             _dataManager = new DataManager(_dataFeed, universeSelection, _algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork),
                 MarketHoursDatabase.FromDataFolder(),
                 true,
                 new RegisteredSecurityDataTypesProvider(),
                 new DataPermissionManager());
+            _resultHandler = new TestResultHandler();
             _synchronizer.Initialize(_algorithm, _dataManager);
             _dataFeed.Initialize(_algorithm,
                 new LiveNodePacket(),
-                new TestResultHandler(),
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
-                new DefaultDataProvider(),
+                _resultHandler,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.DataProvider,
                 _dataManager,
                 _synchronizer,
                 new DataChannelProvider());
@@ -353,7 +362,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.Securities.SetSecurityService(securityService);
             _algorithm.SetFinishedWarmingUp();
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
-            backtestingTransactionHandler.Initialize(_algorithm, new PaperBrokerage(_algorithm, new LiveNodePacket()), new TestResultHandler());
+            backtestingTransactionHandler.Initialize(_algorithm, new PaperBrokerage(_algorithm, new LiveNodePacket()), _resultHandler);
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
             _algorithm.PostInitialize();
         }

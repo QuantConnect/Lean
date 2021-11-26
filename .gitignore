@@ -144,6 +144,7 @@ $tf/
 # ReSharper is a .NET coding add-in
 _ReSharper*/
 *.[Rr]e[Ss]harper
+*.DotSettings
 *.DotSettings.user
 
 # JustCode is a .NET coding addin-in
@@ -195,6 +196,7 @@ publish/
 
 # NuGet Packages
 *.nupkg
+!LocalPackages/*
 # The packages folder can be ignored because of Package Restore
 **/packages/*
 # except build/, which is used as an MSBuild target.
@@ -203,6 +205,7 @@ publish/
 #!**/packages/repositories.config
 # ignore sln level nuget
 .nuget/
+!.nuget/NuGet.config
 
 # Windows Azure Build Output
 csx/
@@ -271,3 +274,6 @@ QuantConnect.Lean.sln.DotSettings*
 
 #User notebook files
 Research/Notebooks
+
+#Docker result files
+Results/

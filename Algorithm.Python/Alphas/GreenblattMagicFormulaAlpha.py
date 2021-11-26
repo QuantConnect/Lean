@@ -11,21 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Indicators import *
+from AlgorithmImports import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
-from datetime import timedelta, datetime
 from math import ceil
 from itertools import chain
 
@@ -144,10 +132,9 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
 
     def __init__(self,
                  filterFineData = True,
-                 universeSettings = None,
-                 securityInitializer = None):
+                 universeSettings = None):
         '''Initializes a new default instance of the MagicFormulaUniverseSelectionModel'''
-        super().__init__(filterFineData, universeSettings, securityInitializer)
+        super().__init__(filterFineData, universeSettings)
 
         # Number of stocks in Coarse Universe
         self.NumberOfSymbolsCoarse = 500

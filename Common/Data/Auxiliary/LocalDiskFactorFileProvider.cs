@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,10 +14,10 @@
  *
 */
 
-using System.Collections.Concurrent;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
+using System.IO;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -26,27 +26,28 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class LocalDiskFactorFileProvider : IFactorFileProvider
     {
-        private readonly IMapFileProvider _mapFileProvider;
-        private readonly ConcurrentDictionary<Symbol, FactorFile> _cache;
+        private IMapFileProvider _mapFileProvider;
+        private IDataProvider _dataProvider;
+        private readonly ConcurrentDictionary<Symbol, IFactorProvider> _cache;
 
         /// <summary>
-        /// Initializes a new instance of <see cref="LocalDiskFactorFileProvider"/> that uses configuration
-        /// to resolve an instance of <see cref="IMapFileProvider"/> from the <see cref="Composer.Instance"/>
+        /// Creates a new instance of the <see cref="LocalDiskFactorFileProvider"/>
         /// </summary>
         public LocalDiskFactorFileProvider()
-            : this(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
         {
+            _cache = new ConcurrentDictionary<Symbol, IFactorProvider>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LocalDiskFactorFileProvider"/> using the specified
-        /// map file provider
+        /// Initializes our FactorFileProvider by supplying our mapFileProvider
+        /// and dataProvider
         /// </summary>
-        /// <param name="mapFileProvider">The map file provider used to resolve permticks of securities</param>
-        public LocalDiskFactorFileProvider(IMapFileProvider mapFileProvider)
+        /// <param name="mapFileProvider">MapFileProvider to use</param>
+        /// <param name="dataProvider">DataProvider to use</param>
+        public void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider)
         {
             _mapFileProvider = mapFileProvider;
-            _cache = new ConcurrentDictionary<Symbol, FactorFile>();
+            _dataProvider = dataProvider;
         }
 
         /// <summary>
@@ -54,49 +55,40 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="symbol">The security's symbol whose factor file we seek</param>
         /// <returns>The resolved factor file, or null if not found</returns>
-        public FactorFile Get(Symbol symbol)
+        public IFactorProvider Get(Symbol symbol)
         {
-            FactorFile factorFile;
+            symbol = symbol.GetFactorFileSymbol();
+            IFactorProvider factorFile;
             if (_cache.TryGetValue(symbol, out factorFile))
             {
                 return factorFile;
             }
 
-            var market = symbol.ID.Market;
-
             // we first need to resolve the map file to get a permtick, that's how the factor files are stored
-            var mapFileResolver = _mapFileProvider.Get(market);
+            var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
             if (mapFileResolver == null)
             {
-                return GetFactorFile(symbol, symbol.Value, market);
+                return GetFactorFile(symbol, symbol.Value);
             }
 
-            var mapFile = mapFileResolver.ResolveMapFile(symbol.ID.Symbol, symbol.ID.Date);
+            var mapFile = mapFileResolver.ResolveMapFile(symbol);
             if (mapFile.IsNullOrEmpty())
             {
-                return GetFactorFile(symbol, symbol.Value, market);
+                return GetFactorFile(symbol, symbol.Value);
             }
 
-            return GetFactorFile(symbol, mapFile.Permtick, market);
+            return GetFactorFile(symbol, mapFile.Permtick);
         }
 
         /// <summary>
         /// Checks that the factor file exists on disk, and if it does, loads it into memory
         /// </summary>
-        private FactorFile GetFactorFile(Symbol symbol, string permtick, string market)
+        private IFactorProvider GetFactorFile(Symbol symbol, string permtick)
         {
-            FactorFile factorFile = null;
-            if (FactorFile.HasScalingFactors(permtick, market))
-            {
-                factorFile = FactorFile.Read(permtick, market);
-                _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
-            }
-            else
-            {
-                // add null value to the cache, we don't want to check the disk multiple times
-                // but keep existing value if it exists, just in case
-                _cache.AddOrUpdate(symbol, factorFile, (s, oldValue) => oldValue);
-            }
+            var path = Path.Combine(Globals.CacheDataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market, "factor_files", permtick.ToLowerInvariant() + ".csv");
+
+            var factorFile = PriceScalingExtensions.SafeRead(permtick, _dataProvider.ReadLines(path), symbol.SecurityType);
+            _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
             return factorFile;
         }
     }

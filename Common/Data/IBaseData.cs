@@ -41,6 +41,9 @@ namespace QuantConnect.Data
             set;
         }
 
+        /// <summary>
+        /// End time of data
+        /// </summary>
         DateTime EndTime
         {
             get;

@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,22 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Selection import *
-from datetime import timedelta
+from AlgorithmImports import *
 
 ### <summary>
 ### Regression algorithm testing portfolio construction model control over rebalancing,
@@ -38,11 +23,15 @@ class PortfolioRebalanceOnDateRulesRegressionAlgorithm(QCAlgorithm):
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+        # Commented so regression algorithm is more sensitive
+        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+
         self.SetStartDate(2015,1,1)
         self.SetEndDate(2017,1,1)
 
-        self.Settings.RebalancePortfolioOnInsightChanges = False;
-        self.Settings.RebalancePortfolioOnSecurityChanges = False;
+        self.Settings.RebalancePortfolioOnInsightChanges = False
+        self.Settings.RebalancePortfolioOnSecurityChanges = False
 
         self.SetUniverseSelection(CustomUniverseSelectionModel("CustomUniverseSelectionModel", lambda time: [ "AAPL", "IBM", "FB", "SPY" ]))
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, None))
@@ -51,6 +40,6 @@ class PortfolioRebalanceOnDateRulesRegressionAlgorithm(QCAlgorithm):
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Submitted:
-            self.Debug(str(orderEvent));
+            self.Debug(str(orderEvent))
             if self.UtcTime.weekday() != 2:
-                raise ValueError(str(self.UtcTime) + " " + str(orderEvent.Symbol) + " " + str(self.UtcTime.weekday()));
+                raise ValueError(str(self.UtcTime) + " " + str(orderEvent.Symbol) + " " + str(self.UtcTime.weekday()))

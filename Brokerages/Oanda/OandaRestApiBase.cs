@@ -28,7 +28,6 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -38,8 +37,8 @@ namespace QuantConnect.Brokerages.Oanda
     public abstract class OandaRestApiBase : Brokerage, IDataQueueHandler
     {
         private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(250);
-        private ManualResetEvent _refreshEvent = new ManualResetEvent(false);
-        private CancellationTokenSource _streamingCancellationTokenSource = new CancellationTokenSource();
+        private readonly ManualResetEvent _refreshEvent = new ManualResetEvent(false);
+        private readonly CancellationTokenSource _streamingCancellationTokenSource = new CancellationTokenSource();
 
         private bool _isConnected;
 
@@ -66,11 +65,6 @@ namespace QuantConnect.Brokerages.Oanda
         /// The list of currently subscribed symbols
         /// </summary>
         protected IEnumerable<Symbol> SubscribedSymbols => _subscriptionManager.GetSubscribedSymbols();
-
-        /// <summary>
-        /// A lock object used to synchronize access to subscribed symbols
-        /// </summary>
-        protected readonly object LockerSubscriptions = new object();
 
         /// <summary>
         /// The symbol mapper
@@ -151,7 +145,7 @@ namespace QuantConnect.Brokerages.Oanda
             Aggregator = aggregator;
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) => Refresh();
-            _subscriptionManager.UnsubscribeImpl += (s, t) => Refresh(); ;
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Refresh();
 
             PricingConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
             PricingConnectionHandler.ConnectionLost += OnPricingConnectionLost;
@@ -183,7 +177,7 @@ namespace QuantConnect.Brokerages.Oanda
                         var symbolsToSubscribe = SubscribedSymbols;
                         // restart streaming session
                         SubscribeSymbols(symbolsToSubscribe);
-                        
+
                     } while (!_streamingCancellationTokenSource.IsCancellationRequested);
                 },
                 TaskCreationOptions.LongRunning
@@ -280,6 +274,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Connect()
         {
+            AccountBaseCurrency = GetAccountBaseCurrency();
+
             // Register to the event session to receive events.
             StartTransactionStream();
 
@@ -301,6 +297,11 @@ namespace QuantConnect.Brokerages.Oanda
 
             _isConnected = false;
         }
+
+        /// <summary>
+        /// Gets the account base currency
+        /// </summary>
+        public abstract string GetAccountBaseCurrency();
 
         /// <summary>
         /// Gets the list of available tradable instruments/products from Oanda

@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Orders import *
-from QuantConnect.Orders.TimeInForces import *
-from datetime import datetime
+from AlgorithmImports import *
 
 ### <summary>
 ### Demonstration algorithm of time in force order settings.
@@ -78,7 +68,7 @@ class TimeInForceAlgorithm(QCAlgorithm):
             self.DefaultOrderProperties.TimeInForce = TimeInForce.Day
 
             # this order will not be filled before market close and will be canceled
-            self.dayOrderTicket1 = self.LimitOrder(self.symbol, 10, 150)
+            self.dayOrderTicket1 = self.LimitOrder(self.symbol, 10, 140)
             self.expectedOrderStatuses[self.dayOrderTicket1.OrderId] = OrderStatus.Canceled
 
             # this order will be filled before market close

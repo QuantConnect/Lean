@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import pandas as pd
+from AlgorithmImports import *
 from scipy.optimize import minimize
 
 ### <summary>
@@ -57,12 +56,12 @@ class MinimumVariancePortfolioOptimizer:
             {'type': 'eq', 'fun': lambda weights: self.get_budget_constraint(weights)},
             {'type': 'eq', 'fun': lambda weights: self.get_target_constraint(weights, expectedReturns)}]
 
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
         opt = minimize(lambda weights: self.portfolio_variance(weights, covariance),     # Objective function
                        x0,                                                        # Initial guess
                        bounds = self.get_boundary_conditions(size),               # Bounds for variables
                        constraints = constraints,                                 # Constraints definition
-                       method='SLSQP',        # Optimization method:  Sequential Least SQuares Programming
-                       options={'ftol': 1e-04}) # Precision goal for the value of f in the stopping criterion.
+                       method='trust-constr')   # Optimization method:  trust-region algorithm for constrained optimization
 
         return opt['x'] if opt['success'] else x0
 

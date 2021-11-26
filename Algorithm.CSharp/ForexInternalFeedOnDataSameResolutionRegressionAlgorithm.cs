@@ -30,6 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly Dictionary<Symbol, int> _dataPointsPerSymbol = new Dictionary<Symbol, int>();
         private bool _added;
         private Symbol _eurusd;
+        private DateTime lastDataTime = DateTime.MinValue;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -51,6 +52,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            if (lastDataTime == data.Time)
+            {
+                throw new Exception("Duplicate time for current data and last data slice");
+            }
+
+            lastDataTime = data.Time;
+
             if (_added)
             {
                 var eurUsdSubscription = SubscriptionManager.SubscriptionDataConfigService
@@ -96,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // normal feed
                 { "EURGBP", 3 },
                 // internal feed on the first day, normal feed on the other two days
-                { "EURUSD", 3 },
+                { "EURUSD", 2 },
                 // internal feed only
                 { "GBPUSD", 0 }
             };
@@ -145,10 +153,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "5.853"},
-            {"Tracking Error", "0.107"},
+            {"Information Ratio", "5.91"},
+            {"Tracking Error", "0.13"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -168,7 +178,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "371857150"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }

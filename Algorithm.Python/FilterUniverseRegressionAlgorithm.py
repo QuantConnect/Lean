@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,15 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from datetime import timedelta
+from AlgorithmImports import *
 
 ### <summary>
 ### This regression algorithm is for testing a custom Python filter for options
@@ -33,7 +25,7 @@ class FilterUniverseRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
+        self.SetEndDate(2015, 12, 28)
         self.SetCash(100000)
 
         equity = self.AddEquity(self.UnderlyingTicker)

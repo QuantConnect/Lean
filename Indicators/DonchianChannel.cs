@@ -106,7 +106,7 @@ namespace QuantConnect.Indicators
             }
 
             _previousInput = input;
-            return (UpperBand + LowerBand) / 2;
+            return (UpperBand.Current.Value + LowerBand.Current.Value) / 2;
         }
 
         /// <summary>

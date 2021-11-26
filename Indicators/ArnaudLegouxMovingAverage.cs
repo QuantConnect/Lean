@@ -114,7 +114,7 @@ namespace QuantConnect.Indicators
         {
             return IsReady 
                 ? window.Select((t, i) => t.Price * _weightVector[i]).Sum()
-                : input;
+                : input.Value;
         }
     }
 }

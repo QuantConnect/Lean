@@ -45,6 +45,12 @@ namespace QuantConnect.Packets
         public string BacktestId = DefaultId;
 
         /// <summary>
+        /// Optimization Id for this task
+        /// </summary>
+        [JsonProperty(PropertyName = "sOptimizationID")]
+        public string OptimizationId;
+
+        /// <summary>
         /// Backtest start-date as defined in the Initialize() method.
         /// </summary>
         [JsonProperty(PropertyName = "dtPeriodStart")]
@@ -101,22 +107,21 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Initialize the backtest task packet.
         /// </summary>
-        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, decimal startingCapital, string name, UserPlan userPlan = UserPlan.Free) 
-            : this (userId, projectId, sessionId, algorithmData, name, userPlan, new CashAmount(startingCapital, Currencies.USD))
+        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, decimal startingCapital, string name)
+            : this (userId, projectId, sessionId, algorithmData, name, new CashAmount(startingCapital, Currencies.USD))
         {
         }
 
         /// <summary>
         /// Initialize the backtest task packet.
         /// </summary>
-        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, string name, UserPlan userPlan = UserPlan.Free, CashAmount? startingCapital = null)
+        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, string name, CashAmount? startingCapital = null)
             : base(PacketType.BacktestNode)
         {
             UserId = userId;
             Algorithm = algorithmData;
             SessionId = sessionId;
             ProjectId = projectId;
-            UserPlan = userPlan;
             Name = name;
             CashAmount = startingCapital;
             Language = Language.CSharp;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,7 +15,6 @@
 
 using Python.Runtime;
 using QuantConnect.Securities;
-using System;
 
 namespace QuantConnect.Python
 {
@@ -27,22 +26,12 @@ namespace QuantConnect.Python
         private readonly dynamic _model;
 
         /// <summary>
-        /// Constructor for initialising the <see cref="BuyingPowerModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
+        /// Constructor for initializing the <see cref="BuyingPowerModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a security's model of buying power</param>
         public BuyingPowerModelPythonWrapper(PyObject model)
         {
-            using (Py.GIL())
-            {
-                foreach (var attributeName in new[] { "GetBuyingPower", "GetMaximumOrderQuantityForDeltaBuyingPower", "GetLeverage", "GetMaximumOrderQuantityForTargetBuyingPower", "GetReservedBuyingPowerForPosition", "HasSufficientBuyingPowerForOrder", "SetLeverage" })
-                {
-                    if (!model.HasAttr(attributeName))
-                    {
-                        throw new NotImplementedException($"IBuyingPowerModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
-                    }
-                }
-            }
-            _model = model;
+            _model = model.ValidateImplementationOf<IBuyingPowerModel>();
         }
 
         /// <summary>
@@ -143,6 +132,48 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 _model.SetLeverage(security, leverage);
+            }
+        }
+
+        /// <summary>
+        /// Gets the margin currently allocated to the specified holding
+        /// </summary>
+        /// <param name="parameters">An object containing the security</param>
+        /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
+        public MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetMaintenanceMargin(parameters) as PyObject)
+                    .GetAndDispose<MaintenanceMargin>();
+            }
+        }
+
+        /// <summary>
+        /// The margin that must be held in order to increase the position by the provided quantity
+        /// </summary>
+        /// <param name="parameters">An object containing the security and quantity</param>
+        /// <returns>The initial margin required for the provided security and quantity</returns>
+        public InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetInitialMarginRequirement(parameters) as PyObject)
+                    .GetAndDispose<InitialMargin>();
+            }
+        }
+
+        /// <summary>
+        /// Gets the total margin required to execute the specified order in units of the account currency including fees
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the security and the order</param>
+        /// <returns>The total margin in terms of the currency quoted in the order</returns>
+        public InitialMargin GetInitialMarginRequiredForOrder(InitialMarginRequiredForOrderParameters parameters)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetInitialMarginRequiredForOrder(parameters) as PyObject)
+                    .GetAndDispose<InitialMargin>();
             }
         }
     }

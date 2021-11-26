@@ -186,5 +186,29 @@ namespace QuantConnect
         {
             return long.TryParse(input, numberStyle, CultureInfo.InvariantCulture, out value);
         }
+
+        /// <summary>
+        /// Parses the provided value as a an enumeration type <typeparamref name="T"/>
+        /// </summary>
+        public static T Enum<T>(string input, bool ignoreCase = true)
+            where T : struct, IConvertible
+        {
+            T value;
+            if (!TryParse(input, out value, ignoreCase))
+            {
+                throw new ArgumentException($"The provided value ({input}) was not parseable as {typeof(T).Name}");
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Parses the provided value as a an enumeration type <typeparamref name="T"/>
+        /// </summary>
+        public static bool TryParse<T>(string input, out T value, bool ignoreCase = true)
+            where T : struct, IConvertible
+        {
+            return System.Enum.TryParse<T>(input, ignoreCase, out value);
+        }
     }
 }

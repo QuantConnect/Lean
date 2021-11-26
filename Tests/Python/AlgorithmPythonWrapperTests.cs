@@ -55,6 +55,42 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        [TestCase("def OnEndOfDay(self): self.Name = 'EOD'\r\n    def OnEndOfDay(self, symbol): self.Name = 'EODSymbol'", "EODSymbol")]
+        [TestCase("def OnEndOfDay(self, symbol): self.Name = 'EODSymbol'\r\n    def OnEndOfDay(self): self.Name = 'EOD'", "EOD")]
+        public void OnEndOfDayBothImplemented(string code, string expectedImplementation)
+        {
+            // If we implement both OnEndOfDay functions we expect it to not throw,
+            // but only the latest will be seen and used.
+            // To test this we will have the functions set something we can verify such as Algo name
+            using (Py.GIL())
+            {
+                var algorithm = GetAlgorithm(code);
+                
+                Assert.Null(algorithm.RunTimeError);
+                Assert.DoesNotThrow(() => algorithm.OnEndOfDay());
+                Assert.Null(algorithm.RunTimeError);
+                Assert.DoesNotThrow(() => algorithm.OnEndOfDay(Symbols.SPY));
+                Assert.Null(algorithm.RunTimeError);
+
+                // Check the name
+                Assert.AreEqual(expectedImplementation, algorithm.Name);
+
+                // Check the wrapper EOD Implemented variables to confirm
+                switch (expectedImplementation)
+                {
+                    case "EOD":
+                        Assert.IsTrue(algorithm.IsOnEndOfDayImplemented);
+                        Assert.IsFalse(algorithm.IsOnEndOfDaySymbolImplemented);
+                        break;
+                    case "EODSymbol":
+                        Assert.IsTrue(algorithm.IsOnEndOfDaySymbolImplemented);
+                        Assert.IsFalse(algorithm.IsOnEndOfDayImplemented);
+                        break;
+                }
+            }
+        }
+
+        [Test]
         public void CallOnEndOfDayExceptionNoParameter()
         {
             // When we define OnEndOfDay without a parameter and it has an user error (divide by zero)

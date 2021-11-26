@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,19 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-
-import numpy as np
-from datetime import timedelta, datetime
+from AlgorithmImports import *
 
 ### <summary>
 ### Regression Channel algorithm simply initializes the date range and cash
@@ -64,7 +52,7 @@ class RegressionChannelAlgorithm(QCAlgorithm):
             self.SetHoldings(self._spy, -1)
             self.Plot("Trade Plot", "Sell", value)
 
-    def OnEndOfDay(self):
+    def OnEndOfDay(self, symbol):
         self.Plot("Trade Plot", "UpperChannel", self._rc.UpperChannel.Current.Value)
         self.Plot("Trade Plot", "LowerChannel", self._rc.LowerChannel.Current.Value)
         self.Plot("Trade Plot", "Regression", self._rc.LinearRegression.Current.Value)

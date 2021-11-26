@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
             SetBenchmark(x => 0);
 
-            _symbol = AddEquity("VXX", Resolution.Hour).Symbol;
+            _symbol = AddEquity("VXX.1", Resolution.Hour).Symbol;
         }
 
         public void OnData(TradeBars tradeBars)
@@ -84,6 +84,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
+            {"Estimated Strategy Capacity", "$1000000000.00"},
+            {"Lowest Capacity Asset", "VXX U9R0H3K6HVMT"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -103,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1795141360"}
+            {"OrderListHash", "d22c476870c3d52698c94a055b90ed6e"}
         };
     }
 }

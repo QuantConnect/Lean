@@ -67,7 +67,7 @@ namespace QuantConnect.Indicators
         {
             if (Samples == 1)
             {
-                _prevValue = input;
+                _prevValue = input.Value;
                 return 0m;
             }
 

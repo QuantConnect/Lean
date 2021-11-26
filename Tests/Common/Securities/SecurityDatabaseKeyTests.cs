@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ThrowsOnWildcardSecurityType()
         {
             const string input = "[*]-usa-SPY";
-            Assert.Throws<ArgumentException>(() =>
+            Assert.Throws<FormatException>(() =>
             {
                 SecurityDatabaseKey.Parse(input);
             }, "as a SecurityType");
@@ -125,6 +125,13 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 SecurityDatabaseKey.Parse(input);
             }, "expected format");
+        }
+
+        [TestCase("Index-usa-SPX")]
+        [TestCase("IndexOption-usa-SPX")]
+        public void DoesNotThrowOnUnknownSecurityType(string key)
+        {
+            Assert.DoesNotThrow(() => SecurityDatabaseKey.Parse(key));
         }
     }
 }

@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(orderEvent.Symbol, deserializeObject.Symbol);
             Assert.AreEqual(orderEvent.StopPrice, deserializeObject.StopPrice);
             // there is a small loss of precision because we use double
-            Assert.AreEqual(orderEvent.UtcTime.Ticks, deserializeObject.UtcTime.Ticks, 50);
+            Assert.AreEqual(orderEvent.UtcTime.Ticks, deserializeObject.UtcTime.Ticks, 200);
             Assert.AreEqual(orderEvent.OrderId, deserializeObject.OrderId);
             Assert.AreEqual(orderEvent.AbsoluteFillQuantity, deserializeObject.AbsoluteFillQuantity);
             Assert.AreEqual(orderEvent.Direction, deserializeObject.Direction);
@@ -112,6 +112,31 @@ namespace QuantConnect.Tests.Common.Orders
 
             Assert.AreEqual(orderEvent.OrderFee.Value.Amount, deserializeObject.OrderFee.Value.Amount);
             Assert.AreEqual(orderEvent.OrderFee.Value.Currency, deserializeObject.OrderFee.Value.Currency);
+        }
+
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ToString_AppendsIsAssignment_ForOptionSymbols(bool isAssignment)
+        {
+            var fill = new OrderEvent(1, Symbols.SPY_C_192_Feb19_2016, DateTime.Today, OrderStatus.New, OrderDirection.Buy, 1, 2, OrderFee.Zero, "message")
+            {
+                IsAssignment = isAssignment
+            };
+            StringAssert.EndsWith($"IsAssignment: {isAssignment}", fill.ToString());
+        }
+
+        [Test]
+        [TestCase(SecurityType.Equity)]
+        [TestCase(SecurityType.Cfd)]
+        [TestCase(SecurityType.Forex)]
+        [TestCase(SecurityType.Crypto)]
+        [TestCase(SecurityType.Future)]
+        public void ToString_DoesNotIncludeIsAssignment_ForNonOptionsSymbols(SecurityType type)
+        {
+            var symbol = Symbols.GetBySecurityType(type);
+            var fill = new OrderEvent(1, symbol, DateTime.Today, OrderStatus.New, OrderDirection.Buy, 1, 2, OrderFee.Zero, "message");
+            StringAssert.DoesNotContain("IsAssignment", fill.ToString());
         }
     }
 }

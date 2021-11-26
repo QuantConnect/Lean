@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -51,7 +52,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 {
                     // Download the data
                     var symbolObject = Symbol.Create(ticker, SecurityType.Equity, market);
-                    var data = downloader.Get(symbolObject, castResolution, startDate, endDate);
+                    var data = downloader.Get(new DataDownloaderGetParameters(symbolObject, castResolution, startDate, endDate));
 
                     // Save the data
                     var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory);

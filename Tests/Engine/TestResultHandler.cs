@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -39,9 +40,9 @@ namespace QuantConnect.Tests.Engine
         private readonly Action<Packet> _packetHandler;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-        public ConcurrentQueue<Packet> Messages { get; set; }
-        public ConcurrentDictionary<string, Chart> Charts { get; set; }
-        public bool IsActive { get; private set; }
+        public new ConcurrentQueue<Packet> Messages { get; set; }
+        public new ConcurrentDictionary<string, Chart> Charts { get; set; }
+        public new bool IsActive { get; private set; }
 
         public TestResultHandler(Action<Packet> packetHandler = null)
         {
@@ -115,6 +116,10 @@ namespace QuantConnect.Tests.Engine
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, _job.AlgorithmId, message, stacktrace));
         }
 
+        public void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent)
+        {
+        }
+
         protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             //Add a copy locally:
@@ -178,11 +183,11 @@ namespace QuantConnect.Tests.Engine
         {
         }
 
-        public void OrderEvent(OrderEvent newEvent)
+        public override void OrderEvent(OrderEvent newEvent)
         {
         }
 
-        public void Exit()
+        public override void Exit()
         {
             _cancellationTokenSource.Cancel();
         }

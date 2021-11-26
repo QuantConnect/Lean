@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,6 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -38,9 +39,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var job = new BacktestNodePacket();
             var resultHandler = new BacktestingResultHandler();
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var dataProvider = new DefaultDataProvider();
 
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             var feed = new FileSystemDataFeed();
@@ -63,7 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var synchronizer = new Synchronizer();
             synchronizer.Initialize(algorithm, dataManager);
 
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager, synchronizer, dataPermissionManager.DataChannelProvider);
+            feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, dataManager, synchronizer, dataPermissionManager.DataChannelProvider);
             algorithm.Initialize();
             algorithm.PostInitialize();
 
@@ -77,16 +75,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     var elapsed = stopwatch.Elapsed.TotalSeconds;
                     var thousands = count / 1000d;
-                    Console.WriteLine($"{DateTime.Now} - Time: {timeSlice.Time}: KPS: {thousands / elapsed}");
+                    Log.Trace($"{DateTime.Now} - Time: {timeSlice.Time}: KPS: {thousands / elapsed}");
                     lastMonth = timeSlice.Time.Month;
                 }
                 count++;
             }
-            Console.WriteLine("Count: " + count);
+            Log.Trace("Count: " + count);
             stopwatch.Stop();
             feed.Exit();
             dataManager.RemoveAllSubscriptions();
-            Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
+            Log.Trace($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
         }
 
         [Test]
@@ -96,17 +94,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            var dataProvider = new DefaultDataProvider();
             var resultHandler = new BacktestingResultHandler();
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, true, enablePriceScaling: false);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.Securities.Single().Value;
             var securityConfig = security.Subscriptions.First();
             var subscriptionRequest = new SubscriptionRequest(false, universe, security, securityConfig, algorithm.StartDate, algorithm.EndDate);
-            var enumerator = factory.CreateEnumerator(subscriptionRequest, dataProvider);
+            var enumerator = factory.CreateEnumerator(subscriptionRequest, TestGlobals.DataProvider);
 
             var count = 0;
             var stopwatch = Stopwatch.StartNew();
@@ -116,7 +111,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var current = enumerator.Current;
                 if (current == null)
                 {
-                    Console.WriteLine("ERROR: Current is null");
+                    Log.Trace("ERROR: Current is null");
                     continue;
                 }
 
@@ -124,17 +119,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     var elapsed = stopwatch.Elapsed.TotalSeconds;
                     var thousands = count / 1000d;
-                    Console.WriteLine($"{DateTime.Now} - Time: {current.Time}: KPS: {thousands / elapsed}");
+                    Log.Trace($"{DateTime.Now} - Time: {current.Time}: KPS: {thousands / elapsed}");
                     lastMonth = current.Time.Month;
                 }
                 count++;
             }
-            Console.WriteLine("Count: " + count);
+            Log.Trace("Count: " + count);
 
             stopwatch.Stop();
             enumerator.Dispose();
             factory.DisposeSafely();
-            Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
+            Log.Trace($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
         }
 
         [Test]
@@ -146,9 +141,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var dataProvider = new DefaultDataProvider();
             var resultHandler = new TestResultHandler();
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, true, enablePriceScaling: false);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.AddEquity("AAA", Resolution.Daily);
@@ -166,7 +159,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var message = ((DebugPacket) resultHandler.Messages.Single()).Message;
             Assert.IsTrue(message.Equals(
-                "The starting date for symbol AAA, 2001-11-30, has been adjusted to match map file first date 2002-05-22."));
+                "The starting dates for the following symbols have been adjusted to match their map files first date: [AAA, 2020-09-09]"));
         }
     }
 }

@@ -81,8 +81,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             var totalFilesProcessed = 0;
             var start = DateTime.MinValue;
 
-            var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
-
             var symbolMultipliers = LoadSymbolMultipliers();
 
             //Extract each file massively in parallel.
@@ -103,34 +101,10 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                         Directory.CreateDirectory(csvFileInfo.DirectoryName);
 
                         Log.Trace("AlgoSeekFuturesConverter.Convert(): Extracting " + file);
-                        var psi = new ProcessStartInfo(zipper, " e " + file.FullName + " -o" + _source.FullName)
-                        {
-                            CreateNoWindow = true,
-                            WindowStyle = ProcessWindowStyle.Hidden,
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true
-                        };
 
-                        var process = new Process();
-                        process.StartInfo = psi;
-                        process.Start();
-
-                        while (!process.StandardOutput.EndOfStream)
-                        {
-                            process.StandardOutput.ReadLine();
-                        }
-
-                        if (!process.WaitForExit(ExecTimeout * 1000))
-                        {
-                            Log.Error("7Zip timed out: " + file);
-                        }
-                        else
-                        {
-                            if (process.ExitCode > 0)
-                            {
-                                Log.Error("7Zip Exited Unsuccessfully: " + file);
-                            }
-                        }
+                        // Never time out extracting an archive; they can be pretty big
+                        // and take a while to extract depending on the computer running this application
+                        Compression.Extract7ZipArchive(file.FullName, _source.FullName, -1);
                     }
 
                     // setting up local processors
@@ -148,6 +122,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                         {
                             var tick = reader.Current as Tick;
 
+                            if (tick.Symbol.ID.Symbol == "VX" && (
+                                tick.BidPrice >= 998m || tick.AskPrice >= 998m))
+                            {
+                                // Invalid value for VX futures. Invalid prices in raw data are 998/999
+                                continue;
+                            }
                             //Add or create the consolidator-flush mechanism for symbol:
                             List<List<AlgoSeekFuturesProcessor>> symbolProcessors;
                             if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
@@ -245,11 +225,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <returns></returns>
         private Dictionary<string, decimal> LoadSymbolMultipliers()
         {
-            const int columnsCount = 4;
             const int columnUnderlying = 0;
-            const int columnProductName = 1;
             const int columnMultipleFactor = 2;
-            const int columnInfo = 3;
 
             return File.ReadAllLines("AlgoSeekFuturesConverter/AlgoSeek.US.Futures.PriceMultipliers.1.1.csv")
                     .Select(line => line.ToCsvData())

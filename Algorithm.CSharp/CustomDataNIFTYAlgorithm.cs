@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// "Nifty" type below and fired into this event handler.
         /// </summary>
         /// <param name="data">One(1) Nifty Object, streamed into our algorithm synchronised in time with our other data streams</param>
-        public void OnData(Slice data)
+        public override void OnData(Slice data)
         {
             if (data.ContainsKey("USDINR"))
             {
@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
 
                 _today.NiftyPrice = Convert.ToDouble(data["NIFTY"].Close);
-                if (_today.Date == data["NIFTY"].EndTime)
+                if (_today.Date == data["NIFTY"].Time)
                 {
                     _prices.Add(_today);
 
@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var quantity = (int)(Portfolio.MarginRemaining * 0.9m / data["NIFTY"].Close);
                 var highestNifty = (from pair in _prices select pair.NiftyPrice).Max();
                 var lowestNifty = (from pair in _prices select pair.NiftyPrice).Min();
-                
+
                 if (Time.DayOfWeek == DayOfWeek.Wednesday) //prices.Count >= minimumCorrelationHistory &&
                 {
                     //List<double> niftyPrices = (from pair in prices select pair.NiftyPrice).ToList();
@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
         /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
-        public override void OnEndOfDay()
+        public override void OnEndOfDay(Symbol symbol)
         {
             Plot("Nifty Closing Price", _today.NiftyPrice);
         }
@@ -181,6 +181,7 @@ namespace QuantConnect.Algorithm.CSharp
                 //2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
                 var data = line.Split(',');
                 index.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
+                index.EndTime = index.Time.AddDays(1);
                 index.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                 index.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
                 index.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
@@ -247,6 +248,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var data = line.Split(',');
                 currency.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
+                currency.EndTime = currency.Time.AddDays(1);
                 currency.Close = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                 currency.Symbol = "USDINR";
                 currency.Value = currency.Close;

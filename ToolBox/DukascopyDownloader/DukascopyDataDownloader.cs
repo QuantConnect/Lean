@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,7 +21,7 @@ using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using SevenZip;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.DukascopyDownloader
 {
@@ -56,13 +56,21 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <param name="dataDownloaderGetParameters">model class for passing in parameters for historical data</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
+            var symbol = dataDownloaderGetParameters.Symbol;
+            var resolution = dataDownloaderGetParameters.Resolution;
+            var startUtc = dataDownloaderGetParameters.StartUtc;
+            var endUtc = dataDownloaderGetParameters.EndUtc;
+            var tickType = dataDownloaderGetParameters.TickType;
+
+            if (tickType != TickType.Quote)
+            {
+                yield break;
+            }
+
             if (!_symbolMapper.IsKnownLeanSymbol(symbol))
                 throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
@@ -94,7 +102,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                     case Resolution.Minute:
                     case Resolution.Hour:
                     case Resolution.Daily:
-                        foreach (var bar in AggregateTicks(symbol, ticks, resolution.ToTimeSpan()))
+                        foreach (var bar in LeanData.AggregateTicks(ticks, symbol, resolution.ToTimeSpan()))
                         {
                             yield return bar;
                         }
@@ -103,40 +111,6 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
 
                 date = date.AddDays(1);
             }
-        }
-
-        /// <summary>
-        /// Aggregates a list of ticks at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="ticks"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal static IEnumerable<QuoteBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
-        {
-            return
-                from t in ticks
-                group t by t.Time.RoundDown(resolution)
-                into g
-                select new QuoteBar
-                {
-                    Symbol = symbol,
-                    Time = g.Key,
-                    Bid = new Bar
-                    {
-                        Open = g.First().BidPrice,
-                        High = g.Max(b => b.BidPrice),
-                        Low = g.Min(b => b.BidPrice),
-                        Close = g.Last().BidPrice
-                    },
-                    Ask = new Bar
-                    {
-                        Open = g.First().AskPrice,
-                        High = g.Max(b => b.AskPrice),
-                        Low = g.Min(b => b.AskPrice),
-                        Close = g.Last().AskPrice
-                    }
-                };
         }
 
         /// <summary>
@@ -194,42 +168,63 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         {
             var ticks = new List<Tick>();
 
-            using (var inStream = new MemoryStream(bytesBi5))
+            byte[] bytes;
+
+            var inputFile = $"{Guid.NewGuid()}.7z";
+            var outputDirectory = $"{Guid.NewGuid()}";
+
+            try
             {
-                using (var outStream = new MemoryStream())
+                File.WriteAllBytes(inputFile, bytesBi5);
+                Compression.Extract7ZipArchive(inputFile, outputDirectory);
+
+                var outputFileInfo = Directory.CreateDirectory(outputDirectory).GetFiles("*").First();
+                bytes = File.ReadAllBytes(outputFileInfo.FullName);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, "Failed to read raw data into stream");
+                return new List<Tick>();
+            }
+            finally
+            {
+                if (File.Exists(inputFile))
                 {
-                    SevenZipExtractor.DecompressStream(inStream, outStream, (int)inStream.Length, null);
+                    File.Delete(inputFile);
+                }
+                if (Directory.Exists(outputDirectory))
+                {
+                    Directory.Delete(outputDirectory, true);
+                }
+            }
 
-                    byte[] bytes = outStream.ToArray();
-                    int count = bytes.Length / DukascopyTickLength;
+            int count = bytes.Length / DukascopyTickLength;
 
-                    // Numbers are big-endian
-                    // ii1 = milliseconds within the hour
-                    // ii2 = AskPrice * point value
-                    // ii3 = BidPrice * point value
-                    // ff1 = AskVolume (not used)
-                    // ff2 = BidVolume (not used)
+            // Numbers are big-endian
+            // ii1 = milliseconds within the hour
+            // ii2 = AskPrice * point value
+            // ii3 = BidPrice * point value
+            // ff1 = AskVolume (not used)
+            // ff2 = BidVolume (not used)
 
-                    fixed (byte* pBuffer = &bytes[0])
+            fixed (byte* pBuffer = &bytes[0])
+            {
+                uint* p = (uint*)pBuffer;
+
+                for (int i = 0; i < count; i++)
+                {
+                    ReverseBytes(p); uint time = *p++;
+                    ReverseBytes(p); uint ask = *p++;
+                    ReverseBytes(p); uint bid = *p++;
+                    p++; p++;
+
+                    if (bid > 0 && ask > 0)
                     {
-                        uint* p = (uint*)pBuffer;
-
-                        for (int i = 0; i < count; i++)
-                        {
-                            ReverseBytes(p); uint time = *p++;
-                            ReverseBytes(p); uint ask = *p++;
-                            ReverseBytes(p); uint bid = *p++;
-                            p++; p++;
-
-                            if (bid > 0 && ask > 0)
-                            {
-                                ticks.Add(new Tick(
-                                    date.AddMilliseconds(timeOffset + time),
-                                    symbol,
-                                    Convert.ToDecimal(bid / pointValue),
-                                    Convert.ToDecimal(ask / pointValue)));
-                            }
-                        }
+                        ticks.Add(new Tick(
+                            date.AddMilliseconds(timeOffset + time),
+                            symbol,
+                            Convert.ToDecimal(bid / pointValue),
+                            Convert.ToDecimal(ask / pointValue)));
                     }
                 }
             }

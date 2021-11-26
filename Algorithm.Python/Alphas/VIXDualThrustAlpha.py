@@ -11,27 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Data.Consolidators import TradeBarConsolidator
-from QuantConnect.Data.Market import TradeBar
-from QuantConnect.Indicators import RollingWindow
-from QuantConnect.Brokerages import BrokerageName
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
-from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
-from QuantConnect.Algorithm.Framework.Execution import ImmediateExecutionModel
-from QuantConnect.Algorithm.Framework.Risk import MaximumDrawdownPercentPerSecurity
-from datetime import timedelta
+from AlgorithmImports import *
 
 #
 # This is a demonstration algorithm. It trades UVXY.
@@ -53,7 +33,7 @@ class VIXDualThrustAlpha(QCAlgorithm):
         # Settings
         self.SetStartDate(2018, 10, 1)
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-        self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
+        self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin)
 
         # Universe Selection
         self.UniverseSettings.Resolution = Resolution.Minute   # it's minute by default, but lets leave this param here
@@ -169,7 +149,7 @@ class DualThrustAlphaModel(AlphaModel):
 
             self.Symbol = symbol
             self.rangeWindow = RollingWindow[TradeBar](rangePeriod)
-            self.consolidator = TradeBarConsolidator(consolidatorResolution);
+            self.consolidator = TradeBarConsolidator(consolidatorResolution)
 
             def onDataConsolidated(sender, consolidated):
                 # add new tradebar to

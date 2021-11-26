@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -86,10 +86,7 @@ namespace QuantConnect.Tests.Python
 import os, sys
 sys.path.append(os.getcwd())
 
-from clr import AddReference
-AddReference('QuantConnect.Common')
-from QuantConnect import *
-from QuantConnect.Securities import *
+from AlgorithmImports import *
 
 class CustomBuyingPowerModel:
     def __init__(self):
@@ -113,6 +110,15 @@ class CustomBuyingPowerModel:
     def HasSufficientBuyingPowerForOrder(self, context):
         return HasSufficientBuyingPowerForOrderResult(True)
 
+    def GetMaintenanceMargin(self, context):
+        return None
+
+    def GetInitialMarginRequirement(self, context):
+        return None
+
+    def GetInitialMarginRequiredForOrder(self, context):
+        return None
+
     def SetLeverage(self, security, leverage):
         self.margin = 1.0 / float(leverage)";
 
@@ -120,10 +126,7 @@ class CustomBuyingPowerModel:
 import os, sys
 sys.path.append(os.getcwd())
 
-from clr import AddReference
-AddReference('QuantConnect.Common')
-from QuantConnect import *
-from QuantConnect.Securities import *
+from AlgorithmImports import *
 
 class CustomBuyingPowerModel(SecurityMarginModel):
     def GetMaximumOrderQuantityForTargetBuyingPower(self, context):

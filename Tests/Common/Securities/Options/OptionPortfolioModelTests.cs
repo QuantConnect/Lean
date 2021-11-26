@@ -14,88 +14,114 @@
 */
 
 using System;
+using System.Linq;
 using NodaTime;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Tests.Engine;
 
 namespace QuantConnect.Tests.Common.Securities.Options
 {
     [TestFixture]
     public class OptionPortfolioModelTests
     {
+        private IResultHandler _resultHandler;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _resultHandler = new TestResultHandler(Console.WriteLine);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _resultHandler.Exit();
+        }
+
         [Test]
-        public void NonAccountCurrencyOption_Exercise()
+        public void OptionExercise_NonAccountCurrency()
         {
-            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
-            SecurityPortfolioManager portfolio;
-            var security = InitializeTest(reference, out portfolio);
+            var algorithm = new QCAlgorithm();
+            var securities = new SecurityManager(new TimeKeeper(DateTime.Now, TimeZones.NewYork));
+            var transactions = new SecurityTransactionManager(null, securities);
+            var transactionHandler = new BacktestingTransactionHandler();
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
 
-            var cash = new Cash("EUR", 0, 10);
-            portfolio.CashBook.Add("EUR", cash);
-            var option = new Option(
+            var EUR = new Cash("EUR", 100*192, 10);
+            portfolio.CashBook.Add("EUR", EUR);
+            portfolio.SetCash("USD", 0, 1);
+            algorithm.Securities = securities;
+            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            transactions.SetOrderProcessor(transactionHandler);
+
+            securities.Add(
+                Symbols.SPY,
+                new Security(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    CreateTradeBarConfig(Symbols.SPY),
+                    EUR,
+                    SymbolProperties.GetDefault(EUR.Symbol),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
+                )
+            );
+            securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
-                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                cash,
-                new OptionSymbolProperties(SymbolProperties.GetDefault("EUR")),
-                portfolio.CashBook,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
+                new Option(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    CreateTradeBarConfig(Symbols.SPY_C_192_Feb19_2016),
+                    EUR,
+                    new OptionSymbolProperties(new SymbolProperties("EUR", "EUR", 100, 0.01m, 1, string.Empty)),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
+                )
             );
-            option.Underlying = security;
-            security.SetMarketPrice(new Tick { Value = 1000 });
-            portfolio.Securities.Add(option);
-            var fakeOrderProcessor = new FakeOrderProcessor();
-            portfolio.Transactions.SetOrderProcessor(fakeOrderProcessor);
+            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
+            securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            var fillPrice = 1000m;
-            var fillQuantity = 1;
-            option.ExerciseSettlement = SettlementType.Cash;
-            var orderFee = new OrderFee(new CashAmount(1, "EUR"));
-            var order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, fillQuantity, DateTime.UtcNow);
-            fakeOrderProcessor.AddOrder(order);
-            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(order.Id, option.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFill(fill);
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
+            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
+            option.Underlying = securities[Symbols.SPY];
 
-            // (1000 (price) - 192 (call strike)) * 1 quantity => 808 EUR
-            Assert.AreEqual(10, option.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
-            // 808 - 1000 (price) - 1 fee
-            Assert.AreEqual(-193, portfolio.CashBook["EUR"].Amount);
-            // 100000 initial amount, no fee deducted
-            Assert.AreEqual(100000, portfolio.CashBook[Currencies.USD].Amount);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
+            Assert.AreEqual("Option Exercise", fills[1].Message);
+
+            foreach (var fill in fills)
+            {
+                portfolio.ProcessFill(fill);
+            }
+
+            // now we have long position in SPY with average price equal to strike
+            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
+            // we added 100*192 EUR (strike price) at beginning, all consumed by exercise
+            Assert.AreEqual(0, EUR.Amount);
+            Assert.AreEqual(0, portfolio.CashBook["USD"].Amount);
+            Assert.AreEqual(100, newUnderlyingHoldings.Quantity);
+            Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
+
+            // and long call option position has disappeared
+            Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
-        private Security InitializeTest(DateTime reference, out SecurityPortfolioManager portfolio)
+        private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
-            var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                CreateTradeBarConfig(),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetMarketPrice(new Tick { Value = 100 });
-            var timeKeeper = new TimeKeeper(reference);
-            var securityManager = new SecurityManager(timeKeeper);
-            securityManager.Add(security);
-            var transactionManager = new SecurityTransactionManager(null, securityManager);
-            portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash(Currencies.USD, 100 * 1000m, 1m);
-            Assert.AreEqual(0, security.Holdings.Quantity);
-            Assert.AreEqual(100 * 1000m, portfolio.CashBook[Currencies.USD].Amount);
-            return security;
-        }
-
-        private static SubscriptionDataConfig CreateTradeBarConfig()
-        {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
         }
     }
 }

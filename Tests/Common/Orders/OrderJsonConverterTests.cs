@@ -129,6 +129,25 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expected.StopPrice, actual.StopPrice);
             Assert.AreEqual(expected.LimitPrice, actual.LimitPrice);
         }
+        
+        [TestCase(Symbols.SymbolsKey.SPY)]
+        [TestCase(Symbols.SymbolsKey.EURUSD)]
+        [TestCase(Symbols.SymbolsKey.BTCUSD)]
+        public void DeserializesLimitIfTouchedOrder(Symbols.SymbolsKey key)
+        {
+            var expected = new LimitIfTouchedOrder(Symbols.Lookup(key), 100, 210.10m, 200.23m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            {
+                Id = 12345,
+                Price = 209.03m,
+                ContingentId = 123456,
+                BrokerId = new List<string> {"727", "54970"}
+            };
+
+            var actual = TestOrderType(expected);
+
+            Assert.AreEqual(expected.TriggerPrice, actual.TriggerPrice);
+            Assert.AreEqual(expected.LimitPrice, actual.LimitPrice);
+        }
 
         [Test]
         public void DeserializesOptionExpireOrder()
@@ -256,6 +275,123 @@ namespace QuantConnect.Tests.Common.Orders
 
             var actual1 = (MarketOnOpenOrder)DeserializeOrder<MarketOnOpenOrder>(json);
             var actual2 = (MarketOnOpenOrder)DeserializeOrder<MarketOnOpenOrder>(json2);
+
+            TestOrderType(expected1);
+            TestOrderType(expected2);
+            TestOrderType(actual1);
+            TestOrderType(actual2);
+        }
+
+        [Test]
+        public void DeserializesStringStatusAndNullTime()
+        {
+            const string stringStatusJson = @"{
+    'Type': 4,
+    'Id': 1,
+    'ContingentId': 0,
+    'BrokerId': [
+        '1'
+    ],
+    'Symbol': {
+        'Value': 'SPY',
+        'ID': 'SPY R735QTJ8XC9X',
+        'Permtick': 'SPY'
+    },
+    'Price': 321.66,
+    'PriceCurrency': 'USD',
+    'Time': '2019-12-24T14:31:00Z',
+    'CreatedTime': '2019-12-24T14:31:00Z',
+    'LastUpdateTime': '2019-12-25T14:31:00Z',
+    'LastFillTime': '2019-12-26T14:31:00Z',
+    'Quantity': 1.0,
+    'Status': 'filled',
+    'TimeInForce': {},
+    'Tag': '',
+    'Properties': {
+        'TimeInForce': {}
+    },
+    'SecurityType': 1,
+    'Direction': 0,
+    'AbsoluteQuantity': 1.0,
+    'Value': 321.66,
+    'OrderSubmissionData': {
+        'BidPrice': 321.4700,
+        'AskPrice': 321.4700,
+        'LastPrice': 321.4700
+    },
+    'IsMarketable': false
+}";
+
+            const string nullTimeJson = @"{
+    'Type': 4,
+    'Id': 1,
+    'ContingentId': 0,
+    'BrokerId': [
+        '1'
+    ],
+    'Symbol': {
+        'Value': 'SPY',
+        'ID': 'SPY R735QTJ8XC9X',
+        'Permtick': 'SPY'
+    },
+    'Price': 321.66,
+    'PriceCurrency': 'USD',
+    'Time': null,
+    'CreatedTime': '2019-12-24T14:31:00Z',
+    'LastUpdateTime': '2019-12-25T14:31:00Z',
+    'LastFillTime': '2019-12-26T14:31:00Z',
+    'Quantity': 1.0,
+    'Status': 3,
+    'TimeInForce': {},
+    'Tag': '',
+    'Properties': {
+        'TimeInForce': {}
+    },
+    'SecurityType': 1,
+    'Direction': 0,
+    'AbsoluteQuantity': 1.0,
+    'Value': 321.66,
+    'OrderSubmissionData': {
+        'BidPrice': 321.4700,
+        'AskPrice': 321.4700,
+        'LastPrice': 321.4700
+    },
+    'IsMarketable': false
+}";
+
+            var time = DateTime.SpecifyKind(new DateTime(2019, 12, 24, 14, 31, 0), DateTimeKind.Utc);
+            var fillTime = DateTime.SpecifyKind(new DateTime(2019, 12, 26, 14, 31, 0), DateTimeKind.Utc);
+            var updateTime = DateTime.SpecifyKind(new DateTime(2019, 12, 25, 14, 31, 0), DateTimeKind.Utc);
+
+            var expected1 = new MarketOnOpenOrder(Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1m, time)
+            {
+                Id = 1,
+                ContingentId = 0,
+                BrokerId = new List<string> { "1" },
+                Price = 321.66m,
+                PriceCurrency = "USD",
+                LastFillTime = fillTime,
+                LastUpdateTime = updateTime,
+                Status = OrderStatus.Filled,
+                OrderSubmissionData = new OrderSubmissionData(321.47m, 321.47m, 321.47m),
+            };
+
+            var expected2 = new MarketOnOpenOrder(Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1m, time)
+            {
+                Id = 1,
+                ContingentId = 0,
+                BrokerId = new List<string> { "1" },
+                Price = 321.66m,
+                PriceCurrency = "USD",
+                LastFillTime = fillTime,
+                LastUpdateTime = updateTime,
+                Status = OrderStatus.Filled,
+                OrderSubmissionData = new OrderSubmissionData(321.47m, 321.47m, 321.47m),
+            };
+
+
+            var actual1 = (MarketOnOpenOrder)DeserializeOrder<MarketOnOpenOrder>(stringStatusJson);
+            var actual2 = (MarketOnOpenOrder)DeserializeOrder<MarketOnOpenOrder>(nullTimeJson);
 
             TestOrderType(expected1);
             TestOrderType(expected2);

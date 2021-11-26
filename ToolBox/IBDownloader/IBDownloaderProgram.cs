@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,12 +14,13 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Configuration;
-using QuantConnect.Data.Market;
-using QuantConnect.Logging;
+using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.IBDownloader
 {
@@ -85,7 +86,7 @@ namespace QuantConnect.ToolBox.IBDownloader
 
                         while (startDate < auxEndDate)
                         {
-                            var data = downloader.Get(symbol, castResolution, startDate, auxEndDate);
+                            var data = downloader.Get(new DataDownloaderGetParameters(symbol, castResolution, startDate, auxEndDate, TickType.Quote));
                             var bars = data.Cast<QuoteBar>().ToList();
 
                             if (allResolutions)
@@ -97,7 +98,7 @@ namespace QuantConnect.ToolBox.IBDownloader
                                 // Save the data (other resolutions)
                                 foreach (var res in new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily })
                                 {
-                                    var resData = downloader.AggregateBars(symbol, bars, res.ToTimeSpan());
+                                    var resData = LeanData.AggregateQuoteBars(bars, symbol, res.ToTimeSpan());
 
                                     writer = new LeanDataWriter(res, symbol, dataDirectory);
                                     writer.Write(resData);

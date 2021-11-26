@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,17 +13,18 @@
  * limitations under the License.
 */
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Diagnostics;
+using QuantConnect.Data;
+using QuantConnect.Util;
+using QuantConnect.Logging;
 using System.Threading.Tasks;
 using IQFeed.CSharpApiClient;
-using IQFeed.CSharpApiClient.Lookup;
-using QuantConnect.Configuration;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
 using QuantConnect.ToolBox.IQFeed;
-using QuantConnect.Util;
+using IQFeed.CSharpApiClient.Lookup;
 
 namespace QuantConnect.ToolBox.IQFeedDownloader
 {
@@ -74,7 +75,7 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                 var universeProvider = new IQFeedDataQueueUniverseProvider();
                 var historyProvider = new IQFeedFileHistoryProvider(lookupClient, universeProvider, MarketHoursDatabase.FromDataFolder());
                 var downloader = new IQFeedDataDownloader(historyProvider);
-                var quoteDownloader = new IQFeedDataDownloader(historyProvider, TickType.Quote);
+                var quoteDownloader = new IQFeedDataDownloader(historyProvider);
 
                 var resolutions = allResolution ? new List<Resolution> { Resolution.Tick, Resolution.Second, Resolution.Minute, Resolution.Hour, Resolution.Daily } : new List<Resolution> { castResolution };
                 var requests = resolutions.SelectMany(r => tickers.Select(t => new { Ticker = t, Resolution = r })).ToList();
@@ -84,7 +85,7 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                  {
                      // Download the data
                      var symbol = Symbol.Create(request.Ticker, SecurityType.Equity, market);
-                     var data = downloader.Get(symbol, request.Resolution, startDate, endDate);
+                     var data = downloader.Get(new DataDownloaderGetParameters(symbol, request.Resolution, startDate, endDate));
 
                      // Write the data
                      var writer = new LeanDataWriter(request.Resolution, symbol, dataDirectory);
@@ -92,7 +93,7 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
 
                      if (request.Resolution == Resolution.Tick)
                      {
-                         var quotes = quoteDownloader.Get(symbol, request.Resolution, startDate, endDate);
+                         var quotes = quoteDownloader.Get(new DataDownloaderGetParameters(symbol, request.Resolution, startDate, endDate, TickType.Quote));
                          var quoteWriter = new LeanDataWriter(request.Resolution, symbol, dataDirectory, TickType.Quote);
                          quoteWriter.Write(quotes);
                      }

@@ -204,7 +204,6 @@ namespace QuantConnect.Tests.Common
             const decimal price = 30.00m;
             const decimal underlyingPrice = 200m;
             const decimal underlyingVol = 0.25m;
-            const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
             var evaluationDate1 = new DateTime(2015, 2, 19);
             var evaluationDate2 = new DateTime(2015, 2, 20);

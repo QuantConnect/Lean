@@ -26,13 +26,13 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Threading;
 using RestSharp;
-using System.Text.RegularExpressions;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -45,11 +45,16 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
         private readonly string _passPhrase;
-        private const string SymbolMatching = "ETH|LTC|BTC|BCH|XRP|EOS|XLM|ETC|ZRX";
         private readonly IAlgorithm _algorithm;
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
+        private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
         private readonly bool _isDataQueueHandler;
+        private LiveNodePacket _job;
+
+        /// <summary>
+        /// Data Aggregator
+        /// </summary>
         protected readonly IDataAggregator _aggregator;
 
         // GDAX has different rate limits for public and private endpoints
@@ -64,8 +69,7 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly Task _fillMonitorTask;
         private readonly AutoResetEvent _fillMonitorResetEvent = new AutoResetEvent(false);
         private readonly int _fillMonitorTimeout = Config.GetInt("gdax-fill-monitor-timeout", 500);
-        private readonly ConcurrentDictionary<string, Order> _pendingOrders = new ConcurrentDictionary<string, Order>();
-        private long _lastEmittedFillTradeId;
+        private readonly ConcurrentDictionary<string, PendingOrder> _pendingOrders = new ConcurrentDictionary<string, PendingOrder>();
 
         #endregion
 
@@ -86,10 +90,12 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">consolidate ticks</param>
+        /// <param name="job">The live job packet</param>
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
-            IPriceProvider priceProvider, IDataAggregator aggregator)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
+            IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, "GDAX")
         {
+            _job = job;
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
             _algorithm = algorithm;
@@ -106,13 +112,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage e)
+        protected override void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
+
             try
             {
                 var raw = JsonConvert.DeserializeObject<Messages.BaseMessage>(e.Message, JsonSettings);
-
-                LastHeartbeatUtcTime = DateTime.UtcNow;
 
                 if (raw.Type == "heartbeat")
                 {
@@ -167,7 +173,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 var message = JsonConvert.DeserializeObject<Messages.Snapshot>(data);
 
-                var symbol = ConvertProductId(message.ProductId);
+                var symbol = _symbolMapper.GetLeanSymbol(message.ProductId, SecurityType.Crypto, Market.GDAX);
 
                 DefaultOrderBook orderBook;
                 if (!_orderBooks.TryGetValue(symbol, out orderBook))
@@ -222,7 +228,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 var message = JsonConvert.DeserializeObject<Messages.L2Update>(data);
 
-                var symbol = ConvertProductId(message.ProductId);
+                var symbol = _symbolMapper.GetLeanSymbol(message.ProductId, SecurityType.Crypto, Market.GDAX);
 
                 var orderBook = _orderBooks[symbol];
 
@@ -277,7 +283,7 @@ namespace QuantConnect.Brokerages.GDAX
 
         private void EmitFillOrderEvent(Messages.Fill fill, Order order)
         {
-            var symbol = ConvertProductId(fill.ProductId);
+            var symbol = _symbolMapper.GetLeanSymbol(fill.ProductId, SecurityType.Crypto, Market.GDAX);
 
             if (!FillSplit.ContainsKey(order.Id))
             {
@@ -316,7 +322,8 @@ namespace QuantConnect.Brokerages.GDAX
                 Order outOrder;
                 CachedOrderIDs.TryRemove(order.Id, out outOrder);
 
-                _pendingOrders.TryRemove(fill.OrderId, out outOrder);
+                PendingOrder removed;
+                _pendingOrders.TryRemove(fill.OrderId, out removed);
             }
 
             OnOrderEvent(orderEvent);
@@ -329,7 +336,9 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public Tick GetTick(Symbol symbol)
         {
-            var req = new RestRequest($"/products/{ConvertSymbol(symbol)}/ticker", Method.GET);
+            var brokerageSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
+
+            var req = new RestRequest($"/products/{brokerageSymbol}/ticker", Method.GET);
             var response = ExecuteRestRequest(req, GdaxEndpointType.Public);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
@@ -368,7 +377,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         private void EmitTradeTick(Messages.Matched message)
         {
-            var symbol = ConvertProductId(message.ProductId);
+            var symbol = _symbolMapper.GetLeanSymbol(message.ProductId, SecurityType.Crypto, Market.GDAX);
 
             _aggregator.Update(new Tick
             {
@@ -383,26 +392,31 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Creates websocket message subscriptions for the supplied symbols
         /// </summary>
-        public override void Subscribe(IEnumerable<Symbol> symbols)
+        protected override bool Subscribe(IEnumerable<Symbol> symbols)
         {
             var fullList = GetSubscribed().Union(symbols);
             var pendingSymbols = new List<Symbol>();
             foreach (var item in fullList)
             {
-                if (!IsSubscribeAvailable(item))
+                if (_symbolMapper.IsKnownLeanSymbol(item))
+                {
+                    pendingSymbols.Add(item);
+                }
+                else if (item.SecurityType == SecurityType.Crypto)
+                {
+                    Log.Error($"Unknown GDAX symbol: {item.Value}");
+                }
+                else
                 {
                     //todo: refactor this outside brokerage
                     //alternative service: http://openexchangerates.org/latest.json
                     PollTick(item);
                 }
-                else
-                {
-                    pendingSymbols.Add(item);
-                }
             }
 
             var products = pendingSymbols
-                .Select(s => s.Value.Substring(0, 3) + "-" + s.Value.Substring(3)).ToArray();
+                .Select(s => _symbolMapper.GetBrokerageSymbol(s))
+                .ToArray();
 
             var payload = new
             {
@@ -413,7 +427,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             if (payload.product_ids.Length == 0)
             {
-                return;
+                return true;
             }
 
             var token = GetAuthenticationToken(string.Empty, "GET", "/users/self/verify");
@@ -432,6 +446,7 @@ namespace QuantConnect.Brokerages.GDAX
             WebSocket.Send(json);
 
             Log.Trace("GDAXBrokerage.Subscribe: Sent subscribe.");
+            return true;
         }
 
         /// <summary>
@@ -486,11 +501,6 @@ namespace QuantConnect.Brokerages.GDAX
             }
         }
 
-        private bool IsSubscribeAvailable(Symbol symbol)
-        {
-            return Regex.IsMatch(symbol.Value, SymbolMatching);
-        }
-
         /// <summary>
         /// Ends current subscriptions
         /// </summary>
@@ -499,7 +509,7 @@ namespace QuantConnect.Brokerages.GDAX
             if (WebSocket.IsOpen)
             {
                 var products = symbols
-                    .Select(s => s.Value.Substring(0, 3) + "-" + s.Value.Substring(3))
+                    .Select(s => _symbolMapper.GetBrokerageSymbol(s))
                     .ToArray();
 
                 var payload = new
@@ -522,7 +532,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 foreach (var order in GetOpenOrders())
                 {
-                    _pendingOrders.TryAdd(order.BrokerId.First(), order);
+                    _pendingOrders.TryAdd(order.BrokerId.First(), new PendingOrder(order));
                 }
 
                 while (!_ctsFillMonitor.IsCancellationRequested)
@@ -532,31 +542,35 @@ namespace QuantConnect.Brokerages.GDAX
                     foreach (var kvp in _pendingOrders)
                     {
                         var orderId = kvp.Key;
-                        var order = kvp.Value;
+                        var pendingOrder = kvp.Value;
 
                         var request = new RestRequest($"/fills?order_id={orderId}", Method.GET);
                         GetAuthenticationToken(request);
 
-                        var response = ExecuteRestRequest(request, GdaxEndpointType.Private);
+                        var response = ExecuteRestRequest(request, GdaxEndpointType.Private, false);
 
                         if (response.StatusCode != HttpStatusCode.OK)
                         {
-                            throw new Exception($"GDAXBrokerage.FillMonitorAction(): request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                            OnMessage(new BrokerageMessageEvent(
+                                BrokerageMessageType.Warning,
+                                -1,
+                                $"GDAXBrokerage.FillMonitorAction(): request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}"));
+
+                            continue;
                         }
 
                         var fills = JsonConvert.DeserializeObject<List<Messages.Fill>>(response.Content);
                         foreach (var fill in fills.OrderBy(x => x.TradeId))
                         {
-                            if (fill.TradeId <= _lastEmittedFillTradeId)
+                            if (fill.TradeId <= pendingOrder.LastEmittedFillTradeId)
                             {
                                 continue;
                             }
 
-                            EmitFillOrderEvent(fill, order);
+                            EmitFillOrderEvent(fill, pendingOrder.Order);
 
-                            _lastEmittedFillTradeId = fill.TradeId;
+                            pendingOrder.LastEmittedFillTradeId = fill.TradeId;
                         }
-
                     }
                 }
             }
@@ -566,6 +580,17 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             Log.Trace("GDAXBrokerage.FillMonitorAction(): task ended");
+        }
+
+        private class PendingOrder
+        {
+            public Order Order { get; }
+            public long LastEmittedFillTradeId { get; set; }
+
+            public PendingOrder(Order order)
+            {
+                Order = order;
+            }
         }
     }
 }

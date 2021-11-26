@@ -62,7 +62,7 @@ namespace QuantConnect.ToolBox.IQFeed
             var ticker = _symbolMapper.GetBrokerageSymbol(request.Symbol);
             if (string.IsNullOrEmpty(ticker))
             {
-                Log.Trace($"IQFeedHistoryProvider.ProcessHistoryRequests(): Unable to retrieve ticker from Symbol: ${request.Symbol}");
+                Log.Trace($"IQFeedFileHistoryProvider.ProcessHistoryRequests(): Unable to retrieve ticker from Symbol: ${request.Symbol}");
                 return Enumerable.Empty<BaseData>();
             }
 
@@ -76,11 +76,11 @@ namespace QuantConnect.ToolBox.IQFeed
             }
 
             Log.Trace(
-                $"IQFeedHistoryProvider.ProcessHistoryRequests(): Submitting request: {request.Symbol.SecurityType.ToStringInvariant()}-{ticker}: " +
+                $"IQFeedFileHistoryProvider.ProcessHistoryRequests(): Submitting request: {request.Symbol.SecurityType.ToStringInvariant()}-{ticker}: " +
                 $"{request.Resolution.ToStringInvariant()} {start.ToStringInvariant()}->{(end ?? DateTime.UtcNow.AddMinutes(-1)).ToStringInvariant()}"
             );
 
-            return GetDataFromFile(request, ticker, start, end);
+            return FilterUnorderedData(GetDataFromFile(request, ticker, start, end));
         }
 
         private IEnumerable<BaseData> GetDataFromFile(HistoryRequest request, string ticker, DateTime startDate, DateTime? endDate)
@@ -97,7 +97,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                         if (_filesByRequestKeyCache.TryRemove(requestKey, out filename))
                             return GetDataFromTickMessages(filename, request, tickFunc, true);
-                        
+
                         filename = _lookupClient.Historical.File.GetHistoryTickTimeframeAsync(ticker, startDate, endDate, dataDirection: DataDirection.Oldest).SynchronouslyAwaitTaskResult();
                         _filesByRequestKeyCache.AddOrUpdate(requestKey, filename);
                         return GetDataFromTickMessages(filename, request, tickFunc, false);
@@ -114,7 +114,7 @@ namespace QuantConnect.ToolBox.IQFeed
             }
             catch (Exception e)
             {
-                Log.Error($"IQFeedHistoryProvider.GetDataFromFile(): {e}");
+                Log.Error($"IQFeedFileHistoryProvider.GetDataFromFile(): {e}");
             }
 
             return Enumerable.Empty<BaseData>();
@@ -268,6 +268,28 @@ namespace QuantConnect.ToolBox.IQFeed
         private static string GetHistoryRequestKey(string ticker, DateTime startDate, DateTime? endDate)
         {
             return $"{ticker}-{startDate}-{endDate}";
+        }
+
+        /// <summary>
+        /// Prevent IQFeed from returning unordered data of all sort. This might happen exceptionally.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private static IEnumerable<BaseData> FilterUnorderedData(IEnumerable<BaseData> data)
+        {
+            var lastTime = DateTime.MinValue;
+            foreach (var d in data)
+            {
+                if (d.Time < lastTime)
+                {
+                    Log.Trace($"IQFeedFileHistoryProvider.FilterUnorderedData(): Unordered IQFeed data to be rejected.\n Rejected data: {d}");
+                    lastTime = d.Time;
+                    continue;
+                }
+
+                lastTime = d.Time;
+                yield return d;
+            }
         }
 
         private static PeriodType GetPeriodType(Resolution resolution)

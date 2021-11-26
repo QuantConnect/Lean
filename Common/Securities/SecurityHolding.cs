@@ -17,6 +17,7 @@ using System;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -25,6 +26,11 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityHolding
     {
+        /// <summary>
+        /// Event raised each time the holdings quantity is changed.
+        /// </summary>
+        public event EventHandler<SecurityHoldingQuantityChangedEventArgs> QuantityChanged;
+
         //Working Variables
         private decimal _averagePrice;
         private decimal _quantity;
@@ -66,7 +72,6 @@ namespace QuantConnect.Securities
             _totalFees = holding._totalFees;
             _currencyConverter = holding._currencyConverter;
         }
-
 
         /// <summary>
         /// The security being held
@@ -152,7 +157,6 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Acquisition cost of the security total holdings in units of the account's currency.
         /// </summary>
@@ -225,7 +229,8 @@ namespace QuantConnect.Securities
                 {
                     return 0;
                 }
-                return _price * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+
+                return GetQuantityValue(Quantity);
             }
         }
 
@@ -350,7 +355,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the unrealized profit as a percenage of holdings cost
         /// </summary>
-        public decimal UnrealizedProfitPercent
+        public virtual decimal UnrealizedProfitPercent
         {
             get
             {
@@ -408,8 +413,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual void SetHoldings(decimal averagePrice, int quantity)
         {
-            _averagePrice = averagePrice;
-            _quantity = quantity;
+            SetHoldings(averagePrice, (decimal) quantity);
         }
 
         /// <summary>
@@ -417,8 +421,13 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual void SetHoldings(decimal averagePrice, decimal quantity)
         {
-            _averagePrice = averagePrice;
+            var previousQuantity = _quantity;
+            var previousAveragePrice = _averagePrice;
+
             _quantity = quantity;
+            _averagePrice = averagePrice;
+
+            OnQuantityChanged(previousAveragePrice, previousQuantity);
         }
 
         /// <summary>
@@ -428,6 +437,29 @@ namespace QuantConnect.Securities
         public virtual void UpdateMarketPrice(decimal closingPrice)
         {
             _price = closingPrice;
+        }
+
+        /// <summary>
+        /// Gets the total value of the specified <paramref name="quantity"/> of shares of this security
+        /// in the account currency
+        /// </summary>
+        /// <param name="quantity">The quantity of shares</param>
+        /// <returns>The value of the quantity of shares in the account currency</returns>
+        public virtual decimal GetQuantityValue(decimal quantity)
+        {
+            return GetQuantityValue(quantity, _price);
+        }
+
+        /// <summary>
+        /// Gets the total value of the specified <paramref name="quantity"/> of shares of this security
+        /// in the account currency
+        /// </summary>
+        /// <param name="quantity">The quantity of shares</param>
+        /// <param name="price">The current price</param>
+        /// <returns>The value of the quantity of shares in the account currency</returns>
+        public virtual decimal GetQuantityValue(decimal quantity, decimal price)
+        {
+            return price * quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
         }
 
         /// <summary>
@@ -450,9 +482,33 @@ namespace QuantConnect.Securities
                 ConvertToAccountCurrency(orderFee).Amount;
 
             var price = marketOrder.Direction == OrderDirection.Sell ? _security.BidPrice : _security.AskPrice;
+            if (price == 0)
+            {
+                // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
+                // the brokerage, but only the last trade price was provided.
+                price = _security.Price;
+            }
 
             return (price - AveragePrice) * Quantity * _security.QuoteCurrency.ConversionRate
                 * _security.SymbolProperties.ContractMultiplier - feesInAccountCurrency;
+        }
+
+        /// <summary>
+        /// Writes out the properties of this instance to string
+        /// </summary>
+        public override string ToString()
+        {
+            return Invariant($"{Symbol.Value}: {Quantity} @ {AveragePrice}");
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="QuantityChanged"/> event
+        /// </summary>
+        protected virtual void OnQuantityChanged(decimal previousAveragePrice, decimal previousQuantity)
+        {
+            QuantityChanged?.Invoke(this, new SecurityHoldingQuantityChangedEventArgs(
+                _security, previousAveragePrice, previousQuantity
+            ));
         }
     }
 }

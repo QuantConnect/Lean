@@ -15,6 +15,7 @@
 
 using System;
 using System.IO;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Util
 {
@@ -141,11 +142,10 @@ namespace QuantConnect.Util
             if (securityTypeOffset == LowResSecurityTypeOffset)
             {
                 ticker = Path.GetFileNameWithoutExtension(path);
-                if (securityType == SecurityType.Option)
+                if (securityType.IsOption())
                 {
-                    // ticker_trade_american
-                    var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
-                    ticker = tickerWithoutStyle.Substring(0, tickerWithoutStyle.LastIndexOfInvariant("_"));
+                    // ticker_year_trade_american
+                    ticker = ticker.Substring(0, ticker.IndexOf("_", StringComparison.InvariantCulture));
                 }
                 if (securityType == SecurityType.Future)
                 {
@@ -173,6 +173,14 @@ namespace QuantConnect.Util
                 rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
                 var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
                 symbol = Symbol.CreateOption(ticker, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var withoutExtension = Path.GetFileNameWithoutExtension(filename);
+                rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
+                var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
+                var futureSymbol = QuantConnect.Symbol.Create(FuturesOptionsSymbolMappings.MapFromOption(ticker), SecurityType.Future, market);
+                symbol = Symbol.CreateOption(futureSymbol, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
             }
             else if (securityType == SecurityType.Future)
             {

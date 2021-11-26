@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 foreach (var date in tradableDays)
                 {
                     var fineFundamentalSource = GetSource(FineFundamental, fineFundamentalConfiguration, date);
-                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental);
+                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental, dataProvider);
                     var fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
 
                     // directly do not emit null points. Null points won't happen when used with Coarse data since we are pre filtering based on Coarse.HasFundamentalData
@@ -109,6 +109,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             if (File.Exists(source.Source))
             {
                 return source;
+            }
+
+            if (_isLiveMode)
+            {
+                var result = DailyBackwardsLoop(fine, config, date, source);
+                // if we didn't fine any file we just fallback into listing the directory
+                if (result != null)
+                {
+                    return result;
+                }
             }
 
             var cacheKey = config.Symbol.Value.ToLowerInvariant().GetHashCode();
@@ -177,6 +187,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
 
             return source;
+        }
+
+        private SubscriptionDataSource DailyBackwardsLoop(FineFundamental fine, SubscriptionDataConfig config, DateTime date, SubscriptionDataSource source)
+        {
+            var path = Path.GetDirectoryName(source.Source) ?? string.Empty;
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+            {
+                // directory does not exist
+                return source;
+            }
+
+            // loop back in time, for 10 days, until we find an existing file
+            var count = 10;
+            do
+            {
+                // get previous date
+                date = date.AddDays(-1);
+
+                // get file name for this date
+                source = fine.GetSource(config, date, _isLiveMode);
+                if (File.Exists(source.Source))
+                {
+                    break;
+                }
+            }
+            while (--count > 0);
+
+            return count == 0 ? null : source;
         }
     }
 }

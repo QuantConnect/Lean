@@ -39,7 +39,6 @@ namespace QuantConnect.ToolBox.IQFeed
     public class IQFeedDataQueueHandler : HistoryProviderBase, IDataQueueHandler, IDataQueueUniverseProvider
     {
         private bool _isConnected;
-        private int _dataPointCount;
         private readonly HashSet<Symbol> _symbols;
         private readonly Dictionary<Symbol, Symbol> _underlyings;
         private readonly object _sync = new object();
@@ -57,7 +56,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
-        public override int DataPointCount => _dataPointCount;
+        public override int DataPointCount { get; } = 0;
 
         /// <summary>
         /// IQFeedDataQueueHandler is an implementation of IDataQueueHandler:
@@ -348,20 +347,31 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <param name="securityExchange">Expected security exchange name(if any)</param>
-        /// <returns></returns>
+        /// <returns>Symbol results</returns>
         public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
         {
             return _symbolUniverse.LookupSymbols(lookupName, securityType, includeExpired, securityCurrency, securityExchange);
         }
 
         /// <summary>
-        /// Returns whether the time can be advanced or not.
+        /// Method returns a collection of Symbols that are available at the data source.
         /// </summary>
-        /// <param name="securityType">The security type</param>
-        /// <returns>true if the time can be advanced</returns>
-        public bool CanAdvanceTime(SecurityType securityType)
+        /// <param name="symbol">Symbol to lookup</param>
+        /// <param name="includeExpired">Include expired contracts</param>
+        /// <param name="securityCurrency">Expected security currency(if any)</param>
+        /// <returns>Symbol results</returns>
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency)
         {
-            return _symbolUniverse.CanAdvanceTime(securityType);
+            return LookupSymbols(symbol.ID.Symbol, symbol.SecurityType, includeExpired, securityCurrency);
+        }
+
+        /// <summary>
+        /// Returns whether selection can take place or not.
+        /// </summary>
+        /// <returns>True if selection can take place</returns>
+        public bool CanPerformSelection()
+        {
+            return _symbolUniverse.CanPerformSelection();
         }
 
         /// <summary>

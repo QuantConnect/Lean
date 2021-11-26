@@ -53,6 +53,12 @@ namespace QuantConnect.Packets
         public string BacktestId = "";
 
         /// <summary>
+        /// OptimizationId for this result packet if any
+        /// </summary>
+        [JsonProperty(PropertyName = "sOptimizationID")]
+        public string OptimizationId;
+
+        /// <summary>
         /// Compile Id for the algorithm which generated this result packet.
         /// </summary>
         [JsonProperty(PropertyName = "sCompileID")]
@@ -147,6 +153,7 @@ namespace QuantConnect.Packets
                 Results             = packet.Results;
                 ProcessingTime      = packet.ProcessingTime;
                 TradeableDates      = packet.TradeableDates;
+                OptimizationId      = packet.OptimizationId;
             }
             catch (Exception err)
             {
@@ -175,6 +182,7 @@ namespace QuantConnect.Packets
                 CompileId = job.CompileId;
                 Channel = job.Channel;
                 BacktestId = job.BacktestId;
+                OptimizationId = job.OptimizationId;
                 Results = results;
                 Name = job.Name;
                 UserId = job.UserId;

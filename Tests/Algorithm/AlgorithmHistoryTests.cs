@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,18 +14,20 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
+using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Algorithm;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Securities;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Algorithm
@@ -35,6 +37,9 @@ namespace QuantConnect.Tests.Algorithm
     {
         private QCAlgorithm _algorithm;
         private TestHistoryProvider _testHistoryProvider;
+        private IDataProvider _dataProvider;
+        private IMapFileProvider _mapFileProvider;
+        private IFactorFileProvider _factorFileProvider;
 
         [SetUp]
         public void Setup()
@@ -42,6 +47,10 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.HistoryProvider = _testHistoryProvider = new TestHistoryProvider();
+
+            _dataProvider = TestGlobals.DataProvider;
+            _mapFileProvider = TestGlobals.MapFileProvider;
+            _factorFileProvider = TestGlobals.FactorFileProvider;
         }
 
         [Test]
@@ -50,15 +59,14 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            var dataProvider = new DefaultDataProvider();
-            var zipCacheProvider = new ZipDataCacheProvider(dataProvider);
+            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
             _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
-                dataProvider,
+                _dataProvider,
                 zipCacheProvider,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
+                _mapFileProvider,
+                _factorFileProvider,
                 null,
                 false,
                 new DataPermissionManager()));
@@ -170,22 +178,8 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void GetLastKnownPriceOfIlliquidAsset_RealData()
         {
-            var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            var cacheProvider = new ZipDataCacheProvider(new DefaultDataProvider());
-            algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                new DefaultDataProvider(),
-                cacheProvider,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
-                null,
-                false,
-                new DataPermissionManager()));
-
-            algorithm.SetDateTime(new DateTime(2014, 6, 6, 15, 0, 0));
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+            var algorithm = GetAlgorithm(cacheProvider,new DateTime(2014, 6, 6, 11, 0, 0));
 
             //20140606_twx_minute_quote_american_call_230000_20150117.csv
             var optionSymbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 23, new DateTime(2015,1,17));
@@ -199,7 +193,6 @@ namespace QuantConnect.Tests.Algorithm
 
             cacheProvider.DisposeSafely();
         }
-
 
         [Test]
         public void GetLastKnownPriceOfIlliquidAsset_TestData()
@@ -220,6 +213,233 @@ namespace QuantConnect.Tests.Algorithm
             var lastKnownPrice = _algorithm.GetLastKnownPrice(option);
             Assert.IsNotNull(lastKnownPrice);
             Assert.AreEqual(barTime.AddMinutes(1), lastKnownPrice.EndTime);
+        }
+
+        [Test]
+        public void GetLastKnownPriceOfCustomData()
+        {
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+            var algorithm = GetAlgorithm(cacheProvider, new DateTime(2018, 4, 4));
+
+            var alpha = algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a");
+
+            var lastKnownPrice = algorithm.GetLastKnownPrice(alpha);
+            Assert.IsNotNull(lastKnownPrice);
+
+            cacheProvider.DisposeSafely();
+        }
+
+        [Test]
+        public void GetLastKnownPricesEquity()
+        {
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+            var algorithm = GetAlgorithm(cacheProvider, new DateTime(2013, 10, 8));
+
+            var equity = algorithm.AddEquity("SPY");
+
+            var lastKnownPrices = algorithm.GetLastKnownPrices(equity.Symbol).ToList();
+            Assert.AreEqual(2, lastKnownPrices.Count);
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(TradeBar)));
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(QuoteBar)));
+
+            cacheProvider.DisposeSafely();
+        }
+
+        [Test]
+        public void GetLastKnownPriceEquity()
+        {
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+            var algorithm = GetAlgorithm(cacheProvider, new DateTime(2013, 10, 8));
+
+            var equity = algorithm.AddEquity("SPY");
+
+            var lastKnownPrice = algorithm.GetLastKnownPrice(equity);
+            Assert.AreEqual(typeof(TradeBar), lastKnownPrice.GetType());
+
+            cacheProvider.DisposeSafely();
+        }
+
+        [Test]
+        public void GetLastKnownPriceOption()
+        {
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+            var algorithm = GetAlgorithm(cacheProvider, new DateTime(2014, 06, 09));
+
+            var option = algorithm.AddOptionContract(Symbols.CreateOptionSymbol("AAPL", OptionRight.Call, 250m, new DateTime(2016, 01, 15)));
+
+            var lastKnownPrice = algorithm.GetLastKnownPrice(option);
+            Assert.AreEqual(typeof(QuoteBar), lastKnownPrice.GetType());
+            cacheProvider.DisposeSafely();
+        }
+
+        [Test]
+        public void GetLastKnownPricesOption()
+        {
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+            var algorithm = GetAlgorithm(cacheProvider, new DateTime(2014, 06, 09));
+
+            var option = algorithm.AddOptionContract(Symbols.CreateOptionSymbol("AAPL", OptionRight.Call, 250m, new DateTime(2016, 01, 15)));
+
+            var lastKnownPrices = algorithm.GetLastKnownPrices(option).ToList();;
+            Assert.AreEqual(2, lastKnownPrices.Count);
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(TradeBar)));
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(QuoteBar)));
+
+            cacheProvider.DisposeSafely();
+        }
+
+        [Test]
+        public void GetLastKnownPriceFuture()
+        {
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+            var algorithm = GetAlgorithm(cacheProvider, new DateTime(2013, 10, 8));
+
+            var future = algorithm.AddSecurity(Symbols.CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2013, 12, 20)));
+
+            var lastKnownPrice = algorithm.GetLastKnownPrice(future);
+            Assert.AreEqual(typeof(QuoteBar), lastKnownPrice.GetType());
+
+            cacheProvider.DisposeSafely();
+        }
+
+        [Test]
+        public void GetLastKnownPricesFuture()
+        {
+            var cacheProvider = new ZipDataCacheProvider(_dataProvider);
+            var algorithm = GetAlgorithm(cacheProvider, new DateTime(2013, 10, 8));
+
+            var future = algorithm.AddSecurity(Symbols.CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2013, 12, 20)));
+
+            var lastKnownPrices = algorithm.GetLastKnownPrices(future).ToList();
+            Assert.AreEqual(2, lastKnownPrices.Count);
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(TradeBar)));
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(QuoteBar)));
+
+            cacheProvider.DisposeSafely();
+        }
+
+        [Test]
+        public void TickResolutionOpenInterestHistoryRequestIsNotFilteredWhenRequestedExplicitly()
+        {
+            _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
+            _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                _dataProvider,
+                zipCacheProvider,
+                _mapFileProvider,
+                _factorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+            var start = new DateTime(2014, 6, 05);
+            _algorithm.SetStartDate(start);
+            _algorithm.SetDateTime(start.AddDays(2));
+
+            _algorithm.UniverseSettings.FillForward = false;
+            var optionSymbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 23, new DateTime(2015, 1, 17));
+            var openInterests = _algorithm.History<OpenInterest>(optionSymbol, start, start.AddDays(2), Resolution.Minute).ToList();
+
+            zipCacheProvider.DisposeSafely();
+            Assert.IsNotEmpty(openInterests);
+
+            Assert.AreEqual(2, openInterests.Count);
+            Assert.AreEqual(new DateTime(2014, 06, 05, 6, 32, 0), openInterests[0].Time);
+            Assert.AreEqual(optionSymbol, openInterests[0].Symbol);
+            Assert.AreEqual(new DateTime(2014, 06, 06, 6, 32, 0), openInterests[1].Time);
+            Assert.AreEqual(optionSymbol, openInterests[1].Symbol);
+        }
+
+        [Test]
+        public void TickResolutionOpenInterestHistoryRequestIsFilteredByDefault_SingleSymbol()
+        {
+            _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
+            _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                _dataProvider,
+                zipCacheProvider,
+                _mapFileProvider,
+                _factorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+            var start = new DateTime(2014, 6, 05);
+            _algorithm.SetStartDate(start);
+            _algorithm.SetDateTime(start.AddDays(2));
+
+            var optionSymbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 23, new DateTime(2015, 1, 17));
+            var result = _algorithm.History(new[] { optionSymbol }, start, start.AddDays(2), Resolution.Minute, fillForward:false).ToList();
+
+            zipCacheProvider.DisposeSafely();
+            Assert.IsNotEmpty(result);
+            Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol)));
+
+            var openInterests = result.Select(slice => slice.Get(typeof(OpenInterest)) as DataDictionary<OpenInterest>).Where(dataDictionary => dataDictionary.Count > 0).ToList();
+
+            Assert.AreEqual(0, openInterests.Count);
+        }
+
+        [Test]
+        public void TickResolutionOpenInterestHistoryRequestIsFilteredByDefault_MultipleSymbols()
+        {
+            _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var zipCacheProvider = new ZipDataCacheProvider(_dataProvider);
+            _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                _dataProvider,
+                zipCacheProvider,
+                _mapFileProvider,
+                _factorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+            var start = new DateTime(2014, 6, 05);
+            _algorithm.SetStartDate(start);
+            _algorithm.SetDateTime(start.AddDays(2));
+
+            var optionSymbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 23, new DateTime(2015, 1, 17));
+            var optionSymbol2 = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 500, new DateTime(2015, 1, 17));
+            var result = _algorithm.History(new[] { optionSymbol, optionSymbol2 }, start, start.AddDays(2), Resolution.Minute, fillForward: false).ToList();
+
+            zipCacheProvider.DisposeSafely();
+            Assert.IsNotEmpty(result);
+
+            Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol)));
+            Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol2)));
+
+            var openInterests = result.Select(slice => slice.Get(typeof(OpenInterest)) as DataDictionary<OpenInterest>).Where(dataDictionary => dataDictionary.Count > 0).ToList();
+
+            Assert.AreEqual(0, openInterests.Count);
+        }
+
+        private QCAlgorithm GetAlgorithm(IDataCacheProvider cacheProvider, DateTime dateTime)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            algorithm.SetDateTime(dateTime.ConvertToUtc(algorithm.TimeZone));
+
+            algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                _dataProvider,
+                cacheProvider,
+                _mapFileProvider,
+                _factorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+            return algorithm;
         }
 
         private class TestHistoryProvider : HistoryProviderBase

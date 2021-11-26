@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     /// <summary>
     /// This is an implementation of <see cref="IDataQueueHandler"/> used for testing
     /// </summary>
-    public class FakeDataQueue : IDataQueueHandler
+    public class FakeDataQueue : IDataQueueHandler, IDataQueueUniverseProvider
     {
         private int _count;
         private readonly Random _random = new Random();
@@ -204,6 +204,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 _symbolExchangeTimeZones[symbol] = offsetProvider = new TimeZoneOffsetProvider(exchangeTimeZone, TimeProvider.GetUtcNow(), Time.EndOfTime);
             }
             return offsetProvider;
+        }
+
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
+        {
+            yield break;
+        }
+
+        public bool CanPerformSelection()
+        {
+            return true;
         }
     }
 }

@@ -17,6 +17,7 @@
 using System;
 using Newtonsoft.Json;
 using ProtoBuf;
+using QuantConnect.Securities.Future;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -30,6 +31,7 @@ namespace QuantConnect
     [ProtoContract(SkipConstructor = true)]
     public sealed class Symbol : IEquatable<Symbol>, IComparable
     {
+        private Symbol _canonical;
         // for performance we register how we compare with empty
         private bool? _isEmpty;
 
@@ -77,6 +79,10 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
                     break;
 
+                case SecurityType.Index:
+                    sid = SecurityIdentifier.GenerateIndex(ticker, market);
+                    break;
+
                 case SecurityType.Option:
                     return CreateOption(ticker, market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
 
@@ -87,6 +93,18 @@ namespace QuantConnect
                 case SecurityType.Crypto:
                     sid = SecurityIdentifier.GenerateCrypto(ticker, market);
                     break;
+
+                case SecurityType.IndexOption:
+                    return CreateOption(
+                        Create(ticker, SecurityType.Index, market),
+                        market,
+                        OptionStyle.European,
+                        default(OptionRight),
+                        0,
+                        SecurityIdentifier.DefaultDate);
+
+                case SecurityType.FutureOption:
+                    throw new NotImplementedException("Cannot create future option Symbol using this method (insufficient information). Use `CreateOption(Symbol, ...)` instead.");
 
                 case SecurityType.Commodity:
                 default:
@@ -100,7 +118,7 @@ namespace QuantConnect
         /// Creates a new Symbol for custom data. This method allows for the creation of a new Base Symbol
         /// using the first ticker and the first traded date from the provided underlying Symbol. This avoids
         /// the issue for mappable types, where the ticker is remapped supposing the provided ticker value is from today.
-        /// See method <see cref="SecurityIdentifier.GetFirstTickerAndDate(Interfaces.IMapFileProvider, string, string)"/>
+        /// See <see cref="SecurityIdentifier"/>'s private method GetFirstTickerAndDate.
         /// The provided symbol is also set to <see cref="Symbol.Underlying"/> so that it can be accessed using the custom data Symbol.
         /// This is useful for associating custom data Symbols to other asset classes so that it is possible to filter using custom data
         /// and place trades on the underlying asset based on the filtered custom data.
@@ -114,7 +132,7 @@ namespace QuantConnect
             // The SID Date is only defined for the following security types: base, equity, future, option.
             // Default to SecurityIdentifier.DefaultDate if there's no matching SecurityType
             var firstDate = underlying.SecurityType == SecurityType.Equity ||
-                underlying.SecurityType == SecurityType.Option ||
+                underlying.SecurityType.IsOption() ||
                 underlying.SecurityType == SecurityType.Future ||
                 underlying.SecurityType == SecurityType.Base
                     ? underlying.ID.Date
@@ -161,20 +179,32 @@ namespace QuantConnect
         {
             var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, market, strike, right, style);
 
-            if (expiry == SecurityIdentifier.DefaultDate)
-            {
-                alias = alias ?? $"?{underlyingSymbol.Value.LazyToUpper()}";
-            }
-            else
-            {
-                var sym = underlyingSymbol.Value;
-                if (sym.Length > 5) sym += " ";
-
-                alias = alias ?? SymbolRepresentation.GenerateOptionTickerOSI(sym, sid.OptionRight, sid.StrikePrice, sid.Date);
-            }
-
-            return new Symbol(sid, alias, underlyingSymbol);
+            return new Symbol(sid, alias ?? GetAlias(sid, underlyingSymbol), underlyingSymbol);
         }
+
+        /// <summary>
+        /// Simple method to create the canonical option symbol for any given underlying symbol
+        /// </summary>
+        /// <param name="underlyingSymbol">Underlying of this option</param>
+        /// <param name="market">Market for this option</param>
+        /// <param name="alias">An alias to be used for the symbol cache. Required when
+        /// adding the same security from different markets</param>
+        /// <returns>New Canonical Option</returns>
+        public static Symbol CreateCanonicalOption(Symbol underlyingSymbol, string market = null, string alias = null)
+        {
+            var optionType = GetOptionTypeFromUnderlying(underlyingSymbol);
+            market ??= underlyingSymbol.ID.Market;
+            
+            return CreateOption(
+                underlyingSymbol,
+                market,
+                optionType.DefaultOptionStyle(),
+                default(OptionRight),
+                0,
+                SecurityIdentifier.DefaultDate,
+                alias);
+        }
+        
 
         /// <summary>
         /// Provides a convenience method for creating a future Symbol.
@@ -189,17 +219,7 @@ namespace QuantConnect
         {
             var sid = SecurityIdentifier.GenerateFuture(expiry, ticker, market);
 
-            if (expiry == SecurityIdentifier.DefaultDate)
-            {
-                alias = alias ?? "/" + ticker.LazyToUpper();
-            }
-            else
-            {
-                var sym = sid.Symbol;
-                alias = alias ?? SymbolRepresentation.GenerateFutureTicker(sym, sid.Date);
-            }
-
-            return new Symbol(sid, alias);
+            return new Symbol(sid, alias ?? GetAlias(sid));
         }
 
         /// <summary>
@@ -210,8 +230,41 @@ namespace QuantConnect
         {
             return
                 (ID.SecurityType == SecurityType.Future ||
-                (ID.SecurityType == SecurityType.Option && HasUnderlying)) &&
+                (ID.SecurityType.IsOption() && HasUnderlying)) &&
                 ID.Date == SecurityIdentifier.DefaultDate;
+        }
+
+        /// <summary>
+        /// Get's the canonical representation of this symbol
+        /// </summary>
+        /// <remarks>This is useful for access and performance</remarks>
+        public Symbol Canonical
+        {
+            get
+            {
+                if (_canonical != null)
+                {
+                    return _canonical;
+                }
+
+                _canonical = this;
+                if (!IsCanonical())
+                {
+                    if (SecurityType.IsOption())
+                    {
+                        _canonical = CreateCanonicalOption(Underlying, ID.Market);
+                    }
+                    else if (SecurityType == SecurityType.Future)
+                    {
+                        _canonical = Create(ID.Symbol, SecurityType.Future, ID.Market);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Canonical is only defined for SecurityType.Option, SecurityType.Future, SecurityType.FutureOption");
+                    }
+                }
+                return _canonical;
+            }
         }
 
         /// <summary>
@@ -290,33 +343,102 @@ namespace QuantConnect
                 throw new ArgumentNullException(nameof(value));
             }
             ID = sid;
+            if (ID.HasUnderlying)
+            {
+                Underlying = new Symbol(ID.Underlying, ID.Underlying.Symbol);
+            }
 
-            Value = value.LazyToUpper();
+            Value = GetAlias(sid, Underlying) ?? value.LazyToUpper();
         }
 
         /// <summary>
         /// Creates new symbol with updated mapped symbol. Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
         /// Method returns newly created symbol
         /// </summary>
-        public Symbol UpdateMappedSymbol(string mappedSymbol)
+        public Symbol UpdateMappedSymbol(string mappedSymbol, uint contractDepthOffset = 0)
         {
-            if (ID.SecurityType == SecurityType.Option)
+            // Throw for any option SecurityType that is not for equities, we don't support mapping for them (FOPs and Index Options)
+            if (ID.SecurityType.IsOption() && SecurityType != SecurityType.Option)
             {
-                var underlyingSymbol = new Symbol(Underlying.ID, mappedSymbol, null);
-
-                var alias = Value;
-
-                if (ID.Date != SecurityIdentifier.DefaultDate)
-                {
-                    var sym = mappedSymbol;
-                    alias = SymbolRepresentation.GenerateOptionTickerOSI(sym, ID.OptionRight, ID.StrikePrice, ID.Date);
-                }
-
-                return new Symbol(ID, alias, underlyingSymbol);
+                throw new ArgumentException($"SecurityType {ID.SecurityType} can not be mapped.");
             }
-            else
+
+            if(ID.SecurityType == SecurityType.Future)
             {
-                return new Symbol(ID, mappedSymbol, Underlying);
+                if (mappedSymbol == Value)
+                {
+                    // futures with no real continuous mapping
+                    return this;
+                }
+                var id = SecurityIdentifier.Parse(mappedSymbol);
+                var underlying = new Symbol(id, mappedSymbol);
+                underlying = underlying.AdjustSymbolByOffset(contractDepthOffset);
+
+                // we map the underlying
+                return new Symbol(ID, underlying.Value, underlying);
+            }
+
+            // Avoid updating the current instance's underlying Symbol.
+            var underlyingSymbol = Underlying;
+
+            // Some universe Symbols, such as Constituent ETF universe Symbols and mapped custom data Symbols, have an
+            // underlying equity ETF Symbol as their underlying. When we're checking to see if a specific BaseData
+            // instance requires mapping, only the parent Symbol will be updated, which might not even need to be mapped
+            // (e.g. universe symbols with no equity ticker in symbol value). 
+            // This will ensure that we map all of the underlying Symbol(s) that also require mapping updates.
+            if (HasUnderlying)
+            {
+                underlyingSymbol = Underlying.UpdateMappedSymbol(mappedSymbol, contractDepthOffset);
+            }
+
+            // If this Symbol is not a custom data type, and the security type does not support mapping,
+            // then we know for a fact that this Symbol should not be mapped.
+            // Custom data types should be mapped, especially if this method is called on them because
+            // they can have an underlying that is also mapped.
+            if (SecurityType != SecurityType.Base && !this.RequiresMapping())
+            {
+                return new Symbol(ID, Value, underlyingSymbol);
+            }
+
+            if (SecurityType == SecurityType.Option)
+            {
+                mappedSymbol = !IsCanonical()
+                    ? SymbolRepresentation.GenerateOptionTickerOSI(mappedSymbol, ID.OptionRight, ID.StrikePrice, ID.Date)
+                    : Value;
+            }
+
+            return new Symbol(ID, mappedSymbol, underlyingSymbol);
+        }
+
+        /// <summary>
+        /// Determines the SecurityType based on the underlying Symbol's SecurityType
+        /// </summary>
+        /// <param name="underlyingSymbol">Underlying Symbol of an option</param>
+        /// <returns>SecurityType of the option</returns>
+        /// <exception cref="ArgumentException">The provided underlying has no SecurityType able to represent it as an option</exception>
+        public static SecurityType GetOptionTypeFromUnderlying(Symbol underlyingSymbol)
+        {
+            return GetOptionTypeFromUnderlying(underlyingSymbol.SecurityType);
+        }
+
+        /// <summary>
+        /// Determines the SecurityType based on the underlying Symbol's SecurityType
+        /// </summary>
+        /// <param name="securityType">SecurityType of the underlying Symbol</param>
+        /// <returns>SecurityType of the option</returns>
+        /// <exception cref="ArgumentException">The provided underlying has no SecurityType able to represent it as an option</exception>
+        public static SecurityType GetOptionTypeFromUnderlying(SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    return SecurityType.Option;
+                case SecurityType.Future:
+                    return SecurityType.FutureOption;
+                case SecurityType.Index:
+                    return SecurityType.IndexOption;
+                default:
+                    throw new ArgumentException($"No option type exists for underlying SecurityType: {securityType}");
             }
         }
 
@@ -543,5 +665,48 @@ namespace QuantConnect
 #pragma warning restore 1591
 
         #endregion
+
+        /// <summary>
+        /// Centralized helper method to resolve alias for a symbol
+        /// </summary>
+        public static string GetAlias(SecurityIdentifier securityIdentifier, Symbol underlying = null)
+        {
+            string sym;
+            switch (securityIdentifier.SecurityType)
+            {
+                case SecurityType.FutureOption:
+                case SecurityType.Option:
+                case SecurityType.IndexOption:
+                    if (securityIdentifier.Date == SecurityIdentifier.DefaultDate)
+                    {
+                        return $"?{underlying.Value.LazyToUpper()}";
+                    }
+                    sym = underlying.Value;
+                    if (securityIdentifier.Symbol != underlying.ID.Symbol)
+                    {
+                        // If we have changed the SID and it does not match the underlying,
+                        // we've mapped a future into another Symbol. We want to have a value
+                        // representing the mapped ticker, not of the underlying.
+                        // e.g. we want:
+                        //     OG  C3200...|GC18Z20
+                        // NOT
+                        //     GC  C3200...|GC18Z20
+                        sym = securityIdentifier.Symbol;
+                    }
+
+                    if (sym.Length > 5) sym += " ";
+
+                    return SymbolRepresentation.GenerateOptionTickerOSI(sym, securityIdentifier.OptionRight, securityIdentifier.StrikePrice, securityIdentifier.Date);
+                case SecurityType.Future:
+                    sym = securityIdentifier.Symbol;
+                    if (securityIdentifier.Date == SecurityIdentifier.DefaultDate)
+                    {
+                        return $"/{sym}";
+                    }
+                    return SymbolRepresentation.GenerateFutureTicker(sym, securityIdentifier.Date);
+                default:
+                    return null;
+            }
+        }
     }
 }

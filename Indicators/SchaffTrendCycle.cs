@@ -86,7 +86,7 @@ namespace QuantConnect.Indicators
             _PF = new Identity(name + "_PF");
             _PFF = type.AsIndicator(3).Of(_PF, false);
 
-            WarmUpPeriod = cyclePeriod;
+            WarmUpPeriod = _MACD.WarmUpPeriod;
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace QuantConnect.Indicators
             var PF = new IndicatorDataPoint(input.Time, ComputeStoch(_D.Current.Value, _maximumD.Current.Value, _minimumD.Current.Value));
             _PF.Update(PF);
 
-            return _PFF;
+            return _PFF.Current.Value;
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace QuantConnect.Indicators
         /// <param name="value">The current value of the set</param>
         /// <param name="highest">The max value of the set within a given period</param>
         /// <param name="lowest">The min value of the set within a given period</param>
-        /// <returns>Stochastics valuereturns>
+        /// <returns>Stochastics value </returns>
         private decimal ComputeStoch(decimal value, decimal highest, decimal lowest)
         {
             var numerator = value - lowest;

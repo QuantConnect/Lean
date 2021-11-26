@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -78,7 +79,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _mapFileProvider,
                 _factorFileProvider,
                 _dataProvider,
-                includeAuxiliaryData: true,
                 enablePriceScaling: false);
 
             IsActive = true;
@@ -150,7 +150,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 factory = new OptionChainUniverseSubscriptionEnumeratorFactory((req) =>
                 {
-                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider.Get(req.Configuration.Market), _factorFileProvider);
+                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _factorFileProvider);
                     return ConfigureEnumerator(req, true, underlyingFactory.CreateEnumerator(req, _dataProvider));
                 });
             }
@@ -201,13 +201,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
 
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardResolution,
-                    request.Configuration.ExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone, request.StartTimeLocal);
+                    request.Configuration.ExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone);
             }
 
             // optionally apply exchange/user filters
             if (request.Configuration.IsFilteredSubscription)
             {
-                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security, request.EndTimeLocal, request.Configuration.ExtendedMarketHours, false);
+                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security,
+                    request.EndTimeLocal, request.Configuration.ExtendedMarketHours, false, request.ExchangeHours);
             }
 
             return enumerator;

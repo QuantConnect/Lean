@@ -92,7 +92,7 @@ namespace QuantConnect.Indicators
             AroonUp.Update(input.Time, input.High);
             AroonDown.Update(input.Time, input.Low);
 
-            return AroonUp - AroonDown;
+            return AroonUp.Current.Value - AroonDown.Current.Value;
         }
 
         /// <summary>

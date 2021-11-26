@@ -75,10 +75,10 @@ namespace QuantConnect.Indicators
 
             if (ADX.IsReady)
             {
-                _adxHistory.Add(ADX);
+                _adxHistory.Add(ADX.Current.Value);
             }
 
-            return IsReady ? (ADX + _adxHistory[_period - 1]) / 2 : 50m;
+            return IsReady ? (ADX.Current.Value + _adxHistory[_period - 1]) / 2 : 50m;
         }
 
         /// <summary>

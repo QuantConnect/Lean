@@ -27,14 +27,14 @@ namespace QuantConnect.Exceptions
         /// <summary>
         /// Determines the order that an instance of this class should be called
         /// </summary>
-        public int Order => int.MaxValue;
+        public virtual int Order => int.MaxValue - 1;
 
         /// <summary>
         /// Determines if this interpreter should be applied to the specified exception. f
         /// </summary>
         /// <param name="exception">The exception to check</param>
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
-        public bool CanInterpret(Exception exception) => exception?.GetType() == typeof(PythonException);
+        public virtual bool CanInterpret(Exception exception) => exception?.GetType() == typeof(PythonException);
 
         /// <summary>
         /// Interprets the specified exception into a new exception
@@ -42,12 +42,11 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public virtual Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
             var pe = (PythonException)exception;
 
-            var message = pe.Message + PythonUtil.PythonExceptionStackParser(pe.StackTrace);
-            return new Exception(message, pe);
+            return new Exception(PythonUtil.PythonExceptionParser(pe), pe);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -179,11 +179,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (DataFeedSubscriptions.TryGetValue(request.Configuration, out subscription))
             {
                 // duplicate subscription request
-                return subscription.AddSubscriptionRequest(request);
+                subscription.AddSubscriptionRequest(request);
+                // only result true if the existing subscription is internal, we actually added something from the users perspective
+                return subscription.Configuration.IsInternalFeed;
             }
 
             // before adding the configuration to the data feed let's assert it's valid
-            _dataPermissionManager.AssertConfiguration(request.Configuration);
+            _dataPermissionManager.AssertConfiguration(request.Configuration, request.StartTimeLocal, request.EndTimeLocal);
 
             subscription = _dataFeed.CreateSubscription(request);
 
@@ -258,6 +260,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     return true;
                 }
+            }
+            else if (universe != null)
+            {
+                // a universe requested removal of a subscription which wasn't present anymore, this can happen when a subscription ends
+                // it will get removed from the data feed subscription list, but the configuration will remain until the universe removes it
+                // why? the effect I found is that the fill models are using these subscriptions to determine which data they could use
+                SubscriptionDataConfig config;
+                _subscriptionManagerSubscriptions.TryRemove(configuration, out config);
             }
             return false;
         }
@@ -342,6 +352,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="subscription">The <see cref="Subscription"/> owning the configuration to remove</param>
         private void RemoveSubscriptionDataConfig(Subscription subscription)
         {
+            // the subscription could of ended but might still be part of the universe
             if (subscription.RemovedFromUniverse.Value)
             {
                 SubscriptionDataConfig config;
@@ -378,11 +389,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
-            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
+            uint contractDepthOffset = 0
             )
         {
             return Add(symbol, resolution, fillForward, extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
-                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))}, dataNormalizationMode)
+                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))},
+                dataNormalizationMode, dataMappingMode, contractDepthOffset)
                 .First();
         }
 
@@ -400,7 +414,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             bool isInternalFeed = false,
             bool isCustomData = false,
             List<Tuple<Type, TickType>> subscriptionDataTypes = null,
-            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
+            uint contractDepthOffset = 0
             )
         {
             var dataTypes = subscriptionDataTypes ??
@@ -447,22 +463,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
             }
-
-            MarketHoursDatabase.Entry marketHoursDbEntry;
-            if (!_marketHoursDatabase.TryGetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType, out marketHoursDbEntry))
-            {
-                if (symbol.SecurityType == SecurityType.Base)
-                {
-                    var baseInstance = dataTypes.Single().Item1.GetBaseDataInstance();
-                    baseInstance.Symbol = symbol;
-                    _marketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, null, SecurityType.Base, baseInstance.DataTimeZone());
-                }
-
-                marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
-            }
+            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol, dataTypes.Select(tuple => tuple.Item1));
 
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
-            if (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future)
+            if (symbol.ID.SecurityType.IsOption() ||
+                symbol.ID.SecurityType == SecurityType.Index)
             {
                 dataNormalizationMode = DataNormalizationMode.Raw;
             }
@@ -490,11 +495,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     exchangeHours.TimeZone,
                     fillForward,
                     extendedMarketHours,
-                    isInternalFeed,
+                    // if the subscription data types were not provided and the tick type is OpenInterest we make it internal
+                    subscriptionDataTypes == null && tickType == TickType.OpenInterest || isInternalFeed,
                     isCustomData,
                     isFilteredSubscription: isFilteredSubscription,
                     tickType: tickType,
-                    dataNormalizationMode: dataNormalizationMode)).ToList();
+                    dataNormalizationMode: dataNormalizationMode,
+                    dataMappingMode: dataMappingMode,
+                    contractDepthOffset: contractDepthOffset)).ToList();
 
             for (int i = 0; i < result.Count; i++)
             {

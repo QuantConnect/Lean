@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,23 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Indicators")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from QuantConnect.Data.UniverseSelection import *
+from AlgorithmImports import *
 
 class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
     '''Provides an example where WarmUpIndicator method is used to warm up indicators
     after their security is added and before (Universe Selection scenario)'''
 
-    count = 10;
+    count = 10
     tolerance = 0.01
     targetPercent = 1 / count
     averages = dict()

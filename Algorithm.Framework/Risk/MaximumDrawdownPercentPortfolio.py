@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget
-from QuantConnect.Algorithm.Framework.Risk import RiskManagementModel
+from AlgorithmImports import *
 
 class MaximumDrawdownPercentPortfolio(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that limits the drawdown of the portfolio to the specified percentage.'''
@@ -35,7 +25,7 @@ class MaximumDrawdownPercentPortfolio(RiskManagementModel):
         self.maximumDrawdownPercent = -abs(maximumDrawdownPercent)
         self.isTrailing = isTrailing
         self.initialised = False
-        self.portfolioHigh = 0;
+        self.portfolioHigh = 0
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
@@ -54,7 +44,8 @@ class MaximumDrawdownPercentPortfolio(RiskManagementModel):
             return []   # return if new high reached
 
         pnl = self.GetTotalDrawdownPercent(currentValue)
-        if pnl < self.maximumDrawdownPercent:
+        if pnl < self.maximumDrawdownPercent and len(targets) != 0:
+            self.initialised = False # reset the trailing high value for restart investing on next rebalcing period
             return [ PortfolioTarget(target.Symbol, 0) for target in targets ]
 
         return []

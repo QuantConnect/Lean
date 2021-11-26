@@ -23,8 +23,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class KeltnerChannels : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly decimal _k;
-
         /// <summary>
         /// Gets the middle band of the channel
         /// </summary>
@@ -67,23 +65,22 @@ namespace QuantConnect.Indicators
         public KeltnerChannels(string name, int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple)
             : base(name)
         {
-            _k = k;
             WarmUpPeriod = period;
 
             //Initialise ATR and SMA
-            AverageTrueRange = new AverageTrueRange(name + "_AverageTrueRange", period, MovingAverageType.Simple);
+            AverageTrueRange = new AverageTrueRange(name + "_AverageTrueRange", period, movingAverageType);
             MiddleBand = movingAverageType.AsIndicator(name + "_MiddleBand", period);
 
             //Compute Lower Band
             LowerBand = new FunctionalIndicator<IBaseDataBar>(name + "_LowerBand",
-                input => MiddleBand.IsReady ? MiddleBand - AverageTrueRange * _k : decimal.Zero,
+                input => MiddleBand.IsReady ? MiddleBand.Current.Value - AverageTrueRange.Current.Value * k : decimal.Zero,
                 lowerBand => MiddleBand.IsReady,
                 () => MiddleBand.Reset()
                 );
 
             //Compute Upper Band
             UpperBand = new FunctionalIndicator<IBaseDataBar>(name + "_UpperBand",
-                input => MiddleBand.IsReady ? MiddleBand + AverageTrueRange * _k : decimal.Zero,
+                input => MiddleBand.IsReady ? MiddleBand.Current.Value + AverageTrueRange.Current.Value * k : decimal.Zero,
                 upperBand => MiddleBand.IsReady,
                 () => MiddleBand.Reset()
                 );
@@ -127,7 +124,7 @@ namespace QuantConnect.Indicators
             // based on the ATR and the middle band
             LowerBand.Update(input);
             UpperBand.Update(input);
-            return MiddleBand;
+            return MiddleBand.Current.Value;
         }
     }
 }

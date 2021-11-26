@@ -73,7 +73,7 @@ namespace QuantConnect.Indicators
             _sma1.Update(input);
             _sma2.Update(_sma1.Current);
 
-            return _sma2;
+            return _sma2.Current.Value;
         }
 
         /// <summary>

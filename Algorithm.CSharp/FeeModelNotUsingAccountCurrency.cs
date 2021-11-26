@@ -174,12 +174,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$804.33"},
+            {"Estimated Strategy Capacity", "$11000.00"},
+            {"Lowest Capacity Asset", "BTCEUR XJ"},
             {"Fitness Score", "0.504"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "-15.574"},
-            {"Portfolio Turnover", "2.056"},
+            {"Portfolio Turnover", "2.057"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -193,7 +195,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-1311542155"}
+            {"OrderListHash", "c84d1ceacb0da30c1c1c0314f9fc850c"}
         };
     }
 }

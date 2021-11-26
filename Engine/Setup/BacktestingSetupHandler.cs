@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,19 +15,17 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Algorithm;
-using QuantConnect.AlgorithmFactory;
-using QuantConnect.Brokerages.Backtesting;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Data;
+using QuantConnect.Algorithm;
+using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
+using System.Collections.Generic;
+using QuantConnect.AlgorithmFactory;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Brokerages.Backtesting;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -50,26 +48,26 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Maximum runtime of the algorithm in seconds.
         /// </summary>
         /// <remarks>Maximum runtime is a formula based on the number and resolution of symbols requested, and the days backtesting</remarks>
-        public TimeSpan MaximumRuntime { get; private set; }
+        public TimeSpan MaximumRuntime { get; protected set; }
 
         /// <summary>
         /// Starting capital according to the users initialize routine.
         /// </summary>
         /// <remarks>Set from the user code.</remarks>
         /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
-        public decimal StartingPortfolioValue { get; private set; }
+        public decimal StartingPortfolioValue { get; protected set; }
 
         /// <summary>
         /// Start date for analysis loops to search for data.
         /// </summary>
         /// <seealso cref="QCAlgorithm.SetStartDate(DateTime)"/>
-        public DateTime StartingDate { get; private set; }
+        public DateTime StartingDate { get; protected set; }
 
         /// <summary>
         /// Maximum number of orders for this backtest.
         /// </summary>
         /// <remarks>To stop algorithm flooding the backtesting system with hundreds of megabytes of order data we limit it to 100 per day</remarks>
-        public int MaxOrders { get; private set; }
+        public int MaxOrders { get; protected set; }
 
         /// <summary>
         /// Initialize the backtest setup handler.
@@ -101,7 +99,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             // Limit load times to 90 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(debugging, algorithmNodePacket.Language, TimeSpan.FromSeconds(90), names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")), WorkerThread);
+            var loader = new Loader(debugging, algorithmNodePacket.Language, BaseSetupHandler.AlgorithmCreationTimeout, names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")), WorkerThread);
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new AlgorithmSetupException($"During the algorithm initialization, the following exception has occurred: {error}");
 
@@ -136,7 +134,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("Expected BacktestNodePacket but received " + parameters.AlgorithmNodePacket.GetType().Name);
             }
 
-            Log.Trace($"BacktestingSetupHandler.Setup(): Setting up job: Plan: {job.UserPlan}, UID: {job.UserId.ToStringInvariant()}, " +
+            Log.Trace($"BacktestingSetupHandler.Setup(): Setting up job: UID: {job.UserId.ToStringInvariant()}, " +
                 $"PID: {job.ProjectId.ToStringInvariant()}, Version: {job.Version}, Source: {job.RequestSource}"
             );
 
@@ -164,6 +162,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
+                    algorithm.SetAvailableDataTypes(BaseSetupHandler.GetConfiguredDataFeeds());
 
                     //Algorithm is backtesting, not live:
                     algorithm.SetLiveMode(false);
@@ -172,10 +171,10 @@ namespace QuantConnect.Lean.Engine.Setup
                     algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);
 
                     // set the option chain provider
-                    algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
+                    algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider(parameters.DataProvider)));
 
                     // set the future chain provider
-                    algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));
+                    algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(parameters.DataProvider)));
 
                     // set the object store
                     algorithm.SetObjectStore(parameters.ObjectStore);
@@ -204,24 +203,16 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err);
                     Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: ", err));
                 }
             }, controls.RamAllocation,
-                sleepIntervalMillis:10,  // entire system is waiting on this, so be as fast as possible
+                sleepIntervalMillis: 100,  // entire system is waiting on this, so be as fast as possible
                 workerThread: WorkerThread);
 
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
 
-            //Calculate the max runtime for the strategy
-            MaximumRuntime = GetMaximumRuntime(algorithm.StartDate, algorithm.EndDate, algorithm.SubscriptionManager, algorithm.UniverseManager, parameters.AlgorithmNodePacket.Controls);
-
-            // Python takes forever; lets give it 10x longer to finish.
-            if (job.Language == Language.Python)
-            {
-                MaximumRuntime = MaximumRuntime.Add(TimeSpan.FromSeconds(MaximumRuntime.TotalSeconds * 9));
-            }
+            MaximumRuntime = TimeSpan.FromMinutes(job.Controls.MaximumRuntimeMinutes);
 
             BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
             StartingPortfolioValue = algorithm.Portfolio.Cash;
@@ -230,20 +221,8 @@ namespace QuantConnect.Lean.Engine.Setup
             algorithm.Settings.FreePortfolioValue =
                 algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
 
-            //Max Orders: 10k per backtest:
-            if (job.UserPlan == UserPlan.Free)
-            {
-                MaxOrders = 10000;
-            }
-            else
-            {
-                MaxOrders = int.MaxValue;
-                MaximumRuntime += MaximumRuntime;
-            }
-
+            // Get and set maximum orders for this job
             MaxOrders = job.Controls.BacktestingMaxOrders;
-
-            //Set back to the algorithm,
             algorithm.SetMaximumOrders(MaxOrders);
 
             //Starting date of the algorithm:
@@ -253,65 +232,15 @@ namespace QuantConnect.Lean.Engine.Setup
             Log.Trace("SetUp Backtesting: User: " + job.UserId + " ProjectId: " + job.ProjectId + " AlgoId: " + job.AlgorithmId);
             Log.Trace($"Dates: Start: {algorithm.StartDate.ToStringInvariant("d")} " +
                       $"End: {algorithm.EndDate.ToStringInvariant("d")} " +
-                      $"Cash: {StartingPortfolioValue.ToStringInvariant("C")}");
+                      $"Cash: {StartingPortfolioValue.ToStringInvariant("C")} " +
+                      $"MaximumRuntime: {MaximumRuntime} " +
+                      $"MaxOrders: {MaxOrders}");
 
             if (Errors.Count > 0)
             {
                 initializeComplete = false;
             }
             return initializeComplete;
-        }
-
-        /// <summary>
-        /// Calculate the maximum runtime for this algorithm job.
-        /// </summary>
-        /// <param name="start">State date of the algorithm</param>
-        /// <param name="finish">End date of the algorithm</param>
-        /// <param name="subscriptionManager">Subscription Manager</param>
-        /// <param name="universeManager">Universe manager containing configured universes</param>
-        /// <param name="controls">Job controls instance</param>
-        /// <returns>Timespan maximum run period</returns>
-        private TimeSpan GetMaximumRuntime(DateTime start, DateTime finish, SubscriptionManager subscriptionManager, UniverseManager universeManager, Controls controls)
-        {
-            // option/futures chain subscriptions
-            var derivativeSubscriptions = subscriptionManager.Subscriptions
-                .Where(x => x.Symbol.IsCanonical())
-                .Select(x => controls.GetLimit(x.Resolution))
-                .Sum();
-
-            // universe coarse/fine/custom subscriptions
-            var universeSubscriptions = universeManager
-                // use max limit for universes without explicitly added securities
-                .Sum(u => u.Value.Members.Count == 0 ? controls.GetLimit(u.Value.UniverseSettings.Resolution) : u.Value.Members.Count);
-
-            var subscriptionCount = derivativeSubscriptions + universeSubscriptions;
-
-            double maxRunTime = 0;
-            var jobDays = (finish - start).TotalDays;
-
-            maxRunTime = 10 * subscriptionCount * jobDays;
-
-            //Rationalize:
-            if ((maxRunTime / 3600) > 12)
-            {
-                //12 hours maximum
-                maxRunTime = 3600 * 12;
-            }
-            else if (maxRunTime < 60)
-            {
-                //If less than 60 seconds.
-                maxRunTime = 60;
-            }
-
-            Log.Trace("BacktestingSetupHandler.GetMaxRunTime(): Job Days: " + jobDays + " Max Runtime: " + Math.Round(maxRunTime / 60) + " min");
-
-            //Override for windows:
-            if (OS.IsWindows)
-            {
-                maxRunTime = 24 * 60 * 60;
-            }
-
-            return TimeSpan.FromSeconds(maxRunTime);
         }
 
         /// <summary>

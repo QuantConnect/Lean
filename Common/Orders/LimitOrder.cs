@@ -59,7 +59,7 @@ namespace QuantConnect.Orders
         {
             LimitPrice = limitPrice;
 
-            if (tag == "")
+            if (string.IsNullOrEmpty(tag))
             {
                 //Default tag values to display limit price in GUI.
                 Tag = Invariant($"Limit Price: {limitPrice:C}");

@@ -11,15 +11,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Globalization;
-using QuantConnect.Configuration;
-using QuantConnect.Logging;
 using System.Threading;
+using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using System.Globalization;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.GDAXDownloader
 {
@@ -35,7 +36,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
                 Console.WriteLine("GDAXDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--tickers=ETH-USD,ETH-BTC,BTC-USD,etc.");
+                Console.WriteLine("--tickers=ETHUSD,ETHBTC,BTCUSD,etc.");
                 Console.WriteLine("--resolution=Second/Minute/Hour/Daily");
                 Environment.Exit(1);
             }
@@ -52,7 +53,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 {
                     // Download the data
                     var symbolObject = Symbol.Create(ticker, SecurityType.Crypto, market);
-                    var data = downloader.Get(symbolObject, castResolution, fromDate, toDate);
+                    var data = downloader.Get(new DataDownloaderGetParameters(symbolObject, castResolution, fromDate, toDate));
 
                     // Save the data
                     var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory, TickType.Trade);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,6 +22,7 @@ using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -60,7 +61,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             // Creates the order
             var security = _algorithm.Securities[Ticker];
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 600, 0, 0, DateTime.Now, "");
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 600, 0, 0, 0, DateTime.Now, "");
 
             // Mock the the order processor
             var orderProcessorMock = new Mock<IOrderProcessor>();
@@ -90,8 +91,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var security = _algorithm.Securities[Ticker];
             var price = 1.12m;
             security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price));
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0, 0, DateTime.UtcNow, "");
-            var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -1000, 0, 0, DateTime.UtcNow, "");
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0, 0, 0, DateTime.UtcNow, "");
+            var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -1000, 0, 0, 0, DateTime.UtcNow, "");
             orderRequest.SetOrderId(1);
             orderRequest2.SetOrderId(2);
 
@@ -127,7 +128,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                         Assert.AreEqual(OrderStatus.Filled, orderEvent.Status);
                         break;
                 }
-                Console.WriteLine($"{orderEvent}");
+                Log.Trace($"{orderEvent}");
             };
 
             var ticket = transactionHandler.Process(orderRequest);
@@ -162,8 +163,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             var price = 1.12m;
             security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price));
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0, 0, DateTime.UtcNow, "");
-            var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -1000, 0, 0, DateTime.UtcNow, "");
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 2000, 0, 0, 9, DateTime.UtcNow, "");
+            var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -2000, 0, 0, 9, DateTime.UtcNow, "");
             orderRequest.SetOrderId(1);
             orderRequest2.SetOrderId(2);
 
@@ -207,7 +208,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                         Assert.AreEqual(OrderStatus.Filled, orderEvent.Status);
                         break;
                 }
-                Console.WriteLine($"{orderEvent}");
+                Log.Trace($"{orderEvent}");
             };
 
             var ticket = transactionHandler.Process(orderRequest);

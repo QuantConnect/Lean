@@ -54,19 +54,8 @@ namespace QuantConnect.Brokerages
         /// <returns>The latest price</returns>
         public decimal GetLastPrice(Symbol symbol)
         {
-            var result = _api.ReadPrices(new[] { symbol });
-            if (!result.Success)
-            {
-                throw new Exception($"ReadPrices error: {string.Join(" - ", result.Errors)}");
-            }
-
-            var priceData = result.Prices.FirstOrDefault(x => x.Symbol == symbol);
-            if (priceData == null)
-            {
-                throw new Exception($"No price data available for symbol: {symbol.Value}");
-            }
-
-            return priceData.Price;
+            //NOP ReadPrices endpoint has been removed
+            throw new InvalidOperationException("Prices endpoint is no longer supported");
         }
     }
 }

@@ -11,17 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-AddReference("System.Windows.Forms")
-
-from System import *
-from System.Collections import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-import numpy as np
+from AlgorithmImports import *
 
 class BasicCSharpIntegrationTemplateAlgorithm(QCAlgorithm):
 

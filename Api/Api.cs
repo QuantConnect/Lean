@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,13 +18,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using Newtonsoft.Json;
-using QuantConnect.API;
-using QuantConnect.Data.Market;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using RestSharp;
-using RestSharp.Extensions;
 using QuantConnect.Util;
 
 namespace QuantConnect.Api
@@ -42,12 +42,12 @@ namespace QuantConnect.Api
         protected ApiConnection ApiConnection { get; private set; }
 
         /// <summary>
-        /// Initialize the API using the config.json file.
+        /// Initialize the API with the given variables
         /// </summary>
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
             ApiConnection = new ApiConnection(userId, token);
-            _dataFolder = dataFolder;
+            _dataFolder = dataFolder?.Replace("\\", "/", StringComparison.InvariantCulture);
 
             //Allow proper decoding of orders from the API.
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -59,34 +59,47 @@ namespace QuantConnect.Api
         /// <summary>
         /// Check if Api is successfully connected with correct credentials
         /// </summary>
-        public bool Connected
-        {
-            get
-            {
-                return ApiConnection.Connected;
-            }
-        }
+        public bool Connected => ApiConnection.Connected;
 
         /// <summary>
         /// Create a project with the specified name and language via QuantConnect.com API
         /// </summary>
         /// <param name="name">Project name</param>
         /// <param name="language">Programming language to use</param>
+        /// <param name="organizationId">Optional param for specifying organization to create project under.
+        /// If none provided web defaults to preferred.</param>
         /// <returns>Project object from the API.</returns>
 
-        public ProjectResponse CreateProject(string name, Language language)
+        public ProjectResponse CreateProject(string name, Language language, string organizationId = null)
         {
-            var request = new RestRequest("projects/create", Method.POST);
-
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            var request = new RestRequest("projects/create", Method.POST)
             {
-                name = name,
-                language = language
-            }), ParameterType.RequestBody);
+                RequestFormat = DataFormat.Json
+            };
 
-            ProjectResponse result;
-            ApiConnection.TryRequest(request, out result);
+            // Only include organization Id if its not null or empty
+            string jsonParams;
+            if (string.IsNullOrEmpty(organizationId))
+            {
+                jsonParams = JsonConvert.SerializeObject(new
+                {
+                    name,
+                    language
+                });
+            }
+            else
+            {
+                jsonParams = JsonConvert.SerializeObject(new
+                {
+                    name,
+                    language,
+                    organizationId
+                });
+            }
+
+            request.AddParameter("application/json", jsonParams, ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out ProjectResponse result);
             return result;
         }
 
@@ -98,13 +111,17 @@ namespace QuantConnect.Api
 
         public ProjectResponse ReadProject(int projectId)
         {
-            var request = new RestRequest("projects/read", Method.GET);
+            var request = new RestRequest("projects/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("projectId", projectId);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    projectId
+                }), ParameterType.RequestBody);
 
-            ProjectResponse result;
-            ApiConnection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out ProjectResponse result);
             return result;
         }
 
@@ -115,10 +132,12 @@ namespace QuantConnect.Api
 
         public ProjectResponse ListProjects()
         {
-            var request = new RestRequest("projects/read", Method.GET);
-            request.RequestFormat = DataFormat.Json;
-            ProjectResponse result;
-            ApiConnection.TryRequest(request, out result);
+            var request = new RestRequest("projects/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            ApiConnection.TryRequest(request, out ProjectResponse result);
             return result;
         }
 
@@ -133,14 +152,19 @@ namespace QuantConnect.Api
 
         public ProjectFilesResponse AddProjectFile(int projectId, string name, string content)
         {
-            var request = new RestRequest("files/create", Method.POST);
+            var request = new RestRequest("files/create", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            request.AddParameter("projectId", projectId);
-            request.AddParameter("name", name);
-            request.AddParameter("content", content);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    projectId,
+                    name,
+                    content
+                }), ParameterType.RequestBody);
 
-            ProjectFilesResponse result;
-            ApiConnection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out ProjectFilesResponse result);
             return result;
         }
 
@@ -155,14 +179,19 @@ namespace QuantConnect.Api
 
         public RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName)
         {
-            var request = new RestRequest("files/update", Method.POST);
+            var request = new RestRequest("files/update", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            request.AddParameter("projectId", projectId);
-            request.AddParameter("name", oldFileName);
-            request.AddParameter("newName", newFileName);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    projectId,
+                    name = oldFileName,
+                    newName = newFileName
+                }), ParameterType.RequestBody);
 
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -177,14 +206,19 @@ namespace QuantConnect.Api
 
         public RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents)
         {
-            var request = new RestRequest("files/update", Method.POST);
+            var request = new RestRequest("files/update", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            request.AddParameter("projectId", projectId);
-            request.AddParameter("name", fileName);
-            request.AddParameter("content", newFileContents);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    projectId,
+                    name = fileName,
+                    content = newFileContents
+                }), ParameterType.RequestBody);
 
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -197,12 +231,17 @@ namespace QuantConnect.Api
 
         public ProjectFilesResponse ReadProjectFiles(int projectId)
         {
-            var request = new RestRequest("files/read", Method.GET);
+            var request = new RestRequest("files/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            request.AddParameter("projectId", projectId);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    projectId
+                }), ParameterType.RequestBody);
 
-            ProjectFilesResponse result;
-            ApiConnection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out ProjectFilesResponse result);
             return result;
         }
 
@@ -216,13 +255,18 @@ namespace QuantConnect.Api
 
         public ProjectFilesResponse ReadProjectFile(int projectId, string fileName)
         {
-            var request = new RestRequest("files/read", Method.GET);
+            var request = new RestRequest("files/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            request.AddParameter("projectId", projectId);
-            request.AddParameter("name", fileName);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    projectId,
+                    name = fileName
+                }), ParameterType.RequestBody);
 
-            ProjectFilesResponse result;
-            ApiConnection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out ProjectFilesResponse result);
             return result;
         }
 
@@ -235,13 +279,18 @@ namespace QuantConnect.Api
 
         public RestResponse DeleteProjectFile(int projectId, string name)
         {
-            var request = new RestRequest("files/delete", Method.POST);
+            var request = new RestRequest("files/delete", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            request.AddParameter("projectId", projectId);
-            request.AddParameter("name", name);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    projectId,
+                    name,
+                }), ParameterType.RequestBody);
 
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -253,14 +302,17 @@ namespace QuantConnect.Api
 
         public RestResponse DeleteProject(int projectId)
         {
-            var request = new RestRequest("projects/delete", Method.POST);
-            request.RequestFormat = DataFormat.Json;
+            var request = new RestRequest("projects/delete", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
             {
-                projectId = projectId
+                projectId
             }), ParameterType.RequestBody);
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -272,13 +324,17 @@ namespace QuantConnect.Api
 
         public Compile CreateCompile(int projectId)
         {
-            var request = new RestRequest("compile/create", Method.POST);
+            var request = new RestRequest("compile/create", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
             {
-                projectId = projectId
+                projectId
             }), ParameterType.RequestBody);
-            Compile result;
-            ApiConnection.TryRequest(request, out result);
+
+            ApiConnection.TryRequest(request, out Compile result);
             return result;
         }
 
@@ -291,12 +347,18 @@ namespace QuantConnect.Api
 
         public Compile ReadCompile(int projectId, string compileId)
         {
-            var request = new RestRequest("compile/read", Method.GET);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("projectId", projectId);
-            request.AddParameter("compileId", compileId);
-            Compile result;
-            ApiConnection.TryRequest(request, out result);
+            var request = new RestRequest("compile/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                compileId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out Compile result);
             return result;
         }
 
@@ -311,13 +373,26 @@ namespace QuantConnect.Api
 
         public Backtest CreateBacktest(int projectId, string compileId, string backtestName)
         {
-            var request = new RestRequest("backtests/create", Method.POST);
-            request.AddParameter("projectId", projectId);
-            request.AddParameter("compileId", compileId);
-            request.AddParameter("backtestName", backtestName);
-            Backtest result;
-            ApiConnection.TryRequest(request, out result);
-            return result;
+            var request = new RestRequest("backtests/create", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                compileId,
+                backtestName
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out BacktestResponseWrapper result);
+
+            // Use API Response values for Backtest Values
+            result.Backtest.Success = result.Success;
+            result.Backtest.Errors = result.Errors;
+
+            // Return only the backtest object
+            return result.Backtest;
         }
 
         /// <summary>
@@ -325,16 +400,77 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to read</param>
         /// <param name="backtestId">Specific backtest id to read</param>
+        /// <param name="getCharts">True will return backtest charts</param>
         /// <returns><see cref="Backtest"/></returns>
 
-        public Backtest ReadBacktest(int projectId, string backtestId)
+        public Backtest ReadBacktest(int projectId, string backtestId, bool getCharts = true)
         {
-            var request = new RestRequest("backtests/read", Method.GET);
-            request.AddParameter("backtestId", backtestId);
-            request.AddParameter("projectId", projectId);
-            Backtest result;
-            ApiConnection.TryRequest(request, out result);
-            return result;
+            var request = new RestRequest("backtests/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                backtestId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out BacktestResponseWrapper result);
+
+            if (!result.Success)
+            {
+                // place an empty place holder so we can return any errors back to the user and not just null
+                result.Backtest = new Backtest { BacktestId = backtestId };
+            }
+            // Go fetch the charts if the backtest is completed and success
+            else if (getCharts && result.Backtest.Completed)
+            {
+                // For storing our collected charts
+                var updatedCharts = new Dictionary<string, Chart>();
+
+                // Create backtest requests for each chart that is empty
+                foreach (var chart in result.Backtest.Charts)
+                {
+                    if (!chart.Value.Series.IsNullOrEmpty())
+                    {
+                        continue;
+                    }
+
+                    var chartRequest = new RestRequest("backtests/read", Method.POST)
+                    {
+                        RequestFormat = DataFormat.Json
+                    };
+
+                    chartRequest.AddParameter("application/json", JsonConvert.SerializeObject(new
+                    {
+                        projectId,
+                        backtestId,
+                        chart = chart.Key.Replace(' ', '+')
+                    }), ParameterType.RequestBody);
+
+                    ApiConnection.TryRequest(chartRequest, out BacktestResponseWrapper chartResponse);
+
+                    // Add this chart to our updated collection
+                    if (chartResponse.Success)
+                    {
+                        updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
+                    }
+                }
+
+                // Update our result
+                foreach(var updatedChart in updatedCharts)
+                {
+                    result.Backtest.Charts[updatedChart.Key] = updatedChart.Value;
+                }
+            }
+
+            // Use API Response values for Backtest Values
+            result.Backtest.Success = result.Success;
+            result.Backtest.Errors = result.Errors;
+
+            // Return only the backtest object
+            return result.Backtest;
         }
 
         /// <summary>
@@ -348,17 +484,20 @@ namespace QuantConnect.Api
 
         public RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "")
         {
-            var request = new RestRequest("backtests/update", Method.POST);
-            request.RequestFormat = DataFormat.Json;
+            var request = new RestRequest("backtests/update", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
             {
-                projectId = projectId,
-                backtestId = backtestId,
-                name = name,
-                note = note
+                projectId,
+                backtestId,
+                name,
+                note
             }), ParameterType.RequestBody);
-            Backtest result;
-            ApiConnection.TryRequest(request, out result);
+
+            ApiConnection.TryRequest(request, out Backtest result);
             return result;
         }
 
@@ -370,10 +509,17 @@ namespace QuantConnect.Api
 
         public BacktestList ListBacktests(int projectId)
         {
-            var request = new RestRequest("backtests/read", Method.GET);
-            request.AddParameter("projectId", projectId);
-            BacktestList result;
-            ApiConnection.TryRequest(request, out result);
+            var request = new RestRequest("backtests/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out BacktestList result);
             return result;
         }
 
@@ -386,12 +532,18 @@ namespace QuantConnect.Api
 
         public RestResponse DeleteBacktest(int projectId, string backtestId)
         {
-            var request = new RestRequest("backtests/delete", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("backtestId", backtestId);
-            request.AddParameter("projectId", projectId);
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+            var request = new RestRequest("backtests/delete", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                backtestId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -400,7 +552,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
-        /// <param name="serverType">Type of server instance that will run the algorithm</param>
+        /// <param name="nodeId">Id of the node that will run the algorithm</param>
         /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
         /// <param name="versionId">The version of the Lean used to run the algorithm.
         ///                         -1 is master, however, sometimes this can create problems with live deployments.
@@ -409,19 +561,23 @@ namespace QuantConnect.Api
 
         public LiveAlgorithm CreateLiveAlgorithm(int projectId,
                                                  string compileId,
-                                                 string serverType,
+                                                 string nodeId,
                                                  BaseLiveAlgorithmSettings baseLiveAlgorithmSettings,
                                                  string versionId = "-1")
         {
-            var request = new RestRequest("live/create", Method.POST);
-            request.AddHeader("Accept", "application/json");
-            request.Parameters.Clear();
-            var body = JsonConvert.SerializeObject(new LiveAlgorithmApiSettingsWrapper(projectId,
-                                                                                       compileId,
-                                                                                       serverType,
-                                                                                       baseLiveAlgorithmSettings,
-                                                                                       versionId));
-            request.AddParameter("application/json", body, ParameterType.RequestBody);
+            var request = new RestRequest("live/create", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(
+                new LiveAlgorithmApiSettingsWrapper
+                (projectId,
+                compileId,
+                nodeId,
+                baseLiveAlgorithmSettings,
+                versionId)
+                ), ParameterType.RequestBody);
 
             LiveAlgorithm result;
             ApiConnection.TryRequest(request, out result);
@@ -451,21 +607,28 @@ namespace QuantConnect.Api
                     "The Api only supports Algorithm Statuses of Running, Stopped, RuntimeError and Liquidated");
             }
 
-            var request = new RestRequest("live/read", Method.GET);
-
-            if (status.HasValue)
+            var request = new RestRequest("live/read", Method.POST)
             {
-                request.AddParameter("status", status.ToString());
-            }
+                RequestFormat = DataFormat.Json
+            };
 
             var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
             var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
 
-            request.AddParameter("start", epochStartTime);
-            request.AddParameter("end", epochEndTime);
+            JObject obj = new JObject
+            {
+                { "start", epochStartTime },
+                { "end", epochEndTime }
+            };
 
-            LiveList result;
-            ApiConnection.TryRequest(request, out result);
+            if (status.HasValue)
+            {
+                obj.Add("status", status.ToString());
+            }
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out LiveList result);
             return result;
         }
 
@@ -478,11 +641,18 @@ namespace QuantConnect.Api
 
         public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId)
         {
-            var request = new RestRequest("live/read", Method.GET);
-            request.AddParameter("projectId", projectId);
-            request.AddParameter("deployId", deployId);
-            LiveAlgorithmResults result;
-            ApiConnection.TryRequest(request, out result);
+            var request = new RestRequest("live/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    projectId,
+                    deployId
+                }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out LiveAlgorithmResults result);
             return result;
         }
 
@@ -494,11 +664,17 @@ namespace QuantConnect.Api
 
         public RestResponse LiquidateLiveAlgorithm(int projectId)
         {
-            var request = new RestRequest("live/update/liquidate", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("projectId", projectId);
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+            var request = new RestRequest("live/update/liquidate", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+                {
+                    projectId
+                }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -510,11 +686,17 @@ namespace QuantConnect.Api
 
         public RestResponse StopLiveAlgorithm(int projectId)
         {
-            var request = new RestRequest("live/update/stop", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("projectId", projectId);
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+            var request = new RestRequest("live/update/stop", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -532,40 +714,108 @@ namespace QuantConnect.Api
             var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
             var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
 
-            var request = new RestRequest("live/read/log", Method.GET);
+            var request = new RestRequest("live/read/log", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            request.AddParameter("format", "json");
-            request.AddParameter("projectId", projectId);
-            request.AddParameter("algorithmId", algorithmId);
-            request.AddParameter("start", epochStartTime);
-            request.AddParameter("end", epochEndTime);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                format = "json",
+                projectId,
+                algorithmId,
+                start = epochStartTime,
+                end = epochEndTime
+            }), ParameterType.RequestBody);
 
-            LiveLog result;
-            ApiConnection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out LiveLog result);
             return result;
         }
 
         /// <summary>
         /// Gets the link to the downloadable data.
         /// </summary>
-        /// <param name="symbol">Symbol of security of which data will be requested.</param>
-        /// <param name="resolution">Resolution of data requested.</param>
-        /// <param name="date">Date of the data requested.</param>
+        /// <param name="filePath">File path representing the data requested</param>
+        /// <param name="organizationId">Organization to download from</param>
         /// <returns><see cref="Link"/> to the downloadable data.</returns>
-
-        public Link ReadDataLink(Symbol symbol, Resolution resolution, DateTime date)
+        public DataLink ReadDataLink(string filePath, string organizationId)
         {
-            var request = new RestRequest("data/read", Method.GET);
+            if (filePath == null)
+            {
+                throw new ArgumentException("Api.ReadDataLink(): Filepath must not be null");
+            }
 
-            request.AddParameter("format", "link");
-            request.AddParameter("ticker", symbol.Value.ToLowerInvariant());
-            request.AddParameter("type", symbol.ID.SecurityType.ToLower());
-            request.AddParameter("market", symbol.ID.Market);
-            request.AddParameter("resolution", resolution);
-            request.AddParameter("date", date.ToStringInvariant("yyyyMMdd"));
+            // Prepare filePath for request
+            filePath = FormatPathForDataRequest(filePath);
 
-            Link result;
-            ApiConnection.TryRequest(request, out result);
+            var request = new RestRequest("data/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                format = "link",
+                filePath,
+                organizationId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out DataLink result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get valid data entries for a given filepath from data/list
+        /// </summary>
+        /// <returns></returns>
+        public DataList ReadDataDirectory(string filePath)
+        {
+            if (filePath == null)
+            {
+                throw new ArgumentException("Api.ReadDataDirectory(): Filepath must not be null");
+            }
+
+            // Prepare filePath for request
+            filePath = FormatPathForDataRequest(filePath);
+
+            // Verify the filePath for this request is at least three directory deep
+            // (requirement of endpoint)
+            if (filePath.Count(x => x == '/') < 3)
+            {
+                throw new ArgumentException($"Api.ReadDataDirectory(): Data directory requested must be at least" +
+                    $" three directories deep. FilePath: {filePath}");
+            }
+
+            var request = new RestRequest("data/list", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                filePath
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out DataList result);
+            return result;
+        }
+
+        /// <summary>
+        /// Gets data prices from data/prices
+        /// </summary>
+        public DataPricesList ReadDataPrices(string organizationId)
+        {
+            var request = new RestRequest("data/prices", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                organizationId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out DataPricesList result);
             return result;
         }
 
@@ -577,72 +827,64 @@ namespace QuantConnect.Api
         /// <returns><see cref="BacktestReport"/></returns>
         public BacktestReport ReadBacktestReport(int projectId, string backtestId)
         {
-            var request = new RestRequest("backtests/read/report", Method.POST);
-            request.AddParameter("backtestId", backtestId);
-            request.AddParameter("projectId", projectId);
+            var request = new RestRequest("backtests/read/report", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            BacktestReport report;
-            ApiConnection.TryRequest(request, out report);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                backtestId,
+                projectId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out BacktestReport report);
             return report;
         }
 
         /// <summary>
-        /// Will get the prices for requested symbols
+        /// Method to purchase and download data from QuantConnect
         /// </summary>
-        /// <param name="symbols">Symbols for which the price is requested</param>
-        /// <returns><see cref="Prices"/></returns>
-        public PricesList ReadPrices(IEnumerable<Symbol> symbols)
-        {
-            var symbolByID = new Dictionary<string, Symbol>();
-            foreach (var symbol in symbols)
-            {
-                symbolByID[symbol.ID.ToString()] = symbol;
-            }
-
-            var request = new RestRequest("prices", Method.POST);
-            var symbolsToRequest = string.Join(",", symbolByID.Keys);
-            request.AddParameter("symbols", symbolsToRequest);
-
-            PricesList pricesList;
-            if (ApiConnection.TryRequest(request, out pricesList))
-            {
-                foreach (var price in pricesList.Prices)
-                {
-                    price.Symbol = symbolByID[price.SymbolID];
-                }
-            }
-
-            return pricesList;
-        }
-
-        /// <summary>
-        /// Method to download and save the data purchased through QuantConnect
-        /// </summary>
-        /// <param name="symbol">Symbol of security of which data will be requested.</param>
-        /// <param name="resolution">Resolution of data requested.</param>
-        /// <param name="date">Date of the data requested.</param>
+        /// <param name="filePath">File path representing the data requested</param>
+        /// <param name="organizationId">Organization to buy the data with</param>
         /// <returns>A <see cref="bool"/> indicating whether the data was successfully downloaded or not.</returns>
 
-        public bool DownloadData(Symbol symbol, Resolution resolution, DateTime date)
+        public bool DownloadData(string filePath, string organizationId)
         {
             // Get a link to the data
-            var link = ReadDataLink(symbol, resolution, date);
+            var dataLink = ReadDataLink(filePath, organizationId);
 
             // Make sure the link was successfully retrieved
-            if (!link.Success)
+            if (!dataLink.Success)
+            {
+                Log.Trace($"Api.DownloadData(): Failed to get link for {filePath}. " +
+                    $"Errors: {string.Join(',', dataLink.Errors)}");
                 return false;
-
-            // Save csv in same folder heirarchy as Lean
-            var path = Path.Combine(_dataFolder, LeanData.GenerateRelativeZipFilePath(symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution));
+            }
 
             // Make sure the directory exist before writing
-            (new FileInfo(path)).Directory.Create();
+            var directory = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
-            // Download and save the data
-            var uri     = new Uri(link.DataLink);
-            var client  = new RestClient(uri.Scheme + "://" + uri.Host);
-            var request = new RestRequest(uri.PathAndQuery, Method.GET);
-            client.DownloadData(request).SaveAs(path);
+            try
+            {
+                // Download the file
+                var uri = new Uri(dataLink.Url);
+
+                using var client = new HttpClient();
+                using var dataStream = client.GetStreamAsync(uri);
+
+                using var fileStream = new FileStream(filePath, FileMode.Create);
+                dataStream.Result.CopyTo(fileStream);
+            }
+            catch
+            {
+                Log.Error($"Api.DownloadData(): Failed to download zip for path ({filePath})");
+                return false;
+            }
 
             return true;
         }
@@ -706,54 +948,6 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Gets all split events between the specified times. From and to are inclusive.
-        /// </summary>
-        /// <param name="from">The first date to get splits for</param>
-        /// <param name="to">The last date to get splits for</param>
-        /// <returns>A list of all splits in the specified range</returns>
-        public List<Data.Market.Split> GetSplits(DateTime from, DateTime to)
-        {
-            var request = new RestRequest("splits", Method.POST);
-            request.AddParameter("from", from.ToStringInvariant("yyyyMMdd"));
-            request.AddParameter("to", from.ToStringInvariant("yyyyMMdd"));
-
-            SplitList splits;
-            ApiConnection.TryRequest(request, out splits);
-
-            return splits.Splits.Select(s => new Data.Market.Split(
-                s.Symbol,
-                s.Date,
-                s.ReferencePrice,
-                s.SplitFactor,
-                SplitType.SplitOccurred)
-            ).ToList();
-        }
-
-        /// <summary>
-        /// Gets all dividend events between the specified times. From and to are inclusive.
-        /// </summary>
-        /// <param name="from">The first date to get dividend for</param>
-        /// <param name="to">The last date to get dividend for</param>
-        /// <returns>A list of all dividend in the specified range</returns>
-        public List<Data.Market.Dividend> GetDividends(DateTime from, DateTime to)
-        {
-            var request = new RestRequest("dividends", Method.POST);
-            request.AddParameter("from", from.ToStringInvariant("yyyyMMdd"));
-            request.AddParameter("to", from.ToStringInvariant("yyyyMMdd"));
-
-            DividendList dividends;
-            ApiConnection.TryRequest(request, out dividends);
-
-            return dividends.Dividends.Select(s => new Data.Market.Dividend(
-                s.Symbol,
-                s.Date,
-                s.DividendPerShare,
-                s.ReferencePrice)
-            ).ToList();
-        }
-
-
-        /// <summary>
         /// Local implementation for downloading data to algorithms
         /// </summary>
         /// <param name="address">URL to download</param>
@@ -776,7 +970,20 @@ namespace QuantConnect.Api
                 // Add a user agent header in case the requested URI contains a query.
                 client.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
 
-                return client.DownloadString(address);
+                try
+                {
+                    return client.DownloadString(address);
+                }
+                catch (WebException exception)
+                {
+                    var message = $"Api.Download(): Failed to download data from {address}";
+                    if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
+                    {
+                        message += $" with username: {userName} and password {password}";
+                    }
+
+                    throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
+                }
             }
         }
 
@@ -808,35 +1015,45 @@ namespace QuantConnect.Api
         /// <param name="name">The name of the new node</param>
         /// <param name="organizationId">ID of the organization</param>
         /// <param name="sku"><see cref="SKU"/> Object representing configuration</param>
-        /// <returns>Returns <see cref="CreatedNode"/> which contains API response and 
+        /// <returns>Returns <see cref="CreatedNode"/> which contains API response and
         /// <see cref="Node"/></returns>
         public CreatedNode CreateNode(string name, string organizationId, SKU sku)
         {
-            var request = new RestRequest("nodes/create", Method.POST);
-            request.AddParameter("name", name);
-            request.AddParameter("organizationId", organizationId);
-            request.AddParameter("sku", sku.ToString());
+            var request = new RestRequest("nodes/create", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            CreatedNode result;
-            ApiConnection.TryRequest(request, out result);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                name,
+                organizationId,
+                sku = sku.ToString()
+            }), ParameterType.RequestBody);
 
+            ApiConnection.TryRequest(request, out CreatedNode result);
             return result;
         }
 
         /// <summary>
-        /// Reads the nodes associated with the organization, creating a 
+        /// Reads the nodes associated with the organization, creating a
         /// <see cref="NodeList"/> for the response
         /// </summary>
         /// <param name="organizationId">ID of the organization</param>
         /// <returns><see cref="NodeList"/> containing Backtest, Research, and Live Nodes</returns>
         public NodeList ReadNodes(string organizationId)
         {
-            var request = new RestRequest("nodes/read", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("organizationId", organizationId);
+            var request = new RestRequest("nodes/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            NodeList result;
-            ApiConnection.TryRequest(request, out result);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                organizationId,
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out NodeList result);
             return result;
         }
 
@@ -849,14 +1066,19 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
         public RestResponse UpdateNode(string nodeId, string newName, string organizationId)
         {
-            var request = new RestRequest("nodes/update", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("nodeId", nodeId);
-            request.AddParameter("name", newName);
-            request.AddParameter("organizationId", organizationId);
+            var request = new RestRequest("nodes/update", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                nodeId,
+                name = newName,
+                organizationId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -868,13 +1090,18 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
         public RestResponse DeleteNode(string nodeId, string organizationId)
         {
-            var request = new RestRequest("nodes/delete", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("nodeId", nodeId);
-            request.AddParameter("organizationId", organizationId);
+            var request = new RestRequest("nodes/delete", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                nodeId,
+                organizationId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -886,14 +1113,105 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
         public RestResponse StopNode(string nodeId, string organizationId)
         {
-            var request = new RestRequest("nodes/stop", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("nodeId", nodeId);
-            request.AddParameter("organizationId", organizationId);
+            var request = new RestRequest("nodes/stop", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
 
-            RestResponse result;
-            ApiConnection.TryRequest(request, out result);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                nodeId,
+                organizationId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
+        }
+
+        /// <summary>
+        /// Will read the organization account status
+        /// </summary>
+        /// <param name="organizationId">The target organization id, if null will return default organization</param>
+        public Account ReadAccount(string organizationId = null)
+        {
+            var request = new RestRequest("account/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            if (organizationId != null)
+            {
+                request.AddParameter("application/json", JsonConvert.SerializeObject(new { organizationId }), ParameterType.RequestBody);
+            }
+
+            ApiConnection.TryRequest(request, out Account account);
+            return account;
+        }
+
+        /// <summary>
+        /// Get a list of organizations tied to this account
+        /// </summary>
+        /// <returns></returns>
+        public List<Organization> ListOrganizations()
+        {
+            var request = new RestRequest("organizations/list", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            ApiConnection.TryRequest(request, out OrganizationResponseList response);
+            return response.List;
+        }
+
+        /// <summary>
+        /// Fetch organization data from web API
+        /// </summary>
+        /// <param name="organizationId"></param>
+        /// <returns></returns>
+        public Organization ReadOrganization(string organizationId = null)
+        {
+            var request = new RestRequest("organizations/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            if (organizationId != null)
+            {
+                request.AddParameter("application/json", JsonConvert.SerializeObject(new { organizationId }), ParameterType.RequestBody);
+            }
+
+            ApiConnection.TryRequest(request, out OrganizationResponse response);
+            return response.Organization;
+        }
+
+        /// <summary>
+        /// Helper method to normalize path for api data requests
+        /// </summary>
+        /// <param name="filePath">Filepath to format</param>
+        /// <param name="dataFolder">The data folder to use</param>
+        /// <returns>Normalized path</returns>
+        public static string FormatPathForDataRequest(string filePath, string dataFolder = null)
+        {
+            if (filePath == null)
+            {
+                Log.Error("Api.FormatPathForDataRequest(): Cannot format null string");
+                return null;
+            }
+
+            dataFolder ??= Globals.DataFolder;
+            // Normalize windows paths to linux format
+            dataFolder = dataFolder.Replace("\\", "/", StringComparison.InvariantCulture);
+            filePath = filePath.Replace("\\", "/", StringComparison.InvariantCulture);
+
+            // First remove data root directory from path for request if included
+            if (filePath.StartsWith(dataFolder, StringComparison.InvariantCulture))
+            {
+                filePath = filePath.Substring(dataFolder.Length);
+            }
+
+            // Trim '/' from start, this can cause issues for _dataFolders without final directory separator in the config
+            filePath = filePath.TrimStart('/');
+            return filePath;
         }
     }
 }

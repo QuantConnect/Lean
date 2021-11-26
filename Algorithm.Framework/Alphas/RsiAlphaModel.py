@@ -11,20 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Logging")
-AddReference("QuantConnect.Common")
-
-from QuantConnect import *
-from QuantConnect.Indicators import *
-from QuantConnect.Logging import Log
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from datetime import timedelta
+from AlgorithmImports import *
+from QuantConnect.Logging import *
 from enum import Enum
 
 class RsiAlphaModel(AlphaModel):

@@ -76,7 +76,7 @@ namespace QuantConnect.ToolBox.IQFeed
             { "NYMEX", Market.NYMEX },
             { "CBOT", Market.CBOT },
             { "ICEFU", Market.ICE },
-            { "CFE", Market.CBOE  }
+            { "CFE", Market.CFE }
         };
 
         // futures fundamental data resolver
@@ -186,11 +186,22 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         /// <summary>
-        /// Returns whether the time can be advanced or not.
+        /// Method returns a collection of Symbols that are available at the data source.
         /// </summary>
-        /// <param name="securityType">The security type</param>
-        /// <returns>true if the time can be advanced</returns>
-        public bool CanAdvanceTime(SecurityType securityType)
+        /// <param name="symbol">Symbol to lookup</param>
+        /// <param name="includeExpired">Include expired contracts</param>
+        /// <param name="securityCurrency">Expected security currency(if any)</param>
+        /// <returns>Symbol results</returns>
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency)
+        {
+            return LookupSymbols(symbol.ID.Symbol, symbol.SecurityType, includeExpired, securityCurrency);
+        }
+
+        /// <summary>
+        /// Returns whether selection can take place or not.
+        /// </summary>
+        /// <returns>True if selection can take place</returns>
+        public bool CanPerformSelection()
         {
             return true;
         }
@@ -520,7 +531,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         if (_iqFeedNameMap.ContainsKey(underlyingString))
                             underlyingString = _iqFeedNameMap[underlyingString];
 
-                        if (underlyingString != placeholder.Symbol.Value)
+                        if (underlyingString != placeholder.Symbol.Value.TrimStart('/'))
                         {
                             continue;
                         }

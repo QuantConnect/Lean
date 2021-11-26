@@ -57,7 +57,7 @@ namespace QuantConnect.Util
             }
             catch (ObjectDisposedException)
             {
-                // we got what we wanted, the object has been diposed
+                // we got what we wanted, the object has been disposed
                 return true;
             }
             catch (Exception error)

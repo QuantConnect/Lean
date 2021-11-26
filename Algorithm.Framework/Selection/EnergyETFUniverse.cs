@@ -24,8 +24,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// 2000-06-16   IYE    iShares U.S. Energy ETF
     /// 2004-09-29   VDE    Vanguard Energy ETF
     /// 2006-04-10   USO    United States Oil Fund
-    /// 2006-06-22   XES    SPDR S&P Oil & Gas Equipment & Services ETF
-    /// 2006-06-22   XOP    SPDR S&P Oil & Gas Exploration & Production ETF
+    /// 2006-06-22   XES    SPDR S&amp;P Oil &amp; Gas Equipment &amp; Services ETF
+    /// 2006-06-22   XOP    SPDR S&amp;P Oil &amp; Gas Exploration &amp; Production ETF
     /// 2007-04-18   UNG    United States Natural Gas Fund
     /// 2008-06-25   ICLN   iShares Global Clean Energy ETF
     /// 2008-11-06   ERX    Direxion Daily Energy Bull 3X Shares

@@ -21,9 +21,11 @@ using System.Numerics;
 using Newtonsoft.Json;
 using ProtoBuf;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
@@ -39,7 +41,7 @@ namespace QuantConnect
     /// </remarks>
     [JsonConverter(typeof(SecurityIdentifierJsonConverter))]
     [ProtoContract(SkipConstructor = true)]
-    public class SecurityIdentifier : IEquatable<SecurityIdentifier>
+    public class SecurityIdentifier : IEquatable<SecurityIdentifier>, IComparable<SecurityIdentifier>, IComparable
     {
         #region Empty, DefaultDate Fields
 
@@ -155,8 +157,8 @@ namespace QuantConnect
         /// Gets the date component of this identifier. For equities this
         /// is the first date the security traded. Technically speaking,
         /// in LEAN, this is the first date mentioned in the map_files.
-        /// For options this is the expiry date. For futures this is the
-        /// settlement date. For forex and cfds this property will throw an
+        /// For futures and options this is the expiry date of the contract.
+        /// For other asset classes, this property will throw an
         /// exception as the field is not specified.
         /// </summary>
         public DateTime Date
@@ -175,11 +177,14 @@ namespace QuantConnect
                         case SecurityType.Equity:
                         case SecurityType.Option:
                         case SecurityType.Future:
+                        case SecurityType.Index:
+                        case SecurityType.FutureOption:
+                        case SecurityType.IndexOption:
                             var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
                             _date = DateTime.FromOADate(oadate);
                             return _date.Value;
                         default:
-                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, and SecurityType.Base");
+                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, and SecurityType.Base");
                     }
                 }
             }
@@ -236,16 +241,25 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option)
+                    if (!SecurityType.IsOption())
                     {
-                        throw new InvalidOperationException("OptionType is only defined for SecurityType.Option");
+                        throw new InvalidOperationException("StrikePrice is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                     }
 
                     // performance: lets calculate strike price once
                     var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
                     var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
                     var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
-                    _strikePrice = unscaled * (decimal)pow;
+                    // If the 20th bit is set to 1, we have a negative strike price.
+                    // Let's normalize the strike and explicitly make it negative
+                    if (((unscaled >> 19) & 1) == 1)
+                    {
+                        _strikePrice = -((unscaled ^ 1 << 19) * (decimal)pow);
+                    }
+                    else
+                    {
+                        _strikePrice = unscaled * (decimal)pow;
+                    }
 
                     return _strikePrice.Value;
                 }
@@ -268,9 +282,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option)
+                    if (!SecurityType.IsOption())
                     {
-                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option");
+                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                     }
                     _optionRight = (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
                     return _optionRight.Value;
@@ -294,9 +308,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option)
+                    if (!SecurityType.IsOption())
                     {
-                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option");
+                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                     }
 
                     _optionStyle = (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
@@ -385,7 +399,7 @@ namespace QuantConnect
             OptionRight optionRight,
             OptionStyle optionStyle)
         {
-            return Generate(expiry, underlying.Symbol, SecurityType.Option, market, strike, optionRight, optionStyle, underlying);
+            return Generate(expiry, underlying.Symbol, QuantConnect.Symbol.GetOptionTypeFromUnderlying(underlying.SecurityType), market, strike, optionRight, optionStyle, underlying);
         }
 
         /// <summary>
@@ -417,7 +431,7 @@ namespace QuantConnect
             var firstDate = DefaultDate;
             if (mapSymbol)
             {
-                var firstTickerDate = GetFirstTickerAndDate(mapFileProvider ?? MapFileProvider.Value, symbol, market, mappingResolveDate: mappingResolveDate);
+                var firstTickerDate = GetFirstTickerAndDate(mapFileProvider ?? MapFileProvider.Value, symbol, market, SecurityType.Equity, mappingResolveDate: mappingResolveDate);
                 firstDate = firstTickerDate.Item2;
                 symbol = firstTickerDate.Item1;
             }
@@ -484,7 +498,7 @@ namespace QuantConnect
 
             if (mapSymbol)
             {
-                var firstTickerDate = GetFirstTickerAndDate(MapFileProvider.Value, symbol, market);
+                var firstTickerDate = GetFirstTickerAndDate(MapFileProvider.Value, symbol, market, SecurityType.Equity);
                 firstDate = firstTickerDate.Item2;
                 symbol = firstTickerDate.Item1;
             }
@@ -532,6 +546,17 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a INDEX security
+        /// </summary>
+        /// <param name="symbol">The Index contract symbol</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified INDEX security</returns>
+        public static SecurityIdentifier GenerateIndex(string symbol, string market)
+        {
+            return Generate(DefaultDate, symbol, SecurityType.Index, market);
+        }
+
+        /// <summary>
         /// Generic generate method. This method should be used carefully as some parameters are not required and
         /// some parameters mean different things for different security types
         /// </summary>
@@ -558,6 +583,13 @@ namespace QuantConnect
             market = market.ToLowerInvariant();
             symbol = forceSymbolToUpper ? symbol.LazyToUpper() : symbol;
 
+            if (securityType == SecurityType.FutureOption)
+            {
+                // Futures options tickers might not match, so we need
+                // to map the provided future Symbol to the actual future option Symbol.
+                symbol = FuturesOptionsSymbolMappings.Map(symbol);
+            }
+
             var marketIdentifier = QuantConnect.Market.Encode(market);
             if (!marketIdentifier.HasValue)
             {
@@ -579,7 +611,7 @@ namespace QuantConnect
 
             var result = new SecurityIdentifier(symbol, otherData, underlying ?? Empty);
 
-            // we already have these so lets set them
+            // we already have these so lets set them. Massive performance improvement!
             switch (securityType)
             {
                 case SecurityType.Base:
@@ -588,6 +620,8 @@ namespace QuantConnect
                     result._date = date;
                     break;
                 case SecurityType.Option:
+                case SecurityType.IndexOption:
+                case SecurityType.FutureOption:
                     result._date = date;
                     result._strikePrice = strike;
                     result._optionRight = optionRight;
@@ -603,59 +637,18 @@ namespace QuantConnect
         /// <param name="mapFileProvider">The IMapFileProvider instance used for resolving map files</param>
         /// <param name="tickerToday">The security's ticker as it trades today</param>
         /// <param name="market">The market the security exists in</param>
+        /// <param name="securityType">The securityType the security exists in</param>
         /// <param name="mappingResolveDate">The date to use to resolve the map file. Default value is <see cref="DateTime.Today"/></param>
         /// <returns>The security's first ticker/date if mapping data available, otherwise, the provided ticker and DefaultDate are returned</returns>
-        private static Tuple<string, DateTime> GetFirstTickerAndDate(IMapFileProvider mapFileProvider, string tickerToday, string market, DateTime? mappingResolveDate = null)
+        private static Tuple<string, DateTime> GetFirstTickerAndDate(IMapFileProvider mapFileProvider, string tickerToday, string market, SecurityType securityType, DateTime? mappingResolveDate = null)
         {
-            var resolver = mapFileProvider.Get(market);
+            var resolver = mapFileProvider.Get(new AuxiliaryDataKey(market, securityType));
             var mapFile = resolver.ResolveMapFile(tickerToday, mappingResolveDate ?? DateTime.Today);
 
             // if we have mapping data, use the first ticker/date from there, otherwise use provided ticker and DefaultDate
             return mapFile.Any()
                 ? Tuple.Create(mapFile.FirstTicker, mapFile.FirstDate)
                 : Tuple.Create(tickerToday, DefaultDate);
-        }
-
-        /// <summary>
-        /// Converts an upper case alpha numeric string into a long
-        /// </summary>
-        private static ulong DecodeBase36(string symbol)
-        {
-            var result = 0ul;
-            var baseValue = 1ul;
-            for (var i = symbol.Length - 1; i > -1; i--)
-            {
-                var c = symbol[i];
-
-                // assumes alpha numeric upper case only strings
-                var value = (uint)(c <= 57
-                    ? c - '0'
-                    : c - 'A' + 10);
-
-                result += baseValue * value;
-                baseValue *= 36;
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Converts a long to an uppercase alpha numeric string
-        /// </summary>
-        private static string EncodeBase36(ulong data)
-        {
-            var stack = new Stack<char>(15);
-            while (data != 0)
-            {
-                var value = data % 36;
-                var c = value < 10
-                    ? (char)(value + '0')
-                    : (char)(value - 10 + 'A');
-
-                stack.Push(c);
-                data /= 36;
-            }
-            return new string(stack.ToArray());
         }
 
         /// <summary>
@@ -682,12 +675,35 @@ namespace QuantConnect
                 scale++;
             }
 
-            if (strike >= 1000000)
+            // Since our max precision was previously capped at 999999 and it had 20 bits set,
+            // we sacrifice a single bit from the strike price to allow for negative strike prices.
+            // 475711 is the maximum value that can be represented when setting the negative bit because
+            // any number greater than that will cause an overflow in the strike price width and increase
+            // its width to 7 digits.
+            // The idea behind this formula is to determine what number the overflow would happen at.
+            // We get the max number representable in 19 bits, subtract the width to normalize the value,
+            // and then get the difference between the 20 bit mask and the 19 bit normalized value to get
+            // the max strike price + 1. Subtract 1 to normalize the value, and we have established an exclusive
+            // upper bound.
+            const ulong negativeMask = 1 << 19;
+            const ulong maxStrikePrice = negativeMask - ((negativeMask ^ (negativeMask - 1)) - StrikeWidth) - 1;
+
+            if (strike >= maxStrikePrice || strike <= -(long)maxStrikePrice)
             {
                 throw new ArgumentException(Invariant($"The specified strike price\'s precision is too high: {str}"));
             }
 
-            return (ulong)strike;
+            var encodedStrike = (long)strike;
+            if (strike < 0)
+            {
+                // Flip the sign
+                encodedStrike = -encodedStrike;
+
+                // Sets the 20th bit equal to 1
+                encodedStrike |= 1 << 19;
+            }
+
+            return (ulong)encodedStrike;
         }
 
         /// <summary>
@@ -792,7 +808,7 @@ namespace QuantConnect
 
                     var symbol = parts[0];
                     var otherData = parts[1];
-                    var props = DecodeBase36(otherData);
+                    var props = otherData.DecodeBase36();
 
                     // toss the previous in as the underlying, if Empty, ignored by ctor
                     identifier = new SecurityIdentifier(symbol, props, identifier);
@@ -820,7 +836,7 @@ namespace QuantConnect
         /// <summary>
         /// Extracts the embedded value from _otherData
         /// </summary>
-        /// <remarks>Static so it can be used in <see cref="_lazySecurityType"/> initialization</remarks>
+        /// <remarks>Static so it can be used in <see cref="SecurityIdentifier"/> initialization</remarks>
         private static ulong ExtractFromProperties(ulong offset, ulong width, ulong properties)
         {
             return (properties / offset) % width;
@@ -829,6 +845,49 @@ namespace QuantConnect
         #endregion
 
         #region Equality members and ToString
+
+        /// <summary>Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object. </summary>
+        /// <param name="other">An object to compare with this instance. </param>
+        /// <returns>A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="other" /> in the sort order.  Zero This instance occurs in the same position in the sort order as <paramref name="other" />. Greater than zero This instance follows <paramref name="other" /> in the sort order. </returns>
+        public int CompareTo(SecurityIdentifier other)
+        {
+            if (ReferenceEquals(this, other))
+            {
+                return 0;
+            }
+
+            if (ReferenceEquals(null, other))
+            {
+                return 1;
+            }
+
+            return string.Compare(ToString(), other.ToString(), StringComparison.Ordinal);
+        }
+
+        /// <summary>Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object.</summary>
+        /// <param name="obj">An object to compare with this instance. </param>
+        /// <returns>A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="obj" /> in the sort order. Zero This instance occurs in the same position in the sort order as <paramref name="obj" />. Greater than zero This instance follows <paramref name="obj" /> in the sort order. </returns>
+        /// <exception cref="T:System.ArgumentException">
+        /// <paramref name="obj" /> is not the same type as this instance. </exception>
+        public int CompareTo(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return 1;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return 0;
+            }
+
+            if (!(obj is SecurityIdentifier))
+            {
+                throw new ArgumentException($"Object must be of type {nameof(SecurityIdentifier)}");
+            }
+
+            return CompareTo((SecurityIdentifier) obj);
+        }
 
         /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.
@@ -902,10 +961,11 @@ namespace QuantConnect
         {
             if (_stringRep == null)
             {
-                var props = EncodeBase36(_properties);
+                var props = _properties.EncodeBase36();
                 props = props.Length == 0 ? "0" : props;
                 _stringRep = HasUnderlying ? $"{_symbol} {props}|{_underlying}" : $"{_symbol} {props}";
             }
+
             return _stringRep;
         }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Common.Util
                 throw new ArgumentException("This test requires an already calculated factor file." +
                                             "Try using one of the pre-existing factor files ");
 
-            var originalFactorFileInstance = FactorFile.Read(PermTick, Market);
+            var originalFactorFileInstance = TestGlobals.FactorFileProvider.Get(_symbol) as CorporateFactorProvider;
 
             // we limit events to the penultimate time in our factor file (last one is 2050)
             var lastValidRow = originalFactorFileInstance.SortedFactorFileData.Reverse().Skip(1).First();
@@ -95,11 +95,8 @@ namespace QuantConnect.Tests.Common.Util
 
             for (var i = earliestDate; i < latestDate; i = i.AddDays(1))
             {
-                FactorFileRow expected = null;
-                FactorFileRow actual = null;
-
-                originalFactorFileInstance.SortedFactorFileData.TryGetValue(i, out expected);
-                newFactorFileInstance.SortedFactorFileData.TryGetValue(i, out actual);
+                originalFactorFileInstance.SortedFactorFileData.TryGetValue(i, out var expected);
+                newFactorFileInstance.SortedFactorFileData.TryGetValue(i, out var actual);
 
                 if (expected == null || actual == null)
                 {
@@ -108,8 +105,8 @@ namespace QuantConnect.Tests.Common.Util
                 }
                 else
                 {
-                    Assert.IsTrue(Math.Abs(expected.PriceFactor - actual.PriceFactor) < tolerance);
-                    Assert.IsTrue(Math.Abs(expected.SplitFactor - actual.SplitFactor) < tolerance);
+                    Assert.IsTrue(Math.Abs(expected.Single().PriceFactor - actual.Single().PriceFactor) < tolerance);
+                    Assert.IsTrue(Math.Abs(expected.Single().SplitFactor - actual.Single().SplitFactor) < tolerance);
                 }
             }
         }

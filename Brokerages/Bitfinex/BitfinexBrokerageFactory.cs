@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -49,7 +49,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
             { "bitfinex-api-key", Config.Get("bitfinex-api-key")},
-            { "bitfinex-api-secret", Config.Get("bitfinex-api-secret")}
+            { "bitfinex-api-secret", Config.Get("bitfinex-api-secret")},
+
+            // load holdings if available
+            { "live-holdings", Config.Get("live-holdings")},
         };
 
         /// <summary>
@@ -81,7 +84,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                 job.BrokerageData["bitfinex-api-secret"],
                 algorithm,
                 priceProvider,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                job);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

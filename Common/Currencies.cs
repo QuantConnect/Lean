@@ -28,6 +28,21 @@ namespace QuantConnect
         public static string USD = "USD";
 
         /// <summary>
+        /// EUR currency string
+        /// </summary>
+        public static string EUR = "EUR";
+
+        /// <summary>
+        /// GBP currency string
+        /// </summary>
+        public static string GBP = "GBP";
+
+        /// <summary>
+        /// INR currency string
+        /// </summary>
+        public static string INR = "INR";
+
+        /// <summary>
         /// Null currency used when a real one is not required
         /// </summary>
         public const string NullCurrency = "QCC";
@@ -77,7 +92,28 @@ namespace QuantConnect
             {"XRP", "XRP"},
             {"XLM", "XLM"},
             {"ETC", "ETC"},
-            {"ZRX", "ZRX"}
+            {"ZRX", "ZRX"},
+            {"USDT", "USDT"}
+        };
+
+        /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB
+        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
+        ///
+        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
+        /// security.
+        /// </summary>
+        public static HashSet<Symbol> StableCoinsWithoutPairs = new HashSet<Symbol>
+        {
+            // Binance StableCoins Missing 1-1 Pairs
+            Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Binance), // USD -> USDC
+            Symbol.Create("BGBPGBP", SecurityType.Crypto, Market.Binance), // GBP -> BGBP
+
+            // Coinbase StableCoins Missing 1-1 Pairs
+            Symbol.Create("USDCUSD", SecurityType.Crypto, Market.GDAX), // USD -> USDC
+
+            // Bitfinex StableCoins Missing 1-1 Pairs
+            Symbol.Create("EURSEUR", SecurityType.Crypto, Market.Bitfinex), // EUR -> EURS
         };
 
         /// <summary>

@@ -14,9 +14,7 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Indicators;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -81,20 +79,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
             }
 
-            if (factor.HasValue && (factor.Value != 1 || configuration.SumOfDividends != 0))
+            if (factor.HasValue && (configuration.SecurityType != SecurityType.Equity || (factor.Value != 1 || configuration.SumOfDividends != 0)))
             {
-                var sumOfDividends = configuration.SumOfDividends;
-
-                BaseData normalizedData = data.Clone();
-
-                if (normalizationMode == DataNormalizationMode.Adjusted || normalizationMode == DataNormalizationMode.SplitAdjusted)
-                {
-                    normalizedData.Adjust(factor.Value);
-                }
-                else if (normalizationMode == DataNormalizationMode.TotalReturn)
-                {
-                    normalizedData.Scale(p => p * factor.Value + sumOfDividends);
-                }
+                var normalizedData = data.Clone(data.IsFillForward).Normalize(factor.Value, normalizationMode, configuration.SumOfDividends);
 
                 return new PrecalculatedSubscriptionData(configuration, data, normalizedData, normalizationMode, emitTimeUtc);
             }

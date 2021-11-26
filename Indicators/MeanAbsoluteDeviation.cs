@@ -71,7 +71,7 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             Mean.Update(input);
-            return Samples < 2 ? 0m : window.Average(v => Math.Abs(v - Mean.Current.Value));
+            return Samples < 2 ? 0m : window.Average(v => Math.Abs(v.Value - Mean.Current.Value));
         }
 
         /// <summary>

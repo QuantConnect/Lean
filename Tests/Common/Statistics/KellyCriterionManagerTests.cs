@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Logging;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Common.Statistics
@@ -40,7 +41,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var estimate = kellyCriterionManager.KellyCriterionEstimate;
             var probabilityValue = kellyCriterionManager.KellyCriterionProbabilityValue;
 
-            Console.WriteLine($"Estimate {estimate} - ProbabilityValue {probabilityValue}");
+            Log.Trace($"Estimate {estimate} - ProbabilityValue {probabilityValue}");
             Assert.AreEqual(extremeCase == 1
                     ? 0.00031578947368421 : -0.00031578947368421, kellyCriterionManager.KellyCriterionEstimate);
             Assert.AreEqual(1, kellyCriterionManager.KellyCriterionProbabilityValue);
@@ -65,7 +66,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var estimate = kellyCriterionManager.KellyCriterionEstimate;
             var probabilityValue = kellyCriterionManager.KellyCriterionProbabilityValue;
 
-            Console.WriteLine($"Estimate {estimate} - ProbabilityValue {probabilityValue}");
+            Log.Trace($"Estimate {estimate} - ProbabilityValue {probabilityValue}");
             Assert.AreEqual(extremeCase == 1
                 ? 0.315789473684211m : -0.315789473684211m, kellyCriterionManager.KellyCriterionEstimate);
             Assert.AreEqual(1, kellyCriterionManager.KellyCriterionProbabilityValue);
@@ -87,9 +88,9 @@ namespace QuantConnect.Tests.Common.Statistics
             var estimate = kellyCriterionManager.KellyCriterionEstimate;
             var probabilityValue = kellyCriterionManager.KellyCriterionProbabilityValue;
 
-            Console.WriteLine($"Estimate {estimate} - ProbabilityValue {probabilityValue}");
+            Log.Trace($"Estimate {estimate} - ProbabilityValue {probabilityValue}");
 
-            Console.WriteLine($"Estimate {estimate} - ProbabilityValue {probabilityValue}");
+            Log.Trace($"Estimate {estimate} - ProbabilityValue {probabilityValue}");
 
             // compare with a delta
             Assert.Less(Math.Abs(0 - kellyCriterionManager.KellyCriterionEstimate), 0.000000000000001m);
@@ -106,7 +107,7 @@ namespace QuantConnect.Tests.Common.Statistics
             kellyCriterionManager.AddNewValue(10, start);
             kellyCriterionManager.UpdateScores();
 
-            Console.WriteLine($"Estimate {kellyCriterionManager.KellyCriterionEstimate}" +
+            Log.Trace($"Estimate {kellyCriterionManager.KellyCriterionEstimate}" +
                               $" - ProbabilityValue {kellyCriterionManager.KellyCriterionProbabilityValue}");
             Assert.AreEqual(0.1, kellyCriterionManager.KellyCriterionEstimate);
             Assert.AreEqual(0.5, kellyCriterionManager.KellyCriterionProbabilityValue);
@@ -116,7 +117,7 @@ namespace QuantConnect.Tests.Common.Statistics
             kellyCriterionManager.AddNewValue(-10, start.AddDays(365));
             kellyCriterionManager.UpdateScores();
 
-            Console.WriteLine($"Estimate {kellyCriterionManager.KellyCriterionEstimate}" +
+            Log.Trace($"Estimate {kellyCriterionManager.KellyCriterionEstimate}" +
                               $" - ProbabilityValue {kellyCriterionManager.KellyCriterionProbabilityValue}");
             Assert.AreEqual(-0.1, kellyCriterionManager.KellyCriterionEstimate);
             Assert.AreEqual(0.5, kellyCriterionManager.KellyCriterionProbabilityValue);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -52,7 +52,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
+                new SecurityCache(),
+                Exchange.UNKNOWN
             );
             security.Setup(m => m.Invested).Returns(invested);
 
@@ -60,6 +61,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 new IdentityCurrencyConverter(Currencies.USD));
             holding.Setup(m => m.UnrealizedProfit).Returns(unrealizedProfit);
             holding.Setup(m => m.AbsoluteHoldingsCost).Returns(absoluteHoldingsCost);
+            holding.Setup(m => m.UnrealizedProfitPercent).Returns(absoluteHoldingsCost == 0m? 0m : unrealizedProfit / absoluteHoldingsCost);
 
             security.Object.Holdings = holding.Object;
 

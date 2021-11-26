@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using QuantConnect.Brokerages;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -104,11 +105,17 @@ namespace QuantConnect.Lean.Engine.Results
         void RuntimeError(string message, string stacktrace = "");
 
         /// <summary>
-        /// Method to attempt to update the <see cref="IResultHandler"/> with various performance metrics.
+        /// Process brokerage message events
+        /// </summary>
+        /// <param name="brokerageMessageEvent">The brokerage message event</param>
+        void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent);
+
+        /// <summary>
+        /// Method to update the <see cref="IResultHandler"/> with various performance metrics.
+        /// Called once a day by scheduled event in AlgorithmManager
         /// </summary>
         /// <param name="time">Current time</param>
-        /// <param name="force">Forces a sampling event if true</param>
-        void Sample(DateTime time, bool force = false);
+        void Sample(DateTime time);
 
         /// <summary>
         /// Set the algorithm of the result handler after its been initialized.

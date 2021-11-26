@@ -30,6 +30,9 @@ namespace QuantConnect.Report
     {
         private JsonSerializerSettings _settings;
 
+        /// <summary>
+        /// Initialize a new instance of <see cref="NullResultValueTypeJsonConverter{T}"/>
+        /// </summary>
         public NullResultValueTypeJsonConverter()
         {
             _settings = new JsonSerializerSettings
@@ -38,14 +41,28 @@ namespace QuantConnect.Report
                 FloatParseHandling = FloatParseHandling.Decimal
             };
         }
+
+        /// <summary>
+        /// Determine if this converter can convert a given type
+        /// </summary>
+        /// <param name="objectType">Object type to convert</param>
+        /// <returns>Always true</returns>
         public override bool CanConvert(Type objectType)
         {
             return true;
         }
 
+        /// <summary>
+        /// Read Json for conversion
+        /// </summary>
+        /// <returns>Resulting object</returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var token = JToken.ReadFrom(reader);
+            if (token.Type == JTokenType.Null)
+            {
+                return null;
+            }
 
             foreach (JProperty property in token["Charts"].Children())
             {
@@ -73,6 +90,9 @@ namespace QuantConnect.Report
             return JsonConvert.DeserializeObject<T>(token.ToString(), _settings);
         }
 
+        /// <summary>
+        /// Write Json; Not implemented
+        /// </summary>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             throw new NotImplementedException();

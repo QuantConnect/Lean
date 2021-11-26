@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -57,6 +58,23 @@ namespace QuantConnect.Data.UniverseSelection
         public DataNormalizationMode DataNormalizationMode;
 
         /// <summary>
+        /// Defines how universe data is mapped together
+        /// </summary>
+        /// <remarks>This is particular useful when generating continuous futures</remarks>
+        public DataMappingMode DataMappingMode;
+
+        /// <summary>
+        /// The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contra
+        /// </summary>
+        public int ContractDepthOffset;
+
+        /// <summary>
+        /// Allows a universe to specify which data types to add for a selected symbol
+        /// </summary>
+        public List<Tuple<Type, TickType>> SubscriptionDataTypes;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSettings"/> class
         /// </summary>
         /// <param name="resolution">The resolution</param>
@@ -65,14 +83,36 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="extendedMarketHours">True to allow extended market hours data, false otherwise</param>
         /// <param name="minimumTimeInUniverse">Defines the minimum amount of time a security must remain in the universe before being removed</param>
         /// <param name="dataNormalizationMode">Defines how universe data is normalized before being send into the algorithm</param>
-        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest, int contractDepthOffset = 0)
         {
             Resolution = resolution;
             Leverage = leverage;
             FillForward = fillForward;
+            DataMappingMode = dataMappingMode;
+            ContractDepthOffset = contractDepthOffset;
             ExtendedMarketHours = extendedMarketHours;
             MinimumTimeInUniverse = minimumTimeInUniverse;
             DataNormalizationMode = dataNormalizationMode;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UniverseSettings"/> class
+        /// </summary>
+        public UniverseSettings(UniverseSettings universeSettings)
+        {
+            Resolution = universeSettings.Resolution;
+            Leverage = universeSettings.Leverage;
+            FillForward = universeSettings.FillForward;
+            DataMappingMode = universeSettings.DataMappingMode;
+            ContractDepthOffset = universeSettings.ContractDepthOffset;
+            ExtendedMarketHours = universeSettings.ExtendedMarketHours;
+            MinimumTimeInUniverse = universeSettings.MinimumTimeInUniverse;
+            DataNormalizationMode = universeSettings.DataNormalizationMode;
+            SubscriptionDataTypes = universeSettings.SubscriptionDataTypes;
         }
     }
 }

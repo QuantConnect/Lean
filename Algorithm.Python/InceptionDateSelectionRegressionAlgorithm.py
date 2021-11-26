@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,18 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System.Core")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Algorithm.Framework.Selection import *
-from QuantConnect.Data.UniverseSelection import *
-from datetime import timedelta
+from AlgorithmImports import *
 
 ### <summary>
 ### Regression algorithm to test universe additions and removals with open positions
@@ -41,7 +30,7 @@ class InceptionDateSelectionRegressionAlgorithm(QCAlgorithm):
         # select IBM once a week, empty universe the other days
         self.AddUniverseSelection(CustomUniverseSelectionModel("my-custom-universe", lambda dt: ["IBM"] if dt.day % 7 == 0 else []))
         # Adds SPY 5 days after StartDate and keep it in Universe
-        self.AddUniverseSelection(InceptionDateUniverseSelectionModel("spy-inception", {"SPY": self.StartDate + timedelta(5)}));
+        self.AddUniverseSelection(InceptionDateUniverseSelectionModel("spy-inception", {"SPY": self.StartDate + timedelta(5)}))
 
 
     def OnData(self, slice):

@@ -31,10 +31,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect import *\n" +
-                    "from QuantConnect.Data.Market import *\n" +
+                    "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
                     "       self.UpdateWasCalled = False\n" +
@@ -76,10 +73,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect import *\n" +
-                    "from QuantConnect.Data.Market import *\n" +
+                    "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
                     "       self.ScanWasCalled = False\n" +
@@ -110,10 +104,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect import *\n" +
-                    "from QuantConnect.Data.Market import *\n" +
+                    "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
                     "       self.InputType = QuoteBar\n" +
@@ -138,10 +129,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect import *\n" +
-                    "from QuantConnect.Data.Market import *\n" +
+                    "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
                     "       self.InputType = QuoteBar\n" +
@@ -165,26 +153,26 @@ namespace QuantConnect.Tests.Python
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("CustomConsolidatorRegressionAlgorithm",
                 new Dictionary<string, string> {
-                    {"Total Trades", "32"},
-                    {"Average Win", "0.42%"},
-                    {"Average Loss", "-0.02%"},
-                    {"Compounding Annual Return", "66.060%"},
+                    {"Total Trades", "49"},
+                    {"Average Win", "0.25%"},
+                    {"Average Loss", "-0.01%"},
+                    {"Compounding Annual Return", "65.750%"},
                     {"Drawdown", "0.300%"},
-                    {"Expectancy", "2.979"},
-                    {"Net Profit", "1.071%"},
-                    {"Sharpe Ratio", "8.939"},
-                    {"Probabilistic Sharpe Ratio", "88.793%"},
-                    {"Loss Rate", "81%"},
-                    {"Win Rate", "19%"},
-                    {"Profit-Loss Ratio", "20.22"},
-                    {"Alpha", "0.528"},
-                    {"Beta", "0.35"},
-                    {"Annual Standard Deviation", "0.08"},
-                    {"Annual Variance", "0.006"},
-                    {"Information Ratio", "1.287"},
-                    {"Tracking Error", "0.141"},
-                    {"Treynor Ratio", "2.045"},
-                    {"Total Fees", "$51.40"}
+                    {"Expectancy", "2.577"},
+                    {"Net Profit", "1.067%"},
+                    {"Sharpe Ratio", "6.873"},
+                    {"Probabilistic Sharpe Ratio", "89.382%"},
+                    {"Loss Rate", "80%"},
+                    {"Win Rate", "20%"},
+                    {"Profit-Loss Ratio", "16.88"},
+                    {"Alpha", "0.34"},
+                    {"Beta", "0.351"},
+                    {"Annual Standard Deviation", "0.068"},
+                    {"Annual Variance", "0.005"},
+                    {"Information Ratio", "0.865"},
+                    {"Tracking Error", "0.118"},
+                    {"Treynor Ratio", "1.336"},
+                    {"Total Fees", "$69.81"}
                 },
                 Language.Python,
                 AlgorithmStatus.Completed);
@@ -202,11 +190,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect import *\n" +
-                    "from QuantConnect.Data.Consolidators import *\n" +
-                    "from datetime import *\n" +
+                    "from AlgorithmImports import *\n" +
                     "class ImplementingClass():\n" +
                     "   def __init__(self):\n" +
                     "       self.EventCalled = False\n" +

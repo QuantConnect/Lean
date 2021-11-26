@@ -16,6 +16,7 @@
 using NUnit.Framework;
 using Python.Runtime;
 using System;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Research
@@ -23,11 +24,15 @@ namespace QuantConnect.Tests.Research
     [TestFixture]
     public class QuantBookIndicatorsTests
     {
+        private ILogHandler _logHandler;
         dynamic _module;
 
         [OneTimeSetUp]
         public void Setup()
         {
+            // Store initial handler
+            _logHandler = Log.LogHandler;
+
             SymbolCache.Clear();
             MarketHoursDatabase.Reset();
 
@@ -35,6 +40,13 @@ namespace QuantConnect.Tests.Research
             {
                 _module = Py.Import("Test_QuantBookIndicator");
             }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            // Reset to initial handler
+            Log.LogHandler = _logHandler;
         }
 
         [Test]

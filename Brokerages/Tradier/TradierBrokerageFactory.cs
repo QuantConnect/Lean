@@ -13,15 +13,10 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -39,58 +34,20 @@ namespace QuantConnect.Brokerages.Tradier
         public static class Configuration
         {
             /// <summary>
-            /// Gets the account ID to be used when instantiating a brokerage
+            /// Gets whether to use the developer sandbox or not
             /// </summary>
-            public static int QuantConnectUserID
-            {
-                get { return Config.GetInt("qc-user-id"); }
-            }
+            public static bool UseSandbox => Config.GetBool("tradier-use-sandbox");
 
             /// <summary>
             /// Gets the account ID to be used when instantiating a brokerage
             /// </summary>
-            public static string AccountID
-            {
-                get { return Config.Get("tradier-account-id"); }
-            }
+            public static string AccountId => Config.Get("tradier-account-id");
 
             /// <summary>
             /// Gets the access token from configuration
             /// </summary>
-            public static string AccessToken
-            {
-                get { return Config.Get("tradier-access-token"); }
-            }
-
-            /// <summary>
-            /// Gets the refresh token from configuration
-            /// </summary>
-            public static string RefreshToken
-            {
-                get { return Config.Get("tradier-refresh-token"); }
-            }
-
-            /// <summary>
-            /// Gets the date time the tokens were issued at from configuration
-            /// </summary>
-            public static DateTime TokensIssuedAt
-            {
-                get { return Config.GetValue<DateTime>("tradier-issued-at"); }
-            }
-
-            /// <summary>
-            /// Gets the life span of the tokens from configuration
-            /// </summary>
-            public static TimeSpan LifeSpan
-            {
-                get { return TimeSpan.FromSeconds(Config.GetInt("tradier-lifespan")); }
-            }
+            public static string AccessToken => Config.Get("tradier-access-token");
         }
-
-        /// <summary>
-        /// File path used to store tradier token data
-        /// </summary>
-        public const string TokensFile = "tradier-tokens.txt";
 
         /// <summary>
         /// Initializes a new instance of he TradierBrokerageFactory class
@@ -111,31 +68,12 @@ namespace QuantConnect.Brokerages.Tradier
         {
             get
             {
-                string accessToken, refreshToken, issuedAt, lifeSpan;
-
-                // always need to grab account ID from configuration
-                var accountID = Configuration.AccountID.ToStringInvariant();
-                var data = new Dictionary<string, string>();
-                if (File.Exists(TokensFile))
+                var data = new Dictionary<string, string>
                 {
-                    var tokens = JsonConvert.DeserializeObject<TokenResponse>(File.ReadAllText(TokensFile));
-                    accessToken = tokens.AccessToken;
-                    refreshToken = tokens.RefreshToken;
-                    issuedAt = tokens.IssuedAt.ToString(CultureInfo.InvariantCulture);
-                    lifeSpan = "86399";
-                }
-                else
-                {
-                    accessToken = Configuration.AccessToken;
-                    refreshToken = Configuration.RefreshToken;
-                    issuedAt = Configuration.TokensIssuedAt.ToString(CultureInfo.InvariantCulture);
-                    lifeSpan = Configuration.LifeSpan.TotalSeconds.ToString(CultureInfo.InvariantCulture);
-                }
-                data.Add("tradier-account-id", accountID);
-                data.Add("tradier-access-token", accessToken);
-                data.Add("tradier-refresh-token", refreshToken);
-                data.Add("tradier-issued-at", issuedAt);
-                data.Add("tradier-lifespan", lifeSpan);
+                    { "tradier-use-sandbox", Configuration.UseSandbox.ToStringInvariant() },
+                    { "tradier-account-id", Configuration.AccountId.ToStringInvariant() },
+                    { "tradier-access-token", Configuration.AccessToken.ToStringInvariant() }
+                };
                 return data;
             }
         }
@@ -155,32 +93,23 @@ namespace QuantConnect.Brokerages.Tradier
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
             var errors = new List<string>();
-            var accountID = Read<string>(job.BrokerageData, "tradier-account-id", errors);
+            var useSandbox = Read<bool>(job.BrokerageData, "tradier-use-sandbox", errors);
+            var accountId = Read<string>(job.BrokerageData, "tradier-account-id", errors);
             var accessToken = Read<string>(job.BrokerageData, "tradier-access-token", errors);
-            var refreshToken = Read<string>(job.BrokerageData, "tradier-refresh-token", errors);
-            var issuedAt = Read<DateTime>(job.BrokerageData, "tradier-issued-at", errors);
-            var lifeSpan = TimeSpan.FromSeconds(Read<double>(job.BrokerageData, "tradier-lifespan", errors));
 
             var brokerage = new TradierBrokerage(
-                algorithm.Transactions, 
+                algorithm,
+                algorithm.Transactions,
                 algorithm.Portfolio,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
-                accountID);
+                useSandbox,
+                accountId,
+                accessToken);
 
-            // if we're running live locally we'll want to save any new tokens generated so that they can easily be retrieved
-            if (Config.GetBool("tradier-save-tokens"))
-            {
-                brokerage.SessionRefreshed += (sender, args) =>
-                {
-                    File.WriteAllText(TokensFile, JsonConvert.SerializeObject(args, Formatting.Indented));
-                };
-            }
-
-            brokerage.SetTokens(job.UserId, accessToken, refreshToken, issuedAt, lifeSpan);
-
-            //Add the brokerage to the composer to ensure its accessible to the live data feed.
+            // Add the brokerage to the composer to ensure its accessible to the live data feed.
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
             Composer.Instance.AddPart<IHistoryProvider>(brokerage);
+
             return brokerage;
         }
 
@@ -190,28 +119,6 @@ namespace QuantConnect.Brokerages.Tradier
         /// <filterpriority>2</filterpriority>
         public override void Dispose()
         {
-        }
-
-
-        /// <summary>
-        /// Reads the tradier tokens from the <see cref="TokensFile"/> or from configuration
-        /// </summary>
-        public static TokenResponse GetTokens()
-        {
-            // pick a source for our tokens
-            if (File.Exists(TokensFile))
-            {
-                Log.Trace("Reading tradier tokens from " + TokensFile);
-                return JsonConvert.DeserializeObject<TokenResponse>(File.ReadAllText(TokensFile));
-            }
-
-            return new TokenResponse
-            {
-                AccessToken = Config.Get("tradier-access-token"),
-                RefreshToken = Config.Get("tradier-refresh-token"),
-                IssuedAt = Config.GetValue<DateTime>("tradier-issued-at"),
-                ExpiresIn = Config.GetInt("tradier-lifespan")
-            };
         }
     }
 }

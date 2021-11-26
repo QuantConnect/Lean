@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,24 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
-AddReference("QuantConnect.Common")
-
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Selection import *
-from QuantConnect.Brokerages import *
-from QuantConnect.Data import *
-from QuantConnect.Interfaces import *
-from QuantConnect.Orders import *
-from System import *
-from datetime import timedelta
+from AlgorithmImports import *
 
 ### <summary>
 ### Basic template framework algorithm uses framework components to define the algorithm.
@@ -57,6 +40,10 @@ class LongOnlyAlphaStreamAlgorithm(QCAlgorithm):
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(Resolution.Daily, PortfolioBias.Long))
         self.SetExecution(ImmediateExecutionModel())
 
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+        # Commented so regression algorithm is more sensitive
+        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+
         # Set algorithm framework models
         self.SetUniverseSelection(ManualUniverseSelectionModel(
             [Symbol.Create(x, SecurityType.Equity, Market.USA) for x in ["SPY", "IBM"]]))
@@ -74,5 +61,5 @@ class LongOnlyAlphaStreamAlgorithm(QCAlgorithm):
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
             if self.Securities[orderEvent.Symbol].Holdings.IsShort:
-                raise ValueError("Invalid position, should not be short");
+                raise ValueError("Invalid position, should not be short")
             self.Debug(orderEvent)

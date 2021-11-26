@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,8 +14,6 @@
  *
 */
 
-using System;
-using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
@@ -27,6 +25,12 @@ namespace QuantConnect.Packets
     /// </summary>
     public class Controls
     {
+        /// <summary>
+        /// The maximum runtime in minutes
+        /// </summary>
+        [JsonProperty(PropertyName = "iMaximumRuntimeMinutes")]
+        public int MaximumRuntimeMinutes;
+
         /// <summary>
         /// The maximum number of minute symbols
         /// </summary>
@@ -132,16 +136,10 @@ namespace QuantConnect.Packets
         public int PersistenceIntervalSeconds;
 
         /// <summary>
-        /// Gets list of streaming data permissions
+        /// The cost associated with running this job
         /// </summary>
-        [JsonProperty(PropertyName = "streamingDataPermissions")]
-        public HashSet<string> StreamingDataPermissions;
-
-        /// <summary>
-        /// Gets list of allowed data resolutions
-        /// </summary>
-        [JsonProperty(PropertyName = "dataResolutionPermissions")]
-        public HashSet<Resolution> DataResolutionPermissions;
+        [JsonProperty(PropertyName = "dCreditCost")]
+        public decimal CreditCost;
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
@@ -156,6 +154,7 @@ namespace QuantConnect.Packets
             BacktestingMaxOrders = int.MaxValue;
             DailyLogLimit = 3000000;
             RemainingLogAllowance = 10000;
+            MaximumRuntimeMinutes = 60 * 24 * 100; // 100 days default
             BacktestingMaxInsights = 10000;
             MaximumDataPointsPerChartSeries = 4000;
             SecondTimeOut = 300;
@@ -166,30 +165,6 @@ namespace QuantConnect.Packets
 
             // initialize to default leaky bucket values in case they're not specified
             TrainingLimits = new LeakyBucketControlParameters();
-
-            StreamingDataPermissions = new HashSet<string>();
-            DataResolutionPermissions = new HashSet<Resolution>();
-        }
-
-        /// <summary>
-        /// Gets the maximum number of subscriptions for the specified resolution
-        /// </summary>
-        public int GetLimit(Resolution resolution)
-        {
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    return TickLimit;
-
-                case Resolution.Second:
-                    return SecondLimit;
-
-                case Resolution.Minute:
-                case Resolution.Hour:
-                case Resolution.Daily:
-                default:
-                    return MinuteLimit;
-            }
         }
     }
 }

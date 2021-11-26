@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -66,14 +66,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
+                new SecurityCache(),
+                null
             );
 
-            var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(false, MapFileResolver.Create(Globals.DataFolder, Market.USA), new LocalDiskFactorFileProvider(new LocalDiskMapFileProvider()));
+            var dataProvider = TestGlobals.DataProvider;
+            var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(false, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider);
             var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());
             Func<SubscriptionRequest, IEnumerator<BaseData>> underlyingEnumeratorFunc = (req) =>
                 {
-                    var input = enumeratorFactory.CreateEnumerator(req, new DefaultDataProvider());
+                    var input = enumeratorFactory.CreateEnumerator(req, dataProvider);
 
                     input = new BaseDataCollectionAggregatorEnumerator(input, req.Configuration.Symbol);
                     return new FillForwardEnumerator(
@@ -83,13 +85,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         false,
                         endTime,
                         Resolution.Minute.ToTimeSpan(),
-                        TimeZones.Utc,
-                        startTime);
+                        TimeZones.Utc);
                 };
             var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(underlyingEnumeratorFunc);
 
             var request = new SubscriptionRequest(true, null, option, config, startTime, endTime);
-            var enumerator = factory.CreateEnumerator(request, new DefaultDataProvider());
+            var enumerator = factory.CreateEnumerator(request, dataProvider);
 
             var emittedCount = 0;
             foreach (var data in enumerator.AsEnumerable())
@@ -138,7 +139,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
+                new SecurityCache(),
+                null
             );
 
             var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());
@@ -156,15 +158,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         false,
                         Time.EndOfTime,
                         Resolution.Minute.ToTimeSpan(),
-                        TimeZones.Utc,
-                        Time.BeginningOfTime);
+                        TimeZones.Utc);
                 };
             var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(underlyingEnumeratorFunc, symbolUniverse, timeProvider);
 
             var universeSettings = new UniverseSettings(Resolution.Minute, 0, true, false, TimeSpan.Zero);
             var universe = new OptionChainUniverse(option, universeSettings, true);
             var request = new SubscriptionRequest(true, universe, option, config, startTime, Time.EndOfTime);
-            var enumerator = (DataQueueOptionChainUniverseDataCollectionEnumerator) factory.CreateEnumerator(request, new DefaultDataProvider());
+            var enumerator = (DataQueueOptionChainUniverseDataCollectionEnumerator) factory.CreateEnumerator(request, TestGlobals.DataProvider);
 
             // 2018-10-19 10:00 AM UTC
             underlyingEnumerator.Enqueue(new Tick { Symbol = Symbols.SPY, Value = 280m });
@@ -258,14 +259,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _timeProvider = timeProvider;
             }
 
-            public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
+            public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
             {
                 TotalLookupCalls++;
 
                 return _timeProvider.GetUtcNow().Date.Day >= 20 ? _symbolList2 : _symbolList1;
             }
 
-            public bool CanAdvanceTime(SecurityType securityType)
+            public bool CanPerformSelection()
             {
                 return true;
             }

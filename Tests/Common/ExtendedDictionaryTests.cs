@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,21 +32,21 @@ namespace QuantConnect.Tests.Common
                     {"Compounding Annual Return", "-100%"},
                     {"Drawdown", "99.600%"},
                     {"Expectancy", "0"},
-                    {"Net Profit", "-99.604%"},
+                    {"Net Profit", "-99.625%"},
                     {"Sharpe Ratio", "-0.126"},
-                    {"Probabilistic Sharpe Ratio", "1.658%"},
+                    {"Probabilistic Sharpe Ratio", "1.667%"},
                     {"Loss Rate", "0%"},
                     {"Win Rate", "0%"},
                     {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "3.904"},
-                    {"Beta", "-2.545"},
-                    {"Annual Standard Deviation", "7.95"},
-                    {"Annual Variance", "63.196"},
-                    {"Information Ratio", "-0.367"},
+                    {"Alpha", "2.999"},
+                    {"Beta", "-2.017"},
+                    {"Annual Standard Deviation", "7.952"},
+                    {"Annual Variance", "63.235"},
+                    {"Information Ratio", "-0.374"},
                     {"Tracking Error", "7.968"},
-                    {"Treynor Ratio", "0.393"},
+                    {"Treynor Ratio", "0.496"},
                     {"Total Fees", "$0.00"},
-                    {"OrderListHash", "1518453211"}
+                    {"OrderListHash", "d303a19fe5a40b59ee99535985833000"}
                 },
                 Language.Python,
                 AlgorithmStatus.Completed);

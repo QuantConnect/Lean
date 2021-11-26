@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -66,7 +67,7 @@ namespace QuantConnect.Tests.Configuration
             Assert.True(File.Exists(defaultFile));
             Assert.True(File.ReadAllText(defaultFile).Length > 0);
         }
-        
+
         [Test]
         public void FlattenTest()
         {
@@ -113,6 +114,64 @@ namespace QuantConnect.Tests.Configuration
         public void GetValueHandlesTimeSpan()
         {
             GetValueHandles(new TimeSpan(1, 2, 3, 4, 5));
+        }
+
+        private static readonly TestCaseData[] DecimalValue =
+        {
+            new TestCaseData(100m)
+        };
+
+        private static readonly TestCaseData[] DecimalWithExpectedValue =
+        {
+            new TestCaseData(100m, (int)100)
+        };
+
+        [TestCase("value")]
+        [TestCase("true")]
+        [TestCase(true)]
+        [TestCase("1")]
+        [TestCase(1)]
+        [TestCase("1.0")]
+        [TestCase(1d)]
+        [Test, TestCaseSource(nameof(DecimalValue))]
+        public void GetString(object value)
+        {
+            Config.MergeCommandLineArgumentsWithConfiguration(new Dictionary<string, object>() { { "temp-value", value } });
+
+            var actual = Config.Get("temp-value");
+            Assert.AreEqual(typeof(string), actual.GetType());
+        }
+
+        [TestCase("true", true)]
+        [TestCase(true, true)]
+        [TestCase("false", false)]
+        [TestCase(false, false)]
+        public void GetBool(object value, bool expected)
+        {
+            Config.MergeCommandLineArgumentsWithConfiguration(new Dictionary<string, object>() { { "temp-value", value } });
+
+            Assert.AreEqual(expected, Config.GetBool("temp-value"));
+        }
+
+        [TestCase("1", 1)]
+        [TestCase(1, 1)]
+        [TestCase(2d, 2)]
+        [Test, TestCaseSource(nameof(DecimalWithExpectedValue))]
+        public void GetInt(object value, object expected)
+        {
+            Config.MergeCommandLineArgumentsWithConfiguration(new Dictionary<string, object>() { { "temp-value", value } });
+
+            Assert.AreEqual(expected, Config.GetInt("temp-value"));
+        }
+
+        [TestCase("100.0", 100)]
+        [TestCase(50d, 50)]
+        [Test, TestCaseSource(nameof(DecimalWithExpectedValue))]
+        public void GetDouble(object value, double expected)
+        {
+            Config.MergeCommandLineArgumentsWithConfiguration(new Dictionary<string, object>() { { "temp-value", value } });
+
+            Assert.AreEqual(expected, Config.GetDouble("temp-value"));
         }
 
         private void GetValueHandles<T>(T value)

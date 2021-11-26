@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _spy;
         private int _reselectedSpy = -1;
+        private DateTime lastDataTime = DateTime.MinValue;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -57,6 +58,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            if (lastDataTime == data.Time)
+            {
+                throw new Exception("Duplicate time for current data and last data slice");
+            }
+
+            lastDataTime = data.Time;
+
             if (_reselectedSpy == 0)
             {
                 if (!Securities[_spy].IsTradable)
@@ -111,29 +119,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "75.079%"},
-            {"Drawdown", "2.200%"},
+            {"Compounding Annual Return", "69.935%"},
+            {"Drawdown", "2.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "4.711%"},
-            {"Sharpe Ratio", "5.067"},
-            {"Probabilistic Sharpe Ratio", "84.391%"},
+            {"Net Profit", "4.455%"},
+            {"Sharpe Ratio", "4.41"},
+            {"Probabilistic Sharpe Ratio", "82.955%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.562"},
-            {"Beta", "0.02"},
-            {"Annual Standard Deviation", "0.113"},
-            {"Annual Variance", "0.013"},
-            {"Information Ratio", "0.511"},
-            {"Tracking Error", "0.159"},
-            {"Treynor Ratio", "28.945"},
-            {"Total Fees", "$3.22"},
-            {"Fitness Score", "0.037"},
+            {"Alpha", "0.054"},
+            {"Beta", "0.976"},
+            {"Annual Standard Deviation", "0.106"},
+            {"Annual Variance", "0.011"},
+            {"Information Ratio", "5.672"},
+            {"Tracking Error", "0.008"},
+            {"Treynor Ratio", "0.48"},
+            {"Total Fees", "$3.41"},
+            {"Estimated Strategy Capacity", "$780000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Fitness Score", "0.038"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "17.868"},
-            {"Return Over Maximum Drawdown", "34.832"},
-            {"Portfolio Turnover", "0.037"},
+            {"Sortino Ratio", "16.556"},
+            {"Return Over Maximum Drawdown", "34.803"},
+            {"Portfolio Turnover", "0.038"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -147,7 +157,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "836605283"}
+            {"OrderListHash", "f24baeb2d21ac305bc86e4ba4e9d4ece"}
         };
     }
 }

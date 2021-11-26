@@ -54,7 +54,7 @@ namespace QuantConnect.Util
         /// <summary>Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
-        public void Add(T item)
+        void ICollection<T>.Add(T item)
         {
             if (item == null)
             {
@@ -292,7 +292,7 @@ namespace QuantConnect.Util
         /// <summary>Adds an element to the current set and returns a value to indicate if the element was successfully added. </summary>
         /// <returns>true if the element is added to the set; false if the element is already in the set.</returns>
         /// <param name="item">The element to add to the set.</param>
-        bool ISet<T>.Add(T item)
+        public bool Add(T item)
         {
             lock (_set)
             {

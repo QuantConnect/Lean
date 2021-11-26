@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,7 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -36,6 +38,11 @@ namespace QuantConnect.Lean.Engine.Setup
     public static class BaseSetupHandler
     {
         /// <summary>
+        /// Get the maximum time that the creation of an algorithm can take
+        /// </summary>
+        public static TimeSpan AlgorithmCreationTimeout { get; } = TimeSpan.FromSeconds(Config.GetDouble("algorithm-creation-timeout", 90));
+
+        /// <summary>
         /// Will first check and add all the required conversion rate securities
         /// and later will seed an initial value to them.
         /// </summary>
@@ -51,49 +58,101 @@ namespace QuantConnect.Lean.Engine.Setup
 
             // now set conversion rates
             var cashToUpdate = algorithm.Portfolio.CashBook.Values
-                .Where(x => x.ConversionRateSecurity != null && x.ConversionRate == 0)
+                .Where(x => x.CurrencyConversion != null && x.ConversionRate == 0)
+                .ToList();
+
+            var securitiesToUpdate = cashToUpdate
+                .SelectMany(x => x.CurrencyConversion.ConversionRateSecurities)
+                .Distinct()
                 .ToList();
 
             var historyRequestFactory = new HistoryRequestFactory(algorithm);
             var historyRequests = new List<HistoryRequest>();
-            foreach (var cash in cashToUpdate)
+            foreach (var security in securitiesToUpdate)
             {
                 var configs = algorithm
                     .SubscriptionManager
                     .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(cash.ConversionRateSecurity.Symbol,
-                        includeInternalConfigs:true);
-
-                var resolution = configs.GetHighestResolution();
-
-                var startTime = historyRequestFactory.GetStartTimeAlgoTz(
-                    cash.ConversionRateSecurity.Symbol,
-                    1,
-                    resolution,
-                    cash.ConversionRateSecurity.Exchange.Hours);
-                var endTime = algorithm.Time.RoundDown(resolution.ToTimeSpan());
+                    .GetSubscriptionDataConfigs(security.Symbol,
+                        includeInternalConfigs: true);
 
                 // we need to order and select a specific configuration type
                 // so the conversion rate is deterministic
                 var configToUse = configs.OrderBy(x => x.TickType).First();
+                var hours = security.Exchange.Hours;
+
+                var resolution = configs.GetHighestResolution();
+                var startTime = historyRequestFactory.GetStartTimeAlgoTz(
+                    security.Symbol,
+                    60,
+                    resolution,
+                    hours,
+                    configToUse.DataTimeZone);
+                var endTime = algorithm.Time;
 
                 historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
                     configToUse,
                     startTime,
                     endTime,
-                    cash.ConversionRateSecurity.Exchange.Hours,
+                    security.Exchange.Hours,
                     resolution));
             }
 
+            // Attempt to get history for these requests and update cash
             var slices = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
             slices.PushThrough(data =>
             {
-                foreach (var cash in cashToUpdate
-                    .Where(x => x.ConversionRateSecurity.Symbol == data.Symbol))
+                foreach (var security in securitiesToUpdate.Where(x => x.Symbol == data.Symbol))
                 {
-                    cash.Update(data);
+                    security.SetMarketPrice(data);
                 }
             });
+
+            foreach (var cash in cashToUpdate)
+            {
+                cash.Update();
+            }
+
+            // Any remaining unassigned cash will attempt to fall back to a daily resolution history request to resolve
+            var unassignedCash = cashToUpdate.Where(x => x.ConversionRate == 0).ToList();
+            if (unassignedCash.Any())
+            {
+                Log.Trace(
+                    $"Failed to assign conversion rates for the following cash: {string.Join(",", unassignedCash.Select(x => x.Symbol))}." +
+                    $" Attempting to request daily resolution history to resolve conversion rate");
+
+                var unassignedCashSymbols = unassignedCash
+                    .SelectMany(x => x.SecuritySymbols)
+                    .ToHashSet();
+
+                var replacementHistoryRequests = new List<HistoryRequest>();
+                foreach (var request in historyRequests.Where(x =>
+                    unassignedCashSymbols.Contains(x.Symbol) && x.Resolution < Resolution.Daily))
+                {
+                    var newRequest = new HistoryRequest(request.EndTimeUtc.AddDays(-10), request.EndTimeUtc,
+                        request.DataType,
+                        request.Symbol, Resolution.Daily, request.ExchangeHours, request.DataTimeZone,
+                        request.FillForwardResolution,
+                        request.IncludeExtendedMarketHours, request.IsCustomData, request.DataNormalizationMode,
+                        request.TickType);
+
+                    replacementHistoryRequests.Add(newRequest);
+                }
+
+                slices = algorithm.HistoryProvider.GetHistory(replacementHistoryRequests, algorithm.TimeZone);
+                slices.PushThrough(data =>
+                {
+                    foreach (var security in securitiesToUpdate.Where(x => x.Symbol == data.Symbol))
+                    {
+                        security.SetMarketPrice(data);
+                    }
+                });
+
+                foreach (var cash in unassignedCash)
+                {
+                    cash.Update();
+                }
+            }
 
             Log.Trace("BaseSetupHandler.SetupCurrencyConversions():" +
                 $"{Environment.NewLine}{algorithm.Portfolio.CashBook}");
@@ -144,6 +203,22 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 algorithm.SetAccountCurrency(job.CashAmount.Value.Currency);
             }
+        }
+
+        /// <summary>
+        /// Get the available data feeds from config.json,
+        /// </summary>
+        public static Dictionary<SecurityType, List<TickType>> GetConfiguredDataFeeds()
+        {
+            var dataFeedsConfigString = Config.Get("security-data-feeds");
+
+            if (!dataFeedsConfigString.IsNullOrEmpty())
+            {
+                var dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+                return dataFeeds;
+            }
+
+            return null;
         }
     }
 }

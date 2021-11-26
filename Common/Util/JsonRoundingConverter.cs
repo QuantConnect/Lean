@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Util
@@ -69,12 +70,13 @@ namespace QuantConnect.Util
             if (value is double)
             {
                 var rounded = Math.Round((double)value, FractionalDigits);
-                writer.WriteValue(rounded);
+                writer.WriteValue(rounded.ToString(CultureInfo.InvariantCulture));
             }
             else
             {
+                // we serialize decimal as string so that json doesn't use exponential notation which actually will lose precision
                 var rounded = Math.Round((decimal)value, FractionalDigits);
-                writer.WriteValue(rounded);
+                writer.WriteValue(rounded.ToString(CultureInfo.InvariantCulture));
             }
         }
     }

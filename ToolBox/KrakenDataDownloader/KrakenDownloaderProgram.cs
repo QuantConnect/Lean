@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2017 QuantConnect Corporation.
  *
@@ -14,10 +14,11 @@
 */
 
 using System;
+using QuantConnect.Data;
+using QuantConnect.Util;
+using QuantConnect.Logging;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
-using QuantConnect.Logging;
-using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.KrakenDownloader
 {
@@ -49,7 +50,7 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                 {
                     // Download data
                     var pairObject = Symbol.Create(pair, SecurityType.Crypto, Market.Kraken);
-                    var data = downloader.Get(pairObject, castResolution, startDate, endDate);
+                    var data = downloader.Get(new DataDownloaderGetParameters(pairObject, castResolution, startDate, endDate));
 
                     // Write data
                     var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);

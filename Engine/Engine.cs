@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Exceptions;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -46,8 +47,8 @@ namespace QuantConnect.Lean.Engine
     public class Engine
     {
         private bool _historyStartDateLimitedWarningEmitted;
+        private bool _historyNumericalPrecisionLimitedWarningEmitted;
         private readonly bool _liveMode;
-        private readonly Lazy<StackExceptionInterpreter> _exceptionInterpreter;
 
         /// <summary>
         /// Gets the configured system handlers for this engine instance
@@ -70,9 +71,6 @@ namespace QuantConnect.Lean.Engine
             _liveMode = liveMode;
             SystemHandlers = systemHandlers;
             AlgorithmHandlers = algorithmHandlers;
-            // this is slow, so we will do it on demand
-            _exceptionInterpreter = new Lazy<StackExceptionInterpreter>(() =>
-                    StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
         }
 
         /// <summary>
@@ -91,6 +89,7 @@ namespace QuantConnect.Lean.Engine
 
             try
             {
+                TextSubscriptionDataSourceReader.SetCacheSize((int) (job.RamAllocation * 0.4));
 
                 //Reset thread holders.
                 var initializeComplete = false;
@@ -131,19 +130,24 @@ namespace QuantConnect.Lean.Engine
                     // notify the user of any errors w/ object store persistence
                     AlgorithmHandlers.ObjectStore.ErrorRaised += (sender, args) => algorithm.Debug($"ObjectStore Persistence Error: {args.Error.Message}");
 
+
                     // Initialize the brokerage
                     IBrokerageFactory factory;
                     brokerage = AlgorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
-                    var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+                    // forward brokerage message events to the result handler
+                    brokerage.Message += (_, e) => AlgorithmHandlers.Results.BrokerageMessage(e);
 
+                    var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+                    var mapFilePrimaryExchangeProvider = new MapFilePrimaryExchangeProvider(AlgorithmHandlers.MapFileProvider);
                     var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
                     var securityService = new SecurityService(algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDatabase,
                         algorithm,
                         registeredTypesProvider,
-                        new SecurityCacheProvider(algorithm.Portfolio));
+                        new SecurityCacheProvider(algorithm.Portfolio),
+                        mapFilePrimaryExchangeProvider);
 
                     algorithm.Securities.SetSecurityService(securityService);
 
@@ -211,7 +215,6 @@ namespace QuantConnect.Lean.Engine
                     );
 
                     historyProvider.InvalidConfigurationDetected += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message); };
-                    historyProvider.NumericalPrecisionLimited += (sender, args) => { AlgorithmHandlers.Results.DebugMessage(args.Message); };
                     historyProvider.DownloadFailed += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message, args.StackTrace); };
                     historyProvider.ReaderErrorDetected += (sender, args) => { AlgorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
 
@@ -221,7 +224,8 @@ namespace QuantConnect.Lean.Engine
                     algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, SystemHandlers.Api);
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-                    initializeComplete = AlgorithmHandlers.Setup.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage, job, AlgorithmHandlers.Results, AlgorithmHandlers.Transactions, AlgorithmHandlers.RealTime, AlgorithmHandlers.ObjectStore));
+                    initializeComplete = AlgorithmHandlers.Setup.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage, job, AlgorithmHandlers.Results,
+                        AlgorithmHandlers.Transactions, AlgorithmHandlers.RealTime, AlgorithmHandlers.ObjectStore, AlgorithmHandlers.DataProvider));
 
                     // set this again now that we've actually added securities
                     AlgorithmHandlers.Results.SetAlgorithm(algorithm, AlgorithmHandlers.Setup.StartingPortfolioValue);
@@ -240,8 +244,9 @@ namespace QuantConnect.Lean.Engine
                             var message = e.Message;
                             if (e.InnerException != null)
                             {
-                                var err = _exceptionInterpreter.Value.Interpret(e.InnerException, _exceptionInterpreter.Value);
-                                message += _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
+                                var interpreter = StackExceptionInterpreter.Instance.Value;
+                                var err = interpreter.Interpret(e.InnerException);
+                                message += interpreter.GetExceptionMessageHeader(err);
                             }
                             return message;
                         }));
@@ -253,8 +258,12 @@ namespace QuantConnect.Lean.Engine
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    var runtimeMessage = "Algorithm.Initialize() Error: " + err.Message + " Stack Trace: " + err;
-                    AlgorithmHandlers.Results.RuntimeError(runtimeMessage, err.ToString());
+
+                    // for python we don't add the ugly pythonNet stack trace
+                    var stackTrace = job.Language == Language.Python ? err.Message : err.ToString();
+
+                    var runtimeMessage = "Algorithm.Initialize() Error: " + err.Message + " Stack Trace: " + stackTrace;
+                    AlgorithmHandlers.Results.RuntimeError(runtimeMessage, stackTrace);
                     SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, runtimeMessage);
                 }
 
@@ -334,10 +343,7 @@ namespace QuantConnect.Lean.Engine
                             }
                             catch (Exception err)
                             {
-                                //Debugging at this level is difficult, stack trace needed.
-                                Log.Error(err);
-                                algorithm.RunTimeError = err;
-                                algorithmManager.SetStatus(AlgorithmStatus.RuntimeError);
+                                algorithm.SetRuntimeError(err, "AlgorithmManager.Run");
                                 return;
                             }
 
@@ -350,19 +356,17 @@ namespace QuantConnect.Lean.Engine
                             throw new Exception("Failed to complete algorithm within " + AlgorithmHandlers.Setup.MaximumRuntime.ToStringInvariant("F")
                                 + " seconds. Please make it run faster.");
                         }
-
-                        // Algorithm runtime error:
-                        if (algorithm.RunTimeError != null)
-                        {
-                            HandleAlgorithmError(job, algorithm.RunTimeError);
-                        }
                     }
                     catch (Exception err)
                     {
                         //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
-                        algorithm.RunTimeError = err;
-                        algorithm.SetStatus(AlgorithmStatus.RuntimeError);
-                        HandleAlgorithmError(job, err);
+                        algorithm.SetRuntimeError(err, "Engine Isolator");
+                    }
+
+                    // Algorithm runtime error:
+                    if (algorithm.RunTimeError != null)
+                    {
+                        HandleAlgorithmError(job, algorithm.RunTimeError);
                     }
 
                     // notify the LEAN manager that the algorithm has finished
@@ -462,18 +466,18 @@ namespace QuantConnect.Lean.Engine
         /// <param name="err">Error from algorithm stack</param>
         private void HandleAlgorithmError(AlgorithmNodePacket job, Exception err)
         {
-            Log.Error(err, "Breaking out of parent try catch:");
-            if (AlgorithmHandlers.DataFeed != null) AlgorithmHandlers.DataFeed.Exit();
+            AlgorithmHandlers.DataFeed?.Exit();
             if (AlgorithmHandlers.Results != null)
             {
-                // perform exception interpretation
-                err = _exceptionInterpreter.Value.Interpret(err, _exceptionInterpreter.Value);
-
-                var message = "Runtime Error: " + _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
+                var message = $"Runtime Error: {err.Message}";
                 Log.Trace("Engine.Run(): Sending runtime error to user...");
                 AlgorithmHandlers.Results.LogMessage(message);
-                AlgorithmHandlers.Results.RuntimeError(message, err.ToString());
-                SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err);
+
+                // for python we don't add the ugly pythonNet stack trace
+                var stackTrace = job.Language == Language.Python ? err.Message : err.ToString();
+
+                AlgorithmHandlers.Results.RuntimeError(message, stackTrace);
+                SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, $"{message} Stack Trace: {stackTrace}");
             }
         }
 
@@ -489,7 +493,14 @@ namespace QuantConnect.Lean.Engine
             var provider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
 
             provider.InvalidConfigurationDetected += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message); };
-            provider.NumericalPrecisionLimited += (sender, args) => { AlgorithmHandlers.Results.DebugMessage(args.Message); };
+            provider.NumericalPrecisionLimited += (sender, args) =>
+            {
+                if (!_historyNumericalPrecisionLimitedWarningEmitted)
+                {
+                    _historyNumericalPrecisionLimitedWarningEmitted = true;
+                    AlgorithmHandlers.Results.DebugMessage("Warning: when performing history requests, the start date will be adjusted if there are numerical precision errors in the factor files.");
+                }
+            };
             provider.StartDateLimited += (sender, args) =>
             {
                 if (!_historyStartDateLimitedWarningEmitted)

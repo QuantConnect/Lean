@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,19 +32,26 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// The string name used for the Alpha Assets chart
         /// </summary>
         public const string AlphaAssets = "Alpha Assets";
-
         private readonly bool _liveMode;
         private readonly StatisticsInsightManagerExtension _statisticsManager;
 
         private const int BacktestChartSamples = 1000;
         private DateTime _lastInsightCountSampleDateUtc;
         private DateTime _nextChartSampleAlgorithmTimeUtc;
+        private int _dailyInsightCount;
 
-        private readonly Chart _totalInsightCountPerSymbolChart = new Chart(AlphaAssets);          // Heatmap chart
+        // Keep track, we only want to add the charts if the algorithm is producing insights
+        private bool _chartsAdded;
+        private IAlgorithm _algorithm;
+
+        // Heatmap chart
+        private readonly Chart _totalInsightCountPerSymbolChart = new Chart(AlphaAssets);          
+        private readonly Dictionary<Symbol, int> _totalInsightCountPerSymbol = new Dictionary<Symbol, int>();
+
+        private readonly Chart _totalInsightCountChart = new Chart("Insight Count");
         private readonly Series _totalInsightCountSeries = new Series("Count", SeriesType.Bar, "#");
 
-        private int _dailyCount;
-        private readonly Dictionary<Symbol, int> _totalInsightCountPerSymbol = new Dictionary<Symbol, int>();
+        private readonly Chart _insightScoreChart = new Chart("Alpha");
         private readonly Dictionary<InsightScoreType, Series> _insightScoreSeriesByScoreType = new Dictionary<InsightScoreType, Series>();
 
         /// <summary>
@@ -60,25 +67,20 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="statisticsManager">Statistics manager used to access mean population scores for charting</param>
         public ChartingInsightManagerExtension(IAlgorithm algorithm, StatisticsInsightManagerExtension statisticsManager)
         {
+            _algorithm = algorithm;
             _statisticsManager = statisticsManager;
             _liveMode = algorithm.LiveMode;
 
-            // chart for average scores over sample period
-            var scoreChart = new Chart("Alpha");
+            // Add our series for average scores over sample period to our "Alpha" chart
             foreach (var scoreType in InsightManager.ScoreTypes)
             {
                 var series = new Series($"{scoreType} Score", SeriesType.Line, "%");
-                scoreChart.AddSeries(series);
                 _insightScoreSeriesByScoreType[scoreType] = series;
+                _insightScoreChart.AddSeries(series);
             }
 
-            // chart for insight count over sample period
-            var insightCount = new Chart("Insight Count");
-            insightCount.AddSeries(_totalInsightCountSeries);
-
-            algorithm.AddChart(scoreChart);
-            algorithm.AddChart(insightCount);
-            algorithm.AddChart(_totalInsightCountPerSymbolChart);
+            // Add a series for insight count over sample period to the "Insight Count" chart
+            _totalInsightCountChart.AddSeries(_totalInsightCountSeries);
         }
 
         /// <summary>
@@ -88,19 +90,31 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="frontierTimeUtc">The current frontier time utc</param>
         public void Step(DateTime frontierTimeUtc)
         {
+            // Only add our charts to the algorithm when we actually have an insight 
+            // We will still update our internal charts anyways, but this keeps Alpha charts out of
+            // algorithms that don't use the framework.
+            if (!_chartsAdded && _dailyInsightCount > 0)
+            {
+                _algorithm.AddChart(_insightScoreChart);
+                _algorithm.AddChart(_totalInsightCountChart);
+                _algorithm.AddChart(_totalInsightCountPerSymbolChart);
+
+                _chartsAdded = true;
+            }
+
             // sample insight/symbol counts each utc day change
             if (frontierTimeUtc.Date > _lastInsightCountSampleDateUtc)
             {
                 _lastInsightCountSampleDateUtc = frontierTimeUtc.Date;
 
                 // add sum of daily insight counts to the total insight count series
-                _totalInsightCountSeries.AddPoint(frontierTimeUtc.Date, _dailyCount);
+                _totalInsightCountSeries.AddPoint(frontierTimeUtc.Date, _dailyInsightCount);
 
                 // Create the pie chart every minute or so
                 PopulateChartWithSeriesPerSymbol(_totalInsightCountPerSymbol, _totalInsightCountPerSymbolChart, SeriesType.Treemap, frontierTimeUtc);
 
                 // Resetting our storage
-                _dailyCount = 0;
+                _dailyInsightCount = 0;
             }
 
             // sample average population scores
@@ -173,7 +187,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 _totalInsightCountPerSymbol[context.Symbol] += 1;
             }
 
-            _dailyCount++;
+            _dailyInsightCount++;
         }
 
         /// <summary>

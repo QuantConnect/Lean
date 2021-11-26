@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -102,7 +102,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
+                new SecurityCache(),
+                null
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
@@ -127,7 +128,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
+                new SecurityCache(),
+                null
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
@@ -150,7 +152,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("GBP", 0, 0),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m),
+                new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
@@ -178,7 +180,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                         SecurityExchangeHours.AlwaysOpen(tz),
                         new Cash("EUR", 0, 0),
                         new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE30EUR, Resolution.Minute, tz, tz, true, false, false),
-                        new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m),
+                        new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m, string.Empty),
                         ErrorCurrencyConverter.Instance,
                         RegisteredSecurityDataTypesProvider.Null
                     );

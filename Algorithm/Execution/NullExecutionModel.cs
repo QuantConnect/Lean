@@ -22,6 +22,11 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class NullExecutionModel : ExecutionModel
     {
+        /// <summary>
+        /// Execute the ExecutionModel
+        /// </summary>
+        /// <param name="algorithm">The Algorithm to execute this model on</param>
+        /// <param name="targets">The portfolio targets</param>
         public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
             // NOP

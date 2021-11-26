@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,20 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data import SubscriptionDataSource
-from QuantConnect.Python import PythonData
-
-from datetime import date, timedelta, datetime
-import numpy as np
-import json
+from AlgorithmImports import *
 
 ### <summary>
 ### Demonstration of using an external custom datasource. LEAN Engine is incredibly flexible and allows you to define your own data source.
@@ -52,7 +39,9 @@ class CustomDataBitcoinAlgorithm(QCAlgorithm):
         # If we don't have any weather "SHARES" -- invest"
         if not self.Portfolio.Invested:
             # Weather used as a tradable asset, like stocks, futures etc.
-            self.SetHoldings("BTC", 1)
+            # It's only OK to use SetHoldings with crypto when using custom data. When trading with built-in crypto data, 
+            # use the cashbook. Reference https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/BasicTemplateCryptoAlgorithm.py 
+            self.SetHoldings("BTC", 1) 
             self.Debug("Buying BTC 'Shares': BTC: {0}".format(close))
 
         self.Debug("Time: {0} {1}".format(datetime.now(), close))
@@ -63,11 +52,11 @@ class Bitcoin(PythonData):
 
     def GetSource(self, config, date, isLiveMode):
         if isLiveMode:
-            return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest);
+            return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest)
 
-        #return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
+        #return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip"
         # OR simply return a fixed small data file. Large files will slow down your backtest
-        return SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.RemoteFile);
+        return SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile)
 
 
     def Reader(self, config, line, date, isLiveMode):
@@ -84,7 +73,7 @@ class Bitcoin(PythonData):
                 value = liveBTC["last"]
                 if value == 0: return None
 
-                coin.Time = datetime.now()
+                coin.EndTime =  datetime.utcnow().astimezone(timezone(str(config.ExchangeTimeZone))).replace(tzinfo=None)
                 coin.Value = value
                 coin["Open"] = float(liveBTC["open"])
                 coin["High"] = float(liveBTC["high"])
@@ -112,6 +101,7 @@ class Bitcoin(PythonData):
             if value == 0: return None
 
             coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
+            coin.EndTime = coin.Time + timedelta(days=1)
             coin.Value = value
             coin["Open"] = float(data[1])
             coin["High"] = float(data[2])
@@ -120,7 +110,7 @@ class Bitcoin(PythonData):
             coin["VolumeBTC"] = float(data[5])
             coin["VolumeUSD"] = float(data[6])
             coin["WeightedPrice"] = float(data[7])
-            return coin;
+            return coin
 
         except ValueError:
             # Do nothing, possible error in json decoding

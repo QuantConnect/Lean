@@ -35,6 +35,11 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             UniverseSettings.Resolution = Resolution.Daily;
+
+            // Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+            // Commented so regression algorithm is more sensitive
+            //Settings.MinimumOrderMarginPortfolioPercentage = 0.005m;
+
             SetStartDate(2014, 03, 25);
             SetEndDate(2014, 04, 07);
 
@@ -100,46 +105,48 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "11"},
-            {"Average Win", "0.01%"},
+            {"Total Trades", "19"},
+            {"Average Win", "0.00%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-5.981%"},
+            {"Compounding Annual Return", "-5.481%"},
             {"Drawdown", "2.100%"},
-            {"Expectancy", "1.186"},
-            {"Net Profit", "-0.236%"},
-            {"Sharpe Ratio", "-0.296"},
-            {"Probabilistic Sharpe Ratio", "39.371%"},
-            {"Loss Rate", "40%"},
-            {"Win Rate", "60%"},
-            {"Profit-Loss Ratio", "2.64"},
-            {"Alpha", "-0.051"},
-            {"Beta", "-0.055"},
-            {"Annual Standard Deviation", "0.136"},
-            {"Annual Variance", "0.019"},
-            {"Information Ratio", "0.927"},
-            {"Tracking Error", "0.174"},
-            {"Treynor Ratio", "0.737"},
-            {"Total Fees", "$14.03"},
-            {"Fitness Score", "0.022"},
-            {"Kelly Criterion Estimate", "-2.186"},
-            {"Kelly Criterion Probability Value", "0.543"},
-            {"Sortino Ratio", "-0.911"},
-            {"Return Over Maximum Drawdown", "-2.817"},
-            {"Portfolio Turnover", "0.083"},
+            {"Expectancy", "0.949"},
+            {"Net Profit", "-0.216%"},
+            {"Sharpe Ratio", "-3.622"},
+            {"Probabilistic Sharpe Ratio", "11.875%"},
+            {"Loss Rate", "33%"},
+            {"Win Rate", "67%"},
+            {"Profit-Loss Ratio", "1.92"},
+            {"Alpha", "-0.213"},
+            {"Beta", "0.679"},
+            {"Annual Standard Deviation", "0.093"},
+            {"Annual Variance", "0.009"},
+            {"Information Ratio", "-2.133"},
+            {"Tracking Error", "0.072"},
+            {"Treynor Ratio", "-0.496"},
+            {"Total Fees", "$33.21"},
+            {"Estimated Strategy Capacity", "$57000000.00"},
+            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
+            {"Fitness Score", "0.023"},
+            {"Kelly Criterion Estimate", "-1.72"},
+            {"Kelly Criterion Probability Value", "0.534"},
+            {"Sortino Ratio", "-0.81"},
+            {"Return Over Maximum Drawdown", "-2.587"},
+            {"Portfolio Turnover", "0.084"},
             {"Total Insights Generated", "22"},
             {"Total Insights Closed", "20"},
             {"Total Insights Analysis Completed", "20"},
             {"Long Insight Count", "22"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-231023.1"},
-            {"Total Accumulated Estimated Alpha Value", "$-109094.2"},
-            {"Mean Population Estimated Insight Value", "$-5454.712"},
+            {"Estimated Monthly Alpha Value", "$-815359.3"},
+            {"Total Accumulated Estimated Alpha Value", "$-385030.8"},
+            {"Mean Population Estimated Insight Value", "$-19251.54"},
             {"Mean Population Direction", "30%"},
             {"Mean Population Magnitude", "30%"},
-            {"Rolling Averaged Population Direction", "42.9591%"},
-            {"Rolling Averaged Population Magnitude", "42.9591%"},
-            {"OrderListHash", "-308164574"}
+            {"Rolling Averaged Population Direction", "42.9939%"},
+            {"Rolling Averaged Population Magnitude", "42.9939%"},
+            {"OrderListHash", "0b0afe138397f324a48170acb2ec6ebf"}
         };
     }
 }

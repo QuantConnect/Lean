@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,9 +14,12 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Ionic.Zip;
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -25,6 +28,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ZipEntryNameSubscriptionDataSourceReader : ISubscriptionDataSourceReader
     {
+        private readonly IDataProvider _dataProvider;
         private readonly SubscriptionDataConfig _config;
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
@@ -39,14 +43,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
+        /// <param name="dataProvider">Used to fetch data</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(IDataProvider dataProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _config = config;
             _date = date;
+            _config = config;
             _isLiveMode = isLiveMode;
+            _dataProvider = dataProvider;
             _factory = _factory = config.GetBaseDataInstance();
         }
 
@@ -57,13 +63,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            ICollection<string> entryNames;
+            List<string> entryNames;
             try
             {
-                using (var zip = new ZipFile(source.Source))
+                var stream = _dataProvider.Fetch(source.Source);
+                if (stream == null)
                 {
-                    entryNames = zip.EntryFileNames;
+                    OnInvalidSource(source, new ArgumentException($"Failed to create source stream {source.Source}"));
+                    yield break;
                 }
+                entryNames = Compression.GetZipEntryFileNames(stream).ToList();
+                stream.DisposeSafely();
             }
             catch (ZipException err)
             {

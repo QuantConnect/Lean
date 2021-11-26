@@ -75,11 +75,11 @@ namespace QuantConnect.Indicators
             _ema1.Update(input);
 
             if (!_ema1.IsReady)
-                return _ema1;
+                return _ema1.Current.Value;
 
             _ema2.Update(_ema1.Current);
 
-            return (_volumeFactor + 1) * _ema1 - _volumeFactor * _ema2;
+            return (_volumeFactor + 1) * _ema1.Current.Value - _volumeFactor * _ema2.Current.Value;
         }
 
         /// <summary>

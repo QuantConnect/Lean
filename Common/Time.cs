@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using NodaTime;
 using QuantConnect.Logging;
@@ -131,7 +132,8 @@ namespace QuantConnect
         }
 
         private static readonly DateTime EpochTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-
+        private const long SecondToMillisecond = 1000;
+        
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
@@ -152,18 +154,41 @@ namespace QuantConnect
             }
             return time;
         }
+        
+        /// <summary>
+        /// Create a C# DateTime from a UnixTimestamp
+        /// </summary>
+        /// <param name="unixTimeStamp">Decimal unix timestamp (Time since Midnight Jan 1 1970)</param>
+        /// <returns>C# date time object</returns>
+        public static DateTime UnixTimeStampToDateTime(decimal unixTimeStamp)
+        {
+            return UnixMillisecondTimeStampToDateTime(unixTimeStamp * SecondToMillisecond);
+        }
+        
+        /// <summary>
+        /// Create a C# DateTime from a UnixTimestamp
+        /// </summary>
+        /// <param name="unixTimeStamp">Long unix timestamp (Time since Midnight Jan 1 1970)</param>
+        /// <returns>C# date time object</returns>
+        public static DateTime UnixTimeStampToDateTime(long unixTimeStamp)
+        {
+            return UnixTimeStampToDateTime(Convert.ToDecimal(unixTimeStamp));
+        }
 
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
-        /// <param name="unixTimeStamp">Double unix timestamp (Time since Midnight Jan 1 1970) in milliseconds</param>
-        /// <returns>C# date timeobject</returns>
-        public static DateTime UnixMillisecondTimeStampToDateTime(double unixTimeStamp)
+        /// <param name="unixTimeStamp">Decimal unix timestamp (Time since Midnight Jan 1 1970) in milliseconds</param>
+        /// <returns>C# date time object</returns>
+        public static DateTime UnixMillisecondTimeStampToDateTime(decimal unixTimeStamp)
         {
             DateTime time;
             try
             {
-                var ticks = unixTimeStamp * TimeSpan.TicksPerMillisecond;
+                // Any residual decimal numbers that remain are nanoseconds from [0, 100) nanoseconds.
+                // If we cast to (long), only the integer component of the decimal is taken, and can
+                // potentially result in look-ahead bias in increments of 100 nanoseconds, i.e. 1 DateTime tick.
+                var ticks = Math.Ceiling(unixTimeStamp * TimeSpan.TicksPerMillisecond);
                 time = EpochTime.AddTicks((long)ticks);
             }
             catch (Exception err)
@@ -178,7 +203,7 @@ namespace QuantConnect
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
         /// <param name="unixTimeStamp">Int64 unix timestamp (Time since Midnight Jan 1 1970) in nanoseconds</param>
-        /// <returns>C# date timeobject</returns>
+        /// <returns>C# date time object</returns>
         public static DateTime UnixNanosecondTimeStampToDateTime(long unixTimeStamp)
         {
             DateTime time;
@@ -360,6 +385,33 @@ namespace QuantConnect
             return DateTime.Now;
         }
 
+        /// <summary>
+        /// Parse a standard YY MM DD date into a DateTime. Attempt common date formats
+        /// </summary>
+        /// <param name="dateToParse">String date time to parse</param>
+        /// <returns>Date time</returns>
+        public static DateTime ParseFIXUtcTimestamp(string dateToParse)
+        {
+            try
+            {
+                //First try the exact options:
+                DateTime date;
+                if (DateTime.TryParseExact(dateToParse, DateFormat.FIX, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.FIXWithMillisecond, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            return DateTime.UtcNow;
+        }
 
         /// <summary>
         /// Define an enumerable date range and return each date as a datetime object in the date range
@@ -524,15 +576,17 @@ namespace QuantConnect
         /// <param name="barSize">The length of each bar</param>
         /// <param name="barCount">The number of bars requested</param>
         /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
+        /// <param name="dataTimeZone">Timezone for this data</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
-        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours)
+        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours, DateTimeZone dataTimeZone)
         {
             if (barSize <= TimeSpan.Zero)
             {
                 throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
             }
 
-            var current = end.RoundDown(barSize);
+            // need to round down in data timezone because data is stored in this time zone
+            var current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
             for (int i = 0; i < barCount;)
             {
                 var previous = current;

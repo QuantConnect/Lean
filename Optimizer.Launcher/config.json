@@ -1,0 +1,68 @@
+{
+  // optional: algorithm class selector
+  "algorithm-type-name": "ParameterizedAlgorithm",
+
+  // optional: Algorithm language selector - options CSharp, Python
+  "algorithm-language": "CSharp",
+
+  // optional: Physical DLL location
+  "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+
+  "optimizer-close-automatically": true,
+
+  // How we manage solutions and make decision to continue or stop
+  "optimization-strategy": "QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy",
+
+  // on-demand settings required for different optimization strategies
+  "optimization-strategy-settings": {
+    "$type": "QuantConnect.Optimizer.Strategies.StepBaseOptimizationStrategySettings, QuantConnect.Optimizer",
+    "default-segment-amount": 10
+  },
+
+  // optimization problem
+  "optimization-criterion": {
+    // path in algorithm output json
+    "target": "Statistics.Sharpe Ratio",
+
+    // optimization: available options max, min
+    "extremum": "max",
+
+    // optional, if defined and backtest complies with the targets then trigger ended event
+    "target-value": 3
+  },
+
+  // if it doesn't comply just drop the backtest
+  "constraints": [
+    {
+      "target": "Drawdown",
+      "operator": "lessOrEqual", // less, greaterOrEqual, greater, notEqual, equals
+      "target-value": 0.15
+    },
+    {
+      "target": "Total Trades",
+      "operator": "greater",
+      "target-value": 2
+    }
+  ],
+
+  // optional: default is process count / 2
+  //"maximum-concurrent-backtests": 10,
+
+  // optimization parameters
+  "parameters": [
+    {
+      "name": "ema-slow",
+      "min": 10,
+      "max": 50
+    },
+    {
+      "name": "ema-fast",
+      "min": 50,
+      "max": 150,
+      "step": 50,
+
+      // optional
+      "min-step": 0.0001
+    }
+  ]
+}

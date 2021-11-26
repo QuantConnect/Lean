@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
@@ -115,7 +116,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Status of the Order
         /// </summary>
-        public OrderStatus Status { get; internal set; }
+        public OrderStatus Status { get; set; }
 
         /// <summary>
         /// Order Time In Force
@@ -235,6 +236,20 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Creates an enumerable containing each position resulting from executing this order.
+        /// </summary>
+        /// <remarks>
+        /// This is provided in anticipation of a new combo order type that will need to override this method,
+        /// returning a position for each 'leg' of the order.
+        /// </remarks>
+        /// <returns>An enumerable of positions matching the results of executing this order</returns>
+        public virtual IEnumerable<IPosition> CreatePositions(SecurityManager securities)
+        {
+            var security = securities[Symbol];
+            yield return new Position(security, Quantity);
+        }
+
+        /// <summary>
         /// Gets the value of this order at the given market price in units of the account currency
         /// NOTE: Some order types derive value from other parameters, such as limit prices
         /// </summary>
@@ -292,7 +307,8 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"OrderId: {Id} (BrokerId: {string.Join(",", BrokerId)}) {Status} {Type} order for {Quantity} unit{(Quantity == 1 ? "" : "s")} of {Symbol}");
+            var tag = string.IsNullOrEmpty(Tag) ? string.Empty : $": {Tag}";
+            return Invariant($"OrderId: {Id} (BrokerId: {string.Join(",", BrokerId)}) {Status} {Type} order for {Quantity} unit{(Quantity == 1 ? "" : "s")} of {Symbol}{tag}");
         }
 
         /// <summary>
@@ -352,7 +368,8 @@ namespace QuantConnect.Orders
                 serializedOrder.Tag,
                 new OrderProperties { TimeInForce = timeInForce },
                 serializedOrder.LimitPrice ?? 0,
-                serializedOrder.StopPrice ?? 0);
+                serializedOrder.StopPrice ?? 0,
+                serializedOrder.TriggerPrice ?? 0);
 
             order.OrderSubmissionData = new OrderSubmissionData(serializedOrder.SubmissionBidPrice,
                 serializedOrder.SubmissionAskPrice,
@@ -391,11 +408,11 @@ namespace QuantConnect.Orders
         public static Order CreateOrder(SubmitOrderRequest request)
         {
             return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
-                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice);
+                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
-            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice)
+            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice)
         {
             Order order;
             switch (type)
@@ -415,6 +432,10 @@ namespace QuantConnect.Orders
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, time, tag, properties);
                     break;
+                
+                case OrderType.LimitIfTouched:
+                    order = new LimitIfTouchedOrder(symbol, quantity, triggerPrice, limitPrice, time, tag, properties);
+                    break;
 
                 case OrderType.MarketOnOpen:
                     order = new MarketOnOpenOrder(symbol, quantity, time, tag, properties);
@@ -433,10 +454,6 @@ namespace QuantConnect.Orders
             }
             order.Status = OrderStatus.New;
             order.Id = orderId;
-            if (tag != null)
-            {
-                order.Tag = tag;
-            }
             return order;
         }
     }

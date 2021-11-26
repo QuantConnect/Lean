@@ -63,11 +63,13 @@ namespace QuantConnect.Securities
                     var feeThisOrder = fill.OrderFee.Value;
                     feeInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(feeThisOrder).Amount;
                     security.Holdings.AddNewFee(feeInAccountCurrency);
-                    portfolio.CashBook[feeThisOrder.Currency].AddAmount(-feeThisOrder.Amount);
+
+                    fill.OrderFee.ApplyToPortfolio(portfolio, fill);
                 }
 
                 // apply the funds using the current settlement model
                 // we dont adjust funds for futures and CFDs: it is zero upfront payment derivative (margin applies though)
+                // We do however apply funds for futures options, since they affect our cash balance the moment they are purchased/sold.
                 if (security.Type != SecurityType.Future && security.Type != SecurityType.Cfd)
                 {
                     security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);

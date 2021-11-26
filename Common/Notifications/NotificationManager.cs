@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using Python.Runtime;
 
 namespace QuantConnect.Notifications
 {
@@ -56,14 +58,28 @@ namespace QuantConnect.Notifications
         /// <param name="message">Message body, up to 10kb</param>
         /// <param name="data">Data attachment (optional)</param>
         /// <param name="address">Email address to send to</param>
-        public bool Email(string address, string subject, string message, string data = "")
+        /// <param name="headers">Optional email headers to use</param>
+        public bool Email(string address, string subject, string message, string data, PyObject headers)
+        {
+            return Email(address, subject, message, data, headers.ConvertToDictionary<string, string>());
+        }
+
+        /// <summary>
+        /// Send an email to the address specified for live trading notifications.
+        /// </summary>
+        /// <param name="subject">Subject of the email</param>
+        /// <param name="message">Message body, up to 10kb</param>
+        /// <param name="data">Data attachment (optional)</param>
+        /// <param name="address">Email address to send to</param>
+        /// <param name="headers">Optional email headers to use</param>
+        public bool Email(string address, string subject, string message, string data = "", Dictionary<string, string> headers = null)
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var email = new NotificationEmail(address, subject, message, data);
+            var email = new NotificationEmail(address, subject, message, data, headers);
             Messages.Enqueue(email);
 
             return true;
@@ -89,18 +105,51 @@ namespace QuantConnect.Notifications
 
         /// <summary>
         /// Place REST POST call to the specified address with the specified DATA.
+        /// Python overload for Headers parameter.
+        /// </summary>
+        /// <param name="address">Endpoint address</param>
+        /// <param name="data">Data to send in body JSON encoded</param>
+        /// <param name="headers">Optional headers to use</param>
+        public bool Web(string address, object data, PyObject headers)
+        {
+            return Web(address, data, headers.ConvertToDictionary<string, string>());
+        }
+
+        /// <summary>
+        /// Place REST POST call to the specified address with the specified DATA.
         /// </summary>
         /// <param name="address">Endpoint address</param>
         /// <param name="data">Data to send in body JSON encoded (optional)</param>
-        public bool Web(string address, object data = null)
+        /// <param name="headers">Optional headers to use</param>
+        public bool Web(string address, object data = null, Dictionary<string, string> headers = null)
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var web = new NotificationWeb(address, data);
+            var web = new NotificationWeb(address, data, headers);
             Messages.Enqueue(web);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Send a telegram message to the chat ID specified, supply token for custom bot.
+        /// Note: Requires bot to have chat with user or be in the group specified by ID.
+        /// </summary>
+        /// <param name="user">Chat or group ID to send message to</param>
+        /// <param name="message">Message to send</param>
+        /// <param name="token">Bot token to use for this message</param>
+        public bool Telegram(string id, string message, string token = null)
+        {
+            if (!Allow())
+            {
+                return false;
+            }
+
+            var telegram = new NotificationTelegram(id, message, token);
+            Messages.Enqueue(telegram);
 
             return true;
         }

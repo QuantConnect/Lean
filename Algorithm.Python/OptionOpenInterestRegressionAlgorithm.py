@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,16 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data.Market import *
-from datetime import datetime, timedelta
+from AlgorithmImports import *
 
 ### <summary>
 ### Options Open Interest data regression test.
@@ -50,7 +41,7 @@ class OptionOpenInterestRegressionAlgorithm(QCAlgorithm):
                        contract.Symbol.ID.OptionRight == OptionRight.Call and \
                        contract.Symbol.ID.Date == datetime(2016, 1, 15):
 
-                        history = self.History(contract.Symbol, timedelta(1))["openinterest"]
+                        history = self.History(OpenInterest, contract.Symbol, timedelta(1))["openinterest"]
                         if len(history.index) == 0 or 0 in history.values:
                             raise ValueError("Regression test failed: open interest history request is empty")
 

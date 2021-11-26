@@ -60,10 +60,10 @@ namespace QuantConnect.Indicators
             if (!IsReady)
             {
                 // grab the initial value until we're ready
-                return window[window.Count - 1];
+                return window[window.Count - 1].Value;
             }
 
-            return window.MostRecentlyRemoved;
+            return window.MostRecentlyRemoved.Value;
         }
     }
 }

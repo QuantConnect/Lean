@@ -37,6 +37,10 @@ namespace QuantConnect.Algorithm.CSharp
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Minute;
 
+            // Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+            // Commented so regression algorithm is more sensitive
+            //Settings.MinimumOrderMarginPortfolioPercentage = 0.005m;
+
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
@@ -74,46 +78,48 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "6"},
-            {"Average Win", "0.00%"},
+            {"Total Trades", "17"},
+            {"Average Win", "0%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "38.059%"},
+            {"Compounding Annual Return", "37.229%"},
             {"Drawdown", "0.600%"},
-            {"Expectancy", "-0.502"},
-            {"Net Profit", "0.413%"},
-            {"Sharpe Ratio", "5.518"},
-            {"Probabilistic Sharpe Ratio", "66.933%"},
-            {"Loss Rate", "67%"},
-            {"Win Rate", "33%"},
-            {"Profit-Loss Ratio", "0.50"},
-            {"Alpha", "-0.178"},
-            {"Beta", "0.249"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "0.405%"},
+            {"Sharpe Ratio", "5.424"},
+            {"Probabilistic Sharpe Ratio", "66.818%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.191"},
+            {"Beta", "0.247"},
             {"Annual Standard Deviation", "0.055"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-9.844"},
-            {"Tracking Error", "0.165"},
-            {"Treynor Ratio", "1.212"},
-            {"Total Fees", "$6.00"},
-            {"Fitness Score", "0.063"},
-            {"Kelly Criterion Estimate", "38.64"},
-            {"Kelly Criterion Probability Value", "0.229"},
+            {"Information Ratio", "-10.052"},
+            {"Tracking Error", "0.168"},
+            {"Treynor Ratio", "1.207"},
+            {"Total Fees", "$17.00"},
+            {"Estimated Strategy Capacity", "$45000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Fitness Score", "0.067"},
+            {"Kelly Criterion Estimate", "38.796"},
+            {"Kelly Criterion Probability Value", "0.228"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "70.188"},
-            {"Portfolio Turnover", "0.063"},
+            {"Return Over Maximum Drawdown", "65.855"},
+            {"Portfolio Turnover", "0.067"},
             {"Total Insights Generated", "100"},
             {"Total Insights Closed", "99"},
             {"Total Insights Analysis Completed", "99"},
             {"Long Insight Count", "100"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$126657.6305"},
-            {"Total Accumulated Estimated Alpha Value", "$20405.9516"},
-            {"Mean Population Estimated Insight Value", "$206.1207"},
-            {"Mean Population Direction", "54.5455%"},
-            {"Mean Population Magnitude", "54.5455%"},
-            {"Rolling Averaged Population Direction", "59.8056%"},
-            {"Rolling Averaged Population Magnitude", "59.8056%"},
-            {"OrderListHash", "501060991"}
+            {"Estimated Monthly Alpha Value", "$135639.1761"},
+            {"Total Accumulated Estimated Alpha Value", "$21852.9784"},
+            {"Mean Population Estimated Insight Value", "$220.7372"},
+            {"Mean Population Direction", "53.5354%"},
+            {"Mean Population Magnitude", "53.5354%"},
+            {"Rolling Averaged Population Direction", "58.2788%"},
+            {"Rolling Averaged Population Magnitude", "58.2788%"},
+            {"OrderListHash", "8a8c913e5ad4ea956a345c84430649c2"}
         };
     }
 }

@@ -15,15 +15,16 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
     /// This type exists for transport of data as a single packet
     /// </summary>
-    public class BaseDataCollection : BaseData
+    public class BaseDataCollection : BaseData, IEnumerable<BaseData>
     {
         private DateTime _endTime;
 
@@ -88,6 +89,24 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Adds a new data point to this collection
+        /// </summary>
+        /// <param name="newDataPoint">The new data point to add</param>
+        public virtual void Add(BaseData newDataPoint)
+        {
+            Data.Add(newDataPoint);
+        }
+
+        /// <summary>
+        /// Adds a new data points to this collection
+        /// </summary>
+        /// <param name="newDataPoints">The new data points to add</param>
+        public virtual void AddRange(IEnumerable<BaseData> newDataPoints)
+        {
+            Data.AddRange(newDataPoints);
+        }
+
+        /// <summary>
         /// Return a new instance clone of this object, used in fill forward
         /// </summary>
         /// <remarks>
@@ -97,6 +116,24 @@ namespace QuantConnect.Data.UniverseSelection
         public override BaseData Clone()
         {
             return new BaseDataCollection(Time, EndTime, Symbol, Data);
+        }
+
+        /// <summary>
+        /// Returns an IEnumerator for this enumerable Object.  The enumerator provides
+        /// a simple way to access all the contents of a collection.
+        /// </summary>
+        public IEnumerator<BaseData> GetEnumerator()
+        {
+            return (Data ?? Enumerable.Empty<BaseData>()).GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an IEnumerator for this enumerable Object.  The enumerator provides
+        /// a simple way to access all the contents of a collection.
+        /// </summary>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

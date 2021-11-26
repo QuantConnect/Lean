@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -58,7 +58,9 @@ namespace QuantConnect.Algorithm.CSharp
                 //Weather used as a tradable asset, like stocks, futures etc.
                 if (data.Close != 0)
                 {
-                    Order("BTC", (Portfolio.MarginRemaining / Math.Abs(data.Close + 1)));
+                    // It's only OK to use SetHoldings with crypto when using custom data. When trading with built-in crypto data, 
+                    // use the cashbook. Reference https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/BasicTemplateCryptoAlgorithm.py 
+                    SetHoldings("BTC", 1);
                 }
                 Console.WriteLine("Buying BTC 'Shares': BTC: " + data.Close);
             }
@@ -117,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 //return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
                 // OR simply return a fixed small data file. Large files will slow down your backtest
-                return new SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.RemoteFile);
+                return new SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile);
             }
 
             /// <summary>
@@ -154,6 +156,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     string[] data = line.Split(',');
                     coin.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
+                    coin.EndTime = coin.Time.AddDays(1);
                     coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                     coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
                     coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);

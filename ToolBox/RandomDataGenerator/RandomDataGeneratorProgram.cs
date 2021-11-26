@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
@@ -51,6 +52,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 output
             );
 
+            if (settings.Start.Year < 1998)
+            {
+                output.Error.WriteLine($"Required parameter --start must be at least 19980101");
+                Environment.Exit(1);
+            }
+
             GenerateRandomData(settings, output);
 
             if (settings.IncludeCoarse && settings.SecurityType == SecurityType.Equity)
@@ -60,8 +67,31 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 CoarseUniverseGeneratorProgram.CoarseUniverseGenerator();
             }
 
-            output.Info.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+            if (!Console.IsInputRedirected)
+            {
+                output.Info.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+            }
+        }
+
+        public static DateTime GetDateMidpoint(DateTime start, DateTime end)
+        {
+            TimeSpan span = end.Subtract(start);
+            int span_time = (int)span.TotalMinutes;
+            double diff_span = -(span_time / 2.0);
+            DateTime start_time = end.AddMinutes(Math.Round(diff_span, 2, MidpointRounding.ToEven));
+
+            //Returns a DateTime object that is halfway between start and end
+            return start_time;
+        }
+
+        public static DateTime GetDelistingDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
+        {
+            var mid_point = GetDateMidpoint(start, end);            
+            var delist_Date = randomValueGenerator.NextDate(mid_point, end, null);
+
+            //Returns a DateTime object that is a random value between the mid_point and end
+            return delist_Date;
         }
 
         public static void GenerateRandomData(RandomDataGeneratorSettings settings, ConsoleLeveledOutput output)
@@ -74,6 +104,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 random = new Random(settings.RandomSeed);
                 randomValueGenerator = new RandomValueGenerator(settings.RandomSeed);
             }
+
+            var maxSymbolCount = randomValueGenerator.GetAvailableSymbolCount(settings.SecurityType, settings.Market);
+            if (settings.SymbolCount > maxSymbolCount)
+            {
+                output.Warn.WriteLine($"Limiting symbol count to {maxSymbolCount}, we don't have more {settings.SecurityType} tickers for {settings.Market}");
+                settings.SymbolCount = maxSymbolCount;
+            }
+
             var symbolGenerator = new SymbolGenerator(settings, randomValueGenerator);
             var tickGenerator = new TickGenerator(settings, randomValueGenerator);
 
@@ -83,7 +121,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var count = 0;
             var progress = 0d;
             var previousMonth = -1;
-            var previousDay = settings.Start;
 
             Func<Tick, DateTime> tickDay = (tick => new DateTime(tick.Time.Year, tick.Time.Month, tick.Time.Day));
             Func<Data.BaseData, DateTime> dataDay = (data => new DateTime(data.Time.Year, data.Time.Month, data.Time.Day));
@@ -91,9 +128,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             foreach (var currentSymbol in symbolGenerator.GenerateRandomSymbols())
             {
                 // This is done so that we can update the symbol in the case of a rename event
+                var delistDate = GetDelistingDate(settings.Start, settings.End, randomValueGenerator);
                 var symbol = currentSymbol;
                 var willBeDelisted = randomValueGenerator.NextBool(1.0);
-                var delistDate = randomValueGenerator.NextDate(settings.Start.AddMonths(6), settings.End, null);
                 var monthsTrading = 0;
 
                 // Keep track of renamed symbols and the time they were renamed. 
@@ -104,6 +141,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // define aggregators via settings
                 var aggregators = settings.CreateAggregators().ToList();
                 var tickHistory = tickGenerator.GenerateTicks(symbol).ToList();
+
+                // Companies rarely IPO then disappear within 6 months
+                if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() <= 6)
+                {
+                    willBeDelisted = false;
+                }
 
                 var dividendsSplitsMaps = new DividendSplitMapGenerator(
                     symbol, 
@@ -119,7 +162,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                     if (!willBeDelisted)
                     {
-                        dividendsSplitsMaps.DividendsSplits.Add(new FactorFileRow(new DateTime(2050, 12, 31), 1m, 1m));
+                        dividendsSplitsMaps.DividendsSplits.Add(new CorporateFactorRow(new DateTime(2050, 12, 31), 1m, 1m));
 
                         if (dividendsSplitsMaps.MapRows.Count > 1)
                         {
@@ -133,7 +176,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     if (symbol != dividendsSplitsMaps.CurrentSymbol)
                     {
                         // Add all symbol rename events to dictionary
-                        foreach (var renameEvent in dividendsSplitsMaps.MapRows)
+                        // We skip the first row as it contains the listing event instead of a rename event
+                        foreach (var renameEvent in dividendsSplitsMaps.MapRows.Skip(1))
                         {
                             // Symbol.UpdateMappedSymbol does not update the underlying security ID symbol, which 
                             // is used to create the hash code. Create a new equity symbol from scratch instead.
@@ -152,13 +196,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     symbol = dividendsSplitsMaps.CurrentSymbol;
 
                     // Write Splits and Dividend events to directory factor_files
-                    var factorFile = new FactorFile(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
+                    var factorFile = new CorporateFactorProvider(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
                     var mapFile = new MapFile(symbol.Value, dividendsSplitsMaps.MapRows);
 
-                    factorFile.WriteToCsv(symbol);
-                    mapFile.WriteToCsv(settings.Market);
+                    factorFile.WriteToFile(symbol);
+                    mapFile.WriteToCsv(settings.Market, symbol.SecurityType);
 
                     output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");
+                }
+                else
+                {
+                    // This ensures that ticks will be written for the current symbol up until 9999-12-31
+                    renamedSymbols.Add(symbol, new DateTime(9999, 12, 31));
                 }
 
                 Symbol previousSymbol = null;

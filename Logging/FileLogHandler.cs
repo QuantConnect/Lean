@@ -116,10 +116,11 @@ namespace QuantConnect.Logging
         /// </summary>
         private void WriteMessage(string text, string level)
         {
+            var message = CreateMessage(text, level);
             lock (_lock)
             {
                 if (_disposed) return;
-                _writer.Value.WriteLine(CreateMessage(text, level));
+                _writer.Value.WriteLine(message);
                 _writer.Value.Flush();
             }
         }

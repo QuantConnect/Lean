@@ -17,10 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Net;
 using QuantConnect.Api;
-using QuantConnect.API;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Interfaces
 {
@@ -40,8 +37,9 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="name">Project name</param>
         /// <param name="language">Programming language to use</param>
+        /// <param name="organizationId">Organization to create this project under</param>
         /// <returns><see cref="ProjectResponse"/> that includes information about the newly created project</returns>
-        ProjectResponse CreateProject(string name, Language language);
+        ProjectResponse CreateProject(string name, Language language, string organizationId = null);
 
         /// <summary>
         /// Read in a project from the QuantConnect.com API.
@@ -142,8 +140,9 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project id for the backtest we'd like to read</param>
         /// <param name="backtestId">Backtest id for the backtest we'd like to read</param>
+        /// <param name="getCharts">True will return backtest charts</param>
         /// <returns>Backtest result object</returns>
-        Backtest ReadBacktest(int projectId, string backtestId);
+        Backtest ReadBacktest(int projectId, string backtestId, bool getCharts = true);
 
         /// <summary>
         /// Update the backtest name
@@ -183,20 +182,17 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the link to the downloadable data.
         /// </summary>
-        /// <param name="symbol">Symbol of security of which data will be requested.</param>
-        /// <param name="resolution">Resolution of data requested.</param>
-        /// <param name="date">Date of the data requested.</param>
+        /// <param name="filePath">File path representing the data requested</param>
+        /// <param name="organizationId">Organization to purchase this data with</param>
         /// <returns>Link to the downloadable data.</returns>
-        Link ReadDataLink(Symbol symbol, Resolution resolution, DateTime date);
+        DataLink ReadDataLink(string filePath, string organizationId);
 
         /// <summary>
         /// Method to download and save the data purchased through QuantConnect
         /// </summary>
-        /// <param name="symbol">Symbol of security of which data will be requested.</param>
-        /// <param name="resolution">Resolution of data requested.</param>
-        /// <param name="date">Date of the data requested.</param>
+        /// <param name="filePath">File path representing the data requested</param>
         /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
-        bool DownloadData(Symbol symbol, Resolution resolution, DateTime date);
+        bool DownloadData(string filePath, string organizationId);
 
         /// <summary>
         /// Create a new live algorithm for a logged in user.
@@ -240,8 +236,6 @@ namespace QuantConnect.Interfaces
         /// <returns></returns>
         RestResponse StopLiveAlgorithm(int projectId);
 
-
-
         //Status StatusRead(int projectId, string algorithmId);
         //RestResponse StatusUpdate(int projectId, string algorithmId, AlgorithmStatus status, string message = "");
         //LogControl LogAllowanceRead();
@@ -266,13 +260,6 @@ namespace QuantConnect.Interfaces
         void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "");
 
         /// <summary>
-        /// Will get the prices for requested symbols
-        /// </summary>
-        /// <param name="symbols">Symbols for which the price is requested</param>
-        /// <returns><see cref="Prices"/></returns>
-        PricesList ReadPrices(IEnumerable<Symbol> symbols);
-
-        /// <summary>
         /// Send the statistics to storage for performance tracking.
         /// </summary>
         /// <param name="algorithmId">Identifier for algorithm</param>
@@ -294,22 +281,6 @@ namespace QuantConnect.Interfaces
         /// <param name="subject">The email subject</param>
         /// <param name="body">The email message body</param>
         void SendUserEmail(string algorithmId, string subject, string body);
-
-        /// <summary>
-        /// Gets all split events between the specified times. From and to are inclusive.
-        /// </summary>
-        /// <param name="from">The first date to get splits for</param>
-        /// <param name="to">The last date to get splits for</param>
-        /// <returns>A list of all splits in the specified range</returns>
-        List<Data.Market.Split> GetSplits(DateTime from, DateTime to);
-
-        /// <summary>
-        /// Gets all dividend events between the specified times. From and to are inclusive.
-        /// </summary>
-        /// <param name="from">The first date to get dividend for</param>
-        /// <param name="to">The last date to get dividend for</param>
-        /// <returns>A list of all dividend in the specified range</returns>
-        List<Data.Market.Dividend> GetDividends(DateTime from, DateTime to);
 
         /// <summary>
         /// Local implementation for downloading data to algorithms

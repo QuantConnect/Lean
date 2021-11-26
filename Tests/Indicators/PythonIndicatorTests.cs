@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -24,6 +24,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -37,15 +38,8 @@ namespace QuantConnect.Tests.Indicators
                 var module = PythonEngine.ModuleFromString(
                     Guid.NewGuid().ToString(),
                     @"
-from clr import AddReference
-AddReference('QuantConnect.Common')
-AddReference('QuantConnect.Indicators')
-
-from QuantConnect import *
-from QuantConnect.Indicators import *
+from AlgorithmImports import *
 from collections import deque
-from datetime import datetime, timedelta
-from numpy import sum
 
 class CustomSimpleMovingAverage(PythonIndicator):
     def __init__(self, name, period):
@@ -57,7 +51,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
     def Update(self, input):
         self.queue.appendleft(input.Value)
         count = len(self.queue)
-        self.Value = sum(self.queue) / count
+        self.Value = np.sum(self.queue) / count
         return count == self.queue.maxlen
 "
                 );
@@ -181,12 +175,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
                 var module = PythonEngine.ModuleFromString(
                     Guid.NewGuid().ToString(),
                     @"
-from clr import AddReference
-AddReference('QuantConnect.Common')
-AddReference('QuantConnect.Indicators')
-
-from QuantConnect import *
-from QuantConnect.Indicators import *
+from AlgorithmImports import *
 class GoodCustomIndicator(PythonIndicator):
     def __init__(self):
         self.Value = 0
@@ -228,15 +217,7 @@ class BadCustomIndicator(PythonIndicator):
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "AddReference(\"QuantConnect.Indicators\")\n" +
-                    "from QuantConnect import *\n" +
-                    "from QuantConnect.Data.Market import *\n" +
-                    "from QuantConnect.Data.Consolidators import *\n" +
-                    "from QuantConnect.Indicators import *\n" +
-                    "from QuantConnect.Python import *\n" +
-                    "from datetime import *\n" +
+                    "from AlgorithmImports import *\n" +
                     "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n" +
                     "timeDelta = timedelta(days=2)\n" +
                     "class CustomIndicator(PythonIndicator):\n" +
@@ -268,6 +249,82 @@ class BadCustomIndicator(PythonIndicator):
 
                 //Test 3: Using a timedelta object; Should convert timedelta to timespan
                 Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, PyIndicator, TimeDelta));
+            }
+        }
+
+        [Test]
+        public void WarmsUpProperlyPythonIndicator()
+        {
+            using (Py.GIL())
+            {
+                var module = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.Name = name
+        self.Value = 0
+        self.queue = deque(maxlen=period)
+        self.WarmUpPeriod = period
+
+    # Update method is mandatory
+    def Update(self, input):
+        self.queue.appendleft(input.Value)
+        count = len(self.queue)
+        self.Value = np.sum(self.queue) / count
+        return count == self.queue.maxlen
+"
+                );
+                var pythonIndicator = module.GetAttr("CustomSimpleMovingAverage")
+                    .Invoke("custom".ToPython(), 14.ToPython());
+                var SMAWithWarmUpPeriod = new PythonIndicator(pythonIndicator);
+                var reference = new DateTime(2000, 1, 1, 0, 0, 0);
+                var period = ((IIndicatorWarmUpPeriodProvider)SMAWithWarmUpPeriod).WarmUpPeriod;
+
+                // Check the WarmUpPeriod parameter is the one defined in the constructor of the custom indicator
+                Assert.AreEqual(14, period);
+
+                for (var i = 0; i < period; i++)
+                {
+                    SMAWithWarmUpPeriod.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
+                    Assert.AreEqual(i == period - 1, SMAWithWarmUpPeriod.IsReady);
+                }
+            }
+        }
+
+        [Test]
+        public void SetDefaultWarmUpPeriodProperly()
+        {
+            using (Py.GIL())
+            {
+                var module = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.Name = name
+        self.Value = 0
+        self.queue = deque(maxlen=period)
+
+    # Update method is mandatory
+    def Update(self, input):
+        self.queue.appendleft(input.Value)
+        count = len(self.queue)
+        self.Value = np.sum(self.queue) / count
+        return count == self.queue.maxlen
+"
+                );
+                var pythonIndicator = module.GetAttr("CustomSimpleMovingAverage")
+                    .Invoke("custom".ToPython(), 14.ToPython());
+                var indicator = new PythonIndicator(pythonIndicator);
+
+                Assert.AreEqual(0, indicator.WarmUpPeriod);
             }
         }
     }

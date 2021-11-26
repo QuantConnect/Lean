@@ -103,6 +103,11 @@ namespace QuantConnect.Util
                     try
                     {
                         var key = SecurityDatabaseKey.Parse(entry.Key);
+                        if (key == null)
+                        {
+                            continue;
+                        }
+
                         entries[key] = entry.Value.Convert();
                     }
                     catch (Exception err)

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace QuantConnect.Configuration
 {
@@ -59,17 +59,17 @@ namespace QuantConnect.Configuration
                         // Booleans, string and numbers
                         case CommandOptionType.NoValue:
                         case CommandOptionType.SingleValue:
-                            optionsObject[optionKey] = ParseTypedArgument(commandOption.Value());
+                            optionsObject[optionKey] = commandOption.Value();
                             break;
 
                         // Parsing nested objects
                         case CommandOptionType.MultipleValue:
                             var keyValuePairs = commandOption.Value().Split(',');
-                            var subDictionary = new Dictionary<string, object>();
+                            var subDictionary = new Dictionary<string, string>();
                             foreach (var keyValuePair in keyValuePairs)
                             {
                                 var subKeys = keyValuePair.Split(':');
-                                subDictionary[subKeys[0]] = ParseTypedArgument(subKeys.Length > 1 ? subKeys[1] : "");
+                                subDictionary[subKeys[0]] = subKeys.Length > 1 ? subKeys[1] : "";
                             }
 
                             optionsObject[optionKey] = subDictionary;
@@ -90,20 +90,37 @@ namespace QuantConnect.Configuration
             return optionsObject;
         }
 
-        private static object ParseTypedArgument(string value)
+        public static void PrintMessageAndExit(int exitCode = 0, string message = "")
         {
-            if (value == "true" || value == "false")
+            if (!string.IsNullOrEmpty(message))
             {
-                return value == "true";
+                Console.WriteLine("\n" + message);
+            }
+            Console.WriteLine("\nUse the '--help' parameter for more information");
+            Console.WriteLine("Press any key to quit");
+            Console.ReadLine();
+            Environment.Exit(exitCode);
+        }
+
+        public static string GetParameterOrExit(IReadOnlyDictionary<string, object> optionsObject, string parameter)
+        {
+            if (!optionsObject.ContainsKey(parameter))
+            {
+                PrintMessageAndExit(1, "ERROR: REQUIRED parameter --" + parameter + "= is missing");
+            }
+            return optionsObject[parameter].ToString();
+        }
+
+        public static string GetParameterOrDefault(IReadOnlyDictionary<string, object> optionsObject, string parameter, string defaultValue)
+        {
+            object value;
+            if (!optionsObject.TryGetValue(parameter, out value))
+            {
+                Console.WriteLine($"'{parameter}' was not specified. Using default value: '{defaultValue}'");
+                return defaultValue;
             }
 
-            double numericValue;
-            if (double.TryParse(value, out numericValue))
-            {
-                return numericValue;
-            }
-
-            return value;
+            return value.ToString();
         }
     }
 }

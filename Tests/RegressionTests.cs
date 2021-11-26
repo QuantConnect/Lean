@@ -15,17 +15,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using NUnit.Framework;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests
 {
-    [TestFixture, Category("TravisExclude")]
+    [TestFixture, Category("TravisExclude"), Category("RegressionTests")]
     public class RegressionTests
     {
         [Test, TestCaseSource(nameof(GetRegressionTestParameters))]
@@ -71,13 +70,21 @@ namespace QuantConnect.Tests
 
         private static TestCaseData[] GetRegressionTestParameters()
         {
+            TestGlobals.Initialize();
+
             // since these are static test cases, they are executed before test setup
             AssemblyInitialize.AdjustCurrentDirectory();
 
             var nonDefaultStatuses = new Dictionary<string, AlgorithmStatus>
             {
-                {"TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError}
+                {"TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError},
+                {"OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError},
+                {"WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError }
             };
+
+            var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] {"CSharp", "Python"}))
+                .Select(str => Parse.Enum<Language>(str.Value<string>()))
+                .ToHashSet();
 
             // find all regression algorithms in Algorithm.CSharp
             return (
@@ -88,7 +95,7 @@ namespace QuantConnect.Tests
                 let instance = (IRegressionAlgorithmDefinition) Activator.CreateInstance(type)
                 let status = nonDefaultStatuses.GetValueOrDefault(type.Name, AlgorithmStatus.Completed)
                 where instance.CanRunLocally                   // open source has data to run this algorithm
-                from language in instance.Languages
+                from language in instance.Languages.Where(languages.Contains)
                 select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, status)
             )
             .OrderBy(x => x.Language).ThenBy(x => x.Algorithm)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,15 +14,16 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Logging;
+using System.Threading.Tasks;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -47,6 +48,16 @@ namespace QuantConnect.Brokerages
         /// Event that fires each time a short option position is assigned
         /// </summary>
         public event EventHandler<OrderEvent> OptionPositionAssigned;
+
+        /// <summary>
+        /// Event that fires each time an option position has changed
+        /// </summary>
+        public event EventHandler<OptionNotificationEventArgs> OptionNotification;
+
+        /// <summary>
+        /// Event that fires each time a delisting occurs
+        /// </summary>
+        public event EventHandler<DelistingNotificationEventArgs> DelistingNotification;
 
         /// <summary>
         /// Event that fires each time a user's brokerage account is changed
@@ -125,12 +136,6 @@ namespace QuantConnect.Brokerages
             try
             {
                 OrderStatusChanged?.Invoke(this, e);
-
-                if (Log.DebuggingEnabled)
-                {
-                    // log after calling the OrderStatusChanged event, the BrokerageTransactionHandler will set the order quantity
-                    Log.Debug("Brokerage.OnOrderEvent(): " + e);
-                }
             }
             catch (Exception err)
             {
@@ -157,6 +162,42 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Event invocator for the OptionNotification event
+        /// </summary>
+        /// <param name="e">The OptionNotification event arguments</param>
+        protected virtual void OnOptionNotification(OptionNotificationEventArgs e)
+        {
+            try
+            {
+                Log.Debug("Brokerage.OnOptionNotification(): " + e);
+
+                OptionNotification?.Invoke(this, e);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
+        /// Event invocator for the DelistingNotification event
+        /// </summary>
+        /// <param name="e">The DelistingNotification event arguments</param>
+        protected virtual void OnDelistingNotification(DelistingNotificationEventArgs e)
+        {
+            try
+            {
+                Log.Debug("Brokerage.OnDelistingNotification(): " + e);
+
+                DelistingNotification?.Invoke(this, e);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
         /// Event invocator for the AccountChanged event
         /// </summary>
         /// <param name="e">The AccountEvent</param>
@@ -164,7 +205,7 @@ namespace QuantConnect.Brokerages
         {
             try
             {
-                Log.Trace("Brokerage.OnAccountChanged(): " + e);
+                Log.Trace($"Brokerage.OnAccountChanged(): {e}");
 
                 AccountChanged?.Invoke(this, e);
             }
@@ -200,6 +241,62 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Helper method that will try to get the live holdings from the provided brokerage data collection else will default to the algorithm state
+        /// </summary>
+        /// <remarks>Holdings will removed from the provided collection on the first call, since this method is expected to be called only
+        /// once on initialize, after which the algorithm should use Lean accounting</remarks>
+        protected virtual List<Holding> GetAccountHoldings(Dictionary<string, string> brokerageData, IEnumerable<Security> securities)
+        {
+            if (Log.DebuggingEnabled)
+            {
+                Log.Debug("Brokerage.GetAccountHoldings(): starting...");
+            }
+
+            if (brokerageData != null && brokerageData.Remove("live-holdings", out var value) && !string.IsNullOrEmpty(value))
+            {
+                // remove the key, we really only want to return the cached value on the first request
+                var result = JsonConvert.DeserializeObject<List<Holding>>(value);
+                if (result == null)
+                {
+                    return new List<Holding>();
+                }
+                Log.Trace($"Brokerage.GetAccountHoldings(): sourcing holdings from provided brokerage data, found {result.Count} entries");
+                return result;
+            }
+
+            return securities?.Where(security => security.Holdings.AbsoluteQuantity > 0)
+                .OrderBy(security => security.Symbol)
+                .Select(security => new Holding(security)).ToList() ?? new List<Holding>();
+        }
+
+        /// <summary>
+        /// Helper method that will try to get the live cash balance from the provided brokerage data collection else will default to the algorithm state
+        /// </summary>
+        /// <remarks>Cash balance will removed from the provided collection on the first call, since this method is expected to be called only
+        /// once on initialize, after which the algorithm should use Lean accounting</remarks>
+        protected virtual List<CashAmount> GetCashBalance(Dictionary<string, string> brokerageData, CashBook cashBook)
+        {
+            if (Log.DebuggingEnabled)
+            {
+                Log.Debug("Brokerage.GetCashBalance(): starting...");
+            }
+
+            if (brokerageData != null && brokerageData.Remove("live-cash-balance", out var value) && !string.IsNullOrEmpty(value))
+            {
+                // remove the key, we really only want to return the cached value on the first request
+                var result = JsonConvert.DeserializeObject<List<CashAmount>>(value);
+                if (result == null)
+                {
+                    return new List<CashAmount>();
+                }
+                Log.Trace($"Brokerage.GetCashBalance(): sourcing cash balance from provided brokerage data, found {result.Count} entries");
+                return result;
+            }
+
+            return cashBook?.Select(x => new CashAmount(x.Value.Amount, x.Value.Symbol)).ToList() ?? new List<CashAmount>();
+        }
+
+        /// <summary>
         /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
@@ -222,6 +319,11 @@ namespace QuantConnect.Brokerages
         /// Specifies whether the brokerage will instantly update account balances
         /// </summary>
         public virtual bool AccountInstantlyUpdated => false;
+
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public virtual string AccountBaseCurrency { get; protected set; }
 
         /// <summary>
         /// Gets the history for the requested security

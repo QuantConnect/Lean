@@ -120,7 +120,7 @@ namespace QuantConnect.Securities
             {
                 var cash = kvp.Value;
 
-                var subscriptionDataConfig = cash.EnsureCurrencyDataFeed(
+                var subscriptionDataConfigs = cash.EnsureCurrencyDataFeed(
                     securities,
                     subscriptions,
                     marketMap,
@@ -128,9 +128,12 @@ namespace QuantConnect.Securities
                     securityService,
                     AccountCurrency,
                     defaultResolution);
-                if (subscriptionDataConfig != null)
+                if (subscriptionDataConfigs != null)
                 {
-                    addedSubscriptionDataConfigs.Add(subscriptionDataConfig);
+                    foreach (var subscriptionDataConfig in subscriptionDataConfigs)
+                    {
+                        addedSubscriptionDataConfigs.Add(subscriptionDataConfig);
+                    }
                 }
             }
             return addedSubscriptionDataConfigs;
@@ -195,7 +198,7 @@ namespace QuantConnect.Securities
             sb.AppendLine(Invariant($"Symbol {"Quantity",13}    {"Conversion",10} = Value in {AccountCurrency}"));
             foreach (var value in _currencies.Select(x => x.Value))
             {
-                sb.AppendLine(value.ToString());
+                sb.AppendLine(value.ToString(AccountCurrency));
             }
             sb.AppendLine("-------------------------------------------------");
             sb.AppendLine("CashBook Total Value:                " +

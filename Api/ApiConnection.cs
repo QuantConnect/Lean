@@ -15,7 +15,6 @@
 
 using System;
 using Newtonsoft.Json;
-using QuantConnect.API;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -29,11 +28,6 @@ namespace QuantConnect.Api
     /// </summary>
     public class ApiConnection
     {
-        /// <summary>
-        /// The current config api url
-        /// </summary>
-        public static string ApiUrl = Config.Get("cloud-api-url", "https://www.quantconnect.com/api/v2/");
-
         /// <summary>
         /// Authorized client to use for requests.
         /// </summary>
@@ -52,7 +46,7 @@ namespace QuantConnect.Api
         {
             _token = token;
             _userId = userId.ToStringInvariant();
-            Client = new RestClient(ApiUrl);
+            Client = new RestClient("https://www.quantconnect.com/api/v2/");
         }
 
         /// <summary>
@@ -122,6 +116,7 @@ namespace QuantConnect.Api
 
                 if (result == null || !result.Success)
                 {
+                    Log.Debug($"ApiConnection.TryRequest(): Raw response: '{responseContent}'");
                     return false;
                 }
             }

@@ -76,11 +76,14 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnEndOfDay()
+        public override void OnEndOfDay(Symbol symbol)
         {
-            Plot("Trade Plot", "UpperChannel", _rc.UpperChannel);
-            Plot("Trade Plot", "LowerChannel", _rc.LowerChannel);
-            Plot("Trade Plot", "Regression", _rc.LinearRegression);
+            if (symbol == _spy)
+            {
+                Plot("Trade Plot", "UpperChannel", _rc.UpperChannel);
+                Plot("Trade Plot", "LowerChannel", _rc.LowerChannel);
+                Plot("Trade Plot", "Regression", _rc.LinearRegression);
+            }
         }
     }
 }

@@ -52,6 +52,11 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Event fired when the universe selection has changed
+        /// </summary>
+        public event EventHandler SelectionChanged;
+
+        /// <summary>
         /// Gets the security type of this universe
         /// </summary>
         public SecurityType SecurityType
@@ -93,16 +98,6 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the instance responsible for initializing newly added securities
-        /// </summary>
-        /// <obsolete>The SecurityInitializer won't be used</obsolete>
-        [Obsolete("SecurityInitializer is obsolete and will not be used.")]
-        public ISecurityInitializer SecurityInitializer
-        {
-            get; private set;
-        }
-
-        /// <summary>
         /// Gets the current listing of members in this universe. Modifications
         /// to this dictionary do not change universe membership.
         /// </summary>
@@ -121,19 +116,6 @@ namespace QuantConnect.Data.UniverseSelection
             Securities = new ConcurrentDictionary<Symbol, Member>();
 
             Configuration = config;
-            SecurityInitializer = QuantConnect.Securities.SecurityInitializer.Null;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Universe"/> class
-        /// </summary>
-        /// <param name="config">The configuration used to source data for this universe</param>
-        /// <param name="securityInitializer">Initializes securities when they're added to the universe</param>
-        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        protected Universe(SubscriptionDataConfig config, ISecurityInitializer securityInitializer)
-            : this(config)
-        {
-            SecurityInitializer = securityInitializer;
         }
 
         /// <summary>
@@ -190,6 +172,7 @@ namespace QuantConnect.Data.UniverseSelection
             // select empty set of symbols after dispose requested
             if (DisposeRequested)
             {
+                OnSelectionChanged();
                 return Enumerable.Empty<Symbol>();
             }
 
@@ -206,6 +189,8 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 return Unchanged;
             }
+
+            OnSelectionChanged(selections);
             return selections;
         }
 
@@ -265,7 +250,10 @@ namespace QuantConnect.Data.UniverseSelection
                 UniverseSettings.Resolution,
                 UniverseSettings.FillForward,
                 UniverseSettings.ExtendedMarketHours,
-                dataNormalizationMode: UniverseSettings.DataNormalizationMode);
+                dataNormalizationMode: UniverseSettings.DataNormalizationMode,
+                subscriptionDataTypes: UniverseSettings.SubscriptionDataTypes,
+                dataMappingMode: UniverseSettings.DataMappingMode,
+                contractDepthOffset: (uint)Math.Abs(UniverseSettings.ContractDepthOffset));
             return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
                 universe: this,
                 security: security,
@@ -327,21 +315,20 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Sets the security initializer, used to initialize/configure securities after creation
+        /// Marks this universe as disposed and ready to remove all child subscriptions
         /// </summary>
-        /// <param name="securityInitializer">The security initializer</param>
-        [Obsolete("SecurityInitializer is obsolete and will not be used.")]
-        public virtual void SetSecurityInitializer(ISecurityInitializer securityInitializer)
+        public virtual void Dispose()
         {
-            SecurityInitializer = securityInitializer;
+            DisposeRequested = true;
         }
 
         /// <summary>
-        /// Marks this universe as disposed and ready to remove all child subscriptions
+        /// Event invocator for the <see cref="SelectionChanged"/> event
         /// </summary>
-        public void Dispose()
+        /// <param name="selection">The current universe selection</param>
+        protected void OnSelectionChanged(HashSet<Symbol> selection = null)
         {
-            DisposeRequested = true;
+            SelectionChanged?.Invoke(this, new SelectionEventArgs(selection ?? new HashSet<Symbol>()));
         }
 
         /// <summary>
@@ -384,14 +371,49 @@ namespace QuantConnect.Data.UniverseSelection
             }
         }
 
+        /// <summary>
+        /// Member of the Universe
+        /// </summary>
         public sealed class Member
         {
+            /// <summary>
+            /// DateTime when added
+            /// </summary>
             public readonly DateTime Added;
+
+            /// <summary>
+            /// The security that was added
+            /// </summary>
             public readonly Security Security;
+
+            /// <summary>
+            /// Initialize a new member for the universe
+            /// </summary>
+            /// <param name="added">DateTime added</param>
+            /// <param name="security">Security to add</param>
             public Member(DateTime added, Security security)
             {
                 Added = added;
                 Security = security;
+            }
+        }
+
+        /// <summary>
+        /// Event fired when the universe selection changes
+        /// </summary>
+        public class SelectionEventArgs : EventArgs
+        {
+            /// <summary>
+            /// The current universe selection
+            /// </summary>
+            public HashSet<Symbol> CurrentSelection { get; }
+
+            /// <summary>
+            /// Creates a new instance
+            /// </summary>
+            public SelectionEventArgs(HashSet<Symbol> currentSelection)
+            {
+                CurrentSelection = currentSelection;
             }
         }
     }

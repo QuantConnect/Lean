@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,8 @@ AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Data import SubscriptionDataSource
-from QuantConnect.Python import PythonData, PythonQuandl
+from QuantConnect.Data import *
+from QuantConnect.Python import *
 from datetime import datetime
 import decimal
 
@@ -34,14 +34,14 @@ class QuandlFuture(PythonQuandl):
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''
     def GetSource(self, config, date, isLiveMode):
-        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
+        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile)
 
 
     def Reader(self, config, line, date, isLiveMode):
         if not (line.strip() and line[0].isdigit()): return None
 
         # New Nifty object
-        index = Nifty();
+        index = Nifty()
         index.Symbol = config.Symbol
 
         try:

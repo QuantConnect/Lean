@@ -53,8 +53,8 @@ namespace QuantConnect.Report.ReportElements
             var liveSeries = new Series<DateTime, double>(liveReturns.Keys, liveReturns.Values);
 
             // The following two operations are equivalent to the Pandas `DataFrame.resample(...)` method
-            var backtestResampled = backtestSeries.ResampleEquivalence(date => date.Date, s => s.TotalReturns()).DropMissing() * 100;
-            var liveResampled = liveSeries.ResampleEquivalence(date => date.Date, s => s.TotalReturns()).DropMissing() * 100;
+            var backtestResampled = backtestSeries.ResampleEquivalence(date => date.Date, s => s.LastValue()).PercentChange().DropMissing() * 100;
+            var liveResampled = liveSeries.ResampleEquivalence(date => date.Date, s => s.LastValue()).PercentChange().DropMissing() * 100;
 
             var base64 = "";
             using (Py.GIL())

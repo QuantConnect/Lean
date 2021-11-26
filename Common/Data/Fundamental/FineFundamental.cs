@@ -68,7 +68,7 @@ namespace QuantConnect.Data.Fundamental
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var source =
-                Path.Combine(Globals.DataFolder, Invariant(
+                Path.Combine(Globals.CacheDataFolder, Invariant(
                     $"equity/{config.Market}/fundamental/fine/{config.Symbol.Value.ToLowerInvariant()}/{date:yyyyMMdd}.zip"
                 ));
 

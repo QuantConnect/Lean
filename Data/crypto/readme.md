@@ -1,7 +1,7 @@
 ![alt tag](https://raw.githubusercontent.com/QuantConnect/Lean/master/Documentation/logo.white.small.png) 
 ## LEAN Data Formats / Cryptocurrency (crypto)
 
-QuantConnect hosts crypto data provided by [Kaiko](https://www.kaiko.com).
+QuantConnect hosts crypto data provided by [CryptoTick](https://www.cryptotick.com/).
 The data contains both *Trade* and *Quote* data. Using the ToolBox applications `GDAXDownloader` and `BitfinexDownloader`, you can obtain historical *trade* data for free, but not *quote* data with this method. 
 You can also download crypto data (trades and quotes starting with Tick and ending with Minute resolution) for a fee on our website. You can explore the data and purchase it at https://www.quantconnect.com/data/tree/crypto
 

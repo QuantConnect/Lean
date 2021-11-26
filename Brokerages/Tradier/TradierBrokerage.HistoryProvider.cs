@@ -20,6 +20,7 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Brokerages.Tradier
@@ -54,7 +55,9 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Event fired when the start date has been limited
         /// </summary>
+#pragma warning disable 0067 // StartDateLimited is currently not used; remove once implemented
         public event EventHandler<StartDateLimitedEventArgs> StartDateLimited;
+#pragma warning restore 0067
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
@@ -79,7 +82,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             foreach (var request in requests)
             {
-                if (request.Symbol.ID.SecurityType != SecurityType.Equity)
+                if (request.Symbol.ID.SecurityType != SecurityType.Equity && request.Symbol.ID.SecurityType != SecurityType.Option)
                 {
                     throw new ArgumentException("Invalid security type: " + request.Symbol.ID.SecurityType);
                 }
@@ -87,6 +90,17 @@ namespace QuantConnect.Brokerages.Tradier
                 if (request.StartTimeUtc >= request.EndTimeUtc)
                 {
                     throw new ArgumentException("Invalid date range specified");
+                }
+
+                if (request.Symbol.IsCanonical())
+                {
+                    throw new ArgumentException("Invalid symbol, cannot use canonical symbols for history request");
+                }
+
+                if (request.DataType == typeof(QuoteBar))
+                {
+                    Log.Error("TradierBrokerage.GetHistory(): Tradier only supports TradeBars");
+                    yield break;
                 }
 
                 var start = request.StartTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
@@ -162,7 +176,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         private IEnumerable<Slice> GetHistoryTick(Symbol symbol, DateTime start, DateTime end)
         {
-            var history = GetTimeSeries(symbol.Value, start, end, TradierTimeSeriesIntervals.Tick);
+            var history = GetTimeSeries(symbol, start, end, TradierTimeSeriesIntervals.Tick);
 
             if (history == null)
                 return Enumerable.Empty<Slice>();
@@ -183,7 +197,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         private IEnumerable<Slice> GetHistorySecond(Symbol symbol, DateTime start, DateTime end)
         {
-            var history = GetTimeSeries(symbol.Value, start, end, TradierTimeSeriesIntervals.Tick);
+            var history = GetTimeSeries(symbol, start, end, TradierTimeSeriesIntervals.Tick);
 
             if (history == null)
                 return Enumerable.Empty<Slice>();
@@ -218,7 +232,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         private IEnumerable<Slice> GetHistoryMinute(Symbol symbol, DateTime start, DateTime end)
         {
-            var history = GetTimeSeries(symbol.Value, start, end, TradierTimeSeriesIntervals.OneMinute);
+            var history = GetTimeSeries(symbol, start, end, TradierTimeSeriesIntervals.OneMinute);
 
             if (history == null)
                 return Enumerable.Empty<Slice>();
@@ -232,7 +246,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         private IEnumerable<Slice> GetHistoryHour(Symbol symbol, DateTime start, DateTime end)
         {
-            var history = GetTimeSeries(symbol.Value, start, end, TradierTimeSeriesIntervals.FifteenMinutes);
+            var history = GetTimeSeries(symbol, start, end, TradierTimeSeriesIntervals.FifteenMinutes);
 
             if (history == null)
                 return Enumerable.Empty<Slice>();
@@ -260,7 +274,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         private IEnumerable<Slice> GetHistoryDaily(Symbol symbol, DateTime start, DateTime end)
         {
-            var history = GetHistoricalData(symbol.Value, start, end);
+            var history = GetHistoricalData(symbol, start, end);
 
             DataPointCount += history.Count;
 

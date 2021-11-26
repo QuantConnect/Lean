@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 using QuantConnect.Util;
 
 namespace QuantConnect.Notifications
@@ -21,6 +23,7 @@ namespace QuantConnect.Notifications
     /// <summary>
     /// Local/desktop implementation of messaging system for Lean Engine.
     /// </summary>
+    [JsonConverter(typeof(NotificationJsonConverter))]
     public abstract class Notification
     {
         /// <summary>
@@ -39,6 +42,12 @@ namespace QuantConnect.Notifications
     public class NotificationWeb : Notification
     {
         /// <summary>
+        /// Optional email headers
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public Dictionary<string, string> Headers;
+
+        /// <summary>
         /// Send a notification message to this web address
         /// </summary>
         public string Address;
@@ -46,17 +55,20 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Object data to send.
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public object Data;
 
         /// <summary>
         /// Constructor for sending a notification SMS to a specified phone number
         /// </summary>
-        /// <param name="address"></param>
-        /// <param name="data"></param>
-        public NotificationWeb(string address, object data = null)
+        /// <param name="address">Address to send to</param>
+        /// <param name="data">Data to send</param>
+        /// <param name="headers">Optional headers to use</param>
+        public NotificationWeb(string address, object data = null, Dictionary<string, string> headers = null)
         {
             Address = address;
             Data = data;
+            Headers = headers;
         }
     }
 
@@ -73,6 +85,7 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Message to send. Limited to 160 characters
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Message;
 
         /// <summary>
@@ -87,12 +100,17 @@ namespace QuantConnect.Notifications
         }
     }
 
-
     /// <summary>
     /// Email notification data.
     /// </summary>
     public class NotificationEmail : Notification
     {
+        /// <summary>
+        /// Optional email headers
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public Dictionary<string, string> Headers;
+
         /// <summary>
         /// Send to address:
         /// </summary>
@@ -106,11 +124,13 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Message to send.
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Message;
 
         /// <summary>
         /// Email Data
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Data;
 
         /// <summary>
@@ -121,7 +141,8 @@ namespace QuantConnect.Notifications
         /// <param name="subject">Subject of the email. Will set to <see cref="string.Empty"/> if null</param>
         /// <param name="message">Message body of the email. Will set to <see cref="string.Empty"/> if null</param>
         /// <param name="data">Data to attach to the email. Will set to <see cref="string.Empty"/> if null</param>
-        public NotificationEmail(string address, string subject = "", string message = "", string data = "")
+        /// <param name="headers">Optional email headers to use</param>
+        public NotificationEmail(string address, string subject = "", string message = "", string data = "", Dictionary<string, string> headers = null)
         {
             if (!Validate.EmailAddress(address))
             {
@@ -132,6 +153,47 @@ namespace QuantConnect.Notifications
             Data = data ?? string.Empty;
             Message = message ?? string.Empty;
             Subject = subject ?? string.Empty;
+            Headers = headers;
+        }
+    }
+
+    /// <summary>
+    /// Telegram notification data
+    /// </summary>
+    public class NotificationTelegram : Notification
+    {
+        /// <summary>
+        /// Send a notification message to this user on Telegram
+        /// Can be either a personal ID or Group ID.
+        /// </summary>
+        public string Id;
+
+        /// <summary>
+        /// Message to send. Limited to 4096 characters
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Message;
+
+        /// <summary>
+        /// Token to use
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Token;
+
+        /// <summary>
+        /// Constructor for sending a telegram notification to a specific User ID
+        /// or group ID. Note: The bot must have an open chat with the user or be
+        /// added to the group for messages to deliver.
+        /// </summary>
+        /// <param name="id">User Id or Group Id to send the message too</param>
+        /// <param name="message">Message to send</param>
+        /// <param name="token">Bot token to use, if null defaults to "telegram-token"
+        /// in config on send</param>
+        public NotificationTelegram(string id, string message, string token = null)
+        {
+            Id = id;
+            Message = message;
+            Token = token;
         }
     }
 }

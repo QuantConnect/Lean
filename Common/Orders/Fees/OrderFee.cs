@@ -13,17 +13,21 @@
  * limitations under the License.
 */
 
+using ProtoBuf;
 using QuantConnect.Securities;
+
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
     /// Defines the result for <see cref="IFeeModel.GetOrderFee"/>
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class OrderFee
     {
         /// <summary>
         /// Gets the order fee
         /// </summary>
+        [ProtoMember(1)]
         public CashAmount Value { get; set; }
 
         /// <summary>
@@ -35,6 +39,16 @@ namespace QuantConnect.Orders.Fees
             Value = new CashAmount(
                 orderFee.Amount.Normalize(),
                 orderFee.Currency);
+        }
+
+        /// <summary>
+        /// Applies the order fee to the given portfolio
+        /// </summary>
+        /// <param name="portfolio">The portfolio instance</param>
+        /// <param name="fill">The order fill event</param>
+        public virtual void ApplyToPortfolio(SecurityPortfolioManager portfolio, OrderEvent fill)
+        {
+            portfolio.CashBook[Value.Currency].AddAmount(-Value.Amount);
         }
 
         /// <summary>

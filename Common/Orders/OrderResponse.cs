@@ -85,7 +85,7 @@ namespace QuantConnect.Orders
             ErrorCode = errorCode;
             if (errorCode != OrderResponseErrorCode.None)
             {
-                ErrorMessage = errorMessage ?? "An unexpected error ocurred.";
+                ErrorMessage = errorMessage ?? "An unexpected error occurred.";
             }
         }
 
@@ -140,7 +140,17 @@ namespace QuantConnect.Orders
         public static OrderResponse InvalidStatus(OrderRequest request, Order order)
         {
             return Error(request, OrderResponseErrorCode.InvalidOrderStatus,
-                Invariant($"Unable to update order with id {request.OrderId} because it already has {order.Status} status")
+                Invariant($"Unable to update order with id {request.OrderId} because it already has {order.Status} status.")
+            );
+        }
+
+        /// <summary>
+        /// Helper method to create an error response due to the "New" order status
+        /// </summary>
+        public static OrderResponse InvalidNewStatus(OrderRequest request, Order order)
+        {
+            return Error(request, OrderResponseErrorCode.InvalidNewOrderStatus,
+                Invariant($"Unable to update or cancel order with id {request.OrderId} and status {order.Status} because the submit confirmation has not been received yet.")
             );
         }
 

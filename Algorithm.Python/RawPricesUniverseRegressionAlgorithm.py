@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System.Core")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Orders import OrderStatus
-from QuantConnect.Orders.Fees import ConstantFeeModel
+from AlgorithmImports import *
 
 ### <summary>
 ### In this algorithm we demonstrate how to use the UniverseSettings
@@ -40,7 +30,7 @@ class RawPricesUniverseRegressionAlgorithm(QCAlgorithm):
         self.UniverseSettings.Resolution = Resolution.Daily
 
         # Use raw prices
-        self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
+        self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw
 
         self.SetStartDate(2014,3,24)    #Set Start Date
         self.SetEndDate(2014,4,7)      #Set End Date
@@ -49,7 +39,7 @@ class RawPricesUniverseRegressionAlgorithm(QCAlgorithm):
         # Set the security initializer with zero fees
         self.SetSecurityInitializer(lambda x: x.SetFeeModel(ConstantFeeModel(0)))
 
-        self.AddUniverse("MyUniverse", Resolution.Daily, self.SelectionFunction);
+        self.AddUniverse("MyUniverse", Resolution.Daily, self.SelectionFunction)
 
 
     def SelectionFunction(self, dateTime):

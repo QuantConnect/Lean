@@ -14,9 +14,9 @@
 */
 
 using System;
+using NodaTime;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -51,17 +51,14 @@ namespace QuantConnect.Data
             SecurityExchangeHours exchangeHours,
             Resolution? resolution)
         {
-            resolution = resolution ?? subscription.Resolution;
-
-            // find the correct data type for the history request
-            var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
+            resolution ??= subscription.Resolution;
 
             var request = new HistoryRequest(subscription,
                 exchangeHours,
                 startAlgoTz.ConvertToUtc(_algorithm.TimeZone),
                 endAlgoTz.ConvertToUtc(_algorithm.TimeZone))
             {
-                DataType = dataType,
+                DataType = subscription.Type,
                 Resolution = resolution.Value,
                 FillForwardResolution = subscription.FillDataForward ? resolution : null,
                 TickType = subscription.TickType
@@ -78,17 +75,20 @@ namespace QuantConnect.Data
         /// <param name="periods">The number of bars requested</param>
         /// <param name="resolution">The length of each bar</param>
         /// <param name="exchange">The exchange hours used for market open hours</param>
+        /// <param name="dataTimeZone">The time zone in which data are stored</param>
         /// <returns>The start time that would provide the specified number of bars ending at the algorithm's current time</returns>
         public DateTime GetStartTimeAlgoTz(
             Symbol symbol,
             int periods,
             Resolution resolution,
-            SecurityExchangeHours exchange)
+            SecurityExchangeHours exchange,
+            DateTimeZone dataTimeZone)
         {
-            var isExtendedMarketHours = _algorithm.SubscriptionManager
+            var configs = _algorithm.SubscriptionManager
                 .SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(symbol)
-                .IsExtendedMarketHours();
+                .GetSubscriptionDataConfigs(symbol);
+            // hour resolution does no have extended market hours data
+            var isExtendedMarketHours = resolution != Resolution.Hour && configs.IsExtendedMarketHours();
 
             var timeSpan = resolution.ToTimeSpan();
             // make this a minimum of one second
@@ -99,7 +99,8 @@ namespace QuantConnect.Data
                 _algorithm.UtcTime.ConvertFromUtc(exchange.TimeZone),
                 timeSpan,
                 periods,
-                isExtendedMarketHours);
+                isExtendedMarketHours,
+                dataTimeZone);
             return localStartTime.ConvertTo(exchange.TimeZone, _algorithm.TimeZone);
         }
     }

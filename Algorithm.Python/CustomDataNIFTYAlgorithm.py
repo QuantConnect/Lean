@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,20 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data import SubscriptionDataSource
-from QuantConnect.Python import PythonData
-from datetime import date, timedelta, datetime
-import numpy as np
-import math
-import json
+from AlgorithmImports import *
 
 ### <summary>
 ### This demonstration imports indian NSE index "NIFTY" as a tradable security in addition to the USDINR currency pair. We move into the
@@ -72,7 +59,7 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
         if self.Time.weekday() != 2: return
 
         cur_qnty = self.Portfolio["NIFTY"].Quantity
-        quantity = math.floor(self.Portfolio.MarginRemaining * 0.9) / data["NIFTY"].Close
+        quantity = int(self.Portfolio.MarginRemaining * 0.9 / data["NIFTY"].Close)
         hi_nifty = max(price.NiftyPrice for price in self.prices)
         lo_nifty = min(price.NiftyPrice for price in self.prices)
 
@@ -103,6 +90,7 @@ class Nifty(PythonData):
             # 2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
             data = line.split(',')
             index.Time = datetime.strptime(data[0], "%Y-%m-%d")
+            index.EndTime = index.Time + timedelta(days=1)
             index.Value = data[4]
             index["Open"] = float(data[1])
             index["High"] = float(data[2])
@@ -132,6 +120,7 @@ class DollarRupee(PythonData):
         try:
             data = line.split(',')
             currency.Time = datetime.strptime(data[0], "%Y-%m-%d")
+            currency.EndTime = currency.Time + timedelta(days=1)
             currency.Value = data[1]
             currency["Close"] = float(data[1])
 

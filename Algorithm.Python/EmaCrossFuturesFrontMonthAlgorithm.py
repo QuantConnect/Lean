@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,18 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Indicators")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Data.Market import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from QuantConnect.Securities import *
+from AlgorithmImports import *
 
 ### <summary>
 ### This example demonstrates how to implement a cross moving average for the futures front contract
@@ -37,7 +26,7 @@ class EmaCrossFuturesFrontMonthAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 10)
         self.SetCash(1000000)
 
-        future = self.AddFuture(Futures.Metals.Gold);
+        future = self.AddFuture(Futures.Metals.Gold)
 
         # Only consider the front month contract
         # Update the universe once per day to improve performance

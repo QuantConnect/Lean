@@ -88,12 +88,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (_needNewCurrent)
             {
+                if (!_universeProvider.CanPerformSelection())
+                {
+                    Current = null;
+                    return true;
+                }
+
                 var localTime = _timeProvider.GetUtcNow()
                     .RoundDown(_subscriptionRequest.Configuration.Increment)
                     .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone);
 
                 // loading the list of futures contracts and converting them into zip entries
-                var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol.ID.Symbol, _subscriptionRequest.Security.Type, false);
+                var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol, false);
                 var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
                 var current = new FuturesChainUniverseDataCollection
                 {

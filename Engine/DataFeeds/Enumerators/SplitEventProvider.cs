@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -30,7 +31,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         // we set the split factor when we encounter a split in the factor file
         // and on the next trading day we use this data to produce the split instance
         private decimal? _splitFactor;
-        private FactorFile _factorFile;
+        private decimal _referencePrice;
+        private CorporateFactorProvider _factorFile;
         private MapFile _mapFile;
         private SubscriptionDataConfig _config;
 
@@ -38,18 +40,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes this instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
-        /// <param name="factorFile">The factor file to use</param>
-        /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
+        /// <param name="factorFileProvider">The factor file provider to use</param>
+        /// <param name="mapFileProvider">The <see cref="Data.Auxiliary.MapFile"/> provider to use</param>
         /// <param name="startTime">Start date for the data request</param>
         public void Initialize(
             SubscriptionDataConfig config,
-            FactorFile factorFile,
-            MapFile mapFile,
+            IFactorFileProvider factorFileProvider,
+            IMapFileProvider mapFileProvider,
             DateTime startTime)
         {
-            _mapFile = mapFile;
-            _factorFile = factorFile;
             _config = config;
+            _mapFile = mapFileProvider.ResolveMapFile(_config);
+            _factorFile = factorFileProvider.Get(_config.Symbol) as CorporateFactorProvider;
         }
 
         /// <summary>
@@ -60,15 +62,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
             if (_config.Symbol == eventArgs.Symbol
+                && _factorFile != null
                 && _mapFile.HasData(eventArgs.Date))
             {
                 var factor = _splitFactor;
                 if (factor != null)
                 {
-                    var close = AuxiliaryDataEnumerator.GetRawClose(
-                        eventArgs.LastBaseData?.Price ?? 0,
-                        _config);
+                    var close = _referencePrice;
+                    if (close == 0)
+                    {
+                        throw new InvalidOperationException($"Zero reference price for {_config.Symbol} split at {eventArgs.Date}");
+                    }
+
                     _splitFactor = null;
+                    _referencePrice = 0;
                     yield return new Split(
                         eventArgs.Symbol,
                         eventArgs.Date,
@@ -78,15 +85,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
 
                 decimal splitFactor;
-                if (_factorFile.HasSplitEventOnNextTradingDay(eventArgs.Date, out splitFactor))
+                decimal referencePrice;
+                if (_factorFile.HasSplitEventOnNextTradingDay(eventArgs.Date, out splitFactor, out referencePrice))
                 {
                     _splitFactor = splitFactor;
+                    _referencePrice = referencePrice;
                     yield return new Split(
                         eventArgs.Symbol,
                         eventArgs.Date,
-                        AuxiliaryDataEnumerator.GetRawClose(
-                            eventArgs.LastBaseData?.Price ?? 0,
-                            _config),
+                        eventArgs.LastRawPrice ?? 0,
                         splitFactor,
                         SplitType.Warning);
                 }

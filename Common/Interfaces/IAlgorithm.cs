@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -362,6 +362,14 @@ namespace QuantConnect.Interfaces
         void SetParameters(Dictionary<string, string> parameters);
 
         /// <summary>
+        /// Checks if the provided asset is shortable at the brokerage
+        /// </summary>
+        /// <param name="symbol">Symbol to check if it is shortable</param>
+        /// <param name="quantity">Order quantity to check if shortable</param>
+        /// <returns></returns>
+        bool Shortable(Symbol symbol, decimal quantity);
+
+        /// <summary>
         /// Sets the brokerage model used to resolve transaction models, settlement models,
         /// and brokerage specified ordering behaviors.
         /// </summary>
@@ -552,7 +560,10 @@ namespace QuantConnect.Interfaces
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
+        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours,
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
@@ -648,6 +659,14 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="historyProvider">Historical data provider</param>
         void SetHistoryProvider(IHistoryProvider historyProvider);
+
+        /// <summary>
+        /// Get the last known price using the history provider.
+        /// Useful for seeding securities with the correct price
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
+        BaseData GetLastKnownPrice(Security security);
 
         /// <summary>
         /// Set the runtime error

@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,15 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
+from AlgorithmImports import *
 
 ### <summary>
 ### Regression algorithm testing GH feature 3790, using SetHoldings with a collection of targets
@@ -36,6 +28,10 @@ class SetHoldingsMultipleTargetsRegressionAlgorithm(QCAlgorithm):
         # use leverage 1 so we test the margin impact ordering
         self._spy = self.AddEquity("SPY", Resolution.Minute, Market.USA, False, 1).Symbol
         self._ibm = self.AddEquity("IBM", Resolution.Minute, Market.USA, False, 1).Symbol
+
+        # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
+        # Commented so regression algorithm is more sensitive
+        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.

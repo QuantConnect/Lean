@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace QuantConnect
@@ -26,9 +27,8 @@ namespace QuantConnect
         // the upper bound (non-inclusive) for market identifiers
         private const int MaxMarketIdentifier = 1000;
 
-        private static readonly object _lock = new object();
-        private static readonly Dictionary<string, int> Markets = new Dictionary<string, int>();
-        private static readonly Dictionary<int, string> ReverseMarkets = new Dictionary<int, string>();
+        private static Dictionary<string, int> Markets = new Dictionary<string, int>();
+        private static Dictionary<int, string> ReverseMarkets = new Dictionary<int, string>();
         private static readonly IEnumerable<Tuple<string, int>> HardcodedMarkets = new List<Tuple<string, int>>
         {
             Tuple.Create("empty", 0),
@@ -43,7 +43,7 @@ namespace QuantConnect
             Tuple.Create(CBOT, 8),
             Tuple.Create(ICE, 9),
             Tuple.Create(CBOE, 10),
-            Tuple.Create(NSE, 11),
+            Tuple.Create(India, 11),
 
             Tuple.Create(GDAX, 12),
             Tuple.Create(Kraken, 13),
@@ -55,11 +55,14 @@ namespace QuantConnect
             Tuple.Create(HitBTC, 19),
             Tuple.Create(OkCoin, 20),
             Tuple.Create(Bitstamp, 21),
-            
+
             Tuple.Create(COMEX, 22),
             Tuple.Create(CME, 23),
             Tuple.Create(SGX, 24),
             Tuple.Create(HKFE, 25),
+
+            Tuple.Create(CFE, 33),
+            Tuple.Create(FTX, 34)
         };
 
         static Market()
@@ -125,15 +128,20 @@ namespace QuantConnect
         public const string CBOE = "cboe";
 
         /// <summary>
-        /// NSE
+        /// CFE
         /// </summary>
-        public const string NSE = "nse";
-        
+        public const string CFE = "cfe";
+
+        /// <summary>
+        /// NSE - National Stock Exchange
+        /// </summary>
+        public const string India = "india";
+
         /// <summary>
         /// Comex
         /// </summary>
         public const string COMEX = "comex";
-        
+
         /// <summary>
         /// CME
         /// </summary>
@@ -200,6 +208,12 @@ namespace QuantConnect
         public const string Bittrex = "bittrex";
 
         /// <summary>
+        /// FTX
+        /// </summary>
+        public const string FTX = "ftx";
+
+
+        /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.
         /// </summary>
         /// <param name="market">The market string to add</param>
@@ -215,30 +229,35 @@ namespace QuantConnect
 
             market = market.ToLowerInvariant();
 
-            // we lock since we don't want multiple threads getting these two dictionaries out of sync
-            lock (_lock)
+            int marketIdentifier;
+            if (Markets.TryGetValue(market, out marketIdentifier) && identifier != marketIdentifier)
             {
-                int marketIdentifier;
-                if (Markets.TryGetValue(market, out marketIdentifier) && identifier != marketIdentifier)
-                {
-                    throw new ArgumentException(
-                        $"Attempted to add an already added market with a different identifier. Market: {market}"
-                    );
-                }
-
-                string existingMarket;
-                if (ReverseMarkets.TryGetValue(identifier, out existingMarket))
-                {
-                    throw new ArgumentException(
-                        "Attempted to add a market identifier that is already in use. " +
-                        $"New Market: {market} Existing Market: {existingMarket}"
-                    );
-                }
-
-                // update our maps
-                Markets[market] = identifier;
-                ReverseMarkets[identifier] = market;
+                throw new ArgumentException(
+                    $"Attempted to add an already added market with a different identifier. Market: {market}"
+                );
             }
+
+            string existingMarket;
+            if (ReverseMarkets.TryGetValue(identifier, out existingMarket))
+            {
+                throw new ArgumentException(
+                    "Attempted to add a market identifier that is already in use. " +
+                    $"New Market: {market} Existing Market: {existingMarket}"
+                );
+            }
+
+            // update our maps.
+            // We make a copy and update the copy, later swap the references so it's thread safe with no lock
+            var newMarketDictionary = Markets.ToDictionary(entry => entry.Key,
+                entry => entry.Value);
+            newMarketDictionary[market] = identifier;
+
+            var newReverseMarketDictionary = ReverseMarkets.ToDictionary(entry => entry.Key,
+                entry => entry.Value);
+            newReverseMarketDictionary[identifier] = market;
+
+            Markets = newMarketDictionary;
+            ReverseMarkets = newReverseMarketDictionary;
         }
 
         /// <summary>
@@ -248,11 +267,7 @@ namespace QuantConnect
         /// <returns>The internal code used for the market. Corresponds to the value used when calling <see cref="Add"/></returns>
         public static int? Encode(string market)
         {
-            lock (_lock)
-            {
-                int code;
-                return !Markets.TryGetValue(market, out code) ? (int?) null : code;
-            }
+            return !Markets.TryGetValue(market, out var code) ? null : code;
         }
 
         /// <summary>
@@ -262,11 +277,7 @@ namespace QuantConnect
         /// <returns>The string representation of the market, or null if not found</returns>
         public static string Decode(int code)
         {
-            lock (_lock)
-            {
-                string market;
-                return !ReverseMarkets.TryGetValue(code, out market) ? null : market;
-            }
+            return !ReverseMarkets.TryGetValue(code, out var market) ? null : market;
         }
     }
 }

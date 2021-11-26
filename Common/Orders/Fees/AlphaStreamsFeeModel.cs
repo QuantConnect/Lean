@@ -36,7 +36,9 @@ namespace QuantConnect.Orders.Fees
             {SecurityType.Forex, 0.000002m},
             // Commission plus clearing fee
             {SecurityType.Future, 0.4m + 0.1m},
+            {SecurityType.FutureOption, 0.4m + 0.1m},
             {SecurityType.Option, 0.4m + 0.1m},
+            {SecurityType.IndexOption, 0.4m + 0.1m},
             {SecurityType.Cfd, 0m}
         };
         private const decimal _makerFee = 0.001m;
@@ -62,11 +64,12 @@ namespace QuantConnect.Orders.Fees
 
             var market = security.Symbol.ID.Market;
             decimal feeRate;
-            
+
             switch (security.Type)
             {
                 case SecurityType.Option:
                 case SecurityType.Future:
+                case SecurityType.FutureOption:
                 case SecurityType.Cfd:
                     _feeRates.TryGetValue(security.Type, out feeRate);
                     return new OrderFee(new CashAmount(feeRate * order.AbsoluteQuantity, Currencies.USD));
@@ -125,9 +128,9 @@ namespace QuantConnect.Orders.Fees
                     {
                         tradeFee = maximumPerOrder;
                     }
-                    
+
                     return new OrderFee(new CashAmount(Math.Abs(tradeFee), equityFee.Currency));
-                    
+
                 default:
                     // unsupported security type
                     throw new ArgumentException(Invariant($"Unsupported security type: {security.Type}"));

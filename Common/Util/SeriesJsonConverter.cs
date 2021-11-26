@@ -24,6 +24,12 @@ namespace QuantConnect.Util
     /// </summary>
     public class SeriesJsonConverter : JsonConverter
     {
+        /// <summary>
+        /// Write Series to Json
+        /// </summary>
+        /// <param name="writer">The Json Writer to use</param>
+        /// <param name="value">The value to written to Json</param>
+        /// <param name="serializer">The Json Serializer to use</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var series = value as Series;
@@ -69,11 +75,19 @@ namespace QuantConnect.Util
             writer.WriteEndObject();
         }
 
+        /// <summary>
+        /// Not implemented
+        /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Determine if this Converter can convert this type
+        /// </summary>
+        /// <param name="objectType">Type that we would like to convert</param>
+        /// <returns>True if <see cref="Series"/></returns>
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof(Series);

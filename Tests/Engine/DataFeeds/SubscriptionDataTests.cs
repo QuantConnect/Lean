@@ -266,6 +266,48 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(tb.Close * scale + config.SumOfDividends, (data.Data as TradeBar).Close);
         }
 
+        [TestCase(true, typeof(TradeBar))]
+        [TestCase(false, typeof(TradeBar))]
+        [TestCase(true, typeof(QuoteBar))]
+        [TestCase(false, typeof(QuoteBar))]
+        [TestCase(true, typeof(Tick))]
+        [TestCase(false, typeof(Tick))]
+        public void FillForwardFlagIsCorrectlySet(bool isFillForward, Type type)
+        {
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Hour,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false
+            );
+
+            var scale = 0.5m;
+            config.DataNormalizationMode = DataNormalizationMode.Adjusted;
+
+            var data = (BaseData)Activator.CreateInstance(type);
+            if (isFillForward)
+            {
+                data = data.Clone(isFillForward);
+            }
+
+            var subscriptionData = (PrecalculatedSubscriptionData) SubscriptionData.Create(config,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                data,
+                config.DataNormalizationMode,
+                scale);
+
+            config.DataNormalizationMode = DataNormalizationMode.Raw;
+            Assert.AreEqual(isFillForward, subscriptionData.Data.IsFillForward);
+
+            config.DataNormalizationMode = DataNormalizationMode.Adjusted;
+            Assert.AreEqual(isFillForward, subscriptionData.Data.IsFillForward);
+        }
+
         internal class MyCustomData : BaseData
         {
         }

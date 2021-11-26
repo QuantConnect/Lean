@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -94,11 +94,7 @@ namespace QuantConnect.Tests.Python
 import os, sys
 sys.path.append(os.getcwd())
 
-from clr import AddReference
-AddReference('QuantConnect.Common')
-from QuantConnect import *
-from QuantConnect.Securities import *
-from QuantConnect.Orders import *
+from AlgorithmImports import *
 
 class CustomMarginCallModel:
     def __init__(self, portfolio, defaultOrderProperties):
@@ -127,17 +123,12 @@ class CustomMarginCallModel:
 import os, sys
 sys.path.append(os.getcwd())
 
-from clr import AddReference
-AddReference('QuantConnect.Common')
-from QuantConnect import *
-from QuantConnect.Securities import *
-from QuantConnect.Orders import *
+from AlgorithmImports import *
 
 class CustomMarginCallModel(DefaultMarginCallModel):
     def __init__(self, portfolio, defaultOrderProperties):
         self.porfolio = portfolio
         self.defaultOrderProperties = defaultOrderProperties
-        super().__init__(portfolio, defaultOrderProperties)
 
     def GenerateMarginCallOrder(self, security, netLiquidationValue, totalMargin, maintenanceMarginRequirement):
         time = Extensions.ConvertToUtc(security.LocalTime, security.Exchange.TimeZone)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,11 +16,9 @@
 
 using System;
 using System.Linq;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
+using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common
@@ -28,11 +26,6 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class SymbolTests
     {
-        private JsonSerializerSettings Settings = new JsonSerializerSettings
-        {
-            TypeNameHandling = TypeNameHandling.All
-        };
-
         [Theory]
         [TestCaseSource(nameof(GetSymbolCreateTestCaseData))]
         public void SymbolCreate(string ticker, SecurityType securityType, string market, Symbol expected)
@@ -137,16 +130,6 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void SurvivesRoundtripSerialization()
-        {
-            var sid = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
-            var expected = new Symbol(sid, "value");
-            var json = JsonConvert.SerializeObject(expected, Settings);
-            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
-            Assert.AreEqual(expected, actual);
-        }
-
-        [Test]
         public void CreatesOptionWithUnderlying()
         {
             var option = Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19));
@@ -157,130 +140,6 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(option.ID.OptionStyle, OptionStyle.American);
             Assert.AreEqual(option.Underlying.ID.Symbol, "XLRE");
 
-        }
-        [Test]
-        public void SurvivesRoundtripSerializationOption()
-        {
-            var expected = Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19));
-
-            var json = JsonConvert.SerializeObject(expected, Settings);
-            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
-            Assert.AreEqual(expected, actual);
-
-            Assert.AreEqual(expected.ID, actual.ID);
-            Assert.AreEqual(expected.Value, actual.Value);
-            Assert.AreEqual(expected.ID.Date, actual.ID.Date);
-            Assert.AreEqual(expected.ID.StrikePrice, actual.ID.StrikePrice);
-            Assert.AreEqual(expected.ID.OptionRight, actual.ID.OptionRight);
-            Assert.AreEqual(expected.ID.OptionStyle, actual.ID.OptionStyle);
-
-            Assert.AreEqual(expected.Underlying.ID, actual.Underlying.ID);
-            Assert.AreEqual(expected.Underlying.Value, actual.Underlying.Value);
-        }
-
-        [Test]
-        public void SurvivesRoundtripSerializationCanonicalOption()
-        {
-            var expected = Symbol.Create("SPY", SecurityType.Option, Market.USA);
-
-            var json = JsonConvert.SerializeObject(expected, Settings);
-            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
-            Assert.AreEqual(expected, actual);
-
-            Assert.AreEqual(SecurityIdentifier.DefaultDate, actual.ID.Date);
-            Assert.AreEqual(0m, actual.ID.StrikePrice);
-            Assert.AreEqual(default(OptionRight), actual.ID.OptionRight);
-            Assert.AreEqual(default(OptionStyle), actual.ID.OptionStyle);
-            Assert.AreNotEqual(default(Symbol), actual.Underlying);
-        }
-
-        [Test]
-        public void SurvivesRoundtripSerializationWithTypeNameHandling()
-        {
-            var sid = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
-            var expected = new Symbol(sid, "value");
-            var json = JsonConvert.SerializeObject(expected, Settings);
-            var actual = JsonConvert.DeserializeObject<Symbol>(json);
-            Assert.AreEqual(expected, actual);
-        }
-
-        [Test]
-        public void HandlesListTicks()
-        {
-            const string json = @"{'$type':'System.Collections.Generic.List`1[[QuantConnect.Data.BaseData, QuantConnect.Common]], mscorlib',
-'$values':[{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common',
-'TickType':0,'Quantity':1,'Exchange':'',
-'SaleCondition':'',
-'Suspicious':false,'BidPrice':0.72722,'AskPrice':0.7278,'BidSize':0,'AskSize':0,'LastPrice':0.72722,'DataType':2,'IsFillForward':false,'Time':'2015-09-18T16:52:37.379',
-'EndTime':'2015-09-18T16:52:37.379',
-'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common',
-'Value':'EURGBP',
-'ID':'EURGBP 5O'},'Value':0.72722,'Price':0.72722}]}";
-
-            var expected = new Symbol(SecurityIdentifier.GenerateForex("EURGBP", Market.FXCM),  "EURGBP");
-            var settings = Settings;
-            var actual = JsonConvert.DeserializeObject<List<BaseData>>(json, settings);
-            Assert.AreEqual(expected, actual[0].Symbol);
-        }
-
-        [Test]
-        public void HandlesListTicksWithDifferentSymbols()
-        {
-            // the first serialized Tick object has a Symbol of EURGBP and the second has EURUSD, but the output
-            const string json =
-                "{'$type':'System.Collections.Generic.List`1[[QuantConnect.Data.BaseData, QuantConnect.Common]], mscorlib','$values':[" +
-
-                    "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common'," +
-                    "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
-                    "'BidPrice':1.11895,'AskPrice':1.11898,'LastPrice':1.11895,'DataType':2,'IsFillForward':false," +
-                    "'Time':'2015-09-22T01:26:44.676','EndTime':'2015-09-22T01:26:44.676'," +
-                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURUSD', 'ID': 'EURUSD 5O'}," +
-                    "'Value':1.11895,'Price':1.11895}," +
-
-                    "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common'," +
-                    "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
-                    "'BidPrice':0.72157,'AskPrice':0.72162,'LastPrice':0.72157,'DataType':2,'IsFillForward':false," +
-                    "'Time':'2015-09-22T01:26:44.675','EndTime':'2015-09-22T01:26:44.675'," +
-                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURGBP', 'ID': 'EURGBP 5O'}," +
-                    "'Value':0.72157,'Price':0.72157}," +
-
-                    "]}";
-
-            var actual = JsonConvert.DeserializeObject<List<BaseData>>(json, Settings);
-            Assert.IsFalse(actual.All(x => x.Symbol == new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD")));
-        }
-
-        [Test]
-        public void SymbolTypeNameHandling()
-        {
-            const string json = @"{'$type':'QuantConnect.Symbol, QuantConnect.Common', 'Value':'EURGBP', 'ID': 'EURGBP 5O'}";
-            var expected = new Symbol(SecurityIdentifier.GenerateForex("EURGBP", Market.FXCM), "EURGBP");
-            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
-            Assert.AreEqual(expected, actual);
-        }
-
-        [Test]
-        public void TickRoundTrip()
-        {
-            var tick = new Tick
-            {
-                Symbol = Symbols.EURGBP,
-                AskPrice = 1,
-                Time = DateTime.Now,
-                Exchange = "",
-                Value = 2,
-                EndTime = DateTime.Now,
-                Quantity = 1,
-                BidPrice = 2,
-                SaleCondition = ""
-            };
-            var json = JsonConvert.SerializeObject(tick, Settings);
-            var actual = JsonConvert.DeserializeObject<Tick>(json, Settings);
-            Assert.AreEqual(tick.Symbol, actual.Symbol);
-
-            json = JsonConvert.SerializeObject(tick, Settings);
-            actual = JsonConvert.DeserializeObject<Tick>(json);
-            Assert.AreEqual(tick.Symbol, actual.Symbol);
         }
 
         [Test]
@@ -390,16 +249,6 @@ namespace QuantConnect.Tests.Common
             Assert.IsFalse(Symbol.Empty == validSymbol);
             Assert.IsFalse(Symbol.Empty != emptySymbol);
             Assert.IsFalse(Symbol.Empty != nullSymbol);
-        }
-
-        [Test]
-        public void BackwardsCompatibleJson()
-        {
-            var symbol = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
-            var json = JsonConvert.SerializeObject(symbol, new JsonSerializerSettings{Formatting = Formatting.Indented, TypeNameHandling = TypeNameHandling.All});
-            var oldSymbol = JsonConvert.DeserializeObject<OldSymbol>(json);
-            Assert.AreEqual("A", oldSymbol.Value);
-            Assert.AreEqual("A", oldSymbol.Permtick);
         }
 
         [Test]
@@ -556,10 +405,148 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(thursdayBeforeGoodFriday, OptionSymbol.GetLastDayOfTrading(symbol));
         }
 
-        class OldSymbol
+        [TestCase("ES", "ES")]
+        [TestCase("GC", "OG")]
+        [TestCase("ZT", "OZT")]
+        public void FutureOptionsWithDifferentUnderlyingGlobexTickersAreMapped(string futureTicker, string expectedFutureOptionTicker)
         {
-            public string Value { get; set; }
-            public string Permtick { get; set; }
+            var future = Symbol.CreateFuture(futureTicker, Market.CME, DateTime.UtcNow.Date);
+            var canonicalFutureOption = Symbol.CreateOption(
+                future,
+                Market.CME,
+                default(OptionStyle),
+                default(OptionRight),
+                default(decimal),
+                SecurityIdentifier.DefaultDate);
+
+            var nonCanonicalFutureOption = Symbol.CreateOption(
+                future,
+                Market.CME,
+                default(OptionStyle),
+                default(OptionRight),
+                default(decimal),
+                new DateTime(2020, 12, 18));
+
+            Assert.AreEqual(canonicalFutureOption.Underlying.ID.Symbol, futureTicker);
+            Assert.AreEqual(canonicalFutureOption.ID.Symbol, expectedFutureOptionTicker);
+            Assert.IsTrue(canonicalFutureOption.Value.StartsWith("?" + futureTicker));
+
+            Assert.AreEqual(nonCanonicalFutureOption.Underlying.ID.Symbol, futureTicker);
+            Assert.AreEqual(nonCanonicalFutureOption.ID.Symbol, expectedFutureOptionTicker);
+            Assert.IsTrue(nonCanonicalFutureOption.Value.StartsWith(expectedFutureOptionTicker));
+        }
+
+        [Test]
+        public void SymbolWithSidContainingUnderlyingCreatedWithoutNullUnderlying()
+        {
+            var future = Symbol.CreateFuture("ES", Market.CME, new DateTime(2020, 6, 19));
+            var optionSid = SecurityIdentifier.GenerateOption(
+                future.ID.Date,
+                future.ID,
+                future.ID.Market,
+                3500m,
+                OptionRight.Call,
+                OptionStyle.American);
+
+            var option = new Symbol(optionSid, "ES");
+            Assert.IsNotNull(option.Underlying);
+            Assert.AreEqual(future, option.Underlying);
+        }
+
+        [TestCase("CL XKJAZ588SI4H", "CL", "CL21F21")] // Future
+        [TestCase("CL JL", "CL", "/CL")] // Canonical Future
+        [TestCase("ES 1S4 | ES XLDTU1KH5XC1", "CL", "?ES21F21")] // Future Option Canonical
+        [TestCase("ES XKGCMV4QK9VO | ES XLDTU1KH5XC1", "ES", "ES21F21  201218C00000000")] // Future Option
+        [TestCase("SPY 2U | SPY R735QTJ8XC9X", "SPY", "?SPY")] // Option Canonical
+        [TestCase("GOOCV 305RBQ2BZBZT2 | GOOCV VP83T1ZUHROL", "GOOCV", "GOOCV 151224P00750000")] // Option
+        [TestCase("SPY R735QTJ8XC9X", "SPY", "SPY")] // Equity
+        [TestCase("EURGBP 8G", "EURGBP", "EURGBP")] // Forex
+        [TestCase("BTCUSD XJ", "BTCUSD", "BTCUSD")] // Crypto
+        public void SymbolAlias(string identifier, string ticker, string expectedValue)
+        {
+            var symbol = new Symbol(SecurityIdentifier.Parse(identifier), ticker);
+            Assert.AreEqual(expectedValue, symbol.Value);
+        }
+
+        [TestCase("CL XKJAZ588SI4H", "CL", "CL21F21")] // Future
+        [TestCase("CL JL", "CL", "/CL")] // Canonical Future
+        [TestCase("ES 1S4 | ES XLDTU1KH5XC1", "ES", "?ES21F21")] // Future Option Canonical
+        [TestCase("ES XKGCMV4QK9VO | ES XLDTU1KH5XC1", "ES", "ES21F21  201218C00000000")] // Future Option
+        [TestCase("SPY 2U | SPY R735QTJ8XC9X", "SPY", "?SPY")] // Option Canonical
+        [TestCase("GOOCV 305RBQ2BZBZT2 | GOOCV VP83T1ZUHROL", "GOOCV", "GOOCV 151224P00750000")] // Option
+        [TestCase("SPY R735QTJ8XC9X", "SPY", null)] // Equity
+        [TestCase("EURGBP 8G", "EURGBP", null)] // Forex
+        [TestCase("BTCUSD XJ", "BTCUSD", null)] // Crypto
+        public void SymbolCanonical(string identifier, string ticker, string expectedValue)
+        {
+            var symbol = new Symbol(SecurityIdentifier.Parse(identifier), ticker);
+            if (expectedValue != null)
+            {
+                var result = symbol.Canonical;
+
+                Assert.IsNotNull(result);
+                Assert.AreSame(result, symbol.Canonical);
+                Assert.IsTrue(result.IsCanonical());
+                Assert.IsTrue(result.Value.Contains(ticker));
+                Assert.AreEqual(symbol.SecurityType, result.SecurityType);
+                Assert.AreEqual(symbol.ID.Market, result.ID.Market);
+            }
+            else
+            {
+                Assert.Throws<InvalidOperationException>(() =>
+                {
+                    var canonical = symbol.Canonical;
+                });
+            }
+        }
+
+ 
+        [TestCase("SPY", "SPY", "SPY 2T")]
+        [TestCase("NWSA", "FOXA", "NWSA 2T")]
+        [TestCase("NWSA", "FOXA", "NWSA 2S|NWSA 2T")]
+        [TestCase("QQQQ", "QQQ", "QQQQ 2S|QQQQ 31|QQQQ 2T")]
+        public void SymbolAndUnderlyingSymbolsMapped(string ticker, string mappedTicker, string sid)
+        {
+            var symbol = new Symbol(SecurityIdentifier.Parse(sid), ticker);
+            var symbolChain = symbol;
+
+            do
+            {
+                Assert.AreEqual(symbolChain.Value, ticker);
+                symbolChain = symbolChain.Underlying;
+            }
+            while (symbolChain != null);
+
+            symbol = symbol.UpdateMappedSymbol(mappedTicker);
+            symbolChain = symbol;
+
+            do
+            {
+                Console.WriteLine(symbolChain.ToString() + "; Value: " + symbolChain.Value);
+                if (symbolChain.SecurityType == SecurityType.Base || symbolChain.RequiresMapping())
+                {
+                    Assert.AreEqual(mappedTicker, symbolChain.Value);
+                }
+                else 
+                {
+                    Assert.AreNotEqual(mappedTicker, symbolChain.Value);   
+                }
+                symbolChain = symbolChain.Underlying;
+            }
+            while (symbolChain != null);
+        }
+
+        [Test]
+        public void SymbolReferenceNotMappedOnUpdate()
+        {
+            var symbol = Symbol.Create("NWSA", SecurityType.Equity, Market.USA);
+            var customSymbol = Symbol.CreateBase(typeof(BaseData), symbol, Market.USA);
+
+            var mappedSymbol = customSymbol.UpdateMappedSymbol("FOXA");
+            
+            Assert.AreNotEqual(customSymbol.Value, mappedSymbol.Value);
+            Assert.AreNotEqual(customSymbol.Underlying.Value, mappedSymbol.Underlying.Value);
+            Assert.AreNotEqual(symbol.Value, mappedSymbol.Underlying.Value);
         }
     }
 }

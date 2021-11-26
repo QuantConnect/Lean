@@ -11,12 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm.Framework")
-
-from QuantConnect.Data.UniverseSelection import *
+from AlgorithmImports import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 from itertools import groupby
 from math import ceil
@@ -25,9 +20,9 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
     '''Defines the QC500 universe as a universe selection model for framework algorithm
     For details: https://github.com/QuantConnect/Lean/pull/1663'''
 
-    def __init__(self, filterFineData = True, universeSettings = None, securityInitializer = None):
+    def __init__(self, filterFineData = True, universeSettings = None):
         '''Initializes a new default instance of the QC500UniverseSelectionModel'''
-        super().__init__(filterFineData, universeSettings, securityInitializer)
+        super().__init__(filterFineData, universeSettings)
         self.numberOfSymbolsCoarse = 1000
         self.numberOfSymbolsFine = 500
         self.dollarVolumeBySymbol = {}

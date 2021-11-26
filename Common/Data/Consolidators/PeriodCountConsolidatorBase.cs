@@ -214,8 +214,9 @@ namespace QuantConnect.Data.Consolidators
                     }
                 }
 
+                // Set _lastEmit first because OnDataConsolidated will set _workingBar to null
+                _lastEmit = IsTimeBased && _workingBar != null ? _workingBar.EndTime : data.Time;
                 OnDataConsolidated(_workingBar);
-                _lastEmit = IsTimeBased && _workingBar != null ? _workingBar.Time.Add(Period ?? TimeSpan.Zero) : data.Time;
             }
 
             if (!aggregateBeforeFire)
@@ -236,8 +237,8 @@ namespace QuantConnect.Data.Consolidators
             if (_workingBar != null && _period.HasValue && _period.Value != TimeSpan.Zero
                 && currentLocalTime - _workingBar.Time >= _period.Value && GetRoundedBarTime(currentLocalTime) > _lastEmit)
             {
+                _lastEmit = _workingBar.EndTime;
                 OnDataConsolidated(_workingBar);
-                _lastEmit = currentLocalTime;
             }
         }
 
@@ -362,7 +363,10 @@ namespace QuantConnect.Data.Consolidators
                 Period = period;
             }
 
-            public DateTime GetRoundedBarTime(DateTime time) => time.RoundDown(Period.Value);
+            public DateTime GetRoundedBarTime(DateTime time) =>
+                Period.Value > Time.OneDay
+                    ? time // #4915 For periods larger than a day, don't use a rounding schedule.
+                    : time.RoundDown(Period.Value);
         }
 
         /// <summary>

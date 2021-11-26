@@ -48,6 +48,11 @@ namespace QuantConnect.Orders
         public decimal? StopPrice { get; private set; }
 
         /// <summary>
+        /// Gets the new trigger price of the order, null to not change the trigger price
+        /// </summary>
+        public decimal? TriggerPrice { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="UpdateOrderRequest"/> class
         /// </summary>
         /// <param name="time">The time the request was submitted</param>
@@ -59,6 +64,7 @@ namespace QuantConnect.Orders
             Quantity = fields.Quantity;
             LimitPrice = fields.LimitPrice;
             StopPrice = fields.StopPrice;
+            TriggerPrice = fields.TriggerPrice;
         }
 
         /// <summary>
@@ -82,6 +88,10 @@ namespace QuantConnect.Orders
             if (StopPrice.HasValue)
             {
                 updates.Add(Invariant($"StopPrice: {StopPrice.Value.SmartRounding()}"));
+            }
+            if (TriggerPrice.HasValue)
+            {
+                updates.Add(Invariant($"TriggerPrice: {TriggerPrice.Value.SmartRounding()}"));
             }
 
             return Invariant($"{Time} UTC: Update Order: ({OrderId}) - {string.Join(", ", updates)} {Tag} Status: {Status}");

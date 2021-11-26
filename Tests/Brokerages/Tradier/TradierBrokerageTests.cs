@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,20 +15,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Tradier
 {
-    [TestFixture, Ignore("This test requires a configured and active Tradier account")]
+    [TestFixture, Explicit("This test requires a configured and active Tradier account")]
     public class TradierBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -51,20 +51,11 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var accountID = TradierBrokerageFactory.Configuration.AccountID;
-            var tradier = new TradierBrokerage(orderProvider, securityProvider, new AggregationManager(), accountID);
+            var useSandbox = TradierBrokerageFactory.Configuration.UseSandbox;
+            var accountId = TradierBrokerageFactory.Configuration.AccountId;
+            var accessToken = TradierBrokerageFactory.Configuration.AccessToken;
 
-            var qcUserID = TradierBrokerageFactory.Configuration.QuantConnectUserID;
-            var tokens = TradierBrokerageFactory.GetTokens();
-            tradier.SetTokens(qcUserID, tokens.AccessToken, tokens.RefreshToken, tokens.IssuedAt, TimeSpan.FromSeconds(tokens.ExpiresIn));
-
-            // keep the tokens up to date in the event of a refresh
-            tradier.SessionRefreshed += (sender, args) =>
-            {
-                File.WriteAllText(TradierBrokerageFactory.TokensFile, JsonConvert.SerializeObject(args, Formatting.Indented));
-            };
-
-            return tradier;
+            return new TradierBrokerage(null, orderProvider, securityProvider, new AggregationManager(), useSandbox, accountId, accessToken);
         }
 
         /// <summary>
@@ -92,10 +83,10 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         {
             var tradier = (TradierBrokerage) Brokerage;
             var quotes = tradier.GetQuotes(new List<string> {symbol.Value});
-            return quotes.Single().Ask;
+            return quotes.Single().Ask ?? 0;
         }
 
-        [Test, TestCaseSource("OrderParameters")]
+        [Test, TestCaseSource(nameof(OrderParameters))]
         public void AllowsOneActiveOrderPerSymbol(OrderTestParameters parameters)
         {
             // tradier's api gets special with zero holdings crossing in that they need to fill the order
@@ -124,13 +115,125 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             Assert.IsTrue(orderFilledOrCanceled);
         }
 
-        [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Tradier.")]
-        public void ShortZnga()
+        [Test]
+        public void RejectedOrderForInsufficientBuyingPower()
         {
-            PlaceOrderWaitForStatus(new MarketOrder(Symbols.ZNGA, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
+            var message = string.Empty;
+            EventHandler<BrokerageMessageEvent> messageHandler = (s, e) => { message = e.Message; };
 
-            // wait for output to be generated
-            Thread.Sleep(20*1000);
+            Brokerage.Message += messageHandler;
+
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            PlaceOrderWaitForStatus(new MarketOrder(symbol, 1000000, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
+
+            Brokerage.Message -= messageHandler;
+
+            // Raw response: {"errors":{"error":["Backoffice rejected override of the order.","DayTradingBuyingPowerExceeded"]}}
+
+            Assert.That(message.Contains("DayTradingBuyingPowerExceeded", StringComparison.InvariantCulture));
+            Assert.That(message.Contains("Backoffice rejected override of the order", StringComparison.InvariantCulture));
+        }
+
+        [Test]
+        public void RejectedOrderForInvalidSymbol()
+        {
+            // This test exists to verify how rejected orders are handled when we don't receive an order ID back from Tradier
+            var message = string.Empty;
+            EventHandler<BrokerageMessageEvent> messageHandler = (s, e) => { message = e.Message; };
+
+            Brokerage.Message += messageHandler;
+
+            var symbol = Symbol.Create("XYZ", SecurityType.Equity, Market.USA);
+            PlaceOrderWaitForStatus(new MarketOrder(symbol, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
+
+            Brokerage.Message -= messageHandler;
+
+            // Raw response: "An error occurred while communicating with the backend."
+
+            Assert.AreEqual("An error occurred while communicating with the backend.", message);
+        }
+
+        [Test]
+        public void RejectedCancelOrderIfNotOurs()
+        {
+            var message = string.Empty;
+            EventHandler<BrokerageMessageEvent> messageHandler = (s, e) => { message = e.Message; };
+
+            Brokerage.Message += messageHandler;
+
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var order = new MarketOrder(symbol, 1, DateTime.Now)
+            {
+                BrokerId = new List<string> { "9999999999999999" }
+            };
+
+            Brokerage.CancelOrder(order);
+
+            Brokerage.Message -= messageHandler;
+
+            // Raw response: "Unauthorized Account: xxx"
+
+            Assert.That(message.Contains($"Unauthorized Account: {TradierBrokerageFactory.Configuration.AccountId}", StringComparison.InvariantCulture));
+        }
+
+        [Test]
+        public void RejectedCancelOrderIfAlreadyFilled()
+        {
+            var message = string.Empty;
+            EventHandler<BrokerageMessageEvent> messageHandler = (s, e) => { message = e.Message; };
+
+            Brokerage.Message += messageHandler;
+
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var order = new MarketOrder(symbol, 1, DateTime.Now);
+
+            PlaceOrderWaitForStatus(order, OrderStatus.Filled);
+
+            Brokerage.CancelOrder(order);
+
+            Brokerage.Message -= messageHandler;
+
+            Assert.That(message.Contains("Unable to cancel the order because it has already been filled or cancelled", StringComparison.InvariantCulture));
+        }
+
+        [Test]
+        public void RejectedCancelOrderIfAlreadyCancelled()
+        {
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var order = new LimitOrder(symbol, 1, 100, DateTime.Now);
+
+            var canceledEvent = new ManualResetEvent(false);
+
+            var message = string.Empty;
+            EventHandler<BrokerageMessageEvent> messageHandler = (s, e) => { message = e.Message; };
+            EventHandler<OrderEvent> orderStatusHandler = (s, e) =>
+            {
+                order.Status = e.Status;
+
+                if (order.Status == OrderStatus.Canceled)
+                {
+                    canceledEvent.Set();
+                }
+            };
+
+            Brokerage.Message += messageHandler;
+            Brokerage.OrderStatusChanged += orderStatusHandler;
+
+            PlaceOrderWaitForStatus(order, OrderStatus.Submitted);
+
+            Brokerage.CancelOrder(order);
+
+            if (!canceledEvent.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                Log.Error("Timeout waiting for Canceled event");
+            }
+
+            Brokerage.CancelOrder(order);
+
+            Brokerage.Message -= messageHandler;
+            Brokerage.OrderStatusChanged -= orderStatusHandler;
+
+            Assert.That(message.Contains("Unable to cancel the order because it has already been filled or cancelled", StringComparison.InvariantCulture));
         }
 
         [Test, TestCaseSource(nameof(OrderParameters))]

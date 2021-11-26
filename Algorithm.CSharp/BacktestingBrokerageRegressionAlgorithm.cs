@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -75,10 +75,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
-        {   
-            if (!_equityBought && data.ContainsKey(_spy)) {
-                //Buy our Equity
-                var quantity = CalculateOrderQuantity(_spy, .1m);
+        {
+            if (!_equityBought && data.ContainsKey(_spy))
+            {
+                //Buy our Equity.
+                //Quantity is rounded down to an even number since it will be split in two equal halves
+                var quantity = Math.Floor(CalculateOrderQuantity(_spy, .1m) / 2) * 2;
                 _equityBuy = MarketOrder(_spy, quantity, asynchronous: true);
                 _equityBought = true;
             }
@@ -114,12 +116,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         /// <param name="orderEvent">OrderEvent object that contains all the information about the event</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
-        {   
+        {
             // Get the order from our transactions
             var order = Transactions.GetOrderById(orderEvent.OrderId);
 
             // Based on the type verify the order
-            switch(order.Type)
+            switch (order.Type)
             {
                 case OrderType.Market:
                     VerifyMarketOrder(order, orderEvent);
@@ -140,19 +142,19 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="order">Order object to analyze</param>
         public void VerifyMarketOrder(Order order, OrderEvent orderEvent)
         {
-            switch(order.Status)
+            switch (order.Status)
             {
                 case OrderStatus.Submitted:
                     break;
 
                 // All PartiallyFilled orders should have a LastFillTime
                 case OrderStatus.PartiallyFilled:
-                    if (order.LastFillTime == null) 
+                    if (order.LastFillTime == null)
                     {
                         throw new Exception("LastFillTime should not be null");
                     }
 
-                    if (order.Quantity/2 != orderEvent.FillQuantity)
+                    if (order.Quantity / 2 != orderEvent.FillQuantity)
                     {
                         throw new Exception("Order size should be half");
                     }
@@ -183,9 +185,9 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("OptionExercise order price should be strike price!!");
             }
 
-            if (orderEvent.Quantity != 1)
+            if (orderEvent.Quantity != -1)
             {
-                throw new Exception("OrderEvent Quantity should be 1");
+                throw new Exception("OrderEvent Quantity should be -1");
             }
         }
 
@@ -215,9 +217,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             //Check equity holding, should be invested, profit should be
-            //Quantity should be 50, AveragePrice should be ticket AverageFillPrice
+            //Quantity should be 52, AveragePrice should be ticket AverageFillPrice
             var equityHolding = Portfolio[_equityBuy.Symbol];
-            if (!equityHolding.Invested || equityHolding.Quantity != 50 || equityHolding.AveragePrice != _equityBuy.AverageFillPrice)
+            if (!equityHolding.Invested || equityHolding.Quantity != 52 || equityHolding.AveragePrice != _equityBuy.AverageFillPrice)
             {
                 throw new Exception("Equity holding does not match expected outcome");
             }
@@ -299,25 +301,45 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.40%"},
-            {"Compounding Annual Return", "-22.335%"},
+            {"Compounding Annual Return", "-22.717%"},
             {"Drawdown", "0.400%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.323%"},
-            {"Sharpe Ratio", "-0.888"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Net Profit", "-0.329%"},
+            {"Sharpe Ratio", "-7.887"},
+            {"Probabilistic Sharpe Ratio", "1.216%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.035"},
-            {"Beta", "0.183"},
-            {"Annual Standard Deviation", "0.004"},
+            {"Alpha", "-0.001"},
+            {"Beta", "0.097"},
+            {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "12.058"},
-            {"Tracking Error", "0.017"},
-            {"Treynor Ratio", "-0.018"},
+            {"Information Ratio", "7.39"},
+            {"Tracking Error", "0.015"},
+            {"Treynor Ratio", "-0.131"},
             {"Total Fees", "$2.00"},
-            {"Fitness Score", "0.213"},
-            {"OrderListHash", "-1514011542"}
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
+            {"Fitness Score", "0.212"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-73.334"},
+            {"Portfolio Turnover", "0.425"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "f67306bc706a2cf66288f1cadf6148ed"}
         };
     }
 }

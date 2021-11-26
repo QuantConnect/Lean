@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -45,7 +46,6 @@ namespace QuantConnect.Tests.Common
         public void ConsumeRequestsAdditionalTimeAfterOneMinute()
         {
             var minuteElapsed = new ManualResetEvent(false);
-            var consumeCompleted = new ManualResetEvent(false);
             var consumeStarted = new ManualResetEvent(false);
 
             Action code = () =>
@@ -58,28 +58,33 @@ namespace QuantConnect.Tests.Common
             var provider = new FakeIsolatorLimitResultProvider();
             var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
 
-            Task.Run(() =>
+            var consumeCompleted = Task.Run(() =>
             {
                 consumeStarted.Set();
-                var name = nameof(ConsumeRequestsAdditionalTimeAfterOneMinute);
                 provider.Consume(timeProvider, code, _timeMonitor);
-                consumeCompleted.Set();
             });
+
             if (!consumeStarted.WaitOne(50))
             {
                 Assert.Fail("Consume should have started.");
             }
 
-            Thread.Sleep(15);
+            // lets give the monitor time to register the initial time
+            Thread.Sleep(100);
             timeProvider.Advance(TimeSpan.FromSeconds(45));
 
             Assert.AreEqual(0, provider.Invocations.Count);
 
             timeProvider.Advance(TimeSpan.FromSeconds(15));
-            Thread.Sleep(15);
+
+            var count = 100;
+            while (provider.Invocations.Count == 0 && --count > 0)
+            {
+                Thread.Sleep(10);
+            }
 
             minuteElapsed.Set();
-            if (!consumeCompleted.WaitOne(50))
+            if (!consumeCompleted.Wait(50))
             {
                 Assert.Fail("Consume should have returned.");
             }
@@ -120,7 +125,7 @@ namespace QuantConnect.Tests.Common
             Action code = () =>
             {
                 // lets give the monitor time to register the initial time
-                Thread.Sleep(50);
+                Thread.Sleep(100);
                 for (int i = 0; i < 4; i++)
                 {
                     timeProvider.AdvanceSeconds(45);
@@ -141,7 +146,17 @@ namespace QuantConnect.Tests.Common
 
         private class FakeIsolatorLimitResultProvider : IIsolatorLimitResultProvider
         {
-            public List<int> Invocations { get; } = new List<int>();
+            private List<int> _ivocations = new List<int>();
+            public List<int> Invocations
+            {
+                get
+                {
+                    lock (_ivocations)
+                    {
+                        return _ivocations.ToList();
+                    }
+                }
+            }
 
             public IsolatorLimitResult IsWithinLimit()
             {
@@ -150,12 +165,18 @@ namespace QuantConnect.Tests.Common
 
             public void RequestAdditionalTime(int minutes)
             {
-                Invocations.Add(minutes);
+                lock (_ivocations)
+                {
+                    _ivocations.Add(minutes);
+                }
             }
 
             public bool TryRequestAdditionalTime(int minutes)
             {
-                Invocations.Add(minutes);
+                lock (_ivocations)
+                {
+                    _ivocations.Add(minutes);
+                }
                 return true;
             }
         }

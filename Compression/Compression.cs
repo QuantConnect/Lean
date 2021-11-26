@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -36,6 +37,18 @@ namespace QuantConnect
     /// <remarks>QuantConnect's data library is stored in zip format locally on the hard drive.</remarks>
     public static class Compression
     {
+        /// <summary>
+        /// Global Flag :: Operating System
+        /// </summary>
+        private static bool IsLinux
+        {
+            get
+            {
+                var p = (int)Environment.OSVersion.Platform;
+                return (p == 4) || (p == 6) || (p == 128);
+            }
+        }
+
         /// <summary>
         /// Create a zip file of the supplied file names and string data source
         /// </summary>
@@ -184,6 +197,37 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Append the zip data to the file-entry specified.
+        /// </summary>
+        /// <param name="path">The zip file path</param>
+        /// <param name="entry">The entry name</param>
+        /// <param name="data">The entry data</param>
+        /// <param name="overrideEntry">True if should override entry if it already exists</param>
+        /// <returns>True on success</returns>
+        public static bool ZipCreateAppendData(string path, string entry, byte[] data, bool overrideEntry = false)
+        {
+            try
+            {
+                using (var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path))
+                {
+                    if (overrideEntry && zip.ContainsEntry(entry))
+                    {
+                        zip.RemoveEntry(entry);
+                    }
+
+                    zip.AddEntry(entry, data);
+                    zip.Save();
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Uncompress zip data byte array into a dictionary string array of filename-contents.
         /// </summary>
         /// <param name="zipData">Byte data array of zip compressed information</param>
@@ -213,7 +257,8 @@ namespace QuantConnect
                                 zipStream.Read(buffer, 0, (int)entry.Size);
 
                                 //Save into array:
-                                data.Add(entry.Name, buffer.GetString(encoding));
+                                var str = (encoding ?? Encoding.ASCII).GetString(buffer);
+                                data.Add(entry.Name, str);
                             }
                             else
                             {
@@ -340,6 +385,12 @@ namespace QuantConnect
             return Zip(textPath, Path.GetFileName(textPath), deleteOriginal);
         }
 
+        /// <summary>
+        /// Compress given data to the path given
+        /// </summary>
+        /// <param name="data">Data to write to zip</param>
+        /// <param name="zipPath">Path to write to</param>
+        /// <param name="zipEntry">Entry to save the data as</param>
         public static void Zip(string data, string zipPath, string zipEntry)
         {
             using (var stream = new ZipOutputStream(File.Create(zipPath)))
@@ -419,7 +470,7 @@ namespace QuantConnect
                             // skip directories
                             if (file.Name == "") continue;
                             var filepath = Path.Combine(directory, file.FullName);
-                            if (OS.IsLinux) filepath = filepath.Replace(@"\", "/");
+                            if (IsLinux) filepath = filepath.Replace(@"\", "/");
                             var outputFile = new FileInfo(filepath);
                             if (!outputFile.Directory.Exists)
                             {
@@ -670,14 +721,27 @@ namespace QuantConnect
         /// <summary>
         /// Unzip a stream that represents a zip file and return the first entry as a stream
         /// </summary>
-        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile)
+        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile, string entryName = null)
         {
             zipFile = ZipFile.Read(zipstream);
 
             try
             {
-                //Read the file entry into buffer:
-                var entry = zipFile.Entries.FirstOrDefault();
+                Ionic.Zip.ZipEntry entry;
+                if (string.IsNullOrEmpty(entryName))
+                {
+                    //Read the file entry into buffer:
+                    entry = zipFile.Entries.FirstOrDefault();
+                }
+                else
+                {
+                    // Attempt to find our specific entry
+                    if (!zipFile.ContainsEntry(entryName))
+                    {
+                        return null;
+                    }
+                    entry = zipFile[entryName];
+                }
 
                 if (entry != null)
                 {
@@ -868,10 +932,52 @@ namespace QuantConnect
         {
             using (var zip = ZipFile.Read(zipFileName))
             {
-                foreach (var entry in zip)
-                {
-                    yield return entry.FileName;
-                }
+                return zip.EntryFileNames;
+            }
+        }
+
+        /// <summary>
+        /// Return the entry file names contained in a zip file
+        /// </summary>
+        /// <param name="zipFileStream">Stream to the file</param>
+        /// <returns>IEnumerable of entry file names</returns>
+        public static IEnumerable<string> GetZipEntryFileNames(Stream zipFileStream)
+        {
+            using (var zip = ZipFile.Read(zipFileStream))
+            {
+                return zip.EntryFileNames;
+            }
+        }
+
+        /// <summary>
+        /// Extracts a 7-zip archive to disk, using the 7-zip CLI utility
+        /// </summary>
+        /// <param name="inputFile">Path to the 7z file</param>
+        /// <param name="outputDirectory">Directory to output contents of 7z</param>
+        /// <param name="execTimeout">Timeout in seconds for how long we should wait for the extraction to complete</param>
+        /// <exception cref="Exception">The extraction failed because of a timeout or the exit code was not 0</exception>
+        public static void Extract7ZipArchive(string inputFile, string outputDirectory, int execTimeout = 60000)
+        {
+            var zipper = IsLinux ? "7z" : "C:/Program Files/7-Zip/7z.exe";
+            var psi = new ProcessStartInfo(zipper, " e " + inputFile + " -o" + outputDirectory)
+            {
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                RedirectStandardOutput = false
+            };
+
+            var process = new Process();
+            process.StartInfo = psi;
+            process.Start();
+
+            if (!process.WaitForExit(execTimeout))
+            {
+                throw new TimeoutException($"Timed out extracting 7Zip archive: {inputFile} ({execTimeout} seconds)");
+            }
+            if (process.ExitCode > 0)
+            {
+                throw new Exception($"Compression.Extract7ZipArchive(): 7Zip exited unsuccessfully (code {process.ExitCode})");
             }
         }
     }

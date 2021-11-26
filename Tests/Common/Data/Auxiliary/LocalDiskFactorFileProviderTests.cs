@@ -19,41 +19,47 @@ using System.Globalization;
 using System.IO;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.Common.Data.Auxiliary
 {
     [TestFixture]
     public class LocalDiskFactorFileProviderTests
     {
+        internal IFactorFileProvider FactorFileProvider;
+
+        [OneTimeSetUp]
+        public virtual void Setup()
+        {
+            FactorFileProvider = TestGlobals.FactorFileProvider;
+        }
+
         [Test]
         public void RetrievesFromDisk()
         {
-            var provider = new LocalDiskFactorFileProvider();
-            var factorFile = provider.Get(Symbols.SPY);
+            var factorFile = FactorFileProvider.Get(Symbols.SPY);
             Assert.IsNotNull(factorFile);
         }
 
         [Test]
         public void CachesValueAndReturnsSameReference()
         {
-            var provider = new LocalDiskFactorFileProvider();
-            var factorFile1 = provider.Get(Symbols.SPY);
-            var factorFile2 = provider.Get(Symbols.SPY);
+            var factorFile1 = FactorFileProvider.Get(Symbols.SPY);
+            var factorFile2 = FactorFileProvider.Get(Symbols.SPY);
             Assert.IsTrue(ReferenceEquals(factorFile1, factorFile2));
         }
 
         [Test]
         public void ReturnsNullForNotFound()
         {
-            var provider = new LocalDiskFactorFileProvider();
-            var factorFile = provider.Get(Symbol.Create("not-a-ticker", SecurityType.Equity, QuantConnect.Market.USA));
-            Assert.IsNull(factorFile);
+            var factorFile = FactorFileProvider.Get(Symbol.Create("not-a-ticker", SecurityType.Equity, QuantConnect.Market.USA)) as CorporateFactorProvider;
+            Assert.IsNotNull(factorFile);
+            Assert.IsEmpty(factorFile);
         }
 
         [Test, Ignore("This test is meant to be run manually")]
         public void FindsFactorFilesWithErrors()
         {
-            var provider = new LocalDiskFactorFileProvider();
             var factorFileFolder = Path.Combine(Globals.DataFolder, "equity", QuantConnect.Market.USA, "factor_files");
 
             foreach (var fileName in Directory.EnumerateFiles(factorFileFolder))
@@ -63,7 +69,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
                 try
                 {
-                    provider.Get(symbol);
+                    FactorFileProvider.Get(symbol);
                 }
                 catch (Exception exception)
                 {

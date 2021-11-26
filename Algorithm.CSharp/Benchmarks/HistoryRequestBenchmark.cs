@@ -28,11 +28,11 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             _symbol = AddEquity("SPY").Symbol;
         }
 
-        public override void OnEndOfDay()
+        public override void OnEndOfDay(Symbol symbol)
         {
-            var minuteHistory = History(_symbol, 60, Resolution.Minute);
+            var minuteHistory = History(symbol, 60, Resolution.Minute);
             var lastHourHigh = minuteHistory.Select(minuteBar => minuteBar.High).DefaultIfEmpty(0).Max();
-            var dailyHistory = History(_symbol, 1, Resolution.Daily).First();
+            var dailyHistory = History(symbol, 1, Resolution.Daily).First();
             var dailyHigh = dailyHistory.High;
             var dailyLow = dailyHistory.Low;
             var dailyOpen = dailyHistory.Open;

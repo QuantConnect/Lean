@@ -71,7 +71,7 @@ namespace QuantConnect.Orders
             StopPrice = stopPrice;
             LimitPrice = limitPrice;
 
-            if (tag == "")
+            if (string.IsNullOrEmpty(tag))
             {
                 //Default tag values to display stop price in GUI.
                 Tag = Invariant($"Stop Price: {stopPrice:C} Limit Price: {limitPrice:C}");

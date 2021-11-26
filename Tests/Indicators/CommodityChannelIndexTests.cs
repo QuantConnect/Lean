@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(expected, (double) indicator.Current.Value, 1e-2);
 
         [Test]
-        public void ResetsProperly()
+        public override void ResetsProperly()
         {
             var cci = new CommodityChannelIndex(2);
             cci.Update(new TradeBar

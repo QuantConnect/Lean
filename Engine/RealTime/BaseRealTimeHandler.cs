@@ -39,6 +39,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         // For performance only add OnEndOfDay Symbol scheduled events if the method is implemented.
         // When there are many securities it adds a significant overhead
         private bool _implementsOnEndOfDaySymbol;
+        private bool _implementsOnEndOfDay;
 
         /// <summary>
         /// Keep track of this event so we can remove it when we need to update it
@@ -90,8 +91,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         protected void Setup(DateTime start, DateTime end, Language language, DateTime? currentUtcTime = null)
         {
-            AddAlgorithmEndOfDayEvent(start, end, currentUtcTime);
-
             if (language == Language.CSharp)
             {
                 var method = Algorithm.GetType().GetMethod("OnEndOfDay", new[] { typeof(Symbol) });
@@ -101,16 +100,31 @@ namespace QuantConnect.Lean.Engine.RealTime
                 {
                     _implementsOnEndOfDaySymbol = true;
                 }
+
+                // Also determine if we are using the soon to be deprecated EOD so we don't use it
+                // unnecessarily and post messages about its deprecation to the user
+                var eodMethod = Algorithm.GetType().GetMethod("OnEndOfDay", Type.EmptyTypes);
+                if (eodMethod != null && eodMethod.DeclaringType != typeof(QCAlgorithm))
+                {
+                    _implementsOnEndOfDay = true;
+                }
             }
             else if (language == Language.Python)
             {
                 var wrapper = Algorithm as AlgorithmPythonWrapper;
-                _implementsOnEndOfDaySymbol = wrapper.IsOnEndOfDayImplemented;
+                if (wrapper != null)
+                {
+                    _implementsOnEndOfDaySymbol = wrapper.IsOnEndOfDaySymbolImplemented;
+                    _implementsOnEndOfDay = wrapper.IsOnEndOfDayImplemented;
+                }
             }
             else
             {
                 throw new ArgumentException(nameof(language));
             }
+
+            // Here to maintain functionality until deprecation in August 2021
+            AddAlgorithmEndOfDayEvent(start, end, currentUtcTime);
         }
 
         /// <summary>
@@ -132,6 +146,9 @@ namespace QuantConnect.Lean.Engine.RealTime
         [Obsolete("This method is deprecated. It will add ScheduledEvents for the deprecated IAlgorithm.OnEndOfDay()")]
         protected void AddAlgorithmEndOfDayEvent(DateTime start, DateTime end, DateTime? currentUtcTime = null)
         {
+            // If the algorithm didn't implement it no need to support it.
+            if (!_implementsOnEndOfDay) { return; }
+
             if (_algorithmOnEndOfDay != null)
             {
                 // if we already set it once we remove the previous and
@@ -213,6 +230,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                 // we re add the algorithm end of day event because it depends on the securities
                 // tradable dates
+                // Here to maintain functionality until deprecation in August 2021
                 AddAlgorithmEndOfDayEvent(Algorithm.UtcTime, Algorithm.EndDate, Algorithm.UtcTime);
             }
         }

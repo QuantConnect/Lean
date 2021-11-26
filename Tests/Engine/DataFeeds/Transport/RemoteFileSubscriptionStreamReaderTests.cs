@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
@@ -98,7 +99,30 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             cacheProvider.DisposeSafely();
         }
 
-        private class TestDownloadProvider : Api.Api
+        [Test]
+        public void InvalidDataSource()
+        {
+            var remoteReader = new RemoteFileSubscriptionStreamReader(
+                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                @"http://helloworld.com",
+                Globals.Cache,
+                null);
+
+            Assert.IsFalse(remoteReader.EndOfStream);
+
+            // Fails to get helloworld.com, missing http://
+            Assert.Throws<WebException>(() => new RemoteFileSubscriptionStreamReader(
+                    new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                    @"helloworld.com",
+                    Globals.Cache,
+                    null),
+                "Api.Download(): Failed to download data from helloworld.com. Please verify the source for missing http:// or https://"
+            );
+
+            remoteReader.DisposeSafely();
+        }
+
+        private class TestDownloadProvider : QuantConnect.Api.Api
         {
             public static int DownloadCount { get; set; }
             static TestDownloadProvider()

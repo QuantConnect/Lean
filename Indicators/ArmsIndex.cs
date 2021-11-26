@@ -24,7 +24,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class ArmsIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private int _stockCount;
         private readonly IndicatorBase<IndicatorDataPoint> _arms;
 
         /// <summary>
@@ -68,7 +67,7 @@ namespace QuantConnect.Indicators
             ADRatio.Update(input);
             ADVRatio.Update(input);
 
-            return _arms;
+            return _arms.Current.Value;
         }
 
         /// <summary>

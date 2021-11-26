@@ -129,26 +129,6 @@ namespace QuantConnect.Brokerages.GDAX
             throw new NotSupportedException($"GDAXBrokerage.ConvertOrderType: Unsupported order type:{orderType.ToStringInvariant()}");
         }
 
-        /// <summary>
-        /// Converts a product id to a symbol
-        /// </summary>
-        /// <param name="productId">gdax format product id</param>
-        /// <returns>Symbol</returns>
-        public static Symbol ConvertProductId(string productId)
-        {
-            return Symbol.Create(productId.Replace("-", ""), SecurityType.Crypto, Market.GDAX);
-        }
-
-        /// <summary>
-        /// Converts a symbol to a product id
-        /// </summary>
-        /// <param name="symbol">Th symbol</param>
-        /// <returns>gdax product id</returns>
-        protected static string ConvertSymbol(Symbol symbol)
-        {
-            return $"{symbol.Value.Substring(0, 3).ToUpperInvariant()}-{symbol.Value.Substring(3, 3).ToUpperInvariant()}";
-        }
-
         private static Orders.OrderStatus ConvertOrderStatus(Messages.Order order)
         {
             if (order.FilledSize != 0 && order.FilledSize != order.Size)
@@ -167,7 +147,7 @@ namespace QuantConnect.Brokerages.GDAX
             return Orders.OrderStatus.None;
         }
 
-        private IRestResponse ExecuteRestRequest(IRestRequest request, GdaxEndpointType endpointType)
+        private IRestResponse ExecuteRestRequest(IRestRequest request, GdaxEndpointType endpointType, bool sendRateLimitMessage = true)
         {
             const int maxAttempts = 10;
             var attempts = 0;
@@ -179,8 +159,11 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (!rateLimiter.WaitToProceed(TimeSpan.Zero))
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
-                        "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+                    if (sendRateLimitMessage)
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
+                            "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+                    }
 
                     rateLimiter.WaitToProceed();
                 }

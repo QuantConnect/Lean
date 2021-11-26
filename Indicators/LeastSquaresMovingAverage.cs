@@ -81,7 +81,7 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             // Until the window is ready, the indicator returns the input value.
-            if (window.Samples <= window.Size) return input;
+            if (window.Samples <= window.Size) return input.Value;
 
             // Sort the window by time, convert the observations to double and transform it to an array
             var series = window
@@ -94,7 +94,7 @@ namespace QuantConnect.Indicators
             Slope.Update(input.Time, (decimal)ols.Item2);
 
             // Calculate the fitted value corresponding to the input
-            return Intercept + Slope * Period;
+            return Intercept.Current.Value + Slope.Current.Value * Period;
         }
 
         /// <summary>

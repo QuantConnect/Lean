@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -28,7 +28,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using QuantConnect.Brokerages.Bitfinex.Messages;
+using QuantConnect.Packets;
+using QuantConnect.Securities.Crypto;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Bitfinex
@@ -42,6 +45,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private const string RestApiUrl = "https://api.bitfinex.com";
         private const string WebSocketUrl = "wss://api.bitfinex.com/ws/2";
 
+        private readonly LiveNodePacket _job;
         private readonly IAlgorithm _algorithm;
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
@@ -52,6 +56,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly ConcurrentDictionary<long, Order> _orderMap = new ConcurrentDictionary<long, Order>();
         private readonly object _clientOrderIdLocker = new object();
         private long _nextClientOrderId;
+
+        // map Bitfinex currency to LEAN currency
+        private readonly Dictionary<string, string> _currencyMap;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -66,8 +73,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">consolidate ticks</param>
-        public BitfinexBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
-            : this(new WebSocketClientWrapper(), new RestClient(RestApiUrl), apiKey, apiSecret, algorithm, priceProvider, aggregator)
+        /// <param name="job">The live job packet</param>
+        public BitfinexBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+            : this(new WebSocketClientWrapper(), new RestClient(RestApiUrl), apiKey, apiSecret, algorithm, priceProvider, aggregator, job)
         {
         }
 
@@ -81,13 +89,36 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">consolidate ticks</param>
-        public BitfinexBrokerage(IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
-            : base(WebSocketUrl, websocket, restClient, apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
+        /// <param name="job">The live job packet</param>
+        public BitfinexBrokerage(IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+            : base(WebSocketUrl, websocket, restClient, apiKey, apiSecret, "Bitfinex")
         {
-            SubscriptionManager = new BitfinexSubscriptionManager(this, WebSocketUrl, _symbolMapper);
+            _job = job;
+
+            SubscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
+                WebSocketUrl,
+                MaximumSymbolsPerConnection,
+                0,
+                null,
+                () => new BitfinexWebSocketWrapper(null),
+                Subscribe,
+                Unsubscribe,
+                OnDataMessage,
+                TimeSpan.Zero,
+                _connectionRateLimiter);
+
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
             _aggregator = aggregator;
+
+            // load currency map
+            using (var wc = new WebClient())
+            {
+                var json = wc.DownloadString("https://api-pub.bitfinex.com/v2/conf/pub:map:currency:sym");
+                var rows = JsonConvert.DeserializeObject<List<List<List<string>>>>(json)[0];
+                _currencyMap = rows
+                    .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
+            }
 
             WebSocket.Open += (sender, args) =>
             {
@@ -100,10 +131,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage e)
+        protected override void OnMessage(object sender, WebSocketMessage e)
         {
-            LastHeartbeatUtcTime = DateTime.UtcNow;
-
             OnMessageImpl(e);
         }
 
@@ -131,11 +160,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Should be empty, Bitfinex brokerage manages his public channels including subscribe/unsubscribe/reconnect methods using <see cref="BitfinexSubscriptionManager"/>
+        /// Should be empty, Bitfinex brokerage manages his public channels including subscribe/unsubscribe/reconnect methods using <see cref="BrokerageMultiWebSocketSubscriptionManager"/>
         /// Not used in master
         /// </summary>
         /// <param name="symbols"></param>
-        public override void Subscribe(IEnumerable<Symbol> symbols) { }
+        protected override bool Subscribe(IEnumerable<Symbol> symbols)
+        {
+            return true;
+        }
 
         private long GetNextClientOrderId()
         {
@@ -161,8 +193,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Implementation of the OnMessage event
         /// </summary>
         /// <param name="e"></param>
-        private void OnMessageImpl(WebSocketMessage e)
+        private void OnMessageImpl(WebSocketMessage webSocketMessage)
         {
+            var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
+
             try
             {
                 var token = JToken.Parse(e.Message);
@@ -232,8 +266,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     {
                         case "auth":
                             var auth = token.ToObject<AuthResponseMessage>();
-                            var result = string.Equals(auth.Status, "OK", StringComparison.OrdinalIgnoreCase) ? "succeed" : "failed";
-                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Subscribing to authenticated channels {result}");
+                            var result = string.Equals(auth.Status, "OK", StringComparison.OrdinalIgnoreCase) ? "successful" : "failed";
+                            Log.Trace($"BitfinexBrokerage.OnMessage: Subscribing to authenticated channels {result}");
                             return;
 
                         case "info":
@@ -242,11 +276,11 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                         case "error":
                             var error = token.ToObject<ErrorMessage>();
-                            Log.Error($"BitfinexWebsocketsBrokerage.OnMessage: {error.Level}: {error.Message}");
+                            Log.Error($"BitfinexBrokerage.OnMessage: {error.Level}: {error.Message}");
                             return;
 
                         default:
-                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Unexpected message format: {e.Message}");
+                            Log.Error($"BitfinexBrokerage.OnMessage: Unexpected message format: {e.Message}");
                             break;
                     }
                 }
@@ -376,17 +410,17 @@ namespace QuantConnect.Brokerages.Bitfinex
                     order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
                     if (order == null)
                     {
-                        Log.Error($"EmitFillOrder(): order not found: BrokerId: {brokerId}");
+                        Log.Error($"BitfinexBrokerage.EmitFillOrder(): order not found: BrokerId: {brokerId}");
                         return;
                     }
                 }
 
-                var symbol = _symbolMapper.GetLeanSymbol(update.Symbol);
+                var symbol = _symbolMapper.GetLeanSymbol(update.Symbol, SecurityType.Crypto, Market.Bitfinex);
                 var fillPrice = update.ExecPrice;
                 var fillQuantity = update.ExecAmount;
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
                 var updTime = Time.UnixMillisecondTimeStampToDateTime(update.MtsCreate);
-                var orderFee = new OrderFee(new CashAmount(Math.Abs(update.Fee), update.FeeCurrency));
+                var orderFee = new OrderFee(new CashAmount(Math.Abs(update.Fee), GetLeanCurrency(update.FeeCurrency)));
 
                 var status = OrderStatus.Filled;
                 if (fillQuantity != order.Quantity)
@@ -399,6 +433,29 @@ namespace QuantConnect.Brokerages.Bitfinex
                     status = totalFillQuantity == order.Quantity
                         ? OrderStatus.Filled
                         : OrderStatus.PartiallyFilled;
+                }
+
+                if (_algorithm.BrokerageModel.AccountType == AccountType.Cash &&
+                    order.Direction == OrderDirection.Buy)
+                {
+                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market,
+                        symbol,
+                        symbol.SecurityType,
+                        AccountBaseCurrency);
+                    Crypto.DecomposeCurrencyPair(symbol, symbolProperties, out var baseCurrency, out var _);
+
+                    if (orderFee.Value.Currency != baseCurrency)
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "UnexpectedFeeCurrency", $"Unexpected fee currency {orderFee.Value.Currency} for symbol {symbol}. OrderId {order.Id}. BrokerageOrderId {brokerId}. " +
+                            "This error can happen because your account is Margin type and Lean is configured to be Cash type or while using Cash type the Bitfinex account fee settings are set to 'Asset Trading Fee' and should be set to 'Currency Exchange Fee'."));
+                    }
+                    else
+                    {
+                        // fees are debited in the base currency, so we have to subtract them from the filled quantity
+                        fillQuantity -= orderFee.Value.Amount;
+
+                        orderFee = new ModifiedFillQuantityOrderFee(orderFee.Value);
+                    }
                 }
 
                 var orderEvent = new OrderEvent
@@ -433,17 +490,31 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
+        private string GetLeanCurrency(string brokerageCurrency)
+        {
+            string currency;
+            if (!_currencyMap.TryGetValue(brokerageCurrency.ToUpperInvariant(), out currency))
+            {
+                currency = brokerageCurrency.ToUpperInvariant();
+            }
+
+            return currency;
+        }
+
         /// <summary>
         /// Emit stream tick
         /// </summary>
         /// <param name="tick"></param>
-        public void EmitTick(Tick tick)
+        private void EmitTick(Tick tick)
         {
-            _aggregator.Update(tick);
+            lock (TickLocker)
+            {
+                _aggregator.Update(tick);
+            }
         }
 
         /// <summary>
-        /// Should be empty. <see cref="BitfinexSubscriptionManager"/> manages each <see cref="BitfinexWebSocketWrapper"/> individually
+        /// Should be empty. <see cref="BrokerageMultiWebSocketSubscriptionManager"/> manages each <see cref="BitfinexWebSocketWrapper"/> individually
         /// </summary>
         /// <returns></returns>
         protected override IEnumerable<Symbol> GetSubscribed() => new List<Symbol>();

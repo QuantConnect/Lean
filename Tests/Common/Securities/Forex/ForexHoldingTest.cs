@@ -54,7 +54,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
                     pairQuoteCurrency,
                     1,
                     minimumPriceVariation,
-                    lotSize
+                    lotSize,
+                    string.Empty
                 ),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null

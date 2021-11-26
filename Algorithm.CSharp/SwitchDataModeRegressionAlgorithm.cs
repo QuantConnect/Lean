@@ -33,13 +33,13 @@ namespace QuantConnect.Algorithm.CSharp
         private const string UnderlyingTicker = "AAPL";
 
         private readonly Dictionary<DateTime, decimal?> _expectedCloseValues = new Dictionary<DateTime, decimal?>() {
-            { new DateTime(2014, 6, 6, 9, 57, 0), 86.04398m},
-            { new DateTime(2014, 6, 6, 9, 58, 0), 86.05196m},
-            { new DateTime(2014, 6, 6, 9, 59, 0), 648.29m},
+            { new DateTime(2014, 6, 6, 9, 57, 0), 20.83533m},
+            { new DateTime(2014, 6, 6, 9, 58, 0), 20.83565m},
+            { new DateTime(2014, 6, 6, 9, 59, 0), 648.37m},
             { new DateTime(2014, 6, 6, 10, 0, 0), 647.86m},
-            { new DateTime(2014, 6, 6, 10, 1, 0), 646.84m},
-            { new DateTime(2014, 6, 6, 10, 2, 0), 647.64m},
-            { new DateTime(2014, 6, 6, 10, 3, 0), 646.9m}
+            { new DateTime(2014, 6, 6, 10, 1, 0), 646.83m},
+            { new DateTime(2014, 6, 6, 10, 2, 0), 647.79m},
+            { new DateTime(2014, 6, 6, 10, 3, 0), 646.92m}
         };
 
         public override void Initialize()
@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_expectedCloseValues.Count > 0)
             {
-                throw new Exception($"Not all expected data points were recieved.");
+                throw new Exception($"Not all expected data points were received.");
             }
         }
 
@@ -117,6 +117,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -136,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "371857150"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }

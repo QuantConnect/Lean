@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -28,7 +28,6 @@ namespace QuantConnect.Securities
         public string Description
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -37,7 +36,6 @@ namespace QuantConnect.Securities
         public string QuoteCurrency
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -52,10 +50,10 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The minimum price variation (tick size) for the security
         /// </summary>
-        public decimal MinimumPriceVariation
+        public virtual decimal MinimumPriceVariation
         {
             get;
-            private set;
+            protected set;
         }
 
         /// <summary>
@@ -64,22 +62,60 @@ namespace QuantConnect.Securities
         public decimal LotSize
         {
             get;
-            private set;
+        }
+
+        /// <summary>
+        /// The market ticker
+        /// </summary>
+        public string MarketTicker
+        {
+            get;
+        }
+
+        /// <summary>
+        /// The minimum order size allowed
+        /// For crypto/forex pairs it's expected to be expressed in base or quote currency
+        /// i.e For BTC/USD the minimum order size allowed with GDAX is 0.0001 BTC
+        /// while on Binance the minimum order size allowed is 10 USD
+        /// </summary>
+        public decimal? MinimumOrderSize
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Allows normalizing live asset prices to US Dollars for Lean consumption. In some exchanges, 
+        /// for some securities, data is expressed in cents like for example for corn futures ('ZC').
+        /// </summary>
+        /// <remarks>Default value is 1 but for some futures in cents it's 100</remarks>
+        public decimal PriceMagnifier
+        {
+            get;
         }
 
         /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null, decimal priceMagnifier = 1)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
             ContractMultiplier = contractMultiplier;
             MinimumPriceVariation = minimumPriceVariation;
             LotSize = lotSize;
-            if(LotSize <= 0)
+
+            if (LotSize <= 0)
             {
                 throw new ArgumentException("SymbolProperties LotSize can not be less than or equal to 0");
+            }
+
+            MarketTicker = marketTicker;
+            MinimumOrderSize = minimumOrderSize;
+
+            PriceMagnifier = priceMagnifier;
+            if (PriceMagnifier <= 0)
+            {
+                throw new ArgumentException("SymbolProprties PriceMagnifier can not be less than or equal to 0");
             }
         }
 
@@ -90,7 +126,7 @@ namespace QuantConnect.Securities
         /// <returns>A default instance of the<see cref="SymbolProperties"/> class</returns>
         public static SymbolProperties GetDefault(string quoteCurrency)
         {
-            return new SymbolProperties("", quoteCurrency.LazyToUpper(), 1, 0.01m, 1);
+            return new SymbolProperties(string.Empty, quoteCurrency.LazyToUpper(), 1, 0.01m, 1, string.Empty);
         }
     }
 }

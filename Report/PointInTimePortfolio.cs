@@ -18,6 +18,8 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Report
 {
@@ -37,8 +39,14 @@ namespace QuantConnect.Report
         public decimal TotalPortfolioValue { get; private set; }
 
         /// <summary>
+        /// The cash the portfolio has
+        /// </summary>
+        public decimal Cash { get; private set; }
+
+        /// <summary>
         /// The order we just processed
         /// </summary>
+        [JsonIgnore]
         public Order Order { get; private set; }
 
         /// <summary>
@@ -61,6 +69,7 @@ namespace QuantConnect.Report
             Time = order.Time;
             Order = order;
             TotalPortfolioValue = portfolio.TotalPortfolioValue;
+            Cash = portfolio.Cash;
             Holdings = portfolio.Securities.Values.Select(x => new PointInTimeHolding(x.Symbol, x.Holdings.HoldingsValue, x.Holdings.Quantity)).ToList();
             Leverage = Holdings.Sum(x => x.AbsoluteHoldingsValue) / TotalPortfolioValue;
         }
@@ -75,8 +84,19 @@ namespace QuantConnect.Report
             Time = time;
             Order = portfolio.Order;
             TotalPortfolioValue = portfolio.TotalPortfolioValue;
-            Holdings = portfolio.Holdings;
+            Cash = portfolio.Cash;
+            Holdings = portfolio.Holdings.Select(x => new PointInTimeHolding(x.Symbol, x.HoldingsValue, x.Quantity)).ToList();
             Leverage = portfolio.Leverage;
+        }
+
+        /// <summary>
+        /// Filters out any empty holdings from the current <see cref="Holdings"/>
+        /// </summary>
+        /// <returns>Current object, but without empty holdings</returns>
+        public PointInTimePortfolio NoEmptyHoldings()
+        {
+            Holdings = Holdings.Where(h => h.Quantity != 0).ToList();
+            return this;
         }
 
         /// <summary>
@@ -102,11 +122,13 @@ namespace QuantConnect.Report
             /// <summary>
             /// Absolute value of the holdings.
             /// </summary>
+            [JsonIgnore]
             public decimal AbsoluteHoldingsValue => Math.Abs(HoldingsValue);
 
             /// <summary>
             /// Absolute value of the quantity
             /// </summary>
+            [JsonIgnore]
             public decimal AbsoluteHoldingsQuantity => Math.Abs(Quantity);
 
             /// <summary>

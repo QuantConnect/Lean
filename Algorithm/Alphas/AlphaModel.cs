@@ -30,6 +30,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         public virtual string Name { get; set; }
 
+        /// <summary>
+        /// Initialize new <see cref="AlphaModel"/>
+        /// </summary>
         public AlphaModel()
         {
             Name = Guid.NewGuid().ToString();

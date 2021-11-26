@@ -159,13 +159,38 @@ namespace QuantConnect.Algorithm.Framework.Execution
             return !algorithm.UniverseManager.Any(kvp => kvp.Value.ContainsMember(symbol));
         }
 
+        /// <summary>
+        /// Symbol Data for this Execution Model
+        /// </summary>
         protected class SymbolData
         {
+            /// <summary>
+            /// Security
+            /// </summary>
             public Security Security { get; }
+
+            /// <summary>
+            /// Standard Deviation
+            /// </summary>
             public StandardDeviation STD { get; }
+            
+            /// <summary>
+            /// Simple Moving Average
+            /// </summary>
             public SimpleMovingAverage SMA { get; }
+
+            /// <summary>
+            /// Data Consolidator
+            /// </summary>
             public IDataConsolidator Consolidator { get; }
 
+            /// <summary>
+            /// Initialize an instance of <see cref="SymbolData"/>
+            /// </summary>
+            /// <param name="algorithm">Algorithm for this security</param>
+            /// <param name="security">The security we are using</param>
+            /// <param name="period">Period of the SMA and STD</param>
+            /// <param name="resolution">Resolution for this symbol</param>
             public SymbolData(QCAlgorithm algorithm, Security security, int period, Resolution resolution)
             {
                 Security = security;
