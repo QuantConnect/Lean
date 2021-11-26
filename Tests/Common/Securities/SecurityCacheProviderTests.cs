@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
+using QuantConnect.DataSource;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
