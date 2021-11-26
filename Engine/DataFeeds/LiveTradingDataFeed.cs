@@ -26,6 +26,7 @@ using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.DataSource;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
