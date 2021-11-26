@@ -18,16 +18,31 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; }
         public Symbol Symbol { get; }
 
-        public TickGenerator(RandomDataGeneratorSettings settings, Symbol symbol) : this(settings, new RandomValueGenerator(), symbol)
+        protected TickGenerator(RandomDataGeneratorSettings settings, Symbol symbol) : this(settings, new RandomValueGenerator(), symbol)
         { }
 
-        public TickGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, Symbol symbol)
+        protected TickGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, Symbol symbol)
         {
             Random = random;
             Settings = settings;
             Symbol = symbol;
             SymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        }
+
+        public static ITickGenerator Create(
+            RandomDataGeneratorSettings settings,
+            IRandomValueGenerator random,
+            Security security
+            )
+        {
+            switch (security.Symbol.SecurityType)
+            {
+                case SecurityType.Option:
+                    return new BlackScholesTickGenerator(settings, random, security);
+                default:
+                    return new TickGenerator(settings, random, security.Symbol);
+            }
         }
 
         public IEnumerable<Tick> GenerateTicks()

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -24,18 +25,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly string _market;
         private readonly SecurityType _securityType;
 
-        public SpotSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
-            : base(settings, random)
+        public SpotSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, ISecurityService securityService)
+            : base(settings, random, securityService)
         {
             _market = settings.Market;
             _securityType = settings.SecurityType;
         }
 
-        protected override Symbol GenerateSymbol()
+        protected override Security GenerateSecurity()
             => NextSymbol(Settings.SecurityType, Settings.Market);
-
-        protected override ITickGenerator CreateTickGenerator(Symbol symbol)
-            => new TickGenerator(Settings, Random, symbol);
 
         public override int GetAvailableSymbolCount()
         {

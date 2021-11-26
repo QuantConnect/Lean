@@ -3,6 +3,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -10,7 +11,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     {
         protected IRandomValueGenerator Random { get; }
         protected RandomDataGeneratorSettings Settings { get; }
-
+        protected ISecurityService SecurityService { get; }
         protected MarketHoursDatabase MarketHoursDatabase { get; }
         protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; }
 
@@ -18,31 +19,32 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         // the memory allocated to checking for duplicates
         private readonly FixedSizeHashQueue<Symbol> _symbols;
 
-        protected SymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+        protected SymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, ISecurityService securityService)
         {
             Settings = settings;
             Random = random;
+            SecurityService = securityService;
             _symbols = new FixedSizeHashQueue<Symbol>(1000);
             SymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
-        public static SymbolGenerator Create(RandomDataGeneratorSettings settings, IRandomValueGenerator random, ISecurityProvider securityProvider)
+        public static SymbolGenerator Create(RandomDataGeneratorSettings settings, IRandomValueGenerator random, ISecurityService securityService, ISecurityProvider securityProvider)
         {
             switch (settings.SecurityType)
             {
                 case SecurityType.Option:
-                    return new OptionSymbolGenerator(settings, random, 100m, 75m, securityProvider);
+                    return new OptionSymbolGenerator(settings, random, securityService, 100m, 75m, securityProvider);
 
                 case SecurityType.Future:
-                    return new FutureSymbolGenerator(settings, random);
+                    return new FutureSymbolGenerator(settings, random, securityService);
 
                 default:
-                    return new SpotSymbolGenerator(settings, random);
+                    return new SpotSymbolGenerator(settings, random, securityService);
             }
         }
 
-        public IEnumerable<SymbolDataGenerator> GenerateRandomSymbols()
+        public IEnumerable<Security> GenerateRandomSymbols()
         {
             for (int i = 0; i < Settings.SymbolCount; i++)
             {
@@ -50,15 +52,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
         }
 
-        public SymbolDataGenerator GenerateSingle()
-        {
-            var symbol = GenerateSymbol();
-            return new()
-            {
-                Symbol = symbol,
-                TickGenerator = CreateTickGenerator(symbol)
-            };
-        }
+        public Security GenerateSingle()
+            => GenerateSecurity();
 
         public Symbol NextSymbol(SecurityType securityType, string market)
         {
@@ -97,9 +92,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return NextSymbol(securityType, market);
         }
 
-        protected abstract Symbol GenerateSymbol();
-
-        protected abstract ITickGenerator CreateTickGenerator(Symbol symbol);
+        protected abstract Security GenerateSecurity();
 
         protected string NextTickerFromSymbolPropertiesDatabase(SecurityType securityType, string market)
         {

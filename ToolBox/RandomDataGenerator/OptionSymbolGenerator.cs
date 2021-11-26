@@ -1,4 +1,5 @@
 using System;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -29,8 +30,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly decimal _maximumStrikePriceDeviation;
         private readonly ISecurityProvider _securityProvider;
 
-        public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, decimal underlyingPrice, decimal maximumStrikePriceDeviation, ISecurityProvider securityProvider)
-            : base(settings, random)
+        public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, ISecurityService securityService, decimal underlyingPrice, decimal maximumStrikePriceDeviation, ISecurityProvider securityProvider)
+            : base(settings, random, securityService)
         {
             _minExpiry = settings.Start;
             _maxExpiry = settings.End;
@@ -40,7 +41,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             _securityProvider = securityProvider;
         }
 
-        protected override Symbol GenerateSymbol()
+        protected override Security GenerateSecurity()
         {
             // first generate the underlying
             var underlying = NextSymbol(SecurityType.Equity, _market);
@@ -63,9 +64,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             // when providing a null option w/ an expiry, it will automatically create the OSI ticker string for the Value
             return Symbol.CreateOption(underlying, _market, OptionStyle.American, optionRight, strike, expiry);
         }
-
-        protected override ITickGenerator CreateTickGenerator(Symbol symbol)
-            => new BlackScholesTickGenerator(Settings, Random, _securityProvider.GetSecurity(symbol));
 
         public override int GetAvailableSymbolCount() => int.MaxValue;
     }

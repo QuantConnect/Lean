@@ -4,6 +4,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 
@@ -118,8 +119,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             //    new MapFilePrimaryExchangeProvider(new LocalDiskMapFileProvider())
             //);
 
+            ISecurityService securityService = null;
             ISecurityProvider securityProvider = null;
-            var symbolGenerator = SymbolGenerator.Create(settings, randomValueGenerator, securityProvider);
+            var symbolGenerator = SymbolGenerator.Create(settings, randomValueGenerator, securityService, securityProvider);
 
             var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount();
             if (settings.SymbolCount > maxSymbolCount)
@@ -135,11 +137,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var progress = 0d;
             var previousMonth = -1;
 
-            foreach (var currentSymbol in symbolGenerator.GenerateRandomSymbols())
+            foreach (var security in symbolGenerator.GenerateRandomSymbols())
             {
                 // This is done so that we can update the Symbol in the case of a rename event
                 var delistDate = GetDelistingDate(settings.Start, settings.End, randomValueGenerator);
-                var symbol = currentSymbol.Symbol;
+                var symbol = security.Symbol;
                 var willBeDelisted = randomValueGenerator.NextBool(1.0);
                 var monthsTrading = 0;
 
@@ -150,7 +152,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                 // define aggregators via settings
                 var aggregators = settings.CreateAggregators().ToList();
-                var tickHistory = currentSymbol.GenerateTicks().ToList();
+                var tickHistory = new List<Tick>();
+                var tickGenerator = TickGenerator.Create(settings, randomValueGenerator, security);
+                foreach (var tick in tickGenerator.GenerateTicks())
+                {
+                    tickHistory.Add(tick);
+                    security.Update(new List<BaseData>() { tick }, tick.GetType(), false);
+                }
 
                 // Companies rarely IPO then disappear within 6 months
                 if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() <= 6)
