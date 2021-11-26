@@ -368,3 +368,17 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
         assert(not (len(spyOpenOrders) or spyOpenOrderTicketsSize)), "No open orders or tickets were expected"
         assert(not spyOpenOrdersRemainingQuantity), "No remaining quantiy to be filled from open orders was expected"
+
+        defaultOrders = self.Transactions.GetOrders();
+        defaultOrderTickets = self.Transactions.GetOrderTickets();
+        defaultOpenOrders = self.Transactions.GetOpenOrders();
+        defaultOpenOrderTickets = self.Transactions.GetOpenOrderTickets();
+        defaultOpenOrdersRemaining = self.Transactions.GetOpenOrdersRemainingQuantity();
+
+        defaultOrdersSize = sum(1 for order in defaultOrders)
+        defaultOrderTicketsSize = sum(1 for ticket in defaultOrderTickets)
+        defaultOpenOrderTicketsSize = sum(1 for ticket in defaultOpenOrderTickets)
+
+        assert(defaultOrdersSize == 10 and defaultOrderTicketsSize == 10), "There were expected 10 orders and 10 order tickets"
+        assert(not (len(defaultOpenOrders) or defaultOpenOrderTicketsSize)), "No open orders or tickets were expected"
+        assert(not defaultOpenOrdersRemaining), "No remaining quantiy to be filled from open orders was expected"

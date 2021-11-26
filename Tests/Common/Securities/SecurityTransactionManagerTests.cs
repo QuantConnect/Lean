@@ -72,13 +72,13 @@ namespace QuantConnect.Tests.Common.Securities
                 var orders = algorithm.Transactions.GetOrders(basicOrderFilter.ToPython());
                 var orderTickets = algorithm.Transactions.GetOrderTickets(basicOrderTicketFilter.ToPython());
                 var openOrders = algorithm.Transactions.GetOpenOrders(basicOrderFilter.ToPython());
-                var openOrdersTickets = algorithm.Transactions.GetOpenOrderTickets(basicOrderTicketFilter.ToPython());
+                var openOrderTickets = algorithm.Transactions.GetOpenOrderTickets(basicOrderTicketFilter.ToPython());
                 var openOrdersRemaining = algorithm.Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter.ToPython());
 
                 Assert.AreEqual(2, orders.Count());
                 Assert.AreEqual(2, orderTickets.Count());
                 Assert.AreEqual(2, openOrders.Count);
-                Assert.AreEqual(2, openOrdersTickets.Count());
+                Assert.AreEqual(2, openOrderTickets.Count());
                 Assert.AreEqual(368, openOrdersRemaining);
 
                 var ibmOpenOrders = algorithm.Transactions.GetOpenOrders(ibm.ToPython()).Count;
@@ -95,7 +95,21 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.AreEqual(1, spyOpenOrders);
                 Assert.AreEqual(1, spyOpenOrderTickets);
                 Assert.AreEqual(184, spyOpenOrdersRemainingQuantity);
+
+                var defaultOrders = algorithm.Transactions.GetOrders();
+                var defaultOrderTickets = algorithm.Transactions.GetOrderTickets();
+                var defaultOpenOrders = algorithm.Transactions.GetOpenOrders();
+                var defaultOpenOrderTickets = algorithm.Transactions.GetOpenOrderTickets();
+                var defaultOpenOrdersRemaining = algorithm.Transactions.GetOpenOrdersRemainingQuantity();
+
+                Assert.AreEqual(2, defaultOrders.Count());
+                Assert.AreEqual(2, defaultOrderTickets.Count());
+                Assert.AreEqual(2, defaultOpenOrders.Count);
+                Assert.AreEqual(2, defaultOpenOrderTickets.Count());
+                Assert.AreEqual(368, defaultOpenOrdersRemaining);
             }
+
+            transactionHandler.Exit();
         }
     }
 }

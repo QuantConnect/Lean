@@ -509,6 +509,25 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"No remaining quantiy to be filled from open orders was expected");
             }
+
+            var defaultOrders = Transactions.GetOrders();
+            var defaultOrderTickets = Transactions.GetOrderTickets();
+            var defaultOpenOrders = Transactions.GetOpenOrders();
+            var defaultOpenOrderTickets = Transactions.GetOpenOrderTickets();
+            var defaultOpenOrdersRemaining = Transactions.GetOpenOrdersRemainingQuantity();
+
+            if (defaultOrders.Count() != 10 || defaultOrderTickets.Count() != 10)
+            {
+                throw new Exception($"There were expected 10 orders and 10 order tickets");
+            }
+            if (defaultOpenOrders.Count != 0 || defaultOpenOrderTickets.Any())
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (defaultOpenOrdersRemaining != 0m)
+            {
+                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+            }
         }
 
         /// <summary>
