@@ -32,7 +32,10 @@ namespace QuantConnect.Indicators
         private decimal _prevKama;
         private decimal _trailingValue;
 
-        public IndicatorBase<IndicatorDataPoint> KER { get; }
+        /// <summary>
+        /// Gets the Efficiency Ratio from KAMA calculation
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> EfficiencyRatio { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KaufmanAdaptiveMovingAverage"/> class using the specified name and period.
@@ -48,7 +51,7 @@ namespace QuantConnect.Indicators
             _slowSmoothingFactor = 2m / (slowEmaPeriod + 1m);
             // Difference between the smoothing factor of the fast and slow EMA
             _diffSmoothingFactor = 2m / (fastEmaPeriod + 1m) - _slowSmoothingFactor;
-            KER = new SimpleMovingAverage(1);
+            EfficiencyRatio = new Identity("EfficiencyRatio");
         }
 
         /// <summary>
@@ -119,11 +122,11 @@ namespace QuantConnect.Indicators
             _trailingValue = newTrailingValue.Value;
 
             // Calculate the efficiency ratio
-            var kefValue = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);
-            KER.Update(input.Time, kefValue);
+            var efficiencyRatio = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);
+            EfficiencyRatio.Update(input.Time, efficiencyRatio);
 
             // Calculate the smoothing constant
-            var smoothingConstant = kefValue * _diffSmoothingFactor + _slowSmoothingFactor;
+            var smoothingConstant = efficiencyRatio * _diffSmoothingFactor + _slowSmoothingFactor;
             smoothingConstant *= smoothingConstant;
 
             // Calculate the KAMA like an EMA, using the
@@ -142,7 +145,7 @@ namespace QuantConnect.Indicators
             _periodRoc = 0;
             _prevKama = 0;
             _trailingValue = 0;
-            KER.Reset();
+            EfficiencyRatio.Reset();
             base.Reset();
         }
     }
