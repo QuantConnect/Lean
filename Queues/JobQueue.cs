@@ -77,20 +77,27 @@ namespace QuantConnect.Queues
         /// <returns>An Instance of Brokearage Factory if possible, otherwise null</returns>
         public static IBrokerageFactory GetFactoryFromDataQueueHandler(string dataQueueHandler)
         {
-            var dataQueueHandlerType = Assembly.GetAssembly(typeof(Brokerage))
-                .GetTypes()
-                .FirstOrDefault(x =>
-                    x.FullName != null &&
-                    x.FullName.EndsWith(dataQueueHandler) &&
-                    x.HasAttribute(typeof(BrokerageFactoryAttribute)));
-
-            if (dataQueueHandlerType != null)
+            IBrokerageFactory brokerageFactory = null;
+            if (!dataQueueHandler.EndsWith("DataQueueHandler"))
             {
-                var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
-                var brokerageFactory = (BrokerageFactory)Activator.CreateInstance(attribute.Type);
-                return brokerageFactory;
+                brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(dataQueueHandler));
             }
-            return null;
+            else
+            {
+                var dataQueueHandlerType = Assembly.GetAssembly(typeof(Brokerage))
+                    .GetTypes()
+                    .FirstOrDefault(x =>
+                        x.FullName != null &&
+                        x.FullName.EndsWith(dataQueueHandler) &&
+                        x.HasAttribute(typeof(BrokerageFactoryAttribute)));
+
+                if (dataQueueHandlerType != null)
+                {
+                    var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
+                    brokerageFactory = (BrokerageFactory)Activator.CreateInstance(attribute.Type);
+                }
+            }
+            return brokerageFactory;
         }
 
         /// <summary>
