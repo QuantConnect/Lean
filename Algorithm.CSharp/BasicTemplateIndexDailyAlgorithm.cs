@@ -11,7 +11,9 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override Resolution Resolution => Resolution.Daily;
         protected override int StartDay => 1;
-        protected virtual int ExpectedBarCount => 12;
+
+        // two complete weeks starting from the 5th plus the 18th bar
+        protected virtual int ExpectedBarCount => 2 * 5 + 1;
         protected int BarCounter = 0;
         
         /// <summary>
@@ -62,31 +64,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "9"},
             {"Average Win", "0%"},
             {"Average Loss", "-39.42%"},
-            {"Compounding Annual Return", "-38.918%"},
-            {"Drawdown", "10.000%"},
+            {"Compounding Annual Return", "394.321%"},
+            {"Drawdown", "0.200%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-2.407%"},
-            {"Sharpe Ratio", "-0.389"},
-            {"Probabilistic Sharpe Ratio", "35.361%"},
+            {"Net Profit", "8.219%"},
+            {"Sharpe Ratio", "6.812"},
+            {"Probabilistic Sharpe Ratio", "91.380%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.124"},
-            {"Beta", "-0.959"},
-            {"Annual Standard Deviation", "0.505"},
-            {"Annual Variance", "0.255"},
-            {"Information Ratio", "-0.511"},
-            {"Tracking Error", "0.531"},
-            {"Treynor Ratio", "0.205"},
+            {"Alpha", "2.236"},
+            {"Beta", "-1.003"},
+            {"Annual Standard Deviation", "0.317"},
+            {"Annual Variance", "0.101"},
+            {"Information Ratio", "5.805"},
+            {"Tracking Error", "0.359"},
+            {"Treynor Ratio", "-2.153"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Fitness Score", "0.014"},
+            {"Fitness Score", "0.027"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-3.884"},
-            {"Portfolio Turnover", "0.025"},
+            {"Return Over Maximum Drawdown", "1776.081"},
+            {"Portfolio Turnover", "0.027"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
