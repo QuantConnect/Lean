@@ -183,7 +183,7 @@ namespace QuantConnect.Tests
             return Symbol.Create(ticker, SecurityType.Future, market, "/" + ticker);
         }
 
-        private static Symbol CreateIndexSymbol(string ticker)
+        internal static Symbol CreateIndexSymbol(string ticker)
         {
             return Symbol.Create(ticker, SecurityType.Index, Market.USA);
         }
