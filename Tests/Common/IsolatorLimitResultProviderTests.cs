@@ -123,6 +123,7 @@ namespace QuantConnect.Tests.Common
             var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
             var provider = new FakeIsolatorLimitResultProvider();
             var timeMonitorEvent = new AutoResetEvent(false);
+            _timeMonitor.TimeMonitorEvent = timeMonitorEvent;
 
             Action code = () =>
             {
@@ -136,14 +137,7 @@ namespace QuantConnect.Tests.Common
                 }
             };
 
-            var consumer = new TimeConsumer
-            {
-                IsolatorLimitProvider = provider,
-                TimeProvider = timeProvider,
-                TriggerEvent = timeMonitorEvent
-            };
-
-            IsolatorLimitProviderTest.Consume(consumer, code, _timeMonitor);
+            provider.Consume(timeProvider, code, _timeMonitor);
 
             Assert.AreEqual(3, provider.Invocations.Count);
             Assert.IsTrue(provider.Invocations.TrueForAll(invoc => invoc == 1));
@@ -192,14 +186,16 @@ namespace QuantConnect.Tests.Common
 
         private class TimeMonitorTest: TimeMonitor
         {
-            public TimeMonitorTest(int monitorIntervalMs = 100): base(monitorIntervalMs) {}
+            public AutoResetEvent TimeMonitorEvent;
+
+            public TimeMonitorTest(int monitorIntervalMs = 100) : base(monitorIntervalMs) { }
 
             protected override void ProcessConsumer(TimeConsumer consumer)
             {
                 base.ProcessConsumer(consumer);
-                if (consumer.TriggerEvent != null)
+                if (TimeMonitorEvent != null)
                 {
-                    consumer.TriggerEvent.Set();
+                    TimeMonitorEvent.Set();
                 }
             }
 
@@ -209,20 +205,6 @@ namespace QuantConnect.Tests.Common
                 {
                     _timeConsumers.RemoveAll(time => time.Finished = true);
                 }
-            }
-        }
-
-        private static class IsolatorLimitProviderTest
-        {
-            public static void Consume(
-                TimeConsumer consumer,
-                Action code,
-                TimeMonitor timeMonitor
-                )
-            {
-                timeMonitor.Add(consumer);
-                code();
-                consumer.Finished = true;
             }
         }
     }

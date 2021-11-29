@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Threading;
 
 namespace QuantConnect.Scheduling
 {
@@ -43,10 +42,5 @@ namespace QuantConnect.Scheduling
         /// to be <see cref="IsolatorLimitProvider"/>
         /// </summary>
         public DateTime? NextTimeRequest { get; set; }
-
-        /// <summary>
-        /// Event to trigger when the timer has already processed this consumer
-        /// </summary>
-        public AutoResetEvent? TriggerEvent { get; set; }
     }
 }
