@@ -57,33 +57,37 @@ namespace QuantConnect.Scheduling
 
                     foreach (var consumer in _timeConsumers)
                     {
-                        if (consumer.NextTimeRequest == null)
-                        {
-                            // first time, for performance we register this here and not the time consumer
-                            consumer.NextTimeRequest = consumer.TimeProvider.GetUtcNow().AddMinutes(1);
-                        }
-                        else if (consumer.TimeProvider.GetUtcNow() >= consumer.NextTimeRequest)
-                        {
-                            // each minute request additional time from the isolator
-                            consumer.NextTimeRequest = consumer.NextTimeRequest.Value.AddMinutes(1);
-                            try
-                            {
-                                // this will notify the isolator that we've exceed the limits
-                                consumer.IsolatorLimitProvider.RequestAdditionalTime(minutes: 1);
-                            }
-                            catch
-                            {
-                                // pass
-                            }
-                        }
-
-                        if (consumer.TriggerEvent != null)
-                        {
-                            consumer.TriggerEvent.Set();
-                        }
+                        ProcessConsumer(consumer);
                     }
                 }
             }, null, monitorIntervalMs, monitorIntervalMs);
+        }
+
+        /// <summary>
+        /// Process the TimeConsumer object in _timeConsumers list
+        /// </summary>
+        /// <param name="consumer">The TimeConsumer object to be processed</param>
+        protected virtual void ProcessConsumer(TimeConsumer consumer)
+        {
+            if (consumer.NextTimeRequest == null)
+            {
+                // first time, for performance we register this here and not the time consumer
+                consumer.NextTimeRequest = consumer.TimeProvider.GetUtcNow().AddMinutes(1);
+            }
+            else if (consumer.TimeProvider.GetUtcNow() >= consumer.NextTimeRequest)
+            {
+                // each minute request additional time from the isolator
+                consumer.NextTimeRequest = consumer.NextTimeRequest.Value.AddMinutes(1);
+                try
+                {
+                    // this will notify the isolator that we've exceed the limits
+                    consumer.IsolatorLimitProvider.RequestAdditionalTime(minutes: 1);
+                }
+                catch
+                {
+                    // pass
+                }
+            }
         }
 
         /// <summary>

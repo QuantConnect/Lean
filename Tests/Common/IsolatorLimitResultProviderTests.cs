@@ -194,6 +194,15 @@ namespace QuantConnect.Tests.Common
         {
             public TimeMonitorTest(int monitorIntervalMs = 100): base(monitorIntervalMs) {}
 
+            protected override void ProcessConsumer(TimeConsumer consumer)
+            {
+                base.ProcessConsumer(consumer);
+                if (consumer.TriggerEvent != null)
+                {
+                    consumer.TriggerEvent.Set();
+                }
+            }
+
             public void RemoveAll()
             {
                 lock (_timeConsumers)

@@ -44,6 +44,9 @@ namespace QuantConnect.Scheduling
         /// </summary>
         public DateTime? NextTimeRequest { get; set; }
 
+        /// <summary>
+        /// Event to trigger when the timer has already processed this consumer
+        /// </summary>
         public AutoResetEvent? TriggerEvent { get; set; }
     }
 }
