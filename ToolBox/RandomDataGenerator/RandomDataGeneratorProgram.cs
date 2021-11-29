@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 
@@ -107,21 +108,22 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 randomValueGenerator = new RandomValueGenerator(settings.RandomSeed);
             }
 
-            //var securityManager = new SecurityManager(new TimeKeeper(Settings.Start, new[] { TimeZones.Utc }));
-            //var securityService = new SecurityService(
-            //    new CashBook(),
-            //    MarketHoursDatabase.FromDataFolder(Globals.DataFolder),
-            //    SymbolPropertiesDatabase.FromDataFolder(),
-            //    new(),
-            //    RegisteredSecurityDataTypesProvider.Null,
-            //    new SecurityCacheProvider(
-            //        new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
-            //    new MapFilePrimaryExchangeProvider(new LocalDiskMapFileProvider())
-            //);
+            var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
+            var securityService = new SecurityService(
+                new CashBook(),
+                MarketHoursDatabase.FromDataFolder(Globals.DataFolder),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                new FuncSecurityInitializer(secutiry =>
+                {
+                    secutiry.FeeModel = new ConstantFeeModel(0);
+                }),
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(
+                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
+                new MapFilePrimaryExchangeProvider(new LocalDiskMapFileProvider())
+            );
 
-            ISecurityService securityService = null;
-            ISecurityProvider securityProvider = null;
-            var symbolGenerator = SymbolGenerator.Create(settings, randomValueGenerator, securityService, securityProvider);
+            var symbolGenerator = SymbolGenerator.Create(settings, randomValueGenerator);
 
             var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount();
             if (settings.SymbolCount > maxSymbolCount)
@@ -137,74 +139,124 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var progress = 0d;
             var previousMonth = -1;
 
-            foreach (var security in symbolGenerator.GenerateRandomSymbols())
+            foreach (var (symbolRef, currentSymbolGroup) in symbolGenerator.GenerateRandomSymbols()
+                .GroupBy(s => s.HasUnderlying ? s.Underlying : s)
+                .Select(g => (g.Key, g.OrderBy(s => s.HasUnderlying).ToList())))
             {
-                // This is done so that we can update the Symbol in the case of a rename event
-                var delistDate = GetDelistingDate(settings.Start, settings.End, randomValueGenerator);
-                var symbol = security.Symbol;
-                var willBeDelisted = randomValueGenerator.NextBool(1.0);
-                var monthsTrading = 0;
+                output.Warn.WriteLine($"\tSymbol[{++count}]: {symbolRef} Progress: {progress:0.0}% - Generating data...");
 
-                // Keep track of renamed symbols and the time they were renamed. 
-                var renamedSymbols = new Dictionary<Symbol, DateTime>();
-
-                output.Warn.WriteLine($"\tSymbol[{++count}]: {symbol} Progress: {progress:0.0}% - Generating data...");
-
-                // define aggregators via settings
-                var aggregators = settings.CreateAggregators().ToList();
-                var tickHistory = new List<Tick>();
-                var tickGenerator = TickGenerator.Create(settings, randomValueGenerator, security);
-                foreach (var tick in tickGenerator.GenerateTicks())
+                var tickGenerators = new Dictionary<Security, IEnumerator<Tick>>();
+                var tickHistories = new Dictionary<Symbol, List<Tick>>();
+                foreach (var currentSymbol in currentSymbolGroup)
                 {
-                    tickHistory.Add(tick);
-                    security.Update(new List<BaseData>() { tick }, tick.GetType(), false);
+                    var security = securityService.CreateSecurity(
+                        currentSymbol,
+                        new SubscriptionDataConfig(
+                            settings.TickTypes.First().GetType(),
+                            currentSymbol,
+                            settings.Resolution,
+                            DateTimeZone.Utc,
+                            DateTimeZone.Utc,
+                            false,
+                            false,
+                            false,
+                            false,
+                            settings.TickTypes.First()));
+
+                    tickGenerators.Add(
+                        security,
+                        TickGenerator.Create(settings, randomValueGenerator, security)
+                            .GenerateTicks()
+                            .GetEnumerator());
+
+                    tickHistories.Add(
+                        currentSymbol,
+                        new List<Tick>());
                 }
 
-                // Companies rarely IPO then disappear within 6 months
-                if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() <= 6)
+
+                foreach (var (security, tickGenerator) in tickGenerators)
                 {
-                    willBeDelisted = false;
+                    var tick = tickGenerator.Current;
+                    tickHistories[security.Symbol].Add(tick);
+
+                    security.Update(new List<BaseData> { tick }, tick.GetType(), false);
+                    tickGenerator.MoveNext();
                 }
 
-                var dividendsSplitsMaps = new DividendSplitMapGenerator(
-                    symbol,
-                    settings,
-                    randomValueGenerator,
-                    symbolGenerator,
-                    random,
-                    delistDate,
-                    willBeDelisted);
-
-                if (settings.SecurityType == SecurityType.Equity)
+                foreach (var (currentSymbol, tickHistory) in tickHistories)
                 {
-                    dividendsSplitsMaps.GenerateSplitsDividends(tickHistory);
+                    var symbol = currentSymbol;
 
-                    if (!willBeDelisted)
+                    // This is done so that we can update the Symbol in the case of a rename event
+                    var delistDate = GetDelistingDate(settings.Start, settings.End, randomValueGenerator);
+                    var willBeDelisted = randomValueGenerator.NextBool(1.0);
+
+                    // Companies rarely IPO then disappear within 6 months
+                    if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() <= 6)
                     {
-                        dividendsSplitsMaps.DividendsSplits.Add(new CorporateFactorRow(new DateTime(2050, 12, 31), 1m, 1m));
-
-                        if (dividendsSplitsMaps.MapRows.Count > 1)
-                        {
-                            // Remove the last element if we're going to have a 20501231 entry
-                            dividendsSplitsMaps.MapRows.RemoveAt(dividendsSplitsMaps.MapRows.Count - 1);
-                        }
-                        dividendsSplitsMaps.MapRows.Add(new MapFileRow(new DateTime(2050, 12, 31), dividendsSplitsMaps.CurrentSymbol.Value));
+                        willBeDelisted = false;
                     }
 
-                    // If the Symbol value has changed, update the current Symbol
-                    if (symbol != dividendsSplitsMaps.CurrentSymbol)
-                    {
-                        // Add all Symbol rename events to dictionary
-                        // We skip the first row as it contains the listing event instead of a rename event
-                        foreach (var renameEvent in dividendsSplitsMaps.MapRows.Skip(1))
-                        {
-                            // Symbol.UpdateMappedSymbol does not update the underlying security ID Symbol, which 
-                            // is used to create the hash code. Create a new equity Symbol from scratch instead.
-                            symbol = Symbol.Create(renameEvent.MappedSymbol, SecurityType.Equity, settings.Market);
-                            renamedSymbols.Add(symbol, renameEvent.Date);
+                    var dividendsSplitsMaps = new DividendSplitMapGenerator(
+                        symbol,
+                        settings,
+                        randomValueGenerator,
+                        symbolGenerator,
+                        random,
+                        delistDate,
+                        willBeDelisted);
 
-                            output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} will be renamed on {renameEvent.Date}");
+                    // Keep track of renamed symbols and the time they were renamed. 
+                    var renamedSymbols = new Dictionary<Symbol, DateTime>();
+
+                    if (settings.SecurityType == SecurityType.Equity)
+                    {
+                        dividendsSplitsMaps.GenerateSplitsDividends(tickHistory);
+
+                        if (!willBeDelisted)
+                        {
+                            dividendsSplitsMaps.DividendsSplits.Add(new CorporateFactorRow(new DateTime(2050, 12, 31), 1m, 1m));
+
+                            if (dividendsSplitsMaps.MapRows.Count > 1)
+                            {
+                                // Remove the last element if we're going to have a 20501231 entry
+                                dividendsSplitsMaps.MapRows.RemoveAt(dividendsSplitsMaps.MapRows.Count - 1);
+                            }
+                            dividendsSplitsMaps.MapRows.Add(new MapFileRow(new DateTime(2050, 12, 31), dividendsSplitsMaps.CurrentSymbol.Value));
                         }
+
+                        // If the Symbol value has changed, update the current Symbol
+                        if (symbol != dividendsSplitsMaps.CurrentSymbol)
+                        {
+                            // Add all Symbol rename events to dictionary
+                            // We skip the first row as it contains the listing event instead of a rename event
+                            foreach (var renameEvent in dividendsSplitsMaps.MapRows.Skip(1))
+                            {
+                                // Symbol.UpdateMappedSymbol does not update the underlying security ID Symbol, which 
+                                // is used to create the hash code. Create a new equity Symbol from scratch instead.
+                                symbol = Symbol.Create(renameEvent.MappedSymbol, SecurityType.Equity, settings.Market);
+                                renamedSymbols.Add(symbol, renameEvent.Date);
+
+                                output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} will be renamed on {renameEvent.Date}");
+                            }
+                        }
+                        else
+                        {
+                            // This ensures that ticks will be written for the current Symbol up until 9999-12-31
+                            renamedSymbols.Add(symbol, new DateTime(9999, 12, 31));
+                        }
+
+                        symbol = dividendsSplitsMaps.CurrentSymbol;
+
+                        // Write Splits and Dividend events to directory factor_files
+                        var factorFile = new CorporateFactorProvider(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
+                        var mapFile = new MapFile(symbol.Value, dividendsSplitsMaps.MapRows);
+
+                        factorFile.WriteToFile(symbol);
+                        mapFile.WriteToCsv(settings.Market, symbol.SecurityType);
+
+                        output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");
                     }
                     else
                     {
@@ -212,85 +264,72 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         renamedSymbols.Add(symbol, new DateTime(9999, 12, 31));
                     }
 
-                    symbol = dividendsSplitsMaps.CurrentSymbol;
+                    // define aggregators via settings
+                    var aggregators = settings.CreateAggregators().ToList();
+                    Symbol previousSymbol = null;
+                    var currentCount = 0;
+                    var monthsTrading = 0;
 
-                    // Write Splits and Dividend events to directory factor_files
-                    var factorFile = new CorporateFactorProvider(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
-                    var mapFile = new MapFile(symbol.Value, dividendsSplitsMaps.MapRows);
-
-                    factorFile.WriteToFile(symbol);
-                    mapFile.WriteToCsv(settings.Market, symbol.SecurityType);
-
-                    output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");
-                }
-                else
-                {
-                    // This ensures that ticks will be written for the current Symbol up until 9999-12-31
-                    renamedSymbols.Add(symbol, new DateTime(9999, 12, 31));
-                }
-
-                Symbol previousSymbol = null;
-                var currentCount = 0;
-
-                foreach (var renamed in renamedSymbols)
-                {
-                    var previousRenameDate = previousSymbol == null ? new DateTime(1, 1, 1) : renamedSymbols[previousSymbol];
-                    var previousRenameDateDay = new DateTime(previousRenameDate.Year, previousRenameDate.Month, previousRenameDate.Day);
-                    var renameDate = renamed.Value;
-                    var renameDateDay = new DateTime(renameDate.Year, renameDate.Month, renameDate.Day);
-
-                    foreach (var tick in tickHistory.Where(tick => tick.Time >= previousRenameDate && previousRenameDateDay != TickDay(tick)))
+                    foreach (var renamed in renamedSymbols)
                     {
-                        // Prevents the aggregator from being updated with ticks after the rename event
-                        if (TickDay(tick) > renameDateDay)
+                        var previousRenameDate = previousSymbol == null ? new DateTime(1, 1, 1) : renamedSymbols[previousSymbol];
+                        var previousRenameDateDay = new DateTime(previousRenameDate.Year, previousRenameDate.Month, previousRenameDate.Day);
+                        var renameDate = renamed.Value;
+                        var renameDateDay = new DateTime(renameDate.Year, renameDate.Month, renameDate.Day);
+
+                        foreach (var tick in tickHistory.Where(tick => tick.Time >= previousRenameDate && previousRenameDateDay != TickDay(tick)))
                         {
-                            break;
+                            // Prevents the aggregator from being updated with ticks after the rename event
+                            if (TickDay(tick) > renameDateDay)
+                            {
+                                break;
+                            }
+
+                            if (tick.Time.Month != previousMonth)
+                            {
+                                output.Info.WriteLine($"\tSymbol[{count}]: Month: {tick.Time:MMMM}");
+                                previousMonth = tick.Time.Month;
+                                monthsTrading++;
+                            }
+
+                            foreach (var item in aggregators)
+                            {
+                                tick.Value = tick.Value / dividendsSplitsMaps.FinalSplitFactor;
+                                item.Consolidator.Update(tick);
+                            }
+
+                            if (monthsTrading >= 6 && willBeDelisted && tick.Time > delistDate)
+                            {
+                                output.Warn.WriteLine($"\tSymbol[{count}]: {renamed.Key} delisted at {tick.Time:MMMM yyyy}");
+                                break;
+                            }
                         }
 
-                        if (tick.Time.Month != previousMonth)
-                        {
-                            output.Info.WriteLine($"\tSymbol[{count}]: Month: {tick.Time:MMMM}");
-                            previousMonth = tick.Time.Month;
-                            monthsTrading++;
-                        }
+                        // count each stage as a point, so total points is 2*Symbol-count
+                        // and the current progress is twice the current, but less one because we haven't finished writing data yet
+                        progress = 100 * (2 * count - 1) / (2.0 * settings.SymbolCount);
 
+                        output.Warn.WriteLine($"\tSymbol[{count}]: {renamed.Key} Progress: {progress:0.0}% - Saving data in LEAN format");
+
+                        // persist consolidated data to disk
                         foreach (var item in aggregators)
                         {
-                            tick.Value = tick.Value / dividendsSplitsMaps.FinalSplitFactor;
-                            item.Consolidator.Update(tick);
+                            var writer = new LeanDataWriter(item.Resolution, renamed.Key, Globals.DataFolder, item.TickType);
+
+                            // send the flushed data into the writer. pulling the flushed list is very important,
+                            // lest we likely wouldn't get the last piece of data stuck in the consolidator
+                            // Filter out the data we're going to write here because filtering them in the consolidator update phase
+                            // makes it write all dates for some unknown reason
+                            writer.Write(item.Flush().Where(data => data.Time > previousRenameDate && previousRenameDateDay != DataDay(data)));
                         }
 
-                        if (monthsTrading >= 6 && willBeDelisted && tick.Time > delistDate)
-                        {
-                            output.Warn.WriteLine($"\tSymbol[{count}]: {renamed.Key} delisted at {tick.Time:MMMM yyyy}");
-                            break;
-                        }
+                        // update progress
+                        progress = 100 * (2 * count) / (2.0 * settings.SymbolCount);
+                        output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Progress: {progress:0.0}% - Symbol data generation and output completed");
+
+                        previousSymbol = renamed.Key;
+                        currentCount++;
                     }
-
-                    // count each stage as a point, so total points is 2*Symbol-count
-                    // and the current progress is twice the current, but less one because we haven't finished writing data yet
-                    progress = 100 * (2 * count - 1) / (2.0 * settings.SymbolCount);
-
-                    output.Warn.WriteLine($"\tSymbol[{count}]: {renamed.Key} Progress: {progress:0.0}% - Saving data in LEAN format");
-
-                    // persist consolidated data to disk
-                    foreach (var item in aggregators)
-                    {
-                        var writer = new LeanDataWriter(item.Resolution, renamed.Key, Globals.DataFolder, item.TickType);
-
-                        // send the flushed data into the writer. pulling the flushed list is very important,
-                        // lest we likely wouldn't get the last piece of data stuck in the consolidator
-                        // Filter out the data we're going to write here because filtering them in the consolidator update phase
-                        // makes it write all dates for some unknown reason
-                        writer.Write(item.Flush().Where(data => data.Time > previousRenameDate && previousRenameDateDay != DataDay(data)));
-                    }
-
-                    // update progress
-                    progress = 100 * (2 * count) / (2.0 * settings.SymbolCount);
-                    output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Progress: {progress:0.0}% - Symbol data generation and output completed");
-
-                    previousSymbol = renamed.Key;
-                    currentCount++;
                 }
             }
 

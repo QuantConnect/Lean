@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -25,15 +25,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly string _market;
         private readonly SecurityType _securityType;
 
-        public SpotSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, ISecurityService securityService)
-            : base(settings, random, securityService)
+        public SpotSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+            : base(settings, random)
         {
             _market = settings.Market;
             _securityType = settings.SecurityType;
         }
 
-        protected override Security GenerateSecurity()
-            => NextSymbol(Settings.SecurityType, Settings.Market);
+        public override IEnumerable<Symbol> GenerateAsset()
+        {
+            yield return NextSymbol(Settings.SecurityType, Settings.Market);
+        }
 
         public override int GetAvailableSymbolCount()
         {

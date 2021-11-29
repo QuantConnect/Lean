@@ -1,5 +1,5 @@
 using System;
-using QuantConnect.Interfaces;
+using System.Collections.Generic;
 using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -28,23 +28,23 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly string _market;
         private readonly decimal _underlyingPrice;
         private readonly decimal _maximumStrikePriceDeviation;
-        private readonly ISecurityProvider _securityProvider;
 
-        public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, ISecurityService securityService, decimal underlyingPrice, decimal maximumStrikePriceDeviation, ISecurityProvider securityProvider)
-            : base(settings, random, securityService)
+        public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, decimal underlyingPrice, decimal maximumStrikePriceDeviation)
+            : base(settings, random)
         {
             _minExpiry = settings.Start;
             _maxExpiry = settings.End;
             _market = settings.Market;
             _underlyingPrice = underlyingPrice;
             _maximumStrikePriceDeviation = maximumStrikePriceDeviation;
-            _securityProvider = securityProvider;
         }
 
-        protected override Security GenerateSecurity()
+        public override IEnumerable<Symbol> GenerateAsset()
         {
             // first generate the underlying
             var underlying = NextSymbol(SecurityType.Equity, _market);
+
+            yield return underlying;
 
             var marketHours = MarketHoursDatabase.GetExchangeHours(_market, underlying, SecurityType.Equity);
             var expiry = GetRandomExpiration(marketHours, _minExpiry, _maxExpiry);
@@ -62,7 +62,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 : OptionRight.Put;
 
             // when providing a null option w/ an expiry, it will automatically create the OSI ticker string for the Value
-            return Symbol.CreateOption(underlying, _market, OptionStyle.American, optionRight, strike, expiry);
+            yield return Symbol.CreateOption(underlying, _market, OptionStyle.American, optionRight, strike, expiry);
         }
 
         public override int GetAvailableSymbolCount() => int.MaxValue;

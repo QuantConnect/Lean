@@ -1,6 +1,5 @@
 using System;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -15,8 +14,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly DateTime _maxExpiry;
         private readonly string _market;
 
-        public FutureSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, ISecurityService securityService)
-            : base(settings, random, securityService)
+        public FutureSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+            : base(settings, random)
         {
             _minExpiry = settings.Start;
             _maxExpiry = settings.End;
@@ -27,7 +26,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// Generates a new random future <see cref="Symbol"/>. The generates future contract Symbol will have an
         /// expiry between the specified minExpiry and maxExpiry.
         /// </summary>
-        protected override Security GenerateSecurity()
+        public override IEnumerable<Symbol> GenerateAsset()
         {
             // get a valid ticker from the Symbol properties database
             var ticker = NextTickerFromSymbolPropertiesDatabase(SecurityType.Future, _market);
@@ -35,7 +34,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var marketHours = MarketHoursDatabase.GetExchangeHours(_market, ticker, SecurityType.Future);
             var expiry = GetRandomExpiration(marketHours, _minExpiry, _maxExpiry);
 
-            return Symbol.CreateFuture(ticker, _market, expiry);
+            yield return Symbol.CreateFuture(ticker, _market, expiry);
         }
 
         public override int GetAvailableSymbolCount() => int.MaxValue;
