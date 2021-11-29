@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Threading;
 
 namespace QuantConnect.Scheduling
 {
@@ -42,5 +43,7 @@ namespace QuantConnect.Scheduling
         /// to be <see cref="IsolatorLimitProvider"/>
         /// </summary>
         public DateTime? NextTimeRequest { get; set; }
+
+        public AutoResetEvent? TriggerEvent { get; set; }
     }
 }

@@ -28,12 +28,12 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class IsolatorLimitResultProviderTests
     {
-        private TimeMonitor _timeMonitor;
+        private TimeMonitorTest _timeMonitor;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _timeMonitor = new TimeMonitor(monitorIntervalMs:3);
+            _timeMonitor = new TimeMonitorTest(monitorIntervalMs:3);
         }
 
         [OneTimeTearDown]
@@ -122,25 +122,34 @@ namespace QuantConnect.Tests.Common
         {
             var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
             var provider = new FakeIsolatorLimitResultProvider();
+            var timeMonitorEvent = new AutoResetEvent(false);
+
             Action code = () =>
             {
                 // lets give the monitor time to register the initial time
-                Thread.Sleep(100);
+                timeMonitorEvent.WaitOne();
                 for (int i = 0; i < 4; i++)
                 {
                     timeProvider.AdvanceSeconds(45);
                     // give the monitoring task time to request more time
-                    Thread.Sleep(100);
+                    timeMonitorEvent.WaitOne();
                 }
             };
 
-            provider.Consume(timeProvider, code, _timeMonitor);
+            var consumer = new TimeConsumer
+            {
+                IsolatorLimitProvider = provider,
+                TimeProvider = timeProvider,
+                TriggerEvent = timeMonitorEvent
+            };
+
+            IsolatorLimitProviderTest.Consume(consumer, code, _timeMonitor);
 
             Assert.AreEqual(3, provider.Invocations.Count);
             Assert.IsTrue(provider.Invocations.TrueForAll(invoc => invoc == 1));
 
             // give time to the monitor to register the time consumer ended
-            Thread.Sleep(50);
+            _timeMonitor.RemoveAll();
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
@@ -178,6 +187,33 @@ namespace QuantConnect.Tests.Common
                     _ivocations.Add(minutes);
                 }
                 return true;
+            }
+        }
+
+        private class TimeMonitorTest: TimeMonitor
+        {
+            public TimeMonitorTest(int monitorIntervalMs = 100): base(monitorIntervalMs) {}
+
+            public void RemoveAll()
+            {
+                lock (_timeConsumers)
+                {
+                    _timeConsumers.RemoveAll(time => time.Finished = true);
+                }
+            }
+        }
+
+        private static class IsolatorLimitProviderTest
+        {
+            public static void Consume(
+                TimeConsumer consumer,
+                Action code,
+                TimeMonitor timeMonitor
+                )
+            {
+                timeMonitor.Add(consumer);
+                code();
+                consumer.Finished = true;
             }
         }
     }
