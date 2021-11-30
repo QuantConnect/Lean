@@ -41,6 +41,7 @@ using QuantConnect.ToolBox.ZerodhaDownloader;
 using QuantConnect.Util;
 using System;
 using System.IO;
+using QuantConnect.Interfaces;
 using static QuantConnect.Configuration.ApplicationParser;
 
 namespace QuantConnect.ToolBox
@@ -63,6 +64,16 @@ namespace QuantConnect.ToolBox
             {
                 PrintMessageAndExit();
             }
+
+            var DataProvider
+                = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider"));
+            var MapFileProvider
+                = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+            var FactorFileProvider
+                = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+            
+            MapFileProvider.Initialize(DataProvider);
+            FactorFileProvider.Initialize(MapFileProvider, DataProvider);
 
             var targetApp = GetParameterOrExit(optionsObject, "app").ToLowerInvariant();
             if (targetApp.Contains("download") || targetApp.EndsWith("dl"))
