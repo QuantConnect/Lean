@@ -29,11 +29,14 @@ namespace QuantConnect.Tests.Common
     public class IsolatorLimitResultProviderTests
     {
         private TimeMonitorTest _timeMonitor;
+        private AutoResetEvent _timeMonitorEvent;
 
         [OneTimeSetUp]
         public void Setup()
         {
             _timeMonitor = new TimeMonitorTest(monitorIntervalMs:3);
+            _timeMonitorEvent = new AutoResetEvent(false);
+            _timeMonitor.TimeMonitorEvent = _timeMonitorEvent;
         }
 
         [OneTimeTearDown]
@@ -47,7 +50,6 @@ namespace QuantConnect.Tests.Common
         {
             var minuteElapsed = new ManualResetEvent(false);
             var consumeStarted = new ManualResetEvent(false);
-            var timeMonitorEvent = new AutoResetEvent(false);
 
             Action code = () =>
             {
@@ -62,7 +64,7 @@ namespace QuantConnect.Tests.Common
             var consumeCompleted = Task.Run(() =>
             {
                 consumeStarted.Set();
-                IsolatorResultProviderTest.Consume(provider, timeProvider, code, _timeMonitor, timeMonitorEvent);
+                provider.Consume(timeProvider, code, _timeMonitor);
             });
 
             if (!consumeStarted.WaitOne(50))
@@ -71,14 +73,14 @@ namespace QuantConnect.Tests.Common
             }
 
             // Let's give the monitor time to register the initial time
-            timeMonitorEvent.WaitOne();
+            _timeMonitorEvent.WaitOne();
             timeProvider.Advance(TimeSpan.FromSeconds(45));
 
             Assert.AreEqual(0, provider.Invocations.Count);
 
             timeProvider.Advance(TimeSpan.FromSeconds(15));
 
-            timeMonitorEvent.WaitOne();
+            _timeMonitorEvent.WaitOne();
 
             minuteElapsed.Set();
             if (!consumeCompleted.Wait(50))
@@ -90,7 +92,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(1, provider.Invocations[0]);
 
             // give time to the monitor to register the time consumer ended
-            timeMonitorEvent.WaitOne();
+            _timeMonitorEvent.WaitOne();
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
@@ -99,20 +101,19 @@ namespace QuantConnect.Tests.Common
         {
             var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
             var provider = new FakeIsolatorLimitResultProvider();
-            var timeMonitorEvent = new AutoResetEvent(false);
 
             Action code = () =>
             {
-                timeMonitorEvent.WaitOne();
+                _timeMonitorEvent.WaitOne();
                 timeProvider.Advance(TimeSpan.FromMinutes(.99));
-                timeMonitorEvent.WaitOne();
+                _timeMonitorEvent.WaitOne();
             };
-            IsolatorResultProviderTest.Consume(provider, timeProvider, code, _timeMonitor, timeMonitorEvent);
+            provider.Consume(timeProvider, code, _timeMonitor);
 
             Assert.IsEmpty(provider.Invocations);
 
             // give time to the monitor to register the time consumer ended
-            timeMonitorEvent.WaitOne();
+            _timeMonitorEvent.WaitOne();
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
@@ -121,27 +122,25 @@ namespace QuantConnect.Tests.Common
         {
             var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
             var provider = new FakeIsolatorLimitResultProvider();
-            var timeMonitorEvent = new AutoResetEvent(false);
 
             Action code = () =>
             {
                 // lets give the monitor time to register the initial time
-                timeMonitorEvent.WaitOne();
+                _timeMonitorEvent.WaitOne();
                 for (int i = 0; i < 4; i++)
                 {
                     timeProvider.AdvanceSeconds(45);
                     // give the monitoring task time to request more time
-                    timeMonitorEvent.WaitOne();
+                    _timeMonitorEvent.WaitOne();
                 }
             };
 
-            IsolatorResultProviderTest.Consume(provider, timeProvider, code, _timeMonitor, timeMonitorEvent);
+            provider.Consume(timeProvider, code, _timeMonitor);
 
             Assert.AreEqual(3, provider.Invocations.Count);
             Assert.IsTrue(provider.Invocations.TrueForAll(invoc => invoc == 1));
-
             // give time to the monitor to register the time consumer ended
-            timeMonitorEvent.WaitOne();
+            _timeMonitorEvent.WaitOne();
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
@@ -184,71 +183,28 @@ namespace QuantConnect.Tests.Common
 
         private class TimeMonitorTest: TimeMonitor
         {
-            private Dictionary<TimeConsumer, AutoResetEvent> _events;
+            public AutoResetEvent TimeMonitorEvent;
 
-            public TimeMonitorTest(int monitorIntervalMs = 100) : base(monitorIntervalMs)
-            {
-                _events = new Dictionary<TimeConsumer, AutoResetEvent>();
-            }
+            public TimeMonitorTest(int monitorIntervalMs = 100) : base(monitorIntervalMs) { }
 
             protected override void ProcessConsumer(TimeConsumer consumer)
             {
                 base.ProcessConsumer(consumer);
-                if (_events.ContainsKey(consumer))
-                {
-                    _events[consumer].Set();
-                }
+
+                TimeMonitorEvent.Set();
             }
             protected override void RemoveAll()
             {
                 // Store the TimeConsumer objects to remove
                 var toRemove = TimeConsumers.Where(time => time.Finished).ToList();
 
-                // Remove the elements in toRemove and trigger the event asociated with each of them
-                foreach (var time in toRemove)
+                base.RemoveAll();
+
+                // Check if there were elements removed
+                if (toRemove.Any())
                 {
-                    TimeConsumers.Remove(time);
-                    if (_events.ContainsKey(time))
-                    {
-                        _events[time].Set();
-                    }
+                    TimeMonitorEvent.Set();
                 }
-            }
-
-            public void Add(TimeConsumerTest consumer)
-            {
-                base.Add(consumer);
-                lock (_events)
-                {
-                    _events.Add(consumer, consumer.Event);
-                }
-            }
-        }
-
-        private class TimeConsumerTest: TimeConsumer
-        {
-            public AutoResetEvent Event { get; set; }
-        }
-
-        private class IsolatorResultProviderTest
-        {
-            public static void Consume(
-            IIsolatorLimitResultProvider isolatorLimitProvider,
-            ITimeProvider timeProvider,
-            Action code,
-            TimeMonitorTest timeMonitor,
-            AutoResetEvent autoResetEvent
-            )
-            {
-                var consumer = new TimeConsumerTest
-                {
-                    IsolatorLimitProvider = isolatorLimitProvider,
-                    TimeProvider = timeProvider,
-                    Event = autoResetEvent
-                };
-                timeMonitor.Add(consumer);
-                code();
-                consumer.Finished = true;
             }
         }
     }
