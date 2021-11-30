@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -28,8 +28,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public double HasSplitsPercentage { get; set; }
         public double HasDividendsPercentage { get; set; }
         public double DividendEveryQuarterPercentage { get; set; }
-
-        public TickType[] TickTypes { get; set; }
 
         public static RandomDataGeneratorSettings FromCommandLineArguments(
             string startDateString,
@@ -234,33 +232,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 Environment.Exit(-1);
             }
 
-            switch (securityType)
-            {
-                case SecurityType.Base:
-                case SecurityType.Equity:
-                    tickTypes = new[] { TickType.Trade };
-                    break;
-
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                    tickTypes = new[] { TickType.Quote };
-                    break;
-
-                case SecurityType.Option:
-                case SecurityType.Future:
-                    tickTypes = new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest };
-                    break;
-
-                case SecurityType.Crypto:
-                    tickTypes = new[] { TickType.Trade, TickType.Quote };
-                    break;
-
-                case SecurityType.Commodity:
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            output.Info.WriteLine($"Selected tick types for {securityType}: {string.Join(", ", tickTypes)}");
+            //output.Info.WriteLine($"Selected tick types for {securityType}: {string.Join(", ", tickTypes)}");
 
             return new RandomDataGeneratorSettings
             {
@@ -271,8 +243,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 SymbolCount = symbolCount,
                 SecurityType = securityType,
                 QuoteTradeRatio = quoteTradeRatio,
-
-                TickTypes = tickTypes,
+                
                 Resolution = resolution,
 
                 DataDensity = dataDensity,
@@ -286,30 +257,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 HasDividendsPercentage = hasDividendsPercentage,
                 DividendEveryQuarterPercentage = dividendEveryQuarterPercentage
             };
-        }
-
-        public IEnumerable<TickAggregator> CreateAggregators()
-        {
-            // create default aggregators for tick type/resolution
-            foreach (var tickAggregator in TickAggregator.ForTickTypes(Resolution, TickTypes))
-            {
-                yield return tickAggregator;
-            }
-
-
-            // ensure we have a daily consolidator when coarse is enabled
-            if (IncludeCoarse && Resolution != Resolution.Daily)
-            {
-                // prefer trades for coarse - in practice equity only does trades, but leaving this as configurable
-                if (TickTypes.Contains(TickType.Trade))
-                {
-                    yield return TickAggregator.ForTickTypes(Resolution.Daily, TickType.Trade).Single();
-                }
-                else
-                {
-                    yield return TickAggregator.ForTickTypes(Resolution.Daily, TickType.Quote).Single();
-                }
-            }
         }
     }
 }

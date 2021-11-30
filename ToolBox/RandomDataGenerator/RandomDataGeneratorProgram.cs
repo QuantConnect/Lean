@@ -2,13 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -17,6 +20,21 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public class RandomDataGeneratorProgram
     {
+
+        private static Dictionary<SecurityType, TickType[]> _tickTypesPerSecurityType =
+            new()
+            {
+                { SecurityType.Base, new[] { TickType.Trade } },
+                { SecurityType.Equity, new[] { TickType.Trade } },
+                { SecurityType.Forex, new[] { TickType.Quote } },
+                { SecurityType.Cfd, new[] { TickType.Quote } },
+
+                { SecurityType.Option, new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest } },
+                { SecurityType.Future, new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest } },
+
+                { SecurityType.Crypto, new[] { TickType.Trade, TickType.Quote } }
+            };
+
         public static void RandomDataGenerator(
             string startDateString,
             string endDateString,
@@ -109,8 +127,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 randomValueGenerator = new RandomValueGenerator(settings.RandomSeed);
             }
 
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            mapFileProvider.Initialize(new DefaultDataProvider());
             var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
             var securityService = new SecurityService(
                 new CashBook(),
@@ -123,7 +139,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(
                     new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
-                new MapFilePrimaryExchangeProvider(mapFileProvider)
+                new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
             );
 
             var symbolGenerator = SymbolGenerator.Create(settings, randomValueGenerator);
@@ -155,20 +171,20 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     var security = securityService.CreateSecurity(
                         currentSymbol,
                         new SubscriptionDataConfig(
-                            settings.TickTypes.First().GetType(),
+                            _tickTypesPerSecurityType[currentSymbol.SecurityType].First().GetType(),
                             currentSymbol,
                             settings.Resolution,
                             DateTimeZone.Utc,
-                            DateTimeZone.Utc,
+                            TimeZones.NewYork,
                             false,
                             false,
                             false,
                             false,
-                            settings.TickTypes.First()));
+                            _tickTypesPerSecurityType[currentSymbol.SecurityType].First()));
 
                     tickGenerators.Add(
                         security,
-                        TickGenerator.Create(settings, randomValueGenerator, security)
+                        TickGenerator.Create(settings, _tickTypesPerSecurityType[currentSymbol.SecurityType], randomValueGenerator, security)
                             .GenerateTicks()
                             .GetEnumerator());
 
@@ -180,11 +196,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                 foreach (var (security, tickGenerator) in tickGenerators)
                 {
+                    tickGenerator.MoveNext();
+
                     var tick = tickGenerator.Current;
                     tickHistories[security.Symbol].Add(tick);
 
                     security.Update(new List<BaseData> { tick }, tick.GetType(), false);
-                    tickGenerator.MoveNext();
                 }
 
                 foreach (var (currentSymbol, tickHistory) in tickHistories)
@@ -268,7 +285,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     }
 
                     // define aggregators via settings
-                    var aggregators = settings.CreateAggregators().ToList();
+                    var aggregators = CreateAggregators(settings, _tickTypesPerSecurityType[currentSymbol.SecurityType]).ToList();
                     Symbol previousSymbol = null;
                     var currentCount = 0;
                     var monthsTrading = 0;
@@ -340,6 +357,31 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             DateTime TickDay(Tick tick) => new(tick.Time.Year, tick.Time.Month, tick.Time.Day);
             DateTime DataDay(BaseData data) => new(data.Time.Year, data.Time.Month, data.Time.Day);
+        }
+
+
+        public static IEnumerable<TickAggregator> CreateAggregators(RandomDataGeneratorSettings settings, TickType[] tickTypes)
+        {
+            // create default aggregators for tick type/resolution
+            foreach (var tickAggregator in TickAggregator.ForTickTypes(settings.Resolution, tickTypes))
+            {
+                yield return tickAggregator;
+            }
+
+
+            // ensure we have a daily consolidator when coarse is enabled
+            if (settings.IncludeCoarse && settings.Resolution != Resolution.Daily)
+            {
+                // prefer trades for coarse - in practice equity only does trades, but leaving this as configurable
+                if (tickTypes.Contains(TickType.Trade))
+                {
+                    yield return TickAggregator.ForTickTypes(Resolution.Daily, TickType.Trade).Single();
+                }
+                else
+                {
+                    yield return TickAggregator.ForTickTypes(Resolution.Daily, TickType.Quote).Single();
+                }
+            }
         }
     }
 }

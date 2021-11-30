@@ -13,18 +13,20 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     {
         protected IRandomValueGenerator Random;
         protected RandomDataGeneratorSettings Settings;
+        protected TickType[] TickTypes;
 
         protected MarketHoursDatabase MarketHoursDatabase { get; }
         protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; }
         public Symbol Symbol { get; }
 
-        protected TickGenerator(RandomDataGeneratorSettings settings, Symbol symbol) : this(settings, new RandomValueGenerator(), symbol)
+        protected TickGenerator(RandomDataGeneratorSettings settings, TickType[] tickTypes, Symbol symbol) : this(settings, tickTypes, new RandomValueGenerator(), symbol)
         { }
 
-        protected TickGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, Symbol symbol)
+        protected TickGenerator(RandomDataGeneratorSettings settings, TickType[] tickTypes, IRandomValueGenerator random, Symbol symbol)
         {
             Random = random;
             Settings = settings;
+            TickTypes = tickTypes;
             Symbol = symbol;
             SymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
@@ -32,6 +34,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         public static ITickGenerator Create(
             RandomDataGeneratorSettings settings,
+            TickType[] tickTypes,
             IRandomValueGenerator random,
             Security security
             )
@@ -39,9 +42,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             switch (security.Symbol.SecurityType)
             {
                 case SecurityType.Option:
-                    return new BlackScholesTickGenerator(settings, random, security);
+                    return new BlackScholesTickGenerator(settings, tickTypes, random, security);
                 default:
-                    return new TickGenerator(settings, random, security.Symbol);
+                    return new TickGenerator(settings, tickTypes, random, security.Symbol);
             }
         }
 
@@ -70,7 +73,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             while (current <= Settings.End)
             {
                 var next = NextTickTime(current, Settings.Resolution, Settings.DataDensity);
-                if (Settings.TickTypes.Contains(TickType.OpenInterest))
+                if (TickTypes.Contains(TickType.OpenInterest))
                 {
                     if (next.Date != current.Date)
                     {
@@ -83,8 +86,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
 
                 // keeps quotes close to the trades for consistency
-                if (Settings.TickTypes.Contains(TickType.Trade) &&
-                    Settings.TickTypes.Contains(TickType.Quote))
+                if (TickTypes.Contains(TickType.Trade) &&
+                    TickTypes.Contains(TickType.Quote))
                 {
                     // since we're generating both trades and quotes we'll only reference one previous value
                     // to prevent the trade and quote prices from drifting away from each other
@@ -105,13 +108,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     }
                     previousValues[TickType.Trade] = referenceValue;
                 }
-                else if (Settings.TickTypes.Contains(TickType.Trade))
+                else if (TickTypes.Contains(TickType.Trade))
                 {
                     var nextTrade = NextTick(next, TickType.Trade, NextSymbolPrice(next, previousValues[TickType.Trade], deviation), deviation);
                     previousValues[TickType.Trade] = nextTrade.Value;
                     yield return nextTrade;
                 }
-                else if (Settings.TickTypes.Contains(TickType.Quote))
+                else if (TickTypes.Contains(TickType.Quote))
                 {
                     var nextQuote = NextTick(next, TickType.Quote, NextSymbolPrice(next, previousValues[TickType.Quote], deviation), deviation);
                     previousValues[TickType.Quote] = nextQuote.Value;

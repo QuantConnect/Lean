@@ -11,8 +11,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     {
         private readonly Securities.Option.Option _option;
 
-        public BlackScholesTickGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, Security security)
-            : base(settings, random, security.Symbol)
+        public BlackScholesTickGenerator(RandomDataGeneratorSettings settings, TickType[] tickTypes, IRandomValueGenerator random, Security security)
+            : base(settings, tickTypes, security.Symbol)
         {
             _option = security as Securities.Option.Option;
         }
