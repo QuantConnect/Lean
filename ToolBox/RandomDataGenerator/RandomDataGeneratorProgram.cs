@@ -113,10 +113,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 new CashBook(),
                 MarketHoursDatabase.FromDataFolder(Globals.DataFolder),
                 SymbolPropertiesDatabase.FromDataFolder(),
-                new FuncSecurityInitializer(secutiry =>
+                new SecurityInitializerProvider(new FuncSecurityInitializer(secutiry =>
                 {
                     secutiry.FeeModel = new ConstantFeeModel(0);
-                }),
+                })),
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(
                     new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
