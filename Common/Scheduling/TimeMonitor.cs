@@ -26,8 +26,13 @@ namespace QuantConnect.Scheduling
     /// </summary>
     public class TimeMonitor : IDisposable
     {
-        protected readonly List<TimeConsumer> _timeConsumers;
         private readonly Timer _timer;
+        /// <summary>
+        /// List to store the coming TimeConsumer objects
+        /// </summary>
+        /// <remarks>This field is protected because it's used in a test class 
+        /// in `IsolatorLimitResultProviderTests.cs</remarks>
+        protected readonly List<TimeConsumer> TimeConsumers;
 
         /// <summary>
         /// Returns the number of time consumers currently being monitored
@@ -36,9 +41,9 @@ namespace QuantConnect.Scheduling
         {
             get
             {
-                lock (_timeConsumers)
+                lock (TimeConsumers)
                 {
-                    return _timeConsumers.Count;
+                    return TimeConsumers.Count;
                 }
             }
         }
@@ -48,14 +53,14 @@ namespace QuantConnect.Scheduling
         /// </summary>
         public TimeMonitor(int monitorIntervalMs = 100)
         {
-            _timeConsumers = new List<TimeConsumer>();
+            TimeConsumers = new List<TimeConsumer>();
             _timer = new Timer(state =>
             {
-                lock (_timeConsumers)
+                lock (TimeConsumers)
                 {
-                    _timeConsumers.RemoveAll(time => time.Finished);
+                    RemoveAll();
 
-                    foreach (var consumer in _timeConsumers)
+                    foreach (var consumer in TimeConsumers)
                     {
                         ProcessConsumer(consumer);
                     }
@@ -64,9 +69,11 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
-        /// Process the TimeConsumer object in _timeConsumers list
+        /// Process the TimeConsumer object in TimeConsumers list
         /// </summary>
         /// <param name="consumer">The TimeConsumer object to be processed</param>
+        /// <remarks>This method is protected because it's overrode by a test class
+        /// in `IsolatorLimitResultProviderTests.cs`</remarks>
         protected virtual void ProcessConsumer(TimeConsumer consumer)
         {
             if (consumer.NextTimeRequest == null)
@@ -91,14 +98,24 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Remove all TimeConsumer objects where the `Finished` field is marked as true
+        /// </summary>
+        /// <remarks>This method is protected because it's overrode by a test class in 
+        /// `IsolatorLimitResultProviderTests.cs`</remarks>
+        protected virtual void RemoveAll()
+        {
+            TimeConsumers.RemoveAll(time => time.Finished);
+        }
+
+        /// <summary>
         /// Adds a new time consumer element to be monitored
         /// </summary>
         /// <param name="consumer">Time consumer instance</param>
         public void Add(TimeConsumer consumer)
         {
-            lock (_timeConsumers)
+            lock (TimeConsumers)
             {
-                _timeConsumers.Add(consumer);
+                TimeConsumers.Add(consumer);
             }
         }
 
