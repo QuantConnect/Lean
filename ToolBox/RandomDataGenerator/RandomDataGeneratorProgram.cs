@@ -5,6 +5,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
@@ -108,6 +109,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 randomValueGenerator = new RandomValueGenerator(settings.RandomSeed);
             }
 
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            mapFileProvider.Initialize(new DefaultDataProvider());
             var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
             var securityService = new SecurityService(
                 new CashBook(),
@@ -120,7 +123,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(
                     new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
-                new MapFilePrimaryExchangeProvider(new LocalDiskMapFileProvider())
+                new MapFilePrimaryExchangeProvider(mapFileProvider)
             );
 
             var symbolGenerator = SymbolGenerator.Create(settings, randomValueGenerator);
