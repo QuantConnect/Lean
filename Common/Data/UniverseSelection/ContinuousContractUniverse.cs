@@ -102,20 +102,22 @@ namespace QuantConnect.Data.UniverseSelection
             DateTime maximumEndTimeUtc,
             ISubscriptionDataConfigService subscriptionService)
         {
-            foreach (var subscriptionRequest in base.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc, subscriptionService))
-            {
-                if (!subscriptionRequest.Configuration.Symbol.IsCanonical())
-                {
-                    // if not canonical selections are internal
-                    yield return new SubscriptionRequest(subscriptionRequest,
-                        configuration: new SubscriptionDataConfig(subscriptionRequest.Configuration, isInternalFeed:true));
-                }
-                else
-                {
-
-                    yield return subscriptionRequest;
-                }
-            }
+            var isInternal = !security.Symbol.IsCanonical();
+            var result = subscriptionService.Add(security.Symbol,
+                UniverseSettings.Resolution,
+                UniverseSettings.FillForward,
+                UniverseSettings.ExtendedMarketHours,
+                dataNormalizationMode: UniverseSettings.DataNormalizationMode,
+                subscriptionDataTypes: UniverseSettings.SubscriptionDataTypes,
+                dataMappingMode: UniverseSettings.DataMappingMode,
+                contractDepthOffset: (uint)Math.Abs(UniverseSettings.ContractDepthOffset),
+                isInternalFeed: isInternal);
+            return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
+                universe: this,
+                security: security,
+                configuration: new SubscriptionDataConfig(config, isInternalFeed: config.IsInternalFeed || config.TickType == TickType.OpenInterest),
+                startTimeUtc: currentTimeUtc,
+                endTimeUtc: maximumEndTimeUtc));
         }
 
         /// <summary>

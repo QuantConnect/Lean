@@ -510,17 +510,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Security security;
             if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
             {
-                // For now this is required for retro compatibility with usages of security.Subscriptions
-                var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
-                    universeSettings.Resolution,
-                    universeSettings.FillForward,
-                    universeSettings.ExtendedMarketHours,
-                    dataNormalizationMode: universeSettings.DataNormalizationMode,
-                    subscriptionDataTypes: universeSettings.SubscriptionDataTypes,
-                    dataMappingMode: universeSettings.DataMappingMode,
-                    contractDepthOffset: (uint)Math.Abs(universeSettings.ContractDepthOffset));
-
-                security = _securityService.CreateSecurity(symbol, configs, universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
+                security = _securityService.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
 
                 pendingAdditions.Add(symbol, security);
             }

@@ -18,14 +18,14 @@ using System;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using System.Collections;
+using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerator that will subscription to a data queue handler and refresh the subscription if any mapping occurs
+    /// Enumerator that will subscribe through the provided data queue handler and refresh the subscription if any mapping occurs
     /// </summary>
     public class LiveSubscriptionEnumerator : IEnumerator<BaseData>
     {

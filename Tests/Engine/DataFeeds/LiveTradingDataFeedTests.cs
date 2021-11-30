@@ -2244,7 +2244,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                         foreach (var symbol in futureSymbols)
                         {
-                            Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol));
+                            // only assert there is data for non internal subscriptions
+                            if (algorithm.SubscriptionManager.SubscriptionDataConfigService
+                                .GetSubscriptionDataConfigs(symbol).Any())
+                            {
+                                Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol), $"{symbol} was not found, has [{string.Join(",", timeSlice.Slice.Keys)}]");
+                            }
                         }
                     }
 
@@ -2265,6 +2270,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         lastSecurityChangedTime = timeSlice.Time;
                         Log.Debug($"{timeSlice.Time} - Adding future symbol: {security.Symbol}");
+
                         futureSymbols.Add(security.Symbol);
                     }
                     else if (security.Symbol.SecurityType == SecurityType.Option)
