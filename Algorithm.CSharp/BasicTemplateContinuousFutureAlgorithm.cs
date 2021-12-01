@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if(_fast > _slow)
                 {
                     _currentContract = Securities[_continuousContract.Mapped];
-                    Buy(_continuousContract.Mapped, 1);
+                    Buy(_currentContract.Symbol, 1);
                 }
             }
             else if(_fast < _slow)

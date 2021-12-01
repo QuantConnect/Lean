@@ -2925,7 +2925,7 @@ namespace QuantConnect
         /// Helper method to determine symbol for a live subscription
         /// </summary>
         /// <remarks>Useful for continuous futures where we subscribe to the underlying</remarks>
-        public static Symbol GetsLiveSubscriptionSymbol(this Symbol symbol)
+        public static Symbol GetLiveSubscriptionSymbol(this Symbol symbol)
         {
             if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical() && symbol.HasUnderlying)
             {
