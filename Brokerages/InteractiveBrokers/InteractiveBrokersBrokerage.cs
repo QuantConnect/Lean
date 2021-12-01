@@ -831,6 +831,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace("InteractiveBrokersBrokerage.Connect(): Restoring data subscriptions...");
                 RestoreDataSubscriptions();
+
+                // we need to tell the DefaultBrokerageMessageHandler we are connected else he will kill us
+                OnMessage(BrokerageMessageEvent.Reconnected("Connect() finished successfully"));
             }
             else
             {
