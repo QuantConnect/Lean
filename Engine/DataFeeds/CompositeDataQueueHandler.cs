@@ -20,6 +20,7 @@ using QuantConnect.Packets;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -76,6 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void SetJob(LiveNodePacket job)
         {
             var dataHandlersConfig = job.DataQueueHandler;
+            Log.Trace($"CompositeDataQueueHandler.SetJob(): will use {dataHandlersConfig}");
             var dataHandlers = JsonConvert.DeserializeObject<List<string>>(dataHandlersConfig);
             foreach (var dataHandlerName in dataHandlers)
             {

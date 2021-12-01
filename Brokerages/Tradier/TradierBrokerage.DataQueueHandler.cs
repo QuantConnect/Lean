@@ -53,12 +53,9 @@ namespace QuantConnect.Brokerages.Tradier
             var accountId = job.BrokerageData["tradier-account-id"];
             var accessToken = job.BrokerageData["tradier-access-token"];
             var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
-            var restClient = new RestClient(useSandbox ? _restApiSandboxUrl : _restApiUrl);
 
             Initialize(
                 wssUrl: WebSocketUrl,
-                websocket: new WebSocketClientWrapper(),
-                restClient: restClient,
                 accountId: accountId,
                 accessToken: accessToken,
                 useSandbox: useSandbox,
@@ -188,6 +185,9 @@ namespace QuantConnect.Brokerages.Tradier
             WebSocket.Send(json);
         }
 
+        /// <summary>
+        /// Handles websocket received messages
+        /// </summary>
         protected override void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
             var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;

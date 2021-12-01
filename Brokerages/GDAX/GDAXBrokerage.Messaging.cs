@@ -60,8 +60,7 @@ namespace QuantConnect.Brokerages.GDAX
 
         // GDAX has different rate limits for public and private endpoints
         // https://docs.gdax.com/#rate-limits
-        internal enum GdaxEndpointType
-        { Public, Private }
+        internal enum GdaxEndpointType { Public, Private }
 
         private readonly RateGate _publicEndpointRateLimiter = new RateGate(6, TimeSpan.FromSeconds(1));
         private readonly RateGate _privateEndpointRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
@@ -193,9 +192,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected virtual void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
             string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
         {
+            if (IsInitialized)
+            {
+                return;
+            }
             base.Initialize(wssUrl, websocket, restClient, apiKey, apiSecret);
             _job = job;
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
@@ -207,6 +210,16 @@ namespace QuantConnect.Brokerages.GDAX
             _isDataQueueHandler = this is GDAXDataQueueHandler;
 
             _fillMonitorTask = Task.Factory.StartNew(FillMonitorAction, _ctsFillMonitor.Token);
+
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+
+            SubscriptionManager = subscriptionManager;
         }
 
         private void OnSnapshot(string data)

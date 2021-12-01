@@ -34,9 +34,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase("GDAXDataQueueHandler")]
         [TestCase("BitfinexBrokerage")] 
         [TestCase("BinanceBrokerage")]
-        public void GetFactoryFromIDQH(string IDQH)
+        public void GetFactoryFromDataQueueHandler(string dataQueueHandler)
         {
-            var factory = JobQueue.GetFactoryFromDataQueueHandler(IDQH);
+            var factory = JobQueue.GetFactoryFromDataQueueHandler(dataQueueHandler);
             Assert.NotNull(factory);
         }
 
@@ -44,11 +44,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SetJob()
         {
             //Array IDQH
-            var dataHanders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
+            var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
             var jobWithArrayIDQH = new LiveNodePacket
             {
                 Brokerage = "ZerodhaBrokerage",
-                DataQueueHandler = dataHanders
+                DataQueueHandler = dataHandlers
             };
             var compositeDataQueueHandler = new CompositeDataQueueHandler();
             compositeDataQueueHandler.SetJob(jobWithArrayIDQH);
@@ -58,11 +58,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void SubscribeReturnsNull()
         {
-            Subscription subscription = null;
-            EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
             var dataConfig = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var compositeDataQueueHandler = new CompositeDataQueueHandler();
-            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, handler);
+            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
             Assert.Null(enumerator);
             compositeDataQueueHandler.Dispose();
         }
@@ -70,20 +68,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void SubscribeReturnsNotNull()
         {
-            var dataHanders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
+            var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
             var job = new LiveNodePacket
             {
                 Brokerage = "ZerodhaBrokerage",
-                DataQueueHandler = dataHanders
+                DataQueueHandler = dataHandlers
             };
             var compositeDataQueueHandler = new CompositeDataQueueHandler();
             compositeDataQueueHandler.SetJob(job);
-            Subscription subscription = null;
-            EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
             var dataConfig = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
-            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, handler);
+            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
             Assert.NotNull(enumerator);
             compositeDataQueueHandler.Dispose();
+            enumerator.Dispose();
         }
 
         [Test]

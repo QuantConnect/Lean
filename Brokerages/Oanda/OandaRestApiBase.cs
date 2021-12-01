@@ -404,7 +404,7 @@ namespace QuantConnect.Brokerages.Oanda
                 return false;
 
             // ignore universe symbols
-            return !symbol.Value.Contains("-UNIVERSE-");
+            return !symbol.Value.Contains("-UNIVERSE-") && symbol.ID.Market == Market.Oanda;
         }
 
         private bool Refresh()

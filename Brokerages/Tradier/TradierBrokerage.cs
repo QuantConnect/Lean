@@ -119,11 +119,8 @@ namespace QuantConnect.Brokerages.Tradier
             string accessToken)
             : base("Tradier Brokerage")
         {
-            var restClient = new RestClient(useSandbox ? _restApiSandboxUrl : _restApiUrl);
             Initialize(
                 wssUrl: WebSocketUrl,
-                websocket: new WebSocketClientWrapper(),
-                restClient: restClient,
                 accountId: accountId,
                 accessToken: accessToken,
                 useSandbox: useSandbox,
@@ -381,7 +378,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Place Order through API.
         /// accounts/{account-id}/orders
         /// </summary>
-        public TradierOrderResponse PlaceOrder(
+        private TradierOrderResponse PlaceOrder(
             TradierOrderClass classification,
             TradierOrderDirection direction,
             string symbol,
@@ -1773,8 +1770,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Initailze the instance of this class
         /// </summary>
-
-        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient,
+        private void Initialize(string wssUrl,
             string accountId, string accessToken, bool useSandbox, IAlgorithm algorithm,
             IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator)
         {
@@ -1782,7 +1778,8 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 return;
             }
-            base.Initialize(wssUrl, websocket, restClient, null, null);
+            var restClient = new RestClient(useSandbox ? _restApiSandboxUrl : _restApiUrl);
+            base.Initialize(wssUrl, new WebSocketClientWrapper(), restClient, null, null);
             _algorithm = algorithm;
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;

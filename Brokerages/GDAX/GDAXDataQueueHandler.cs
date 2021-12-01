@@ -129,49 +129,6 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
-        /// Initialize the instance of this class
-        /// </summary>
-        /// <param name="wssUrl">The web socket base url</param>
-        /// <param name="websocket">instance of websockets client</param>
-        /// <param name="restClient">instance of rest client</param>
-        /// <param name="apiKey">api key</param>
-        /// <param name="apiSecret">api secret</param>
-        /// <param name="passPhrase">pass phrase</param>
-        /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
-        /// <param name="aggregator">the aggregator for consolidating ticks</param>
-        /// <param name="job">The live job packet</param>
-        protected override void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
-            string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
-        {
-            if (IsInitialized)
-            {
-                return;
-            }
-            base.Initialize(
-                wssUrl: wssUrl,
-                websocket: websocket,
-                restClient: restClient,
-                apiKey: apiKey,
-                apiSecret: apiSecret,
-                passPhrase: passPhrase,
-                algorithm: algorithm,
-                priceProvider: priceProvider,
-                aggregator: aggregator,
-                job: job
-            );
-            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            subscriptionManager.SubscribeImpl += (s, t) =>
-            {
-                Subscribe(s);
-                return true;
-            };
-            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-
-            SubscriptionManager = subscriptionManager;
-        }
-
-        /// <summary>
         /// Checks if this brokerage supports the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
@@ -184,7 +141,7 @@ namespace QuantConnect.Brokerages.GDAX
                 return false;
             }
 
-            return true;
+            return symbol.ID.Market == Market.GDAX;
         }
     }
 }

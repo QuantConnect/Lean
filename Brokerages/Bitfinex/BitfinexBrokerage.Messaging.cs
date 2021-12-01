@@ -108,7 +108,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                 apiKey: apiKey,
                 apiSecret: apiSecret,
                 algorithm: algorithm,
-                priceProvider: priceProvider,
                 aggregator: aggregator,
                 job: job
             );
@@ -157,17 +156,19 @@ namespace QuantConnect.Brokerages.Bitfinex
             return true;
         }
 
+        /// <summary>
+        /// Initialize the instance of this class
+        /// </summary>
         /// <param name="wssUrl">The web socket base url</param>
         /// <param name="websocket">instance of websockets client</param>
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey,
-            string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+        private void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey,
+            string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
         {
             if (IsInitialized)
             {

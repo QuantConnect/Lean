@@ -79,7 +79,6 @@ namespace QuantConnect.Brokerages.Binance
             Initialize(
                 wssUrl: webSocketBaseUrl,
                 restApiUrl: restApiUrl,
-                websocket: new WebSocketClientWrapper(),
                 apiKey: apiKey,
                 apiSecret: apiSecret,
                 algorithm: algorithm,
@@ -326,7 +325,6 @@ namespace QuantConnect.Brokerages.Binance
             Initialize(
                 wssUrl: webSocketBaseUrl,
                 restApiUrl: restApiUrl,
-                websocket: new WebSocketClientWrapper(),
                 apiKey: apiKey,
                 apiSecret: apiSecret,
                 algorithm: null,
@@ -377,7 +375,8 @@ namespace QuantConnect.Brokerages.Binance
         private static bool CanSubscribe(Symbol symbol)
         {
             return !symbol.Value.Contains("UNIVERSE") &&
-                   symbol.SecurityType == SecurityType.Crypto;
+                   symbol.SecurityType == SecurityType.Crypto &&
+                   symbol.ID.Market == Market.Binance;
         }
 
         #endregion IDataQueueHandler
@@ -407,20 +406,19 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="wssUrl">The web socket base url</param>
         /// <param name="restApiUrl">The rest api url</param>
-        /// <param name="websocket">instance of websockets client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        protected void Initialize(string wssUrl, string restApiUrl, IWebSocket websocket, string apiKey, string apiSecret,
+        private void Initialize(string wssUrl, string restApiUrl,string apiKey, string apiSecret,
             IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
         {
             if (IsInitialized)
             {
                 return;
             }
-            base.Initialize(wssUrl, websocket, null, apiKey, apiSecret);
+            base.Initialize(wssUrl,  new WebSocketClientWrapper(), null, apiKey, apiSecret);
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;

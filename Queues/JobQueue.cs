@@ -74,28 +74,20 @@ namespace QuantConnect.Queues
         /// Gets Brokerage Factory for provided IDQH
         /// </summary>
         /// <param name="dataQueueHandler"></param>
-        /// <returns>An Instance of Brokearage Factory if possible, otherwise null</returns>
+        /// <returns>An Instance of Brokerage Factory if possible, otherwise null</returns>
         public static IBrokerageFactory GetFactoryFromDataQueueHandler(string dataQueueHandler)
         {
             IBrokerageFactory brokerageFactory = null;
-            if (!dataQueueHandler.EndsWith("DataQueueHandler"))
-            {
-                brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(dataQueueHandler));
-            }
-            else
-            {
-                var dataQueueHandlerType = Assembly.GetAssembly(typeof(Brokerage))
-                    .GetTypes()
-                    .FirstOrDefault(x =>
-                        x.FullName != null &&
-                        x.FullName.EndsWith(dataQueueHandler) &&
-                        x.HasAttribute(typeof(BrokerageFactoryAttribute)));
+            var dataQueueHandlerType = Composer.Instance.GetExportedTypes<IBrokerage>()
+                .FirstOrDefault(x =>
+                    x.FullName != null &&
+                    x.FullName.EndsWith(dataQueueHandler, StringComparison.InvariantCultureIgnoreCase) &&
+                    x.HasAttribute(typeof(BrokerageFactoryAttribute)));
 
-                if (dataQueueHandlerType != null)
-                {
-                    var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
-                    brokerageFactory = (BrokerageFactory)Activator.CreateInstance(attribute.Type);
-                }
+            if (dataQueueHandlerType != null)
+            {
+                var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
+                brokerageFactory = (BrokerageFactory)Activator.CreateInstance(attribute.Type);
             }
             return brokerageFactory;
         }
@@ -182,7 +174,7 @@ namespace QuantConnect.Queues
                     var brokerageFactoryForDataHandler = GetFactoryFromDataQueueHandler(dataHandlerName);
                     if (brokerageFactoryForDataHandler == null)
                     {
-                        Log.Error($"JobQueue.NextJob(): Not able to fetch data handler with name: {dataHandlerName}");
+                        Log.Trace($"JobQueue.NextJob(): Not able to fetch data handler factory with name: {dataHandlerName}");
                         continue;
                     }
                     if (brokerageFactoryForDataHandler.BrokerageType == brokerageName)
@@ -190,8 +182,7 @@ namespace QuantConnect.Queues
                         //Don't need to add brokearageData again if added by brokerage
                         continue;
                     }
-                    var brokerageData = brokerageFactoryForDataHandler.BrokerageData;
-                    foreach (var data in brokerageData)
+                    foreach (var data in brokerageFactoryForDataHandler.BrokerageData)
                     {
                         if (data.Key == "live-holdings")
                         {

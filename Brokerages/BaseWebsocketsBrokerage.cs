@@ -34,44 +34,44 @@ namespace QuantConnect.Brokerages
         private const int ConnectionTimeout = 30000;
 
         /// <summary>
-        ///
+        /// True if the current brokerage is already initialized
         /// </summary>
-        protected bool IsInitialized;
+        protected bool IsInitialized { get; set; }
 
         /// <summary>
         /// The websockets client instance
         /// </summary>
-        protected IWebSocket WebSocket;
+        protected IWebSocket WebSocket { get; set; }
 
         /// <summary>
         /// The rest client instance
         /// </summary>
-        protected IRestClient RestClient;
+        protected IRestClient RestClient { get; set; }
 
         /// <summary>
         /// standard json parsing settings
         /// </summary>
-        protected JsonSerializerSettings JsonSettings;
+        protected JsonSerializerSettings JsonSettings { get; set; }
 
         /// <summary>
         /// A list of currently active orders
         /// </summary>
-        public ConcurrentDictionary<int, Orders.Order> CachedOrderIDs;
+        public ConcurrentDictionary<int, Orders.Order> CachedOrderIDs { get; set; }
 
         /// <summary>
         /// The api secret
         /// </summary>
-        protected string ApiSecret;
+        protected string ApiSecret { get; set; }
 
         /// <summary>
         /// The api key
         /// </summary>
-        protected string ApiKey;
+        protected string ApiKey { get; set; }
 
         /// <summary>
         /// Count subscribers for each (symbol, tickType) combination
         /// </summary>
-        protected DataQueueHandlerSubscriptionManager SubscriptionManager;
+        protected DataQueueHandlerSubscriptionManager SubscriptionManager { get; set; }
 
         /// <summary>
         /// Initialize the instance of this class

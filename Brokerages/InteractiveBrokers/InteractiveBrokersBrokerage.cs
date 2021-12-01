@@ -2594,7 +2594,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var port = Config.GetInt("ib-port", 4001);
             var host = Config.Get("ib-host", "127.0.0.1");
             var twsDirectory = Config.Get("ib-tws-dir", "C:\\Jts");
-            var ibVersion = Config.Get("ib-version", InteractiveBrokersBrokerage.DefaultVersion);
+            var ibVersion = Config.Get("ib-version", DefaultVersion);
 
             var account = job.BrokerageData["ib-account"];
             var userId = job.BrokerageData["ib-user-name"];

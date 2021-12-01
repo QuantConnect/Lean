@@ -215,6 +215,25 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Will return all loaded types that are assignable to T type
+        /// </summary>
+        public IEnumerable<Type> GetExportedTypes<T>() where T : class
+        {
+            var type = typeof(T);
+            return _exportedTypes.Where(type1 =>
+                {
+                    try
+                    {
+                        return type.IsAssignableFrom(type1);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                });
+        }
+
+        /// <summary>
         /// Extension method to searches the composition container for an export that has a matching type name. This function
         /// will first try to match on Type.AssemblyQualifiedName, then Type.FullName, and finally on Type.Name
         ///
