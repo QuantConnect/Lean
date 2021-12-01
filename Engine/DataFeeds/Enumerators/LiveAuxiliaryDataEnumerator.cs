@@ -32,12 +32,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private SecurityCache _securityCache;
 
         /// <summary>
-        /// Allows specifying an offset to trigger the tradable date event
-        /// </summary>
-        /// <remarks>Useful for delaying the tradable date event until new auxiliary data is available to refresh map and factor files</remarks>
-        public static TimeSpan TradableDateOffset { get; set; } = TimeSpan.FromHours(6);
-
-        /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
@@ -64,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
         public override bool MoveNext()
         {
-            var currentDate = _timeProvider.GetUtcNow().ConvertFromUtc(Config.ExchangeTimeZone).Add(-TradableDateOffset).Date;
+            var currentDate = _timeProvider.GetUtcNow().ConvertFromUtc(Config.ExchangeTimeZone).Add(-Time.LiveAuxiliaryDataOffset).Date;
             if (currentDate != _lastTime)
             {
                 // when the date changes for the security we trigger a new tradable date event

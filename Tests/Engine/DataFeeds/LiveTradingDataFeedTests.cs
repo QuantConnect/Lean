@@ -896,7 +896,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (securityType == SecurityType.Future)
             {
-                _algorithm.AddFuture(Futures.Metals.Gold);
+                _algorithm.AddFuture(Futures.Indices.SP500EMini);
             }
             else
             {
@@ -1290,7 +1290,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction, lookupSymbolsFunction, canPerformSelection, _manualTimeProvider);
 
             _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
-            var fileProvider = new DefaultDataProvider();
+            var fileProvider = TestGlobals.DataProvider;
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(_algorithm.Portfolio));
@@ -1313,7 +1313,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TestGlobals.FactorFileProvider, fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
 
             _algorithm.PostInitialize();
-            Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
             return _feed;
         }
 
@@ -2245,7 +2244,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                         foreach (var symbol in futureSymbols)
                         {
-                            Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol));
+                            // only assert there is data for non internal subscriptions
+                            if (algorithm.SubscriptionManager.SubscriptionDataConfigService
+                                .GetSubscriptionDataConfigs(symbol).Any())
+                            {
+                                Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol), $"{symbol} was not found, has [{string.Join(",", timeSlice.Slice.Keys)}]");
+                            }
                         }
                     }
 
@@ -2266,6 +2270,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         lastSecurityChangedTime = timeSlice.Time;
                         Log.Debug($"{timeSlice.Time} - Adding future symbol: {security.Symbol}");
+
                         futureSymbols.Add(security.Symbol);
                     }
                     else if (security.Symbol.SecurityType == SecurityType.Option)
@@ -2322,8 +2327,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (securityType == SecurityType.Future)
             {
-                // we add 2 symbols + 1 continuous future
-                Assert.AreEqual(3, futureSymbols.Count, "Future symbols count mismatch");
+                // we add 2 symbols + 1 continuous future + 1 continuous future mapped symbol
+                Assert.AreEqual(4, futureSymbols.Count, "Future symbols count mismatch");
             }
             else if (securityType == SecurityType.Option)
             {

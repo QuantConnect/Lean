@@ -14,9 +14,9 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Continuous Futures Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
+### Basic Continuous Futures Template Algorithm
 ### </summary>
-class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
+class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
 
     def Initialize(self):
@@ -25,13 +25,14 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2013, 7, 1)
         self.SetEndDate(2014, 1, 1)
 
-        self._mappings = []
-        self._lastDateLog = -1
         self._continuousContract = self.AddFuture(Futures.Indices.SP500EMini,
                                                   dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
                                                   dataMappingMode = DataMappingMode.LastTradingDay,
                                                   contractDepthOffset= 0)
-        self._currentMappedSymbol = self._continuousContract.Symbol;
+
+        self._fast = self.SMA(self._continuousContract.Symbol, 3, Resolution.Daily)
+        self._slow = self.SMA(self._continuousContract.Symbol, 10, Resolution.Daily)
+        self._currentContract = None
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -39,43 +40,27 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        currentlyMappedSecurity = self.Securities[self._continuousContract.Mapped]
-        if len(data.Keys) != 1:
-            raise ValueError(f"We are getting data for more than one symbols! {','.join(data.Keys)}")
-
         for changedEvent in data.SymbolChangedEvents.Values:
             if changedEvent.Symbol == self._continuousContract.Symbol:
-                self._mappings.append(changedEvent)
                 self.Log(f"SymbolChanged event: {changedEvent}")
 
-                if self._currentMappedSymbol == self._continuousContract.Mapped:
-                    raise ValueError(f"Continuous contract current symbol did not change! {self._continuousContract.Mapped}")
+        if not self.Portfolio.Invested:
+            if self._fast.Current.Value > self._slow.Current.Value:
+                self._currentContract = self.Securities[self._continuousContract.Mapped]
+                self.Buy(self._currentContract.Symbol, 1)
+        elif self._fast.Current.Value < self._slow.Current.Value:
+            self.Liquidate()
 
-        if self._lastDateLog != self.Time.month and currentlyMappedSecurity.HasData:
-            self._lastDateLog = self.Time.month
+        if self._currentContract is not None and self._currentContract.Symbol != self._continuousContract.Mapped:
+            self.Log(f"{Time} - rolling position from {self._currentContract.Symbol} to {self._continuousContract.Mapped}")
 
-            self.Log(f"{self.Time}- {currentlyMappedSecurity.GetLastData()}")
-            if self.Portfolio.Invested:
-                self.Liquidate()
-            else:
-                # This works because we set this contract as tradable, even if it's a canonical security
-                self.Buy(currentlyMappedSecurity.Symbol, 1)
-
-            if self.Time.month == 1 and self.Time.year == 2013:
-                response = self.History( [ self._continuousContract.Symbol ], 60 * 24 * 90)
-                if response.empty:
-                    raise ValueError("Unexpected empty history response")
-
-        self._currentMappedSymbol = self._continuousContract.Mapped
+            currentPositionSize = self._currentContract.Holdings.Quantity
+            self.Liquidate(self._currentContract.Symbol)
+            self.Buy(self._continuousContract.Mapped, currentPositionSize)
+            self._currentContract = self.Securities[self._continuousContract.Mapped]
 
     def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug("Purchased Stock: {0}".format(orderEvent.Symbol))
+        self.Debug("Purchased Stock: {0}".format(orderEvent.Symbol))
 
     def OnSecuritiesChanged(self, changes):
         self.Debug(f"{self.Time}-{changes}")
-
-    def OnEndOfAlgorithm(self):
-        expectedMappingCounts = 2
-        if len(self._mappings) != expectedMappingCounts:
-            raise ValueError(f"Unexpected symbol changed events: {self._mappings.count()}, was expecting {expectedMappingCounts}")

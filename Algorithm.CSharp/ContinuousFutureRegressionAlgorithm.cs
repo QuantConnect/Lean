@@ -21,6 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -31,8 +32,9 @@ namespace QuantConnect.Algorithm.CSharp
     public class ContinuousFutureRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private List<SymbolChangedEvent> _mappings = new();
+        private Symbol _currentMappedSymbol;
         private Future _continuousContract;
-        private DateTime _lastDateLog;
+        private DateTime _lastMonth;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -55,6 +57,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            // we subtract a minute cause we can get data on the market close, from the previous minute
+            if (!_continuousContract.Exchange.DateTimeIsOpen(Time.AddMinutes(-1)))
+            {
+                if (data.Bars.Count > 0 || data.QuoteBars.Count > 0)
+                {
+                    throw new Exception($"We are getting data during closed market!");
+                }
+            }
+
+            var currentlyMappedSecurity = Securities[_continuousContract.Mapped];
+
             if (data.Keys.Count != 1)
             {
                 throw new Exception($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
@@ -65,7 +78,12 @@ namespace QuantConnect.Algorithm.CSharp
                 if (changedEvent.Symbol == _continuousContract.Symbol)
                 {
                     _mappings.Add(changedEvent);
-                    Log($"SymbolChanged event: {changedEvent}");
+                    Log($"{Time} - SymbolChanged event: {changedEvent}");
+
+                    if (_currentMappedSymbol == _continuousContract.Mapped)
+                    {
+                        throw new Exception($"Continuous contract current symbol did not change! {_continuousContract.Mapped}");
+                    }
 
                     var currentExpiration = changedEvent.Symbol.Underlying.ID.Date;
                     var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(_continuousContract.Symbol)(Time.AddMonths(1));
@@ -77,20 +95,19 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
-
-            if (_lastDateLog.Month != Time.Month)
+            if (_lastMonth.Month != Time.Month && currentlyMappedSecurity.HasData)
             {
-                _lastDateLog = Time;
+                _lastMonth = Time;
 
-                Log($"{Time}- {Securities[_continuousContract.Symbol].GetLastData()}");
+                Log($"{Time}- {currentlyMappedSecurity.GetLastData()}");
                 if (Portfolio.Invested)
                 {
                     Liquidate();
                 }
-                else if(_continuousContract.HasData)
+                else
                 {
                     // This works because we set this contract as tradable, even if it's a canonical security
-                    Buy(_continuousContract.Symbol, 1);
+                    Buy(currentlyMappedSecurity.Symbol, 1);
                 }
 
                 if(Time.Month == 1 && Time.Year == 2013)
@@ -102,6 +119,8 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
+
+            _currentMappedSymbol = _continuousContract.Mapped;
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
@@ -110,6 +129,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Log($"{orderEvent}");
             }
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            Debug($"{Time}-{changes}");
         }
 
         public override void OnEndOfAlgorithm()
@@ -137,32 +161,32 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},
-            {"Average Win", "1.03%"},
+            {"Average Win", "1.21%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "1.970%"},
-            {"Drawdown", "1.400%"},
+            {"Compounding Annual Return", "2.392%"},
+            {"Drawdown", "1.600%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.994%"},
-            {"Sharpe Ratio", "0.7"},
-            {"Probabilistic Sharpe Ratio", "37.553%"},
+            {"Net Profit", "1.199%"},
+            {"Sharpe Ratio", "0.775"},
+            {"Probabilistic Sharpe Ratio", "40.287%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "-0.006"},
-            {"Beta", "0.091"},
-            {"Annual Standard Deviation", "0.02"},
+            {"Beta", "0.099"},
+            {"Annual Standard Deviation", "0.022"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-2.745"},
+            {"Information Ratio", "-2.726"},
             {"Tracking Error", "0.076"},
-            {"Treynor Ratio", "0.153"},
+            {"Treynor Ratio", "0.169"},
             {"Total Fees", "$5.55"},
-            {"Estimated Strategy Capacity", "$48000000.00"},
-            {"Lowest Capacity Asset", "ES 1S1"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Fitness Score", "0.01"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.492"},
-            {"Return Over Maximum Drawdown", "1.708"},
+            {"Sortino Ratio", "0.516"},
+            {"Return Over Maximum Drawdown", "1.935"},
             {"Portfolio Turnover", "0.016"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -177,7 +201,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "fb3bb82d84fc6c390a40f36d0d1faf59"}
+            {"OrderListHash", "8ad040c62ad255e4f9cd423364147e85"}
         };
     }
 }

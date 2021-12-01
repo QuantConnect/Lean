@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             if (delayed)
             {
                 // we advance to the mapping date, without any new mapFile!
-                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + LiveAuxiliaryDataEnumerator.TradableDateOffset);
+                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + Time.LiveAuxiliaryDataOffset);
             }
             else
             {
@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             else
             {
                 // we advance to the mapping date
-                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + LiveAuxiliaryDataEnumerator.TradableDateOffset);
+                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + Time.LiveAuxiliaryDataOffset);
             }
 
             Assert.IsTrue(enumerator.MoveNext());
@@ -164,7 +164,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // advance until delisting date, take into account 5 hour offset of NY + TradableDateOffset
             timeProvider.Advance(TimeSpan.FromDays(10));
             timeProvider.Advance(TimeSpan.FromHours(5));
-            timeProvider.Advance(LiveAuxiliaryDataEnumerator.TradableDateOffset);
+            timeProvider.Advance(Time.LiveAuxiliaryDataOffset);
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual(DelistingType.Warning, (enumerator.Current as Delisting).Type);

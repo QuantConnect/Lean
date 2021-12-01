@@ -2922,6 +2922,19 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to determine symbol for a live subscription
+        /// </summary>
+        /// <remarks>Useful for continuous futures where we subscribe to the underlying</remarks>
+        public static Symbol GetLiveSubscriptionSymbol(this Symbol symbol)
+        {
+            if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical() && symbol.HasUnderlying)
+            {
+                return symbol.Underlying;
+            }
+            return symbol;
+        }
+
+        /// <summary>
         /// Gets the delisting date for the provided Symbol
         /// </summary>
         /// <param name="symbol">The symbol to lookup the last trading date</param>

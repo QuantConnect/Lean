@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (_lastDateLog.Month != Time.Month)
+            if (_lastDateLog.Month != Time.Month && _continuousContract.HasData)
             {
                 _lastDateLog = Time;
 
@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     Liquidate();
                 }
-                else if(_continuousContract.HasData)
+                else
                 {
                     // This works because we set this contract as tradable, even if it's a canonical security
                     Buy(_continuousContract.Symbol, 1);
@@ -138,33 +138,33 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "1.11%"},
+            {"Average Win", "1.16%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "2.199%"},
-            {"Drawdown", "1.700%"},
+            {"Compounding Annual Return", "2.311%"},
+            {"Drawdown", "1.600%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.109%"},
-            {"Sharpe Ratio", "0.717"},
-            {"Probabilistic Sharpe Ratio", "38.157%"},
+            {"Net Profit", "1.159%"},
+            {"Sharpe Ratio", "0.753"},
+            {"Probabilistic Sharpe Ratio", "39.483%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.007"},
+            {"Alpha", "-0.006"},
             {"Beta", "0.099"},
             {"Annual Standard Deviation", "0.022"},
             {"Annual Variance", "0"},
             {"Information Ratio", "-2.732"},
             {"Tracking Error", "0.076"},
-            {"Treynor Ratio", "0.156"},
+            {"Treynor Ratio", "0.165"},
             {"Total Fees", "$3.70"},
             {"Estimated Strategy Capacity", "$3900000.00"},
             {"Lowest Capacity Asset", "ES 1S1"},
             {"Fitness Score", "0.007"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.484"},
-            {"Return Over Maximum Drawdown", "1.736"},
-            {"Portfolio Turnover", "0.011"},
+            {"Sortino Ratio", "0.563"},
+            {"Return Over Maximum Drawdown", "1.87"},
+            {"Portfolio Turnover", "0.01"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -178,7 +178,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "7d6fb409115f2f8d403c7eb261b9b3b6"}
+            {"OrderListHash", "8aa2ed1319e8bb5beb403476a5aebfef"}
         };
     }
 }

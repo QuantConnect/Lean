@@ -26,16 +26,12 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class FineFundamentalUniverse : Universe
     {
-        private readonly UniverseSettings _universeSettings;
         private readonly Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> _selector;
 
         /// <summary>
-        /// Gets the settings used for subscriptons added for this universe
+        /// Gets the settings used for subscriptions added for this universe
         /// </summary>
-        public override UniverseSettings UniverseSettings
-        {
-            get { return _universeSettings; }
-        }
+        public override UniverseSettings UniverseSettings { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FineFundamentalUniverse"/> class
@@ -45,7 +41,7 @@ namespace QuantConnect.Data.UniverseSelection
         public FineFundamentalUniverse(UniverseSettings universeSettings, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> selector)
             : base(CreateConfiguration(FineFundamental.CreateUniverseSymbol(QuantConnect.Market.USA)))
         {
-            _universeSettings = universeSettings;
+            UniverseSettings = universeSettings;
             _selector = selector;
         }
 
@@ -58,7 +54,7 @@ namespace QuantConnect.Data.UniverseSelection
         public FineFundamentalUniverse(Symbol symbol, UniverseSettings universeSettings, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> selector)
             : base(CreateConfiguration(symbol))
         {
-            _universeSettings = universeSettings;
+            UniverseSettings = universeSettings;
             _selector = selector;
         }
 
