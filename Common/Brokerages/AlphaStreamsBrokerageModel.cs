@@ -59,11 +59,6 @@ namespace QuantConnect.Brokerages
         /// <returns>The leverage for the specified security</returns>
         public override decimal GetLeverage(Security security)
         {
-            if (AccountType == AccountType.Cash)
-            {
-                return 1m;
-            }
-
             switch (security.Type)
             {
                 case SecurityType.Forex:
