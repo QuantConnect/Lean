@@ -470,9 +470,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            var symbol = dataConfig.Symbol;
-            if (symbol.Value.Contains("UNIVERSE") ||
-                !_symbolMapper.IsKnownLeanSymbol(symbol))
+            if (!CanSubscribe(dataConfig.Symbol))
             {
                 return null;
             }
@@ -514,6 +512,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             _connectionRateLimiter.Dispose();
             _onSubscribeEvent.Dispose();
             _onUnsubscribeEvent.Dispose();
+        }
+
+        private bool CanSubscribe(Symbol symbol)
+        {
+            if (symbol.Value.Contains("UNIVERSE") || !_symbolMapper.IsKnownLeanSymbol(symbol))
+            {
+                return false;
+            }
+            return symbol.ID.Market == Market.Bitfinex;
         }
     }
 }
