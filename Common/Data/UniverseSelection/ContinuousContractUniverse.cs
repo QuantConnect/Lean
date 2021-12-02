@@ -133,5 +133,16 @@ namespace QuantConnect.Data.UniverseSelection
                 // in live trading we delay selection so that we make sure auxiliary data is ready
                 .Select(time => _liveMode ? time.Add(Time.LiveAuxiliaryDataOffset) : time);
         }
+
+        /// <summary>
+        /// Creates a continuous universe symbol
+        /// </summary>
+        /// <param name="symbol">The associated symbol</param>
+        /// <returns>A symbol for a continuous universe of the specified symbol</returns>
+        public static Symbol CreateSymbol(Symbol symbol)
+        {
+            var ticker = $"qc-universe-continuous-{symbol.ID.Market.ToLowerInvariant()}-{symbol.SecurityType}-{symbol.ID.Symbol}";
+            return UniverseExtensions.CreateSymbol(symbol.SecurityType, symbol.ID.Market, ticker);
+        }
     }
 }
