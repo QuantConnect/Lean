@@ -10,6 +10,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.Util;
 
@@ -130,11 +131,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
             var securityService = new SecurityService(
                 new CashBook(),
-                MarketHoursDatabase.FromDataFolder(Globals.DataFolder),
+                MarketHoursDatabase.FromDataFolder(),
                 SymbolPropertiesDatabase.FromDataFolder(),
                 new SecurityInitializerProvider(new FuncSecurityInitializer(secutiry =>
                 {
-                    secutiry.FeeModel = new ConstantFeeModel(0);
+                    // from settings
+                    secutiry.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(60);
+                    // from settings
+                    if (secutiry is Option option)
+                    {
+                        option.PriceModel = OptionPriceModels.BlackScholes();
+                    }
                 })),
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(
@@ -166,21 +173,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                 var tickGenerators = new Dictionary<Security, IEnumerator<Tick>>();
                 var tickHistories = new Dictionary<Symbol, List<Tick>>();
+                Security underlyingSecurity = null;
                 foreach (var currentSymbol in currentSymbolGroup)
                 {
                     var security = securityService.CreateSecurity(
                         currentSymbol,
-                        new SubscriptionDataConfig(
-                            _tickTypesPerSecurityType[currentSymbol.SecurityType].First().GetType(),
-                            currentSymbol,
-                            settings.Resolution,
-                            DateTimeZone.Utc,
-                            TimeZones.NewYork,
-                            false,
-                            false,
-                            false,
-                            false,
-                            _tickTypesPerSecurityType[currentSymbol.SecurityType].First()));
+                        new List<SubscriptionDataConfig>(),
+                        underlying: underlyingSecurity);
+
+                    underlyingSecurity ??= security;
 
                     tickGenerators.Add(
                         security,
