@@ -33,13 +33,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 6, 5);  //Set Start Date
-            SetEndDate(2014, 6, 15);    //Set End Date
+            SetStartDate(2021, 10, 23);  //Set Start Date
+            SetEndDate(2021, 10, 31);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Equities Resolutions: Tick, Second, Minute, Hour, Daily.
-            AddEquity("UNIONBANK", Resolution.Minute, Market.India);
+            AddEquity("AARTIDRUGS", Resolution.Minute, Market.India);
 
             //Set Order Prperties as per the requirements for order placement
             DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE);
@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                var marketTicket = MarketOrder("UNIONBANK", 1);
+                var marketTicket = MarketOrder("AARTIDRUGS", 1);
             }
         }
 
