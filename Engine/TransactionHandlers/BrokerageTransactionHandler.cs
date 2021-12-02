@@ -1198,62 +1198,83 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             if (_algorithm.Securities.TryGetValue(e.Symbol, out var security))
             {
-                if (OptionSymbol.IsOptionContractExpired(e.Symbol, CurrentTimeUtc))
+                // let's take the order event lock, we will be looking at orders and security holdings
+                // and we don't want them changing mid processing because of an order event coming in at the same time
+                // for example: DateTime/decimal order attributes are not thread safe by nature!
+                lock (_lockHandleOrderEvent)
                 {
-                    if (e.Position == 0)
+                    if (OptionSymbol.IsOptionContractExpired(e.Symbol, CurrentTimeUtc))
                     {
-                        Log.Trace(
-                            "BrokerageTransactionHandler.HandleOptionNotification(): clearing position for expired option holding: " +
-                            $"Symbol: {e.Symbol.Value}, " +
-                            $"Quantity: {security.Holdings.Quantity}");
-
-                        var quantity = -security.Holdings.Quantity;
-
-                        // If the quantity is already 0 for Lean and the brokerage there is nothing else todo here
-                        if (quantity != 0)
+                        if (e.Position == 0)
                         {
-                            var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+                            Log.Trace(
+                                "BrokerageTransactionHandler.HandleOptionNotification(): clearing position for expired option holding: " +
+                                $"Symbol: {e.Symbol.Value}, " +
+                                $"Quantity: {security.Holdings.Quantity}");
 
-                            EmitOptionNotificationEvents(security, exerciseOrder);
+                            var quantity = -security.Holdings.Quantity;
+
+                            // If the quantity is already 0 for Lean and the brokerage there is nothing else todo here
+                            if (quantity != 0)
+                            {
+                                var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+
+                                EmitOptionNotificationEvents(security, exerciseOrder);
+                            }
+                        }
+                        else
+                        {
+                            Log.Error("BrokerageTransactionHandler.HandleOptionNotification(): " +
+                                $"unexpected position ({e.Position} instead of zero) " +
+                                $"for expired option contract: {e.Symbol.Value}");
                         }
                     }
                     else
                     {
-                        Log.Error("BrokerageTransactionHandler.HandleOptionNotification(): " +
-                            $"unexpected position ({e.Position} instead of zero) " +
-                            $"for expired option contract: {e.Symbol.Value}");
-                    }
-                }
-                else
-                {
-                    // if position is reduced, could be an early exercise or early assignment
-                    if (Math.Abs(e.Position) < security.Holdings.AbsoluteQuantity)
-                    {
-                        // if we are long the option and there is an open exercise order, assume it's an early exercise
-                        if (security.Holdings.IsLong)
+                        // if position is reduced, could be an early exercise or early assignment
+                        if (Math.Abs(e.Position) < security.Holdings.AbsoluteQuantity)
                         {
-                            if (GetOpenOrders(x =>
-                                    x.Symbol == e.Symbol &&
-                                    x.Type == OrderType.OptionExercise)
-                                .FirstOrDefault() is OptionExerciseOrder exerciseOrder)
+                            Log.Trace("BrokerageTransactionHandler.HandleOptionNotification(): " +
+                                $"Symbol {e.Symbol.Value} EventQuantity {e.Position} Holdings {security.Holdings.Quantity}");
+
+                            // if we are long the option and there is an open order, assume it's an early exercise
+                            if (security.Holdings.IsLong)
                             {
-                                EmitOptionNotificationEvents(security, exerciseOrder);
+                                // we only care about open option exercise orders, if it's closed it means we already
+                                // processed it and we wouldn't have a need to handle it here
+                                if (GetOpenOrders(x =>
+                                        x.Symbol == e.Symbol &&
+                                        x.Type == OrderType.OptionExercise)
+                                    .FirstOrDefault() is OptionExerciseOrder exerciseOrder)
+                                {
+                                    EmitOptionNotificationEvents(security, exerciseOrder);
+                                }
                             }
-                        }
 
-                        // if we are short the option and there are no buy orders, assume it's an early assignment
-                        else if (security.Holdings.IsShort)
-                        {
-                            if (!GetOpenOrders(x =>
-                                    x.Symbol == e.Symbol &&
-                                    x.Direction == OrderDirection.Buy)
-                                .Any())
+                            // if we are short the option and there are no buy orders (open or recently closed), assume it's an early assignment
+                            else if (security.Holdings.IsShort)
                             {
-                                var quantity = e.Position - security.Holdings.Quantity;
+                                var nowUtc = CurrentTimeUtc;
+                                // for some brokerages (like IB) there might be a race condition between getting an option
+                                // notification event and lean processing an order event.
+                                // For example: if IB sent the OptionNotificationEventArgs after lean processed an order there
+                                // wouldn't be any Buy order open but yes recently filled or partially filled, so we get all orders for this symbol
+                                // that were placed or got an update in the last 'orderWindowSeconds'
+                                const int orderWindowSeconds = 10;
+                                if (!GetOrders(x =>
+                                        x.Symbol == e.Symbol
+                                        && x.Direction == OrderDirection.Buy
+                                        && (x.Status.IsOpen() || x.Status.IsFill() &&
+                                            (Math.Abs((x.Time - nowUtc).TotalSeconds) < orderWindowSeconds
+                                                || (x.LastUpdateTime.HasValue && Math.Abs((x.LastUpdateTime.Value - nowUtc).TotalSeconds) < orderWindowSeconds)
+                                                || (x.LastFillTime.HasValue && Math.Abs((x.LastFillTime.Value - nowUtc).TotalSeconds) < orderWindowSeconds)))).Any())
+                                {
+                                    var quantity = e.Position - security.Holdings.Quantity;
 
-                                var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+                                    var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
 
-                                EmitOptionNotificationEvents(security, exerciseOrder);
+                                    EmitOptionNotificationEvents(security, exerciseOrder);
+                                }
                             }
                         }
                     }
