@@ -593,7 +593,7 @@ namespace QuantConnect.Algorithm
             else
             {
                 // should never happen, someone would need to add a non-user defined universe with this symbol
-                throw new Exception("Expected universe with symbol '" + universeSymbol.Value + "' to be of type UserDefinedUniverse.");
+                throw new Exception($"Expected universe with symbol '{universeSymbol.Value}' to be of type {nameof(UserDefinedUniverse)} but was {universe.GetType().Name}.");
             }
 
             return security;

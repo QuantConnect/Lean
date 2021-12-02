@@ -1564,7 +1564,7 @@ namespace QuantConnect.Algorithm
                                 ContractDepthOffset = (int)continuousConfigs.First().ContractDepthOffset,
                                 SubscriptionDataTypes = dataTypes
                             }, LiveMode,
-                            new SubscriptionDataConfig(canonicalConfig, symbol: UserDefinedUniverse.CreateSymbol(security.Type, security.Symbol.ID.Market))));
+                            new SubscriptionDataConfig(canonicalConfig, symbol: ContinuousContractUniverse.CreateSymbol(security.Symbol))));
 
                         universe = new FuturesChainUniverse((Future)security, settings);
                     }
@@ -1956,9 +1956,10 @@ namespace QuantConnect.Algorithm
             if (symbol.IsCanonical())
             {
                 // remove underlying equity data if it's marked as internal
-                var universe = UniverseManager.Select(x => x.Value).FirstOrDefault(x => x.Configuration.Symbol == symbol);
-                if (universe != null)
+                foreach (var kvp in UniverseManager.Where(x => x.Value.Configuration.Symbol == symbol
+                    || x.Value.Configuration.Symbol == ContinuousContractUniverse.CreateSymbol(symbol)))
                 {
+                    var universe = kvp.Value;
                     // remove underlying if not used by other universes
                     var otherUniverses = UniverseManager.Select(ukvp => ukvp.Value).Where(u => !ReferenceEquals(u, universe)).ToList();
                     if (symbol.HasUnderlying)
@@ -1974,15 +1975,15 @@ namespace QuantConnect.Algorithm
                     // we order the securities so that the removal is deterministic, it will liquidate any holdings
                     foreach (var child in universe.Members.Values.OrderBy(security1 => security1.Symbol))
                     {
-                        if (!otherUniverses.Any(u => u.Members.ContainsKey(child.Symbol)))
+                        if (!otherUniverses.Any(u => u.Members.ContainsKey(child.Symbol)) && !child.Symbol.IsCanonical())
                         {
                             RemoveSecurity(child.Symbol);
                         }
                     }
 
                     // finally, dispose and remove the canonical security from the universe manager
-                    UniverseManager.Remove(symbol);
-                    _userAddedUniverses.Remove(symbol);
+                    UniverseManager.Remove(kvp.Key);
+                    _userAddedUniverses.Remove(kvp.Key);
                 }
             }
             else
