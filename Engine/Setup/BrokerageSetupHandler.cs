@@ -297,6 +297,12 @@ namespace QuantConnect.Lean.Engine.Setup
                 }, controls.RamAllocation,
                     sleepIntervalMillis: 100); // entire system is waiting on this, so be as fast as possible
 
+                if (Errors.Count != 0)
+                {
+                    // if we already got an error just exit right away
+                    return false;
+                }
+
                 if (!initializeComplete)
                 {
                     AddInitializationError("Initialization timed out.");
