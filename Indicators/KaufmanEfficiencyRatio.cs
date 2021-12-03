@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
+
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -20,7 +20,17 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class KaufmanEfficiencyRatio : Indicator, IIndicatorWarmUpPeriodProvider
     {
-        private KaufmanAdaptiveMovingAverage KAMA;
+        private readonly KaufmanAdaptiveMovingAverage _kaufmanAdaptiveMovingAverage;
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => _kaufmanAdaptiveMovingAverage.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _kaufmanAdaptiveMovingAverage.Period;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KaufmanEfficiencyRatio"/> class using the specified period.
@@ -39,18 +49,9 @@ namespace QuantConnect.Indicators
         public KaufmanEfficiencyRatio(string name, int period)
             : base(name)
         {
-            KAMA = new KaufmanAdaptiveMovingAverage(period);
+            _kaufmanAdaptiveMovingAverage = new KaufmanAdaptiveMovingAverage(period);
         }
-        
 
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => KAMA.IsReady;
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod => KAMA.Period;
         /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
@@ -58,15 +59,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            KAMA.Update(input);
-            return KAMA.EfficiencyRatio.Current.Value;
-        }
-        /// <summary>
-        /// Resets this indicator to its initial state
-        /// </summary>
-        public override void Reset()
-        {
-            base.Reset();
+            _kaufmanAdaptiveMovingAverage.Update(input);
+            return _kaufmanAdaptiveMovingAverage.EfficiencyRatio.Current.Value;
         }
     }
 }

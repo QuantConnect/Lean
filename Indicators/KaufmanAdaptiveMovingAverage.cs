@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// The Kaufman Adaptive Moving Average is calculated as explained here:
     /// http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:kaufman_s_adaptive_moving_average
     /// </summary>
-    public class KaufmanAdaptiveMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class KaufmanAdaptiveMovingAverage : WindowIndicator<IndicatorDataPoint>
     {
         private readonly decimal _slowSmoothingFactor;
         private readonly decimal _diffSmoothingFactor;
@@ -73,7 +73,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => Period;
+        public override int WarmUpPeriod => Period;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
