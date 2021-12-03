@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using System.Collections;
@@ -46,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _requestedSymbol = dataConfig.Symbol;
             // we adjust the requested config symbol before sending it to the data queue handler
             _currentConfig = new SubscriptionDataConfig(dataConfig, symbol: dataConfig.Symbol.GetLiveSubscriptionSymbol());
-            _underlyingEnumerator = dataQueueHandler.Subscribe(_currentConfig, handler);
+            _underlyingEnumerator = Subscribe(dataQueueHandler, _currentConfig, handler);
 
             // for any mapping event we will re subscribe
             dataConfig.NewSymbol += (_, _) =>
@@ -56,7 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 var oldSymbol = _currentConfig.Symbol;
                 _currentConfig = new SubscriptionDataConfig(dataConfig, symbol: dataConfig.Symbol.GetLiveSubscriptionSymbol());
-                _underlyingEnumerator = dataQueueHandler.Subscribe(_currentConfig, handler);
+                _underlyingEnumerator = Subscribe(dataQueueHandler, _currentConfig, handler);
 
                 Log.Trace($"LiveSubscriptionEnumerator({_requestedSymbol}): " +
                     $"resubscribing old: '{oldSymbol.Value}' new '{_currentConfig.Symbol.Value}'");
@@ -99,6 +100,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             _previousEnumerator.DisposeSafely();
             _underlyingEnumerator.DisposeSafely();
+        }
+
+        private IEnumerator<BaseData> Subscribe(IDataQueueHandler dataQueueHandler,
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler)
+        {
+            var enumerator = dataQueueHandler.Subscribe(dataConfig, newDataAvailableHandler);
+            if (enumerator != null)
+            {
+                return enumerator;
+            }
+            return Enumerable.Empty<BaseData>().GetEnumerator();
         }
     }
 }
