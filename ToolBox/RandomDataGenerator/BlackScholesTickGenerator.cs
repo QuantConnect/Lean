@@ -39,7 +39,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     OptionContract.Create(
                         Symbol,
                         Symbol.Underlying,
-                        referenceDate.Add(Settings.Resolution.ToTimeSpan()),
+                        referenceDate,
                         _option,
                         referencePrice
                         ))

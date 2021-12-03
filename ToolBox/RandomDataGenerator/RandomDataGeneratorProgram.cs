@@ -191,16 +191,24 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         new List<Tick>());
                 }
 
-                foreach (var (security, tickGenerator) in tickGenerators)
+                var go = true;
+                while (go)
                 {
-                    tickGenerator.MoveNext();
-
-                    var ticks = tickGenerator.Current.ToList();
-                    tickHistories[security.Symbol].AddRange(ticks);
-
-                    foreach (var group in ticks.GroupBy(t => t.TickType))
+                    foreach (var (security, tickGenerator) in tickGenerators)
                     {
-                        security.Update(group.ToList(), group.First().GetType(), false);
+                        go = tickGenerator.MoveNext();
+                        if (!go)
+                        {
+                            break;
+                        }
+
+                        var ticks = tickGenerator.Current.ToList();
+                        tickHistories[security.Symbol].AddRange(ticks);
+
+                        foreach (var group in ticks.GroupBy(t => t.TickType))
+                        {
+                            security.Update(group.ToList(), group.First().GetType(), false);
+                        }
                     }
                 }
 
