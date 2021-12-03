@@ -62,7 +62,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 : OptionRight.Put;
 
             // when providing a null option w/ an expiry, it will automatically create the OSI ticker string for the Value
-            yield return Symbol.CreateOption(underlying, _market, OptionStyle.American, optionRight, strike, expiry);
+            yield return Symbol.CreateOption(underlying, _market, OptionStyle.European, optionRight, strike, expiry);
         }
 
         public override int GetAvailableSymbolCount() => int.MaxValue;

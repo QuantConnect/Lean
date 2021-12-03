@@ -1,18 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using NodaTime;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -171,7 +168,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 output.Warn.WriteLine($"\tSymbol[{++count}]: {symbolRef} Progress: {progress:0.0}% - Generating data...");
 
-                var tickGenerators = new Dictionary<Security, IEnumerator<Tick>>();
+                var tickGenerators = new Dictionary<Security, IEnumerator<IEnumerable<Tick>>>();
                 var tickHistories = new Dictionary<Symbol, List<Tick>>();
                 Security underlyingSecurity = null;
                 foreach (var currentSymbol in currentSymbolGroup)
@@ -194,15 +191,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         new List<Tick>());
                 }
 
-
                 foreach (var (security, tickGenerator) in tickGenerators)
                 {
                     tickGenerator.MoveNext();
 
-                    var tick = tickGenerator.Current;
-                    tickHistories[security.Symbol].Add(tick);
+                    var ticks = tickGenerator.Current.ToList();
+                    tickHistories[security.Symbol].AddRange(ticks);
 
-                    security.Update(new List<BaseData> { tick }, tick.GetType(), false);
+                    foreach (var group in ticks.GroupBy(t => t.TickType))
+                    {
+                        security.Update(group.ToList(), group.First().GetType(), false);
+                    }
                 }
 
                 foreach (var (currentSymbol, tickHistory) in tickHistories)

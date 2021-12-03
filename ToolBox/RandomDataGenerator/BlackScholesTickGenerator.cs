@@ -1,5 +1,6 @@
 using QuantConnect.Securities;
 using System;
+using QuantConnect.Data.Market;
 
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -17,14 +18,31 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             _option = security as Securities.Option.Option;
         }
 
-        public override decimal NextValue(decimal referencePrice)
+        public override decimal NextReferencePrice(
+            DateTime dateTime,
+            decimal referencePrice,
+            decimal maximumPercentDeviation
+            )
+            => _option.Underlying.Price;
+
+        public override decimal NextValue(decimal referencePrice, DateTime referenceDate)
         {
             if (Symbol.SecurityType != SecurityType.Option)
             {
                 throw new ArgumentException("Please use TickGenerator for non options.");
             }
 
-            return _option.PriceModel.Evaluate(_option, null, null)
+            return _option.PriceModel
+                .Evaluate(
+                    _option,
+                    null,
+                    OptionContract.Create(
+                        Symbol,
+                        Symbol.Underlying,
+                        referenceDate.Add(Settings.Resolution.ToTimeSpan()),
+                        _option,
+                        referencePrice
+                        ))
                 .TheoreticalPrice;
         }
     }

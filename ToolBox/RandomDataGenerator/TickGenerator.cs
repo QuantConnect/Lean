@@ -1,8 +1,8 @@
+using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -48,8 +48,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
         }
 
-        public IEnumerable<Tick> GenerateTicks()
+        public IEnumerable<IEnumerable<Tick>> GenerateTicks()
         {
+            List<Tick> ticks = new List<Tick>();
+
             var previousValues = new Dictionary<TickType, decimal>
             {
                 {TickType.Trade, 100m},
@@ -72,6 +74,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var deviation = GetMaximumDeviation(Settings.Resolution);
             while (current <= Settings.End)
             {
+                ticks.Clear();
+
                 var next = NextTickTime(current, Settings.Resolution, Settings.DataDensity);
                 if (TickTypes.Contains(TickType.OpenInterest))
                 {
@@ -81,7 +85,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         var previous = previousValues[TickType.OpenInterest];
                         var openInterest = NextOpenInterest(next.Date, previous, 5m);
                         previousValues[TickType.OpenInterest] = openInterest.Value;
-                        yield return openInterest;
+                        ticks.Add(openInterest);
                     }
                 }
 
@@ -91,7 +95,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 {
                     // since we're generating both trades and quotes we'll only reference one previous value
                     // to prevent the trade and quote prices from drifting away from each other
-                    var referenceValue = NextSymbolPrice(next, previousValues[TickType.Trade], deviation);
+                    var referenceValue = NextReferencePrice(next, previousValues[TickType.Trade], deviation);
 
                     // %odds of getting a trade tick, for example, a quote:trade ratio of 2 means twice as likely
                     // to get a quote, which means you have a 33% chance of getting a trade => 1/3
@@ -99,30 +103,31 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     if (Random.NextBool(tradeChancePercent))
                     {
                         var nextTrade = NextTick(next, TickType.Trade, referenceValue, deviation);
-                        yield return nextTrade;
+                        ticks.Add(nextTrade);
                     }
                     else
                     {
                         var nextQuote = NextTick(next, TickType.Quote, referenceValue, deviation);
-                        yield return nextQuote;
+                        ticks.Add(nextQuote);
                     }
                     previousValues[TickType.Trade] = referenceValue;
                 }
                 else if (TickTypes.Contains(TickType.Trade))
                 {
-                    var nextTrade = NextTick(next, TickType.Trade, NextSymbolPrice(next, previousValues[TickType.Trade], deviation), deviation);
+                    var nextTrade = NextTick(next, TickType.Trade, NextReferencePrice(next, previousValues[TickType.Trade], deviation), deviation);
                     previousValues[TickType.Trade] = nextTrade.Value;
-                    yield return nextTrade;
+                    ticks.Add(nextTrade);
                 }
                 else if (TickTypes.Contains(TickType.Quote))
                 {
-                    var nextQuote = NextTick(next, TickType.Quote, NextSymbolPrice(next, previousValues[TickType.Quote], deviation), deviation);
+                    var nextQuote = NextTick(next, TickType.Quote, NextReferencePrice(next, previousValues[TickType.Quote], deviation), deviation);
                     previousValues[TickType.Quote] = nextQuote.Value;
-                    yield return nextQuote;
+                    ticks.Add(nextQuote);
                 }
 
                 // advance to the next time step
                 current = next;
+                yield return ticks;
             }
         }
 
@@ -142,7 +147,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// from the <paramref name="referencePrice"/></returns>
         public virtual Tick NextTick(DateTime dateTime, TickType tickType, decimal referencePrice, decimal maximumPercentDeviation)
         {
-            var next = NextValue(referencePrice);
+            var next = NextValue(referencePrice, dateTime);
             var tick = new Tick
             {
                 Time = dateTime,
@@ -180,10 +185,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
         }
 
-        public virtual decimal NextSymbolPrice(DateTime dateTime, decimal referencePrice, decimal maximumPercentDeviation)
+        public virtual decimal NextReferencePrice(DateTime dateTime, decimal referencePrice, decimal maximumPercentDeviation)
             => Random.NextPrice(Symbol.SecurityType, Symbol.ID.Market, referencePrice, maximumPercentDeviation);
 
-        public virtual decimal NextValue(decimal referencePrice)
+        public virtual decimal NextValue(decimal referencePrice, DateTime referenceDate)
             => referencePrice;
 
 

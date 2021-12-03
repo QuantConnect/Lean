@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,8 @@
 */
 
 using System;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Data.Market
@@ -23,8 +25,8 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionContract
     {
-        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new Lazy<OptionPriceModelResult>(() => 
-                                                                            new OptionPriceModelResult(0m, new Greeks())); 
+        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new Lazy<OptionPriceModelResult>(() =>
+                                                                            new OptionPriceModelResult(0m, new Greeks()));
 
         /// <summary>
         /// Gets the option contract's symbol
@@ -176,5 +178,25 @@ namespace QuantConnect.Data.Market
         /// A string that represents the current object.
         /// </returns>
         public override string ToString() => Symbol.Value;
+
+        public static OptionContract Create(BaseData baseData, IOptionPrice security, decimal underlyingLastPrice)
+            => Create(baseData.Symbol, baseData.Symbol.Underlying, baseData.EndTime, security, underlyingLastPrice);
+
+
+        public static OptionContract Create(Symbol symbol, Symbol underlyingSymbol, DateTime endTime, IOptionPrice security, decimal underlyinLastPrice)
+        {
+            return new OptionContract(symbol, underlyingSymbol)
+            {
+                Time = endTime,
+                LastPrice = security.Close,
+                Volume = (long)security.Volume,
+                BidPrice = security.BidPrice,
+                BidSize = (long)security.BidSize,
+                AskPrice = security.AskPrice,
+                AskSize = (long)security.AskSize,
+                OpenInterest = security.OpenInterest,
+                UnderlyingLastPrice = underlyinLastPrice
+            };
+        }
     }
 }
