@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
@@ -78,8 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var dataHandlersConfig = job.DataQueueHandler;
             Log.Trace($"CompositeDataQueueHandler.SetJob(): will use {dataHandlersConfig}");
-            var dataHandlers = JsonConvert.DeserializeObject<List<string>>(dataHandlersConfig);
-            foreach (var dataHandlerName in dataHandlers)
+            foreach (var dataHandlerName in dataHandlersConfig.DeserializeList())
             {
                 var dataHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(dataHandlerName);
                 dataHandler.SetJob(job);
