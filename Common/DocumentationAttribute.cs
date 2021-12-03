@@ -45,7 +45,7 @@ namespace QuantConnect
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public DocumentationAttribute(string tag, int weight)
+        public DocumentationAttribute(string tag, int weight = 0)
         {
             Tag = tag;
             Weight = weight;
