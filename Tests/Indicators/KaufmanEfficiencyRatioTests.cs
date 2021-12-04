@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
-using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
@@ -31,12 +29,5 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_ker.txt";
 
         protected override string TestColumnName => "KER";
-
-        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
-        {
-            get { return (indicator, expected) => Assert.AreEqual(expected, 0.001); }
-        }
-       
-
     }
 }

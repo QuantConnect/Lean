@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -22,20 +20,11 @@ namespace QuantConnect.Indicators
     /// The Kaufman Adaptive Moving Average is calculated as explained here:
     /// http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:kaufman_s_adaptive_moving_average
     /// </summary>
-    public class KaufmanAdaptiveMovingAverage : WindowIndicator<IndicatorDataPoint>
+    public class KaufmanAdaptiveMovingAverage : KaufmanEfficiencyRatio
     {
         private readonly decimal _slowSmoothingFactor;
         private readonly decimal _diffSmoothingFactor;
-
-        private decimal _sumRoc1;
-        private decimal _periodRoc;
         private decimal _prevKama;
-        private decimal _trailingValue;
-
-        /// <summary>
-        /// Gets the Efficiency Ratio from KAMA calculation
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> EfficiencyRatio { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KaufmanAdaptiveMovingAverage"/> class using the specified name and period.
@@ -45,13 +34,12 @@ namespace QuantConnect.Indicators
         /// <param name="fastEmaPeriod">The period of the fast EMA used to calculate the Smoothing Constant (SC)</param>
         /// <param name="slowEmaPeriod">The period of the slow EMA used to calculate the Smoothing Constant (SC)</param>
         public KaufmanAdaptiveMovingAverage(string name, int period, int fastEmaPeriod = 2, int slowEmaPeriod = 30)
-            : base(name, period + 1)
+            : base(name, period)
         {
             // Smoothing factor of the slow EMA
             _slowSmoothingFactor = 2m / (slowEmaPeriod + 1m);
             // Difference between the smoothing factor of the fast and slow EMA
             _diffSmoothingFactor = 2m / (fastEmaPeriod + 1m) - _slowSmoothingFactor;
-            EfficiencyRatio = new Identity("EfficiencyRatio");
         }
 
         /// <summary>
@@ -66,16 +54,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => Samples >= Period;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public override int WarmUpPeriod => Period;
-
-        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
@@ -83,47 +61,20 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
+            // Calculate the efficiency ratio
+            var efficiencyRatio = base.ComputeNextValue(window, input);
+
             if (Samples < Period)
             {
-                if (Samples > 1)
-                {
-                    _sumRoc1 += Math.Abs(input.Value - window[1].Value);
-                }
-
                 return input.Value;
             }
 
             if (Samples == Period)
             {
-                _sumRoc1 += Math.Abs(input.Value - window[1].Value);
-
-                // At this point sumROC1 represents the 
-                // summation of the 1-day price difference
-                // over the (optInTimePeriod-1)
-
                 // Calculate the first KAMA
                 // The yesterday price is used here as the previous KAMA.
                 _prevKama = window[1].Value;
             }
-
-            var newTrailingValue = window[Period - 1];
-            _periodRoc = input.Value - newTrailingValue.Value;
-
-            if (Samples > Period)
-            {
-                // Adjust sumROC1:
-                // - Remove trailing ROC1 
-                // - Add new ROC1
-                _sumRoc1 -= Math.Abs(_trailingValue - newTrailingValue.Value);
-                _sumRoc1 += Math.Abs(input.Value - window[1].Value);
-            }
-
-            // Save the trailing value.
-            _trailingValue = newTrailingValue.Value;
-
-            // Calculate the efficiency ratio
-            var efficiencyRatio = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);
-            EfficiencyRatio.Update(input.Time, efficiencyRatio);
 
             // Calculate the smoothing constant
             var smoothingConstant = efficiencyRatio * _diffSmoothingFactor + _slowSmoothingFactor;
@@ -141,11 +92,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _sumRoc1 = 0;
-            _periodRoc = 0;
             _prevKama = 0;
-            _trailingValue = 0;
-            EfficiencyRatio.Reset();
             base.Reset();
         }
     }
