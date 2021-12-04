@@ -914,6 +914,27 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an KaufmanEfficiencyRatio indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose EF we want</param>
+        /// <param name="period">The period of the EF</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The KaufmanEfficiencyRatio indicator for the given parameters</returns>
+        public KaufmanEfficiencyRatio KER(Symbol symbol, int period = 2, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"KER({period})", resolution);
+            var kaufmanEfficiencyRatio = new KaufmanEfficiencyRatio(name, period);
+            RegisterIndicator(symbol, kaufmanEfficiencyRatio, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, kaufmanEfficiencyRatio, resolution);
+            }
+            return kaufmanEfficiencyRatio;
+        }
+
+        /// <summary>
         /// Creates a new Keltner Channels indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>

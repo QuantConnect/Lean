@@ -50,7 +50,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, to the indicator to be ready and fully initialized
         /// </summary>
-        public int WarmUpPeriod => Period;
+        public virtual int WarmUpPeriod => Period;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
