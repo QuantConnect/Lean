@@ -91,5 +91,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             compositeDataQueueHandler.Unsubscribe(dataConfig);
             compositeDataQueueHandler.Dispose();
         }
+
+        [Test]
+        public void IsNotUniverseProvider()
+        {
+            var compositeDataQueueHandler = new CompositeDataQueueHandler();
+            Assert.IsFalse(compositeDataQueueHandler.HasUniverseProvider);
+            Assert.Throws<NotSupportedException>(() => compositeDataQueueHandler.LookupSymbols(Symbols.ES_Future_Chain, false));
+            Assert.Throws<NotSupportedException>(() => compositeDataQueueHandler.CanPerformSelection());
+            compositeDataQueueHandler.Dispose();
+        }
+
+        [Test]
+        public void IsUniverseProvider()
+        {
+            var compositeDataQueueHandler = new CompositeDataQueueHandler();
+            compositeDataQueueHandler.SetJob(new LiveNodePacket { Brokerage = "ZerodhaBrokerage", DataQueueHandler = "[ \"FakeDataQueue\" ]" });
+            Assert.IsTrue(compositeDataQueueHandler.HasUniverseProvider);
+            Assert.DoesNotThrow(() => compositeDataQueueHandler.LookupSymbols(Symbols.ES_Future_Chain, false));
+            Assert.DoesNotThrow(() => compositeDataQueueHandler.CanPerformSelection());
+            compositeDataQueueHandler.Dispose();
+        }
     }
 }
