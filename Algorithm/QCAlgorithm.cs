@@ -241,7 +241,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the brokerage model - used to model interactions with specific brokerages.
         /// </summary>
-        [DocumentationAttribute("Modelling")]
+        [DocumentationAttribute("Modeling")]
         public IBrokerageModel BrokerageModel
         {
             get;
@@ -252,7 +252,7 @@ namespace QuantConnect.Algorithm
         /// Gets the brokerage message handler used to decide what to do
         /// with each message sent from the brokerage
         /// </summary>
-        [DocumentationAttribute("Modelling")]
+        [DocumentationAttribute("Modeling")]
         public IBrokerageMessageHandler BrokerageMessageHandler
         {
             get;
@@ -474,7 +474,7 @@ namespace QuantConnect.Algorithm
         /// Storage for debugging messages before the event handler has passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Debug(string)"/>
-        [DocumentationAttribute("Charting")]
+        [DocumentationAttribute("Logging")]
         public ConcurrentQueue<string> DebugMessages
         {
             get
@@ -491,7 +491,7 @@ namespace QuantConnect.Algorithm
         /// Storage for log messages before the event handlers have passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Log(string)"/>
-        [DocumentationAttribute("Charting")]
+        [DocumentationAttribute("Logging")]
         public ConcurrentQueue<string> LogMessages
         {
             get
@@ -507,7 +507,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the run time error from the algorithm, or null if none was encountered.
         /// </summary>
-        [DocumentationAttribute("Charting")]
+        [DocumentationAttribute("Logging")]
         public Exception RunTimeError { get; set; }
 
         /// <summary>
@@ -515,7 +515,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>This method is best used within a try-catch bracket to handle any runtime errors from a user algorithm.</remarks>
         /// <see cref="Error(string)"/>
-        [DocumentationAttribute("Charting")]
+        [DocumentationAttribute("Logging")]
         public ConcurrentQueue<string> ErrorMessages
         {
             get
@@ -876,7 +876,7 @@ namespace QuantConnect.Algorithm
         /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
         /// </summary>
         /// <param name="requests">The orders to be executed to bring this algorithm within margin limits</param>
-        [DocumentationAttribute("Modelling")]
+        [DocumentationAttribute("Modeling")]
         public virtual void OnMarginCall(List<SubmitOrderRequest> requests)
         {
         }
@@ -884,7 +884,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Margin call warning event handler. This method is called when Portfolio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
         /// </summary>
-        [DocumentationAttribute("Modelling")]
+        [DocumentationAttribute("Modeling")]
         public virtual void OnMarginCallWarning()
         {
         }
@@ -959,7 +959,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Brokerage message event handler. This method is called for all types of brokerage messages.
         /// </summary>
-        [DocumentationAttribute("Modelling")]
+        [DocumentationAttribute("Modeling")]
         public virtual void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
         {
 
@@ -1055,7 +1055,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="brokerage">The brokerage to emulate</param>
         /// <param name="accountType">The account type (Cash or Margin)</param>
-        [DocumentationAttribute("Modelling")]
+        [DocumentationAttribute("Modeling")]
         public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
             SetBrokerageModel(Brokerages.BrokerageModel.Create(Transactions, brokerage, accountType));
@@ -1066,7 +1066,7 @@ namespace QuantConnect.Algorithm
         /// This can be used to set a custom brokerage model.
         /// </summary>
         /// <param name="model">The brokerage model to use</param>
-        [DocumentationAttribute("Modelling")]
+        [DocumentationAttribute("Modeling")]
         public void SetBrokerageModel(IBrokerageModel model)
         {
             BrokerageModel = model;
@@ -1100,7 +1100,7 @@ namespace QuantConnect.Algorithm
         /// is stopped.
         /// </summary>
         /// <param name="handler">The message handler to use</param>
-        [DocumentationAttribute("Modelling")]
+        [DocumentationAttribute("Modeling")]
         [DocumentationAttribute("Logging")]
         public void SetBrokerageMessageHandler(IBrokerageMessageHandler handler)
         {

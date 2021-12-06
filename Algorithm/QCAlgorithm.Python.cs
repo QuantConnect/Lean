@@ -1040,7 +1040,7 @@ namespace QuantConnect.Algorithm
         /// This can be used to set a custom brokerage model.
         /// </summary>
         /// <param name="model">The brokerage model to use</param>
-        [Documentation("Modelling")]
+        [Documentation("Modeling")]
         public void SetBrokerageModel(PyObject model)
         {
             IBrokerageModel brokerageModel;
