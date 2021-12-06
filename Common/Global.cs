@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -723,29 +723,6 @@ namespace QuantConnect
             string market = Market.USA)
         {
             return exchange.GetPrimaryExchange(securityType, market).Code;
-        }
-
-        /// <summary>
-        /// Gets the exchange as single character representation.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("This overload has not enough information to determine the exchange. " +
-            "Please use overload expecting a SecurityType and Market")]
-        public static string GetPrimaryExchangeAsSingleCharacter(this string exchange)
-        {
-            return exchange.GetPrimaryExchange().Code;
-        }
-
-        /// <summary>
-        /// Returns the main Exchange from the single character encoding.
-        /// </summary>
-        /// <param name="exchange"></param>
-        /// <returns></returns>
-        [Obsolete("This overload has not enough information to determine the exchange. " +
-            "Please use overload expecting a string, SecurityType and Market")]
-        public static Exchange GetPrimaryExchange(char exchange)
-        {
-            return exchange.ToString().GetPrimaryExchange();
         }
 
         /// <summary>
