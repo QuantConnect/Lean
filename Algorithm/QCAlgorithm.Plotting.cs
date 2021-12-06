@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using QuantConnect.APIReference;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 
@@ -45,6 +46,7 @@ namespace QuantConnect.Algorithm
         /// Access to the runtime statistics property. User provided statistics.
         /// </summary>
         /// <remarks> RuntimeStatistics are displayed in the head banner in live trading</remarks>
+        [Documentation(new string[] {"Charting"})]
         public ConcurrentDictionary<string, string> RuntimeStatistics { get; } = new ConcurrentDictionary<string, string>();
 
         /// <summary>
@@ -52,6 +54,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="chart">Chart object to add to collection.</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void AddChart(Chart chart)
         {
             _charts.TryAdd(chart.Name, chart);
@@ -63,6 +66,7 @@ namespace QuantConnect.Algorithm
         /// <param name="series">Name of the plot series</param>
         /// <param name="value">Value to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Plot(string series, decimal value)
         {
             //By default plot to the primary chart:
@@ -74,6 +78,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks> Record(string series, int value)</remarks>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Record(string series, int value)
         {
             Plot(series, value);
@@ -83,6 +88,7 @@ namespace QuantConnect.Algorithm
         /// Plot a chart using string series name, with double value. Alias of Plot();
         /// </summary>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Record(string series, double value)
         {
             Plot(series, value);
@@ -94,6 +100,7 @@ namespace QuantConnect.Algorithm
         /// <param name="series"></param>
         /// <param name="value"></param>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Record(string series, decimal value)
         {
             //By default plot to the primary chart:
@@ -104,6 +111,7 @@ namespace QuantConnect.Algorithm
         /// Plot a chart using string series name, with double value.
         /// </summary>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Plot(string series, double value) {
             Plot(series, value.SafeDecimalCast());
         }
@@ -112,6 +120,7 @@ namespace QuantConnect.Algorithm
         /// Plot a chart using string series name, with int value.
         /// </summary>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Plot(string series, int value)
         {
             Plot(series, (decimal)value);
@@ -121,6 +130,7 @@ namespace QuantConnect.Algorithm
         ///Plot a chart using string series name, with float value.
         /// </summary>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Plot(string series, float value)
         {
             Plot(series, (decimal)value);
@@ -130,6 +140,7 @@ namespace QuantConnect.Algorithm
         /// Plot a chart to string chart name, using string series name, with double value.
         /// </summary>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Plot(string chart, string series, double value)
         {
             Plot(chart, series, value.SafeDecimalCast());
@@ -139,6 +150,7 @@ namespace QuantConnect.Algorithm
         /// Plot a chart to string chart name, using string series name, with int value
         /// </summary>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Plot(string chart, string series, int value)
         {
             Plot(chart, series, (decimal)value);
@@ -148,6 +160,7 @@ namespace QuantConnect.Algorithm
         /// Plot a chart to string chart name, using string series name, with float value
         /// </summary>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Plot(string chart, string series, float value)
         {
             Plot(chart, series, (decimal)value);
@@ -159,6 +172,7 @@ namespace QuantConnect.Algorithm
         /// <param name="chart">Chart name</param>
         /// <param name="series">Series name</param>
         /// <param name="value">Value of the point</param>
+        [Documentation(new string[] {"Charting"})]
         public void Plot(string chart, string series, decimal value)
         {
             // Check if chart/series names are reserved
@@ -209,6 +223,7 @@ namespace QuantConnect.Algorithm
         /// <param name="series">The series name</param>
         /// <param name="seriesType">The type of series, i.e, Scatter</param>
         /// <param name="unit">The unit of the y axis, usually $</param>
+        [Documentation(new string[] {"Charting"})]
         public void AddSeries(string chart, string series, SeriesType seriesType, string unit = "$")
         {
             Chart c;
@@ -226,6 +241,7 @@ namespace QuantConnect.Algorithm
         /// <param name="chart">The chart's name</param>
         /// <param name="indicators">The indicatorsto plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
+        [Documentation(new string[] {"Charting"})]
         public void Plot<T>(string chart, params IndicatorBase<T>[] indicators)
             where T : IBaseData
         {
@@ -238,6 +254,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
+        [Documentation(new string[] {"Charting"})]
         public void PlotIndicator<T>(string chart, params IndicatorBase<T>[] indicators)
             where T : IBaseData
         {
@@ -257,6 +274,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
         /// </summary>
+        [Documentation(new string[] {"Charting"})]
         public void PlotIndicator<T>(string chart, bool waitForReady, params IndicatorBase<T>[] indicators)
             where T : IBaseData
         {
@@ -282,6 +300,7 @@ namespace QuantConnect.Algorithm
         /// <param name="name">Name of your runtime statistic</param>
         /// <param name="value">String value of your runtime statistic</param>
         /// <seealso cref="LiveMode"/>
+        [Documentation(new string[] {"Charting"})]
         public void SetRuntimeStatistic(string name, string value)
         {
             RuntimeStatistics.AddOrUpdate(name, value);
@@ -292,6 +311,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="name">Name of your runtime statistic</param>
         /// <param name="value">Decimal value of your runtime statistic</param>
+        [Documentation(new string[] {"Charting"})]
         public void SetRuntimeStatistic(string name, decimal value)
         {
             SetRuntimeStatistic(name, value.ToString(CultureInfo.InvariantCulture));
@@ -302,6 +322,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="name">Name of your runtime statistic</param>
         /// <param name="value">Int value of your runtime statistic</param>
+        [Documentation(new string[] {"Charting"})]
         public void SetRuntimeStatistic(string name, int value)
         {
             SetRuntimeStatistic(name, value.ToStringInvariant());
@@ -312,17 +333,19 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="name">Name of your runtime statistic</param>
         /// <param name="value">Double value of your runtime statistic</param>
+        [Documentation(new string[] {"Charting"})]
         public void SetRuntimeStatistic(string name, double value)
         {
             SetRuntimeStatistic(name, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
-        /// Get the chart updates by fetch the recent points added and return for dynamic plotting.
+        /// Get the chart updates by fetch the recent points added and return for dynamic Charting.
         /// </summary>
         /// <param name="clearChartData"></param>
         /// <returns>List of chart updates since the last request</returns>
         /// <remarks>GetChartUpdates returns the latest updates since previous request.</remarks>
+        [Documentation(new string[] {"Charting"})]
         public List<Chart> GetChartUpdates(bool clearChartData = false)
         {
             var updates = _charts.Select(x => x.Value).Select(chart => chart.GetUpdates()).ToList();

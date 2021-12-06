@@ -16,6 +16,7 @@
 using System;
 using NodaTime;
 using System.Linq;
+using QuantConnect.APIReference;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
@@ -39,6 +40,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets whether or not this algorithm is still warming up
         /// </summary>
+        [Documentation(new string[] {"Handling Data"})]
         public bool IsWarmingUp
         {
             get;
@@ -49,6 +51,7 @@ namespace QuantConnect.Algorithm
         /// Sets the warm up period to the specified value
         /// </summary>
         /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        [Documentation(new string[] {"Initialization"})]
         public void SetWarmup(TimeSpan timeSpan)
         {
             SetWarmUp(timeSpan, null);
@@ -58,6 +61,7 @@ namespace QuantConnect.Algorithm
         /// Sets the warm up period to the specified value
         /// </summary>
         /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        [Documentation(new string[] {"Initialization"})]
         public void SetWarmUp(TimeSpan timeSpan)
         {
             SetWarmup(timeSpan);
@@ -68,6 +72,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
         /// <param name="resolution">The resolution to request</param>
+        [Documentation(new string[] {"Initialization"})]
         public void SetWarmup(TimeSpan timeSpan, Resolution? resolution)
         {
             if (_locked)
@@ -85,6 +90,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
         /// <param name="resolution">The resolution to request</param>
+        [Documentation(new string[] {"Initialization"})]
         public void SetWarmUp(TimeSpan timeSpan, Resolution? resolution)
         {
             SetWarmup(timeSpan, resolution);
@@ -97,6 +103,7 @@ namespace QuantConnect.Algorithm
         /// use 200 minute bars.
         /// </summary>
         /// <param name="barCount">The number of data points requested for warm up</param>
+        [Documentation(new string[] {"Initialization"})]
         public void SetWarmup(int barCount)
         {
             SetWarmUp(barCount, null);
@@ -109,6 +116,7 @@ namespace QuantConnect.Algorithm
         /// use 200 minute bars.
         /// </summary>
         /// <param name="barCount">The number of data points requested for warm up</param>
+        [Documentation(new string[] {"Initialization"})]
         public void SetWarmUp(int barCount)
         {
             SetWarmup(barCount);
@@ -120,6 +128,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="barCount">The number of data points requested for warm up</param>
         /// <param name="resolution">The resolution to request</param>
+        [Documentation(new string[] {"Initialization"})]
         public void SetWarmup(int barCount, Resolution? resolution)
         {
             if (_locked)
@@ -138,6 +147,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="barCount">The number of data points requested for warm up</param>
         /// <param name="resolution">The resolution to request</param>
+        [Documentation(new string[] {"Initialization"})]
         public void SetWarmUp(int barCount, Resolution? resolution)
         {
             SetWarmup(barCount, resolution);
@@ -146,6 +156,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Sets <see cref="IAlgorithm.IsWarmingUp"/> to false to indicate this algorithm has finished its warm up
         /// </summary>
+        [Documentation(new string[] {"Handling Data"})]
         public void SetFinishedWarmingUp()
         {
             IsWarmingUp = false;
@@ -165,6 +176,7 @@ namespace QuantConnect.Algorithm
         /// Gets the history requests required for provide warm up data for the algorithm
         /// </summary>
         /// <returns></returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
         {
             if (_warmupBarCount.HasValue)
@@ -189,6 +201,7 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to request data. This is a calendar span, so take into consideration weekends and such</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null)
         {
             return History(Securities.Keys, Time - span, Time, resolution).Memoize();
@@ -202,6 +215,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<Slice> History(int periods, Resolution? resolution = null)
         {
             return History(Securities.Keys, periods, resolution).Memoize();
@@ -215,6 +229,7 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null)
             where T : IBaseData
         {
@@ -230,6 +245,7 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
             where T : IBaseData
         {
@@ -246,6 +262,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
             where T : IBaseData
         {
@@ -272,6 +289,7 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null)
             where T : IBaseData
         {
@@ -294,6 +312,7 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
             where T : IBaseData
         {
@@ -308,6 +327,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null)
         {
             if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
@@ -328,6 +348,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null)
             where T : IBaseData
         {
@@ -347,6 +368,7 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
             where T : IBaseData
         {
@@ -363,6 +385,7 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
         {
             return History(symbol, Time - span, Time, resolution);
@@ -376,6 +399,7 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var securityType = symbol.ID.SecurityType;
@@ -403,6 +427,7 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
         {
             return History(symbols, Time - span, Time, resolution).Memoize();
@@ -417,6 +442,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
@@ -433,6 +459,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
         {
             return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarket)).Memoize();
@@ -443,6 +470,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="request">the history request to execute</param>
         /// <returns>An enumerable of slice satisfying the specified history request</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<Slice> History(HistoryRequest request)
         {
             return History(new[] { request }).Memoize();
@@ -453,6 +481,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="requests">the history requests to execute</param>
         /// <returns>An enumerable of slice satisfying the specified history request</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests)
         {
             return History(requests, TimeZone).Memoize();
@@ -463,6 +492,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
         /// <returns>Securities historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<BaseData> GetLastKnownPrices(Security security)
         {
             return GetLastKnownPrices(security.Symbol);
@@ -473,6 +503,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol we want to get seed data for</param>
         /// <returns>Securities historical data</returns>
+        [Documentation(new string[] {"Historical Data"})]
         public IEnumerable<BaseData> GetLastKnownPrices(Symbol symbol)
         {
             if (!HistoryRequestValid(symbol) || HistoryProvider == null)
@@ -534,6 +565,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
         [Obsolete("This method is obsolete please use 'GetLastKnownPrices' which will return the last data point" +
             " for each type associated with the requested security")]
+        [Documentation(new string[] {"Historical Data"})]
         public BaseData GetLastKnownPrice(Security security)
         {
             return GetLastKnownPrices(security.Symbol)

@@ -19,6 +19,7 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.APIReference;
 
 namespace QuantConnect.Algorithm
 {
@@ -28,6 +29,7 @@ namespace QuantConnect.Algorithm
         /// Sets the alpha model
         /// </summary>
         /// <param name="alpha">Model that generates alpha</param>
+        [Documentation(new string[] {"Algorithm Framework"})]
         public void SetAlpha(PyObject alpha)
         {
             IAlphaModel model;
@@ -45,6 +47,7 @@ namespace QuantConnect.Algorithm
         /// Adds a new alpha model
         /// </summary>
         /// <param name="alpha">Model that generates alpha to add</param>
+        [Documentation(new string[] {"Algorithm Framework"})]
         public void AddAlpha(PyObject alpha)
         {
             IAlphaModel model;
@@ -62,6 +65,7 @@ namespace QuantConnect.Algorithm
         /// Sets the execution model
         /// </summary>
         /// <param name="execution">Model defining how to execute trades to reach a portfolio target</param>
+        [Documentation(new string[] {"Algorithm Framework"})]
         public void SetExecution(PyObject execution)
         {
             IExecutionModel model;
@@ -79,6 +83,7 @@ namespace QuantConnect.Algorithm
         /// Sets the portfolio construction model
         /// </summary>
         /// <param name="portfolioConstruction">Model defining how to build a portfolio from alphas</param>
+        [Documentation(new string[] {"Algorithm Framework"})]
         public void SetPortfolioConstruction(PyObject portfolioConstruction)
         {
             IPortfolioConstructionModel model;
@@ -96,6 +101,7 @@ namespace QuantConnect.Algorithm
         /// Sets the universe selection model
         /// </summary>
         /// <param name="universeSelection">Model defining universes for the algorithm</param>
+        [Documentation(new string[] {"Algorithm Framework", "Universe"})]
         public void SetUniverseSelection(PyObject universeSelection)
         {
             IUniverseSelectionModel model;
@@ -110,6 +116,7 @@ namespace QuantConnect.Algorithm
         /// Adds a new universe selection model
         /// </summary>
         /// <param name="universeSelection">Model defining universes for the algorithm to add</param>
+        [Documentation(new string[] {"Algorithm Framework", "Universe"})]
         public void AddUniverseSelection(PyObject universeSelection)
         {
             IUniverseSelectionModel model;
@@ -124,6 +131,7 @@ namespace QuantConnect.Algorithm
         /// Sets the risk management model
         /// </summary>
         /// <param name="riskManagement">Model defining how risk is managed</param>
+        [Documentation(new string[] {"Algorithm Framework"})]
         public void SetRiskManagement(PyObject riskManagement)
         {
             IRiskManagementModel model;
@@ -141,6 +149,7 @@ namespace QuantConnect.Algorithm
         /// Adds a new risk management model
         /// </summary>
         /// <param name="riskManagement">Model defining how risk is managed to add</param>
+        [Documentation(new string[] {"Algorithm Framework"})]
         public void AddRiskManagement(PyObject riskManagement)
         {
             IRiskManagementModel model;
