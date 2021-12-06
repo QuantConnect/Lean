@@ -2562,6 +2562,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="trainingCode">The training code to be invoked</param>
         [DocumentationAttribute("Machine Learning")]
+        [DocumentationAttribute("Scheduled Events")]
         public ScheduledEvent Train(Action trainingCode)
         {
             return Schedule.TrainingNow(trainingCode);
@@ -2574,6 +2575,7 @@ namespace QuantConnect.Algorithm
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="trainingCode">The training code to be invoked</param>
         [DocumentationAttribute("Machine Learning")]
+        [DocumentationAttribute("Scheduled Events")]
         public ScheduledEvent Train(IDateRule dateRule, ITimeRule timeRule, Action trainingCode)
         {
             return Schedule.Training(dateRule, timeRule, trainingCode);

@@ -1248,6 +1248,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="trainingCode">The training code to be invoked</param>
         [Documentation("Machine Learning")]
+        [DocumentationAttribute("Scheduled Events")]
         public ScheduledEvent Train(PyObject trainingCode)
         {
             return Schedule.TrainingNow(trainingCode);
@@ -1260,6 +1261,7 @@ namespace QuantConnect.Algorithm
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="trainingCode">The training code to be invoked</param>
         [Documentation("Machine Learning")]
+        [DocumentationAttribute("Scheduled Events")]
         public ScheduledEvent Train(IDateRule dateRule, ITimeRule timeRule, PyObject trainingCode)
         {
             return Schedule.Training(dateRule, timeRule, trainingCode);
