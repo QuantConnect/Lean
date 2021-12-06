@@ -1157,7 +1157,7 @@ namespace QuantConnect.Algorithm
         /// Terminate the algorithm after processing the current event handler.
         /// </summary>
         /// <param name="message">Exit message to display on quitting</param>
-        [Documentation("Algorithm Framework")]
+        [Documentation("Logging")]
         public void Quit(PyObject message)
         {
             Quit(message.ToSafeString());

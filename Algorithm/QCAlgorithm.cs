@@ -2415,7 +2415,7 @@ namespace QuantConnect.Algorithm
         /// Terminate the algorithm after processing the current event handler.
         /// </summary>
         /// <param name="message">Exit message to display on quitting</param>
-        [DocumentationAttribute("Algorithm Framework")]
+        [DocumentationAttribute("Logging")]
         public void Quit(string message = "")
         {
             Debug("Quit(): " + message);
@@ -2428,7 +2428,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>Intended for internal use by the QuantConnect Lean Engine only.</remarks>
         /// <param name="quit">Boolean quit state</param>
         /// <seealso cref="Quit(String)"/>
-        [DocumentationAttribute("Algorithm Framework")]
+        [DocumentationAttribute("Logging")]
         public void SetQuit(bool quit)
         {
             if (quit)
