@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Interfaces
 {
@@ -168,6 +170,99 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to search</param>
         /// <returns>BacktestList container for list of backtests</returns>
         BacktestList ListBacktests(int projectId);
+
+        /// <summary>
+        /// Estimate optimization with the specified parameters via QuantConnect.com API
+        /// </summary>
+        /// <param name="projectId">Project ID of the project the optimization belongs to</param>
+        /// <param name="name">Name of the optimization</param>
+        /// <param name="target">Target of the optimization</param>
+        /// <param name="targetTo">Target extremum of the optimization</param>
+        /// <param name="targetValue">Optimization target value</param>
+        /// <param name="strategy">Optimization strategy</param>
+        /// <param name="compileId">Optimization compile ID</param>
+        /// <param name="parameters">Optimization parameters</param>
+        /// <param name="constraints">Optimization constraints</param>
+        /// <returns>Optimization object from the API.</returns>
+        public Optimization EstimateOptimization(
+            int projectId,
+            string name,
+            string target,
+            string targetTo,
+            decimal? targetValue,
+            string strategy,
+            string compileId,
+            HashSet<OptimizationParameter> parameters,
+            IReadOnlyList<Constraint> constraints
+            );
+
+        /// <summary>
+        /// Create an optimization with the specified parameters via QuantConnect.com API
+        /// </summary>
+        /// <param name="projectId">Project ID of the project the optimization belongs to</param>
+        /// <param name="name">Name of the optimization</param>
+        /// <param name="target">Target of the optimization</param>
+        /// <param name="targetTo">Target extremum of the optimization</param>
+        /// <param name="targetValue">Optimization target value</param>
+        /// <param name="strategy">Optimization strategy</param>
+        /// <param name="compileId">Optimization compile ID</param>
+        /// <param name="parameters">Optimization parameters</param>
+        /// <param name="constraints">Optimization constraints</param>
+        /// <param name="estimatedCost">Estimated cost for optimization</param>
+        /// <param name="nodeType">Optimization node type</param>
+        /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
+        /// <returns>Optimization object from the API.</returns>
+        public Optimization CreateOptimization(
+            int projectId,
+            string name,
+            string target,
+            string targetTo,
+            decimal? targetValue,
+            string strategy,
+            string compileId,
+            HashSet<OptimizationParameter> parameters,
+            IReadOnlyList<Constraint> constraints,
+            decimal estimatedCost,
+            string nodeType,
+            int parallelNodes
+            );
+
+        /// <summary>
+        /// List all the optimizations for a project
+        /// </summary>
+        /// <param name="projectId">Project id we'd like to get a list of optimizations for</param>
+        /// <returns><see cref="OptimizationList"/></returns>
+        public OptimizationList ListOptimizations(int projectId);
+
+        /// <summary>
+        /// Read an optimization
+        /// </summary>        
+        /// <param name="optimizationId">Optimization id for the optimization we want to read</param>
+        /// <returns><see cref="Optimization"/></returns>
+        public Optimization ReadOptimization(int optimizationId);
+
+        /// <summary>
+        /// Abort an optimization
+        /// </summary>        
+        /// <param name="optimizationId">Optimization id for the optimization we want to abort</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse AbortOptimization(string optimizationId);
+
+        /// <summary>
+        /// Update an optimization
+        /// </summary>
+        /// <param name="optimizationId">Optimization id we want to update</param>
+        /// <param name="name">Name we'd like to assign to the optimization</param>
+        /// <param name="layout">Layout of the optimization</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse UpdateOptimization(int optimizationId, string name = "", string layout = "");
+
+        /// <summary>
+        /// Delete an optimization
+        /// </summary>        
+        /// <param name="optimizationId">Optimization id for the optimization we want to delete</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse DeleteOptimization(string optimizationId);
 
         /// <summary>
         /// Gets the logs of a specific live algorithm

@@ -21,10 +21,12 @@ using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using RestSharp;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Orders;
-using RestSharp;
 using QuantConnect.Util;
 
 namespace QuantConnect.Api
@@ -1184,6 +1186,218 @@ namespace QuantConnect.Api
             return response.Organization;
         }
 
+        /// <summary>
+        /// Estimate optimization with the specified parameters via QuantConnect.com API
+        /// </summary>
+        /// <param name="projectId">Project ID of the project the optimization belongs to</param>
+        /// <param name="name">Name of the optimization</param>
+        /// <param name="target">Target of the optimization</param>
+        /// <param name="targetTo">Target extremum of the optimization</param>
+        /// <param name="targetValue">Optimization target value</param>
+        /// <param name="strategy">Optimization strategy</param>
+        /// <param name="compileId">Optimization compile ID</param>
+        /// <param name="parameters">Optimization parameters</param>
+        /// <param name="constraints">Optimization constraints</param>
+        /// <returns>Optimization object from the API.</returns>
+        public Optimization EstimateOptimization(
+            int projectId,
+            string name,
+            string target,
+            string targetTo,
+            decimal? targetValue,
+            string strategy,
+            string compileId,
+            HashSet<OptimizationParameter> parameters,
+            IReadOnlyList<Constraint> constraints
+            )
+        {
+            var request = new RestRequest("optimizations/estimate", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                name,
+                target,
+                targetTo,
+                targetValue,
+                strategy,
+                compileId,
+                parameters,
+                constraints
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out OptimizationResponseWrapper response);
+            return response.Optimization;
+        }
+
+        /// <summary>
+        /// Create an optimization with the specified parameters via QuantConnect.com API
+        /// </summary>
+        /// <param name="projectId">Project ID of the project the optimization belongs to</param>
+        /// <param name="name">Name of the optimization</param>
+        /// <param name="target">Target of the optimization</param>
+        /// <param name="targetTo">Target extremum of the optimization</param>
+        /// <param name="targetValue">Optimization target value</param>
+        /// <param name="strategy">Optimization strategy</param>
+        /// <param name="compileId">Optimization compile ID</param>
+        /// <param name="parameters">Optimization parameters</param>
+        /// <param name="constraints">Optimization constraints</param>
+        /// <param name="estimatedCost">Estimated cost for optimization</param>
+        /// <param name="nodeType">Optimization node type</param>
+        /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
+        /// <returns>Optimization object from the API.</returns>
+        public Optimization CreateOptimization(
+            int projectId,
+            string name,
+            string target,
+            string targetTo,
+            decimal? targetValue,
+            string strategy,
+            string compileId,
+            HashSet<OptimizationParameter> parameters,
+            IReadOnlyList<Constraint> constraints,
+            decimal estimatedCost,
+            string nodeType,
+            int parallelNodes
+            )
+        {
+            var request = new RestRequest("optimizations/create", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                name,
+                target,
+                targetTo,
+                targetValue,
+                strategy,
+                compileId,
+                parameters,
+                constraints,
+                estimatedCost,
+                nodeType,
+                parallelNodes
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out OptimizationResponseWrapper response);
+            return response.Optimization;
+        }
+
+        /// <summary>
+        /// List all the optimizations for a project
+        /// </summary>
+        /// <param name="projectId">Project id we'd like to get a list of optimizations for</param>
+        /// <returns><see cref="OptimizationList"/></returns>
+        public OptimizationList ListOptimizations(int projectId)
+        {
+            var request = new RestRequest("optimizations/list", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out OptimizationList result);
+            return result;
+        }
+
+        /// <summary>
+        /// Read an optimization
+        /// </summary>        
+        /// <param name="optimizationId">Optimization id for the optimization we want to read</param>
+        /// <returns><see cref="Optimization"/></returns>
+        public Optimization ReadOptimization(int optimizationId)
+        {
+            var request = new RestRequest("optimizations/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                optimizationId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out OptimizationResponseWrapper response);
+            return response.Optimization;
+        }
+
+        /// <summary>
+        /// Abort an optimization
+        /// </summary>        
+        /// <param name="optimizationId">Optimization id for the optimization we want to abort</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse AbortOptimization(string optimizationId)
+        {
+            var request = new RestRequest("optimizations/abort", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                optimizationId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Update an optimization
+        /// </summary>
+        /// <param name="optimizationId">Optimization id we want to update</param>
+        /// <param name="name">Name we'd like to assign to the optimization</param>
+        /// <param name="layout">Layout of the optimization</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse UpdateOptimization(int optimizationId, string name = "", string layout = "")
+        {
+            var request = new RestRequest("optimizations/update", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                optimizationId,
+                name,
+                layout
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Delete an optimization
+        /// </summary>        
+        /// <param name="optimizationId">Optimization id for the optimization we want to delete</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse DeleteOptimization(string optimizationId)
+        {
+            var request = new RestRequest("optimizations/delete", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                optimizationId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+        
         /// <summary>
         /// Helper method to normalize path for api data requests
         /// </summary>
