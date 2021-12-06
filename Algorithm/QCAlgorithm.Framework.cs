@@ -22,7 +22,6 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.APIReference;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
@@ -39,7 +38,7 @@ namespace QuantConnect.Algorithm
         /// Enables additional logging of framework models including:
         /// All insights, portfolio targets, order events, and any risk management altered targets
         /// </summary>
-        [Documentation(new string[] {"Initialization"})]
+        [DocumentationAttribute("Logging")]
         public bool DebugMode { get; set; }
 
         /// <summary>
@@ -71,7 +70,7 @@ namespace QuantConnect.Algorithm
         /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
         /// the data gather in the Initialize method
         /// </summary>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         public void FrameworkPostInitialize()
         {
             //Prevents execution in the case of cash brokerage with IExecutionModel and IPortfolioConstructionModel
@@ -100,7 +99,8 @@ namespace QuantConnect.Algorithm
         /// Used to send data updates to algorithm framework models
         /// </summary>
         /// <param name="slice">The current data slice</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
+        [DocumentationAttribute("Handling Data")]
         public void OnFrameworkData(Slice slice)
         {
             if (UtcTime >= UniverseSelection.GetNextRefreshTimeUtc())
@@ -174,7 +174,7 @@ namespace QuantConnect.Algorithm
         /// and the <see cref="IExecutionModel"/> will execute the <see cref="IPortfolioTarget"/>
         /// </summary>
         /// <param name="insights">The insight to process</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         private void ProcessInsights(Insight[] insights)
         {
             // construct portfolio targets from insights
@@ -249,7 +249,8 @@ namespace QuantConnect.Algorithm
         /// Used to send security changes to algorithm framework models
         /// </summary>
         /// <param name="changes">Security additions/removals for this time step</param>
-        [Documentation(new string[] {"Universes", "Algorithm Framework"})]
+        [DocumentationAttribute("Universes")]
+        [DocumentationAttribute("Algorithm Framework")]
         public void OnFrameworkSecuritiesChanged(SecurityChanges changes)
         {
             if (DebugMode)
@@ -267,7 +268,8 @@ namespace QuantConnect.Algorithm
         /// Sets the universe selection model
         /// </summary>
         /// <param name="universeSelection">Model defining universes for the algorithm</param>
-        [Documentation(new string[] {"Universes", "Algorithm Framework"})]
+        [DocumentationAttribute("Universes")]
+        [DocumentationAttribute("Algorithm Framework")]
         public void SetUniverseSelection(IUniverseSelectionModel universeSelection)
         {
             UniverseSelection = universeSelection;
@@ -277,7 +279,8 @@ namespace QuantConnect.Algorithm
         /// Adds a new universe selection model
         /// </summary>
         /// <param name="universeSelection">Model defining universes for the algorithm to add</param>
-        [Documentation(new string[] {"Universes", "Algorithm Framework"})]
+        [DocumentationAttribute("Universes")]
+        [DocumentationAttribute("Algorithm Framework")]
         public void AddUniverseSelection(IUniverseSelectionModel universeSelection)
         {
             if (UniverseSelection.GetType() != typeof(NullUniverseSelectionModel))
@@ -302,7 +305,7 @@ namespace QuantConnect.Algorithm
         /// Sets the alpha model
         /// </summary>
         /// <param name="alpha">Model that generates alpha</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         public void SetAlpha(IAlphaModel alpha)
         {
             Alpha = alpha;
@@ -312,7 +315,7 @@ namespace QuantConnect.Algorithm
         /// Adds a new alpha model
         /// </summary>
         /// <param name="alpha">Model that generates alpha to add</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         public void AddAlpha(IAlphaModel alpha)
         {
             if (Alpha.GetType() != typeof(NullAlphaModel))
@@ -337,7 +340,7 @@ namespace QuantConnect.Algorithm
         /// Sets the portfolio construction model
         /// </summary>
         /// <param name="portfolioConstruction">Model defining how to build a portfolio from insights</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         public void SetPortfolioConstruction(IPortfolioConstructionModel portfolioConstruction)
         {
             PortfolioConstruction = portfolioConstruction;
@@ -347,7 +350,7 @@ namespace QuantConnect.Algorithm
         /// Sets the execution model
         /// </summary>
         /// <param name="execution">Model defining how to execute trades to reach a portfolio target</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         public void SetExecution(IExecutionModel execution)
         {
             Execution = execution;
@@ -357,7 +360,7 @@ namespace QuantConnect.Algorithm
         /// Sets the risk management model
         /// </summary>
         /// <param name="riskManagement">Model defining how risk is managed</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         public void SetRiskManagement(IRiskManagementModel riskManagement)
         {
             RiskManagement = riskManagement;
@@ -367,7 +370,7 @@ namespace QuantConnect.Algorithm
         /// Adds a new risk management model
         /// </summary>
         /// <param name="riskManagement">Model defining how risk is managed to add</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         public void AddRiskManagement(IRiskManagementModel riskManagement)
         {
             if (RiskManagement.GetType() != typeof(NullRiskManagementModel))
@@ -394,7 +397,7 @@ namespace QuantConnect.Algorithm
         /// QCAlgorithm that have been ported into the algorithm framework.
         /// </summary>
         /// <param name="insights">The array of insights to be emitted</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         public void EmitInsights(params Insight[] insights)
         {
             if (IsWarmingUp)
@@ -418,7 +421,7 @@ namespace QuantConnect.Algorithm
         /// QCAlgorithm that have been ported into the algorithm framework.
         /// </summary>
         /// <param name="insight">The insight to be emitted</param>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         public void EmitInsights(Insight insight)
         {
             EmitInsights(new[] { insight });
@@ -429,7 +432,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="insights">insights preparing to be emitted</param>
         /// <returns>Validated insights</returns>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         private Insight[] InitializeInsights(Insight[] insights)
         {
             List<Insight> validInsights = null;
@@ -475,7 +478,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="insight">The <see cref="Insight"/> to set the values for</param>
         /// <returns>The same <see cref="Insight"/> instance with the values set</returns>
-        [Documentation(new string[] {"Algorithm Framework"})]
+        [DocumentationAttribute("Algorithm Framework")]
         private Insight InitializeInsightFields(Insight insight)
         {
             insight.GeneratedTimeUtc = UtcTime;
