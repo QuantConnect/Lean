@@ -345,11 +345,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone);
                 };
 
-                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
-                if (symbolUniverse == null)
-                {
-                    throw new NotSupportedException("The DataQueueHandler does not support Options.");
-                }
+                var symbolUniverse = GetUniverseProvider(SecurityType.Option);
 
                 var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
@@ -360,11 +356,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ID);
 
-                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
-                if (symbolUniverse == null)
-                {
-                    throw new NotSupportedException("The DataQueueHandler does not support Futures.");
-                }
+                var symbolUniverse = GetUniverseProvider(SecurityType.Option);
 
                 var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
@@ -413,6 +405,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var stepTimeProvider = new PredicateTimeProvider(_frontierTimeProvider, customStepEvaluator);
 
             return new FrontierAwareEnumerator(enumerator, stepTimeProvider, tzOffsetProvider);
+        }
+
+        private IDataQueueUniverseProvider GetUniverseProvider(SecurityType securityType)
+        {
+            if (_dataQueueHandler is not IDataQueueUniverseProvider or CompositeDataQueueHandler { HasUniverseProvider: false })
+            {
+                throw new NotSupportedException($"The DataQueueHandler does not support {securityType}.");
+            }
+            return (IDataQueueUniverseProvider)_dataQueueHandler;
         }
 
         /// <summary>

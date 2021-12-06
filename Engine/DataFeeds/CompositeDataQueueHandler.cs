@@ -13,23 +13,29 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Packets;
-using QuantConnect.Util;
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Util;
+using QuantConnect.Data;
+using QuantConnect.Packets;
 using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// This is an implementation of <see cref="IDataQueueHandler"/> used to handle multiple live datafeeds
     /// </summary>
-    public class CompositeDataQueueHandler : IDataQueueHandler
+    public class CompositeDataQueueHandler : IDataQueueHandler, IDataQueueUniverseProvider
     {
         private readonly List<IDataQueueHandler> _dataHandlers = new();
         private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler = new();
+
+        /// <summary>
+        /// True if the composite queue handler has any <see cref="IDataQueueUniverseProvider"/> instance
+        /// </summary>
+        public bool HasUniverseProvider => _dataHandlers.OfType<IDataQueueUniverseProvider>().Any();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeDataQueueHandler"/> class
@@ -99,6 +105,52 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             foreach (var dataHandler in _dataHandlers)
             {
                 dataHandler.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Method returns a collection of Symbols that are available at the data source.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup</param>
+        /// <param name="includeExpired">Include expired contracts</param>
+        /// <param name="securityCurrency">Expected security currency(if any)</param>
+        /// <returns>Enumerable of Symbols, that are associated with the provided Symbol</returns>
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
+        {
+            foreach (var dataHandler in GetUniverseProviders())
+            {
+                var result = dataHandler.LookupSymbols(symbol, includeExpired, securityCurrency).ToList();
+                if (result.Any())
+                {
+                    return result;
+                }
+            }
+            return Enumerable.Empty<Symbol>();
+        }
+
+        /// <summary>
+        /// Returns whether selection can take place or not.
+        /// </summary>
+        /// <remarks>This is useful to avoid a selection taking place during invalid times, for example IB reset times or when not connected,
+        /// because if allowed selection would fail since IB isn't running and would kill the algorithm</remarks>
+        /// <returns>True if selection can take place</returns>
+        public bool CanPerformSelection()
+        {
+            return GetUniverseProviders().Any(provider => provider.CanPerformSelection());
+        }
+
+        private IEnumerable<IDataQueueUniverseProvider> GetUniverseProviders()
+        {
+            var yielded = false;
+            foreach (var universeProvider in _dataHandlers.OfType<IDataQueueUniverseProvider>())
+            {
+                yielded = true;
+                yield return universeProvider;
+            }
+
+            if (!yielded)
+            {
+                throw new NotSupportedException("The DataQueueHandler does not support Options and Futures.");
             }
         }
     }

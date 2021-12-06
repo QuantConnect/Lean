@@ -3035,10 +3035,16 @@ namespace QuantConnect
 
             using (var streamReader = new StreamReader(stream))
             {
-                while (!streamReader.EndOfStream)
+                string line;
+                do
                 {
-                    yield return streamReader.ReadLine();
+                    line = streamReader.ReadLine();
+                    if (line != null)
+                    {
+                        yield return line;
+                    }
                 }
+                while (line != null);
             }
         }
 
