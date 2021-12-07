@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm
         /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the data</param>
         /// <returns>The new <see cref="Security"/></returns>
-        [DocumentationAttribute("Adding Data")]
+        [DocumentationAttribute(AddingData)]
         public Security AddData(PyObject type, string ticker, Resolution? resolution = null)
         {
             return AddData(type, ticker, resolution, null, false, 1m);
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm
         /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
         public Security AddData(PyObject type, Symbol underlying, Resolution? resolution = null)
         {
             return AddData(type, underlying, resolution, null, false, 1m);
@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
         public Security AddData(PyObject type, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             return AddData(type.CreateType(), ticker, resolution, timeZone, fillDataForward, leverage);
@@ -127,7 +127,7 @@ namespace QuantConnect.Algorithm
         /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
         public Security AddData(PyObject type, Symbol underlying, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             return AddData(type.CreateType(), underlying, resolution, timeZone, fillDataForward, leverage);
@@ -145,7 +145,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
         public Security AddData(Type dataType, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             // NOTE: Invoking methods on BaseData w/out setting the symbol may provide unexpected behavior
@@ -190,7 +190,7 @@ namespace QuantConnect.Algorithm
         /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
         public Security AddData(Type dataType, Symbol underlying, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, Market.USA);
@@ -210,7 +210,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
         public Security AddData(PyObject type, string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             // Get the right key for storage of base type symbols
@@ -231,7 +231,7 @@ namespace QuantConnect.Algorithm
         /// <param name="optionFilter">Filter to apply to option contracts loaded as part of the universe</param>
         /// <returns>The new Option security, containing a Future as its underlying.</returns>
         /// <exception cref="ArgumentException">The symbol provided is not canonical.</exception>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
         public void AddFutureOption(Symbol futureSymbol, PyObject optionFilter)
         {
             Func<OptionFilterUniverse, OptionFilterUniverse> optionFilterUniverse;
@@ -284,7 +284,7 @@ namespace QuantConnect.Algorithm
         /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
         /// </summary>
         /// <param name="pyObject">Defines an initial coarse selection</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject pyObject)
         {
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
@@ -318,7 +318,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="pyObject">Defines an initial coarse selection or a universe</param>
         /// <param name="pyfine">Defines a more detailed selection with access to more data</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject pyObject, PyObject pyfine)
         {
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
@@ -350,7 +350,7 @@ namespace QuantConnect.Algorithm
         /// <param name="name">A unique name for this universe</param>
         /// <param name="resolution">The resolution this universe should be triggered on</param>
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(string name, Resolution resolution, PyObject pySelector)
         {
             var selector = pySelector.ConvertToDelegate<Func<DateTime, object>>();
@@ -363,7 +363,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="name">A unique name for this universe</param>
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(string name, PyObject pySelector)
         {
             var selector = pySelector.ConvertToDelegate<Func<DateTime, object>>();
@@ -379,7 +379,7 @@ namespace QuantConnect.Algorithm
         /// <param name="market">The market of the universe</param>
         /// <param name="universeSettings">The subscription settings used for securities added from this universe</param>
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
         {
             var selector = pySelector.ConvertToDelegate<Func<DateTime, object>>();
@@ -394,7 +394,7 @@ namespace QuantConnect.Algorithm
         /// <param name="T">The data type</param>
         /// <param name="name">A unique name for this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject T, string name, PyObject selector)
         {
             return AddUniverse(T.CreateType(), SecurityType.Equity, name, Resolution.Daily, Market.USA, UniverseSettings, selector);
@@ -409,7 +409,7 @@ namespace QuantConnect.Algorithm
         /// <param name="name">A unique name for this universe</param>
         /// <param name="resolution">The epected resolution of the universe data</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject T, string name, Resolution resolution, PyObject selector)
         {
             return AddUniverse(T.CreateType(), SecurityType.Equity, name, resolution, Market.USA, UniverseSettings, selector);
@@ -425,7 +425,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The epected resolution of the universe data</param>
         /// <param name="universeSettings">The settings used for securities added by this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject T, string name, Resolution resolution, UniverseSettings universeSettings, PyObject selector)
         {
             return AddUniverse(T.CreateType(), SecurityType.Equity, name, resolution, Market.USA, universeSettings, selector);
@@ -440,7 +440,7 @@ namespace QuantConnect.Algorithm
         /// <param name="name">A unique name for this universe</param>
         /// <param name="universeSettings">The settings used for securities added by this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject T, string name, UniverseSettings universeSettings, PyObject selector)
         {
             return AddUniverse(T.CreateType(), SecurityType.Equity, name, Resolution.Daily, Market.USA, universeSettings, selector);
@@ -456,7 +456,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The epected resolution of the universe data</param>
         /// <param name="market">The market for selected symbols</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, PyObject selector)
         {
             return AddUniverse(T.CreateType(), securityType, name, resolution, market, UniverseSettings, selector);
@@ -472,7 +472,7 @@ namespace QuantConnect.Algorithm
         /// <param name="market">The market for selected symbols</param>
         /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject selector)
         {
             return AddUniverse(T.CreateType(), securityType, name, resolution, market, universeSettings, selector);
@@ -488,7 +488,7 @@ namespace QuantConnect.Algorithm
         /// <param name="market">The market for selected symbols</param>
         /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
         /// <param name="pySelector">Function delegate that performs selection on the universe data</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(Type dataType, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
         {
             var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
@@ -515,7 +515,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="universe">The universe we want to chain an option universe selection model too</param>
         /// <param name="optionFilter">The option filter universe to use</param>
-        [Documentation("Universes")]
+        [DocumentationAttribute(Universes)]
         public void AddUniverseOptions(PyObject universe, PyObject optionFilter)
         {
             Func<OptionFilterUniverse, OptionFilterUniverse> convertedOptionChain;
@@ -542,8 +542,8 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        [Documentation("Indicators")]
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(ConsolidatingData)]
         public void RegisterIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
         {
             RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector);
@@ -557,8 +557,8 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        [Documentation("Indicators")]
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(ConsolidatingData)]
         public void RegisterIndicator(Symbol symbol, PyObject indicator, TimeSpan? resolution = null, PyObject selector = null)
         {
             RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector);
@@ -572,8 +572,8 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="pyObject">The python object that it is trying to register with, could be consolidator or a timespan</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        [Documentation("Indicators")]
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(ConsolidatingData)]
         public void RegisterIndicator(Symbol symbol, PyObject indicator, PyObject pyObject, PyObject selector = null)
         {
             try
@@ -621,8 +621,8 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        [Documentation("Indicators")]
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(ConsolidatingData)]
         public void RegisterIndicator(Symbol symbol, PyObject indicator, IDataConsolidator consolidator, PyObject selector = null)
         {
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
@@ -656,8 +656,8 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        [Documentation("Indicators")]
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(HistoricalData)]
         public void WarmUpIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
         {
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
@@ -690,7 +690,7 @@ namespace QuantConnect.Algorithm
         /// <param name="series">Name of the plot series</param>
         /// <param name="pyObject">PyObject with the value to plot</param>
         /// <seealso cref="Plot(string,decimal)"/>
-        [Documentation("Charting")]
+        [DocumentationAttribute(Charting)]
         public void Plot(string series, PyObject pyObject)
         {
             using (Py.GIL())
@@ -717,7 +717,7 @@ namespace QuantConnect.Algorithm
         /// <param name="third">The third indicator to plot</param>
         /// <param name="fourth">The fourth indicator to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
-        [Documentation("Charting")]
+        [DocumentationAttribute(Charting)]
         public void Plot(string chart, Indicator first, Indicator second = null, Indicator third = null, Indicator fourth = null)
         {
             Plot(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
@@ -732,7 +732,7 @@ namespace QuantConnect.Algorithm
         /// <param name="third">The third indicator to plot</param>
         /// <param name="fourth">The fourth indicator to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
-        [Documentation("Charting")]
+        [DocumentationAttribute(Charting)]
         public void Plot(string chart, BarIndicator first, BarIndicator second = null, BarIndicator third = null, BarIndicator fourth = null)
         {
             Plot(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
@@ -747,7 +747,7 @@ namespace QuantConnect.Algorithm
         /// <param name="third">The third indicator to plot</param>
         /// <param name="fourth">The fourth indicator to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
-        [Documentation("Charting")]
+        [DocumentationAttribute(Charting)]
         public void Plot(string chart, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
         {
             Plot(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
@@ -756,8 +756,8 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        [Documentation("Charting")]
-        [Documentation("Indicators")]
+        [DocumentationAttribute(Charting)]
+        [DocumentationAttribute(Indicators)]
         public void PlotIndicator(string chart, PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
         {
             var array = GetIndicatorArray(first, second, third, fourth);
@@ -767,8 +767,8 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        [Documentation("Charting")]
-        [Documentation("Indicators")]
+        [DocumentationAttribute(Charting)]
+        [DocumentationAttribute(Indicators)]
         public void PlotIndicator(string chart, bool waitForReady, PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
         {
             var array = GetIndicatorArray(first, second, third, fourth);
@@ -784,7 +784,7 @@ namespace QuantConnect.Algorithm
         /// <param name="filter">Filters the IBaseData send into the indicator, if null defaults to true (x => true) which means no filter</param>
         /// <param name="fieldName">The name of the field being selected</param>
         /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
-        [Documentation("Indicators")]
+        [DocumentationAttribute(Indicators)]
         public FilteredIdentity FilteredIdentity(Symbol symbol, PyObject selector = null, PyObject filter = null, string fieldName = null)
         {
             var resolution = GetSubscription(symbol).Resolution;
@@ -801,7 +801,7 @@ namespace QuantConnect.Algorithm
         /// <param name="filter">Filters the IBaseData send into the indicator, if null defaults to true (x => true) which means no filter</param>
         /// <param name="fieldName">The name of the field being selected</param>
         /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
-        [Documentation("Indicators")]
+        [DocumentationAttribute(Indicators)]
         public FilteredIdentity FilteredIdentity(Symbol symbol, Resolution resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
         {
             var name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
@@ -822,7 +822,7 @@ namespace QuantConnect.Algorithm
         /// <param name="filter">Filters the IBaseData send into the indicator, if null defaults to true (x => true) which means no filter</param>
         /// <param name="fieldName">The name of the field being selected</param>
         /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
-        [Documentation("Indicators")]
+        [DocumentationAttribute(Indicators)]
         public FilteredIdentity FilteredIdentity(Symbol symbol, TimeSpan resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
         {
             var name = $"{symbol}({fieldName ?? "close"}_{resolution.ToStringInvariant(null)})";
@@ -841,7 +841,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, int periods, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
@@ -856,7 +856,7 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
@@ -871,7 +871,7 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
@@ -887,7 +887,7 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
@@ -916,7 +916,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
@@ -947,7 +947,7 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null)
         {
             return History(type, tickers, Time - span, Time, resolution);
@@ -962,7 +962,7 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var security = Securities[symbol];
@@ -990,7 +990,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null)
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
@@ -1010,7 +1010,7 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
-        [Documentation("Historical Data")]
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null)
         {
             return History(type, symbol, Time - span, Time, resolution);
@@ -1021,6 +1021,9 @@ namespace QuantConnect.Algorithm
         /// the benchmark at each date/time requested
         /// </summary>
         /// <param name="benchmark">The benchmark producing function</param>
+        [DocumentationAttribute(TradingAndOrders)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(Indicators)]
         public void SetBenchmark(PyObject benchmark)
         {
             using (Py.GIL())
@@ -1040,7 +1043,7 @@ namespace QuantConnect.Algorithm
         /// This can be used to set a custom brokerage model.
         /// </summary>
         /// <param name="model">The brokerage model to use</param>
-        [Documentation("Modeling")]
+        [DocumentationAttribute(Modeling)]
         public void SetBrokerageModel(PyObject model)
         {
             IBrokerageModel brokerageModel;
@@ -1056,7 +1059,8 @@ namespace QuantConnect.Algorithm
         /// Sets the security initializer function, used to initialize/configure securities after creation
         /// </summary>
         /// <param name="securityInitializer">The security initializer function or class</param>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(Modeling)]
         public void SetSecurityInitializer(PyObject securityInitializer)
         {
             var securityInitializer1 = PythonUtil.ToAction<Security>(securityInitializer);
@@ -1076,7 +1080,8 @@ namespace QuantConnect.Algorithm
         /// <param name="address">A string containing the URI to download</param>
         /// <param name="headers">Defines header values to add to the request</param>
         /// <returns>The requested resource as a <see cref="string"/></returns>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(MachineLearning)]
         public string Download(string address, PyObject headers) => Download(address, headers, null, null);
 
         /// <summary>
@@ -1088,7 +1093,8 @@ namespace QuantConnect.Algorithm
         /// <param name="userName">The user name associated with the credentials</param>
         /// <param name="password">The password for the user name associated with the credentials</param>
         /// <returns>The requested resource as a <see cref="string"/></returns>
-        [Documentation("Adding Data")]
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(MachineLearning)]
         public string Download(string address, PyObject headers, string userName, string password)
         {
             var dict = new Dictionary<string, string>();
@@ -1123,7 +1129,7 @@ namespace QuantConnect.Algorithm
         /// <param name="message">Message to send to debug console</param>
         /// <seealso cref="Log(PyObject)"/>
         /// <seealso cref="Error(PyObject)"/>
-        [Documentation("Logging")]
+        [DocumentationAttribute(Logging)]
         public void Debug(PyObject message)
         {
             Debug(message.ToSafeString());
@@ -1135,7 +1141,7 @@ namespace QuantConnect.Algorithm
         /// <param name="message">Message to display in errors grid</param>
         /// <seealso cref="Debug(PyObject)"/>
         /// <seealso cref="Log(PyObject)"/>
-        [Documentation("Logging")]
+        [DocumentationAttribute(Logging)]
         public void Error(PyObject message)
         {
             Error(message.ToSafeString());
@@ -1147,7 +1153,7 @@ namespace QuantConnect.Algorithm
         /// <param name="message">String message to log.</param>
         /// <seealso cref="Debug(PyObject)"/>
         /// <seealso cref="Error(PyObject)"/>
-        [Documentation("Logging")]
+        [DocumentationAttribute(Logging)]
         public void Log(PyObject message)
         {
             Log(message.ToSafeString());
@@ -1157,7 +1163,7 @@ namespace QuantConnect.Algorithm
         /// Terminate the algorithm after processing the current event handler.
         /// </summary>
         /// <param name="message">Exit message to display on quitting</param>
-        [Documentation("Logging")]
+        [DocumentationAttribute(Logging)]
         public void Quit(PyObject message)
         {
             Quit(message.ToSafeString());
@@ -1170,7 +1176,7 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The consolidation period</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate(Symbol symbol, Resolution period, PyObject handler)
         {
             return Consolidate(symbol, period.ToTimeSpan(), null, handler);
@@ -1184,7 +1190,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate(Symbol symbol, Resolution period, TickType? tickType, PyObject handler)
         {
             return Consolidate(symbol, period.ToTimeSpan(), tickType, handler);
@@ -1197,7 +1203,7 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The consolidation period</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate(Symbol symbol, TimeSpan period, PyObject handler)
         {
             return Consolidate(symbol, period, null, handler);
@@ -1211,7 +1217,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate(Symbol symbol, TimeSpan period, TickType? tickType, PyObject handler)
         {
             // resolve consolidator input subscription
@@ -1237,7 +1243,7 @@ namespace QuantConnect.Algorithm
         /// <param name="calendar">The consolidation calendar</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendar, PyObject handler)
         {
             return Consolidate(symbol, calendar, null, handler);
@@ -1247,8 +1253,8 @@ namespace QuantConnect.Algorithm
         /// Schedules the provided training code to execute immediately
         /// </summary>
         /// <param name="trainingCode">The training code to be invoked</param>
-        [Documentation("Machine Learning")]
-        [DocumentationAttribute("Scheduled Events")]
+        [DocumentationAttribute(MachineLearning)]
+        [DocumentationAttribute(ScheduledEvents)]
         public ScheduledEvent Train(PyObject trainingCode)
         {
             return Schedule.TrainingNow(trainingCode);
@@ -1260,8 +1266,8 @@ namespace QuantConnect.Algorithm
         /// <param name="dateRule">Specifies what dates the event should run</param>
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="trainingCode">The training code to be invoked</param>
-        [Documentation("Machine Learning")]
-        [DocumentationAttribute("Scheduled Events")]
+        [DocumentationAttribute(MachineLearning)]
+        [DocumentationAttribute(ScheduledEvents)]
         public ScheduledEvent Train(IDateRule dateRule, ITimeRule timeRule, PyObject trainingCode)
         {
             return Schedule.Training(dateRule, timeRule, trainingCode);
@@ -1275,7 +1281,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
-        [Documentation("Consolidating Data")]
+        [DocumentationAttribute(ConsolidatingData)]
         private IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendar, TickType? tickType, PyObject handler)
         {
             // resolve consolidator input subscription
