@@ -30,6 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class CompositeDataQueueHandler : IDataQueueHandler, IDataQueueUniverseProvider
     {
         private readonly List<IDataQueueHandler> _dataHandlers = new();
+        private readonly Dictionary<SubscriptionDataConfig, int> _dataConfigCounter = new();
         private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler = new();
 
         /// <summary>
@@ -58,7 +59,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // Check if the enumerator is not empty
                 if (enumerator != null)
                 {
-                    _dataConfigAndDataHandler.Add(dataConfig, dataHandler);
+                    _dataConfigCounter.TryGetValue(dataConfig, out var counter);
+                    _dataConfigCounter[dataConfig] = counter + 1;
+
+                    _dataConfigAndDataHandler[dataConfig] = dataHandler;
                     return enumerator;
                 }
             }
@@ -73,6 +77,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _dataConfigAndDataHandler.TryGetValue(dataConfig, out IDataQueueHandler dataHandler);
             dataHandler?.Unsubscribe(dataConfig);
+
+            _dataConfigCounter.TryGetValue(dataConfig, out var counter);
+            if (--counter <= 0)
+            {
+                _dataConfigCounter.Remove(dataConfig);
+                _dataConfigAndDataHandler.Remove(dataConfig);
+            }
+            else
+            {
+                _dataConfigCounter[dataConfig] = counter;
+            }
         }
 
         /// <summary>
