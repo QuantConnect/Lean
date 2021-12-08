@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Api
@@ -109,6 +110,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "runtimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, string> RuntimeStatistics;
+
+        /// <summary>
+        /// Optimization parameters
+        /// </summary>
+        [JsonProperty(PropertyName = "parameterSet", NullValueHandling = NullValueHandling.Ignore)]
+        public HashSet<OptimizationParameter> ParameterSet;
     }
 
     /// <summary>

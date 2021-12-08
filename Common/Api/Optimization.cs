@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 
@@ -28,12 +27,6 @@ namespace QuantConnect.Api
     public class Optimization : BaseOptimization
     {
         /// <summary>
-        /// Optimization snapshot ID
-        /// </summary>
-        [JsonProperty(PropertyName = "snapshotId")]
-        public string SnapshotId;
-
-        /// <summary>
         /// Runtime banner/updating statistics for the optimization
         /// </summary>
         [JsonProperty(PropertyName = "runtimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
@@ -42,13 +35,13 @@ namespace QuantConnect.Api
         /// <summary>
         /// Optimization constraints
         /// </summary>
-        [JsonProperty(PropertyName = "constraints")]
+        [JsonProperty(PropertyName = "constraints", NullValueHandling = NullValueHandling.Ignore)]
         IReadOnlyList<Constraint> Constraints;
 
         /// <summary>
         /// Optimization parameters
         /// </summary>
-        [JsonProperty(PropertyName = "parameters")]
+        [JsonProperty(PropertyName = "parameters", NullValueHandling = NullValueHandling.Ignore)]
         public HashSet<OptimizationParameter> Parameters;
 
         /// <summary>
@@ -60,7 +53,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Optimization constraints
         /// </summary>
-        [JsonProperty(PropertyName = "backtests")]
+        [JsonProperty(PropertyName = "backtests", NullValueHandling = NullValueHandling.Ignore)]
         IDictionary<string, Backtest> Backtests;
 
         /// <summary>
