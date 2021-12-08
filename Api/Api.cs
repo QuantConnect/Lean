@@ -1315,7 +1315,7 @@ namespace QuantConnect.Api
         /// </summary>        
         /// <param name="optimizationId">Optimization id for the optimization we want to read</param>
         /// <returns><see cref="Optimization"/></returns>
-        public Optimization ReadOptimization(int optimizationId)
+        public Optimization ReadOptimization(string optimizationId)
         {
             var request = new RestRequest("optimizations/read", Method.POST)
             {
@@ -1359,7 +1359,7 @@ namespace QuantConnect.Api
         /// <param name="name">Name we'd like to assign to the optimization</param>
         /// <param name="layout">Layout of the optimization</param>
         /// <returns><see cref="RestResponse"/></returns>
-        public RestResponse UpdateOptimization(int optimizationId, string name = "", string layout = "")
+        public RestResponse UpdateOptimization(string optimizationId, string name = "", string layout = "")
         {
             var request = new RestRequest("optimizations/update", Method.POST)
             {
