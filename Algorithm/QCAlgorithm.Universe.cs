@@ -584,12 +584,12 @@ namespace QuantConnect.Algorithm
                         // since universe selection proper is never invoked on this type of universe
                         var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
 
-                        if (security.Type == SecurityType.Base)
-                        {
-                            // set entry in market hours database for the universe subscription to match the custom data
-                            var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(uconfig.Symbol);
-                            MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType, security.Exchange.Hours, uconfig.DataTimeZone);
-                        }
+                        // this is the universe symbol, has no real entry in the mhdb, will default to market
+                        // and security type which can be different than the provided config so let's make sure
+                        // the config and the security use the same exchange time zone
+                        // set entry in market hours database for the universe subscription to match the config based on the added security
+                        var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(uconfig.Symbol);
+                        MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType, security.Exchange.Hours, uconfig.DataTimeZone);
 
                         universe = new UserDefinedUniverse(uconfig,
                             new UniverseSettings(

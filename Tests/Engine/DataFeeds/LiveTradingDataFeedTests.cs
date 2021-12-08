@@ -644,6 +644,69 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Log.Trace("Count: " + count + " ReaderCount: " + RestApiBaseData.ReaderCount);
         }
 
+        [TestCase("AAPL", SecurityType.Equity)]
+        [TestCase("BTCUSD", SecurityType.Crypto)]
+        [TestCase("SPX500USD", SecurityType.Cfd)]
+        [TestCase("ES", SecurityType.Future)]
+        [TestCase("ES", SecurityType.FutureOption)]
+        [TestCase("AAPL", SecurityType.Option)]
+        public void UserDefinedUniverseSelection(string ticker, SecurityType securityType)
+        {
+            var feed = RunDataFeed();
+            _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
+            _algorithm.SetFinishedWarmingUp();
+
+            Symbol symbol = null;
+            if (securityType == SecurityType.Cfd)
+            {
+                symbol = _algorithm.AddCfd(ticker, market: Market.Oanda).Symbol;
+            }
+            else if (securityType == SecurityType.Equity)
+            {
+                symbol = _algorithm.AddEquity(ticker).Symbol;
+            }
+            else if (securityType == SecurityType.Crypto)
+            {
+                symbol = _algorithm.AddCrypto(ticker).Symbol;
+            }
+            else if (securityType == SecurityType.Option)
+            {
+                symbol = Symbol.CreateOption(Symbols.AAPL, Symbols.AAPL.ID.Market, OptionStyle.American,
+                    OptionRight.Call, 1, _manualTimeProvider.GetUtcNow().AddDays(20));
+                _algorithm.AddOptionContract(symbol);
+            }
+            else if (securityType == SecurityType.Future)
+            {
+                symbol = _algorithm.AddFuture(ticker).Symbol;
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var expiration = _manualTimeProvider.GetUtcNow().AddDays(20);
+                symbol = Symbol.CreateFuture("ES", Market.CME, expiration);
+                symbol = Symbol.CreateOption(symbol, symbol.ID.Market, OptionStyle.American, OptionRight.Call, 1, expiration);
+                _algorithm.AddFutureOptionContract(symbol);
+            }
+
+            var receivedSecurityChanges = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(3), ts =>
+            {
+                foreach (var addedSecurity in ts.SecurityChanges.AddedSecurities)
+                {
+                    if (addedSecurity.Symbol == symbol)
+                    {
+                        receivedSecurityChanges = true;
+                        // we got what we wanted, end unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    }
+                }
+            },
+            alwaysInvoke: true,
+            secondsTimeStep: 1,
+            endDate: _startDate.AddSeconds(2));
+
+            Assert.IsTrue(receivedSecurityChanges, "Did not add symbol!");
+        }
+
         [Test]
         public void DelistedEventEmitted_Equity()
         {
@@ -1287,7 +1350,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
-            _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction, lookupSymbolsFunction, canPerformSelection, _manualTimeProvider);
+            _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction,
+                lookupSymbolsFunction ?? ((symbol, _, _) =>
+                {
+                    return new List<Symbol> { Symbol.CreateOption(symbol.Underlying ?? symbol,
+                        symbol.ID.Market,
+                        symbol.SecurityType.DefaultOptionStyle(),
+                        OptionRight.Call,
+                        1,
+                        _manualTimeProvider.GetUtcNow().AddDays(10))};
+                }),
+                canPerformSelection ?? (() => true), _manualTimeProvider);
 
             _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
             var fileProvider = TestGlobals.DataProvider;
