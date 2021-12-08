@@ -22,31 +22,13 @@ namespace QuantConnect.Api
     /// <summary>
     /// OptimizationDTO item from the QuantConnect.com API.
     /// </summary>
-    public class OptimizationDTO
+    public class BaseOptimization : RestResponse
     {
-        /// <summary>
-        /// Name of the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name;
-
-        /// <summary>
-        /// Creation time of the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "created")]
-        public DateTime Created;
-        
         /// <summary>
         /// Optimization ID
         /// </summary>
         [JsonProperty(PropertyName = "optimizationId")]
         public string OptimizationId;
-
-        /// <summary>
-        /// Status of the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "status")]
-        public OptimizationStatus Status;
 
         /// <summary>
         /// Project ID of the project the optimization belongs to
@@ -55,33 +37,21 @@ namespace QuantConnect.Api
         public int ProjectId;
 
         /// <summary>
+        /// Name of the optimization
+        /// </summary>
+        [JsonProperty(PropertyName = "name")]
+        public string Name;
+
+        /// <summary>
+        /// Status of the optimization
+        /// </summary>
+        [JsonProperty(PropertyName = "status")]
+        public OptimizationStatus Status;
+        
+        /// <summary>
         /// Optimization node type
         /// </summary>
         [JsonProperty(PropertyName = "nodeType")]
         public string NodeType;
-
-        /// <summary>
-        /// Probabilistic Sharpe Ratio of the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "psr")]
-        public decimal PSR;
-
-        /// <summary>
-        /// Sharpe Ratio of the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "sharpeRatio")]
-        public decimal SharpeRatio;
-
-        /// <summary>
-        /// Number of trades in the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "trades")]
-        public int Trades;
-
-        /// <summary>
-        /// Optimization clone ID
-        /// </summary>
-        [JsonProperty(PropertyName = "cloneId")]
-        public int CloneId;
     }
 }

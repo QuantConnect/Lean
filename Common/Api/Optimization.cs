@@ -25,25 +25,13 @@ namespace QuantConnect.Api
     /// <summary>
     /// Optimization response packet from the QuantConnect.com API.
     /// </summary>
-    public class Optimization : RestResponse
+    public class Optimization : BaseOptimization
     {
-        /// <summary>
-        /// Optimization ID
-        /// </summary>
-        [JsonProperty(PropertyName = "optimizationId")]
-        public string OptimizationId;
-
         /// <summary>
         /// Optimization snapshot ID
         /// </summary>
         [JsonProperty(PropertyName = "snapshotId")]
         public string SnapshotId;
-
-        /// <summary>
-        /// Name of the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name;
 
         /// <summary>
         /// Runtime banner/updating statistics for the optimization
@@ -64,28 +52,10 @@ namespace QuantConnect.Api
         public HashSet<OptimizationParameter> Parameters;
 
         /// <summary>
-        /// Optimization node type
-        /// </summary>
-        [JsonProperty(PropertyName = "nodeType")]
-        public string NodeType;
-
-        /// <summary>
         /// Number of parallel nodes for optimization
         /// </summary>
         [JsonProperty(PropertyName = "parallelNodes")]
         public int ParallelNodes;
-
-        /// <summary>
-        /// Project ID of the project the optimization belongs to
-        /// </summary>
-        [JsonProperty(PropertyName = "projectId")]
-        public int ProjectId;
-
-        /// <summary>
-        /// Status of the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "status")]
-        public OptimizationStatus Status;
 
         /// <summary>
         /// Optimization constraints
@@ -118,7 +88,7 @@ namespace QuantConnect.Api
         public Extremum Extremum;
 
         /// <summary>
-        /// Requested time of the optimization
+        /// Optimization requested date and time
         /// </summary>
         [JsonProperty(PropertyName = "requested")]
         public DateTime Requested;
@@ -158,6 +128,6 @@ namespace QuantConnect.Api
         /// Collection of summarized optimization objects
         /// </summary>
         [JsonProperty(PropertyName = "optimizations")]
-        public List<OptimizationDTO> Optimizations;
+        public List<BaseOptimization> Optimizations;
     }
 }
