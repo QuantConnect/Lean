@@ -110,43 +110,70 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var dataConfig = GetConfig();
             var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
-            var enumerator2 = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
-            compositeDataQueueHandler.Unsubscribe(dataConfig);
-            compositeDataQueueHandler.Unsubscribe(dataConfig);
-            compositeDataQueueHandler.Unsubscribe(dataConfig);
 
-            Assert.AreEqual(2, TestDataHandler.UnsubscribeCounter);
-
-            TestDataHandler.UnsubscribeCounter = 0;
+            Assert.Throws<ArgumentException>(() => compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => { }));
             compositeDataQueueHandler.Dispose();
         }
 
         [Test]
         public void SingleSubscribe()
         {
+            TestDataHandler.UnsubscribeCounter = 0;
             var compositeDataQueueHandler = new CompositeDataQueueHandler();
             compositeDataQueueHandler.SetJob(new LiveNodePacket { Brokerage = "ZerodhaBrokerage", DataQueueHandler = "[ \"TestDataHandler\" ]" });
 
             var dataConfig = GetConfig();
             var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
+
             compositeDataQueueHandler.Unsubscribe(dataConfig);
             compositeDataQueueHandler.Unsubscribe(dataConfig);
             compositeDataQueueHandler.Unsubscribe(dataConfig);
 
             Assert.AreEqual(1, TestDataHandler.UnsubscribeCounter);
 
-            TestDataHandler.UnsubscribeCounter = 0;
             compositeDataQueueHandler.Dispose();
         }
 
-        private static SubscriptionDataConfig GetConfig()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void MappedConfig(bool canonicalUnsubscribeFirst)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork,
+            TestDataHandler.UnsubscribeCounter = 0;
+            TestDataHandler.SubscribeCounter = 0;
+            var compositeDataQueueHandler = new CompositeDataQueueHandler();
+            compositeDataQueueHandler.SetJob(new LiveNodePacket { Brokerage = "ZerodhaBrokerage", DataQueueHandler = "[ \"TestDataHandler\" ]" });
+
+            var canonicalSymbol = Symbols.ES_Future_Chain.UpdateMappedSymbol(Symbols.Future_ESZ18_Dec2018.ID.ToString());
+            var canonicalConfig = GetConfig(canonicalSymbol);
+            var contractConfig = GetConfig(Symbols.Future_ESZ18_Dec2018);
+            var enumerator = compositeDataQueueHandler.Subscribe(canonicalConfig, (_, _) => {});
+            var enumerator2 = compositeDataQueueHandler.Subscribe(contractConfig, (_, _) => {});
+
+            var firstUnsubscribe = canonicalUnsubscribeFirst ? canonicalConfig : contractConfig;
+            var secondUnsubscribe = canonicalUnsubscribeFirst ? contractConfig : canonicalConfig;
+
+            Assert.AreEqual(2, TestDataHandler.SubscribeCounter);
+            compositeDataQueueHandler.Unsubscribe(firstUnsubscribe);
+
+            // Assert is hasn't really unsubscribe because they share mapped config
+            Assert.AreEqual(0, TestDataHandler.UnsubscribeCounter);
+            compositeDataQueueHandler.Unsubscribe(secondUnsubscribe);
+
+            Assert.AreEqual(1, TestDataHandler.UnsubscribeCounter);
+
+            compositeDataQueueHandler.Dispose();
+        }
+
+        private static SubscriptionDataConfig GetConfig(Symbol symbol = null)
+        {
+            return new SubscriptionDataConfig(typeof(TradeBar), symbol ?? Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork,
                 false, false, false, false, TickType.Trade, false);
         }
 
         private class TestDataHandler : IDataQueueHandler
         {
+            public static int SubscribeCounter { get; set; }
+
             public static int UnsubscribeCounter { get; set; }
             public void Dispose()
             {
@@ -154,6 +181,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
             {
+                SubscribeCounter++;
                 return Enumerable.Empty<BaseData>().GetEnumerator();
             }
 

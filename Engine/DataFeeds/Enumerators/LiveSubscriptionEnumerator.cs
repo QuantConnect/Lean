@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using System.Collections;
-using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     public class LiveSubscriptionEnumerator : IEnumerator<BaseData>
     {
         private readonly Symbol _requestedSymbol;
-        private SubscriptionDataConfig _currentConfig;
         private IEnumerator<BaseData> _previousEnumerator;
         private IEnumerator<BaseData> _underlyingEnumerator;
 
@@ -45,22 +43,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public LiveSubscriptionEnumerator(SubscriptionDataConfig dataConfig, IDataQueueHandler dataQueueHandler, EventHandler handler)
         {
             _requestedSymbol = dataConfig.Symbol;
-            // we adjust the requested config symbol before sending it to the data queue handler
-            _currentConfig = new SubscriptionDataConfig(dataConfig, symbol: dataConfig.Symbol.GetLiveSubscriptionSymbol());
-            _underlyingEnumerator = Subscribe(dataQueueHandler, _currentConfig, handler);
+            _underlyingEnumerator = Subscribe(dataQueueHandler, dataConfig, handler);
 
             // for any mapping event we will re subscribe
             dataConfig.NewSymbol += (_, _) =>
             {
-                dataQueueHandler.Unsubscribe(_currentConfig);
+                dataQueueHandler.Unsubscribe(dataConfig);
                 _previousEnumerator = _underlyingEnumerator;
-
-                var oldSymbol = _currentConfig.Symbol;
-                _currentConfig = new SubscriptionDataConfig(dataConfig, symbol: dataConfig.Symbol.GetLiveSubscriptionSymbol());
-                _underlyingEnumerator = Subscribe(dataQueueHandler, _currentConfig, handler);
-
-                Log.Trace($"LiveSubscriptionEnumerator({_requestedSymbol}): " +
-                    $"resubscribing old: '{oldSymbol.Value}' new '{_currentConfig.Symbol.Value}'");
+                _underlyingEnumerator = Subscribe(dataQueueHandler, dataConfig, handler);
             };
         }
 
