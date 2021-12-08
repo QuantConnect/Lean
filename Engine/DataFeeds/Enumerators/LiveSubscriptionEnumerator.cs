@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using System.Collections;
+using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
@@ -30,6 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     public class LiveSubscriptionEnumerator : IEnumerator<BaseData>
     {
         private readonly Symbol _requestedSymbol;
+        private SubscriptionDataConfig _currentConfig;
         private IEnumerator<BaseData> _previousEnumerator;
         private IEnumerator<BaseData> _underlyingEnumerator;
 
@@ -43,14 +44,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public LiveSubscriptionEnumerator(SubscriptionDataConfig dataConfig, IDataQueueHandler dataQueueHandler, EventHandler handler)
         {
             _requestedSymbol = dataConfig.Symbol;
-            _underlyingEnumerator = Subscribe(dataQueueHandler, dataConfig, handler);
+            _underlyingEnumerator = dataQueueHandler.Subscribe(dataConfig, handler, out _currentConfig);
 
             // for any mapping event we will re subscribe
             dataConfig.NewSymbol += (_, _) =>
             {
-                dataQueueHandler.Unsubscribe(dataConfig);
+                dataQueueHandler.Unsubscribe(_currentConfig);
                 _previousEnumerator = _underlyingEnumerator;
-                _underlyingEnumerator = Subscribe(dataQueueHandler, dataConfig, handler);
+
+                var oldSymbol = _currentConfig.Symbol;
+                _underlyingEnumerator = dataQueueHandler.Subscribe(dataConfig, handler, out _currentConfig);
+
+                Log.Trace($"LiveSubscriptionEnumerator({_requestedSymbol}): " +
+                    $"resubscribing old: '{oldSymbol.Value}' new '{_currentConfig.Symbol.Value}'");
             };
         }
 
@@ -90,18 +96,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             _previousEnumerator.DisposeSafely();
             _underlyingEnumerator.DisposeSafely();
-        }
-
-        private IEnumerator<BaseData> Subscribe(IDataQueueHandler dataQueueHandler,
-            SubscriptionDataConfig dataConfig,
-            EventHandler newDataAvailableHandler)
-        {
-            var enumerator = dataQueueHandler.Subscribe(dataConfig, newDataAvailableHandler);
-            if (enumerator != null)
-            {
-                return enumerator;
-            }
-            return Enumerable.Empty<BaseData>().GetEnumerator();
         }
     }
 }

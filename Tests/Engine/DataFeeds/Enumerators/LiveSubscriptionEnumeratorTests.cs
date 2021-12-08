@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 MappedSymbol = Symbols.Fut_SPY_Feb19_2016.ID.ToString()
             };
 
-            var compositeDataQueueHandler = new TestCompositeDataQueueHandler();
+            var compositeDataQueueHandler = new TestDataQueueHandlerManager();
             compositeDataQueueHandler.ExposedDataHandlers.Add(dataQueue);
             var data = new LiveSubscriptionEnumerator(config, compositeDataQueueHandler, (_, _) => {});
 
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
         }
 
-        private class TestCompositeDataQueueHandler : CompositeDataQueueHandler
+        private class TestDataQueueHandlerManager : DataQueueHandlerManager
         {
             public List<IDataQueueHandler> ExposedDataHandlers => DataHandlers;
         }

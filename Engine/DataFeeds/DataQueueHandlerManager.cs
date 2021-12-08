@@ -27,10 +27,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// This is an implementation of <see cref="IDataQueueHandler"/> used to handle multiple live datafeeds
     /// </summary>
-    public class CompositeDataQueueHandler : IDataQueueHandler, IDataQueueUniverseProvider
+    public class DataQueueHandlerManager : IDataQueueHandler, IDataQueueUniverseProvider
     {
         private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler = new();
-        private readonly Dictionary<SubscriptionDataConfig, SubscriptionDataConfig> _dataConfigs = new();
 
         /// <summary>
         /// Collection of data queue handles being used
@@ -51,23 +50,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            var targetConfig = dataConfig;
-            if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
-            {
-                // if required we create a new mapped config
-                Log.Trace($"CompositeDataQueueHandler({targetConfig.Symbol}): subscribing to mapped symbol {mappedSymbol}");
-                targetConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol);
-            }
-
             foreach (var dataHandler in DataHandlers)
             {
-                var enumerator = dataHandler.Subscribe(targetConfig, newDataAvailableHandler);
+                var enumerator = dataHandler.Subscribe(dataConfig, newDataAvailableHandler);
                 // Check if the enumerator is not empty
                 if (enumerator != null)
                 {
                     _dataConfigAndDataHandler.Add(dataConfig, dataHandler);
-                    // keep track of requested config and what we actually subscribed too, so we can unsubscribe correctly
-                    _dataConfigs[dataConfig] = targetConfig;
                     return enumerator;
                 }
             }
@@ -82,16 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (_dataConfigAndDataHandler.Remove(dataConfig, out var dataHandler))
             {
-                if (_dataConfigs.Remove(dataConfig, out var mappedConfig))
-                {
-                    dataConfig = mappedConfig;
-                }
-
-                // only unsubscribe if after we map the config there is no other subscription
-                if (_dataConfigs.Values.All(config => config != dataConfig))
-                {
-                    dataHandler.Unsubscribe(dataConfig);
-                }
+                dataHandler.Unsubscribe(dataConfig);
             }
         }
 

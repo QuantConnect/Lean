@@ -67,5 +67,25 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreNotEqual(configA, configB);
             Assert.AreNotEqual(configA.GetHashCode(), configB.GetHashCode());
         }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void EqualityMapped(bool mapped)
+        {
+            var configA = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork,
+                TimeZones.NewYork, false, false, false);
+            var configB = new SubscriptionDataConfig(configA, mappedConfig: mapped);
+
+            if (mapped)
+            {
+                Assert.AreNotEqual(configA, configB);
+                Assert.AreNotEqual(configA.GetHashCode(), configB.GetHashCode());
+            }
+            else
+            {
+                Assert.AreEqual(configA, configB);
+                Assert.AreEqual(configA.GetHashCode(), configB.GetHashCode());
+            }
+        }
     }
 }
