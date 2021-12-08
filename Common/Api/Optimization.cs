@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 
@@ -27,10 +28,16 @@ namespace QuantConnect.Api
     public class Optimization : RestResponse
     {
         /// <summary>
-        /// Project ID of the project the optimization belongs to
+        /// Optimization ID
         /// </summary>
-        [JsonProperty(PropertyName = "projectId")]
-        public int ProjectId;
+        [JsonProperty(PropertyName = "optimizationId")]
+        public string OptimizationId;
+
+        /// <summary>
+        /// Optimization snapshot ID
+        /// </summary>
+        [JsonProperty(PropertyName = "snapshotId")]
+        public string SnapshotId;
 
         /// <summary>
         /// Name of the optimization
@@ -39,40 +46,22 @@ namespace QuantConnect.Api
         public string Name;
 
         /// <summary>
-        /// Optimization strategy
+        /// Runtime banner/updating statistics for the optimization
         /// </summary>
-        [JsonProperty(PropertyName = "strategy")]
-        public string Strategy;
-
-        /// <summary>
-        /// Target of the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "target")]
-        public string Target;
-
-        /// <summary>
-        /// Target extremum of the optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "targetTo")]
-        public Extremum TargetTo;
-
-        /// <summary>
-        /// Optimization target value
-        /// </summary>
-        [JsonProperty(PropertyName = "targetValue")]
-        public decimal? TargetValue;
-
-        /// <summary>
-        /// Optimization parameters
-        /// </summary>
-        [JsonProperty(PropertyName = "parameters")]
-        public HashSet<OptimizationParameter> Parameters;
+        [JsonProperty(PropertyName = "runtimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> RuntimeStatistics;
 
         /// <summary>
         /// Optimization constraints
         /// </summary>
         [JsonProperty(PropertyName = "constraints")]
         IReadOnlyList<Constraint> Constraints;
+
+        /// <summary>
+        /// Optimization parameters
+        /// </summary>
+        [JsonProperty(PropertyName = "parameters")]
+        public HashSet<OptimizationParameter> Parameters;
 
         /// <summary>
         /// Optimization node type
@@ -85,6 +74,54 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "parallelNodes")]
         public int ParallelNodes;
+
+        /// <summary>
+        /// Project ID of the project the optimization belongs to
+        /// </summary>
+        [JsonProperty(PropertyName = "projectId")]
+        public int ProjectId;
+
+        /// <summary>
+        /// Status of the optimization
+        /// </summary>
+        [JsonProperty(PropertyName = "status")]
+        public OptimizationStatus Status;
+
+        /// <summary>
+        /// Optimization constraints
+        /// </summary>
+        [JsonProperty(PropertyName = "backtests")]
+        IDictionary<string, Backtest> Backtests;
+
+        /// <summary>
+        /// Optimization strategy
+        /// </summary>
+        [JsonProperty(PropertyName = "strategy")]
+        public string Strategy;
+
+        /// <summary>
+        /// Optimization target
+        /// </summary>
+        [JsonProperty(PropertyName = "optimizationTarget")]
+        public string Target;
+
+        /// <summary>
+        /// Optimization target value
+        /// </summary>
+        [JsonProperty(PropertyName = "targetValue")]
+        public decimal? TargetValue;
+
+        /// <summary>
+        /// Optimization target extremum
+        /// </summary>
+        [JsonProperty(PropertyName = "extremum")]
+        public Extremum Extremum;
+
+        /// <summary>
+        /// Requested time of the optimization
+        /// </summary>
+        [JsonProperty(PropertyName = "requested")]
+        public DateTime Requested;
 
         /// <summary>
         /// Estimated cost for optimization
@@ -113,7 +150,7 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// Collection container for a list of optimizations for a project
+    /// Collection container for a list of summarized optimizations for a project
     /// </summary>
     public class OptimizationList : RestResponse
     {
@@ -121,6 +158,6 @@ namespace QuantConnect.Api
         /// Collection of summarized optimization objects
         /// </summary>
         [JsonProperty(PropertyName = "optimizations")]
-        public List<Optimization> Optimizations;
+        public List<OptimizationDTO> Optimizations;
     }
 }
