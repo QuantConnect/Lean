@@ -283,11 +283,93 @@ namespace QuantConnect.Interfaces
         DataLink ReadDataLink(string filePath, string organizationId);
 
         /// <summary>
+        /// Get valid data entries for a given filepath from data/list
+        /// </summary>
+        /// <returns></returns>
+        DataList ReadDataDirectory(string filePath);
+
+        /// <summary>
+        /// Gets data prices from data/prices
+        /// </summary>
+        public DataPricesList ReadDataPrices(string organizationId);
+
+        /// <summary>
+        /// Read out the report of a backtest in the project id specified.
+        /// </summary>
+        /// <param name="projectId">Project id to read</param>
+        /// <param name="backtestId">Specific backtest id to read</param>
+        /// <returns><see cref="BacktestReport"/></returns>
+        public BacktestReport ReadBacktestReport(int projectId, string backtestId);
+
+        /// <summary>
         /// Method to download and save the data purchased through QuantConnect
         /// </summary>
         /// <param name="filePath">File path representing the data requested</param>
         /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
         bool DownloadData(string filePath, string organizationId);
+
+        /// <summary>
+        /// Create a new node in the organization, node configuration is defined by the
+        /// <see cref="SKU"/>
+        /// </summary>
+        /// <param name="name">The name of the new node</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <param name="sku"><see cref="SKU"/> Object representing configuration</param>
+        /// <returns>Returns <see cref="CreatedNode"/> which contains API response and
+        /// <see cref="Node"/></returns>
+        public CreatedNode CreateNode(string name, string organizationId, SKU sku);
+
+        /// <summary>
+        /// Reads the nodes associated with the organization, creating a
+        /// <see cref="NodeList"/> for the response
+        /// </summary>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="NodeList"/> containing Backtest, Research, and Live Nodes</returns>
+        public NodeList ReadNodes(string organizationId);
+
+        /// <summary>
+        /// Update an organizations node with a new name
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to update</param>
+        /// <param name="newName">The new name for that node</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public RestResponse UpdateNode(string nodeId, string newName, string organizationId);
+
+        /// <summary>
+        /// Delete a node from an organization, requires node ID.
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to delete</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public RestResponse DeleteNode(string nodeId, string organizationId);
+
+        /// <summary>
+        /// Stop a running node in a organization
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to stop</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public RestResponse StopNode(string nodeId, string organizationId);
+
+        /// <summary>
+        /// Will read the organization account status
+        /// </summary>
+        /// <param name="organizationId">The target organization id, if null will return default organization</param>
+        public Account ReadAccount(string organizationId = null);
+
+        /// <summary>
+        /// Get a list of organizations tied to this account
+        /// </summary>
+        /// <returns></returns>
+        public List<Organization> ListOrganizations();
+
+        /// <summary>
+        /// Fetch organization data from web API
+        /// </summary>
+        /// <param name="organizationId"></param>
+        /// <returns></returns>
+        public Organization ReadOrganization(string organizationId = null);
 
         /// <summary>
         /// Create a new live algorithm for a logged in user.
