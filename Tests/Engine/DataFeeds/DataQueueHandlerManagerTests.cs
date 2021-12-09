@@ -156,10 +156,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.AreEqual(2, TestDataHandler.SubscribeCounter);
 
-            compositeDataQueueHandler.UnSubscribe(firstUnsubscribe);
+            compositeDataQueueHandler.UnsubscribeWithMapping(firstUnsubscribe);
             Assert.AreEqual(1, TestDataHandler.UnsubscribeCounter);
 
-            compositeDataQueueHandler.UnSubscribe(secondUnsubscribe);
+            compositeDataQueueHandler.UnsubscribeWithMapping(secondUnsubscribe);
             Assert.AreEqual(2, TestDataHandler.UnsubscribeCounter);
 
             enumerator.Dispose();

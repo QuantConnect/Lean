@@ -3024,7 +3024,7 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to unsubscribe a given configuration, handling any required mapping
         /// </summary>
-        public static void UnSubscribe(this IDataQueueHandler dataQueueHandler, SubscriptionDataConfig dataConfig)
+        public static void UnsubscribeWithMapping(this IDataQueueHandler dataQueueHandler, SubscriptionDataConfig dataConfig)
         {
             if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
             {
@@ -3036,7 +3036,7 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to subscribe a given configuration, handling any required mapping
         /// </summary>
-        public static IEnumerator<BaseData> Subscribe(this IDataQueueHandler dataQueueHandler,
+        public static IEnumerator<BaseData> SubscribeWithMapping(this IDataQueueHandler dataQueueHandler,
             SubscriptionDataConfig dataConfig,
             EventHandler newDataAvailableHandler,
             out SubscriptionDataConfig subscribedConfig)

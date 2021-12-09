@@ -141,11 +141,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                _dataQueueHandler.UnSubscribe(subscription.Configuration);
+                _dataQueueHandler.UnsubscribeWithMapping(subscription.Configuration);
                 if (subscription.Configuration.SecurityType == SecurityType.Equity && !subscription.Configuration.IsInternalFeed)
                 {
-                    _dataQueueHandler.UnSubscribe(new SubscriptionDataConfig(subscription.Configuration, typeof(Dividend)));
-                    _dataQueueHandler.UnSubscribe(new SubscriptionDataConfig(subscription.Configuration, typeof(Split)));
+                    _dataQueueHandler.UnsubscribeWithMapping(new SubscriptionDataConfig(subscription.Configuration, typeof(Dividend)));
+                    _dataQueueHandler.UnsubscribeWithMapping(new SubscriptionDataConfig(subscription.Configuration, typeof(Split)));
                 }
             }
         }
