@@ -141,11 +141,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                _dataQueueHandler.Unsubscribe(subscription.Configuration);
+                _dataQueueHandler.UnsubscribeWithMapping(subscription.Configuration);
                 if (subscription.Configuration.SecurityType == SecurityType.Equity && !subscription.Configuration.IsInternalFeed)
                 {
-                    _dataQueueHandler.Unsubscribe(new SubscriptionDataConfig(subscription.Configuration, typeof(Dividend)));
-                    _dataQueueHandler.Unsubscribe(new SubscriptionDataConfig(subscription.Configuration, typeof(Split)));
+                    _dataQueueHandler.UnsubscribeWithMapping(new SubscriptionDataConfig(subscription.Configuration, typeof(Dividend)));
+                    _dataQueueHandler.UnsubscribeWithMapping(new SubscriptionDataConfig(subscription.Configuration, typeof(Split)));
                 }
             }
         }
@@ -166,13 +166,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Gets the <see cref="IDataQueueHandler"/> to use by default <see cref="CompositeDataQueueHandler"/>
+        /// Gets the <see cref="IDataQueueHandler"/> to use by default <see cref="DataQueueHandlerManager"/>
         /// </summary>
         /// <remarks>Useful for testing</remarks>
         /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
-            return new CompositeDataQueueHandler();
+            return new DataQueueHandlerManager();
         }
 
         /// <summary>
@@ -409,7 +409,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private IDataQueueUniverseProvider GetUniverseProvider(SecurityType securityType)
         {
-            if (_dataQueueHandler is not IDataQueueUniverseProvider or CompositeDataQueueHandler { HasUniverseProvider: false })
+            if (_dataQueueHandler is not IDataQueueUniverseProvider or DataQueueHandlerManager { HasUniverseProvider: false })
             {
                 throw new NotSupportedException($"The DataQueueHandler does not support {securityType}.");
             }
