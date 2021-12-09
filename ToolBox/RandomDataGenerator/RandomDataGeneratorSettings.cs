@@ -10,7 +10,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     public class RandomDataGeneratorSettings
     {
         private static int MarketCode = 100;
-        private static readonly string[] DateFormats = {DateFormat.EightCharacter, DateFormat.YearMonth, "yyyy-MM-dd"};
+        private static readonly string[] DateFormats = { DateFormat.EightCharacter, DateFormat.YearMonth, "yyyy-MM-dd" };
 
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
@@ -23,6 +23,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public double QuoteTradeRatio { get; set; } = 1;
         public int RandomSeed { get; set; }
         public bool RandomSeedSet { get; set; }
+        public decimal? VolatilityRatio { get; set; }
         public double HasIpoPercentage { get; set; }
         public double HasRenamePercentage { get; set; }
         public double HasSplitsPercentage { get; set; }
@@ -45,6 +46,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string hasSplitsPercentageString,
             string hasDividendsPercentageString,
             string dividendEveryQuarterPercentageString,
+            string volatilityRatioString,
             ConsoleLeveledOutput output
             )
         {
@@ -64,6 +66,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             double hasSplitsPercentage;
             double hasDividendsPercentage;
             double dividendEveryQuarterPercentage;
+            decimal? volatilityRatio = null;
 
             // --start
             if (!DateTime.TryParseExact(startDateString, DateFormats, null, DateTimeStyles.None, out startDate))
@@ -185,7 +188,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 output.Error.WriteLine($"Optional parameter --ipo-percentage was incorrectly formatted. Please specify a valid double greater than or equal to zero. Value provided: '{hasIpoPercentageString}'");
             }
-            
+
             // --rename-percentage
             if (string.IsNullOrEmpty(hasRenamePercentageString))
             {
@@ -226,6 +229,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 output.Error.WriteLine($"Optional parameter --dividend-ever-quarter-percentage was incorrectly formatted. Please specify a valid double greater than or equal to zero. Value provided: '{dividendEveryQuarterPercentageString}'");
             }
 
+            if (!string.IsNullOrEmpty(volatilityRatioString))
+            {
+                if (decimal.TryParse(volatilityRatioString, out var volatilityRatioDecimal))
+                {
+                    volatilityRatio = volatilityRatioDecimal;
+                }
+                else
+                {
+                    output.Error.WriteLine($"Optional parameter --dividend-ever-quarter-percentage was incorrectly formatted. Please specify a valid double greater than or equal to zero. Value provided: '{dividendEveryQuarterPercentageString}'");
+                }
+            }
+
             if (output.ErrorMessageWritten)
             {
                 output.Error.WriteLine("Please address the errors and run the application again.");
@@ -243,7 +258,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 SymbolCount = symbolCount,
                 SecurityType = securityType,
                 QuoteTradeRatio = quoteTradeRatio,
-                
+
                 Resolution = resolution,
 
                 DataDensity = dataDensity,
@@ -255,7 +270,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 HasRenamePercentage = hasRenamePercentage,
                 HasSplitsPercentage = hasSplitsPercentage,
                 HasDividendsPercentage = hasDividendsPercentage,
-                DividendEveryQuarterPercentage = dividendEveryQuarterPercentage
+                DividendEveryQuarterPercentage = dividendEveryQuarterPercentage,
+                VolatilityRatio = volatilityRatio.HasValue ? volatilityRatio.Value : null
             };
         }
     }

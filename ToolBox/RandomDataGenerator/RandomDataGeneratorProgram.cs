@@ -48,7 +48,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string hasRenamePercentageString,
             string hasSplitsPercentageString,
             string hasDividendsPercentageString,
-            string dividendEveryQuarterPercentageString
+            string dividendEveryQuarterPercentageString,
+            string volatilityPercentageString
             )
         {
             var output = new ConsoleLeveledOutput();
@@ -68,6 +69,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 hasSplitsPercentageString,
                 hasDividendsPercentageString,
                 dividendEveryQuarterPercentageString,
+                volatilityPercentageString,
 
                 output
             );
@@ -133,7 +135,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 new SecurityInitializerProvider(new FuncSecurityInitializer(secutiry =>
                 {
                     // from settings
-                    secutiry.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(60);
+                    if (settings.VolatilityRatio.HasValue)
+                    {
+                        secutiry.VolatilityModel = new ConstantVolatilityModel(settings.VolatilityRatio.Value);
+                    }
+                    else
+                    {
+                        secutiry.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(60, settings.Resolution);
+                    }
+
                     // from settings
                     if (secutiry is Option option)
                     {

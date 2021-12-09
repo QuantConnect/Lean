@@ -119,6 +119,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         {
             if (referencePrice <= 0)
             {
+                if (securityType == SecurityType.Option && referencePrice == 0)
+                {
+                    return 0;
+                }
                 throw new ArgumentException("The provided reference price must be a positive number.");
             }
 

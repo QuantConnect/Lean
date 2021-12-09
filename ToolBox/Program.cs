@@ -247,6 +247,7 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "splits-percentage", "15.0"),
                             GetParameterOrDefault(optionsObject, "dividends-percentage", "60.0"),
                             GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0")
+                            GetParameterOrDefault(optionsObject, "volatility-percentage", "0,05")
                         );
                         break;
 
