@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Algorithm.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
@@ -582,14 +583,15 @@ namespace QuantConnect.Algorithm
                     {
                         // create a new universe, these subscription settings don't currently get used
                         // since universe selection proper is never invoked on this type of universe
-                        var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
+                        var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false,
+                            exchangeTimeZone: DateTimeZone.Utc,
+                            dataTimeZone: DateTimeZone.Utc);
 
-                        // this is the universe symbol, has no real entry in the mhdb, will default to market
-                        // and security type which can be different than the provided config so let's make sure
-                        // the config and the security use the same exchange time zone
-                        // set entry in market hours database for the universe subscription to match the config based on the added security
+                        // this is the universe symbol, has no real entry in the mhdb, will default to market and security type
+                        // set entry in market hours database for the universe subscription to match the config
                         var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(uconfig.Symbol);
-                        MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType, security.Exchange.Hours, uconfig.DataTimeZone);
+                        MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType,
+                            SecurityExchangeHours.AlwaysOpen(uconfig.ExchangeTimeZone), uconfig.DataTimeZone);
 
                         universe = new UserDefinedUniverse(uconfig,
                             new UniverseSettings(
