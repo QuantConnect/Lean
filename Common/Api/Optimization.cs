@@ -54,7 +54,7 @@ namespace QuantConnect.Api
         /// Optimization constraints
         /// </summary>
         [JsonProperty(PropertyName = "backtests", NullValueHandling = NullValueHandling.Ignore)]
-        IDictionary<string, Backtest> Backtests;
+        IDictionary<string, OptimizationBacktest> Backtests;
 
         /// <summary>
         /// Optimization strategy
