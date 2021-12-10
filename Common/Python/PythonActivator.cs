@@ -42,40 +42,19 @@ namespace QuantConnect.Python
         {
             Type = type;
 
-            var isPythonQuandl = false;
-
             using (Py.GIL())
             {
                 var pythonType = value.Invoke().GetPythonType();
-                isPythonQuandl = pythonType.As<Type>() == typeof(PythonQuandl);
                 pythonType.Dispose();
             }
 
-            if (isPythonQuandl)
+            Factory = x =>
             {
-                Factory = x =>
+                using (Py.GIL())
                 {
-                    using (Py.GIL())
-                    {
-                        var instance = value.Invoke();
-                        var pyValueColumnName = instance.GetAttr("ValueColumnName");
-                        var valueColumnName = pyValueColumnName.ToString();
-                        instance.Dispose();
-                        pyValueColumnName.Dispose();
-                        return new PythonQuandl(valueColumnName);
-                    }
-                };
-            }
-            else
-            {
-                Factory = x =>
-                {
-                    using (Py.GIL())
-                    {
-                        var instance = value.Invoke();
-                        return new PythonData(instance);
-                    }
-                };
+                    var instance = value.Invoke();
+                    return new PythonData(instance);
+                }
             };
         }
     }

@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = AddSecurity(SecurityType.Equity, _ticker, Resolution.Daily).Symbol;
 
             //Add the Custom Data:
-            _customSymbol = AddData<Quandl>(_customTicker, Resolution.Daily).Symbol;
+            _customSymbol = AddData<UnlinkedData>(_customTicker, Resolution.Daily).Symbol;
 
             //Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
             _indicators = new Indicators
@@ -128,8 +128,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Custom data event handler:
         /// </summary>
-        /// <param name="data">Quandl - dictionary Bars of Quandl Data</param>
-        public void OnData(Quandl data)
+        /// <param name="data">UnlinkedData - dictionary Bars of UnlinkedData Data</param>
+        public void OnData(UnlinkedData data)
         {
         }
 

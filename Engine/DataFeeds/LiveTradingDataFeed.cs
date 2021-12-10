@@ -20,8 +20,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -192,12 +190,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 IEnumerator<BaseData> enumerator;
                 if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
                 {
-                    if (!Quandl.IsAuthCodeSet)
-                    {
-                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        Quandl.SetAuthCode(Config.Get("quandl-auth-token"));
-                    }
-
                     if (!Tiingo.IsAuthCodeSet)
                     {
                         // we're not using the SubscriptionDataReader, so be sure to set the auth token here

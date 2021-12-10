@@ -13,17 +13,14 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Data;
-using QuantConnect.Data.Custom;
-using QuantConnect.Data.Market;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// The algorithm creates new indicator value with the existing indicator method by Indicator Extensions
-    /// Demonstration of using the external custom datasource Quandl to request the VIX and VXV daily data
+    /// Demonstration of using the local custom datasource UnlinkedData to request the VIX and VXV daily data
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
@@ -50,8 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(25000);
 
             // Define the symbol and "type" of our generic data
-            AddData<QuandlVix>(_vix, Resolution.Daily);
-            AddData<Quandl>(_vxv, Resolution.Daily);
+            AddData<UnlinkedData>(_vix, Resolution.Daily);
+            AddData<UnlinkedDataTradeBar>(_vxv, Resolution.Daily);
             // Set up default Indicators, these are just 'identities' of the closing price
             _smaVIX = SMA(_vix, 1);
             _smaVXV = SMA(_vxv, 1);
@@ -62,8 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Custom data event handler:
         /// </summary>
-        /// <param name="data">Quandl - dictionary Bars of Quandl Data</param>
-        public void OnData(Quandl data)
+        /// <param name="data">UnlinkedData - dictionary Bars of UnlinkedData Data</param>
+        public void OnData(UnlinkedData data)
         {
             // Wait for all indicators to fully initialize
             if (_smaVIX.IsReady && _smaVXV.IsReady && _ratio.IsReady)
@@ -81,15 +78,5 @@ namespace QuantConnect.Algorithm.CSharp
                 PlotIndicator("Ratio", _ratio);
             }
         }
-    }
-
-    /// <summary>
-    /// In CBOE/VIX data, there is a "vix close" column instead of "close" which is the 
-    /// default column namein LEAN Quandl custom data implementation.
-    /// This class assigns new column name to match the the external datasource setting.
-    /// </summary>
-    public class QuandlVix : Quandl
-    {
-        public QuandlVix() : base(valueColumnName: "vix close") { }
     }
 }

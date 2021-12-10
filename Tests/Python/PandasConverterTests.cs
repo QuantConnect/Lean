@@ -18,6 +18,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -3228,16 +3229,14 @@ def Test(dataFrame, symbol):
         }
 
         [Test]
-        [TestCase(typeof(Quandl), "yyyy-MM-dd")]
         [TestCase(typeof(FxcmVolume), "yyyyMMdd HH:mm")]
         public void HandlesCustomDataBars(Type type, string format)
         {
             var converter = new PandasConverter();
             var symbol = Symbols.LTCUSD;
 
-            var config = GetSubscriptionDataConfig<Quandl>(symbol, Resolution.Daily);
+            var config = GetSubscriptionDataConfig<FxcmVolume>(symbol, Resolution.Daily);
             var custom = Activator.CreateInstance(type) as BaseData;
-            if (type == typeof(Quandl)) custom.Reader(config, "date,open,high,low,close,transactions", DateTime.UtcNow, false);
 
             var rawBars = Enumerable
                 .Range(0, 10)
@@ -3310,8 +3309,8 @@ def Test(dataFrame, symbol):
             var converter = new PandasConverter();
             var symbol = Symbols.LTCUSD;
 
-            var config = GetSubscriptionDataConfig<Quandl>(symbol, Resolution.Daily);
-            var custom = Activator.CreateInstance(typeof(CustomQuandl)) as BaseData;
+            var config = GetSubscriptionDataConfig<UnlinkedData>(symbol, Resolution.Daily);
+            var custom = Activator.CreateInstance(typeof(UnlinkedData)) as BaseData;
             custom.Reader(config, "Date,Value", DateTime.UtcNow, false);
 
             var rawBars = Enumerable
@@ -3375,7 +3374,7 @@ def Test(dataFrame, symbol):
             var converter = new PandasConverter();
             var symbol = Symbols.LTCUSD;
 
-            var config = GetSubscriptionDataConfig<Quandl>(symbol, Resolution.Daily);
+            var config = GetSubscriptionDataConfig<UnlinkedDataTradeBar>(symbol, Resolution.Daily);
             dynamic custom = Activator.CreateInstance(type);
 
             var rawBars = Enumerable
@@ -3598,14 +3597,6 @@ def Test(dataFrame, symbol):
             public DateTime? NullableTime { get; set; }
 
             public double? NullableColumn { get; set; }
-        }
-
-        internal class CustomQuandl : Quandl
-        {
-            // For CustomDataWithValueColumn test
-            public CustomQuandl() : base("Value")
-            {
-            }
         }
 
         internal class EnumerableData : BaseDataCollection

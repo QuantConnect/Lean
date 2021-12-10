@@ -17,7 +17,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.IconicTypes;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -83,53 +83,53 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 Resolution resolution = Resolution.Daily
                 )
             {
-            	// Add Quandl data for a Well's Fargo 30-year Fixed Rate mortgage
-                _mortgageRate = algorithm.AddData<QuandlMortgagePriceColumns>("WFC/PR_GOV_30YFIXEDVA_APR").Symbol;
+                // Add Quandl data for a Well's Fargo 30-year Fixed Rate mortgage
+                _mortgageRate = algorithm.AddData<UnlinkedData>("WFC/PR_GOV_30YFIXEDVA_APR").Symbol;
                 _indicatorPeriod = indicatorPeriod;
                 _resolution = resolution;
                 _insightDuration = resolution.ToTimeSpan().Multiply(indicatorPeriod);
                 _insightMagnitude = insightMagnitude;
                 _deviations = deviations;
-                
+
                 // Add indicators for the mortgage rate -- Standard Deviation and Simple Moving Average
                 _mortgageRateStd = algorithm.STD(_mortgageRate, _indicatorPeriod, resolution);
                 _mortgageRateSma = algorithm.SMA(_mortgageRate, _indicatorPeriod, resolution);
-                
+
                 // Use a history call to warm-up the indicators
                 WarmUpIndicators(algorithm);
             }
-            
+
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 var insights = new List<Insight>();
-                
+
                 // Return empty list if data slice doesn't contain monrtgage rate data
                 if (!data.Keys.Contains(_mortgageRate))
                 {
                     return insights;
                 }
-				// Extract current mortgage rate, the current STD indicator value, and current SMA value
+                // Extract current mortgage rate, the current STD indicator value, and current SMA value
                 var rate = data[_mortgageRate].Value;
                 var deviation = _deviations * _mortgageRateStd;
                 var sma = _mortgageRateSma;
 
-				// Loop through all Active Securities to emit insights
+                // Loop through all Active Securities to emit insights
                 foreach (var security in algorithm.ActiveSecurities.Keys)
                 {
-                	// Mortgage rate Symbol will be in the collection, so skip it
+                    // Mortgage rate Symbol will be in the collection, so skip it
                     if (security == _mortgageRate)
                     {
                         return insights;
                     }
 
-					// If volatility in mortgage rates is high, then we emit an Insight to sell
+                    // If volatility in mortgage rates is high, then we emit an Insight to sell
                     if ((rate < sma - deviation) || (rate > sma + deviation))
                     {
                         insights.Add(Insight.Price(security, _insightDuration, InsightDirection.Down, _insightMagnitude));
                     }
-                    
+
                     // If volatility in mortgage rates is low, then we emit an Insight to buy
-                    if ((rate < sma - (decimal)deviation/2) || (rate > sma + (decimal)deviation/2))
+                    if ((rate < sma - (decimal)deviation / 2) || (rate > sma + (decimal)deviation / 2))
                     {
                         insights.Add(Insight.Price(security, _insightDuration, InsightDirection.Up, _insightMagnitude));
                     }
@@ -140,22 +140,12 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             private void WarmUpIndicators(QCAlgorithm algorithm)
             {
-            	// Make a history call and update the indicators
+                // Make a history call and update the indicators
                 algorithm.History(new[] { _mortgageRate }, _indicatorPeriod, _resolution).PushThrough(bar =>
                 {
                     _mortgageRateSma.Update(bar.EndTime, bar.Value);
                     _mortgageRateStd.Update(bar.EndTime, bar.Value);
                 });
-            }
-        }
-        public class QuandlMortgagePriceColumns : Quandl
-        {
-            public QuandlMortgagePriceColumns()
-            
-            // Rename the Quandl object column to the data we want, which is the 'Value' column
-	        // of the CSV that our API call returns
-                : base(valueColumnName: "Value")
-            {
             }
         }
     }

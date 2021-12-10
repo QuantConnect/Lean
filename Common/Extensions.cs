@@ -2796,9 +2796,7 @@ namespace QuantConnect
         public static Type CreateType(this PyObject pyObject)
         {
             Type type;
-            if (pyObject.TryConvert(out type) &&
-                type != typeof(PythonQuandl) &&
-                type != typeof(PythonData))
+            if (pyObject.TryConvert(out type) && type != typeof(PythonData))
             {
                 return type;
             }

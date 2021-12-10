@@ -30,9 +30,9 @@ class HistoryAlgorithm(QCAlgorithm):
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
         self.AddEquity("SPY", Resolution.Daily)
-        self.AddData(QuandlFuture,"CHRIS/CME_SP1", Resolution.Daily)
+        self.AddData(CustomDataEquity,"IBM", Resolution.Daily)
         # specifying the exchange will allow the history methods that accept a number of bars to return to work properly
-        self.Securities["CHRIS/CME_SP1"].Exchange = EquityExchange()
+        self.Securities["IBM"].Exchange = EquityExchange()
 
         # we can get history in initialize to set up indicators and such
         self.spyDailySma = SimpleMovingAverage(14)
@@ -41,7 +41,7 @@ class HistoryAlgorithm(QCAlgorithm):
         tradeBarHistory = self.History([self.Securities["SPY"].Symbol], timedelta(365))
         self.AssertHistoryCount("History<TradeBar>([\"SPY\"], timedelta(365))", tradeBarHistory, 250)
 
-        # get the last calendar day's worth of SPY data at the specified resolution
+         # get the last calendar day's worth of SPY data at the specified resolution
         tradeBarHistory = self.History(["SPY"], timedelta(1), Resolution.Minute)
         self.AssertHistoryCount("History([\"SPY\"], timedelta(1), Resolution.Minute)", tradeBarHistory, 390)
 
@@ -58,54 +58,54 @@ class HistoryAlgorithm(QCAlgorithm):
         for index, tradeBar in tradeBarHistory.loc["SPY"].iterrows():
             self.spyDailySma.Update(index, tradeBar["close"])
 
-        # get the last calendar year's worth of quandl data at the configured resolution (daily)
-        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", timedelta(365))
-        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1\", timedelta(365))", quandlHistory, 250)
+        # get the last calendar year's worth of customData data at the configured resolution (daily)
+        customDataHistory = self.History(CustomDataEquity, "IBM", timedelta(365))
+        self.AssertHistoryCount("History(CustomDataEquity, \"IBM\", timedelta(365))", customDataHistory, 250)
 
-        # get the last 14 bars of SPY at the configured resolution (daily)
-        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", 14)
-        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1\", 14)", quandlHistory, 14)
+        # get the last 14 bars of IBM at the configured resolution (daily)
+        customDataHistory = self.History(CustomDataEquity, "IBM", 14)
+        self.AssertHistoryCount("History(CustomDataEquity, \"IBM\", 14)", customDataHistory, 14)
 
-        # we can loop over the return values from these functions and we'll get Quandl data
+        # we can loop over the return values from these functions and we'll get Custom data
         # this can be used in much the same way as the tradeBarHistory above
         self.spyDailySma.Reset()
-        for index, quandl in quandlHistory.loc["CHRIS/CME_SP1"].iterrows():
-            self.spyDailySma.Update(index, quandl["settle"])
+        for index, customData in customDataHistory.loc["IBM"].iterrows():
+            self.spyDailySma.Update(index, customData["close"])
 
-        # get the last year's worth of all configured Quandl data at the configured resolution (daily)
-        #allQuandlData = self.History(QuandlFuture, timedelta(365))
-        #self.AssertHistoryCount("History(QuandlFuture, timedelta(365))", allQuandlData, 250)
+        # get the last year's worth of all configured Custom data at the configured resolution (daily)
+        #allCustomData = self.History(CustomDataEquity, timedelta(365))
+        #self.AssertHistoryCount("History(CustomDataEquity, timedelta(365))", allCustomData, 250)
 
-        # get the last 14 bars worth of Quandl data for the specified symbols at the configured resolution (daily)
-        allQuandlData = self.History(QuandlFuture, self.Securities.Keys, 14)
-        self.AssertHistoryCount("History(QuandlFuture, self.Securities.Keys, 14)", allQuandlData, 14)
+        # get the last 14 bars worth of Custom data for the specified symbols at the configured resolution (daily)
+        allCustomData = self.History(CustomDataEquity, self.Securities.Keys, 14)
+        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, 14)", allCustomData, 14)
 
         # NOTE: using different resolutions require that they are properly implemented in your data type, since
-        #  Quandl doesn't support minute data, this won't actually work, but if your custom data source has
+        #  Custom doesn't support minute data, this won't actually work, but if your custom data source has
         #  different resolutions, it would need to be implemented in the GetSource and Reader methods properly
-        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", timedelta(7), Resolution.Minute)
-        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", 14, Resolution.Minute)
-        #allQuandlData = self.History(QuandlFuture, timedelta(365), Resolution.Minute)
-        #allQuandlData = self.History(QuandlFuture, self.Securities.Keys, 14, Resolution.Minute)
-        #allQuandlData = self.History(QuandlFuture, self.Securities.Keys, timedelta(1), Resolution.Minute)
-        #allQuandlData = self.History(QuandlFuture, self.Securities.Keys, 14, Resolution.Minute)
+        #customDataHistory = self.History(CustomDataEquity, "IBM", timedelta(7), Resolution.Minute)
+        #customDataHistory = self.History(CustomDataEquity, "IBM", 14, Resolution.Minute)
+        #allCustomData = self.History(CustomDataEquity, timedelta(365), Resolution.Minute)
+        #allCustomData = self.History(CustomDataEquity, self.Securities.Keys, 14, Resolution.Minute)
+        #allCustomData = self.History(CustomDataEquity, self.Securities.Keys, timedelta(1), Resolution.Minute)
+        #allCustomData = self.History(CustomDataEquity, self.Securities.Keys, 14, Resolution.Minute)
 
-        # get the last calendar year's worth of all quandl data
-        allQuandlData = self.History(QuandlFuture, self.Securities.Keys, timedelta(365))
-        self.AssertHistoryCount("History(QuandlFuture, self.Securities.Keys, timedelta(365))", allQuandlData, 250)
+        # get the last calendar year's worth of all customData data
+        allCustomData = self.History(CustomDataEquity, self.Securities.Keys, timedelta(365))
+        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, timedelta(365))", allCustomData, 250)
 
         # we can also access the return value from the multiple symbol functions to request a single
         # symbol and then loop over it
-        singleSymbolQuandl = allQuandlData.loc["CHRIS/CME_SP1"]
-        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"]", singleSymbolQuandl, 250)
-        for  quandl in singleSymbolQuandl:
-            # do something with 'CHRIS/CME_SP1.QuandlFuture' quandl data
+        singleSymbolCustom = allCustomData.loc["IBM"]
+        self.AssertHistoryCount("allCustomData.loc[\"IBM\"]", singleSymbolCustom, 250)
+        for  customData in singleSymbolCustom:
+            # do something with 'IBM.CustomDataEquity' customData data
             pass
 
-        quandlSpyLows = allQuandlData.loc["CHRIS/CME_SP1"]["low"]
-        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"][\"low\"]", quandlSpyLows, 250)
-        for  low in quandlSpyLows:
-            # do something with 'CHRIS/CME_SP1.QuandlFuture' quandl data
+        customDataSpyLows = allCustomData.loc["IBM"]["low"]
+        self.AssertHistoryCount("allCustomData.loc[\"IBM\"][\"low\"]", customDataSpyLows, 250)
+        for  low in customDataSpyLows:
+            # do something with 'IBM.CustomDataEquity' customData data
             pass
 
 
@@ -124,10 +124,25 @@ class HistoryAlgorithm(QCAlgorithm):
             raise Exception("{} expected {}, but received {}".format(methodCall, expected, count))
 
 
-class QuandlFuture(PythonQuandl):
-    '''Custom quandl data type for setting customized value column name. Value column is used for the primary trading calculations and charting.'''
-    def __init__(self):
-        # Define ValueColumnName: cannot be None, Empty or non-existant column name
-        # If ValueColumnName is "Close", do not use PythonQuandl, use Quandl:
-        # self.AddData[QuandlFuture](self.crude, Resolution.Daily)
-        self.ValueColumnName = "Settle"
+class CustomDataEquity(PythonData):
+    def GetSource(self, config, date, isLive):
+        source = "../../../Data/equity/usa/daily/ibm.zip"
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+
+    def Reader(self, config, line, date, isLive):
+        if line == None:
+            return None
+
+        customData = CustomDataEquity()
+        customData.Symbol = config.Symbol
+
+        scaleFactor = 1 / 10000
+        csv = line.split(",")
+        customData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M') + timedelta(hours=10)
+        customData.EndTime = customData.Time - timedelta(hours=5)
+        customData["Open"] = float(csv[1]) * scaleFactor
+        customData["High"] = float(csv[2]) * scaleFactor
+        customData["Low"] = float(csv[3]) * scaleFactor
+        customData["Close"] = float(csv[4]) * scaleFactor
+        customData["Volume"] = float(csv[5])
+        return customData

@@ -36,7 +36,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         # Find more symbols here: http://quantconnect.com/data
 
         self.AddEquity(self.symbol, Resolution.Daily)
-        self.AddData(Quandl, self.customSymbol, Resolution.Daily)
+        self.AddData(UnlinkedData, self.customSymbol, Resolution.Daily)
 
         # Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
         self.indicators = {
