@@ -173,7 +173,7 @@ namespace QuantConnect.Tests
             return Symbol.Create(underlying, SecurityType.Option, Market.USA, "?" + underlying);
         }
 
-        private static Symbol CreateFuturesCanonicalSymbol(string ticker)
+        internal static Symbol CreateFuturesCanonicalSymbol(string ticker)
         {
             string market;
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, SecurityType.Future, out market))
