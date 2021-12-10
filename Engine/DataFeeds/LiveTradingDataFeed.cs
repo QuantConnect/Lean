@@ -250,6 +250,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
                 }
 
+                if (request.Configuration.PricesShouldBeScaled(liveMode:true))
+                {
+                    enumerator = new PriceScaleFactorEnumerator(
+                        enumerator,
+                        request.Configuration,
+                        _factorFileProvider,
+                        liveMode:true);
+                }
+
                 // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
 

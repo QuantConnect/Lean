@@ -644,6 +644,65 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Log.Trace("Count: " + count + " ReaderCount: " + RestApiBaseData.ReaderCount);
         }
 
+        [TestCase(DataNormalizationMode.Raw)]
+        [TestCase(DataNormalizationMode.BackwardsRatio)]
+        [TestCase(DataNormalizationMode.BackwardsPanamaCanal)]
+        [TestCase(DataNormalizationMode.ForwardPanamaCanal)]
+        public void LivePriceScaling(DataNormalizationMode dataNormalizationMode)
+        {
+            var feed = RunDataFeed();
+            _algorithm.SetFinishedWarmingUp();
+
+            var symbol = _algorithm.AddFuture("ES",
+                dataNormalizationMode: dataNormalizationMode).Symbol;
+
+            var receivedSecurityChanges = false;
+            var receivedData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(3), ts =>
+            {
+                foreach (var addedSecurity in ts.SecurityChanges.AddedSecurities)
+                {
+                    if (addedSecurity.Symbol == symbol)
+                    {
+                        receivedSecurityChanges = true;
+                    }
+                }
+
+                if (ts.Slice.ContainsKey(symbol))
+                {
+                    receivedData = true;
+
+                    var point = ts.Slice.Bars[symbol];
+
+                    if (dataNormalizationMode == DataNormalizationMode.ForwardPanamaCanal && point.Price < 150)
+                    {
+                        throw new Exception($"unexpected price {point.Price} for {symbol}");
+                    }
+                    else if (dataNormalizationMode == DataNormalizationMode.Raw && point.Price == 2)
+                    {
+                        throw new Exception($"unexpected price {point.Price} for {symbol}");
+                    }
+                    else if (dataNormalizationMode == DataNormalizationMode.BackwardsPanamaCanal && point.Price < -150)
+                    {
+                        throw new Exception($"unexpected price {point.Price} for {symbol}");
+                    }
+                    else if (dataNormalizationMode == DataNormalizationMode.BackwardsRatio && Math.Abs(point.Price - 1.48m) > point.Price * 0.1m)
+                    {
+                        throw new Exception($"unexpected price {point.Price} for {symbol}");
+                    }
+
+                    // we got what we wanted, end unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                }
+            },
+            alwaysInvoke: true,
+            secondsTimeStep: 60,
+            endDate: _startDate.AddDays(2));
+
+            Assert.IsTrue(receivedSecurityChanges, "Did not add symbol!");
+            Assert.IsTrue(receivedData, "Did not get any symbol data!");
+        }
+
         [TestCase("AAPL", SecurityType.Equity)]
         [TestCase("BTCUSD", SecurityType.Crypto)]
         [TestCase("SPX500USD", SecurityType.Cfd)]
@@ -653,7 +712,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void UserDefinedUniverseSelection(string ticker, SecurityType securityType)
         {
             var feed = RunDataFeed();
-            _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
             _algorithm.SetFinishedWarmingUp();
 
             Symbol symbol = null;
@@ -1320,6 +1378,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Func<bool> canPerformSelection = null)
         {
             _algorithm.SetStartDate(_startDate);
+            _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
 
             var lastTime = _manualTimeProvider.GetUtcNow();
             getNextTicksFunction = getNextTicksFunction ?? (fdqh =>

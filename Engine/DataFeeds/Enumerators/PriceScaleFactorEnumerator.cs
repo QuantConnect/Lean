@@ -33,8 +33,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly IEnumerator<BaseData> _rawDataEnumerator;
         private readonly SubscriptionDataConfig _config;
         private readonly IFactorFileProvider _factorFileProvider;
-        private DateTime _lastTradableDate;
+        private DateTime _nextTradableDate;
         private IFactorProvider _factorFile;
+        private bool _liveMode;
 
         /// <summary>
         /// Explicit interface implementation for <see cref="Current"/>
@@ -57,13 +58,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="config">The <see cref="SubscriptionDataConfig"/> to enumerate for.
         /// Will determine the <see cref="DataNormalizationMode"/> to use.</param>
         /// <param name="factorFileProvider">The <see cref="IFactorFileProvider"/> instance to use</param>
+        /// <param name="liveMode">True, is this is a live mode data stream</param>
         public PriceScaleFactorEnumerator(
             IEnumerator<BaseData> rawDataEnumerator,
             SubscriptionDataConfig config,
-            IFactorFileProvider factorFileProvider)
+            IFactorFileProvider factorFileProvider,
+            bool liveMode = false)
         {
-            _lastTradableDate = DateTime.MinValue;
             _config = config;
+            _liveMode = liveMode;
+            _nextTradableDate = DateTime.MinValue;
             _rawDataEnumerator = rawDataEnumerator;
             _factorFileProvider = factorFileProvider;
         }
@@ -93,11 +97,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 && _factorFileProvider != null
                 && _config.DataNormalizationMode != DataNormalizationMode.Raw)
             {
-                if (Current.Time.Date > _lastTradableDate)
+                if (Current.Time >= _nextTradableDate)
                 {
                     _factorFile = _factorFileProvider.Get(_config.Symbol);
-                    _lastTradableDate = Current.Time.Date;
-                    _config.PriceScaleFactor = _factorFile.GetPriceScale(_lastTradableDate, _config.DataNormalizationMode, _config.ContractDepthOffset, _config.DataMappingMode);
+                    _config.PriceScaleFactor = _factorFile.GetPriceScale(Current.Time.Date, _config.DataNormalizationMode, _config.ContractDepthOffset, _config.DataMappingMode);
+
+                    // update factor files every day
+                    _nextTradableDate = Current.Time.Date.AddDays(1);
+                    if (_liveMode)
+                    {
+                        // in live trading we add a offset to make sure new factor files are available
+                        _nextTradableDate = _nextTradableDate.Add(Time.LiveAuxiliaryDataOffset);
+                    }
                 }
 
                 Current = Current.Normalize(_config.PriceScaleFactor, _config.DataNormalizationMode, _config.SumOfDividends);
