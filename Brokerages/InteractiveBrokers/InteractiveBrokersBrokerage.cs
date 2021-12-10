@@ -2038,12 +2038,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var securityType = ConvertSecurityType(symbol.SecurityType);
             var ibSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
 
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                symbol.ID.Market,
+                symbol,
+                symbol.SecurityType,
+                Currencies.USD);
+
             var contract = new Contract
             {
                 Symbol = ibSymbol,
                 Exchange = exchange ?? GetSymbolExchange(symbol),
                 SecType = securityType,
-                Currency = Currencies.USD
+                Currency = symbolProperties.QuoteCurrency
             };
             if (symbol.ID.SecurityType == SecurityType.Forex)
             {
@@ -2108,12 +2114,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Symbol = ibSymbol;
                 contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter);
                 contract.Exchange = GetSymbolExchange(symbol);
-
-                var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
-                    symbol.ID.Market,
-                    symbol,
-                    symbol.SecurityType,
-                    Currencies.USD);
 
                 contract.Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant();
 
