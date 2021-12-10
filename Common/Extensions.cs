@@ -3208,6 +3208,41 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Thread safe concurrent dictionary order by implementation by using <see cref="SafeEnumeration{TSource,TKey}"/>
+        /// </summary>
+        /// <remarks>See https://stackoverflow.com/questions/47630824/is-c-sharp-linq-orderby-threadsafe-when-used-with-concurrentdictionarytkey-tva</remarks>
+        public static IOrderedEnumerable<KeyValuePair<TSource, TKey>> OrderBySafe<TSource, TKey>(
+            this ConcurrentDictionary<TSource, TKey> source, Func<KeyValuePair<TSource, TKey>, TSource> keySelector
+            )
+        {
+            return source.SafeEnumeration().OrderBy(keySelector);
+        }
+
+        /// <summary>
+        /// Thread safe concurrent dictionary order by implementation by using <see cref="SafeEnumeration{TSource,TKey}"/>
+        /// </summary>
+        /// <remarks>See https://stackoverflow.com/questions/47630824/is-c-sharp-linq-orderby-threadsafe-when-used-with-concurrentdictionarytkey-tva</remarks>
+        public static IOrderedEnumerable<KeyValuePair<TSource, TKey>> OrderBySafe<TSource, TKey>(
+            this ConcurrentDictionary<TSource, TKey> source, Func<KeyValuePair<TSource, TKey>, TKey> keySelector
+            )
+        {
+            return source.SafeEnumeration().OrderBy(keySelector);
+        }
+
+        /// <summary>
+        /// Force concurrent dictionary enumeration using a thread safe implementation
+        /// </summary>
+        /// <remarks>See https://stackoverflow.com/questions/47630824/is-c-sharp-linq-orderby-threadsafe-when-used-with-concurrentdictionarytkey-tva</remarks>
+        public static IEnumerable<KeyValuePair<TSource, TKey>> SafeEnumeration<TSource, TKey>(
+            this ConcurrentDictionary<TSource, TKey> source)
+        {
+            foreach (var kvp in source)
+            {
+                yield return kvp;
+            }
+        }
+
+        /// <summary>
         /// Helper method to determine the right data normalization mode to use by default
         /// </summary>
         public static DataNormalizationMode GetUniverseNormalizationModeOrDefault(this UniverseSettings universeSettings, SecurityType securityType)
