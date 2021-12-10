@@ -2944,13 +2944,15 @@ namespace QuantConnect
         /// Helper method to determine symbol for a live subscription
         /// </summary>
         /// <remarks>Useful for continuous futures where we subscribe to the underlying</remarks>
-        public static Symbol GetLiveSubscriptionSymbol(this Symbol symbol)
+        public static bool TryGetLiveSubscriptionSymbol(this Symbol symbol, out Symbol mapped)
         {
+            mapped = null;
             if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical() && symbol.HasUnderlying)
             {
-                return symbol.Underlying;
+                mapped = symbol.Underlying;
+                return true;
             }
-            return symbol;
+            return false;
         }
 
         /// <summary>
@@ -3017,6 +3019,35 @@ namespace QuantConnect
             }
 
             return symbol;
+        }
+
+        /// <summary>
+        /// Helper method to unsubscribe a given configuration, handling any required mapping
+        /// </summary>
+        public static void UnsubscribeWithMapping(this IDataQueueHandler dataQueueHandler, SubscriptionDataConfig dataConfig)
+        {
+            if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
+            {
+                dataConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol, mappedConfig: true);
+            }
+            dataQueueHandler.Unsubscribe(dataConfig);
+        }
+
+        /// <summary>
+        /// Helper method to subscribe a given configuration, handling any required mapping
+        /// </summary>
+        public static IEnumerator<BaseData> SubscribeWithMapping(this IDataQueueHandler dataQueueHandler,
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler,
+            out SubscriptionDataConfig subscribedConfig)
+        {
+            subscribedConfig = dataConfig;
+            if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
+            {
+                subscribedConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol, mappedConfig: true);
+            }
+            var enumerator = dataQueueHandler.Subscribe(subscribedConfig, newDataAvailableHandler);
+            return enumerator ?? Enumerable.Empty<BaseData>().GetEnumerator();
         }
 
         /// <summary>

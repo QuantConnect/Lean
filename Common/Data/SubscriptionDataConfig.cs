@@ -29,6 +29,7 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionDataConfig : IEquatable<SubscriptionDataConfig>
     {
+        private readonly bool _mappedConfig;
         private readonly SecurityIdentifier _sid;
 
         /// <summary>
@@ -204,7 +205,8 @@ namespace QuantConnect.Data
             bool isFilteredSubscription = true,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
-            uint contractDepthOffset = 0)
+            uint contractDepthOffset = 0,
+            bool mappedConfig = false)
         {
             if (objectType == null) throw new ArgumentNullException(nameof(objectType));
             if (symbol == null) throw new ArgumentNullException(nameof(symbol));
@@ -221,6 +223,7 @@ namespace QuantConnect.Data
             IsInternalFeed = isInternalFeed;
             IsCustomData = isCustom;
             DataTimeZone = dataTimeZone;
+            _mappedConfig = mappedConfig;
             DataMappingMode = dataMappingMode;
             ExchangeTimeZone = exchangeTimeZone;
             ContractDepthOffset = contractDepthOffset;
@@ -275,6 +278,8 @@ namespace QuantConnect.Data
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// <param name="mappedConfig">True if this is created as a mapped config. This is useful for continuous contract at live trading
+        /// where we subscribe to the mapped symbol but want to preserve uniqueness</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
@@ -289,7 +294,8 @@ namespace QuantConnect.Data
             bool? isFilteredSubscription = null,
             DataNormalizationMode? dataNormalizationMode = null,
             DataMappingMode? dataMappingMode = null,
-            uint? contractDepthOffset = null)
+            uint? contractDepthOffset = null,
+            bool? mappedConfig = null)
             : this(
             objectType ?? config.Type,
             symbol ?? config.Symbol,
@@ -304,7 +310,8 @@ namespace QuantConnect.Data
             isFilteredSubscription ?? config.IsFilteredSubscription,
             dataNormalizationMode ?? config.DataNormalizationMode,
             dataMappingMode ?? config.DataMappingMode,
-            contractDepthOffset ?? config.ContractDepthOffset
+            contractDepthOffset ?? config.ContractDepthOffset,
+            mappedConfig ?? false
             )
         {
             PriceScaleFactor = config.PriceScaleFactor;
@@ -334,7 +341,8 @@ namespace QuantConnect.Data
                 && DataMappingMode == other.DataMappingMode
                 && ExchangeTimeZone.Equals(other.ExchangeTimeZone)
                 && ContractDepthOffset == other.ContractDepthOffset
-                && IsFilteredSubscription == other.IsFilteredSubscription;
+                && IsFilteredSubscription == other.IsFilteredSubscription
+                && _mappedConfig == other._mappedConfig;
         }
 
         /// <summary>
@@ -375,6 +383,7 @@ namespace QuantConnect.Data
                 hashCode = (hashCode*397) ^ ExchangeTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ ContractDepthOffset.GetHashCode();
                 hashCode = (hashCode*397) ^ IsFilteredSubscription.GetHashCode();
+                hashCode = (hashCode*397) ^ _mappedConfig.GetHashCode();
                 return hashCode;
             }
         }

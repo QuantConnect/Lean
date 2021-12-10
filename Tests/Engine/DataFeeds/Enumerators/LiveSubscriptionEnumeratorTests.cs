@@ -21,6 +21,7 @@ using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -48,7 +49,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 MappedSymbol = Symbols.Fut_SPY_Feb19_2016.ID.ToString()
             };
 
-            var data = new LiveSubscriptionEnumerator(config, dataQueue, (_, _) => {});
+            var compositeDataQueueHandler = new TestDataQueueHandlerManager();
+            compositeDataQueueHandler.ExposedDataHandlers.Add(dataQueue);
+            var data = new LiveSubscriptionEnumerator(config, compositeDataQueueHandler, (_, _) => {});
 
             Assert.IsTrue(data.MoveNext());
             Assert.AreEqual(1, (data.Current as Tick).AskPrice);
@@ -71,7 +74,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(1, dataQueue.DataPerSymbol.Count);
 
             data.Dispose();
-            dataQueue.Dispose();
+            compositeDataQueueHandler.Dispose();
         }
 
         private class TestDataQueueHandler : IDataQueueHandler
@@ -98,6 +101,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public void Dispose()
             {
             }
+        }
+
+        private class TestDataQueueHandlerManager : DataQueueHandlerManager
+        {
+            public List<IDataQueueHandler> ExposedDataHandlers => DataHandlers;
         }
     }
 }

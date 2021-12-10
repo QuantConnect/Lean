@@ -27,22 +27,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// This is an implementation of <see cref="IDataQueueHandler"/> used to handle multiple live datafeeds
     /// </summary>
-    public class CompositeDataQueueHandler : IDataQueueHandler, IDataQueueUniverseProvider
+    public class DataQueueHandlerManager : IDataQueueHandler, IDataQueueUniverseProvider
     {
-        private readonly List<IDataQueueHandler> _dataHandlers = new();
         private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler = new();
+
+        /// <summary>
+        /// Collection of data queue handles being used
+        /// </summary>
+        /// <remarks>Protected for testing purposes</remarks>
+        protected List<IDataQueueHandler> DataHandlers { get; } = new();
 
         /// <summary>
         /// True if the composite queue handler has any <see cref="IDataQueueUniverseProvider"/> instance
         /// </summary>
-        public bool HasUniverseProvider => _dataHandlers.OfType<IDataQueueUniverseProvider>().Any();
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CompositeDataQueueHandler"/> class
-        /// </summary>
-        public CompositeDataQueueHandler()
-        {
-        }
+        public bool HasUniverseProvider => DataHandlers.OfType<IDataQueueUniverseProvider>().Any();
 
         /// <summary>
         /// Subscribe to the specified configuration
@@ -52,7 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            foreach (var dataHandler in _dataHandlers)
+            foreach (var dataHandler in DataHandlers)
             {
                 var enumerator = dataHandler.Subscribe(dataConfig, newDataAvailableHandler);
                 // Check if the enumerator is not empty
@@ -71,8 +69,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataConfig">Subscription config to be removed</param>
         public virtual void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            _dataConfigAndDataHandler.TryGetValue(dataConfig, out IDataQueueHandler dataHandler);
-            dataHandler?.Unsubscribe(dataConfig);
+            if (_dataConfigAndDataHandler.Remove(dataConfig, out var dataHandler))
+            {
+                dataHandler.Unsubscribe(dataConfig);
+            }
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var dataHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(dataHandlerName);
                 dataHandler.SetJob(job);
-                _dataHandlers.Add(dataHandler);
+                DataHandlers.Add(dataHandler);
             }
         }
 
@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
-            foreach (var dataHandler in _dataHandlers)
+            foreach (var dataHandler in DataHandlers)
             {
                 dataHandler.Dispose();
             }
@@ -142,7 +142,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IEnumerable<IDataQueueUniverseProvider> GetUniverseProviders()
         {
             var yielded = false;
-            foreach (var universeProvider in _dataHandlers.OfType<IDataQueueUniverseProvider>())
+            foreach (var universeProvider in DataHandlers.OfType<IDataQueueUniverseProvider>())
             {
                 yielded = true;
                 yield return universeProvider;
