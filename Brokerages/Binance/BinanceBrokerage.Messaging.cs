@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages.Binance
 {
     public partial class BinanceBrokerage
     {
-        private readonly IDataAggregator _aggregator;
+        private IDataAggregator _aggregator;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -41,6 +41,11 @@ namespace QuantConnect.Brokerages.Binance
 
             try
             {
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"BinanceBrokerage.OnUserMessage(): {e.Message}");
+                }
+
                 var obj = JObject.Parse(e.Message);
 
                 var objError = obj["error"];

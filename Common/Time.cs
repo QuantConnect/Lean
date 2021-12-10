@@ -30,6 +30,12 @@ namespace QuantConnect
     public static class Time
     {
         /// <summary>
+        /// Allows specifying an offset to trigger the tradable date event
+        /// </summary>
+        /// <remarks>Useful for delaying the tradable date event until new auxiliary data is available to refresh map and factor files</remarks>
+        public static TimeSpan LiveAuxiliaryDataOffset { get; set; } = TimeSpan.FromHours(8);
+
+        /// <summary>
         /// Provides a value far enough in the future the current computer hardware will have decayed :)
         /// </summary>
         /// <value>
@@ -132,7 +138,8 @@ namespace QuantConnect
         }
 
         private static readonly DateTime EpochTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-
+        private const long SecondToMillisecond = 1000;
+        
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
@@ -153,12 +160,32 @@ namespace QuantConnect
             }
             return time;
         }
+        
+        /// <summary>
+        /// Create a C# DateTime from a UnixTimestamp
+        /// </summary>
+        /// <param name="unixTimeStamp">Decimal unix timestamp (Time since Midnight Jan 1 1970)</param>
+        /// <returns>C# date time object</returns>
+        public static DateTime UnixTimeStampToDateTime(decimal unixTimeStamp)
+        {
+            return UnixMillisecondTimeStampToDateTime(unixTimeStamp * SecondToMillisecond);
+        }
+        
+        /// <summary>
+        /// Create a C# DateTime from a UnixTimestamp
+        /// </summary>
+        /// <param name="unixTimeStamp">Long unix timestamp (Time since Midnight Jan 1 1970)</param>
+        /// <returns>C# date time object</returns>
+        public static DateTime UnixTimeStampToDateTime(long unixTimeStamp)
+        {
+            return UnixTimeStampToDateTime(Convert.ToDecimal(unixTimeStamp));
+        }
 
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
-        /// <param name="unixTimeStamp">Double unix timestamp (Time since Midnight Jan 1 1970) in milliseconds</param>
-        /// <returns>C# date timeobject</returns>
+        /// <param name="unixTimeStamp">Decimal unix timestamp (Time since Midnight Jan 1 1970) in milliseconds</param>
+        /// <returns>C# date time object</returns>
         public static DateTime UnixMillisecondTimeStampToDateTime(decimal unixTimeStamp)
         {
             DateTime time;
@@ -182,7 +209,7 @@ namespace QuantConnect
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
         /// <param name="unixTimeStamp">Int64 unix timestamp (Time since Midnight Jan 1 1970) in nanoseconds</param>
-        /// <returns>C# date timeobject</returns>
+        /// <returns>C# date time object</returns>
         public static DateTime UnixNanosecondTimeStampToDateTime(long unixTimeStamp)
         {
             DateTime time;

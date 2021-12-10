@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly Identity _brent = new Identity("Brent");
         private readonly Identity _wti = new Identity("WTI");
 
-        private CompositeIndicator<IndicatorDataPoint> _spread;
+        private CompositeIndicator _spread;
 
         private ExponentialMovingAverage _emaWti;
 

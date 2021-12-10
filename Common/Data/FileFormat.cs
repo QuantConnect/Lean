@@ -38,11 +38,19 @@ namespace QuantConnect.Data
         /// <summary>
         /// Reader returns a BaseDataCollection object.
         /// </summary>
-        Collection,
+        /// <remarks>Lean will unfold the collection and consume it as individual data points</remarks>
+        UnfoldingCollection,
 
         /// <summary>
         /// Data stored using an intermediate index source
         /// </summary>
-        Index
+        Index,
+
+        /// <summary>
+        /// Data type inherits from BaseDataCollection.
+        /// Reader method can return a non BaseDataCollection type which will be folded, based on unique time,
+        /// into an instance of the data type.
+        /// </summary>
+        FoldingCollection
     }
 }

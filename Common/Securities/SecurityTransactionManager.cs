@@ -21,6 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using static QuantConnect.StringExtensions;
+using Python.Runtime;
 
 namespace QuantConnect.Securities
 {
@@ -229,6 +230,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets an enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The Python function filter used to find the required order tickets</param>
+        /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOrderTickets(PyObject filter)
+        {
+            return _orderProcessor.GetOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>());
+        }
+
+        /// <summary>
         /// Get an enumerable of open <see cref="OrderTicket"/> for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol for which to return the order tickets</param>
@@ -249,12 +260,50 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets an enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason 
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it 
+        /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
+        /// </summary>
+        /// <param name="filter">The Python function filter used to find the required order tickets</param>
+        /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOpenOrderTickets(PyObject filter)
+        {
+            Symbol pythonSymbol;
+            if (filter.TryConvert(out pythonSymbol))
+            {
+                return GetOpenOrderTickets(pythonSymbol);
+            }
+            return _orderProcessor.GetOpenOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>());
+        }
+
+        /// <summary>
         /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
         /// </summary>
         /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
         /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
         public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
         {
+            return GetOpenOrderTickets(filter)
+                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+        }
+
+        /// <summary>
+        /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
+        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason 
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it 
+        /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
+        /// </summary>
+        /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
+        /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
+        public decimal GetOpenOrdersRemainingQuantity(PyObject filter)
+        {
+            Symbol pythonSymbol;
+            if (filter.TryConvert(out pythonSymbol))
+            {
+                return GetOpenOrdersRemainingQuantity(pythonSymbol);
+            }
+
             return GetOpenOrderTickets(filter)
                 .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
         }
@@ -333,6 +382,25 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets open orders matching the specified filter. However, this method can be confused with the
+        /// override that takes a Symbol as parameter. For this reason it first checks if it can convert
+        /// the parameter into a symbol. If that conversion cannot be aplied it assumes the parameter is
+        /// a Python function object and not a Python representation of a Symbol.
+        /// </summary>
+        /// <param name="filter">Python function object used to filter the orders</param>
+        /// <returns>All filtered open orders this order provider currently holds</returns>
+        public List<Order> GetOpenOrders(PyObject filter)
+        {
+            Symbol pythonSymbol;
+            if (filter.TryConvert(out pythonSymbol))
+            {
+                return GetOpenOrders(pythonSymbol);
+            }
+            Func<Order, bool> csharpFilter = filter.ConvertToDelegate<Func<Order, bool>>();
+            return _orderProcessor.GetOpenOrders(x => csharpFilter(x));
+        }
+
+        /// <summary>
         /// Gets the current number of orders that have been processed
         /// </summary>
         public int OrdersCount
@@ -366,9 +434,19 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="filter">Delegate used to filter the orders</param>
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
-        public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
+        public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
         {
-            return _orderProcessor.GetOrders(filter);
+            return _orderProcessor.GetOrders(filter ?? (x => true));
+        }
+
+        /// <summary>
+        /// Gets all orders matching the specified filter.
+        /// </summary>
+        /// <param name="filter">Python function object used to filter the orders</param>
+        /// <returns>All orders this order provider currently holds by the specified filter</returns>
+        public IEnumerable<Order> GetOrders(PyObject filter)
+        {
+            return _orderProcessor.GetOrders(filter.ConvertToDelegate<Func<Order, bool>>());
         }
 
         /// <summary>

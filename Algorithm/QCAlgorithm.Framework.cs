@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,37 +38,44 @@ namespace QuantConnect.Algorithm
         /// Enables additional logging of framework models including:
         /// All insights, portfolio targets, order events, and any risk management altered targets
         /// </summary>
+        [DocumentationAttribute(Logging)]
         public bool DebugMode { get; set; }
 
         /// <summary>
         /// Gets or sets the universe selection model.
         /// </summary>
+        [DocumentationAttribute(AlgorithmFramework)]
         public IUniverseSelectionModel UniverseSelection { get; set; }
 
         /// <summary>
         /// Gets or sets the alpha model
         /// </summary>
+        [DocumentationAttribute(AlgorithmFramework)]
         public IAlphaModel Alpha { get; set; }
 
         /// <summary>
         /// Gets or sets the portfolio construction model
         /// </summary>
+        [DocumentationAttribute(AlgorithmFramework)]
         public IPortfolioConstructionModel PortfolioConstruction { get; set; }
 
         /// <summary>
         /// Gets or sets the execution model
         /// </summary>
+        [DocumentationAttribute(AlgorithmFramework)]
         public IExecutionModel Execution { get; set; }
 
         /// <summary>
         /// Gets or sets the risk management model
         /// </summary>
+        [DocumentationAttribute(AlgorithmFramework)]
         public IRiskManagementModel RiskManagement { get; set; }
 
         /// <summary>
         /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
         /// the data gather in the Initialize method
         /// </summary>
+        [DocumentationAttribute(AlgorithmFramework)]
         public void FrameworkPostInitialize()
         {
             //Prevents execution in the case of cash brokerage with IExecutionModel and IPortfolioConstructionModel
@@ -97,6 +104,8 @@ namespace QuantConnect.Algorithm
         /// Used to send data updates to algorithm framework models
         /// </summary>
         /// <param name="slice">The current data slice</param>
+        [DocumentationAttribute(AlgorithmFramework)]
+        [DocumentationAttribute(HandlingData)]
         public void OnFrameworkData(Slice slice)
         {
             if (UtcTime >= UniverseSelection.GetNextRefreshTimeUtc())
@@ -170,6 +179,7 @@ namespace QuantConnect.Algorithm
         /// and the <see cref="IExecutionModel"/> will execute the <see cref="IPortfolioTarget"/>
         /// </summary>
         /// <param name="insights">The insight to process</param>
+        [DocumentationAttribute(AlgorithmFramework)]
         private void ProcessInsights(Insight[] insights)
         {
             // construct portfolio targets from insights
@@ -244,6 +254,8 @@ namespace QuantConnect.Algorithm
         /// Used to send security changes to algorithm framework models
         /// </summary>
         /// <param name="changes">Security additions/removals for this time step</param>
+        [DocumentationAttribute(AlgorithmFramework)]
+        [DocumentationAttribute(Universes)]
         public void OnFrameworkSecuritiesChanged(SecurityChanges changes)
         {
             if (DebugMode)
@@ -261,6 +273,8 @@ namespace QuantConnect.Algorithm
         /// Sets the universe selection model
         /// </summary>
         /// <param name="universeSelection">Model defining universes for the algorithm</param>
+        [DocumentationAttribute(AlgorithmFramework)]
+        [DocumentationAttribute(Universes)]
         public void SetUniverseSelection(IUniverseSelectionModel universeSelection)
         {
             UniverseSelection = universeSelection;
@@ -270,6 +284,8 @@ namespace QuantConnect.Algorithm
         /// Adds a new universe selection model
         /// </summary>
         /// <param name="universeSelection">Model defining universes for the algorithm to add</param>
+        [DocumentationAttribute(AlgorithmFramework)]
+        [DocumentationAttribute(Universes)]
         public void AddUniverseSelection(IUniverseSelectionModel universeSelection)
         {
             if (UniverseSelection.GetType() != typeof(NullUniverseSelectionModel))
@@ -294,6 +310,7 @@ namespace QuantConnect.Algorithm
         /// Sets the alpha model
         /// </summary>
         /// <param name="alpha">Model that generates alpha</param>
+        [DocumentationAttribute(AlgorithmFramework)]
         public void SetAlpha(IAlphaModel alpha)
         {
             Alpha = alpha;
@@ -303,6 +320,7 @@ namespace QuantConnect.Algorithm
         /// Adds a new alpha model
         /// </summary>
         /// <param name="alpha">Model that generates alpha to add</param>
+        [DocumentationAttribute(AlgorithmFramework)]
         public void AddAlpha(IAlphaModel alpha)
         {
             if (Alpha.GetType() != typeof(NullAlphaModel))
@@ -327,6 +345,8 @@ namespace QuantConnect.Algorithm
         /// Sets the portfolio construction model
         /// </summary>
         /// <param name="portfolioConstruction">Model defining how to build a portfolio from insights</param>
+        [DocumentationAttribute(AlgorithmFramework)]
+        [DocumentationAttribute(TradingAndOrders)]
         public void SetPortfolioConstruction(IPortfolioConstructionModel portfolioConstruction)
         {
             PortfolioConstruction = portfolioConstruction;
@@ -336,6 +356,8 @@ namespace QuantConnect.Algorithm
         /// Sets the execution model
         /// </summary>
         /// <param name="execution">Model defining how to execute trades to reach a portfolio target</param>
+        [DocumentationAttribute(AlgorithmFramework)]
+        [DocumentationAttribute(TradingAndOrders)]
         public void SetExecution(IExecutionModel execution)
         {
             Execution = execution;
@@ -345,6 +367,8 @@ namespace QuantConnect.Algorithm
         /// Sets the risk management model
         /// </summary>
         /// <param name="riskManagement">Model defining how risk is managed</param>
+        [DocumentationAttribute(AlgorithmFramework)]
+        [DocumentationAttribute(TradingAndOrders)]
         public void SetRiskManagement(IRiskManagementModel riskManagement)
         {
             RiskManagement = riskManagement;
@@ -354,6 +378,8 @@ namespace QuantConnect.Algorithm
         /// Adds a new risk management model
         /// </summary>
         /// <param name="riskManagement">Model defining how risk is managed to add</param>
+        [DocumentationAttribute(AlgorithmFramework)]
+        [DocumentationAttribute(TradingAndOrders)]
         public void AddRiskManagement(IRiskManagementModel riskManagement)
         {
             if (RiskManagement.GetType() != typeof(NullRiskManagementModel))
@@ -380,6 +406,7 @@ namespace QuantConnect.Algorithm
         /// QCAlgorithm that have been ported into the algorithm framework.
         /// </summary>
         /// <param name="insights">The array of insights to be emitted</param>
+        [DocumentationAttribute(AlgorithmFramework)]
         public void EmitInsights(params Insight[] insights)
         {
             if (IsWarmingUp)
@@ -403,6 +430,7 @@ namespace QuantConnect.Algorithm
         /// QCAlgorithm that have been ported into the algorithm framework.
         /// </summary>
         /// <param name="insight">The insight to be emitted</param>
+        [DocumentationAttribute(AlgorithmFramework)]
         public void EmitInsights(Insight insight)
         {
             EmitInsights(new[] { insight });

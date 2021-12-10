@@ -14,25 +14,25 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Packets;
+using QuantConnect.Securities;
+using QuantConnect.Util;
+using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using System.Threading;
-using RestSharp;
-using QuantConnect.Configuration;
-using QuantConnect.Logging;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
-using QuantConnect.Util;
-using QuantConnect.Data;
-using QuantConnect.Packets;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -44,39 +44,49 @@ namespace QuantConnect.Brokerages.GDAX
         /// Collection of partial split messages
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
-        private readonly string _passPhrase;
-        private readonly IAlgorithm _algorithm;
+
+        private string _passPhrase;
+        private IAlgorithm _algorithm;
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
-        private readonly bool _isDataQueueHandler;
+        private bool _isDataQueueHandler;
         private LiveNodePacket _job;
 
         /// <summary>
         /// Data Aggregator
         /// </summary>
-        protected readonly IDataAggregator _aggregator;
+        protected IDataAggregator _aggregator;
 
         // GDAX has different rate limits for public and private endpoints
         // https://docs.gdax.com/#rate-limits
         internal enum GdaxEndpointType { Public, Private }
+
         private readonly RateGate _publicEndpointRateLimiter = new RateGate(6, TimeSpan.FromSeconds(1));
         private readonly RateGate _privateEndpointRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
 
-        private readonly IPriceProvider _priceProvider;
+        private IPriceProvider _priceProvider;
 
         private readonly CancellationTokenSource _ctsFillMonitor = new CancellationTokenSource();
-        private readonly Task _fillMonitorTask;
+        private Task _fillMonitorTask;
         private readonly AutoResetEvent _fillMonitorResetEvent = new AutoResetEvent(false);
         private readonly int _fillMonitorTimeout = Config.GetInt("gdax-fill-monitor-timeout", 500);
         private readonly ConcurrentDictionary<string, PendingOrder> _pendingOrders = new ConcurrentDictionary<string, PendingOrder>();
 
-        #endregion
+        #endregion Declarations
 
         /// <summary>
         /// The list of websocket channels to subscribe
         /// </summary>
         protected virtual string[] ChannelNames { get; } = { "heartbeat" };
+
+        /// <summary>
+        /// Constructor for brokerage
+        /// </summary>
+        /// <param name="name">Name of brokerage</param>
+        public GDAXBrokerage(string name) : base(name)
+        {
+        }
 
         /// <summary>
         /// Constructor for brokerage
@@ -93,18 +103,20 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="job">The live job packet</param>
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
             IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, "GDAX")
+            : base("GDAX")
         {
-            _job = job;
-            FillSplit = new ConcurrentDictionary<long, GDAXFill>();
-            _passPhrase = passPhrase;
-            _algorithm = algorithm;
-            _priceProvider = priceProvider;
-            _aggregator = aggregator;
-
-            _isDataQueueHandler = this is GDAXDataQueueHandler;
-
-            _fillMonitorTask = Task.Factory.StartNew(FillMonitorAction, _ctsFillMonitor.Token);
+            Initialize(
+                wssUrl: wssUrl,
+                websocket: websocket,
+                restClient: restClient,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                passPhrase: passPhrase,
+                algorithm: algorithm,
+                priceProvider: priceProvider,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         /// <summary>
@@ -112,7 +124,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage webSocketMessage)
+        protected override void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
             var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
 
@@ -165,6 +177,49 @@ namespace QuantConnect.Brokerages.GDAX
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Initialize the instance of this class
+        /// </summary>
+        /// <param name="wssUrl">The web socket base url</param>
+        /// <param name="websocket">instance of websockets client</param>
+        /// <param name="restClient">instance of rest client</param>
+        /// <param name="apiKey">api key</param>
+        /// <param name="apiSecret">api secret</param>
+        /// <param name="passPhrase">pass phrase</param>
+        /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
+        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
+        /// <param name="aggregator">the aggregator for consolidating ticks</param>
+        /// <param name="job">The live job packet</param>
+        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret,
+            string passPhrase, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
+        {
+            if (IsInitialized)
+            {
+                return;
+            }
+            base.Initialize(wssUrl, websocket, restClient, apiKey, apiSecret);
+            _job = job;
+            FillSplit = new ConcurrentDictionary<long, GDAXFill>();
+            _passPhrase = passPhrase;
+            _algorithm = algorithm;
+            _priceProvider = priceProvider;
+            _aggregator = aggregator;
+
+            _isDataQueueHandler = this is GDAXDataQueueHandler;
+
+            _fillMonitorTask = Task.Factory.StartNew(FillMonitorAction, _ctsFillMonitor.Token);
+
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+
+            SubscriptionManager = subscriptionManager;
         }
 
         private void OnSnapshot(string data)
@@ -259,7 +314,6 @@ namespace QuantConnect.Brokerages.GDAX
                             orderBook.UpdateAskRow(price, size);
                         }
                     }
-
                 }
             }
             catch (Exception e)
@@ -392,7 +446,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Creates websocket message subscriptions for the supplied symbols
         /// </summary>
-        public override void Subscribe(IEnumerable<Symbol> symbols)
+        protected override bool Subscribe(IEnumerable<Symbol> symbols)
         {
             var fullList = GetSubscribed().Union(symbols);
             var pendingSymbols = new List<Symbol>();
@@ -427,7 +481,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             if (payload.product_ids.Length == 0)
             {
-                return;
+                return true;
             }
 
             var token = GetAuthenticationToken(string.Empty, "GET", "/users/self/verify");
@@ -446,6 +500,7 @@ namespace QuantConnect.Brokerages.GDAX
             WebSocket.Send(json);
 
             Log.Trace("GDAXBrokerage.Subscribe: Sent subscribe.");
+            return true;
         }
 
         /// <summary>

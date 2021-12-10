@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -20,14 +23,11 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using QuantConnect.Configuration;
-using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Brokerages.Binance
@@ -38,23 +38,30 @@ namespace QuantConnect.Brokerages.Binance
     [BrokerageFactory(typeof(BinanceBrokerageFactory))]
     public partial class BinanceBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
-
-        private readonly IAlgorithm _algorithm;
+        private IAlgorithm _algorithm;
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Binance);
 
         // Binance allows 5 messages per second, but we still get rate limited if we send a lot of messages at that rate
         // By sending 3 messages per second, evenly spaced out, we can keep sending messages without being limited
         private readonly RateGate _webSocketRateLimiter = new RateGate(1, TimeSpan.FromMilliseconds(330));
+
         private long _lastRequestId;
 
         private LiveNodePacket _job;
         private string _webSocketBaseUrl;
-        private readonly Timer _keepAliveTimer;
-        private readonly Timer _reconnectTimer;
-        private readonly BinanceRestApiClient _apiClient;
-        private readonly BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
+        private Timer _keepAliveTimer;
+        private Timer _reconnectTimer;
+        private BinanceRestApiClient _apiClient;
+        private BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
 
         private const int MaximumSymbolsPerConnection = 512;
+
+        /// <summary>
+        /// Constructor for brokerage
+        /// </summary>
+        public BinanceBrokerage() : base("Binance")
+        {
+        }
 
         /// <summary>
         /// Constructor for brokerage
@@ -67,67 +74,17 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
         public BinanceBrokerage(string apiKey, string apiSecret, string restApiUrl, string webSocketBaseUrl, IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
-            : base(webSocketBaseUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, "Binance")
+            : base("Binance")
         {
-            _job = job;
-            _algorithm = algorithm;
-            _aggregator = aggregator;
-            _webSocketBaseUrl = webSocketBaseUrl;
-            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnUserMessage);
-
-            var maximumWebSocketConnections = Config.GetInt("binance-maximum-websocket-connections");
-            var symbolWeights = maximumWebSocketConnections > 0 ? FetchSymbolWeights() : null;
-
-            var subscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
-                webSocketBaseUrl,
-                MaximumSymbolsPerConnection,
-                maximumWebSocketConnections,
-                symbolWeights,
-                () => new BinanceWebSocketWrapper(null),
-                Subscribe,
-                Unsubscribe,
-                OnDataMessage,
-                new TimeSpan(23, 45, 0));
-
-            SubscriptionManager = subscriptionManager;
-
-            _apiClient = new BinanceRestApiClient(_symbolMapper,
-                algorithm?.Portfolio,
-                apiKey,
-                apiSecret,
-                restApiUrl);
-
-            _apiClient.OrderSubmit += (s, e) => OnOrderSubmit(e);
-            _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
-            _apiClient.Message += (s, e) => OnMessage(e);
-
-            // User data streams will close after 60 minutes. It's recommended to send a ping about every 30 minutes.
-            // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/user-data-stream.md#pingkeep-alive-a-listenkey
-            _keepAliveTimer = new Timer
-            {
-                // 30 minutes
-                Interval = 30 * 60 * 1000
-            };
-            _keepAliveTimer.Elapsed += (s, e) => _apiClient.SessionKeepAlive();
-
-            WebSocket.Open += (s, e) => { _keepAliveTimer.Start(); };
-            WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
-
-            // A single connection to stream.binance.com is only valid for 24 hours; expect to be disconnected at the 24 hour mark
-            // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#general-wss-information
-            _reconnectTimer = new Timer
-            {
-                // 23.5 hours
-                Interval = 23.5 * 60 * 60 * 1000
-            };
-            _reconnectTimer.Elapsed += (s, e) =>
-            {
-                Log.Trace("Daily websocket restart: disconnect");
-                Disconnect();
-
-                Log.Trace("Daily websocket restart: connect");
-                Connect();
-            };
+            Initialize(
+                wssUrl: webSocketBaseUrl,
+                restApiUrl: restApiUrl,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                algorithm: algorithm,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         #region IBrokerage
@@ -209,18 +166,22 @@ namespace QuantConnect.Brokerages.Binance
                     case "MARKET":
                         order = new MarketOrder { Price = item.Price };
                         break;
+
                     case "LIMIT":
                     case "LIMIT_MAKER":
                         order = new LimitOrder { LimitPrice = item.Price };
                         break;
+
                     case "STOP_LOSS":
                     case "TAKE_PROFIT":
                         order = new StopMarketOrder { StopPrice = item.StopPrice, Price = item.Price };
                         break;
+
                     case "STOP_LOSS_LIMIT":
                     case "TAKE_PROFIT_LIMIT":
                         order = new StopLimitOrder { StopPrice = item.StopPrice, LimitPrice = item.Price };
                         break;
+
                     default:
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1,
                             "BinanceBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
@@ -339,12 +300,12 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage e)
+        protected override void OnMessage(object sender, WebSocketMessage e)
         {
             _messageHandler.HandleNewMessage(e);
         }
 
-        #endregion
+        #endregion IBrokerage
 
         #region IDataQueueHandler
 
@@ -354,6 +315,27 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            var webSocketBaseUrl = job.BrokerageData["binance-websocket-url"];
+            var restApiUrl = job.BrokerageData["binance-api-url"];
+            var apiKey = job.BrokerageData["binance-api-key"];
+            var apiSecret = job.BrokerageData["binance-api-secret"];
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+
+            Initialize(
+                wssUrl: webSocketBaseUrl,
+                restApiUrl: restApiUrl,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                algorithm: null,
+                aggregator: aggregator,
+                job: job
+            );
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
@@ -366,7 +348,7 @@ namespace QuantConnect.Brokerages.Binance
         {
             if (!CanSubscribe(dataConfig.Symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
@@ -393,10 +375,11 @@ namespace QuantConnect.Brokerages.Binance
         private static bool CanSubscribe(Symbol symbol)
         {
             return !symbol.Value.Contains("UNIVERSE") &&
-                   symbol.SecurityType == SecurityType.Crypto;
+                   symbol.SecurityType == SecurityType.Crypto &&
+                   symbol.ID.Market == Market.Binance;
         }
 
-        #endregion
+        #endregion IDataQueueHandler
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -412,9 +395,89 @@ namespace QuantConnect.Brokerages.Binance
         /// <summary>
         /// Not used
         /// </summary>
-        public override void Subscribe(IEnumerable<Symbol> symbols)
+        protected override bool Subscribe(IEnumerable<Symbol> symbols)
         {
             // NOP
+            return true;
+        }
+
+        /// <summary>
+        /// Initialize the instance of this class
+        /// </summary>
+        /// <param name="wssUrl">The web socket base url</param>
+        /// <param name="restApiUrl">The rest api url</param>
+        /// <param name="apiKey">api key</param>
+        /// <param name="apiSecret">api secret</param>
+        /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
+        /// <param name="aggregator">the aggregator for consolidating ticks</param>
+        /// <param name="job">The live job packet</param>
+        private void Initialize(string wssUrl, string restApiUrl,string apiKey, string apiSecret,
+            IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
+        {
+            if (IsInitialized)
+            {
+                return;
+            }
+            base.Initialize(wssUrl,  new WebSocketClientWrapper(), null, apiKey, apiSecret);
+            _job = job;
+            _algorithm = algorithm;
+            _aggregator = aggregator;
+            _webSocketBaseUrl = wssUrl;
+            _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnUserMessage);
+
+            var maximumWebSocketConnections = Config.GetInt("binance-maximum-websocket-connections");
+            var symbolWeights = maximumWebSocketConnections > 0 ? FetchSymbolWeights() : null;
+
+            var subscriptionManager = new BrokerageMultiWebSocketSubscriptionManager(
+                wssUrl,
+                MaximumSymbolsPerConnection,
+                maximumWebSocketConnections,
+                symbolWeights,
+                () => new BinanceWebSocketWrapper(null),
+                Subscribe,
+                Unsubscribe,
+                OnDataMessage,
+                new TimeSpan(23, 45, 0));
+
+            SubscriptionManager = subscriptionManager;
+
+            _apiClient = new BinanceRestApiClient(_symbolMapper,
+                algorithm?.Portfolio,
+                apiKey,
+                apiSecret,
+                restApiUrl);
+
+            _apiClient.OrderSubmit += (s, e) => OnOrderSubmit(e);
+            _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
+            _apiClient.Message += (s, e) => OnMessage(e);
+
+            // User data streams will close after 60 minutes. It's recommended to send a ping about every 30 minutes.
+            // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/user-data-stream.md#pingkeep-alive-a-listenkey
+            _keepAliveTimer = new Timer
+            {
+                // 30 minutes
+                Interval = 30 * 60 * 1000
+            };
+            _keepAliveTimer.Elapsed += (s, e) => _apiClient.SessionKeepAlive();
+
+            WebSocket.Open += (s, e) => { _keepAliveTimer.Start(); };
+            WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
+
+            // A single connection to stream.binance.com is only valid for 24 hours; expect to be disconnected at the 24 hour mark
+            // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#general-wss-information
+            _reconnectTimer = new Timer
+            {
+                // 23.5 hours
+                Interval = 23.5 * 60 * 60 * 1000
+            };
+            _reconnectTimer.Elapsed += (s, e) =>
+            {
+                Log.Trace("Daily websocket restart: disconnect");
+                Disconnect();
+
+                Log.Trace("Daily websocket restart: connect");
+                Connect();
+            };
         }
 
         /// <summary>

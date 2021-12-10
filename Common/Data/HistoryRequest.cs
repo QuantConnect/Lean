@@ -84,6 +84,17 @@ namespace QuantConnect.Data
         public DataNormalizationMode DataNormalizationMode { get; set; }
 
         /// <summary>
+        /// Gets the data mapping mode used for this subscription
+        /// </summary>
+        public DataMappingMode DataMappingMode { get; set; }
+
+        /// <summary>
+        /// The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract
+        /// </summary>
+        public uint ContractDepthOffset { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified parameters
         /// </summary>
         /// <param name="startTimeUtc">The start time for this request,</param>
@@ -98,6 +109,9 @@ namespace QuantConnect.Data
         /// <param name="isCustomData">True for custom user data, false for normal QC data</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
         /// <param name="tickType">The tick type used to created the <see cref="SubscriptionDataConfig"/> for the retrieval of history data</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         public HistoryRequest(DateTime startTimeUtc,
             DateTime endTimeUtc,
             Type dataType,
@@ -109,7 +123,9 @@ namespace QuantConnect.Data
             bool includeExtendedMarketHours,
             bool isCustomData,
             DataNormalizationMode dataNormalizationMode,
-            TickType tickType)
+            TickType tickType,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
+            uint contractDepthOffset = 0)
             : base(startTimeUtc, endTimeUtc, exchangeHours, tickType)
         {
             Symbol = symbol;
@@ -121,19 +137,21 @@ namespace QuantConnect.Data
             IsCustomData = isCustomData;
             DataNormalizationMode = dataNormalizationMode;
             TickType = tickType;
+            DataMappingMode = dataMappingMode;
+            ContractDepthOffset = contractDepthOffset;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified config and exchange hours
         /// </summary>
-        /// <param name="config">The subscription data config used to initalize this request</param>
+        /// <param name="config">The subscription data config used to initialize this request</param>
         /// <param name="hours">The exchange hours used for fill forward processing</param>
         /// <param name="startTimeUtc">The start time for this request,</param>
         /// <param name="endTimeUtc">The start time for this request</param>
         public HistoryRequest(SubscriptionDataConfig config, SecurityExchangeHours hours, DateTime startTimeUtc, DateTime endTimeUtc)
             : this(startTimeUtc, endTimeUtc, config.Type, config.Symbol, config.Resolution,
                 hours, config.DataTimeZone, config.FillDataForward ? config.Resolution : (Resolution?)null,
-                config.ExtendedMarketHours, config.IsCustomData, config.DataNormalizationMode, config.TickType)
+                config.ExtendedMarketHours, config.IsCustomData, config.DataNormalizationMode, config.TickType, config.DataMappingMode, config.ContractDepthOffset)
         {
         }
     }

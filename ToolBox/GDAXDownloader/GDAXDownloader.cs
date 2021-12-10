@@ -37,15 +37,23 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         const int MaxRequestsPerSecond = 2;
 
         /// <summary>
-        /// Get historical data enumerable for a single symbol, type and resolution given this start and end times(in UTC).
+        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Only Tick is currently supported</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <param name="dataDownloaderGetParameters">model class for passing in parameters for historical data</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
+            var symbol = dataDownloaderGetParameters.Symbol;
+            var resolution = dataDownloaderGetParameters.Resolution;
+            var startUtc = dataDownloaderGetParameters.StartUtc;
+            var endUtc = dataDownloaderGetParameters.EndUtc;
+            var tickType = dataDownloaderGetParameters.TickType;
+
+            if (tickType != TickType.Trade)
+            {
+                return Enumerable.Empty<BaseData>();
+            }
+
             // get symbol mapper for GDAX
             var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
             var brokerageTicker = mapper.GetBrokerageSymbol(symbol);

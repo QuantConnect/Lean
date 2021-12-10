@@ -355,18 +355,15 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
 
             var gotBTCUSD = false;
-            var gotGBPUSD = false;
             var gotETHBTC = false;
 
             _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX), Resolution.Tick), (s, e) => { gotBTCUSD = true; });
             StringAssert.Contains("[\"BTC-USD\"]", actual);
-            _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("GBPUSD", SecurityType.Forex, Market.FXCM), Resolution.Tick), (s, e) => { gotGBPUSD = true; });
             _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.GDAX), Resolution.Tick), (s, e) => { gotETHBTC = true; });
             StringAssert.Contains("[\"BTC-USD\",\"ETH-BTC\"]", actual);
             Thread.Sleep(1000);
 
             Assert.IsFalse(gotBTCUSD);
-            Assert.IsTrue(gotGBPUSD);
             Assert.IsFalse(gotETHBTC);
         }
 
@@ -380,19 +377,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             StringAssert.Contains("user", actual);
             StringAssert.Contains("heartbeat", actual);
             StringAssert.DoesNotContain("matches", actual);
-        }
-
-        [Test]
-        public void PollTickTest()
-        {
-            var gotGBPUSD = false;
-            var enumerator = _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("GBPUSD", SecurityType.Forex, Market.FXCM), Resolution.Tick), (s, e) => { gotGBPUSD = true; });
-            Thread.Sleep(1000);
-
-            // conversion rate is the price returned by the QC pricing API
-            Assert.IsTrue(gotGBPUSD);
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.AreEqual(1.234m, enumerator.Current.Price);
         }
 
         [Test]
@@ -429,6 +413,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 IPriceProvider priceProvider, IDataAggregator aggregator)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, null)
             {
+            }
+
+            public void Subscribe(IEnumerable<Symbol> symbols)
+            {
+                base.Subscribe(symbols);
             }
         }
     }

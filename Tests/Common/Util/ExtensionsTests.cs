@@ -42,6 +42,29 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase("CL XTN6UA1G9QKH")]
+        [TestCase("ES VU1EHIDJYLMP")]
+        [TestCase("ES VRJST036ZY0X")]
+        [TestCase("GE YYBCLAZG1NGH")]
+        [TestCase("GE YTC58AEQ4C8X")]
+        [TestCase("BTC XTU2YXLMT1XD")]
+        [TestCase("UB XUIP59QUPVS5")]
+        [TestCase("NQ XUERCWA6EWAP")]
+        [TestCase("PL XVJ4OQA3JSN5")]
+        public void AdjustSymbolByOffsetTest(string future)
+        {
+            var sid = SecurityIdentifier.Parse(future);
+            var symbol = new Symbol(sid, sid.Symbol);
+
+            Assert.AreEqual(symbol.ID.Date, symbol.AdjustSymbolByOffset(0).ID.Date);
+
+            var nextExpiration = symbol.AdjustSymbolByOffset(1);
+            Assert.Greater(nextExpiration.ID.Date, symbol.ID.Date);
+
+            var nextNextExpiration = symbol.AdjustSymbolByOffset(2);
+            Assert.Greater(nextNextExpiration.ID.Date, nextExpiration.ID.Date);
+        }
+
         [TestCase("A", "a")]
         [TestCase("", "")]
         [TestCase(null, null)]
@@ -1220,7 +1243,7 @@ actualDictionary.update({'IBM': 5})
                         null
                     ),
                     new DataPermissionManager(),
-                    new DefaultDataProvider()
+                    TestGlobals.DataProvider
                 ),
                 algo,
                 new TimeKeeper(DateTime.UtcNow),
@@ -1230,7 +1253,7 @@ actualDictionary.update({'IBM': 5})
                 new DataPermissionManager()
             ));
 
-            using (var zipDataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider()))
+            using (var zipDataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider))
             {
                 algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
                 algo.HistoryProvider.Initialize(
@@ -1239,8 +1262,8 @@ actualDictionary.update({'IBM': 5})
                         null,
                         null,
                         zipDataCacheProvider,
-                        new LocalDiskMapFileProvider(),
-                        new LocalDiskFactorFileProvider(),
+                        TestGlobals.MapFileProvider,
+                        TestGlobals.FactorFileProvider,
                         (_) => {},
                         false,
                         new DataPermissionManager()));

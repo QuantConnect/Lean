@@ -239,32 +239,25 @@ namespace QuantConnect.Securities.Future
         {
             lock (DataFolderSymbolLock)
             {
-                var stream = _dataProvider.Fetch(file);
-                if (stream == null)
+                // skip the first header line, also skip #'s as these are comment lines
+                var marginRequirementsEntries = _dataProvider.ReadLines(file)
+                    .Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x))
+                    .Skip(1)
+                    .Select(FromCsvLine)
+                    .OrderBy(x => x.Date)
+                    .ToArray();
+
+                if(marginRequirementsEntries.Length == 0)
                 {
                     Log.Trace($"Unable to locate future margin requirements file. Defaulting to zero margin for this symbol. File: {file}");
 
                     return new[] {
-                                new MarginRequirementsEntry
-                                {
-                                  Date = DateTime.MinValue
-                                }
-                            };
+                        new MarginRequirementsEntry
+                        {
+                            Date = DateTime.MinValue
+                        }
+                    };
                 }
-
-                MarginRequirementsEntry[] marginRequirementsEntries;
-                using (var streamReader = new StreamReader(stream))
-                {
-                    // skip the first header line, also skip #'s as these are comment lines
-                    marginRequirementsEntries = streamReader.ReadAllLines()
-                        .Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x))
-                        .Skip(1)
-                        .Select(FromCsvLine)
-                        .OrderBy(x => x.Date)
-                        .ToArray();
-                }
-                
-                stream.Dispose();
                 return marginRequirementsEntries;
             }
         }

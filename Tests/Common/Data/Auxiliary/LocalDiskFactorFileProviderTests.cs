@@ -18,6 +18,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using NUnit.Framework;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.Common.Data.Auxiliary
@@ -51,8 +52,9 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void ReturnsNullForNotFound()
         {
-            var factorFile = FactorFileProvider.Get(Symbol.Create("not-a-ticker", SecurityType.Equity, QuantConnect.Market.USA));
-            Assert.IsNull(factorFile);
+            var factorFile = FactorFileProvider.Get(Symbol.Create("not-a-ticker", SecurityType.Equity, QuantConnect.Market.USA)) as CorporateFactorProvider;
+            Assert.IsNotNull(factorFile);
+            Assert.IsEmpty(factorFile);
         }
 
         [Test, Ignore("This test is meant to be run manually")]

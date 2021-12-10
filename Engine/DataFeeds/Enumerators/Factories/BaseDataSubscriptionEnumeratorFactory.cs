@@ -30,22 +30,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     public class BaseDataSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
-        private readonly MapFileResolver _mapFileResolver;
+        private readonly IMapFileProvider _mapFileProvider;
         private readonly bool _isLiveMode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
-        /// <param name="mapFileResolver">Used for resolving the correct map files</param>
+        /// <param name="mapFileProvider">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
         {
             _isLiveMode = isLiveMode;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
-            _mapFileResolver = mapFileResolver;
+            _mapFileProvider = mapFileProvider;
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 foreach (var date in _tradableDaysProvider(request))
                 {
-                    if (sourceFactory.RequiresMapping())
+                    if (sourceFactory.RequiresMapping() && _mapFileProvider != null)
                     {
                         request.Configuration.MappedSymbol = GetMappedSymbol(request.Configuration, date);
                     }
@@ -87,6 +87,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     var entriesForDate = factory.Read(source);
                     foreach (var entry in entriesForDate)
                     {
+                        // Fix for Daily/Hour options cases when reading in all equity data from daily/hourly file
+                        if (entry.Time.Date != date)
+                        {
+                            continue;
+                        }
+
                         yield return entry;
                     }
                 }
@@ -95,8 +101,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
         private string GetMappedSymbol(SubscriptionDataConfig config, DateTime date)
         {
-            return _mapFileResolver.ResolveMapFile(config.Symbol, config.Type)
-                .GetMappedSymbol(date, config.MappedSymbol);
+            return _mapFileProvider.ResolveMapFile(config).GetMappedSymbol(date, config.MappedSymbol);
         }
     }
 }

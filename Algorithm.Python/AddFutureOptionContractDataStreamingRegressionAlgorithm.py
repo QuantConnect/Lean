@@ -25,7 +25,7 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         self.expectedSymbolsReceived = []
         self.dataReceived = {}
 
-        self.SetStartDate(2020, 1, 5)
+        self.SetStartDate(2020, 1, 4)
         self.SetEndDate(2020, 1, 6)
 
         self.es20h20 = self.AddFutureContract(
@@ -36,8 +36,8 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
             Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 6, 19)),
             Resolution.Minute).Symbol
 
-        optionChains = self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time)
-        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time)
+        optionChains = self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time + timedelta(days=1))
+        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time + timedelta(days=1))
 
         for optionContract in optionChains:
             self.expectedSymbolsReceived.append(self.AddFutureOptionContract(optionContract, Resolution.Minute).Symbol)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,8 +26,13 @@ namespace QuantConnect.Scheduling
     /// </summary>
     public class TimeMonitor : IDisposable
     {
-        private readonly List<TimeConsumer> _timeConsumers;
         private readonly Timer _timer;
+        /// <summary>
+        /// List to store the coming TimeConsumer objects
+        /// </summary>
+        /// <remarks>This field is protected because it's used in a test class 
+        /// in `IsolatorLimitResultProviderTests.cs</remarks>
+        protected readonly List<TimeConsumer> TimeConsumers;
 
         /// <summary>
         /// Returns the number of time consumers currently being monitored
@@ -36,9 +41,9 @@ namespace QuantConnect.Scheduling
         {
             get
             {
-                lock (_timeConsumers)
+                lock (TimeConsumers)
                 {
-                    return _timeConsumers.Count;
+                    return TimeConsumers.Count;
                 }
             }
         }
@@ -48,37 +53,58 @@ namespace QuantConnect.Scheduling
         /// </summary>
         public TimeMonitor(int monitorIntervalMs = 100)
         {
-            _timeConsumers = new List<TimeConsumer>();
+            TimeConsumers = new List<TimeConsumer>();
             _timer = new Timer(state =>
             {
-                lock (_timeConsumers)
+                lock (TimeConsumers)
                 {
-                    _timeConsumers.RemoveAll(time => time.Finished);
+                    RemoveAll();
 
-                    foreach (var consumer in _timeConsumers)
+                    foreach (var consumer in TimeConsumers)
                     {
-                        if (consumer.NextTimeRequest == null)
-                        {
-                            // first time, for performance we register this here and not the time consumer
-                            consumer.NextTimeRequest = consumer.TimeProvider.GetUtcNow().AddMinutes(1);
-                        }
-                        else if (consumer.TimeProvider.GetUtcNow() >= consumer.NextTimeRequest)
-                        {
-                            // each minute request additional time from the isolator
-                            consumer.NextTimeRequest = consumer.NextTimeRequest.Value.AddMinutes(1);
-                            try
-                            {
-                                // this will notify the isolator that we've exceed the limits
-                                consumer.IsolatorLimitProvider.RequestAdditionalTime(minutes: 1);
-                            }
-                            catch
-                            {
-                                // pass
-                            }
-                        }
+                        ProcessConsumer(consumer);
                     }
                 }
             }, null, monitorIntervalMs, monitorIntervalMs);
+        }
+
+        /// <summary>
+        /// Process the TimeConsumer object in TimeConsumers list
+        /// </summary>
+        /// <param name="consumer">The TimeConsumer object to be processed</param>
+        /// <remarks>This method is protected because it's overrode by a test class
+        /// in `IsolatorLimitResultProviderTests.cs`</remarks>
+        protected virtual void ProcessConsumer(TimeConsumer consumer)
+        {
+            if (consumer.NextTimeRequest == null)
+            {
+                // first time, for performance we register this here and not the time consumer
+                consumer.NextTimeRequest = consumer.TimeProvider.GetUtcNow().AddMinutes(1);
+            }
+            else if (consumer.TimeProvider.GetUtcNow() >= consumer.NextTimeRequest)
+            {
+                // each minute request additional time from the isolator
+                consumer.NextTimeRequest = consumer.NextTimeRequest.Value.AddMinutes(1);
+                try
+                {
+                    // this will notify the isolator that we've exceed the limits
+                    consumer.IsolatorLimitProvider.RequestAdditionalTime(minutes: 1);
+                }
+                catch
+                {
+                    // pass
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove all TimeConsumer objects where the `Finished` field is marked as true
+        /// </summary>
+        /// <remarks>This method is protected because it's overrode by a test class in 
+        /// `IsolatorLimitResultProviderTests.cs`</remarks>
+        protected virtual void RemoveAll()
+        {
+            TimeConsumers.RemoveAll(time => time.Finished);
         }
 
         /// <summary>
@@ -87,9 +113,9 @@ namespace QuantConnect.Scheduling
         /// <param name="consumer">Time consumer instance</param>
         public void Add(TimeConsumer consumer)
         {
-            lock (_timeConsumers)
+            lock (TimeConsumers)
             {
-                _timeConsumers.Add(consumer);
+                TimeConsumers.Add(consumer);
             }
         }
 

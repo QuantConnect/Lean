@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,6 +20,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Brokerages.Oanda;
+using QuantConnect.Util;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.ToolBox.OandaDownloader
@@ -69,13 +70,21 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <param name="dataDownloaderGetParameters">model class for passing in parameters for historical data</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
+            var symbol = dataDownloaderGetParameters.Symbol;
+            var resolution = dataDownloaderGetParameters.Resolution;
+            var startUtc = dataDownloaderGetParameters.StartUtc;
+            var endUtc = dataDownloaderGetParameters.EndUtc;
+            var tickType = dataDownloaderGetParameters.TickType;
+
+            if (tickType != TickType.Quote)
+            {
+                yield break;
+            }
+
             if (!_symbolMapper.IsKnownLeanSymbol(symbol))
                 throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
@@ -159,47 +168,14 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 case Resolution.Minute:
                 case Resolution.Hour:
                 case Resolution.Daily:
-                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, resolution.ToTimeSpan()))
+                    foreach (var bar in LeanData.AggregateQuoteBars(barsTotalInPeriod, symbol, resolution.ToTimeSpan()))
                     {
                         yield return bar;
                     }
                     break;
             }
         }
-
-        /// <summary>
-        /// Aggregates a list of 5-second bars at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="bars"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal IEnumerable<QuoteBar> AggregateBars(Symbol symbol, IEnumerable<QuoteBar> bars, TimeSpan resolution)
-        {
-            return
-                (from b in bars
-                 group b by b.Time.RoundDown(resolution)
-                     into g
-                 select new QuoteBar
-                 {
-                     Symbol = symbol,
-                     Time = g.Key,
-                     Bid = new Bar
-                     {
-                         Open = g.First().Bid.Open,
-                         High = g.Max(b => b.Bid.High),
-                         Low = g.Min(b => b.Bid.Low),
-                         Close = g.Last().Bid.Close
-                     },
-                     Ask = new Bar
-                     {
-                         Open = g.First().Ask.Open,
-                         High = g.Max(b => b.Ask.High),
-                         Low = g.Min(b => b.Ask.Low),
-                         Close = g.Last().Ask.Close
-                     }
-                 });
-        }
+        
 
         /// <summary>
         /// Groups a list of bars into a dictionary keyed by date

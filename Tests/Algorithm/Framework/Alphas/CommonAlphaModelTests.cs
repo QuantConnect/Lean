@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -37,18 +37,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     /// </summary>
     public abstract class CommonAlphaModelTests
     {
-        private QCAlgorithm _algorithm;
+        protected QCAlgorithm Algorithm;
+        protected ZipDataCacheProvider ZipCacheProvider;
 
         [OneTimeSetUp]
         public void Initialize()
         {
             PythonInitializer.Initialize();
 
-            _algorithm = new QCAlgorithm();
-            _algorithm.PortfolioConstruction = new NullPortfolioConstructionModel();
-            _algorithm.HistoryProvider = new SineHistoryProvider(_algorithm.Securities);
-            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
-            InitializeAlgorithm(_algorithm);
+            Algorithm = new QCAlgorithm();
+            Algorithm.PortfolioConstruction = new NullPortfolioConstructionModel();
+            Algorithm.HistoryProvider = new SineHistoryProvider(Algorithm.Securities);
+            Algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(Algorithm));
+            InitializeAlgorithm(Algorithm);
         }
 
         [Test]
@@ -67,30 +68,30 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             }
 
             // Set the alpha model
-            _algorithm.SetAlpha(model);
-            _algorithm.AddAlpha(model2);
-            _algorithm.AddAlpha(model3);
-            _algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
+            Algorithm.SetAlpha(model);
+            Algorithm.AddAlpha(model2);
+            Algorithm.AddAlpha(model3);
+            Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
             var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
-            _algorithm.OnFrameworkSecuritiesChanged(changes);
+            Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             var actualInsights = new List<Insight>();
-            _algorithm.InsightsGenerated += (s, e) => actualInsights.AddRange(e.Insights);
+            Algorithm.InsightsGenerated += (s, e) => actualInsights.AddRange(e.Insights);
 
             var expectedInsights = ExpectedInsights().ToList();
 
-            var consolidators = _algorithm.Securities.SelectMany(kvp => kvp.Value.Subscriptions).SelectMany(x => x.Consolidators);
+            var consolidators = Algorithm.Securities.SelectMany(kvp => kvp.Value.Subscriptions).SelectMany(x => x.Consolidators);
             var slices = CreateSlices();
 
             foreach (var slice in slices.ToList())
             {
-                _algorithm.SetDateTime(slice.Time);
+                Algorithm.SetDateTime(slice.Time);
 
                 foreach (var symbol in slice.Keys)
                 {
                     var data = slice[symbol];
-                    _algorithm.Securities[symbol].SetMarketPrice(data);
+                    Algorithm.Securities[symbol].SetMarketPrice(data);
 
                     foreach (var consolidator in consolidators)
                     {
@@ -98,7 +99,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     }
                 }
 
-                _algorithm.OnFrameworkData(slice);
+                Algorithm.OnFrameworkData(slice);
             }
 
             Assert.AreEqual(expectedInsights.Count * 3, actualInsights.Count);
@@ -131,28 +132,28 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             }
 
             // Set the alpha model
-            _algorithm.SetAlpha(model);
-            _algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
+            Algorithm.SetAlpha(model);
+            Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
             var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
-            _algorithm.OnFrameworkSecuritiesChanged(changes);
+            Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             var actualInsights = new List<Insight>();
-            _algorithm.InsightsGenerated += (s, e) => actualInsights.AddRange(e.Insights);
+            Algorithm.InsightsGenerated += (s, e) => actualInsights.AddRange(e.Insights);
 
             var expectedInsights = ExpectedInsights().ToList();
 
-            var consolidators = _algorithm.Securities.SelectMany(kvp => kvp.Value.Subscriptions).SelectMany(x => x.Consolidators);
+            var consolidators = Algorithm.Securities.SelectMany(kvp => kvp.Value.Subscriptions).SelectMany(x => x.Consolidators);
             var slices = CreateSlices();
 
             foreach (var slice in slices.ToList())
             {
-                _algorithm.SetDateTime(slice.Time);
+                Algorithm.SetDateTime(slice.Time);
 
                 foreach (var symbol in slice.Keys)
                 {
                     var data = slice[symbol];
-                    _algorithm.Securities[symbol].SetMarketPrice(data);
+                    Algorithm.Securities[symbol].SetMarketPrice(data);
 
                     foreach (var consolidator in consolidators)
                     {
@@ -160,7 +161,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     }
                 }
 
-                _algorithm.OnFrameworkData(slice);
+                Algorithm.OnFrameworkData(slice);
             }
 
             Assert.AreEqual(expectedInsights.Count, actualInsights.Count);
@@ -191,7 +192,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
 
-            Assert.DoesNotThrow(() => model.OnSecuritiesChanged(_algorithm, changes));
+            Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }
 
         [Test]
@@ -207,7 +208,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var changes = new SecurityChanges(RemovedSecurities, AddedSecurities);
 
-            Assert.DoesNotThrow(() => model.OnSecuritiesChanged(_algorithm, changes));
+            Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }
 
         [Test]
@@ -244,7 +245,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// <summary>
         /// List of securities to be added to the model
         /// </summary>
-        protected virtual IEnumerable<Security> AddedSecurities => _algorithm.Securities.Values;
+        protected virtual IEnumerable<Security> AddedSecurities => Algorithm.Securities.Values;
 
         /// <summary>
         /// List of securities to be removed to the model
@@ -261,8 +262,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// </summary>
         protected virtual void InitializeAlgorithm(QCAlgorithm algorithm)
         {
-            _algorithm.SetStartDate(2018, 1, 4);
-            _algorithm.AddEquity(Symbols.SPY.Value, Resolution.Daily);
+            Algorithm.SetStartDate(2018, 1, 4);
+            Algorithm.AddEquity(Symbols.SPY.Value, Resolution.Daily);
         }
 
         /// <summary>
@@ -284,11 +285,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 var last = Convert.ToDecimal(100 + 10 * Math.Sin(Math.PI * i / 180.0));
                 var high = last * 1.005m;
                 var low = last / 1.005m;
-                foreach (var kvp in _algorithm.Securities)
+                foreach (var kvp in Algorithm.Securities)
                 {
                     var security = kvp.Value;
                     var exchange = security.Exchange.Hours;
-                    var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    var configs = Algorithm.SubscriptionManager.SubscriptionDataConfigService
                         .GetSubscriptionDataConfigs(security.Symbol);
                     var extendedMarket = configs.IsExtendedMarketHours();
                     var localDateTime = utcDateTime.ConvertFromUtc(exchange.TimeZone);
@@ -311,6 +312,25 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         }
 
         /// <summary>
+        /// Set up the HistoryProvider for algorithm
+        /// </summary>
+        protected void SetUpHistoryProvider()
+        {
+            Algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            ZipCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
+            Algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                TestGlobals.DataProvider,
+                ZipCacheProvider,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                null,
+                false,
+                new DataPermissionManager()));
+        }
+
+        /// <summary>
         /// Gets the maximum number of slice objects to generate
         /// </summary>
         protected virtual int MaxSliceCount => 360;
@@ -319,14 +339,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         {
             var i = 0;
             var sliceDateTimes = new List<DateTime>();
-            var utcDateTime = _algorithm.StartDate;
+            var utcDateTime = Algorithm.StartDate;
 
             while (sliceDateTimes.Count < maxCount)
             {
-                foreach (var kvp in _algorithm.Securities)
+                foreach (var kvp in Algorithm.Securities)
                 {
                     var security = kvp.Value;
-                    var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    var configs = Algorithm.SubscriptionManager.SubscriptionDataConfigService
                         .GetSubscriptionDataConfigs(security.Symbol);
                     var resolution = configs.GetHighestResolution().ToTimeSpan();
                     utcDateTime = utcDateTime.Add(resolution);
@@ -358,7 +378,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     model = CreateCSharpAlphaModel();
                     return true;
                 case Language.Python:
-                    _algorithm.SetPandasConverter();
+                    Algorithm.SetPandasConverter();
                     model = CreatePythonAlphaModel();
                     return true;
                 default:

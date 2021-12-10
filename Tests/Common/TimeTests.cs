@@ -43,6 +43,25 @@ namespace QuantConnect.Tests.Common
             var time = Time.UnixMillisecondTimeStampToDateTime(stamp);
             Assert.AreEqual(expected, time);
         }
+        
+        
+        [Test]
+        public void UnixTimeStampSecondsToDateTimeSubMillisecondPrecision()
+        {
+            const decimal stamp = 1520711961.00055m;
+            var expected = new DateTime(2018, 3, 10, 19, 59, 21, 0).AddTicks(5500);
+            var time = Time.UnixTimeStampToDateTime(stamp);
+            Assert.AreEqual(expected, time);
+        }
+
+        [Test]
+        public void UnixTimeStampSecondsToDateTime()
+        {
+            const long stamp = 1520711961000;
+            var expected = new DateTime(2018, 3, 10, 19, 59, 21, 0);
+            var time = Time.UnixMillisecondTimeStampToDateTime(stamp);
+            Assert.AreEqual(expected, time);
+        }
 
         [Test]
         public void GetStartTimeForTradeBarsRoundsDown()

@@ -15,15 +15,14 @@
 */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -44,7 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly bool _enablePriceScaling;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataReaderSubscriptionEnumeratorFactory"/> class
         /// </summary>
@@ -82,14 +81,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            var mapFileResolver = request.Configuration.TickerShouldBeMapped()
-                                    ? _mapFileProvider.Get(request.Security.Symbol.ID.Market)
-                                    : MapFileResolver.Empty;
-
             var dataReader = new SubscriptionDataReader(request.Configuration,
                 request.StartTimeLocal,
                 request.EndTimeLocal,
-                mapFileResolver,
+                _mapFileProvider,
                 _factorFileProvider,
                 _tradableDaysProvider(request),
                 _isLiveMode,
@@ -122,7 +117,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 request.Configuration,
                 _factorFileProvider,
                 dataReader,
-                mapFileResolver,
+                _mapFileProvider,
                 request.StartTimeLocal,
                 _enablePriceScaling);
 

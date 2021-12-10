@@ -15,10 +15,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -43,54 +42,58 @@ namespace QuantConnect.Data.Auxiliary
         public Exchange PrimaryExchange { get; }
 
         /// <summary>
+        /// Gets the securities mapping mode associated to this mapping row
+        /// </summary>
+        public DataMappingMode? DataMappingMode { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, char primaryExchange = '\0')
-            : this(date, mappedSymbol, Exchanges.GetPrimaryExchange(primaryExchange))
+        public MapFileRow(DateTime date, string mappedSymbol, string primaryExchange,
+            string market = QuantConnect.Market.USA, SecurityType securityType = SecurityType.Equity, DataMappingMode? dataMappingMode = null)
+            : this(date, mappedSymbol, primaryExchange.GetPrimaryExchange(securityType, market), dataMappingMode)
         { }
         
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, Exchange primaryExchange)
+        public MapFileRow(DateTime date, string mappedSymbol, Exchange primaryExchange = null, DataMappingMode? dataMappingMode = null)
         {
             Date = date;
             MappedSymbol = mappedSymbol.LazyToUpper();
-            PrimaryExchange = primaryExchange;
+            PrimaryExchange = primaryExchange ?? Exchange.UNKNOWN;
+            DataMappingMode = dataMappingMode;
         }
 
         /// <summary>
         /// Reads in the map_file for the specified equity symbol
         /// </summary>
-        public static IEnumerable<MapFileRow> Read(string permtick, string market)
+        public static IEnumerable<MapFileRow> Read(string file, string market, SecurityType securityType, IDataProvider dataProvider)
         {
-            var path = MapFile.GetMapFilePath(permtick, market);
-            return File.Exists(path)
-                ? Read(path)
-                : Enumerable.Empty<MapFileRow>();
-        }
-
-        /// <summary>
-        /// Reads in the map_file at the specified path
-        /// </summary>
-        public static IEnumerable<MapFileRow> Read(string path)
-        {
-            return File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).Select(Parse);
+            return dataProvider.ReadLines(file)
+                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .Select(s => Parse(s, market, securityType));
         }
 
         /// <summary>
         /// Parses the specified line into a MapFileRow
         /// </summary>
-        public static MapFileRow Parse(string line)
+        public static MapFileRow Parse(string line, string market, SecurityType securityType)
         {
             var csv = line.Split(',');
             var primaryExchange = Exchange.UNKNOWN;
-            if (csv.Length == 3)
+            DataMappingMode? mappingMode = null;
+
+            if (csv.Length >= 3)
             {
-                primaryExchange = Exchanges.GetPrimaryExchange(Convert.ToChar(csv[2], CultureInfo.InvariantCulture));
+                primaryExchange = csv[2].GetPrimaryExchange(securityType, market);
+            }
+            if (csv.Length >= 4)
+            {
+                mappingMode = csv[3].ParseDataMappingMode();
             }
 
-            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], primaryExchange);
+            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], primaryExchange, mappingMode);
         }
 
         #region Equality members
@@ -108,7 +111,8 @@ namespace QuantConnect.Data.Auxiliary
             if (ReferenceEquals(this, other)) return true;
             return Date.Equals(other.Date) &&
                    string.Equals(MappedSymbol, other.MappedSymbol) &&
-                   string.Equals(PrimaryExchange, other.PrimaryExchange);
+                   string.Equals(PrimaryExchange, other.PrimaryExchange) &&
+                   DataMappingMode == other.DataMappingMode;
         }
 
         /// <summary>
@@ -139,6 +143,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 return (Date.GetHashCode() * 397) ^ 
                        (MappedSymbol != null ? MappedSymbol.GetHashCode() : 0) ^
+                       (DataMappingMode != null ? DataMappingMode.GetHashCode() : 0) ^
                        (PrimaryExchange.GetHashCode());
             }
         }
@@ -166,8 +171,21 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            var encodedExchange = PrimaryExchange == Exchange.UNKNOWN? string.Empty : $",{Convert.ToChar((byte) PrimaryExchange)}";
-            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}";
+            var encodedExchange = string.Empty;
+            if (PrimaryExchange == Exchange.UNKNOWN)
+            {
+                if (DataMappingMode != null)
+                {
+                    // be lazy, only add a comma if we have a mapping mode after
+                    encodedExchange = ",";
+                }
+            }
+            else
+            {
+                encodedExchange = $",{PrimaryExchange.Code}";
+            }
+            var mappingMode = DataMappingMode != null ? $",{(int)DataMappingMode}" : string.Empty;
+            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}{mappingMode}";
         }
 
         /// <summary>
@@ -176,8 +194,9 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>resulting string</returns>
         public override string ToString()
         {
-            var mainExchange = PrimaryExchange == Exchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange.ToString()}";
-            return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange;
+            var mainExchange = PrimaryExchange == Exchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange}";
+            var mappingMode = DataMappingMode != null ? $" - {DataMappingMode}" : string.Empty;
+            return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange + mappingMode;
         }
     }
 }

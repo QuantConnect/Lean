@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -473,6 +474,62 @@ namespace QuantConnect.Algorithm.CSharp
             return Time.Day == day && Time.Hour == hour && Time.Minute == minute;
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            Func<OrderTicket, bool> basicOrderTicketFilter = x => x.Symbol == symbol;
+
+            var filledOrders = Transactions.GetOrders(x => x.Status == OrderStatus.Filled);
+            var orderTickets = Transactions.GetOrderTickets(basicOrderTicketFilter);
+            var openOrders = Transactions.GetOpenOrders(x => x.Symbol == symbol);
+            var openOrderTickets = Transactions.GetOpenOrderTickets(basicOrderTicketFilter);
+            var remainingOpenOrders = Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter);
+
+            if (filledOrders.Count() != 8 || orderTickets.Count() != 10)
+            {
+                throw new Exception($"There were expected 8 filled orders and 10 order tickets");
+            }
+            if (openOrders.Count != 0 || openOrderTickets.Any())
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (remainingOpenOrders != 0m)
+            {
+                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+            }
+
+            var symbolOpenOrders = Transactions.GetOpenOrders(symbol).Count;
+            var symbolOpenOrdersTickets = Transactions.GetOpenOrderTickets(symbol).Count();
+            var symbolOpenOrdersRemainingQuantity = Transactions.GetOpenOrdersRemainingQuantity(symbol);
+
+            if (symbolOpenOrders != 0 || symbolOpenOrdersTickets != 0)
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (symbolOpenOrdersRemainingQuantity != 0)
+            {
+                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+            }
+
+            var defaultOrders = Transactions.GetOrders();
+            var defaultOrderTickets = Transactions.GetOrderTickets();
+            var defaultOpenOrders = Transactions.GetOpenOrders();
+            var defaultOpenOrderTickets = Transactions.GetOpenOrderTickets();
+            var defaultOpenOrdersRemaining = Transactions.GetOpenOrdersRemainingQuantity();
+
+            if (defaultOrders.Count() != 10 || defaultOrderTickets.Count() != 10)
+            {
+                throw new Exception($"There were expected 10 orders and 10 order tickets");
+            }
+            if (defaultOpenOrders.Count != 0 || defaultOpenOrderTickets.Any())
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (defaultOpenOrdersRemaining != 0m)
+            {
+                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -491,30 +548,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "8"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "91.836%"},
+            {"Compounding Annual Return", "92.027%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "0.836%"},
-            {"Sharpe Ratio", "12.924"},
-            {"Probabilistic Sharpe Ratio", "99.044%"},
+            {"Net Profit", "0.838%"},
+            {"Sharpe Ratio", "12.96"},
+            {"Probabilistic Sharpe Ratio", "99.089%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.247"},
-            {"Beta", "0.23"},
+            {"Alpha", "0.249"},
+            {"Beta", "0.229"},
             {"Annual Standard Deviation", "0.054"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-7.426"},
+            {"Information Ratio", "-7.418"},
             {"Tracking Error", "0.172"},
-            {"Treynor Ratio", "3.059"},
+            {"Treynor Ratio", "3.066"},
             {"Total Fees", "$8.00"},
             {"Estimated Strategy Capacity", "$48000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Fitness Score", "0.093"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "150.447"},
-            {"Return Over Maximum Drawdown", "1180.131"},
+            {"Sortino Ratio", "150.877"},
+            {"Return Over Maximum Drawdown", "1183.499"},
             {"Portfolio Turnover", "0.093"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -529,7 +586,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "11d64052951ca2d3abf586c88d41a97a"}
+            {"OrderListHash", "3f7c620ad37d096af1af0ca341fbbe48"}
         };
     }
 }

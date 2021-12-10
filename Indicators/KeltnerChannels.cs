@@ -68,7 +68,7 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = period;
 
             //Initialise ATR and SMA
-            AverageTrueRange = new AverageTrueRange(name + "_AverageTrueRange", period, MovingAverageType.Simple);
+            AverageTrueRange = new AverageTrueRange(name + "_AverageTrueRange", period, movingAverageType);
             MiddleBand = movingAverageType.AsIndicator(name + "_MiddleBand", period);
 
             //Compute Lower Band
@@ -118,7 +118,7 @@ namespace QuantConnect.Indicators
             AverageTrueRange.Update(input);
 
             var typicalPrice = (input.High + input.Low + input.Close)/3m;
-            MiddleBand.Update(input.Time, typicalPrice);
+            MiddleBand.Update(input.EndTime, typicalPrice);
 
             // poke the upper/lower bands, they actually don't use the input, they compute
             // based on the ATR and the middle band

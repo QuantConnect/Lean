@@ -55,6 +55,7 @@ using NodaTime.TimeZones;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Exceptions;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
@@ -151,6 +152,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to deserialize a json array into a list also handling single json values
+        /// </summary>
+        /// <param name="jsonArray">The value to deserialize</param>
+        public static List<string> DeserializeList(this string jsonArray)
+        {
+            List<string> result = new();
+            try
+            {
+                result = JsonConvert.DeserializeObject<List<string>>(jsonArray);
+            }
+            catch(JsonReaderException)
+            {
+                result.Add(jsonArray);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Helper method to download a provided url as a string
         /// </summary>
         /// <param name="url">The url to download data from</param>
@@ -171,29 +191,29 @@ namespace QuantConnect
                 catch (WebException ex)
                 {
                     Log.Error(ex, $"DownloadData(): failed for: '{url}'");
-                    // If server returned an error most likely on this day there is no data we are going to the next cycle
                     return null;
                 }
             }
         }
 
         /// <summary>
-        /// Helper method to create an order request to liquidate a delisted asset
+        /// Helper method to download a provided url as a byte array
         /// </summary>
-        public static SubmitOrderRequest CreateDelistedSecurityOrderRequest(this Security security, DateTime utcTime)
+        /// <param name="url">The url to download data from</param>
+        public static byte[] DownloadByteArray(this string url)
         {
-            var orderType = OrderType.Market;
-            var tag = "Liquidate from delisting";
-            if (security.Type.IsOption())
+            using (var wc = new HttpClient())
             {
-                // tx handler will determine auto exercise/assignment
-                tag = "Option Expired";
-                orderType = OrderType.OptionExercise;
+                try
+                {
+                    return wc.GetByteArrayAsync(url).Result;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"DownloadByteArray(): failed for: '{url}'");
+                    return null;
+                }
             }
-
-            // submit an order to liquidate on market close or exercise (for options)
-            return new SubmitOrderRequest(orderType, security.Type, security.Symbol,
-                -security.Holdings.Quantity, 0, 0, utcTime, tag);
         }
 
         /// <summary>
@@ -850,6 +870,24 @@ namespace QuantConnect
                 alreadyUpper = char.IsUpper(data[i]);
             }
             return alreadyUpper ? data : data.ToUpperInvariant();
+        }
+
+        /// <summary>
+        /// Lazy string to lower implementation.
+        /// Will first verify the string is not already lower and avoid
+        /// the call to <see cref="string.ToLowerInvariant()"/> if possible.
+        /// </summary>
+        /// <param name="data">The string to lower</param>
+        /// <returns>The lower string</returns>
+        public static string LazyToLower(this string data)
+        {
+            // for performance only call to lower if required
+            var alreadyLower = true;
+            for (int i = 0; i < data.Length && alreadyLower; i++)
+            {
+                alreadyLower = char.IsLower(data[i]);
+            }
+            return alreadyLower ? data : data.ToLowerInvariant();
         }
 
         /// <summary>
@@ -2097,6 +2135,44 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts the specified string to its corresponding OptionStyle
+        /// </summary>
+        /// <remarks>This method provides faster performance than enum parse</remarks>
+        /// <param name="optionStyle">The OptionStyle string value</param>
+        /// <returns>The OptionStyle value</returns>
+        public static OptionStyle ParseOptionStyle(this string optionStyle)
+        {
+            switch (optionStyle.LazyToLower())
+            {
+                case "american":
+                    return OptionStyle.American;
+                case "european":
+                    return OptionStyle.European;
+                default:
+                    throw new ArgumentException($"Unexpected OptionStyle: {optionStyle}");
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified string to its corresponding OptionRight
+        /// </summary>
+        /// <remarks>This method provides faster performance than enum parse</remarks>
+        /// <param name="optionRight">The optionRight string value</param>
+        /// <returns>The OptionRight value</returns>
+        public static OptionRight ParseOptionRight(this string optionRight)
+        {
+            switch (optionRight.LazyToLower())
+            {
+                case "call":
+                    return OptionRight.Call;
+                case "put":
+                    return OptionRight.Put;
+                default:
+                    throw new ArgumentException($"Unexpected OptionRight: {optionRight}");
+            }
+        }
+
+        /// <summary>
         /// Converts the specified <paramref name="optionRight"/> value to its corresponding string representation
         /// </summary>
         /// <remarks>This method provides faster performance than enum <see cref="Object.ToString"/></remarks>
@@ -2113,6 +2189,72 @@ namespace QuantConnect
                 default:
                     // just in case
                     return optionRight.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified <paramref name="optionRight"/> value to its corresponding lower-case string representation
+        /// </summary>
+        /// <remarks>This method provides faster performance than <see cref="ToLower"/></remarks>
+        /// <param name="optionRight">The optionRight value</param>
+        /// <returns>A lower case string representation of the specified OptionRight value</returns>
+        public static string OptionRightToLower(this OptionRight optionRight)
+        {
+            switch (optionRight)
+            {
+                case OptionRight.Call:
+                    return "call";
+                case OptionRight.Put:
+                    return "put";
+                default:
+                    throw new ArgumentException($"Unexpected OptionRight: {optionRight}");
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified <paramref name="optionStyle"/> value to its corresponding lower-case string representation
+        /// </summary>
+        /// <remarks>This method provides faster performance than <see cref="ToLower"/></remarks>
+        /// <param name="optionStyle">The optionStyle value</param>
+        /// <returns>A lower case string representation of the specified optionStyle value</returns>
+        public static string OptionStyleToLower(this OptionStyle optionStyle)
+        {
+            switch (optionStyle)
+            {
+                case OptionStyle.American:
+                    return "american";
+                case OptionStyle.European:
+                    return "european";
+                default:
+                    throw new ArgumentException($"Unexpected OptionStyle: {optionStyle}");
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified string to its corresponding DataMappingMode
+        /// </summary>
+        /// <remarks>This method provides faster performance than enum parse</remarks>
+        /// <param name="dataMappingMode">The dataMappingMode string value</param>
+        /// <returns>The DataMappingMode value</returns>
+        public static DataMappingMode? ParseDataMappingMode(this string dataMappingMode)
+        {
+            if (string.IsNullOrEmpty(dataMappingMode))
+            {
+                return null;
+            }
+            switch (dataMappingMode.LazyToLower())
+            {
+                case "0":
+                case "lasttradingday":
+                    return DataMappingMode.LastTradingDay;
+                case "1":
+                case "firstdaymonth":
+                    return DataMappingMode.FirstDayMonth;
+                case "2":
+                case "openinterest":
+                    return DataMappingMode.OpenInterest;
+                default:
+                    throw new ArgumentException($"Unexpected DataMappingMode: {dataMappingMode}");
             }
         }
 
@@ -2799,27 +2941,18 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Normalizes the specified price based on the DataNormalizationMode
+        /// Helper method to determine symbol for a live subscription
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static decimal GetNormalizedPrice(this SubscriptionDataConfig config, decimal price)
+        /// <remarks>Useful for continuous futures where we subscribe to the underlying</remarks>
+        public static bool TryGetLiveSubscriptionSymbol(this Symbol symbol, out Symbol mapped)
         {
-            switch (config.DataNormalizationMode)
+            mapped = null;
+            if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical() && symbol.HasUnderlying)
             {
-                case DataNormalizationMode.Raw:
-                    return price;
-
-                // the price scale factor will be set accordingly based on the mode in update scale factors
-                case DataNormalizationMode.Adjusted:
-                case DataNormalizationMode.SplitAdjusted:
-                    return price * config.PriceScaleFactor;
-
-                case DataNormalizationMode.TotalReturn:
-                    return (price * config.PriceScaleFactor) + config.SumOfDividends;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
+                mapped = symbol.Underlying;
+                return true;
             }
+            return false;
         }
 
         /// <summary>
@@ -2833,7 +2966,7 @@ namespace QuantConnect
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Future:
-                    return symbol.ID.Date;
+                    return symbol.ID.Date == SecurityIdentifier.DefaultDate ? Time.EndOfTime : symbol.ID.Date;
                 case SecurityType.Option:
                     return OptionSymbol.GetLastDayOfTrading(symbol);
                 case SecurityType.FutureOption:
@@ -2856,39 +2989,94 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Returns the delisted liquidation time for a given delisting warning and exchange hours
+        /// Helper method that will return a back month, with future expiration, future contract based on the given offset
         /// </summary>
-        /// <param name="delisting">The delisting warning event</param>
-        /// <param name="exchangeHours">The securities exchange hours to use</param>
-        /// <returns>The securities liquidation time</returns>
-        public static DateTime GetLiquidationTime(this Delisting delisting, SecurityExchangeHours exchangeHours)
+        /// <param name="symbol">The none canonical future symbol</param>
+        /// <param name="offset">The quantity of contracts to move into the future expiration chain</param>
+        /// <returns>A new future expiration symbol instance</returns>
+        public static Symbol AdjustSymbolByOffset(this Symbol symbol, uint offset)
         {
-            if (delisting.Type != DelistingType.Warning)
+            if (symbol.SecurityType != SecurityType.Future || symbol.IsCanonical())
             {
-                throw new ArgumentException("GetLiquidationTime can only be called with the liquidate warning event", nameof(delisting));
+                throw new InvalidOperationException("Adjusting a symbol by an offset is currently only supported for non canonical futures");
             }
 
-            var delistingWarning = delisting.Time.Date;
-
-            // by default liquidation/exercise will happen a few min before the end of the last trading day
-            var liquidationTime = delistingWarning.AddDays(1).Add(DelistingMarketCloseOffsetSpan);
-
-            // if the market is open today (most probably should), we will determine the market close and liquidate a few min before instead
-            if (exchangeHours.IsDateOpen(delistingWarning))
+            var expiration = symbol.ID.Date;
+            for (var i = 0; i < offset; i++)
             {
-                var marketOpen = delistingWarning;
-                if (!exchangeHours.IsOpen(marketOpen, false))
+                var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
+                DateTime newExpiration;
+                // for the current expiration we add a month to get the next one
+                var monthOffset = 0;
+                do
                 {
-                    // if the market isn't open at 0:00 we get next market open
-                    marketOpen = exchangeHours.GetNextMarketOpen(delistingWarning, false);
-                }
+                    monthOffset++;
+                    newExpiration = expiryFunction(expiration.AddMonths(monthOffset)).Date;
+                } while (newExpiration <= expiration);
 
-                // using current market open we will get next market close which should be today and we will liquidate a few min before
-                liquidationTime = exchangeHours.GetNextMarketClose(marketOpen, false)
-                    .Add(DelistingMarketCloseOffsetSpan);
+                expiration = newExpiration;
+                symbol = Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, newExpiration);
             }
 
-            return liquidationTime;
+            return symbol;
+        }
+
+        /// <summary>
+        /// Helper method to unsubscribe a given configuration, handling any required mapping
+        /// </summary>
+        public static void UnsubscribeWithMapping(this IDataQueueHandler dataQueueHandler, SubscriptionDataConfig dataConfig)
+        {
+            if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
+            {
+                dataConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol, mappedConfig: true);
+            }
+            dataQueueHandler.Unsubscribe(dataConfig);
+        }
+
+        /// <summary>
+        /// Helper method to subscribe a given configuration, handling any required mapping
+        /// </summary>
+        public static IEnumerator<BaseData> SubscribeWithMapping(this IDataQueueHandler dataQueueHandler,
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler,
+            out SubscriptionDataConfig subscribedConfig)
+        {
+            subscribedConfig = dataConfig;
+            if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
+            {
+                subscribedConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol, mappedConfig: true);
+            }
+            var enumerator = dataQueueHandler.Subscribe(subscribedConfig, newDataAvailableHandler);
+            return enumerator ?? Enumerable.Empty<BaseData>().GetEnumerator();
+        }
+
+        /// <summary>
+        /// Helper method to stream read lines from a file
+        /// </summary>
+        /// <param name="dataProvider">The data provider to use</param>
+        /// <param name="file">The file path to read from</param>
+        /// <returns>Enumeration of lines in file</returns>
+        public static IEnumerable<string> ReadLines(this IDataProvider dataProvider, string file)
+        {
+            var stream = dataProvider.Fetch(file);
+            if (stream == null)
+            {
+                yield break;
+            }
+
+            using (var streamReader = new StreamReader(stream))
+            {
+                string line;
+                do
+                {
+                    line = streamReader.ReadLine();
+                    if (line != null)
+                    {
+                        yield return line;
+                    }
+                }
+                while (line != null);
+            }
         }
 
         /// <summary>
@@ -2992,22 +3180,51 @@ namespace QuantConnect
         /// Normalize prices based on configuration
         /// </summary>
         /// <param name="data">Data to be normalized</param>
-        /// <param name="config">Price scale</param>
-        /// <returns></returns>
-        public static BaseData Normalize(this BaseData data, SubscriptionDataConfig config)
+        /// <param name="factor">Price scale</param>
+        /// <param name="normalizationMode">The price scaling normalization mode</param>
+        /// <param name="sumOfDividends">The current dividend sum</param>
+        /// <returns>The provided data point adjusted</returns>
+        public static BaseData Normalize(this BaseData data, decimal factor, DataNormalizationMode normalizationMode, decimal sumOfDividends)
         {
-            return data?.Scale(p => config.GetNormalizedPrice(p), 1/config.PriceScaleFactor);
+            switch (normalizationMode)
+            {
+                case DataNormalizationMode.Adjusted:
+                case DataNormalizationMode.SplitAdjusted:
+                    return data?.Scale(p => p * factor, 1/factor);
+                case DataNormalizationMode.TotalReturn:
+                    return data.Scale(p => p * factor + sumOfDividends, 1/factor);
+
+                case DataNormalizationMode.BackwardsRatio:
+                    return data.Scale(p => p * factor, 1);
+                case DataNormalizationMode.BackwardsPanamaCanal:
+                    return data.Scale(p => p + factor, 1);
+                case DataNormalizationMode.ForwardPanamaCanal:
+                    return data.Scale(p => p + factor, 1);
+
+                case DataNormalizationMode.Raw:
+                default:
+                    return data;
+            }
         }
 
         /// <summary>
-        /// Adjust prices based on price scale
+        /// Helper method to determine the right data normalization mode to use by default
         /// </summary>
-        /// <param name="data">Data to be adjusted</param>
-        /// <param name="scale">Price scale</param>
-        /// <returns></returns>
-        public static BaseData Adjust(this BaseData data, decimal scale)
+        public static DataNormalizationMode GetUniverseNormalizationModeOrDefault(this UniverseSettings universeSettings, SecurityType securityType)
         {
-            return data?.Scale(p => p * scale, 1/scale);
+            switch (securityType)
+            {
+                case SecurityType.Future:
+                    if (universeSettings.DataNormalizationMode is DataNormalizationMode.BackwardsRatio
+                        or DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal
+                        or DataNormalizationMode.Raw)
+                    {
+                        return universeSettings.DataNormalizationMode;
+                    }
+                    return DataNormalizationMode.BackwardsRatio;
+                default:
+                    return universeSettings.DataNormalizationMode;
+            }
         }
 
         /// <summary>
@@ -3196,7 +3413,9 @@ namespace QuantConnect
                 request.IsCustomData,
                 request.TickType,
                 isFilteredSubscription,
-                request.DataNormalizationMode
+                request.DataNormalizationMode,
+                request.DataMappingMode,
+                request.ContractDepthOffset
             );
         }
 
@@ -3225,7 +3444,7 @@ namespace QuantConnect
             }
 
             // Check our config type first to be lazy about using data.GetType() unless required
-            var configTypeFilter = (config.Type == typeof(TradeBar) ||
+            var configTypeFilter = (config.Type == typeof(TradeBar) || config.Type == typeof(ZipEntryName) ||
                 config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
 
             if (!configTypeFilter)
@@ -3360,28 +3579,18 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Read all lines from a stream reader
-        /// </summary>
-        /// <param name="reader">Stream reader to read from</param>
-        /// <returns>Enumerable of lines in stream</returns>
-        public static IEnumerable<string> ReadAllLines(this StreamReader reader)
-        {
-            string line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                yield return line;
-            }
-        }
-
-        /// <summary>
         /// Determine if this SecurityType requires mapping
         /// </summary>
-        /// <param name="securityType">Type to check</param>
+        /// <param name="symbol">Type to check</param>
         /// <returns>True if it needs to be mapped</returns>
-        public static bool RequiresMapping(this SecurityType securityType)
+        public static bool RequiresMapping(this Symbol symbol)
         {
-            switch (securityType)
+            switch (symbol.SecurityType)
             {
+                case SecurityType.Base:
+                    return symbol.HasUnderlying && symbol.Underlying.RequiresMapping();
+                case SecurityType.Future:
+                    return symbol.IsCanonical();
                 case SecurityType.Equity:
                 case SecurityType.Option:
                     return true;

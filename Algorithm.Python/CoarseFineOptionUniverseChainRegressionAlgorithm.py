@@ -22,7 +22,7 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2014,6,5)  #Set Start Date
+        self.SetStartDate(2014,6,4)  #Set Start Date
         self.SetEndDate(2014,6,6)    #Set End Date
 
         self.UniverseSettings.Resolution = Resolution.Minute

@@ -51,9 +51,8 @@ namespace QuantConnect.ToolBox.BinanceDownloader
                     foreach (var ticker in tickers)
                     {
                         // Download the data
-                        var startDate = fromDate;
                         var symbol = downloader.GetSymbol(ticker);
-                        var data = downloader.Get(symbol, castResolution, fromDate, toDate);
+                        var data = downloader.Get(new DataDownloaderGetParameters(symbol, castResolution, fromDate, toDate));
                         var bars = data.Cast<TradeBar>().ToList();
 
                         // Save the data (single resolution)
@@ -65,7 +64,7 @@ namespace QuantConnect.ToolBox.BinanceDownloader
                             // Save the data (other resolutions)
                             foreach (var res in new[] { Resolution.Hour, Resolution.Daily })
                             {
-                                var resData = downloader.AggregateBars(symbol, bars, res.ToTimeSpan());
+                                var resData = LeanData.AggregateTradeBars(bars, symbol, res.ToTimeSpan());
 
                                 writer = new LeanDataWriter(res, symbol, dataDirectory);
                                 writer.Write(resData);

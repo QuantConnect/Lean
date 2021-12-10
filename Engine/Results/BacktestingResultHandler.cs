@@ -399,7 +399,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Algorithm = algorithm;
             StartingPortfolioValue = startingPortfolioValue;
-            PreviousUtcSampleTime = Algorithm.UtcTime;
             DailyPortfolioValue = StartingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
             AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);

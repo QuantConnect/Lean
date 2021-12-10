@@ -119,7 +119,7 @@ RUN pip install --no-cache-dir      \
     gym==0.17.2                     \
     ipywidgets==7.5.1               \
     deap==1.3.1                     \
-    cvxpy==1.0.31                   \
+    cvxpy==1.1.15                   \
     pykalman==0.9.5                 \
     pyportfolioopt==1.2.2           \
     pyramid-arima==0.9.0            \

@@ -66,7 +66,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                     var securityType = downloader.GetSecurityType(ticker);
                     var symbol = Symbol.Create(ticker, securityType, market);
 
-                    var data = downloader.Get(symbol, castResolution, startDate, endDate);
+                    var data = downloader.Get(new DataDownloaderGetParameters(symbol, castResolution, startDate, endDate, TickType.Quote));
 
                     if (allResolutions)
                     {
@@ -79,7 +79,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                         // Save the data (other resolutions)
                         foreach (var res in new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily })
                         {
-                            var resData = downloader.AggregateBars(symbol, bars, res.ToTimeSpan());
+                            var resData = LeanData.AggregateQuoteBars(bars, symbol, res.ToTimeSpan());
 
                             writer = new LeanDataWriter(res, symbol, dataDirectory);
                             writer.Write(resData);

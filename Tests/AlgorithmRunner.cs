@@ -275,7 +275,8 @@ namespace QuantConnect.Tests
             public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 requests = requests.ToList();
-                if (requests.Any(r => RegressionSetupHandlerWrapper.Algorithm.UniverseManager.ContainsKey(r.Symbol)))
+                if (requests.Any(r => RegressionSetupHandlerWrapper.Algorithm.UniverseManager.ContainsKey(r.Symbol)
+                    && (r.Symbol.SecurityType != SecurityType.Future || !r.Symbol.IsCanonical())))
                 {
                     throw new Exception("History requests should not be submitted for universe symbols");
                 }

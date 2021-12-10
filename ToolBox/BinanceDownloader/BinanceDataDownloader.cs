@@ -48,13 +48,21 @@ namespace QuantConnect.ToolBox.BinanceDownloader
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <param name="dataDownloaderGetParameters">model class for passing in parameters for historical data</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
+            var symbol = dataDownloaderGetParameters.Symbol;
+            var resolution = dataDownloaderGetParameters.Resolution;
+            var startUtc = dataDownloaderGetParameters.StartUtc;
+            var endUtc = dataDownloaderGetParameters.EndUtc;
+            var tickType = dataDownloaderGetParameters.TickType;
+
+            if (tickType != TickType.Trade)
+            {
+                return Enumerable.Empty<BaseData>();
+            }
+
             if (resolution == Resolution.Tick || resolution == Resolution.Second)
             {
                 throw new ArgumentException($"Resolution not available: {resolution}");
@@ -95,35 +103,6 @@ namespace QuantConnect.ToolBox.BinanceDownloader
         internal Symbol GetSymbol(string ticker)
         {
             return _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Binance);
-        }
-
-        /// <summary>
-        /// Aggregates a list of minute bars at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="bars"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal IEnumerable<TradeBar> AggregateBars(Symbol symbol, IEnumerable<TradeBar> bars, TimeSpan resolution)
-        {
-            return
-                (from b in bars
-                 group b by b.Time.RoundDown(resolution)
-                     into g
-                 select new TradeBar
-                 {
-                     Symbol = symbol,
-                     Time = g.Key,
-                     Open = g.First().Open,
-                     High = g.Max(b => b.High),
-                     Low = g.Min(b => b.Low),
-                     Close = g.Last().Close,
-                     Volume = g.Sum(b => b.Volume),
-                     Value = g.Last().Close,
-                     DataType = MarketDataType.TradeBar,
-                     Period = resolution,
-                     EndTime = g.Key.AddMilliseconds(resolution.TotalMilliseconds)
-                 });
         }
 
         public void Dispose()

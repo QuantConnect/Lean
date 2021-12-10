@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Util
                 Volume = 10000
             };
 
-            var adjustedTb = tb.Clone(tb.IsFillForward).Adjust(_factor);
+            var adjustedTb = tb.Clone(tb.IsFillForward).Normalize(_factor, DataNormalizationMode.Adjusted, 0);
 
             Assert.AreEqual(tb.Open * _factor, (adjustedTb as TradeBar).Open);
             Assert.AreEqual(tb.High * _factor, (adjustedTb as TradeBar).High);
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Util
                 Quantity = 10
             };
 
-            var adjustedTick = tick.Clone(tick.IsFillForward).Adjust(_factor);
+            var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_factor, DataNormalizationMode.Adjusted, 0);
 
             Assert.AreEqual(tick.Value * _factor, (adjustedTick as Tick).Value);
             Assert.AreEqual(tick.Quantity / _factor, (adjustedTick as Tick).Quantity);
@@ -100,7 +100,7 @@ namespace QuantConnect.Tests.Common.Util
                 BidSize = 10
             };
 
-            var adjustedTick = tick.Clone(tick.IsFillForward).Adjust(_factor);
+            var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_factor, DataNormalizationMode.Adjusted, 0);
 
             Assert.AreEqual(tick.AskPrice * _factor, (adjustedTick as Tick).AskPrice);
             Assert.AreEqual(tick.BidPrice * _factor, (adjustedTick as Tick).BidPrice);
@@ -119,7 +119,7 @@ namespace QuantConnect.Tests.Common.Util
                 new Bar(10, 10, 10, 10),
                 100);
 
-            var adjustedQb = qb.Clone(qb.IsFillForward).Adjust(_factor);
+            var adjustedQb = qb.Clone(qb.IsFillForward).Normalize(_factor, DataNormalizationMode.Adjusted, 0);
 
             Assert.AreEqual(qb.Value, qb.Close);
 
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Common.Util
                 Volume = 1000
             };
 
-            var adjustedTb = tb.Clone(tb.IsFillForward).Normalize(_config);
+            var adjustedTb = tb.Clone(tb.IsFillForward).Normalize(_config.PriceScaleFactor, _config.DataNormalizationMode, _config.SumOfDividends);
 
             Assert.AreEqual(tb.Open * _factor, (adjustedTb as TradeBar).Open);
             Assert.AreEqual(tb.High * _factor, (adjustedTb as TradeBar).High);
@@ -172,7 +172,7 @@ namespace QuantConnect.Tests.Common.Util
                 Quantity = 10
             };
 
-            var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_config);
+            var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_config.PriceScaleFactor, _config.DataNormalizationMode, _config.SumOfDividends);
 
             Assert.AreEqual(tick.Value * _factor, (adjustedTick as Tick).Value);
             Assert.AreEqual(tick.Quantity / _factor, (adjustedTick as Tick).Quantity);
@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.Common.Util
                 BidSize = 10
             };
 
-            var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_config);
+            var adjustedTick = tick.Clone(tick.IsFillForward).Normalize(_config.PriceScaleFactor, _config.DataNormalizationMode, _config.SumOfDividends);
 
             Assert.AreEqual(tick.AskPrice * _factor, (adjustedTick as Tick).AskPrice);
             Assert.AreEqual(tick.BidPrice * _factor, (adjustedTick as Tick).BidPrice);
@@ -211,7 +211,7 @@ namespace QuantConnect.Tests.Common.Util
                 new Bar(10, 10, 10, 10),
                 100);
 
-            var adjustedQb = qb.Clone(qb.IsFillForward).Normalize(_config);
+            var adjustedQb = qb.Clone(qb.IsFillForward).Normalize(_config.PriceScaleFactor, _config.DataNormalizationMode, _config.SumOfDividends);
 
             Assert.AreEqual(qb.Value, qb.Close);
 

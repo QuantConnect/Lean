@@ -210,6 +210,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             get
             {
+                var futureSymbolUsingCents = Symbols.CreateFutureSymbol("LE", new DateTime(2021, 12, 31));
+                var futureOptionSymbolUsingCents = Symbols.CreateFutureOptionSymbol(futureSymbolUsingCents, OptionRight.Call, 1.23m, new DateTime(2021, 12, 3));
+
                 var futureSymbol = Symbol.CreateFuture("NQ", Market.CME, new DateTime(2021, 9, 17));
                 var optionSymbol = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 145, new DateTime(2021, 8, 20));
 
@@ -222,6 +225,13 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     // 30 min RTH + 30 min ETH
                     new TestCaseData(Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork,
                         new DateTime(2021, 8, 6, 10, 0, 0), TimeSpan.FromHours(1), true, 3600),
+
+                    // daily
+                    new TestCaseData(futureSymbolUsingCents, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork,
+                        new DateTime(2021, 9, 20, 0, 0, 0), TimeSpan.FromDays(10), true, 6),
+                    // hourly
+                    new TestCaseData(futureOptionSymbolUsingCents, Resolution.Hour, TimeZones.NewYork, TimeZones.NewYork,
+                        new DateTime(2021, 9, 20, 0, 0, 0), TimeSpan.FromDays(10), true, 11),
 
                     // 60 min
                     new TestCaseData(futureSymbol, Resolution.Second, TimeZones.NewYork, TimeZones.Utc,

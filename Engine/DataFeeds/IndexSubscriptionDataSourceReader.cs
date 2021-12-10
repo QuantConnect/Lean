@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -34,12 +34,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _date;
         private IDataProvider _dataProvider;
         private readonly IndexedBaseData _factory;
-
-        /// <summary>
-        /// Event fired when the specified source is considered invalid, this may
-        /// be from a missing file or failure to download a remote source
-        /// </summary>
-        public override event EventHandler<InvalidSourceEventArgs> InvalidSource;
 
         /// <summary>
         /// Creates a new instance of this <see cref="ISubscriptionDataSourceReader"/>
@@ -120,17 +114,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Event invocator for the <see cref="InvalidSource"/> event
-        /// </summary>
-        /// <param name="source">The <see cref="SubscriptionDataSource"/> that was invalid</param>
-        /// <param name="exception">The exception if one was raised, otherwise null</param>
-        private void OnInvalidSource(SubscriptionDataSource source, Exception exception)
-        {
-            var handler = InvalidSource;
-            if (handler != null) handler(this, new InvalidSourceEventArgs(source, exception));
         }
     }
 }

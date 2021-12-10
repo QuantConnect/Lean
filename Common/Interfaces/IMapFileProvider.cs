@@ -35,8 +35,8 @@ namespace QuantConnect.Interfaces
         /// Gets a <see cref="MapFileResolver"/> representing all the map
         /// files for the specified market
         /// </summary>
-        /// <param name="market">The equity market, for example, 'usa'</param>
+        /// <param name="auxiliaryDataKey">Key used to fetch a map file resolver. Specifying market and security type</param>
         /// <returns>A <see cref="MapFileResolver"/> containing all map files for the specified market</returns>
-        MapFileResolver Get(string market);
+        MapFileResolver Get(AuxiliaryDataKey auxiliaryDataKey);
     }
 }

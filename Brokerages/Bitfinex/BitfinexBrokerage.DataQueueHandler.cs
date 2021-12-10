@@ -481,17 +481,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             try
             {
-                lock (TickLocker)
+                EmitTick(new Tick
                 {
-                    EmitTick(new Tick
-                    {
-                        Value = price,
-                        Time = time,
-                        Symbol = symbol,
-                        TickType = TickType.Trade,
-                        Quantity = Math.Abs(amount)
-                    });
-                }
+                    Value = price,
+                    Time = time,
+                    Symbol = symbol,
+                    TickType = TickType.Trade,
+                    Quantity = Math.Abs(amount)
+                });
             }
             catch (Exception e)
             {
@@ -502,20 +499,17 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
-            lock (TickLocker)
+            EmitTick(new Tick
             {
-                EmitTick(new Tick
-                {
-                    AskPrice = askPrice,
-                    BidPrice = bidPrice,
-                    Value = (askPrice + bidPrice) / 2m,
-                    Time = DateTime.UtcNow,
-                    Symbol = symbol,
-                    TickType = TickType.Quote,
-                    AskSize = Math.Abs(askSize),
-                    BidSize = Math.Abs(bidSize)
-                });
-            }
+                AskPrice = askPrice,
+                BidPrice = bidPrice,
+                Value = (askPrice + bidPrice) / 2m,
+                Time = DateTime.UtcNow,
+                Symbol = symbol,
+                TickType = TickType.Quote,
+                AskSize = Math.Abs(askSize),
+                BidSize = Math.Abs(bidSize)
+            });
         }
 
         private void OnBestBidAskUpdated(object sender, BestBidAskUpdatedEventArgs e)

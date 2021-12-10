@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -26,8 +26,8 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class PivotPointsHighLow : IndicatorBase<IBaseDataBar>, IIndicatorWarmUpPeriodProvider
     {
-        private readonly int _lengthHigh;
-        private readonly int _lengthLow;
+        private readonly int _surroundingBarsCountForHighPoint;
+        private readonly int _surroundingBarsCountForLowPoint;
         private readonly RollingWindow<IBaseDataBar> _windowHighs;
         private readonly RollingWindow<IBaseDataBar> _windowLows;
         // Stores information of that last N pivot points
@@ -46,40 +46,42 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod { get; }
+        public int WarmUpPeriod { get; protected set; }
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator with an equal high and low length
         /// </summary>
-        /// <param name="length">The length parameter here defines the number of surround bars that we compare against the current bar high and lows for the max/min </param>
+        /// <param name="surroundingBarsCount">The length parameter here defines the number of surrounding bars that we compare against the current bar high and lows for the max/min </param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(int length, int lastStoredValues = 100)
-            : this($"PivotPointsHighLow({length})", length, length, lastStoredValues)
+        public PivotPointsHighLow(int surroundingBarsCount, int lastStoredValues = 100)
+            : this($"PivotPointsHighLow({surroundingBarsCount})", surroundingBarsCount, surroundingBarsCount, lastStoredValues)
         { }
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
         /// </summary>
-        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
-        /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
+        /// <param name="surroundingBarsCountForHighPoint">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
+        /// <param name="surroundingBarsCountForLowPoint">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(int lengthHigh, int lengthLow, int lastStoredValues = 100)
-            : this($"PivotPointsHighLow({lengthHigh},{lengthLow})", lengthHigh, lengthLow, lastStoredValues)
+        public PivotPointsHighLow(int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100)
+            : this($"PivotPointsHighLow({surroundingBarsCountForHighPoint},{surroundingBarsCountForLowPoint})", surroundingBarsCountForHighPoint, surroundingBarsCountForLowPoint, lastStoredValues)
         { }
+
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
         /// </summary>
         /// <param name="name">The name of an indicator</param>
-        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
-        /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
+        /// <param name="surroundingBarsCountForHighPoint">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
+        /// <param name="surroundingBarsCountForLowPoint">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(string name, int lengthHigh, int lengthLow, int lastStoredValues = 100) : base(name)
+        public PivotPointsHighLow(string name, int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100)
+            : base(name)
         {
-            _lengthHigh = lengthHigh;
-            _lengthLow = lengthLow;
-            _windowHighs = new RollingWindow<IBaseDataBar>(2 * lengthHigh + 1);
-            _windowLows = new RollingWindow<IBaseDataBar>(2 * _lengthLow + 1);
+            _surroundingBarsCountForHighPoint = surroundingBarsCountForHighPoint;
+            _surroundingBarsCountForLowPoint = surroundingBarsCountForLowPoint;
+            _windowHighs = new RollingWindow<IBaseDataBar>(2 * surroundingBarsCountForHighPoint + 1);
+            _windowLows = new RollingWindow<IBaseDataBar>(2 * _surroundingBarsCountForLowPoint + 1);
             _windowPivotPoints = new RollingWindow<PivotPoint>(lastStoredValues);
             WarmUpPeriod = Math.Max(_windowHighs.Size, _windowLows.Size);
         }
@@ -94,65 +96,104 @@ namespace QuantConnect.Indicators
             _windowHighs.Add(input);
             _windowLows.Add(input);
 
-            PivotPoint high = null, low = null;
+            PivotPoint highPoint = null, lowPoint = null;
 
             if (_windowHighs.IsReady)
             {
-                var isHigh = true;
-                var middlePoint = _windowHighs[_lengthHigh];
-                for (var k = 0; k < _windowHighs.Size && isHigh; k++)
-                {
-                    // Skip the middle point
-                    if (k == _lengthHigh)
-                    {
-                        continue;
-                    }
-
-                    // Check if current high is below middle point high
-                    isHigh = _windowHighs[k].High < middlePoint.High;
-                }
-
-                if (isHigh)
-                {
-                    high = new PivotPoint(PivotPointType.High, middlePoint.High, middlePoint.EndTime);
-                }
+                highPoint = FindNextHighPivotPoint(_windowHighs, _surroundingBarsCountForHighPoint);
             }
 
             if (_windowLows.IsReady)
             {
-                var isLow = true;
-                var middlePoint = _windowLows[_lengthLow];
-                for (var k = 0; k < _windowLows.Size && isLow; k++)
-                {
-                    if (k == _lengthLow)
-                    {
-                        continue;
-                    }
-
-                    isLow = _windowLows[k].Low > middlePoint.Low;
-                }
-
-                if (isLow)
-                {
-                    low = new PivotPoint(PivotPointType.Low, middlePoint.Low, middlePoint.EndTime);
-                }
+                lowPoint = FindNextLowPivotPoint(_windowLows, _surroundingBarsCountForLowPoint);
             }
 
-            if (high != null)
+            OnNewPivotPointFormed(highPoint);
+            OnNewPivotPointFormed(lowPoint);
+
+            return ConvertToComputedValue(highPoint, lowPoint);
+        }
+
+        /// <summary>
+        /// Looks for the next low pivot point.
+        /// </summary>
+        /// <param name="windowLows">rolling window that tracks the lows</param>
+        /// <param name="midPointIndexOrSurroundingBarsCount">The midpoint index or surrounding bars count for lows</param>
+        /// <returns>pivot point if found else null</returns>
+        protected virtual PivotPoint FindNextLowPivotPoint(RollingWindow<IBaseDataBar> windowLows, int midPointIndexOrSurroundingBarsCount)
+        {
+            var isLow = true;
+            var middlePoint = windowLows[midPointIndexOrSurroundingBarsCount];
+            for (var k = 0; k < windowLows.Size && isLow; k++)
             {
-                OnNewPivotPointFormed(high);
-                if (low != null)
+                if (k == midPointIndexOrSurroundingBarsCount)
+                {
+                    continue;
+                }
+
+                isLow = windowLows[k].Low > middlePoint.Low;
+            }
+
+            PivotPoint low = null;
+            if (isLow)
+            {
+                low = new PivotPoint(PivotPointType.Low, middlePoint.Low, middlePoint.EndTime);
+            }
+
+            return low;
+        }
+
+        /// <summary>
+        /// Looks for the next high pivot point.
+        /// </summary>
+        /// <param name="windowHighs">rolling window that tracks the highs</param>
+        /// <param name="midPointIndexOrSurroundingBarsCount">The midpoint index or surrounding bars count for highs</param>
+        /// <returns>pivot point if found else null</returns>
+        protected virtual PivotPoint FindNextHighPivotPoint(RollingWindow<IBaseDataBar> windowHighs, int midPointIndexOrSurroundingBarsCount)
+        {
+            var isHigh = true;
+            var middlePoint = windowHighs[midPointIndexOrSurroundingBarsCount];
+            for (var k = 0; k < windowHighs.Size && isHigh; k++)
+            {
+                // Skip the middle point
+                if (k == midPointIndexOrSurroundingBarsCount)
+                {
+                    continue;
+                }
+
+                // Check if current high is below middle point high
+                isHigh = windowHighs[k].High < middlePoint.High;
+            }
+
+            PivotPoint high = null;
+            if (isHigh)
+            {
+                high = new PivotPoint(PivotPointType.High, middlePoint.High, middlePoint.EndTime);
+            }
+
+            return high;
+        }
+
+        /// <summary>
+        /// Method for converting high and low pivot points to a decimal value.
+        /// </summary>
+        /// <param name="highPoint">new high point or null</param>
+        /// <param name="lowPoint">new low point or null</param>
+        /// <returns>a decimal value representing the values of high and low pivot points</returns>
+        protected virtual decimal ConvertToComputedValue(PivotPoint highPoint, PivotPoint lowPoint)
+        {
+            if (highPoint != null)
+            {
+                if (lowPoint != null)
                 {
                     // Can be the bar forms both high and low pivot points at the same time
-                    OnNewPivotPointFormed(low);
                     return (decimal)PivotPointType.Both;
                 }
                 return (decimal)PivotPointType.High;
             }
 
-            if (low != null)
+            if (lowPoint != null)
             {
-                OnNewPivotPointFormed(low);
                 return (decimal)PivotPointType.Low;
             }
 
@@ -204,10 +245,13 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Invokes NewPivotPointFormed event
         /// </summary>
-        protected virtual void OnNewPivotPointFormed(PivotPoint pivotPoint)
+        private void OnNewPivotPointFormed(PivotPoint pivotPoint)
         {
-            _windowPivotPoints.Add(pivotPoint);
-            NewPivotPointFormed?.Invoke(this, new PivotPointsEventArgs(pivotPoint));
+            if (pivotPoint != null)
+            {
+                _windowPivotPoints.Add(pivotPoint);
+                NewPivotPointFormed?.Invoke(this, new PivotPointsEventArgs(pivotPoint));
+            }
         }
     }
 

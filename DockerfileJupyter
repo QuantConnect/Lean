@@ -30,7 +30,7 @@ ENV LD_LIBRARY_PATH=/lib/
 
 # Install .NET Interactive to support C# in Jupyter notebooks
 ENV PATH="${PATH}:/root/.dotnet/tools"
-RUN dotnet tool install -g --no-cache --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
+RUN dotnet tool install -g --no-cache --version 1.0.255902 --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
     dotnet interactive jupyter install
 
 # Setting some environment variables
@@ -54,7 +54,7 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     \"api-handler\": \"QuantConnect.Api.Api\" }' > ${WORK}Notebooks/config.json; fi && \
     echo \"Starting JupyterLab, access in your browser at localhost:8888\" && \
     jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=\"Notebooks\" --LabApp.token='' " \
-    > start.sh
+    > start.sh && echo "from QuantConnect.AlphaStream import *" >> ${WORK}AlgorithmImports.py
 
 RUN chmod -R 777 ${WORK}
 EXPOSE 8888

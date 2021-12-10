@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2014, 04, 03);
+            SetStartDate(2014, 04, 02);
             SetEndDate(2014, 04, 06);
             SetCash(100000);
 
@@ -108,48 +108,48 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "8"},
-            {"Average Win", "0.37%"},
-            {"Average Loss", "-0.06%"},
-            {"Compounding Annual Return", "-99.924%"},
-            {"Drawdown", "3.900%"},
-            {"Expectancy", "1.458"},
-            {"Net Profit", "-3.861%"},
-            {"Sharpe Ratio", "-2.553"},
+            {"Total Trades", "11"},
+            {"Average Win", "0.53%"},
+            {"Average Loss", "-0.14%"},
+            {"Compounding Annual Return", "-98.490%"},
+            {"Drawdown", "3.700%"},
+            {"Expectancy", "1.373"},
+            {"Net Profit", "-3.388%"},
+            {"Sharpe Ratio", "-2.408"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "67%"},
-            {"Win Rate", "33%"},
-            {"Profit-Loss Ratio", "6.37"},
-            {"Alpha", "-3.271"},
-            {"Beta", "-2.943"},
-            {"Annual Standard Deviation", "0.389"},
-            {"Annual Variance", "0.151"},
-            {"Information Ratio", "-0.42"},
-            {"Tracking Error", "0.521"},
-            {"Treynor Ratio", "0.337"},
-            {"Total Fees", "$45.38"},
-            {"Estimated Strategy Capacity", "$54000000.00"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "3.75"},
+            {"Alpha", "1.867"},
+            {"Beta", "3.527"},
+            {"Annual Standard Deviation", "0.412"},
+            {"Annual Variance", "0.169"},
+            {"Information Ratio", "-0.613"},
+            {"Tracking Error", "0.295"},
+            {"Treynor Ratio", "-0.281"},
+            {"Total Fees", "$48.59"},
+            {"Estimated Strategy Capacity", "$44000000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Fitness Score", "0.094"},
-            {"Kelly Criterion Estimate", "-43.604"},
-            {"Kelly Criterion Probability Value", "0.673"},
-            {"Sortino Ratio", "-2.569"},
-            {"Return Over Maximum Drawdown", "-25.883"},
-            {"Portfolio Turnover", "1.539"},
-            {"Total Insights Generated", "7"},
-            {"Total Insights Closed", "3"},
-            {"Total Insights Analysis Completed", "3"},
-            {"Long Insight Count", "7"},
+            {"Fitness Score", "0.1"},
+            {"Kelly Criterion Estimate", "7.595"},
+            {"Kelly Criterion Probability Value", "0.446"},
+            {"Sortino Ratio", "-2.393"},
+            {"Return Over Maximum Drawdown", "-26.614"},
+            {"Portfolio Turnover", "1.027"},
+            {"Total Insights Generated", "10"},
+            {"Total Insights Closed", "6"},
+            {"Total Insights Analysis Completed", "6"},
+            {"Long Insight Count", "10"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-3436478"},
-            {"Total Accumulated Estimated Alpha Value", "$-248190.1"},
-            {"Mean Population Estimated Insight Value", "$-82730.02"},
-            {"Mean Population Direction", "33.3333%"},
+            {"Estimated Monthly Alpha Value", "$-1879580"},
+            {"Total Accumulated Estimated Alpha Value", "$-198400.1"},
+            {"Mean Population Estimated Insight Value", "$-33066.68"},
+            {"Mean Population Direction", "50%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "33.3333%"},
+            {"Rolling Averaged Population Direction", "49.9804%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "2eb3f3dabc4ad19cd53ab6d378d3edd0"}
+            {"OrderListHash", "63df03353a26867cd9ead66cf0cb20c3"}
         };
     }
 }

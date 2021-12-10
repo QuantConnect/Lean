@@ -39,9 +39,9 @@ namespace QuantConnect.Indicators
     public abstract class MarketProfile : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Period of the indicator
+        /// Percentage of total volume contained in the ValueArea
         /// </summary>
-        private readonly int _period;
+        private readonly decimal _valueAreaVolumePercentage;
 
         /// <summary>
         /// The range of roundoff to the prices. i.e two decimal places, three decimal places
@@ -127,16 +127,17 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => _period;
+        public int WarmUpPeriod { get; private set; }
 
         /// <summary>
         /// Creates a new MarkProfile indicator with the specified period
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of this indicator</param>
+        /// <param name="valueAreaVolumePercentage">The percentage of volume contained in the value area</param>
         /// <param name="priceRangeRoundOff">How many digits you want to round and the precision.
         /// i.e 0.01 round to two digits exactly. 0.05 by default.</param>
-        protected MarketProfile(string name, int period, decimal priceRangeRoundOff = 0.05m)
+        protected MarketProfile(string name, int period, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m)
             : base(name)
         {
             // Check roundoff is positive
@@ -145,6 +146,8 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException("Must be strictly bigger than zero.", nameof(priceRangeRoundOff));
             }
 
+            WarmUpPeriod = period;
+            _valueAreaVolumePercentage = valueAreaVolumePercentage;
             _oldDataPoints = new RollingWindow<Tuple<decimal, decimal>>(period);
             _volumePerPrice = new SortedList<decimal, decimal>();
             _totalVolume = new Sum(name + "_Sum", period);
@@ -256,7 +259,7 @@ namespace QuantConnect.Indicators
         private void CalculateValueArea()
         {
             // First ValueArea estimation
-            ValueAreaVolume = _totalVolume.Current.Value * 0.70m;
+            ValueAreaVolume = _totalVolume.Current.Value * _valueAreaVolumePercentage;
 
             var currentVolume = POCVolume;
 

@@ -17,6 +17,7 @@ using System;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -490,6 +491,14 @@ namespace QuantConnect.Securities
 
             return (price - AveragePrice) * Quantity * _security.QuoteCurrency.ConversionRate
                 * _security.SymbolProperties.ContractMultiplier - feesInAccountCurrency;
+        }
+
+        /// <summary>
+        /// Writes out the properties of this instance to string
+        /// </summary>
+        public override string ToString()
+        {
+            return Invariant($"{Symbol.Value}: {Quantity} @ {AveragePrice}");
         }
 
         /// <summary>

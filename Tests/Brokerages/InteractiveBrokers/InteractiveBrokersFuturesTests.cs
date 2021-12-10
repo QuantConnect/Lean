@@ -264,5 +264,61 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 }
             }
         }
+
+        [Test]
+        public void CreateExpectedFutureContractsWithDifferentCurrencies()
+        {
+            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager(), TestGlobals.MapFileProvider))
+            {
+                ib.Connect();
+                Assert.IsTrue(ib.IsConnected);
+
+                var tickersByMarket = new Dictionary<string, string[]>
+                {
+                    {
+                        Market.HKFE,
+                        new[]
+                        {
+                            "HSI"
+                        }
+                    },
+                    {
+                        Market.CME,
+                        new[]
+                        {
+                            "ACD",
+                            "AJY",
+                            "ANE"
+                        }
+
+                    },
+                    {
+                        Market.CBOT,
+                        new[]
+                        {
+                            "ZC"
+                        }
+                    }
+                };
+
+                foreach (var kvp in tickersByMarket)
+                {
+                    var market = kvp.Key;
+                    var tickers = kvp.Value;
+
+                    foreach (var ticker in tickers)
+                    {
+                        var currentSymbol = Symbol.Create(ticker, SecurityType.Future, market);
+                        var symbolsFound = ib.LookupSymbols(currentSymbol, false);
+                        Assert.IsNotEmpty(symbolsFound);
+
+                        foreach (var symbol in symbolsFound)
+                        {
+                            Log.Trace($"Symbol found in IB: {symbol}");
+                        }
+                    }
+                }
+            }
+        }
     }
 }
