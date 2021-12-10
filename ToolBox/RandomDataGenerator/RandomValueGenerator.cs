@@ -117,6 +117,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <returns>A new decimal suitable for usage as price within the specified deviation from the reference price</returns>
         public virtual decimal NextPrice(SecurityType securityType, string market, decimal referencePrice, decimal maximumPercentDeviation)
         {
+            Dictionary<SecurityType, Func<decimal, bool>> priceVariationDictionary = new Dictionary<SecurityType, Func<decimal, bool>>
+            {
+                [SecurityType.Option] = p => p < 0
+            };
+
             if (referencePrice <= 0)
             {
                 if (securityType == SecurityType.Option && referencePrice == 0)
@@ -124,6 +129,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     return 0;
                 }
                 throw new ArgumentException("The provided reference price must be a positive number.");
+            }
+
+            if (!priceVariationDictionary.TryGetValue(securityType, out var priceVariation))
+            {
+                priceVariation = p => p <= 0;
             }
 
             if (maximumPercentDeviation <= 0)
@@ -149,9 +159,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 price = RoundPrice(price, minimumPriceVariation);
 
                 attempts++;
-            } while (price <= 0 && attempts < 10);
+            } while (priceVariation(price) && attempts < 10);
 
-            if (price <= 0)
+            if (priceVariation(price))
             {
                 // if still invalid, bail
                 throw new TooManyFailedAttemptsException(nameof(NextPrice), attempts);
