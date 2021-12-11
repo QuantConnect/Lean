@@ -255,7 +255,7 @@ namespace QuantConnect.Interfaces
         /// <param name="name">Name we'd like to assign to the optimization</param>
         /// <param name="layout">Layout of the optimization</param>
         /// <returns><see cref="RestResponse"/></returns>
-        public RestResponse UpdateOptimization(string optimizationId, string name = "", string layout = "");
+        public RestResponse UpdateOptimization(string optimizationId, string name = null, string layout = null);
 
         /// <summary>
         /// Delete an optimization

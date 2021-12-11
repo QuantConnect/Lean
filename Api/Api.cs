@@ -22,6 +22,7 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
+using RestSharp.Extensions;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Optimizer.Objectives;
@@ -1359,19 +1360,29 @@ namespace QuantConnect.Api
         /// <param name="name">Name we'd like to assign to the optimization</param>
         /// <param name="layout">Layout of the optimization</param>
         /// <returns><see cref="RestResponse"/></returns>
-        public RestResponse UpdateOptimization(string optimizationId, string name = "", string layout = "")
+        public RestResponse UpdateOptimization(string optimizationId, string name = null, string layout = null)
         {
             var request = new RestRequest("optimizations/update", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
 
-            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            JObject obj = new JObject
             {
-                optimizationId,
-                name,
-                layout
-            }), ParameterType.RequestBody);
+                { "optimizationId", optimizationId }
+            };
+
+            if (name.HasValue())
+            {
+                obj.Add("name", name);
+            }
+
+            if (layout.HasValue())
+            {
+                obj.Add("layout", layout);
+            }
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
