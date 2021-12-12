@@ -25,7 +25,7 @@ namespace QuantConnect.Optimizer.Objectives
     /// </summary>
     public abstract class Objective
     {
-        private readonly Regex _targetTemplate = new Regex("['(.+)']");
+        private readonly Regex _targetTemplate = new Regex("(.+)");
 
         /// <summary>
         /// Target; property of json file we want to track
