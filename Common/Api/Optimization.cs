@@ -101,7 +101,7 @@ namespace QuantConnect.Api
 
     /// <summary>
     /// Wrapper class for Optimizations/* endpoints JSON response
-    /// Currently used by Optimizations/Read, Optimizations/Create and Optimizations/Estimate
+    /// Currently used by Optimizations/Read and Optimizations/Create
     /// </summary>
     public class OptimizationResponseWrapper : RestResponse
     {

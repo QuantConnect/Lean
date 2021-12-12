@@ -183,8 +183,8 @@ namespace QuantConnect.Interfaces
         /// <param name="compileId">Optimization compile ID</param>
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>
-        /// <returns>Optimization object from the API.</returns>
-        public Optimization EstimateOptimization(
+        /// <returns>Estimate object from the API.</returns>
+        public Estimate EstimateOptimization(
             int projectId,
             string name,
             string target,
@@ -193,8 +193,7 @@ namespace QuantConnect.Interfaces
             string strategy,
             string compileId,
             HashSet<OptimizationParameter> parameters,
-            IReadOnlyList<Constraint> constraints
-            );
+            IReadOnlyList<Constraint> constraints);
 
         /// <summary>
         /// Create an optimization with the specified parameters via QuantConnect.com API

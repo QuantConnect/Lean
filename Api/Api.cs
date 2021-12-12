@@ -1199,8 +1199,8 @@ namespace QuantConnect.Api
         /// <param name="compileId">Optimization compile ID</param>
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>
-        /// <returns>Optimization object from the API.</returns>
-        public Optimization EstimateOptimization(
+        /// <returns>Estimate object from the API.</returns>
+        public Estimate EstimateOptimization(
             int projectId,
             string name,
             string target,
@@ -1209,8 +1209,7 @@ namespace QuantConnect.Api
             string strategy,
             string compileId,
             HashSet<OptimizationParameter> parameters,
-            IReadOnlyList<Constraint> constraints
-            )
+            IReadOnlyList<Constraint> constraints)
         {
             var request = new RestRequest("optimizations/estimate", Method.POST)
             {
@@ -1230,8 +1229,8 @@ namespace QuantConnect.Api
                 constraints
             }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out OptimizationResponseWrapper response);
-            return response.Optimization;
+            ApiConnection.TryRequest(request, out EstimateResponseWrapper response);
+            return response.Estimate;
         }
 
         /// <summary>
