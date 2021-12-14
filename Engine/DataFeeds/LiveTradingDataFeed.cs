@@ -15,22 +15,22 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom.Tiingo;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
-using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using System.Threading.Tasks;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Custom.Tiingo;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
