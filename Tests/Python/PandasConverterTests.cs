@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Python;
 using QuantConnect.Securities;
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Tests.ToolBox;
@@ -3309,9 +3310,8 @@ def Test(dataFrame, symbol):
             var converter = new PandasConverter();
             var symbol = Symbols.LTCUSD;
 
-            var config = GetSubscriptionDataConfig<UnlinkedData>(symbol, Resolution.Daily);
-            var custom = Activator.CreateInstance(typeof(UnlinkedData)) as BaseData;
-            custom.Reader(config, "Date,Value", DateTime.UtcNow, false);
+            var config = GetSubscriptionDataConfig<BaseData>(symbol, Resolution.Daily);
+            var custom = Activator.CreateInstance(typeof(CustomData)) as BaseData;
 
             var rawBars = Enumerable
                 .Range(0, 10)
@@ -3597,6 +3597,23 @@ def Test(dataFrame, symbol):
             public DateTime? NullableTime { get; set; }
 
             public double? NullableColumn { get; set; }
+        }
+
+        internal class CustomData: BaseData
+        {
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            {
+                var csv = line.Split(',');
+
+                var data = new CustomData
+                {
+                    Symbol = config.Symbol,
+                    Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    Value = csv[1].ToDecimal()
+                };
+
+                return data;
+            }
         }
 
         internal class EnumerableData : BaseDataCollection

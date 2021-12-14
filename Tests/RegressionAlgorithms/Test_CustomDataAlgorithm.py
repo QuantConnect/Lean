@@ -18,7 +18,30 @@ class Test_CustomDataAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.AddData(Nifty, "NIFTY")
-        self.AddData(QuandlFuture, "SCF/CME_CL1_ON", Resolution.Daily)
+        self.AddData(CustomData, "IBM", Resolution.Daily)
+
+class CustomData(PythonData):
+    def GetSource(self, config, date, isLive):
+        source = "../../../Data/equity/usa/daily/ibm.zip"
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+
+    def Reader(self, config, line, date, isLive):
+        if line == None:
+            return None
+
+        customData = CustomDataEquity()
+        customData.Symbol = config.Symbol
+
+        scaleFactor = 1 / 10000
+        csv = line.split(",")
+        customData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M') + timedelta(hours=10)
+        customData.EndTime = customData.Time - timedelta(hours=5)
+        customData["Open"] = float(csv[1]) * scaleFactor
+        customData["High"] = float(csv[2]) * scaleFactor
+        customData["Low"] = float(csv[3]) * scaleFactor
+        customData["Close"] = float(csv[4]) * scaleFactor
+        customData["Volume"] = float(csv[5])
+        return customData
 
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''

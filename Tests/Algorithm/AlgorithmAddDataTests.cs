@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -555,7 +555,7 @@ namespace QuantConnect.Tests.Algorithm
 
             // Initialize contains the statements:
             // self.AddData(Nifty, "NIFTY")
-            // self.AddData(UnlinkedDataFuture, "SCF/CME_CL1_ON", Resolution.Daily)
+            // self.AddData(CustomData, "IBM", Resolution.Daily)
             qcAlgorithm.Initialize();
 
             var niftySubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "NIFTY");
@@ -564,7 +564,7 @@ namespace QuantConnect.Tests.Algorithm
             var niftyFactory = (BaseData)ObjectActivator.GetActivator(niftySubscription.Type).Invoke(new object[] { niftySubscription.Type });
             Assert.DoesNotThrow(() => niftyFactory.GetSource(niftySubscription, DateTime.UtcNow, false));
 
-            var unlinkedDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "SCF/CME_CL1_ON");
+            var unlinkedDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "IBM");
             Assert.IsNotNull(unlinkedDataSubscription);
 
             var unlinkedDataFactory = (BaseData)ObjectActivator.GetActivator(unlinkedDataSubscription.Type).Invoke(new object[] { unlinkedDataSubscription.Type });
@@ -579,14 +579,14 @@ namespace QuantConnect.Tests.Algorithm
 
             // Initialize contains the statements:
             // self.AddData(Nifty, "NIFTY")
-            // self.AddData(UnlinkedDataFuture, "SCF/CME_CL1_ON", Resolution.Daily)
+            // self.AddData(CustomData, "IBM", Resolution.Daily)
             qcAlgorithm.Initialize();
 
             var niftyConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
             Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("NIFTY", niftyConsolidator));
 
             var unlinkedDataConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
-            Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("SCF/CME_CL1_ON", unlinkedDataConsolidator));
+            Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("IBM", unlinkedDataConsolidator));
         }
 
         [Test]
