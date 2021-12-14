@@ -369,7 +369,7 @@ namespace QuantConnect.Algorithm.CSharp
                     Low = csv[3].ToDecimal() * _scaleFactor,
                     Close = csv[4].ToDecimal() * _scaleFactor,
                     Volume = csv[5].ToDecimal(),
-            };
+                };
                 return custom;
             }
         }
