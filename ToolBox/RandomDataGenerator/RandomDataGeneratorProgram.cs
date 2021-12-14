@@ -18,21 +18,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public class RandomDataGeneratorProgram
     {
-
-        private static Dictionary<SecurityType, TickType[]> _tickTypesPerSecurityType =
-            new()
-            {
-                { SecurityType.Base, new[] { TickType.Trade } },
-                { SecurityType.Equity, new[] { TickType.Trade } },
-                { SecurityType.Forex, new[] { TickType.Quote } },
-                { SecurityType.Cfd, new[] { TickType.Quote } },
-
-                { SecurityType.Option, new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest } },
-                { SecurityType.Future, new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest } },
-
-                { SecurityType.Crypto, new[] { TickType.Trade, TickType.Quote } }
-            };
-
         public static void RandomDataGenerator(
             string startDateString,
             string endDateString,
@@ -118,6 +103,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         public static void GenerateRandomData(RandomDataGeneratorSettings settings, ConsoleLeveledOutput output)
         {
+            var tickTypesPerSecurityType = SubscriptionManager.DefaultDataTypes();
             // can specify a seed value in this ctor if determinism is desired
             var random = new Random();
             var randomValueGenerator = new RandomValueGenerator();
@@ -185,7 +171,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                     tickGenerators.Add(
                         security,
-                        TickGenerator.Create(settings, _tickTypesPerSecurityType[currentSymbol.SecurityType], randomValueGenerator, security)
+                        TickGenerator.Create(settings, tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray(), randomValueGenerator, security)
                             .GenerateTicks()
                             .GetEnumerator());
 
@@ -296,7 +282,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     }
 
                     // define aggregators via settings
-                    var aggregators = CreateAggregators(settings, _tickTypesPerSecurityType[currentSymbol.SecurityType]).ToList();
+                    var aggregators = CreateAggregators(settings, tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray()).ToList();
                     Symbol previousSymbol = null;
                     var currentCount = 0;
                     var monthsTrading = 0;
