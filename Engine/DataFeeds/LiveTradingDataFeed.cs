@@ -23,6 +23,7 @@ using QuantConnect.Packets;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
