@@ -20,7 +20,7 @@ using QuantConnect.Optimizer;
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// OptimizationDTO item from the QuantConnect.com API.
+    /// BaseOptimization item from the QuantConnect.com API.
     /// </summary>
     public class BaseOptimization : RestResponse
     {
