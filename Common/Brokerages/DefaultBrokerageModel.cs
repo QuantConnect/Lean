@@ -49,7 +49,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Future, Market.CME},
             {SecurityType.FutureOption, Market.CME},
             {SecurityType.Forex, Market.Oanda},
-            {SecurityType.Cfd, Market.FXCM},
+            {SecurityType.Cfd, Market.Oanda},
             {SecurityType.Crypto, Market.GDAX},
             {SecurityType.Index, Market.USA},
             {SecurityType.IndexOption, Market.USA}

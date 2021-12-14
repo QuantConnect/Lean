@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -24,14 +25,49 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
-    [TestFixture]
-    [Ignore("These tests require the IBGateway to be installed.")]
+    [TestFixture, Explicit("These tests require the IBGateway to be installed.")]
     public class InteractiveBrokersBrokerageDataQueueHandlerTest
     {
+        [Test]
+        public void FutureSubscriptions()
+        {
+            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager(), TestGlobals.MapFileProvider))
+            {
+                ib.Connect();
+                var gotEsData = false;
+                var gotHsiData = false;
+
+                var cancelationToken = new CancellationTokenSource();
+
+                var es = Symbols.CreateFuturesCanonicalSymbol("ES");
+                var firstEs = ib.LookupSymbols(es, includeExpired: false).First();
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(firstEs, Resolution.Second), (s, e) => { gotEsData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
+
+                // non USD quote currency, HDK
+                var hsi = Symbols.CreateFuturesCanonicalSymbol("HSI");
+                var firstHsi = ib.LookupSymbols(hsi, includeExpired: false).First();
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(firstHsi, Resolution.Second), (s, e) => { gotHsiData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
+
+                Thread.Sleep(2000);
+                cancelationToken.Cancel();
+                cancelationToken.Dispose();
+
+                Assert.IsTrue(gotEsData);
+                Assert.IsTrue(gotHsiData);
+            }
+        }
+
         [Test]
         public void GetsTickData()
         {
@@ -106,12 +142,13 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
         protected SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
         {
+            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
             return new SubscriptionDataConfig(
                 typeof(T),
                 symbol,
                 resolution,
-                TimeZones.Utc,
-                TimeZones.Utc,
+                entry.DataTimeZone,
+                entry.ExchangeHours.TimeZone,
                 true,
                 true,
                 false);
@@ -143,11 +180,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             });
         }
 
-        private void Log(BaseData tick)
+        private void Log(BaseData dataPoint)
         {
-            if (tick != null)
+            if (dataPoint != null)
             {
-                QuantConnect.Logging.Log.Trace("{0}: {1} - {2} @ {3}", tick.Time, tick.Symbol, tick.Price, ((Tick)tick).Quantity);
+                QuantConnect.Logging.Log.Trace("{dataPoint}");
             }
         }
     }
