@@ -22,15 +22,6 @@ from QuantConnect.Python import *
 from datetime import datetime
 import decimal
 
-class QuandlFuture(PythonQuandl):
-    '''Custom quandl data type for setting customized value column name. Value column is used for the primary trading calculations and charting.'''
-    def __init__(self):
-        # Define ValueColumnName: cannot be None, Empty or non-existant column name
-        # If ValueColumnName is "Close", do not use PythonQuandl, use Quandl:
-        # self.AddData[QuandlFuture](self.crude, Resolution.Daily)
-        self.ValueColumnName = "Settle"
-
-
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''
     def GetSource(self, config, date, isLiveMode):
