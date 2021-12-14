@@ -210,8 +210,8 @@ namespace QuantConnect.Interfaces
         /// <param name="estimatedCost">Estimated cost for optimization</param>
         /// <param name="nodeType">Optimization node type</param>
         /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
-        /// <returns>Optimization object from the API.</returns>
-        public Optimization CreateOptimization(
+        /// <returns>BaseOptimization object from the API.</returns>
+        public BaseOptimization CreateOptimization(
             int projectId,
             string name,
             string target,
@@ -223,15 +223,14 @@ namespace QuantConnect.Interfaces
             IReadOnlyList<Constraint> constraints,
             decimal estimatedCost,
             string nodeType,
-            int parallelNodes
-            );
+            int parallelNodes);
 
         /// <summary>
         /// List all the optimizations for a project
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of optimizations for</param>
-        /// <returns><see cref="OptimizationList"/></returns>
-        public OptimizationList ListOptimizations(int projectId);
+        /// <returns>A list of BaseOptimization objects, <see cref="BaseOptimization"/></returns>
+        public List<BaseOptimization> ListOptimizations(int projectId);
 
         /// <summary>
         /// Read an optimization

@@ -1248,8 +1248,8 @@ namespace QuantConnect.Api
         /// <param name="estimatedCost">Estimated cost for optimization</param>
         /// <param name="nodeType">Optimization node type</param>
         /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
-        /// <returns>Optimization object from the API.</returns>
-        public Optimization CreateOptimization(
+        /// <returns>BaseOptimization object from the API.</returns>
+        public BaseOptimization CreateOptimization(
             int projectId,
             string name,
             string target,
@@ -1261,8 +1261,7 @@ namespace QuantConnect.Api
             IReadOnlyList<Constraint> constraints,
             decimal estimatedCost,
             string nodeType,
-            int parallelNodes
-            )
+            int parallelNodes)
         {
             var request = new RestRequest("optimizations/create", Method.POST)
             {
@@ -1285,16 +1284,16 @@ namespace QuantConnect.Api
                 parallelNodes
             }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out OptimizationResponseWrapper response);
-            return response.Optimization;
+            ApiConnection.TryRequest(request, out OptimizationList result);
+            return result.Optimizations.FirstOrDefault();
         }
 
         /// <summary>
         /// List all the optimizations for a project
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of optimizations for</param>
-        /// <returns><see cref="OptimizationList"/></returns>
-        public OptimizationList ListOptimizations(int projectId)
+        /// <returns>A list of BaseOptimization objects, <see cref="BaseOptimization"/></returns>
+        public List<BaseOptimization> ListOptimizations(int projectId)
         {
             var request = new RestRequest("optimizations/list", Method.POST)
             {
@@ -1307,7 +1306,7 @@ namespace QuantConnect.Api
             }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out OptimizationList result);
-            return result;
+            return result.Optimizations;
         }
 
         /// <summary>

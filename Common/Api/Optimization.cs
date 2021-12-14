@@ -91,12 +91,6 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "estimatedCost")]
         public decimal EstimatedCost;
-
-        /// <summary>
-        /// Optimization compile ID
-        /// </summary>
-        [JsonProperty(PropertyName = "compileId")]
-        public string CompileId;
     }
 
     /// <summary>
