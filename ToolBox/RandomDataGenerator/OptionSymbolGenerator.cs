@@ -28,6 +28,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly string _market;
         private readonly decimal _underlyingPrice;
         private readonly decimal _maximumStrikePriceDeviation;
+        private readonly SecurityType _underlyingSecurityType  = SecurityType.Equity;
 
         public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, decimal underlyingPrice, decimal maximumStrikePriceDeviation)
             : base(settings, random)
@@ -42,16 +43,16 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public override IEnumerable<Symbol> GenerateAsset()
         {
             // first generate the underlying
-            var underlying = NextSymbol(SecurityType.Equity, _market);
+            var underlying = NextSymbol(_underlyingSecurityType, _market);
 
             yield return underlying;
 
-            var marketHours = MarketHoursDatabase.GetExchangeHours(_market, underlying, SecurityType.Equity);
+            var marketHours = MarketHoursDatabase.GetExchangeHours(_market, underlying, _underlyingSecurityType);
             var expiry = GetRandomExpiration(marketHours, _minExpiry, _maxExpiry);
 
             // generate a random strike while respecting the maximum deviation from the underlying's price
             // since these are underlying prices, use Equity as the security type
-            var strike = Random.NextPrice(SecurityType.Equity, _market, _underlyingPrice, _maximumStrikePriceDeviation);
+            var strike = Random.NextPrice(_underlyingSecurityType, _market, _underlyingPrice, _maximumStrikePriceDeviation);
 
             // round the strike price to something reasonable
             var order = 1 + Math.Log10((double)strike);
