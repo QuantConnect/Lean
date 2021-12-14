@@ -135,14 +135,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 new SecurityInitializerProvider(new FuncSecurityInitializer(secutiry =>
                 {
                     // from settings
-                    if (settings.VolatilityRatio.HasValue)
-                    {
-                        secutiry.VolatilityModel = new ConstantVolatilityModel(settings.VolatilityRatio.Value);
-                    }
-                    else
-                    {
-                        secutiry.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(60, settings.Resolution);
-                    }
+                    secutiry.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.Resolution);
 
                     // from settings
                     if (secutiry is Option option)

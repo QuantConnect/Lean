@@ -23,7 +23,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public double QuoteTradeRatio { get; set; } = 1;
         public int RandomSeed { get; set; }
         public bool RandomSeedSet { get; set; }
-        public decimal? VolatilityRatio { get; set; }
         public double HasIpoPercentage { get; set; }
         public double HasRenamePercentage { get; set; }
         public double HasSplitsPercentage { get; set; }
@@ -66,7 +65,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             double hasSplitsPercentage;
             double hasDividendsPercentage;
             double dividendEveryQuarterPercentage;
-            decimal? volatilityRatio = null;
 
             // --start
             if (!DateTime.TryParseExact(startDateString, DateFormats, null, DateTimeStyles.None, out startDate))
@@ -229,18 +227,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 output.Error.WriteLine($"Optional parameter --dividend-ever-quarter-percentage was incorrectly formatted. Please specify a valid double greater than or equal to zero. Value provided: '{dividendEveryQuarterPercentageString}'");
             }
 
-            if (!string.IsNullOrEmpty(volatilityRatioString))
-            {
-                if (decimal.TryParse(volatilityRatioString, out var volatilityRatioDecimal))
-                {
-                    volatilityRatio = volatilityRatioDecimal;
-                }
-                else
-                {
-                    output.Error.WriteLine($"Optional parameter --dividend-ever-quarter-percentage was incorrectly formatted. Please specify a valid double greater than or equal to zero. Value provided: '{dividendEveryQuarterPercentageString}'");
-                }
-            }
-
             if (output.ErrorMessageWritten)
             {
                 output.Error.WriteLine("Please address the errors and run the application again.");
@@ -270,8 +256,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 HasRenamePercentage = hasRenamePercentage,
                 HasSplitsPercentage = hasSplitsPercentage,
                 HasDividendsPercentage = hasDividendsPercentage,
-                DividendEveryQuarterPercentage = dividendEveryQuarterPercentage,
-                VolatilityRatio = volatilityRatio.HasValue ? volatilityRatio.Value : null
+                DividendEveryQuarterPercentage = dividendEveryQuarterPercentage
             };
         }
     }
