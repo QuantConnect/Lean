@@ -88,6 +88,21 @@ namespace QuantConnect.Tests.API
         {
             var deserialized = JsonConvert.DeserializeObject<OptimizationBacktest>(_validSerialization);
             Assert.IsNotNull(deserialized);
+            Assert.AreEqual("ImABacktestName", deserialized.Name);
+            Assert.AreEqual("backtestId", deserialized.BacktestId);
+            Assert.AreEqual(0.0m, deserialized.Progress);
+            Assert.AreEqual(0, deserialized.ExitCode);
+            Assert.AreEqual(-1, deserialized.ParameterSet.Id);
+            Assert.IsTrue(deserialized.ParameterSet.Value.Count == 2);
+            Assert.IsTrue(deserialized.ParameterSet.Value["pinocho"] == "19");
+            Assert.IsTrue(deserialized.ParameterSet.Value["pepe"] == "-1");
+            Assert.IsTrue(deserialized.Equity.Values.Count == 3);
+            Assert.IsTrue(deserialized.Equity.Values[0].x == 1);
+            Assert.IsTrue(deserialized.Equity.Values[0].y == 1m);
+            Assert.IsTrue(deserialized.Equity.Values[1].x == 2);
+            Assert.IsTrue(deserialized.Equity.Values[1].y == 2m);
+            Assert.IsTrue(deserialized.Equity.Values[2].x == 3);
+            Assert.IsTrue(deserialized.Equity.Values[2].y == 3m);
         }
     }
 }
