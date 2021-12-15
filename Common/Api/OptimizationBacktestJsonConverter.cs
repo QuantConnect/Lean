@@ -20,6 +20,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Statistics;
 using QuantConnect.Util;
 
 namespace QuantConnect.Api
@@ -139,27 +140,27 @@ namespace QuantConnect.Api
             var jStatistics = jObject["statistics"];
             var statistics = new Dictionary<string, string>
             {
-                { "Alpha", jStatistics[0].Value<string>() },
-                { "Annual Standard Deviation", jStatistics[1].Value<string>() },
-                { "Annual Variance", jStatistics[2].Value<string>() },
-                { "Average Loss", jStatistics[3].Value<string>() },
-                { "Average Win", jStatistics[4].Value<string>() },
-                { "Beta", jStatistics[5].Value<string>() },
-                { "Compounding Annual Return", jStatistics[6].Value<string>() },
-                { "Drawdown", jStatistics[7].Value<string>() },
-                { "Estimated Strategy Capacity", jStatistics[8].Value<string>() },
-                { "Expectancy", jStatistics[9].Value<string>() },
-                { "Information Ratio", jStatistics[10].Value<string>() },
-                { "Loss Rate", jStatistics[11].Value<string>() },
-                { "Net Profit", jStatistics[12].Value<string>() },
-                { "Probabilistic Sharpe Ratio", jStatistics[13].Value<string>() },
-                { "Profit-Loss Ratio", jStatistics[14].Value<string>() },
-                { "Sharpe Ratio", jStatistics[15].Value<string>() },
-                { "Total Fees", jStatistics[16].Value<string>() },
-                { "Total Trades", jStatistics[17].Value<string>() },
-                { "Tracking Error", jStatistics[18].Value<string>() },
-                { "Treynor Ratio", jStatistics[19].Value<string>() },
-                { "Win Rate", jStatistics[20].Value<string>() },
+                { PerformanceMetrics.Alpha, jStatistics[0].Value<string>() },
+                { PerformanceMetrics.AnnualStandardDeviation, jStatistics[1].Value<string>() },
+                { PerformanceMetrics.AnnualVariance, jStatistics[2].Value<string>() },
+                { PerformanceMetrics.AverageLoss, jStatistics[3].Value<string>() },
+                { PerformanceMetrics.AverageWin, jStatistics[4].Value<string>() },
+                { PerformanceMetrics.Beta, jStatistics[5].Value<string>() },
+                { PerformanceMetrics.CompoundingAnnualReturn, jStatistics[6].Value<string>() },
+                { PerformanceMetrics.Drawdown, jStatistics[7].Value<string>() },
+                { PerformanceMetrics.EstimatedStrategyCapacity, jStatistics[8].Value<string>() },
+                { PerformanceMetrics.Expectancy, jStatistics[9].Value<string>() },
+                { PerformanceMetrics.InformationRatio, jStatistics[10].Value<string>() },
+                { PerformanceMetrics.LossRate, jStatistics[11].Value<string>() },
+                { PerformanceMetrics.NetProfit, jStatistics[12].Value<string>() },
+                { PerformanceMetrics.ProbabilisticSharpeRatio, jStatistics[13].Value<string>() },
+                { PerformanceMetrics.ProfitLossRatio, jStatistics[14].Value<string>() },
+                { PerformanceMetrics.SharpeRatio, jStatistics[15].Value<string>() },
+                { PerformanceMetrics.TotalFees, jStatistics[16].Value<string>() },
+                { PerformanceMetrics.TotalTrades, jStatistics[17].Value<string>() },
+                { PerformanceMetrics.TrackingError, jStatistics[18].Value<string>() },
+                { PerformanceMetrics.TreynorRatio, jStatistics[19].Value<string>() },
+                { PerformanceMetrics.WinRate, jStatistics[20].Value<string>() },
             };
 
             var parameterSet = new ParameterSet(-1, serializer.Deserialize<Dictionary<string, string>>(jObject["parameterSet"].CreateReader()));
