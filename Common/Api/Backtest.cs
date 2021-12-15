@@ -114,8 +114,8 @@ namespace QuantConnect.Api
         /// <summary>
         /// Optimization parameters
         /// </summary>
-        [JsonProperty(PropertyName = "parameterSet", NullValueHandling = NullValueHandling.Ignore)]
-        public HashSet<OptimizationParameter> ParameterSet { get; set; }
+        [JsonProperty(PropertyName = "parameterSet")]
+        public ParameterSet ParameterSet { get; set; }
     }
 
     /// <summary>
