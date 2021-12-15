@@ -141,8 +141,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // we can also access individual properties on our data, this will
             // get the 'IBM' customDatas like above, but then only return the Low properties
-            var customDataSpyLows = allCustomData.Get("IBM", "Low");
-            AssertHistoryCount("allCustomData.Get(\"IBM\", \"Low\")", customDataSpyLows, 250);
+            var customDataSpyLows = allCustomData.Get("IBM", "Value");
+            AssertHistoryCount("allCustomData.Get(\"IBM\", \"Value\")", customDataSpyLows, 250);
             foreach (decimal low in customDataSpyLows)
             {
                 // do something with each low value
@@ -152,7 +152,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // request the last year's worth of history for all configured symbols at their configured resolutions
             var allHistory = History(TimeSpan.FromDays(365));
-            AssertHistoryCount("History(TimeSpan.FromDays(365))", allHistory, 500, SPY, IBM);
+            AssertHistoryCount("History(TimeSpan.FromDays(365))", allHistory, 250, SPY, IBM);
 
             // request the last days's worth of history at the minute resolution
             allHistory = History(TimeSpan.FromDays(1), Resolution.Minute);
@@ -160,7 +160,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // request the last 100 bars for the specified securities at the configured resolution
             allHistory = History(Securities.Keys, 100);
-            AssertHistoryCount("History(Securities.Keys, 100)", allHistory, 200, SPY, IBM);
+            AssertHistoryCount("History(Securities.Keys, 100)", allHistory, 100, SPY, IBM);
 
             // request the last 100 minute bars for the specified securities
             allHistory = History(Securities.Keys, 100, Resolution.Minute);
@@ -168,7 +168,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // request the last calendar years worth of history for the specified securities
             allHistory = History(Securities.Keys, TimeSpan.FromDays(365));
-            AssertHistoryCount("History(Securities.Keys, TimeSpan.FromDays(365))", allHistory, 500, SPY, IBM);
+            AssertHistoryCount("History(Securities.Keys, TimeSpan.FromDays(365))", allHistory, 250, SPY, IBM);
             // we can also specify the resolution
             allHistory = History(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute);
             AssertHistoryCount("History(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute)", allHistory, 390, SPY, IBM);
@@ -216,9 +216,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             _count++;
 
-            if (_count > 17)
+            if (_count > 5)
             {
-                throw new Exception("Invalid number of bars arrived. Expected exactly 17");
+                throw new Exception($"Invalid number of bars arrived. Expected exactly 17, but received {_count}");
             }
 
             if (!Portfolio.Invested)
@@ -347,8 +347,21 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Custom customData data type for setting customized value column name. Value column is used for the primary trading calculations and charting.
         /// </summary>
-        public class CustomDataEquity : UnlinkedDataTradeBar
+        public class CustomDataEquity : BaseData
         {
+            public override DateTime EndTime
+            {
+                get { return Time + Period; }
+                set { Time = value - Period; }
+            }
+
+            /// <summary>
+            /// Gets a time span of one day
+            /// </summary>
+            public TimeSpan Period
+            {
+                get { return QuantConnect.Time.OneDay; }
+            }
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 var source = Path.Combine(Globals.DataFolder, "equity", "usa", config.Resolution.ToString().ToLower(), LeanData.GenerateZipFileName(config.Symbol, date, config.Resolution, config.TickType));
@@ -364,11 +377,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     Symbol = config.Symbol,
                     Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone),
-                    Open = csv[1].ToDecimal() * _scaleFactor,
-                    High = csv[2].ToDecimal() * _scaleFactor,
-                    Low = csv[3].ToDecimal() * _scaleFactor,
-                    Close = csv[4].ToDecimal() * _scaleFactor,
-                    Volume = csv[5].ToDecimal(),
+                    Value = csv[4].ToDecimal() * _scaleFactor,
                 };
                 return custom;
             }
