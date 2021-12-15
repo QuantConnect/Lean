@@ -29,13 +29,13 @@ namespace QuantConnect.Api
         public string EstimateId;
 
         /// <summary>
-        /// Estimate time
+        /// Estimate time in seconds
         /// </summary>
         [JsonProperty(PropertyName = "time")]
         public int Time;
 
         /// <summary>
-        /// Estimate balance
+        /// Estimate balance in QCC
         /// </summary>
         [JsonProperty(PropertyName = "balance")]
         public int Balance;

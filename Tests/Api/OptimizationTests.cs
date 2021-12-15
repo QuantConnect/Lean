@@ -30,7 +30,6 @@ namespace QuantConnect.Tests.API
     {
         private int testProjectId = 1; // "EnterProjectHere";
         private string testOptimizationId = "EnterOptimizationHere";
-        private string testOrganizationId = "EnterOrganizationHere";
         
         [Test]
         public void EstimateOptimization()

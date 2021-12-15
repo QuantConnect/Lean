@@ -130,19 +130,6 @@ namespace QuantConnect.Api
         {
             var jObject = JObject.Load(reader);
 
-            var optimizationBacktest = CreateOptimizationBacktestFromJObject(jObject, serializer);
-
-            return optimizationBacktest;
-        }
-
-        /// <summary>
-        /// Custom parsing of optimization backtest data
-        /// </summary>
-        /// <param name="jObject">JSON representing OptimizationBacktest.</param>
-        /// <param name="serializer">The calling serializer.</param>
-        /// <returns></returns>
-        public static OptimizationBacktest CreateOptimizationBacktestFromJObject(JObject jObject, JsonSerializer serializer)
-        {
             var name = jObject["name"].Value<string>();
             var hostName = jObject["hostName"]?.Value<string>();
             var backtestId = jObject["id"].Value<string>();

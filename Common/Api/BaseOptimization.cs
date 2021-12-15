@@ -52,6 +52,6 @@ namespace QuantConnect.Api
         /// Optimization node type
         /// </summary>
         [JsonProperty(PropertyName = "nodeType")]
-        public string NodeType;
+        public NodeType NodeType;
     }
 }
