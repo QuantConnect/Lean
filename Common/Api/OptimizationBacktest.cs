@@ -63,7 +63,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// The exit code of this backtest
         /// </summary>
-        public int ExitCode;
+        public int ExitCode { get; set; }
 
         /// <summary>
         /// Creates a new instance

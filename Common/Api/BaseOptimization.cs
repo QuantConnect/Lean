@@ -28,30 +28,30 @@ namespace QuantConnect.Api
         /// Optimization ID
         /// </summary>
         [JsonProperty(PropertyName = "optimizationId")]
-        public string OptimizationId;
+        public string OptimizationId { get; set; }
 
         /// <summary>
         /// Project ID of the project the optimization belongs to
         /// </summary>
         [JsonProperty(PropertyName = "projectId")]
-        public int ProjectId;
+        public int ProjectId { get; set; }
 
         /// <summary>
         /// Name of the optimization
         /// </summary>
         [JsonProperty(PropertyName = "name")]
-        public string Name;
+        public string Name { get; set; }
 
         /// <summary>
         /// Status of the optimization
         /// </summary>
         [JsonProperty(PropertyName = "status")]
-        public OptimizationStatus Status;
-        
+        public OptimizationStatus Status { get; set; }
+
         /// <summary>
         /// Optimization node type
         /// </summary>
         [JsonProperty(PropertyName = "nodeType")]
-        public NodeType NodeType;
+        public NodeType NodeType { get; set; }
     }
 }

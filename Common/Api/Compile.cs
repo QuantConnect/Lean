@@ -28,19 +28,19 @@ namespace QuantConnect.Api
         /// Compile Id for a sucessful build
         /// </summary>
         [JsonProperty(PropertyName = "compileId")]
-        public string CompileId;
+        public string CompileId { get; set; }
 
         /// <summary>
         /// True on successful compile
         /// </summary>
         [JsonProperty(PropertyName = "state")]
         [JsonConverter(typeof(StringEnumConverter))]
-        public CompileState State;
+        public CompileState State { get; set; }
 
         /// <summary>
         /// Logs of the compilation request
         /// </summary>
         [JsonProperty(PropertyName = "logs")]
-        public List<string> Logs;
+        public List<string> Logs { get; set; }
     }
 }

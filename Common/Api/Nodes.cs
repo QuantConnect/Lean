@@ -103,19 +103,19 @@ namespace QuantConnect.Api
         /// Collection of backtest nodes
         /// </summary>
         [JsonProperty(PropertyName = "backtest")]
-        public List<Node> BacktestNodes;
+        public List<Node> BacktestNodes { get; set; }
 
         /// <summary>
         /// Collection of research nodes
         /// </summary>
         [JsonProperty(PropertyName = "research")]
-        public List<Node> ResearchNodes;
+        public List<Node> ResearchNodes { get; set; }
 
         /// <summary>
         /// Collection of live nodes
         /// </summary>
         [JsonProperty(PropertyName = "live")]
-        public List<Node> LiveNodes;
+        public List<Node> LiveNodes { get; set; }
     }
 
     /// <summary>
@@ -143,17 +143,17 @@ namespace QuantConnect.Api
         /// <summary>
         /// The number of CPU cores in the node
         /// </summary>
-        public int Cores;
+        public int Cores { get; set; }
 
         /// <summary>
         /// Size of RAM in GB of the Node
         /// </summary>
-        public int Memory;
+        public int Memory { get; set; }
 
         /// <summary>
         /// Target environment for the node
         /// </summary>
-        public NodeType Target;
+        public NodeType Target { get; set; }
 
         /// <summary>
         /// Constructs a SKU object out of the provided node configuration
