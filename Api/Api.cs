@@ -1357,9 +1357,8 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="optimizationId">Optimization id we want to update</param>
         /// <param name="name">Name we'd like to assign to the optimization</param>
-        /// <param name="layout">Layout of the optimization</param>
         /// <returns><see cref="RestResponse"/></returns>
-        public RestResponse UpdateOptimization(string optimizationId, string name = null, string layout = null)
+        public RestResponse UpdateOptimization(string optimizationId, string name = null)
         {
             var request = new RestRequest("optimizations/update", Method.POST)
             {
@@ -1374,11 +1373,6 @@ namespace QuantConnect.Api
             if (name.HasValue())
             {
                 obj.Add("name", name);
-            }
-
-            if (layout.HasValue())
-            {
-                obj.Add("layout", layout);
             }
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
