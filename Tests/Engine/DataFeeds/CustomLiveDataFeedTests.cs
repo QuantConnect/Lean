@@ -335,7 +335,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public static string GetLocalFileName(string ticker, string fileExtension)
             {
-                return $"./TestData/future/custom_future_{ticker.Replace("/", "_").ToLowerInvariant()}.{fileExtension}";
+                return $"./TestData/custom_future_{ticker.Replace("/", "_").ToLowerInvariant()}.{fileExtension}";
             }
 
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
