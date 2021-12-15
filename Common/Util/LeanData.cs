@@ -1013,7 +1013,12 @@ namespace QuantConnect.Util
                 var fileName = Path.GetFileNameWithoutExtension(filePath);
                 if (fileName.Contains("_"))
                 {
-                    tickType = (TickType)Enum.Parse(typeof(TickType), fileName.Split('_')[1], true);
+                    var tickTypePosition = 1;
+                    if (resolution >= Resolution.Hour && symbol.SecurityType.IsOption())
+                    {
+                        tickTypePosition = 2;
+                    }
+                    tickType = (TickType)Enum.Parse(typeof(TickType), fileName.Split('_')[tickTypePosition], true);
                 }
 
                 dataType = GetDataType(resolution, tickType);
