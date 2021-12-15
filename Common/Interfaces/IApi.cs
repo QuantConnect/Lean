@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using QuantConnect.Api;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Interfaces
 {
@@ -176,10 +177,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project ID of the project the optimization belongs to</param>
         /// <param name="name">Name of the optimization</param>
-        /// <param name="target">Target of the optimization</param>
-        /// <param name="targetTo">Target extremum of the optimization</param>
+        /// <param name="target">Target of the optimization, see examples in <see cref="PortfolioStatistics"/></param>
+        /// <param name="targetTo">Target extremum of the optimization, for example "max" or "min"</param>
         /// <param name="targetValue">Optimization target value</param>
-        /// <param name="strategy">Optimization strategy</param>
+        /// <param name="strategy">Optimization strategy, <see cref="GridSearchOptimizationStrategy"/></param>
         /// <param name="compileId">Optimization compile ID</param>
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>
@@ -200,10 +201,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project ID of the project the optimization belongs to</param>
         /// <param name="name">Name of the optimization</param>
-        /// <param name="target">Target of the optimization</param>
-        /// <param name="targetTo">Target extremum of the optimization</param>
+        /// <param name="target">Target of the optimization, see examples in <see cref="PortfolioStatistics"/></param>
+        /// <param name="targetTo">Target extremum of the optimization, for example "max" or "min"</param>
         /// <param name="targetValue">Optimization target value</param>
-        /// <param name="strategy">Optimization strategy</param>
+        /// <param name="strategy">Optimization strategy, <see cref="GridSearchOptimizationStrategy"/></param>
         /// <param name="compileId">Optimization compile ID</param>
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>

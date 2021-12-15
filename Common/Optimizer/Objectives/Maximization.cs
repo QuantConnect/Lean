@@ -16,7 +16,7 @@
 namespace QuantConnect.Optimizer.Objectives
 {
     /// <summary>
-    /// Defines standard maximization strategy, i.e. right operand is great than left
+    /// Defines standard maximization strategy, i.e. right operand is greater than left
     /// </summary>
     public class Maximization : Extremum
     {
