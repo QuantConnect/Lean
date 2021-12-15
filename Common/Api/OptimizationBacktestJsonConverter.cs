@@ -193,14 +193,7 @@ namespace QuantConnect.Api
                 var x = point[0];
                 var y = point[1];
 
-                if (y != null && y.Type == JTokenType.Float)
-                {
-                    chartPoints.Add(new ChartPoint((long)x, (decimal)y));
-                }
-                else
-                {
-                    chartPoints.Add(new ChartPoint((long)x, (int)y));
-                }
+                chartPoints.Add(new ChartPoint((long)x, (decimal)y));
             }
 
             return chartPoints;
