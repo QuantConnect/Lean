@@ -154,9 +154,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     if (cachedZip.Disposed)
                     {
-                        // if disposed and we have the lock means it's not in the dictionary anymore, let's retry
-                        // but to be safe let's remove it from the dic
-                        if (_zipFileCache.Remove(fileName, out _))
+                        // if disposed and we have the lock means it's not in the dictionary anymore, let's assert it
+                        // but there is a window for another thread to add a **new/different** instance which is okay
+                        // we will pick it up on the store call bellow
+                        if (_zipFileCache.TryGetValue(fileName, out var existing) && ReferenceEquals(existing, cachedZip))
                         {
                             Log.Error($"ZipDataCacheProvider.Store(): unexpected cache state for {fileName}");
                             throw new InvalidOperationException(
