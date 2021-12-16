@@ -159,6 +159,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (_zipFileCache.Remove(fileName, out _))
                         {
                             Log.Error($"ZipDataCacheProvider.Store(): unexpected cache state for {fileName}");
+                            throw new InvalidOperationException(
+                                "LEAN entered an unexpected state. Please contact support@quantconnect.com so we may debug this further.");
                         }
                         Store(key, data);
                     }
@@ -208,7 +210,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             try
                             {
                                 // we first dispose it since if written it will refresh the file on disk and we don't
-                                // want anyone reading it directly which should be covered by the cache and lock
+                                // want anyone reading it directly which should be covered by the entry being in the cache
+                                // and us holding the instance lock
                                 zip.Value.Dispose();
                                 // removing it from the cache
                                 _zipFileCache.TryRemove(zip.Key, out _);
@@ -289,6 +292,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (entryCache is { Modified: true })
             {
                 // we want to read an entry in the zip that has be edited, we need to start over
+                // because of the zip library else it blows up, we need to call 'Save'
                 zipFile.Dispose();
                 _zipFileCache.Remove(fileName, out _);
 
@@ -455,6 +459,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             public void WriteEntry(string entryName, byte[] content)
             {
                 Interlocked.Increment(ref _modified);
+                // we refresh our cache time when modified
                 _dateCached = new ReferenceWrapper<DateTime>(DateTime.UtcNow);
 
                 // If the entry already exists remove it 
