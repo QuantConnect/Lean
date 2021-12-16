@@ -28,6 +28,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public double HasSplitsPercentage { get; set; }
         public double HasDividendsPercentage { get; set; }
         public double DividendEveryQuarterPercentage { get; set; }
+        public string OptionPriceEngineName { get; set; }
 
         public static RandomDataGeneratorSettings FromCommandLineArguments(
             string startDateString,
@@ -45,7 +46,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string hasSplitsPercentageString,
             string hasDividendsPercentageString,
             string dividendEveryQuarterPercentageString,
-            string volatilityRatioString,
+            string optionPriceEngineName,
             ConsoleLeveledOutput output
             )
         {
@@ -54,7 +55,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             int randomSeed;
             int symbolCount;
             bool includeCoarse;
-            TickType[] tickTypes;
             Resolution resolution;
             double quoteTradeRatio;
             DataDensity dataDensity;
@@ -256,7 +256,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 HasRenamePercentage = hasRenamePercentage,
                 HasSplitsPercentage = hasSplitsPercentage,
                 HasDividendsPercentage = hasDividendsPercentage,
-                DividendEveryQuarterPercentage = dividendEveryQuarterPercentage
+                DividendEveryQuarterPercentage = dividendEveryQuarterPercentage,
+                OptionPriceEngineName = optionPriceEngineName
             };
         }
     }

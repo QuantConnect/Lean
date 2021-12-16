@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,12 +13,9 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QLNet;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Securities.Option
 {
@@ -43,7 +40,24 @@ namespace QuantConnect.Securities.Option
         private const int _timeStepsFD = 100;
 
         /// <summary>
-        /// Pricing engine for European vanilla options using analytical formulae. 
+        /// Pricing engine for . 
+        /// </summary>
+        /// <returns>New option price model instance</returns>
+        public static IOptionPriceModel Create(string priceEngineName)
+        {
+            var type = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic)
+                .SelectMany(a => a.GetTypes())
+                .FirstOrDefault(t => t.FullName.EndsWith(priceEngineName));
+
+            return new QLOptionPriceModel(process => (IPricingEngine)Activator.CreateInstance(type, process),
+                _underlyingVolEstimator,
+                _riskFreeRateEstimator,
+                _dividendYieldEstimator);
+        }
+
+        /// <summary>
+        /// Pricing engine for European vanilla options using analytical formula. 
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_analytic_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>

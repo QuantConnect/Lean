@@ -83,6 +83,12 @@ namespace QuantConnect.Securities.Option
         {
             try
             {
+                // expired options has no price
+                if (contract.Time > contract.Expiry)
+                {
+                    return new OptionPriceModelResult(0m, new Greeks());
+                }
+
                 // setting up option pricing parameters
                 var calendar = new UnitedStates();
                 var dayCounter = new Actual365Fixed();

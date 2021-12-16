@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string hasSplitsPercentageString,
             string hasDividendsPercentageString,
             string dividendEveryQuarterPercentageString,
-            string volatilityPercentageString
+            string optionPriceEngineName
             )
         {
             var output = new ConsoleLeveledOutput();
@@ -54,7 +54,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 hasSplitsPercentageString,
                 hasDividendsPercentageString,
                 dividendEveryQuarterPercentageString,
-                volatilityPercentageString,
+                optionPriceEngineName,
 
                 output
             );
@@ -126,7 +126,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // from settings
                     if (secutiry is Option option)
                     {
-                        option.PriceModel = OptionPriceModels.BlackScholes();
+                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName);
                     }
                 })),
                 RegisteredSecurityDataTypesProvider.Null,
