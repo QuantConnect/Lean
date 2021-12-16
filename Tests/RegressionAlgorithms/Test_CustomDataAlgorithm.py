@@ -29,7 +29,7 @@ class CustomPythonData(PythonData):
         if line == None:
             return None
 
-        customPythonData = CustomDataEquity()
+        customPythonData = CustomPythonData()
         customPythonData.Symbol = config.Symbol
 
         scaleFactor = 1 / 10000

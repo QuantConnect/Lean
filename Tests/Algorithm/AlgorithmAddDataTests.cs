@@ -135,10 +135,10 @@ namespace QuantConnect.Tests.Algorithm
             var bitcoinSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(Bitcoin));
             Assert.AreEqual(bitcoinSubscription.Type, typeof(Bitcoin));
 
-            // Add a custom data subscription
-            qcAlgorithm.AddData<CustomData>("IBM");
-            var unlinkedDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(CustomData));
-            Assert.AreEqual(unlinkedDataSubscription.Type, typeof(CustomData));
+            // Add a unlinkedData subscription
+            qcAlgorithm.AddData<UnlinkedData>("EURCAD");
+            var unlinkedDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(UnlinkedData));
+            Assert.AreEqual(unlinkedDataSubscription.Type, typeof(UnlinkedData));
         }
 
         [Test]

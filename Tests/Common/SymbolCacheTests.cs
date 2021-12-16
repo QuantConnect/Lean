@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Common
             var symbol1 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedData));
             SymbolCache.Set(symbol1.ID.Symbol, symbol1);
 
-            var symbol2 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedData));
+            var symbol2 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedDataTradeBar));
             SymbolCache.Set(symbol2.ID.Symbol, symbol2);
 
             Assert.Throws<InvalidOperationException>(
