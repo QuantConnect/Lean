@@ -1355,6 +1355,26 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to determine if a data type implements the Stream reader method
+        /// </summary>
+        public static bool ImplementsStreamReader(this Type baseDataType)
+        {
+            // we know these type implement the streamReader interface lets avoid dynamic reflection call to figure it out
+            if (baseDataType == typeof(TradeBar) || baseDataType == typeof(QuoteBar) || baseDataType == typeof(Tick))
+            {
+                return true;
+            }
+
+            var method = baseDataType.GetMethod("Reader",
+                new[] { typeof(SubscriptionDataConfig), typeof(StreamReader), typeof(DateTime), typeof(bool) });
+            if (method != null && method.DeclaringType == baseDataType)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Breaks the specified string into csv components, all commas are considered separators
         /// </summary>
         /// <param name="str">The string to be broken into csv</param>

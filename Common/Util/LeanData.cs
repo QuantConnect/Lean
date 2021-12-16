@@ -726,6 +726,7 @@ namespace QuantConnect.Util
                 case SecurityType.IndexOption:
                     if (isHourOrDaily)
                     {
+                        // see TryParsePath: he knows tick type position is 3
                         var optionPath = symbol.Underlying.Value.ToLowerInvariant();
                         return $"{optionPath}_{date.Year}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
                     }
@@ -735,6 +736,7 @@ namespace QuantConnect.Util
                 case SecurityType.FutureOption:
                     if (isHourOrDaily)
                     {
+                        // see TryParsePath: he knows tick type position is 3
                         var futureOptionPath = symbol.ID.Symbol.ToLowerInvariant();
                         return $"{futureOptionPath}_{date.Year}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
                     }
@@ -1013,7 +1015,15 @@ namespace QuantConnect.Util
                 var fileName = Path.GetFileNameWithoutExtension(filePath);
                 if (fileName.Contains("_"))
                 {
-                    tickType = (TickType)Enum.Parse(typeof(TickType), fileName.Split('_')[1], true);
+                    // example: 20140606_openinterest_american.zip
+                    var tickTypePosition = 1;
+                    if (resolution >= Resolution.Hour && symbol.SecurityType.IsOption())
+                    {
+                        // daily and hourly have the year too, example: aapl_2014_openinterest_american.zip
+                        // see GenerateZipFileName he's creating these paths
+                        tickTypePosition = 2;
+                    }
+                    tickType = (TickType)Enum.Parse(typeof(TickType), fileName.Split('_')[tickTypePosition], true);
                 }
 
                 dataType = GetDataType(resolution, tickType);
