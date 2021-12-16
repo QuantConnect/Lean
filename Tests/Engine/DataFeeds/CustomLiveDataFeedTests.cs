@@ -23,10 +23,7 @@ using System.Text;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
-using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -231,6 +228,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var symbols = new List<Symbol>
             {
+                algorithm.AddData<TestableRemoteCustomData>("FB", Resolution.Daily).Symbol,
                 algorithm.AddData<TestableRemoteCustomData>("IBM", Resolution.Daily).Symbol,
                 algorithm.AddEquity("SPY", Resolution.Daily).Symbol,
                 algorithm.AddEquity("AAPL", Resolution.Daily).Symbol
@@ -279,6 +277,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[0]), $"Slice doesn't contain {symbols[0]}");
                         Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[1]), $"Slice doesn't contain {symbols[1]}");
                         Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[2]), $"Slice doesn't contain {symbols[2]}");
+                        Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[2]), $"Slice doesn't contain {symbols[2]}");
                     }
                 }
             }
@@ -323,7 +322,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private static int _countFilesWritten;
 
-        public class TestableCustomFuture : UnlinkedData
+        public class TestableCustomFuture : BaseData
         {
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {

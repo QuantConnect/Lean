@@ -3230,13 +3230,14 @@ def Test(dataFrame, symbol):
         }
 
         [Test]
+        [TestCase(typeof(CustomDataBars), "yyyyMMdd HH:mm")]
         [TestCase(typeof(FxcmVolume), "yyyyMMdd HH:mm")]
         public void HandlesCustomDataBars(Type type, string format)
         {
             var converter = new PandasConverter();
             var symbol = Symbols.LTCUSD;
 
-            var config = GetSubscriptionDataConfig<FxcmVolume>(symbol, Resolution.Daily);
+            var config = GetSubscriptionDataConfig<BaseData>(symbol, Resolution.Daily);
             var custom = Activator.CreateInstance(type) as BaseData;
 
             var rawBars = Enumerable
@@ -3610,6 +3611,34 @@ def Test(dataFrame, symbol):
                     Symbol = config.Symbol,
                     Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture),
                     Value = csv[1].ToDecimal()
+                };
+
+                return data;
+            }
+        }
+
+        internal class CustomDataBars : BaseData
+        {
+            public decimal Open;
+            public decimal High;
+            public decimal Low;
+            public decimal Close;
+            public decimal Transactions { private set; get; }
+
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            {
+                var csv = line.Split(',');
+
+                var data = new CustomDataBars
+                {
+                    Symbol = config.Symbol,
+                    Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture),
+                    Open = csv[1].ToDecimal(),
+                    High = csv[2].ToDecimal(),
+                    Low = csv[3].ToDecimal(),
+                    Close = csv[4].ToDecimal(),
+                    Transactions = csv[5].ToDecimal(),
+                    Value = csv[4].ToDecimal()
                 };
 
                 return data;

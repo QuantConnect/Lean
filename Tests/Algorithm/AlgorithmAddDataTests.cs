@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Algorithm.Selection;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Configuration;
@@ -28,7 +29,6 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -135,10 +135,10 @@ namespace QuantConnect.Tests.Algorithm
             var bitcoinSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(Bitcoin));
             Assert.AreEqual(bitcoinSubscription.Type, typeof(Bitcoin));
 
-            // Add a unlinkedData subscription
-            qcAlgorithm.AddData<UnlinkedData>("EURCAD");
-            var unlinkedDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(UnlinkedData));
-            Assert.AreEqual(unlinkedDataSubscription.Type, typeof(UnlinkedData));
+            // Add a custom data subscription
+            qcAlgorithm.AddData<CustomData>("IBM");
+            var unlinkedDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(CustomData));
+            Assert.AreEqual(unlinkedDataSubscription.Type, typeof(CustomData));
         }
 
         [Test]
@@ -555,7 +555,7 @@ namespace QuantConnect.Tests.Algorithm
 
             // Initialize contains the statements:
             // self.AddData(Nifty, "NIFTY")
-            // self.AddData(CustomData, "IBM", Resolution.Daily)
+            // self.AddData(CustomPythonData, "IBM", Resolution.Daily)
             qcAlgorithm.Initialize();
 
             var niftySubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "NIFTY");
@@ -564,11 +564,11 @@ namespace QuantConnect.Tests.Algorithm
             var niftyFactory = (BaseData)ObjectActivator.GetActivator(niftySubscription.Type).Invoke(new object[] { niftySubscription.Type });
             Assert.DoesNotThrow(() => niftyFactory.GetSource(niftySubscription, DateTime.UtcNow, false));
 
-            var unlinkedDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "IBM");
-            Assert.IsNotNull(unlinkedDataSubscription);
+            var customDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "IBM");
+            Assert.IsNotNull(customDataSubscription);
 
-            var unlinkedDataFactory = (BaseData)ObjectActivator.GetActivator(unlinkedDataSubscription.Type).Invoke(new object[] { unlinkedDataSubscription.Type });
-            Assert.DoesNotThrow(() => unlinkedDataFactory.GetSource(unlinkedDataSubscription, DateTime.UtcNow, false));
+            var customDataFactory = (BaseData)ObjectActivator.GetActivator(customDataSubscription.Type).Invoke(new object[] { customDataSubscription.Type });
+            Assert.DoesNotThrow(() => customDataFactory.GetSource(customDataSubscription, DateTime.UtcNow, false));
         }
 
         [Test]
@@ -579,14 +579,14 @@ namespace QuantConnect.Tests.Algorithm
 
             // Initialize contains the statements:
             // self.AddData(Nifty, "NIFTY")
-            // self.AddData(CustomData, "IBM", Resolution.Daily)
+            // self.AddData(CustomPythonData, "IBM", Resolution.Daily)
             qcAlgorithm.Initialize();
 
             var niftyConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
             Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("NIFTY", niftyConsolidator));
 
-            var unlinkedDataConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
-            Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("IBM", unlinkedDataConsolidator));
+            var customDataConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
+            Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("IBM", customDataConsolidator));
         }
 
         [Test]

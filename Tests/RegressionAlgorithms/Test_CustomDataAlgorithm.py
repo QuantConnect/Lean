@@ -18,9 +18,9 @@ class Test_CustomDataAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.AddData(Nifty, "NIFTY")
-        self.AddData(CustomData, "IBM", Resolution.Daily)
+        self.AddData(CustomPythonData, "IBM", Resolution.Daily)
 
-class CustomData(PythonData):
+class CustomPythonData(PythonData):
     def GetSource(self, config, date, isLive):
         source = "../../../Data/equity/usa/daily/ibm.zip"
         return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
@@ -29,19 +29,19 @@ class CustomData(PythonData):
         if line == None:
             return None
 
-        customData = CustomDataEquity()
-        customData.Symbol = config.Symbol
+        customPythonData = CustomDataEquity()
+        customPythonData.Symbol = config.Symbol
 
         scaleFactor = 1 / 10000
         csv = line.split(",")
-        customData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M') + timedelta(hours=10)
-        customData.EndTime = customData.Time - timedelta(hours=5)
-        customData["Open"] = float(csv[1]) * scaleFactor
-        customData["High"] = float(csv[2]) * scaleFactor
-        customData["Low"] = float(csv[3]) * scaleFactor
-        customData["Close"] = float(csv[4]) * scaleFactor
-        customData["Volume"] = float(csv[5])
-        return customData
+        customPythonData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M') + timedelta(hours=10)
+        customPythonData.EndTime = customPythonData.Time - timedelta(hours=5)
+        customPythonData["Open"] = float(csv[1]) * scaleFactor
+        customPythonData["High"] = float(csv[2]) * scaleFactor
+        customPythonData["Low"] = float(csv[3]) * scaleFactor
+        customPythonData["Close"] = float(csv[4]) * scaleFactor
+        customPythonData["Volume"] = float(csv[5])
+        return customPythonData
 
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''

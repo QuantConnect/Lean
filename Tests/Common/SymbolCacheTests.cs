@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Common
             var symbol1 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedData));
             SymbolCache.Set(symbol1.ID.Symbol, symbol1);
 
-            var symbol2 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedDataTradeBar));
+            var symbol2 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedData));
             SymbolCache.Set(symbol2.ID.Symbol, symbol2);
 
             Assert.Throws<InvalidOperationException>(

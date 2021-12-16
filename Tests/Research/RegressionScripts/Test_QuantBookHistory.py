@@ -22,7 +22,7 @@ from QuantConnect import *
 from QuantConnect.Data import *
 from QuantConnect.Research import *
 from datetime import datetime, timedelta
-from custom_data import Nifty
+from custom_data import CustomPythonData, Nifty
 import pandas as pd
 
 class SecurityHistoryTest():
@@ -84,6 +84,9 @@ class CustomDataHistoryTest(SecurityHistoryTest):
 
         if security_type == 'Nifty':
             type = Nifty
+            self.column = 'close'
+        elif security_type == 'CustomDataPython':
+            type = CustomDataPython
             self.column = 'close'
         else:
             raise

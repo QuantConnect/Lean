@@ -35,13 +35,13 @@ class HistoryAlgorithm(QCAlgorithm):
         self.Securities["IBM"].Exchange = EquityExchange()
 
         # we can get history in initialize to set up indicators and such
-        self.spyDailySma = SimpleMovingAverage(14)
+        self.dailySma = SimpleMovingAverage(14)
 
         # get the last calendar year's worth of SPY data at the configured resolution (daily)
         tradeBarHistory = self.History([self.Securities["SPY"].Symbol], timedelta(365))
         self.AssertHistoryCount("History<TradeBar>([\"SPY\"], timedelta(365))", tradeBarHistory, 250)
 
-         # get the last calendar day's worth of SPY data at the specified resolution
+        # get the last calendar day's worth of SPY data at the specified resolution
         tradeBarHistory = self.History(["SPY"], timedelta(1), Resolution.Minute)
         self.AssertHistoryCount("History([\"SPY\"], timedelta(1), Resolution.Minute)", tradeBarHistory, 390)
 
@@ -56,7 +56,7 @@ class HistoryAlgorithm(QCAlgorithm):
         # we can loop over the return value from these functions and we get TradeBars
         # we can use these TradeBars to initialize indicators or perform other math
         for index, tradeBar in tradeBarHistory.loc["SPY"].iterrows():
-            self.spyDailySma.Update(index, tradeBar["close"])
+            self.dailySma.Update(index, tradeBar["close"])
 
         # get the last calendar year's worth of customData data at the configured resolution (daily)
         customDataHistory = self.History(CustomDataEquity, "IBM", timedelta(365))
@@ -68,9 +68,9 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # we can loop over the return values from these functions and we'll get Custom data
         # this can be used in much the same way as the tradeBarHistory above
-        self.spyDailySma.Reset()
+        self.dailySma.Reset()
         for index, customData in customDataHistory.loc["IBM"].iterrows():
-            self.spyDailySma.Update(index, customData["close"])
+            self.dailySma.Update(index, customData["close"])
 
         # get the last year's worth of all configured Custom data at the configured resolution (daily)
         #allCustomData = self.History(CustomDataEquity, timedelta(365))

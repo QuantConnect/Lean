@@ -156,21 +156,21 @@ namespace QuantConnect.Tests.Common.Data
         {
             var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
             var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, tradeBar });
+            var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, tradeBar });
 
-            DataDictionary<UnlinkedData> unlinkedDataData = slice.Get<UnlinkedData>();
-            Assert.AreEqual(1, unlinkedDataData.Count);
+            var unlinkedData = slice.Get<UnlinkedData>();
+            Assert.AreEqual(1, unlinkedData.Count);
         }
 
         [Test]
         public void AccessesCustomGenericallyByType()
         {
-            UnlinkedData unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
-            UnlinkedData unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
+            var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now };
+            var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
 
-            DataDictionary<UnlinkedData> unlinkedDataData = slice.Get<UnlinkedData>();
-            Assert.AreEqual(2, unlinkedDataData.Count);
+            var unlinkedData = slice.Get<UnlinkedData>();
+            Assert.AreEqual(2, unlinkedData.Count);
         }
 
         [Test]
@@ -198,12 +198,12 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccessesGenericallyByTypeAndSymbol()
         {
-            UnlinkedData unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
-            UnlinkedData unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
+            var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now };
+            var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
 
-            UnlinkedData unlinkedDataData = slice.Get<UnlinkedData>(Symbols.SPY);
-            Assert.AreEqual(unlinkedDataSpy, unlinkedDataData);
+            var unlinkedData = slice.Get<UnlinkedData>(Symbols.SPY);
+            Assert.AreEqual(unlinkedDataSpy, unlinkedData);
         }
 
         [Test]

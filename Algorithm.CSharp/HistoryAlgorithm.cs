@@ -14,13 +14,10 @@
 */
 
 using System;
-using System.Globalization;
-using System.IO;
 using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Securities.Equity;
@@ -39,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class HistoryAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private int _count;
-        private SimpleMovingAverage _spyDailySma;
+        private SimpleMovingAverage _dailySma;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -52,12 +49,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Find more symbols here: http://quantconnect.com/data
             var SPY = AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily).Symbol;
-            var IBM = AddData<CustomDataEquity>("IBM", Resolution.Daily).Symbol;
+            var IBM = AddData<CustomData>("IBM", Resolution.Daily).Symbol;
             // specifying the exchange will allow the history methods that accept a number of bars to return to work properly
             Securities["IBM"].Exchange = new EquityExchange();
 
             // we can get history in initialize to set up indicators and such
-            _spyDailySma = new SimpleMovingAverage(14);
+            _dailySma = new SimpleMovingAverage(14);
 
             // get the last calendar year's worth of SPY data at the configured resolution (daily)
             var tradeBarHistory = History<TradeBar>("SPY", TimeSpan.FromDays(365));
@@ -79,54 +76,52 @@ namespace QuantConnect.Algorithm.CSharp
             // we can use these TradeBars to initialize indicators or perform other math
             foreach (TradeBar tradeBar in tradeBarHistory)
             {
-                _spyDailySma.Update(tradeBar.EndTime, tradeBar.Close);
+                _dailySma.Update(tradeBar.EndTime, tradeBar.Close);
             }
 
-            // get the last calendar year's worth of customData data at the configured resolution (daily)
-            var customDataHistory = History<CustomDataEquity>("IBM", TimeSpan.FromDays(365));
+            // get the last calendar year's worth of IBM data at the configured resolution (daily)
+            var customDataHistory = History<CustomData>("IBM", TimeSpan.FromDays(365));
             AssertHistoryCount("History<CustomData>(\"IBM\", TimeSpan.FromDays(365))", customDataHistory, 250, IBM);
 
             // get the last 14 bars of IBM at the configured resolution (daily)
-            customDataHistory = History<CustomDataEquity>("IBM", 14);
+            customDataHistory = History<CustomData>("IBM", 14);
             AssertHistoryCount("History<CustomData>(\"IBM\", 14)", customDataHistory, 14, IBM);
 
-            // get the last 14 minute bars of IBM
-
-            // we can loop over the return values from these functions and we'll get CustomData data
+            // we can loop over the return values from these functions and we'll get custom data
             // this can be used in much the same way as the tradeBarHistory above
-            _spyDailySma.Reset();
-            foreach (CustomDataEquity customData in customDataHistory)
+            _dailySma.Reset();
+            foreach (CustomData customData in customDataHistory)
             {
-                _spyDailySma.Update(customData.EndTime, customData.Value);
+                _dailySma.Update(customData.EndTime, customData.Value);
             }
 
-            // get the last year's worth of all configured CustomData data at the configured resolution (daily)
-            var allCustomData = History<CustomDataEquity>(TimeSpan.FromDays(365));
-            AssertHistoryCount("History<CustomDataEquity>(TimeSpan.FromDays(365))", allCustomData, 250, IBM);
+            // get the last year's worth of all configured custom data at the configured resolution (daily)
+            var allCustomData = History<CustomData>(TimeSpan.FromDays(365));
+            AssertHistoryCount("History<CustomData>(TimeSpan.FromDays(365))", allCustomData, 250, IBM);
 
-            // get the last 14 bars worth of CustomData data for the specified symbols at the configured resolution (daily)
-            allCustomData = History<CustomDataEquity>(Securities.Keys, 14);
-            AssertHistoryCount("History<CustomDataEquity>(Securities.Keys, 14)", allCustomData, 14, IBM);
+            // get the last 14 bars worth of custom data for the specified symbols at the configured resolution (daily)
+            allCustomData = History<CustomData>(Securities.Keys, 14);
+            AssertHistoryCount("History<CustomData>(Securities.Keys, 14)", allCustomData, 14, IBM);
 
             // NOTE: using different resolutions require that they are properly implemented in your data type, since
             //  CustomData doesn't support minute data, this won't actually work, but if your custom data source has
             //  different resolutions, it would need to be implemented in the GetSource and Reader methods properly
-            //customDataHistory = History<CustomDataEquity>("IBM", TimeSpan.FromDays(7), Resolution.Minute);
-            //customDataHistory = History<CustomDataEquity>("IBM", 14, Resolution.Minute);
-            //allCustomData = History<CustomDataEquity>(TimeSpan.FromDays(365), Resolution.Minute);
-            //allCustomData = History<CustomDataEquity>(Securities.Keys, 14, Resolution.Minute);
-            //allCustomData = History<CustomDataEquity>(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute);
-            //allCustomData = History<CustomDataEquity>(Securities.Keys, 14, Resolution.Minute);
+            //customDataHistory = History<CustomData>("IBM", TimeSpan.FromDays(7), Resolution.Minute);
+            //customDataHistory = History<CustomData>("IBM", 14, Resolution.Minute);
+            //allCustomData = History<CustomData>(TimeSpan.FromDays(365), Resolution.Minute);
+            //allCustomData = History<CustomData>(Securities.Keys, 14, Resolution.Minute);
+            //allCustomData = History<CustomData>(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute);
+            //allCustomData = History<CustomData>(Securities.Keys, 14, Resolution.Minute);
 
-            // get the last calendar year's worth of all customData data
-            allCustomData = History<CustomDataEquity>(Securities.Keys, TimeSpan.FromDays(365));
-            AssertHistoryCount("History<CustomDataEquity>(Securities.Keys, TimeSpan.FromDays(365))", allCustomData, 250, IBM);
+            // get the last calendar year's worth of all custom data
+            allCustomData = History<CustomData>(Securities.Keys, TimeSpan.FromDays(365));
+            AssertHistoryCount("History<CustomData>(Securities.Keys, TimeSpan.FromDays(365))", allCustomData, 250, IBM);
 
-            // the return is a series of dictionaries containing all customData data at each time
+            // the return is a series of dictionaries containing all custom data at each time
             // we can loop over it to get the individual dictionaries
-            foreach (DataDictionary<CustomDataEquity> customDataDictionary in allCustomData)
+            foreach (DataDictionary<CustomData> customDataDictionary in allCustomData)
             {
-                // we can access the dictionary to get the customData data we want
+                // we can access the dictionary to get the custom data we want
                 var customData = customDataDictionary["IBM"];
             }
 
@@ -134,16 +129,16 @@ namespace QuantConnect.Algorithm.CSharp
             // symbol and then loop over it
             var singleSymbolCustomData = allCustomData.Get("IBM");
             AssertHistoryCount("allCustomData.Get(\"IBM\")", singleSymbolCustomData, 250, IBM);
-            foreach (CustomDataEquity customData in singleSymbolCustomData)
+            foreach (CustomData customData in singleSymbolCustomData)
             {
-                // do something with 'IBM' customData data
+                // do something with 'IBM' custom data
             }
 
             // we can also access individual properties on our data, this will
-            // get the 'IBM' customDatas like above, but then only return the Low properties
-            var customDataSpyLows = allCustomData.Get("IBM", "Value");
-            AssertHistoryCount("allCustomData.Get(\"IBM\", \"Value\")", customDataSpyLows, 250);
-            foreach (decimal low in customDataSpyLows)
+            // get the 'IBM' CustomData objects like above, but then only return the Low properties
+            var customDataIbmValues = allCustomData.Get("IBM", "Value");
+            AssertHistoryCount("allCustomData.Get(\"IBM\", \"Value\")", customDataIbmValues, 250);
+            foreach (decimal value in customDataIbmValues)
             {
                 // do something with each low value
             }
@@ -218,7 +213,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_count > 5)
             {
-                throw new Exception($"Invalid number of bars arrived. Expected exactly 17, but received {_count}");
+                throw new Exception($"Invalid number of bars arrived. Expected exactly 5, but received {_count}");
             }
 
             if (!Portfolio.Invested)
@@ -248,9 +243,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(DataDictionary<>))
             {
-                if (typeof(T).GetGenericArguments()[0] == typeof(CustomDataEquity))
+                if (typeof(T).GetGenericArguments()[0] == typeof(CustomData))
                 {
-                    var dictionaries = (IEnumerable<DataDictionary<CustomDataEquity>>) history;
+                    var dictionaries = (IEnumerable<DataDictionary<CustomData>>) history;
                     unexpectedSymbols = dictionaries.SelectMany(dd => dd.Keys)
                         .Distinct()
                         .Where(sym => !expectedSymbols.Contains(sym))
@@ -343,44 +338,5 @@ namespace QuantConnect.Algorithm.CSharp
             {"Rolling Averaged Population Magnitude", "0%"},
             {"OrderListHash", "33d01821923c397f999cfb2e5b5928ad"}
         };
-
-        /// <summary>
-        /// Custom customData data type for setting customized value column name. Value column is used for the primary trading calculations and charting.
-        /// </summary>
-        public class CustomDataEquity : BaseData
-        {
-            public override DateTime EndTime
-            {
-                get { return Time + Period; }
-                set { Time = value - Period; }
-            }
-
-            /// <summary>
-            /// Gets a time span of one day
-            /// </summary>
-            public TimeSpan Period
-            {
-                get { return QuantConnect.Time.OneDay; }
-            }
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
-            {
-                var source = Path.Combine(Globals.DataFolder, "equity", "usa", config.Resolution.ToString().ToLower(), LeanData.GenerateZipFileName(config.Symbol, date, config.Resolution, config.TickType));
-                return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
-            }
-
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
-            {
-                var csv = line.ToCsv(6);
-                var _scaleFactor = 1 / 10000m;
-
-                var custom = new CustomDataEquity
-                {
-                    Symbol = config.Symbol,
-                    Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone),
-                    Value = csv[4].ToDecimal() * _scaleFactor,
-                };
-                return custom;
-            }
-        }
     }
 }
