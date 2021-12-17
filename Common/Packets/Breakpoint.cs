@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
@@ -21,6 +22,7 @@ namespace QuantConnect.Packets
     /// <summary>
     /// A debugging breakpoint
     /// </summary>
+    [Obsolete("Breakpoint is Deprecated, we have moved to using VSCode + NetCoreDbg for C# and PTVSD for Python so no longer need to track breakpoints in packets")]
     public class Breakpoint
     {
         /// <summary>
