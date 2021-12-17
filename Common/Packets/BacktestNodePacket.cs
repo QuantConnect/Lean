@@ -68,12 +68,6 @@ namespace QuantConnect.Packets
         public int TradeableDates = 0;
 
         /// <summary>
-        /// The initial Watchlist for debugging, if any
-        /// </summary>
-        [JsonProperty(PropertyName = "aWatchlist")]
-        public List<string> Watchlist = new List<string>();
-
-        /// <summary>
         /// True, if this is a debugging backtest
         /// </summary>
         [JsonProperty(PropertyName = "bDebugging")]
