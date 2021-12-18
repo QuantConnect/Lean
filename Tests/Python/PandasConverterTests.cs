@@ -3506,7 +3506,7 @@ def Test(dataFrame, symbol):
             return data.Select(t => timeSliceFactory.Create(
                t.Time,
                new List<DataFeedPacket> { new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() { t as BaseData }) },
-               new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+               SecurityChanges.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>()).Slice);
         }
 

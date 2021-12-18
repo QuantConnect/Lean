@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             IEnumerable<TimeSlice> timeSlices = rawTicks.Select(t => _timeSliceFactory.Create(
                 t.Time,
                 new List<DataFeedPacket> { new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() { t }) },
-                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                SecurityChanges.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>()));
 
             Tick[] timeSliceTicks = timeSlices.SelectMany(ts => ts.Slice.Ticks.Values.SelectMany(x => x)).ToArray();
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     new DataFeedPacket(security1, subscriptionDataConfig1, new List<BaseData> {new QuandlFuture { Symbol = symbol1, Time = DateTime.UtcNow.Date, Value = 15 } }),
                     new DataFeedPacket(security2, subscriptionDataConfig2, new List<BaseData> {new QuandlFuture { Symbol = symbol2, Time = DateTime.UtcNow.Date, Value = 20 } }),
                 },
-                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                SecurityChanges.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>());
 
             Assert.AreEqual(2, timeSlice.CustomData.Count);
@@ -202,7 +202,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         new Tick(DateTime.UtcNow, symbol, 281, 0, 0)
                     })
                 },
-                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                SecurityChanges.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>());
 
             Assert.AreEqual(1, timeSlice.ConsolidatorUpdateData.Count);
@@ -246,7 +246,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                 new TradeBar(time, symbol, 100, 100, 110, 106, volume)
                             }),
                         },
-                        new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                        SecurityChanges.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                         new Dictionary<Universe, BaseDataCollection>())
                         .Slice;
                 });

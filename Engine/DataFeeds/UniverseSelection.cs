@@ -26,7 +26,6 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -38,7 +37,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IDataFeedSubscriptionManager _dataManager;
         private readonly IAlgorithm _algorithm;
         private readonly ISecurityService _securityService;
-        private readonly IDataPermissionManager _dataPermissionManager;
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
@@ -65,7 +63,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataProvider = dataProvider;
             _algorithm = algorithm;
             _securityService = securityService;
-            _dataPermissionManager = dataPermissionManager;
             _pendingRemovalsManager = new PendingRemovalsManager(algorithm.Transactions);
             _currencySubscriptionDataConfigManager = new CurrencySubscriptionDataConfigManager(algorithm.Portfolio.CashBook,
                 algorithm.Securities,
@@ -246,14 +243,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // materialize the enumerable into a set for processing
             var selections = selectSymbolsResult.ToHashSet();
 
-            var additions = new List<Security>();
-            var removals = new List<Security>();
-
             // first check for no pending removals, even if the universe selection
             // didn't change we might need to remove a security because a position was closed
             RemoveSecurityFromUniverse(
                 _pendingRemovalsManager.CheckPendingRemovals(selections, universe),
-                removals,
+                null,
                 dateTimeUtc,
                 algorithmEndDateUtc);
 
@@ -262,6 +256,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 return SecurityChanges.None;
             }
+
+            var additions = new Dictionary<Security, bool>();
+            var removals = new Dictionary<Security, bool>();
 
             // determine which data subscriptions need to be removed from this universe
             foreach (var member in universe.Securities.Values.OrderBy(member => member.Security.Symbol.SecurityType))
@@ -273,10 +270,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // don't remove if the universe wants to keep him in
                 if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
 
-                // remove the member - this marks this member as not being
-                // selected by the universe, but it may remain in the universe
-                // until open orders are closed and the security is liquidated
-                removals.Add(security);
+                if (!removals.TryGetValue(security, out var existingIsInternal) || existingIsInternal && !member.IsInternal)
+                {
+                    // remove the member - this marks this member as not being
+                    // selected by the universe, but it may remain in the universe
+                    // until open orders are closed and the security is liquidated
+                    removals[security] = member.IsInternal;
+                }
 
                 RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
                     removals,
@@ -314,6 +314,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var addedSubscription = false;
                 var dataFeedAdded = false;
+                var internalFeed = true;
                 foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc,
                                                                          _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
@@ -339,18 +340,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (!request.IsUniverseSubscription)
                     {
                         addedSubscription = true;
-
+                        // if any config isn't internal then it's not internal
+                        internalFeed &= request.Configuration.IsInternalFeed;
                         _internalSubscriptionManager.AddedSubscriptionRequest(request);
                     }
                 }
 
                 if (addedSubscription)
                 {
-                    var addedMember = universe.AddMember(dateTimeUtc, security);
+                    var addedMember = universe.AddMember(dateTimeUtc, security, internalFeed);
 
                     if (addedMember && dataFeedAdded)
                     {
-                        additions.Add(security);
+                        if (!additions.TryGetValue(security, out var existingIsInternal) || existingIsInternal && !internalFeed)
+                        {
+                            // let's add it if not present or override it if was internal and new addition isn't
+                            additions[security] = internalFeed;
+                        }
                     }
                 }
             }
@@ -465,7 +471,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void RemoveSecurityFromUniverse(
             List<PendingRemovalsManager.RemovedMember> removedMembers,
-            List<Security> removals,
+            Dictionary<Security, bool> removals,
             DateTime dateTimeUtc,
             DateTime algorithmEndDateUtc)
         {
@@ -490,7 +496,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     if (subscription.IsUniverseSubscription)
                     {
-                        removals.Remove(member);
+                        removals?.Remove(member);
                     }
                     else
                     {

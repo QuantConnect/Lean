@@ -95,6 +95,12 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             Debug($"{Time}-{changes}");
+
+            if (changes.AddedSecurities.Any(security => security.Symbol != _continuousContract.Symbol && security.Symbol != _futureContract.Symbol)
+                || changes.RemovedSecurities.Any(security => security.Symbol != _continuousContract.Symbol && security.Symbol != _futureContract.Symbol))
+            {
+                throw new Exception($"We got an unexpected security changes {changes}");
+            }
         }
 
         /// <summary>

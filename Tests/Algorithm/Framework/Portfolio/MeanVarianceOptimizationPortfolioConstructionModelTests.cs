@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(_nowUtc, qqq.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, -0.1d, null),
                 new Insight(_nowUtc, bac.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, -0.1d, null)
             };
-            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChanges.Added(appl, spy, ibm, aig, qqq, bac));
+            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChanges.AddedNonInternal(appl, spy, ibm, aig, qqq, bac));
 
             foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
             {
@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 kvp.Value.SetHoldings(kvp.Value.Price, 0);
             }
 
-            var changes = SecurityChanges.Added(_algorithm.Securities.Values.ToArray());
+            var changes = SecurityChanges.AddedNonInternal(_algorithm.Securities.Values.ToArray());
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
 

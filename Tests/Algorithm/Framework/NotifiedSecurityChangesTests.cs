@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
                 new RegisteredSecurityDataTypesProvider(),
                 new SecurityCache()
             );
-            var changes = SecurityChanges.Removed(SPY);
+            var changes = SecurityChanges.RemovedNonInternal(SPY);
             NotifiedSecurityChanges.UpdateDictionary(dictionary, changes,
                 security => security.Symbol,
                 security => new Disposable(security.Symbol)

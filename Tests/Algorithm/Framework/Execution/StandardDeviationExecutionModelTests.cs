@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+            var changes = SecurityChanges.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
             model.OnSecuritiesChanged(algorithm, changes);
 
             model.Execute(algorithm, new IPortfolioTarget[0]);
@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = new SecurityChanges(new[] { security }, Enumerable.Empty<Security>());
+            var changes = SecurityChanges.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
             model.OnSecuritiesChanged(algorithm, changes);
 
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
@@ -177,7 +177,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = new SecurityChanges(new[] { security }, Enumerable.Empty<Security>());
+            var changes = SecurityChanges.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(algorithm, changes));
         }
 

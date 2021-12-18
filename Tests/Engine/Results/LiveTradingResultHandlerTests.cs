@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Engine.Results
             var aapl = algo.AddEquity("AAPL", extendedMarketHours: extendedMarketHoursEnabled);
             algo.PostInitialize();
             resultHandler.SetAlgorithm(algo, 100000);
-            resultHandler.OnSecuritiesChanged(SecurityChanges.Added(aapl));
+            resultHandler.OnSecuritiesChanged(SecurityChanges.AddedNonInternal(aapl));
 
             // Add values during market hours, should always update
             algo.Portfolio.CashBook["USD"].AddAmount(1000);

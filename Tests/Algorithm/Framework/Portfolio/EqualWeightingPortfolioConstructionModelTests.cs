@@ -120,7 +120,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(1, targets.Count);
 
             // Removing SPY should clear the key in the insight collection
-            var changes = SecurityChanges.Removed(Algorithm.Securities[Symbols.SPY]);
+            var changes = SecurityChanges.RemovedNonInternal(Algorithm.Securities[Symbols.SPY]);
             Algorithm.PortfolioConstruction.OnSecuritiesChanged(Algorithm, changes);
 
             // Equity will be divided by all securities minus 1, since SPY is already invested and we want to remove it

@@ -399,7 +399,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
             realTimeHandler.OnSecuritiesChanged(
-                new SecurityChanges(new[] { security }, Enumerable.Empty<Security>()));
+                SecurityChanges.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
 
             Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
@@ -441,7 +441,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
             realTimeHandler.OnSecuritiesChanged(
-                new SecurityChanges(new[] { security }, Enumerable.Empty<Security>()));
+                SecurityChanges.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
 
             Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
             realTimeHandler.Exit();

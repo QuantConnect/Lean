@@ -122,9 +122,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="utcTime">The current utc date time</param>
         /// <param name="security">The security to be added</param>
+        /// <param name="isInternal">True if internal member</param>
         /// <returns>True if the security was successfully added,
         /// false if the security was already in the universe</returns>
-        internal override bool AddMember(DateTime utcTime, Security security)
+        internal override bool AddMember(DateTime utcTime, Security security, bool isInternal)
         {
             // never add members to disposed universes
             if (DisposeRequested)
@@ -145,7 +146,7 @@ namespace QuantConnect.Data.UniverseSelection
                 Securities.TryRemove(security.Symbol, out member);
             }
 
-            var added = Securities.TryAdd(security.Symbol, new Member(utcTime, security));
+            var added = Securities.TryAdd(security.Symbol, new Member(utcTime, security, isInternal));
 
             if (added && _liveMode)
             {

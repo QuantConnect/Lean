@@ -80,7 +80,7 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
                 aapl.SetMarketPrice(new Tick(now, aapl.Symbol, 10, 10));
                 algorithm.SetDateTime(now);
 
-                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChanges.Added(aapl)));
+                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChanges.AddedNonInternal(aapl)));
                 Assert.IsTrue((bool)model.OnSecuritiesChanged_WasCalled);
 
                 var insight = new Insight(now, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null);
@@ -146,7 +146,7 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
                 aapl.SetMarketPrice(new Tick(now, aapl.Symbol, 10, 10));
                 algorithm.SetDateTime(now);
 
-                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChanges.Added(aapl)));
+                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChanges.AddedNonInternal(aapl)));
                 Assert.IsTrue((bool)model.OnSecuritiesChanged_WasCalled);
 
                 var insight = new Insight(now, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null);

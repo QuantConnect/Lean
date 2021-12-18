@@ -21,8 +21,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.Future;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -134,6 +134,11 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             Debug($"{Time}-{changes}");
+            if (changes.AddedSecurities.Any(security => security.Symbol != _continuousContract.Symbol)
+                || changes.RemovedSecurities.Any(security => security.Symbol != _continuousContract.Symbol))
+            {
+                throw new Exception($"We got an unexpected security changes {changes}");
+            }
         }
 
         public override void OnEndOfAlgorithm()

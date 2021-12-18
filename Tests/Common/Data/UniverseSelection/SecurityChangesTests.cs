@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
 
-            var changes = new SecurityChanges(new List<Security> { security, customSecurity },
+            var changes = SecurityChanges.CreateNonInternal(new List<Security> { security, customSecurity },
                 new List<Security> { security, customSecurity });
 
             Assert.IsTrue(changes.AddedSecurities.Contains(customSecurity));
@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
 
-            var changes = new SecurityChanges(new List<Security> { security, customSecurity },
+            var changes = SecurityChanges.CreateNonInternal(new List<Security> { security, customSecurity },
                 new List<Security> { security, customSecurity });
 
             changes.FilterCustomSecurities = true;

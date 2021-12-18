@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Algorithm.AddAlpha(model3);
             Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
-            var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChanges.CreateNonInternal(AddedSecurities, RemovedSecurities);
             Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             var actualInsights = new List<Insight>();
@@ -135,7 +135,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Algorithm.SetAlpha(model);
             Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
-            var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChanges.CreateNonInternal(AddedSecurities, RemovedSecurities);
             Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             var actualInsights = new List<Insight>();
@@ -190,7 +190,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
 
-            var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChanges.CreateNonInternal(AddedSecurities, RemovedSecurities);
 
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }
@@ -206,7 +206,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
 
-            var changes = new SecurityChanges(RemovedSecurities, AddedSecurities);
+            var changes = SecurityChanges.CreateNonInternal(RemovedSecurities, AddedSecurities);
 
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }

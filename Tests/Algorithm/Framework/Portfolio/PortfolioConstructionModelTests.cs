@@ -98,7 +98,7 @@ def RebalanceFunc(time):
                 new RegisteredSecurityDataTypesProvider(),
                 new SecurityCache());
 
-            constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
+            constructionModel.OnSecuritiesChanged(null, SecurityChanges.AddedNonInternal(security));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
         }
@@ -206,7 +206,7 @@ def RebalanceFunc():
                 new RegisteredSecurityDataTypesProvider(),
                 new SecurityCache());
 
-            constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
+            constructionModel.OnSecuritiesChanged(null, SecurityChanges.AddedNonInternal(security));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
             constructionModel.OnSecuritiesChanged(null, SecurityChanges.None);
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
