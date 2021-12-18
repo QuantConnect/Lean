@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm
         const string Indicators = "Indicators";
         const string LiveTrading = "Live Trading";
         const string Logging = "Logging";
-        const string MachineLearning = "MachineLearning";
+        const string MachineLearning = "Machine Learning";
         const string Modeling = "Modeling";
         const string ParameterAndOptimization = "Parameter and Optimization";
         const string ScheduledEvents = "Scheduled Events";

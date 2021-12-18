@@ -316,7 +316,7 @@ namespace QuantConnect.Tests.ToolBox
 
 
         [Test, TestCaseSource(nameof(OptionAndFuturesCases))]
-        public void ReadLeanFutureAndOptionDataFromFilePath(string composedFilePath, Symbol symbol,  int rowsInfile, double sumValue)
+        public void ReadLeanFutureAndOptionDataFromFilePath(string composedFilePath, Symbol symbol, int rowsInfile, double sumValue)
         {
             // Act
             var ldr = new LeanDataReader(composedFilePath);
@@ -414,6 +414,36 @@ namespace QuantConnect.Tests.ToolBox
                                                 "20151224_goog_minute_openinterest_american_call_3000000_20160115.csv"),
                 1,
                 38
+            },
+
+            new object[]
+            {
+                "../../../Data/option/usa/daily/aapl_2014_openinterest_american.zip#aapl_openinterest_american_call_1950000_20150117.csv",
+                LeanData.ReadSymbolFromZipEntry(Symbol.Create("AAPL", SecurityType.Option, Market.USA),
+                    Resolution.Daily,
+                    "aapl_openinterest_american_call_1950000_20150117.csv"),
+                2,
+                824
+            },
+
+            new object[]
+            {
+            "../../../Data/option/usa/daily/aapl_2014_trade_american.zip#aapl_trade_american_call_5400000_20141018.csv",
+            LeanData.ReadSymbolFromZipEntry(Symbol.Create("AAPL", SecurityType.Option, Market.USA),
+                Resolution.Daily,
+                "aapl_trade_american_call_5400000_20141018.csv"),
+            1,
+            109.9
+            },
+
+            new object[]
+            {
+                "../../../Data/option/usa/daily/aapl_2014_quote_american.zip#aapl_quote_american_call_307100_20150117.csv",
+                LeanData.ReadSymbolFromZipEntry(Symbol.Create("AAPL", SecurityType.Option, Market.USA),
+                    Resolution.Daily,
+                    "aapl_quote_american_call_307100_20150117.csv"),
+                1,
+                63.3
             }
         };
 
