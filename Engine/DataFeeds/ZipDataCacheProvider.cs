@@ -433,6 +433,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _dataStream = dataStream;
                 _zipFile = ZipFile.Read(dataStream);
+                _zipFile.UseZip64WhenSaving = Zip64Option.Always;
                 foreach (var entry in _zipFile.Entries)
                 {
                     EntryCache[entry.FileName] = new ZipEntryCache{ Entry = entry };
