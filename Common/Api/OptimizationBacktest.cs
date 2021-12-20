@@ -20,7 +20,7 @@ using QuantConnect.Optimizer.Parameters;
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Custom JsonConverter for OptimizationBacktest data
+    /// OptimizationBacktest object from the QuantConnect.com API.
     /// </summary>
     [JsonConverter(typeof(OptimizationBacktestJsonConverter))]
     public class OptimizationBacktest

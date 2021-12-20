@@ -16,6 +16,7 @@
 using System;
 using Newtonsoft.Json;
 using QuantConnect.Optimizer;
+using QuantConnect.Optimizer.Objectives;
 
 namespace QuantConnect.Api
 {
@@ -53,5 +54,11 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "nodeType")]
         public string NodeType { get; set; }
+
+        /// <summary>
+        /// Optimization statistical target
+        /// </summary>
+        [JsonProperty(PropertyName = "criterion")]
+        public Target Criterion { get; set; }
     }
 }

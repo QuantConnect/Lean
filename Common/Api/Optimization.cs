@@ -61,25 +61,7 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "strategy")]
         public string Strategy { get; set; }
-
-        /// <summary>
-        /// Optimization target
-        /// </summary>
-        [JsonProperty(PropertyName = "optimizationTarget")]
-        public string Target { get; set; }
-
-        /// <summary>
-        /// Optimization target value
-        /// </summary>
-        [JsonProperty(PropertyName = "targetValue")]
-        public decimal? TargetValue { get; set; }
-
-        /// <summary>
-        /// Optimization target extremum
-        /// </summary>
-        [JsonProperty(PropertyName = "extremum")]
-        public Extremum Extremum { get; set; }
-
+        
         /// <summary>
         /// Optimization requested date and time
         /// </summary>
