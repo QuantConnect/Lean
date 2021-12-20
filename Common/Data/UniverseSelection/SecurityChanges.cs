@@ -13,9 +13,10 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -27,15 +28,19 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets an instance that represents no changes have been made
         /// </summary>
-        public static readonly SecurityChanges None = new (new Dictionary<Security, bool>(), new Dictionary<Security, bool>());
+        public static readonly SecurityChanges None = new (Enumerable.Empty<Security>(), Enumerable.Empty<Security>(),
+            Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
 
-        private readonly Dictionary<Security, bool> _addedSecurities;
-        private readonly Dictionary<Security, bool> _removedSecurities;
+        private readonly IReadOnlySet<Security> _addedSecurities;
+        private readonly IReadOnlySet<Security> _removedSecurities;
+        private readonly IReadOnlySet<Security> _internalAddedSecurities;
+        private readonly IReadOnlySet<Security> _internalRemovedSecurities;
 
         /// <summary>
         /// Gets the total count of added and removed securities
         /// </summary>
-        public int Count => _addedSecurities.Count + _removedSecurities.Count;
+        public int Count => _addedSecurities.Count + _removedSecurities.Count
+            + _internalAddedSecurities.Count + _internalRemovedSecurities.Count;
 
         /// <summary>
         /// True will filter out custom securities from the
@@ -60,7 +65,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// to determine if custom securities should be filtered</remarks>
         /// <remarks>Will use <see cref="FilterInternalSecurities"/> value
         /// to determine if internal securities should be filtered</remarks>
-        public IReadOnlyList<Security> AddedSecurities => GetFilteredList(_addedSecurities);
+        public IReadOnlyList<Security> AddedSecurities => GetFilteredList(_addedSecurities,
+            !FilterInternalSecurities ? _internalAddedSecurities : null);
 
         /// <summary>
         /// Gets the symbols that were removed by universe selection. This list may
@@ -71,17 +77,23 @@ namespace QuantConnect.Data.UniverseSelection
         /// to determine if custom securities should be filtered</remarks>
         /// <remarks>Will use <see cref="FilterInternalSecurities"/> value
         /// to determine if internal securities should be filtered</remarks>
-        public IReadOnlyList<Security> RemovedSecurities => GetFilteredList(_removedSecurities);
+        public IReadOnlyList<Security> RemovedSecurities => GetFilteredList(_removedSecurities,
+            !FilterInternalSecurities ? _internalRemovedSecurities : null);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityChanges"/> class
         /// </summary>
-        /// <param name="addedSecurities">Added symbols list</param>
-        /// <param name="removedSecurities">Removed symbols list</param>
-        public SecurityChanges(Dictionary<Security, bool> addedSecurities, Dictionary<Security, bool> removedSecurities)
+        /// <param name="additions">Added symbols list</param>
+        /// <param name="removals">Removed symbols list</param>
+        /// <param name="internalAdditions">Internal added symbols list</param>
+        /// <param name="internalRemovals">Internal removed symbols list</param>
+        private SecurityChanges(IEnumerable<Security> additions, IEnumerable<Security> removals,
+            IEnumerable<Security> internalAdditions, IEnumerable<Security> internalRemovals)
         {
-            _addedSecurities = addedSecurities;
-            _removedSecurities = removedSecurities;
+            _addedSecurities = additions.ToHashSet();
+            _removedSecurities = removals.ToHashSet();
+            _internalAddedSecurities = internalAdditions.ToHashSet();
+            _internalRemovedSecurities = internalRemovals.ToHashSet();
         }
 
         /// <summary>
@@ -93,6 +105,8 @@ namespace QuantConnect.Data.UniverseSelection
         {
             _addedSecurities = changes._addedSecurities;
             _removedSecurities = changes._removedSecurities;
+            _internalAddedSecurities = changes._internalAddedSecurities;
+            _internalRemovedSecurities = changes._internalRemovedSecurities;
         }
 
         /// <summary>
@@ -124,7 +138,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="left">The left side of the operand</param>
         /// <param name="right">The right side of the operand</param>
-        /// <returns>Adds the additions together and removes any removals found in the additions, that is, additions take precendence</returns>
+        /// <returns>Adds the additions together and removes any removals found in the additions, that is, additions take precedence</returns>
         public static SecurityChanges operator +(SecurityChanges left, SecurityChanges right)
         {
             // common case is adding something to nothing, shortcut these to prevent linqness
@@ -132,14 +146,14 @@ namespace QuantConnect.Data.UniverseSelection
             if (right == None || right.Count == 0) return left;
 
             var additions = Merge(left._addedSecurities, right._addedSecurities);
-            var removals = Merge(left._removedSecurities, right._removedSecurities);
-            if (additions.Count > 0 && removals.Count > 0)
-            {
-                removals = new Dictionary<Security, bool>(
-                    removals.Where(x => !additions.ContainsKey(x.Key)));
-            }
+            var internalAdditions = Merge(left._internalAddedSecurities, right._internalAddedSecurities);
 
-            return new SecurityChanges(additions, removals);
+            var removals = Merge(left._removedSecurities, right._removedSecurities,
+                security => !additions.Contains(security) && !internalAdditions.Contains(security));
+            var internalRemovals = Merge(left._internalRemovedSecurities, right._internalRemovedSecurities,
+                security => !additions.Contains(security) && !internalAdditions.Contains(security));
+
+            return new SecurityChanges(additions, removals, internalAdditions, internalRemovals);
         }
 
         /// <summary>
@@ -150,11 +164,25 @@ namespace QuantConnect.Data.UniverseSelection
         /// <remarks>Useful for testing</remarks>
         public static SecurityChanges CreateNonInternal(IEnumerable<Security> addedSecurities, IEnumerable<Security> removedSecurities)
         {
-            return new SecurityChanges(
-                new Dictionary<Security, bool>(addedSecurities.Select(security =>
-                    new KeyValuePair<Security, bool>(security, false))),
-                new Dictionary<Security, bool>(removedSecurities.Select(security =>
-                    new KeyValuePair<Security, bool>(security, false))));
+            return new SecurityChanges(addedSecurities, removedSecurities,
+                Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityChanges"/> class all none internal
+        /// </summary>
+        /// <param name="additions">Added symbols list</param>
+        /// <param name="removals">Removed symbols list</param>
+        /// <param name="internalAdditions">Internal added symbols list</param>
+        /// <param name="internalRemovals">Internal removed symbols list</param>
+        /// <remarks>Useful for testing</remarks>
+        public static SecurityChanges Create(IReadOnlyCollection<Security> additions, IReadOnlyCollection<Security> removals,
+            IReadOnlyCollection<Security> internalAdditions, IReadOnlyCollection<Security> internalRemovals)
+        {
+            // return None if there's no changes, otherwise return what we've modified
+            return additions?.Count + removals?.Count + internalAdditions?.Count + internalRemovals?.Count > 0
+                ? new SecurityChanges(additions, removals, internalAdditions, internalRemovals)
+                : None;
         }
 
         #region Overrides of Object
@@ -192,23 +220,26 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Helper method to filter added and removed securities based on current settings
         /// </summary>
-        private IReadOnlyList<Security> GetFilteredList(IReadOnlyDictionary<Security, bool> source)
+        private IReadOnlyList<Security> GetFilteredList(IEnumerable<Security> source, IEnumerable<Security> secondSource = null)
         {
-            return source.Where(kvp => !FilterCustomSecurities || kvp.Key.Type != SecurityType.Base)
-            .Where(kvp => !FilterInternalSecurities || !kvp.Value)
-            .Select(kvp => kvp.Key)
-            .OrderBy(security => security.Symbol.Value)
-            .ToList();
+            if (secondSource != null)
+            {
+                source = source.Union(secondSource);
+            }
+            return source.Where(kvp => !FilterCustomSecurities || kvp.Type != SecurityType.Base)
+                .Select(kvp => kvp)
+                .OrderBy(security => security.Symbol.Value)
+                .ToList();
         }
 
         /// <summary>
-        /// Helper method that will merge two security change collections
+        /// Helper method that will merge two security sets, taken into account an optional filter
         /// </summary>
-        /// <returns>Will return merged dictionary</returns>
-        private static Dictionary<Security, bool> Merge(Dictionary<Security, bool> left, Dictionary<Security, bool> right)
+        /// <returns>Will return merged set</returns>
+        private static HashSet<Security> Merge(IReadOnlyCollection<Security> left, IReadOnlyCollection<Security> right, Func<Security, bool> filter = null)
         {
             // if right is emtpy we just use left
-            var result = left;
+            IEnumerable<Security> result = left;
             if (right.Count != 0)
             {
                 if (left.Count == 0)
@@ -219,20 +250,16 @@ namespace QuantConnect.Data.UniverseSelection
                 else
                 {
                     // merge, both are not empty
-                    result = new Dictionary<Security, bool>(result);
-                    foreach (var kvp in right)
-                    {
-                        if (!result.TryGetValue(kvp.Key, out var existingIsInternal) || existingIsInternal && !kvp.Value)
-                        {
-                            // let's add it if not present or override it if was internal and new the other isn't
-                            result[kvp.Key] = kvp.Value;
-                        }
-                    }
-
-                    return result;
+                    result = result.Concat(right);
                 }
             }
-            return new Dictionary<Security, bool>(result);
+
+            if (filter != null)
+            {
+                result = result.Where(filter.Invoke);
+            }
+
+            return new HashSet<Security>(result);
         }
     }
 }

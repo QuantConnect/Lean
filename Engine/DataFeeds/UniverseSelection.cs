@@ -247,7 +247,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // didn't change we might need to remove a security because a position was closed
             RemoveSecurityFromUniverse(
                 _pendingRemovalsManager.CheckPendingRemovals(selections, universe),
-                null,
                 dateTimeUtc,
                 algorithmEndDateUtc);
 
@@ -257,8 +256,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return SecurityChanges.None;
             }
 
-            var additions = new Dictionary<Security, bool>();
-            var removals = new Dictionary<Security, bool>();
+            var additions = new List<Security>();
+            var removals = new List<Security>();
+            var internalAdditions = new List<Security>();
+            var internalRemovals = new List<Security>();
 
             // determine which data subscriptions need to be removed from this universe
             foreach (var member in universe.Securities.Values.OrderBy(member => member.Security.Symbol.SecurityType))
@@ -270,16 +271,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // don't remove if the universe wants to keep him in
                 if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
 
-                if (!removals.TryGetValue(security, out var existingIsInternal) || existingIsInternal && !member.IsInternal)
+                if (member.IsInternal)
                 {
-                    // remove the member - this marks this member as not being
-                    // selected by the universe, but it may remain in the universe
-                    // until open orders are closed and the security is liquidated
-                    removals[security] = member.IsInternal;
+                    internalRemovals.Add(member.Security);
+                }
+                else
+                {
+                    removals.Add(member.Security);
                 }
 
                 RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
-                    removals,
                     dateTimeUtc,
                     algorithmEndDateUtc);
             }
@@ -352,22 +353,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (addedMember && dataFeedAdded)
                     {
-                        if (!additions.TryGetValue(security, out var existingIsInternal) || existingIsInternal && !internalFeed)
+                        if (internalFeed)
                         {
-                            // let's add it if not present or override it if was internal and new addition isn't
-                            additions[security] = internalFeed;
+                            internalAdditions.Add(security);
+                        }
+                        else
+                        {
+                            additions.Add(security);
                         }
                     }
                 }
             }
 
-            // return None if there's no changes, otherwise return what we've modified
-            var securityChanges = additions.Count + removals.Count != 0
-                ? new SecurityChanges(additions, removals)
-                : SecurityChanges.None;
+            var securityChanges = SecurityChanges.Create(additions, removals, internalAdditions, internalRemovals);
 
             // Add currency data feeds that weren't explicitly added in Initialize
-            if (additions.Count > 0)
+            if (securityChanges.AddedSecurities.Count > 0)
             {
                 EnsureCurrencyDataFeeds(securityChanges);
             }
@@ -471,7 +472,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void RemoveSecurityFromUniverse(
             List<PendingRemovalsManager.RemovedMember> removedMembers,
-            Dictionary<Security, bool> removals,
             DateTime dateTimeUtc,
             DateTime algorithmEndDateUtc)
         {
@@ -494,17 +494,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc,
                                                                               _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
-                    if (subscription.IsUniverseSubscription)
+                    if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
                     {
-                        removals?.Remove(member);
-                    }
-                    else
-                    {
-                        if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
-                        {
-                            _internalSubscriptionManager.RemovedSubscriptionRequest(subscription);
-                            member.IsTradable = false;
-                        }
+                        _internalSubscriptionManager.RemovedSubscriptionRequest(subscription);
+                        member.IsTradable = false;
                     }
                 }
             }

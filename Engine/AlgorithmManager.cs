@@ -396,11 +396,8 @@ namespace QuantConnect.Lean.Engine
                             FilterInternalSecurities = true
                         };
 
-                        if (algorithmSecurityChanges.Count > 0)
-                        {
-                            algorithm.OnSecuritiesChanged(algorithmSecurityChanges);
-                            algorithm.OnFrameworkSecuritiesChanged(algorithmSecurityChanges);
-                        }
+                        algorithm.OnSecuritiesChanged(algorithmSecurityChanges);
+                        algorithm.OnFrameworkSecuritiesChanged(algorithmSecurityChanges);
                     }
                     catch (Exception err)
                     {
