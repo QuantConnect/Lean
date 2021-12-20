@@ -36,7 +36,7 @@ namespace QuantConnect.Api
         /// Optimization constraints
         /// </summary>
         [JsonProperty(PropertyName = "constraints", NullValueHandling = NullValueHandling.Ignore)]
-        IReadOnlyList<Constraint> Constraints { get; set; }
+        public IReadOnlyList<Constraint> Constraints { get; set; }
 
         /// <summary>
         /// Optimization parameters
@@ -54,7 +54,7 @@ namespace QuantConnect.Api
         /// Optimization constraints
         /// </summary>
         [JsonProperty(PropertyName = "backtests", NullValueHandling = NullValueHandling.Ignore)]
-        IDictionary<string, OptimizationBacktest> Backtests { get; set; }
+        public IDictionary<string, OptimizationBacktest> Backtests { get; set; }
 
         /// <summary>
         /// Optimization strategy
@@ -67,12 +67,6 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "requested")]
         public DateTime Requested { get; set; }
-
-        /// <summary>
-        /// Estimated cost for optimization in QCC
-        /// </summary>
-        [JsonProperty(PropertyName = "estimatedCost")]
-        public decimal EstimatedCost { get; set; }
     }
 
     /// <summary>

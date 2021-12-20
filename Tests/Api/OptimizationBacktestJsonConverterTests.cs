@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Api;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.API
 {
@@ -103,6 +104,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deserialized.Equity.Values[1].y == 2m);
             Assert.IsTrue(deserialized.Equity.Values[2].x == 3);
             Assert.IsTrue(deserialized.Equity.Values[2].y == 3m);
+            Assert.AreEqual("77.188", deserialized.Statistics[PerformanceMetrics.ProbabilisticSharpeRatio]);
         }
     }
 }
