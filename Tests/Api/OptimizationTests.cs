@@ -43,62 +43,7 @@ namespace QuantConnect.Tests.API
             "\"statistics\":[0.374,0.217,0.047,-4.51,2.86,-0.664,52.602,17.800,6300000.00,0.196,1.571,27.0,123.888,77.188,0.63,1.707,1390.49,180.0,0.233,-0.558,73.0]," +
             "\"parameterSet\":{\"myParamName\":\"2\"},\"equity\":[]}},\"strategy\":\"QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy\"," +
             "\"requested\":\"2021-12-16 00:51:58\",\"criterion\":{\"extremum\":\"max\",\"target\":\"TotalPerformance.PortfolioStatistics.SharpeRatio\",\"targetValue\":null}}";
-
-        [Ignore("Optimization structure currently doesn't match structure received from server in terms of property order due to inherited properties")]
-        [Test]
-        public void Serialization()
-        {
-            var optimization = new Optimization
-            {
-                OptimizationId = "myOptimizationId",
-                Name = "myOptimizationName",
-                RuntimeStatistics = new Dictionary<string, string> {{ "Completed", "1" }},
-                Constraints = new List<Constraint> { new("TotalPerformance.PortfolioStatistics.SharpeRatio", ComparisonOperatorTypes.GreaterOrEqual, 1) },
-                Parameters = new HashSet<OptimizationParameter> {new OptimizationStepParameter("myParamName", 2, 4, 1) },
-                NodeType = "O2-8",
-                ParallelNodes = 12,
-                ProjectId = 1234567,
-                Status = OptimizationStatus.Completed,
-                Backtests = new Dictionary<string, OptimizationBacktest> {{
-                    "myBacktestKey", new OptimizationBacktest(new ParameterSet(-1, new Dictionary<string, string> {{ "myParamName", "2" }}), "myBacktestId", "myBacktestName")
-                    {
-                        Progress = 1,
-                        Statistics = new Dictionary<string, string>
-                        {
-                            { "Total Trades", "180" },
-                            { "Average Win", "2.86%" },
-                            { "Average Loss", "-4.51%" },
-                            { "Compounding Annual Return", "52.602%" },
-                            { "Drawdown", "17.800%" },
-                            { "Expectancy", "0.196" },
-                            { "Net Profit", "123.888%" },
-                            { "Sharpe Ratio", "1.707" },
-                            { "Probabilistic Sharpe Ratio", "77.188%" },
-                            { "Loss Rate", "27%" },
-                            { "Win Rate", "73%" },
-                            { "Profit-Loss Ratio", "0.63" },
-                            { "Alpha", "0.374" },
-                            { "Beta", "-0.664" },
-                            { "Annual Standard Deviation", "0.217" },
-                            { "Annual Variance", "0.047" },
-                            { "Information Ratio", "1.571" },
-                            { "Tracking Error", "0.233" },
-                            { "Treynor Ratio", "-0.558" },
-                            { "Total Fees", "$1390.49" },
-                            { "Estimated Strategy Capacity", "$6300000.00" }
-                        }
-                    }
-                }},
-                Strategy = "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy",
-                Requested = new DateTime( 2021, 12, 16, 00, 51, 58),
-                Criterion = new Target("TotalPerformance.PortfolioStatistics.SharpeRatio", new Maximization(), null)
-            };
-
-            var serialized = JsonConvert.SerializeObject(optimization);
-
-            Assert.AreEqual(_validSerialization, serialized);
-        }
-
+        
         [Test]
         public void Deserialization()
         {
