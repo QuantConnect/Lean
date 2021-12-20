@@ -91,8 +91,8 @@ namespace QuantConnect.Data
         /// <param name="source">IEnumerable source of the data: sorted from oldest to newest.</param>
         public void Write(IEnumerable<BaseData> source)
         {
-            var lastTime = DateTime.MinValue;
-            var outputFile = string.Empty;
+            var lastTime = source.First().Time;
+            var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
             var currentFileData = new List<(DateTime, string)>();
             var writeTasks = new Queue<Task>();
 
@@ -107,16 +107,17 @@ namespace QuantConnect.Data
                 {
                     // Get the latest file name, if it has changed, we have entered a new file, write our current data to file
                     var latestOutputFile = GetZipOutputFileName(_dataDirectory, data.Time);
-                    if (outputFile.IsNullOrEmpty() || outputFile != latestOutputFile)
+                    if (outputFile != latestOutputFile)
                     {
                         if (!currentFileData.IsNullOrEmpty())
                         {
                             // Launch a write task for the current file and data set
                             var file = outputFile;
                             var fileData = currentFileData;
+                            var queueTime = lastTime;
                             writeTasks.Enqueue(Task.Run(() =>
                             {
-                                WriteFile(file, fileData, data.Time);
+                                WriteFile(file, fileData, queueTime);
                             }));
                         }
 
