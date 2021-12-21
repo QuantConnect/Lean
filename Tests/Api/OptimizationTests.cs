@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(stepParam.MinValue == 2);
             Assert.IsTrue(stepParam.MaxValue == 4);
             Assert.IsTrue(stepParam.Step == 1);
-            Assert.AreEqual("O2-8", deserialized.NodeType);
+            Assert.AreEqual(OptimizationNodes.O2_8, deserialized.NodeType);
             Assert.AreEqual(12, deserialized.ParallelNodes);
             Assert.AreEqual(1234567, deserialized.ProjectId);
             Assert.AreEqual(OptimizationStatus.Completed, deserialized.Status);
@@ -119,8 +119,9 @@ namespace QuantConnect.Tests.API
             Assert.GreaterOrEqual(estimate.Balance, 0);
         }
 
-        [Test]
-        public void CreateOptimization()
+        [TestCase(1)]
+        [TestCase(null)]
+        public void CreateOptimization(decimal? value)
         {
             var compile = ApiClient.CreateCompile(testProjectId);
 
@@ -129,7 +130,7 @@ namespace QuantConnect.Tests.API
                 name: "My Testable Optimization",
                 target: "TotalPerformance.PortfolioStatistics.SharpeRatio",
                 targetTo: "max",
-                targetValue: null,
+                targetValue: value,
                 strategy: "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy",
                 compileId: compile.CompileId,
                 parameters: new HashSet<OptimizationParameter>
@@ -141,7 +142,7 @@ namespace QuantConnect.Tests.API
                     new Constraint("TotalPerformance.PortfolioStatistics.SharpeRatio", ComparisonOperatorTypes.GreaterOrEqual, 1)
                 },
                 estimatedCost: 0.06m,
-                nodeType: "O2-8",
+                nodeType: OptimizationNodes.O2_8,
                 parallelNodes: 12
             );
 

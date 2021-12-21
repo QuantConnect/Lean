@@ -1247,7 +1247,7 @@ namespace QuantConnect.Api
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>
         /// <param name="estimatedCost">Estimated cost for optimization</param>
-        /// <param name="nodeType">Optimization node type</param>
+        /// <param name="nodeType">Optimization node type <see cref="OptimizationNodes"/></param>
         /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
         /// <returns>BaseOptimization object from the API.</returns>
         public BaseOptimization CreateOptimization(
@@ -1365,7 +1365,7 @@ namespace QuantConnect.Api
                 RequestFormat = DataFormat.Json
             };
 
-            JObject obj = new JObject
+            var obj = new JObject
             {
                 { "optimizationId", optimizationId }
             };
