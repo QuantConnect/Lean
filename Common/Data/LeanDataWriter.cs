@@ -107,17 +107,16 @@ namespace QuantConnect.Data
                 {
                     // Get the latest file name, if it has changed, we have entered a new file, write our current data to file
                     var latestOutputFile = GetZipOutputFileName(_dataDirectory, data.Time);
-                    if (outputFile != latestOutputFile)
+                    if (outputFile.IsNullOrEmpty() || outputFile != latestOutputFile)
                     {
                         if (!currentFileData.IsNullOrEmpty())
                         {
                             // Launch a write task for the current file and data set
                             var file = outputFile;
                             var fileData = currentFileData;
-                            var queueTime = lastTime;
                             writeTasks.Enqueue(Task.Run(() =>
                             {
-                                WriteFile(file, fileData, queueTime);
+                                WriteFile(file, fileData, fileData[0].Item1);
                             }));
                         }
 
