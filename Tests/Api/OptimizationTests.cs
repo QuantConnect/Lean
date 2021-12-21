@@ -43,7 +43,9 @@ namespace QuantConnect.Tests.API
             "\"statistics\":[0.374,0.217,0.047,-4.51,2.86,-0.664,52.602,17.800,6300000.00,0.196,1.571,27.0,123.888,77.188,0.63,1.707,1390.49,180.0,0.233,-0.558,73.0]," +
             "\"parameterSet\":{\"myParamName\":\"2\"},\"equity\":[]}},\"strategy\":\"QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy\"," +
             "\"requested\":\"2021-12-16 00:51:58\",\"criterion\":{\"extremum\":\"max\",\"target\":\"TotalPerformance.PortfolioStatistics.SharpeRatio\",\"targetValue\":null}}";
-        
+
+        private string _validEstimateSerialization = "{\"estimateId\":\"myEstimateId\",\"time\":26,\"balance\":500}";
+
         [Test]
         public void Deserialization()
         {
@@ -77,6 +79,15 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual("['TotalPerformance'].['PortfolioStatistics'].['SharpeRatio']", deserialized.Criterion.Target);
             Assert.IsInstanceOf<Maximization>(deserialized.Criterion.Extremum);
             Assert.IsNull(deserialized.Criterion.TargetValue);
+        }
+
+        [Test]
+        public void EstimateDeserialization()
+        {
+            var deserialized = JsonConvert.DeserializeObject<Estimate>(_validEstimateSerialization);
+            Assert.AreEqual("myEstimateId", deserialized.EstimateId);
+            Assert.AreEqual(26, deserialized.Time);
+            Assert.AreEqual(500, deserialized.Balance);
         }
 
         [Test]
