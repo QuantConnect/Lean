@@ -245,9 +245,9 @@ namespace QuantConnect.Api
         public static string O2_8 => "O2-8";
 
         /// <summary>
-        /// 4 CPUs 8 GB ram
+        /// 4 CPUs 12 GB ram
         /// </summary>
-        public static string O4_8 => "O4-8";
+        public static string O4_12 => "O4-12";
 
         /// <summary>
         /// 8 CPUs 16 GB ram
