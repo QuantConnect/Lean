@@ -116,7 +116,7 @@ namespace QuantConnect.Data
                             var fileData = currentFileData;
                             writeTasks.Enqueue(Task.Run(() =>
                             {
-                                WriteFile(file, fileData, data.Time);
+                                WriteFile(file, fileData);
                             }));
                         }
 
@@ -139,7 +139,7 @@ namespace QuantConnect.Data
             {
                 writeTasks.Enqueue(Task.Run(() =>
                 {
-                    WriteFile(outputFile, currentFileData, lastTime);
+                    WriteFile(outputFile, currentFileData);
                 }));
             }
 
@@ -258,16 +258,19 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="filePath">The full path to the new file</param>
         /// <param name="data">The data to write as a list of dates and strings</param>
-        /// <param name="date">The date the data represents</param>
         /// <remarks>The reason we have the data as IEnumerable(DateTime, string) is to support
         /// a generic write that works for all resolutions. In order to merge in hour/daily case I need the
         /// date of the data to correctly merge the two. In order to support writing ticks I need to allow
         /// two data points to have the same time. Thus I cannot use a single list of just strings nor
         /// a sorted dictionary of DateTimes and strings. </remarks>
-        private void WriteFile(string filePath, IEnumerable<(DateTime, string)> data, DateTime date)
+        private void WriteFile(string filePath, List<(DateTime, string)> data)
         {
+            if (data == null || data.Count == 0)
+            {
+                return;
+            }
             // Generate this csv entry name
-            var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
+            var entryName = LeanData.GenerateZipEntryName(_symbol, data[0].Item1, _resolution, _tickType);
             
             // Check disk once for this file ahead of time, reuse where possible
             var fileExists = File.Exists(filePath);

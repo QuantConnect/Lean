@@ -72,6 +72,38 @@ namespace QuantConnect.Tests.ToolBox
         }
 
         [Test]
+        public void LeanDataWriter_MultipleDays()
+        {
+            var leanDataWriter = new LeanDataWriter(Resolution.Second, _forex, _dataDirectory, TickType.Quote);
+            var sourceData = new List<QuoteBar>
+            {
+                new (Parse.DateTime("3/16/2021 12:00:00 PM"), _forex, new Bar(1m, 2m, 3m, 4m),  1, new Bar(5m, 6m, 7m, 8m),  2)
+            };
+
+            for (var i = 1; i < 100; i++)
+            {
+                sourceData.Add(new QuoteBar(sourceData.Last().Time.AddDays(1),
+                    _forex,
+                    new Bar(1m, 2m, 3m, 4m),
+                    1, new Bar(5m, 6m, 7m, 8m),
+                    2));
+            }
+            leanDataWriter.Write(sourceData);
+
+            foreach (var bar in sourceData)
+            {
+                var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _forex, bar.Time, Resolution.Second, TickType.Quote);
+                Assert.IsTrue(File.Exists(filePath));
+                Assert.IsFalse(File.Exists(filePath + ".tmp"));
+
+                var data = QuantConnect.Compression.Unzip(filePath).Single();
+
+                Assert.AreEqual(1, data.Value.Count());
+                Assert.IsTrue(data.Key.Contains(bar.Time.ToStringInvariant(DateFormat.EightCharacter)), $"Key {data.Key} BarTime: {bar.Time}");
+            }
+        }
+
+        [Test]
         public void LeanDataWriter_CanWriteForex()
         {
             var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _forex, _date, Resolution.Second, TickType.Quote);
