@@ -119,9 +119,8 @@ namespace QuantConnect.Tests.API
             Assert.GreaterOrEqual(estimate.Balance, 0);
         }
 
-        [TestCase(1)]
-        [TestCase(null)]
-        public void CreateOptimization(decimal? value)
+        [Test]
+        public void CreateOptimization()
         {
             var compile = ApiClient.CreateCompile(testProjectId);
 
@@ -130,7 +129,7 @@ namespace QuantConnect.Tests.API
                 name: "My Testable Optimization",
                 target: "TotalPerformance.PortfolioStatistics.SharpeRatio",
                 targetTo: "max",
-                targetValue: value,
+                targetValue: null,
                 strategy: "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy",
                 compileId: compile.CompileId,
                 parameters: new HashSet<OptimizationParameter>
