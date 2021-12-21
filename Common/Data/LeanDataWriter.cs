@@ -91,8 +91,8 @@ namespace QuantConnect.Data
         /// <param name="source">IEnumerable source of the data: sorted from oldest to newest.</param>
         public void Write(IEnumerable<BaseData> source)
         {
-            var lastTime = source.First().Time;
-            var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
+            var lastTime = DateTime.MinValue;
+            var outputFile = string.Empty;
             var currentFileData = new List<(DateTime, string)>();
             var writeTasks = new Queue<Task>();
 
