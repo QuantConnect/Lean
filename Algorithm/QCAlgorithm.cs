@@ -2128,10 +2128,16 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                foreach (var universe in UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().Where(x => x.Members.ContainsKey(symbol)))
+                // we need to handle existing universes and pending to be added universes, that will be pushed
+                // at the end of this time step see OnEndOfTimeStep()
+                foreach (var universe in UniverseManager.Select(x => x.Value)
+                    .Concat(_pendingUniverseAdditions)
+                    .OfType<UserDefinedUniverse>())
                 {
                     universe.Remove(symbol);
                 }
+                // for existing universes we need to purge pending additions too, also handled at OnEndOfTimeStep()
+                _pendingUserDefinedUniverseSecurityAdditions.RemoveAll(addition => addition.Security.Symbol == symbol);
             }
 
             return true;
