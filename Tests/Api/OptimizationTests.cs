@@ -114,6 +114,9 @@ namespace QuantConnect.Tests.API
             );
 
             Assert.IsNotNull(estimate);
+            Assert.IsNotEmpty(estimate.EstimateId);
+            Assert.GreaterOrEqual(estimate.Time, 0);
+            Assert.GreaterOrEqual(estimate.Balance, 0);
         }
 
         [Test]
@@ -142,7 +145,7 @@ namespace QuantConnect.Tests.API
                 parallelNodes: 12
             );
 
-            Assert.IsNotNull(optimization);
+            TestBaseOptimization(optimization);
         }
 
         [Test]
@@ -150,13 +153,23 @@ namespace QuantConnect.Tests.API
         {
             var optimizations = ApiClient.ListOptimizations(testProjectId);
             Assert.IsNotNull(optimizations);
+            Assert.IsTrue(optimizations.Any());
+            TestBaseOptimization(optimizations.First());
         }
 
         [Test]
         public void ReadOptimization()
         {
             var optimization = ApiClient.ReadOptimization(testOptimizationId);
-            Assert.IsNotNull(optimization);
+
+            TestBaseOptimization(optimization);
+            Assert.IsTrue(optimization.RuntimeStatistics.Any());
+            Assert.IsTrue(optimization.Constraints.Any());
+            Assert.IsTrue(optimization.Parameters.Any());
+            Assert.Positive(optimization.ParallelNodes);
+            Assert.IsTrue(optimization.Backtests.Any());
+            Assert.IsNotEmpty(optimization.Strategy);
+            Assert.AreNotEqual(default(DateTime), optimization.Requested);
         }
 
         [Test]
@@ -178,6 +191,17 @@ namespace QuantConnect.Tests.API
         {
             var response = ApiClient.DeleteOptimization(testOptimizationId);
             Assert.IsTrue(response.Success);
+        }
+
+        private void TestBaseOptimization(BaseOptimization optimization)
+        {
+            Assert.IsNotNull(optimization);
+            Assert.IsNotEmpty(optimization.OptimizationId);
+            Assert.Positive(optimization.ProjectId);
+            Assert.IsNotEmpty(optimization.Name);
+            Assert.IsInstanceOf<OptimizationStatus>(optimization.Status);
+            Assert.IsNotEmpty(optimization.NodeType);
+            Assert.IsNotNull(optimization.Criterion);
         }
     }
 }
