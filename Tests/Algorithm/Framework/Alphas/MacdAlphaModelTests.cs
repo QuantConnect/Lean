@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
@@ -69,7 +70,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Algorithm.SetAlpha(model);
             Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
-            var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
             Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             // Get the dictionary of macd indicators
@@ -105,7 +106,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 var instance = model();
                 Algorithm.SetAlpha(instance);
 
-                var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
+                var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
                 Algorithm.OnFrameworkSecuritiesChanged(changes);
 
                 // Get the dictionary of macd indicators

@@ -28,6 +28,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.RealTime
@@ -399,7 +400,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
             realTimeHandler.OnSecuritiesChanged(
-                new SecurityChanges(new[] { security }, Enumerable.Empty<Security>()));
+                SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
 
             Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
@@ -441,7 +442,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
             realTimeHandler.OnSecuritiesChanged(
-                new SecurityChanges(new[] { security }, Enumerable.Empty<Security>()));
+                SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
 
             Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
             realTimeHandler.Exit();

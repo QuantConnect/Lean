@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm;
 using QuantConnect.Python;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
@@ -73,7 +74,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Algorithm.AddAlpha(model3);
             Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
-            var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
             Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             var actualInsights = new List<Insight>();
@@ -135,7 +136,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Algorithm.SetAlpha(model);
             Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
-            var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
             Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             var actualInsights = new List<Insight>();
@@ -190,7 +191,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
 
-            var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
 
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }
@@ -206,7 +207,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
 
-            var changes = new SecurityChanges(RemovedSecurities, AddedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(RemovedSecurities, AddedSecurities);
 
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }

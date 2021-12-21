@@ -25,6 +25,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -82,7 +83,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var targets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights).ToList();
             Assert.AreEqual(1, targets.Count);
 
-            var changes = SecurityChanges.Removed(Algorithm.Securities[Symbols.SPY]);
+            var changes = SecurityChangesTests.RemovedNonInternal(Algorithm.Securities[Symbols.SPY]);
             Algorithm.PortfolioConstruction.OnSecuritiesChanged(Algorithm, changes);
 
             var expectedTargets = new List<IPortfolioTarget> { new PortfolioTarget(Symbols.SPY, 0) };
@@ -231,7 +232,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Algorithm.Portfolio.SetCash(StartingCash);
             SetUtcTime(new DateTime(2018, 7, 31));
 
-            var changes = SecurityChanges.Added(Algorithm.Securities.Values.ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(Algorithm.Securities.Values.ToArray());
             Algorithm.PortfolioConstruction.OnSecuritiesChanged(Algorithm, changes);
         }
 
