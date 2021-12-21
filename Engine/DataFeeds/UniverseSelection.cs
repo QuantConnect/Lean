@@ -44,6 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _initializedSecurityBenchmark;
         private readonly IDataProvider _dataProvider;
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
+        private readonly SecurityChangesConstructor _securityChangesConstructor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -71,6 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Resolution.Minute);
             // TODO: next step is to merge currency internal subscriptions under the same 'internal manager' instance and we could move this directly into the DataManager class
             _internalSubscriptionManager = new InternalSubscriptionManager(_algorithm, internalConfigResolution);
+            _securityChangesConstructor = new SecurityChangesConstructor();
         }
 
         /// <summary>
@@ -256,11 +258,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return SecurityChanges.None;
             }
 
-            var additions = new List<Security>();
-            var removals = new List<Security>();
-            var internalAdditions = new List<Security>();
-            var internalRemovals = new List<Security>();
-
             // determine which data subscriptions need to be removed from this universe
             foreach (var member in universe.Securities.Values.OrderBy(member => member.Security.Symbol.SecurityType))
             {
@@ -271,14 +268,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // don't remove if the universe wants to keep him in
                 if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
 
-                if (member.IsInternal)
-                {
-                    internalRemovals.Add(member.Security);
-                }
-                else
-                {
-                    removals.Add(member.Security);
-                }
+                _securityChangesConstructor.Remove(member.Security, member.IsInternal);
 
                 RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
                     dateTimeUtc,
@@ -353,19 +343,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (addedMember && dataFeedAdded)
                     {
-                        if (internalFeed)
-                        {
-                            internalAdditions.Add(security);
-                        }
-                        else
-                        {
-                            additions.Add(security);
-                        }
+                        _securityChangesConstructor.Add(security, internalFeed);
                     }
                 }
             }
 
-            var securityChanges = SecurityChanges.Create(additions, removals, internalAdditions, internalRemovals);
+            var securityChanges = _securityChangesConstructor.Flush();
 
             // Add currency data feeds that weren't explicitly added in Initialize
             if (securityChanges.AddedSecurities.Count > 0)

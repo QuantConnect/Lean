@@ -110,30 +110,6 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Returns a new instance of <see cref="SecurityChanges"/> with the specified securities marked as added
-        /// </summary>
-        /// <param name="securities">The added securities</param>
-        /// <remarks>Useful for testing</remarks>
-        /// <returns>A new security changes instance with the specified securities marked as added</returns>
-        public static SecurityChanges AddedNonInternal(params Security[] securities)
-        {
-            if (securities == null || securities.Length == 0) return None;
-            return CreateNonInternal(securities, Enumerable.Empty<Security>());
-        }
-
-        /// <summary>
-        /// Returns a new instance of <see cref="SecurityChanges"/> with the specified securities marked as removed
-        /// </summary>
-        /// <param name="securities">The removed securities</param>
-        /// <remarks>Useful for testing</remarks>
-        /// <returns>A new security changes instance with the specified securities marked as removed</returns>
-        public static SecurityChanges RemovedNonInternal(params Security[] securities)
-        {
-            if (securities == null || securities.Length == 0) return None;
-            return CreateNonInternal(Enumerable.Empty<Security>(), securities);
-        }
-
-        /// <summary>
         /// Combines the results of two <see cref="SecurityChanges"/>
         /// </summary>
         /// <param name="left">The left side of the operand</param>
@@ -154,18 +130,6 @@ namespace QuantConnect.Data.UniverseSelection
                 security => !additions.Contains(security) && !internalAdditions.Contains(security));
 
             return new SecurityChanges(additions, removals, internalAdditions, internalRemovals);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityChanges"/> class all none internal
-        /// </summary>
-        /// <param name="addedSecurities">Added symbols list</param>
-        /// <param name="removedSecurities">Removed symbols list</param>
-        /// <remarks>Useful for testing</remarks>
-        public static SecurityChanges CreateNonInternal(IEnumerable<Security> addedSecurities, IEnumerable<Security> removedSecurities)
-        {
-            return new SecurityChanges(addedSecurities, removedSecurities,
-                Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
         }
 
         /// <summary>
@@ -260,6 +224,62 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             return new HashSet<Security>(result);
+        }
+    }
+
+    /// <summary>
+    /// Helper method to create security changes
+    /// </summary>
+    public class SecurityChangesConstructor
+    {
+        private readonly List<Security> _internalAdditions =  new();
+        private readonly List<Security> _internalRemovals =  new();
+        private readonly List<Security> _additions = new();
+        private readonly List<Security> _removals = new();
+
+        /// <summary>
+        /// Inserts a security addition change
+        /// </summary>
+        public void Add(Security security, bool isInternal)
+        {
+            if (isInternal)
+            {
+                _internalAdditions.Add(security);
+            }
+            else
+            {
+                _additions.Add(security);
+            }
+        }
+
+        /// <summary>
+        /// Inserts a security removal change
+        /// </summary>
+        public void Remove(Security security, bool isInternal)
+        {
+            if (isInternal)
+            {
+                _internalRemovals.Add(security);
+            }
+            else
+            {
+                _removals.Add(security);
+            }
+        }
+
+        /// <summary>
+        /// Get the current security changes clearing state
+        /// </summary>
+        public SecurityChanges Flush()
+        {
+            var result = SecurityChanges.Create(_additions, _removals, _internalAdditions, _internalRemovals);
+
+            _internalAdditions.Clear();
+            _removals.Clear();
+            _internalRemovals.Clear();
+            _additions.Clear();
+
+            return result;
         }
     }
 }
