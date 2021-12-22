@@ -21,6 +21,7 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
@@ -80,7 +81,7 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
                 aapl.SetMarketPrice(new Tick(now, aapl.Symbol, 10, 10));
                 algorithm.SetDateTime(now);
 
-                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChanges.Added(aapl)));
+                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChangesTests.AddedNonInternal(aapl)));
                 Assert.IsTrue((bool)model.OnSecuritiesChanged_WasCalled);
 
                 var insight = new Insight(now, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null);
@@ -146,7 +147,7 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
                 aapl.SetMarketPrice(new Tick(now, aapl.Symbol, 10, 10));
                 algorithm.SetDateTime(now);
 
-                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChanges.Added(aapl)));
+                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChangesTests.AddedNonInternal(aapl)));
                 Assert.IsTrue((bool)model.OnSecuritiesChanged_WasCalled);
 
                 var insight = new Insight(now, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null);

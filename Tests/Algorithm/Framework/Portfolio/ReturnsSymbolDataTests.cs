@@ -27,6 +27,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -140,7 +141,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             security.SetMarketPrice(new Tick(algorithm.Time, symbol, 1m, 1m));
             algorithm.Securities.Add(symbol, security);
 
-            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChanges.Added(security));
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChangesTests.AddedNonInternal(security));
 
             var insights = new[] {Insight.Price(symbol, Time.OneMinute, InsightDirection.Up, .1)};
 

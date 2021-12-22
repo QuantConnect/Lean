@@ -26,6 +26,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
@@ -426,7 +427,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(now, aig.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, -0.1d, null),
                 new Insight(now, qqq.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, 0.1d, null)
             };
-            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChanges.Added(appl, spy, ibm, aig, qqq));
+            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(appl, spy, ibm, aig, qqq));
 
             var createdValidTarget = false;
             foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
@@ -488,7 +489,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.Portfolio.SetCash(_startingCash);
             SetUtcTime(new DateTime(2018, 7, 31));
 
-            var changes = SecurityChanges.Added(_algorithm.Securities.Values.ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(_algorithm.Securities.Values.ToArray());
             algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
 
