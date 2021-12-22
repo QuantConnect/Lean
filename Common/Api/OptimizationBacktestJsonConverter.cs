@@ -163,7 +163,7 @@ namespace QuantConnect.Api
                 { PerformanceMetrics.WinRate, jStatistics[20].Value<string>() },
             };
 
-            var parameterSet = new ParameterSet(-1, serializer.Deserialize<Dictionary<string, string>>(jObject["parameterSet"].CreateReader()));
+            var parameterSet = serializer.Deserialize<ParameterSet>(jObject["parameterSet"].CreateReader());
 
             var equity = new Series { Values = GetSeriesValues(jObject["equity"]) };
 
