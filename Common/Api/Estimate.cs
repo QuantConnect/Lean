@@ -13,45 +13,44 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// File for a project
+    /// Estimate response packet from the QuantConnect.com API.
     /// </summary>
-    public class ProjectFile
+    public class Estimate
     {
         /// <summary>
-        /// Name of a project file
+        /// Estimate id
         /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
+        [JsonProperty(PropertyName = "estimateId")]
+        public string EstimateId { get; set; }
 
         /// <summary>
-        /// Contents of the project file
+        /// Estimate time in seconds
         /// </summary>
-        [JsonProperty(PropertyName = "content")]
-        public string Code { get; set; }
+        [JsonProperty(PropertyName = "time")]
+        public int Time { get; set; }
 
         /// <summary>
-        /// DateTime project file was modified
+        /// Estimate balance in QCC
         /// </summary>
-        [JsonProperty(PropertyName = "modified")]
-        public DateTime DateModified{ get; set; }
+        [JsonProperty(PropertyName = "balance")]
+        public int Balance { get; set; }
     }
 
     /// <summary>
-    /// Response received when reading all files of a project
+    /// Wrapper class for Optimizations/* endpoints JSON response
+    /// Currently used by Optimizations/Estimate
     /// </summary>
-    public class ProjectFilesResponse : RestResponse
+    public class EstimateResponseWrapper : RestResponse
     {
         /// <summary>
-        /// List of project file information
+        /// Estimate object
         /// </summary>
-        [JsonProperty(PropertyName = "files")]
-        public List<ProjectFile> Files { get; set; }
+        [JsonProperty(PropertyName = "estimate")]
+        public Estimate Estimate { get; set; }
     }
 }

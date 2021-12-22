@@ -73,18 +73,6 @@ namespace QuantConnect.Api
         {
             var jObject = JObject.Load(reader);
 
-            var liveResults = CreateLiveResultsFromJObject(jObject);
-
-            return liveResults;
-        }
-
-        /// <summary>
-        /// Custom parsing of live results data
-        /// </summary>
-        /// <param name="jObject">Json representing LiveResults</param>
-        /// <returns></returns>
-        public static LiveAlgorithmResults CreateLiveResultsFromJObject(JObject jObject)
-        {
             var liveAlgoResults = new LiveAlgorithmResults
             {
                 Success = jObject["success"].Value<bool>()

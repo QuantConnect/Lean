@@ -14,44 +14,52 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Optimizer;
+using QuantConnect.Optimizer.Objectives;
 
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// File for a project
+    /// BaseOptimization item from the QuantConnect.com API.
     /// </summary>
-    public class ProjectFile
+    public class BaseOptimization : RestResponse
     {
         /// <summary>
-        /// Name of a project file
+        /// Optimization ID
+        /// </summary>
+        [JsonProperty(PropertyName = "optimizationId")]
+        public string OptimizationId { get; set; }
+
+        /// <summary>
+        /// Project ID of the project the optimization belongs to
+        /// </summary>
+        [JsonProperty(PropertyName = "projectId")]
+        public int ProjectId { get; set; }
+
+        /// <summary>
+        /// Name of the optimization
         /// </summary>
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
 
         /// <summary>
-        /// Contents of the project file
+        /// Status of the optimization
         /// </summary>
-        [JsonProperty(PropertyName = "content")]
-        public string Code { get; set; }
+        [JsonProperty(PropertyName = "status")]
+        public OptimizationStatus Status { get; set; }
 
         /// <summary>
-        /// DateTime project file was modified
+        /// Optimization node type
         /// </summary>
-        [JsonProperty(PropertyName = "modified")]
-        public DateTime DateModified{ get; set; }
-    }
+        /// <remarks><see cref="OptimizationNodes"/></remarks>
+        [JsonProperty(PropertyName = "nodeType")]
+        public string NodeType { get; set; }
 
-    /// <summary>
-    /// Response received when reading all files of a project
-    /// </summary>
-    public class ProjectFilesResponse : RestResponse
-    {
         /// <summary>
-        /// List of project file information
+        /// Optimization statistical target
         /// </summary>
-        [JsonProperty(PropertyName = "files")]
-        public List<ProjectFile> Files { get; set; }
+        [JsonProperty(PropertyName = "criterion")]
+        public Target Criterion { get; set; }
     }
 }

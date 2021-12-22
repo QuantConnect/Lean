@@ -27,37 +27,37 @@ namespace QuantConnect.Api
         /// Project id for the live instance
         /// </summary>
         [JsonProperty(PropertyName = "projectId")]
-        public int ProjectId;
+        public int ProjectId { get; set; }
 
         /// <summary>
         /// Unique live algorithm deployment identifier (similar to a backtest id).
         /// </summary>
         [JsonProperty(PropertyName = "deployId")]
-        public string DeployId;
+        public string DeployId { get; set; }
 
         /// <summary>
         /// Algorithm status: running, stopped or runtime error.
         /// </summary>
         [JsonProperty(PropertyName = "status")]
-        public AlgorithmStatus Status;
+        public AlgorithmStatus Status { get; set; }
 
         /// <summary>
         /// Datetime the algorithm was launched in UTC.
         /// </summary>
         [JsonProperty(PropertyName = "launched")]
-        public DateTime Launched;
+        public DateTime Launched { get; set; }
 
         /// <summary>
         /// Datetime the algorithm was stopped in UTC, null if its still running.
         /// </summary>
         [JsonProperty(PropertyName = "stopped")]
-        public DateTime? Stopped;
+        public DateTime? Stopped { get; set; }
 
         /// <summary>
         /// Brokerage
         /// </summary>
         [JsonProperty(PropertyName = "brokerage")]
-        public string Brokerage;
+        public string Brokerage { get; set; }
 
         /// <summary>
         /// Chart we're subscribed to
@@ -66,13 +66,13 @@ namespace QuantConnect.Api
         /// Data limitations mean we can only stream one chart at a time to the consumer. See which chart you're watching here.
         /// </remarks>
         [JsonProperty(PropertyName = "subscription")]
-        public string Subscription;
+        public string Subscription { get; set; }
 
         /// <summary>
         /// Live algorithm error message from a crash or algorithm runtime error.
         /// </summary>
         [JsonProperty(PropertyName = "error")]
-        public string Error;
+        public string Error { get; set; }
     }
 
     /// <summary>
@@ -84,6 +84,6 @@ namespace QuantConnect.Api
         /// Algorithm list matching the requested status.
         /// </summary>
         [JsonProperty(PropertyName = "live")]
-        public List<LiveAlgorithm> Algorithms;
+        public List<LiveAlgorithm> Algorithms { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,18 +13,31 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Optimizer.Objectives
+namespace QuantConnect.Optimizer
 {
     /// <summary>
-    /// Defines standard maximization strategy, i.e. right operand is great than left
+    /// The different optimization status
     /// </summary>
-    public class Maximization : Extremum
+    public enum OptimizationStatus
     {
         /// <summary>
-        /// Creates an instance of <see cref="Maximization"/>
+        /// Just created and not running optimization
         /// </summary>
-        public Maximization() : base((v1, v2) => v1 < v2)
-        {
-        }
+        New,
+
+        /// <summary>
+        /// We failed or we were aborted
+        /// </summary>
+        Aborted,
+
+        /// <summary>
+        /// We are running
+        /// </summary>
+        Running,
+
+        /// <summary>
+        /// Optimization job has completed
+        /// </summary>
+        Completed
     }
 }
