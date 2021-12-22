@@ -179,10 +179,10 @@ RUN wget https://cdn.quantconnect.com/tigramite/tigramite-4.1.zip && \
     python setup.py install && cd .. && rm -rf tigramite-4.1 && rm tigramite-4.1.zip
 
 # Install H2O: https://www.h2o.ai/download/
-RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
-    unzip -q h2o-3.30.0.3.zip && \
-    pip install h2o-3.30.0.3/python/h2o-3.30.0.3-py2.py3-none-any.whl && \
-    rm -rf h2o-3.30.0.3 && rm h2o-3.30.0.3.zip
+RUN wget https://cdn.quantconnect.com/h2o/h2o-3.34.0.7.zip && \
+    unzip -q h2o-3.34.0.7.zip && \
+    pip install h2o-3.34.0.7-py2.py3-none-any.whl && \
+    rm h2o-3.34.0.7.zip h2o-3.34.0.7-py2.py3-none-any.whl
 
 # Remove black-listed packages
 RUN pip uninstall -y s3transfer
