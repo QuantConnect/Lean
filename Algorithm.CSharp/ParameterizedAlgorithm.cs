@@ -28,9 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using quantconnect" />
     public class ParameterizedAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        // we place attributes on top of our fields or properties that should receive
+        // We place attributes on top of our fields or properties that should receive
         // their values from the job. The values 100 and 200 are just default values that
-        // or only used if the parameters do not exist
+        // are only used if the parameters do not exist.
         [Parameter("ema-fast")]
         public int FastPeriod = 100;
 
