@@ -11,19 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-import pandas
-AddReference("System")
+from AlgorithmImports import *
 AddReference("QuantConnect.Research")
 AddReference("QuantConnect.Common")
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Data import *
-from QuantConnect.Research import *
-from datetime import datetime, timedelta
 from custom_data import CustomPythonData, Nifty
-import pandas as pd
 
 class SecurityHistoryTest():
     def __init__(self, start_date, security_type, symbol):
@@ -85,8 +77,8 @@ class CustomDataHistoryTest(SecurityHistoryTest):
         if security_type == 'Nifty':
             type = Nifty
             self.column = 'close'
-        elif security_type == 'CustomDataPython':
-            type = CustomDataPython
+        elif security_type == 'CustomPythonData':
+            type = CustomPythonData
             self.column = 'close'
         else:
             raise

@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
             var custom = new CustomData
             {
                 Symbol = config.Symbol,
-                Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone),
+                Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture),
                 Open = csv[1].ToDecimal() * _scaleFactor,
                 High = csv[2].ToDecimal() * _scaleFactor,
                 Low = csv[3].ToDecimal() * _scaleFactor,

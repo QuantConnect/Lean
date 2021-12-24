@@ -11,20 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
+from AlgorithmImports import *
 AddReference("QuantConnect.Common")
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Data import *
-from QuantConnect.Python import *
-from datetime import datetime
 import decimal
 
 class CustomPythonData(PythonData):
     def GetSource(self, config, date, isLive):
-        source = "../../../Data/equity/usa/daily/ibm.zip"
+        source = Globals.DataFolder + "/equity/usa/daily/ibm.zip"
         return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
 
     def Reader(self, config, line, date, isLive):

@@ -16,11 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
-using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Algorithm.Selection;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Configuration;
@@ -565,6 +565,8 @@ namespace QuantConnect.Tests.Algorithm
             Assert.DoesNotThrow(() => niftyFactory.GetSource(niftySubscription, DateTime.UtcNow, false));
 
             var customDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "IBM");
+            Assert.AreEqual("custom_data.CustomPythonData", customDataSubscription.Type.ToString());
+            Assert.IsTrue(customDataSubscription.IsCustomData);
             Assert.IsNotNull(customDataSubscription);
 
             var customDataFactory = (BaseData)ObjectActivator.GetActivator(customDataSubscription.Type).Invoke(new object[] { customDataSubscription.Type });

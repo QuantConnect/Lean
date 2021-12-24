@@ -32,7 +32,6 @@ class HistoryAlgorithm(QCAlgorithm):
         self.AddEquity("SPY", Resolution.Daily)
         self.AddData(CustomDataEquity,"IBM", Resolution.Daily)
         # specifying the exchange will allow the history methods that accept a number of bars to return to work properly
-        self.Securities["IBM"].Exchange = EquityExchange()
 
         # we can get history in initialize to set up indicators and such
         self.dailySma = SimpleMovingAverage(14)
@@ -60,25 +59,21 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # get the last calendar year's worth of customData data at the configured resolution (daily)
         customDataHistory = self.History(CustomDataEquity, "IBM", timedelta(365))
-        self.AssertHistoryCount("History(CustomDataEquity, \"IBM\", timedelta(365))", customDataHistory, 250)
+        self.AssertHistoryCount("History(CustomDataEquity, \"IBM\", timedelta(365))", customDataHistory, 10)
 
-        # get the last 14 bars of IBM at the configured resolution (daily)
+        # get the last 10 bars of IBM at the configured resolution (daily)
         customDataHistory = self.History(CustomDataEquity, "IBM", 14)
-        self.AssertHistoryCount("History(CustomDataEquity, \"IBM\", 14)", customDataHistory, 14)
+        self.AssertHistoryCount("History(CustomDataEquity, \"IBM\", 14)", customDataHistory, 10)
 
         # we can loop over the return values from these functions and we'll get Custom data
         # this can be used in much the same way as the tradeBarHistory above
         self.dailySma.Reset()
         for index, customData in customDataHistory.loc["IBM"].iterrows():
-            self.dailySma.Update(index, customData["close"])
+            self.dailySma.Update(index, customData["value"])
 
-        # get the last year's worth of all configured Custom data at the configured resolution (daily)
-        #allCustomData = self.History(CustomDataEquity, timedelta(365))
-        #self.AssertHistoryCount("History(CustomDataEquity, timedelta(365))", allCustomData, 250)
-
-        # get the last 14 bars worth of Custom data for the specified symbols at the configured resolution (daily)
+        # get the last 10 bars worth of Custom data for the specified symbols at the configured resolution (daily)
         allCustomData = self.History(CustomDataEquity, self.Securities.Keys, 14)
-        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, 14)", allCustomData, 14)
+        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, 14)", allCustomData, 10)
 
         # NOTE: using different resolutions require that they are properly implemented in your data type, since
         #  Custom doesn't support minute data, this won't actually work, but if your custom data source has
@@ -92,19 +87,19 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # get the last calendar year's worth of all customData data
         allCustomData = self.History(CustomDataEquity, self.Securities.Keys, timedelta(365))
-        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, timedelta(365))", allCustomData, 250)
+        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, timedelta(365))", allCustomData, 10)
 
         # we can also access the return value from the multiple symbol functions to request a single
         # symbol and then loop over it
         singleSymbolCustom = allCustomData.loc["IBM"]
-        self.AssertHistoryCount("allCustomData.loc[\"IBM\"]", singleSymbolCustom, 250)
+        self.AssertHistoryCount("allCustomData.loc[\"IBM\"]", singleSymbolCustom, 10)
         for  customData in singleSymbolCustom:
             # do something with 'IBM.CustomDataEquity' customData data
             pass
 
-        customDataSpyLows = allCustomData.loc["IBM"]["low"]
-        self.AssertHistoryCount("allCustomData.loc[\"IBM\"][\"low\"]", customDataSpyLows, 250)
-        for  low in customDataSpyLows:
+        customDataSpyLows = allCustomData.loc["IBM"]["value"]
+        self.AssertHistoryCount("allCustomData.loc[\"IBM\"][\"value\"]", customDataSpyLows, 10)
+        for value in customDataSpyLows:
             # do something with 'IBM.CustomDataEquity' customData data
             pass
 
@@ -126,8 +121,8 @@ class HistoryAlgorithm(QCAlgorithm):
 
 class CustomDataEquity(PythonData):
     def GetSource(self, config, date, isLive):
-        source = "../../../Data/equity/usa/daily/ibm.zip"
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+        source = "https://www.dl.dropboxusercontent.com/s/o6ili2svndzn556/custom_data.csv?dl=0"
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile)
 
     def Reader(self, config, line, date, isLive):
         if line == None:
@@ -136,13 +131,8 @@ class CustomDataEquity(PythonData):
         customData = CustomDataEquity()
         customData.Symbol = config.Symbol
 
-        scaleFactor = 1 / 10000
         csv = line.split(",")
-        customData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M') + timedelta(hours=10)
-        customData.EndTime = customData.Time - timedelta(hours=5)
-        customData["Open"] = float(csv[1]) * scaleFactor
-        customData["High"] = float(csv[2]) * scaleFactor
-        customData["Low"] = float(csv[3]) * scaleFactor
-        customData["Close"] = float(csv[4]) * scaleFactor
-        customData["Volume"] = float(csv[5])
+        customData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M')
+        customData.EndTime = customData.Time + timedelta(days=1)
+        customData.Value = float(csv[1])
         return customData

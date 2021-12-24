@@ -12,36 +12,16 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-import decimal
+sys.path.append('/QuantConnect/Tests/Research/RegressionScripts')
+
+from custom_data import CustomPythonData
+
 
 class Test_CustomDataAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.AddData(Nifty, "NIFTY")
         self.AddData(CustomPythonData, "IBM", Resolution.Daily)
-
-class CustomPythonData(PythonData):
-    def GetSource(self, config, date, isLive):
-        source = "../../../Data/equity/usa/daily/ibm.zip"
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
-
-    def Reader(self, config, line, date, isLive):
-        if line == None:
-            return None
-
-        customPythonData = CustomPythonData()
-        customPythonData.Symbol = config.Symbol
-
-        scaleFactor = 1 / 10000
-        csv = line.split(",")
-        customPythonData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M') + timedelta(hours=10)
-        customPythonData.EndTime = customPythonData.Time - timedelta(hours=5)
-        customPythonData["Open"] = float(csv[1]) * scaleFactor
-        customPythonData["High"] = float(csv[2]) * scaleFactor
-        customPythonData["Low"] = float(csv[3]) * scaleFactor
-        customPythonData["Close"] = float(csv[4]) * scaleFactor
-        customPythonData["Volume"] = float(csv[5])
-        return customPythonData
 
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''

@@ -3313,6 +3313,7 @@ def Test(dataFrame, symbol):
 
             var config = GetSubscriptionDataConfig<BaseData>(symbol, Resolution.Daily);
             var custom = Activator.CreateInstance(typeof(CustomData)) as BaseData;
+            custom.Reader(config, "Date,Value", DateTime.UtcNow, false);
 
             var rawBars = Enumerable
                 .Range(0, 10)
@@ -3600,18 +3601,43 @@ def Test(dataFrame, symbol):
             public double? NullableColumn { get; set; }
         }
 
-        internal class CustomData: BaseData
+        internal class CustomData: DynamicData
         {
+            private bool _isInitialized;
+            private readonly List<string> _propertyNames = new List<string>();
+
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
+                // be sure to instantiate the correct type
+                var data = (CustomData)Activator.CreateInstance(GetType());
+                data.Symbol = config.Symbol;
                 var csv = line.Split(',');
 
-                var data = new CustomData
+                if (!_isInitialized)
                 {
-                    Symbol = config.Symbol,
-                    Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                    Value = csv[1].ToDecimal()
-                };
+                    _isInitialized = true;
+                    foreach (var propertyName in csv)
+                    {
+                        var property = propertyName.Trim();
+                        // should we remove property names like Time?
+                        // do we need to alias the Time??
+                        data.SetProperty(property, 0m);
+                        _propertyNames.Add(property);
+                    }
+                    // Returns null at this point where we are only reading the properties names
+                    return null;
+                }
+
+                data.Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+                for (var i = 1; i < csv.Length; i++)
+                {
+                    var value = csv[i].ToDecimal();
+                    data.SetProperty(_propertyNames[i], value);
+                }
+
+                // we know that there is a close property, we want to set that to 'Value'
+                data.Value = (decimal)data.GetProperty("Value");
 
                 return data;
             }
