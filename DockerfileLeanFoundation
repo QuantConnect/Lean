@@ -29,10 +29,10 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test \
 
 # Install IB Gateway: Installs to /root/ibgateway
 RUN mkdir -p /root/ibgateway && \
-    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
-    ./ibgateway-latest-standalone-linux-x64.v985.1j.sh -q -dir /root/ibgateway && \
-    rm ibgateway-latest-standalone-linux-x64.v985.1j.sh
+    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.12.2d.sh && \
+    chmod 777 ibgateway-latest-standalone-linux-x64.v10.12.2d.sh && \
+    ./ibgateway-latest-standalone-linux-x64.v10.12.2d.sh -q -dir /root/ibgateway && \
+    rm ibgateway-latest-standalone-linux-x64.v10.12.2d.sh
 
 # Install dotnet 5 sdk & runtime
 RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
@@ -166,7 +166,8 @@ RUN pip install --no-cache-dir      \
     dgl==0.6.1                      \
     ruptures==1.1.3                 \
     simpy==4.0.1                    \
-    scikit-learn-extra==0.2.0
+    scikit-learn-extra==0.2.0       \
+    ray==1.9.1
 
 # feature_selector has overly strict dependency version ranges
 # We already installed close-enough versions of all of its dependencies above
