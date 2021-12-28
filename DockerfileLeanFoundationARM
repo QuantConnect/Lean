@@ -54,9 +54,9 @@ RUN wget -O Miniforge3.sh https://github.com/conda-forge/miniforge/releases/late
     rm Miniforge3.sh && \
     ln -s /opt/miniforge3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so && \
     conda config --append channels https://repo.anaconda.com/pkgs/main && \
-    conda update -y conda pip && \
-    pip install --upgrade --no-cache-dir pip && \
-    conda install -y python=3.6.7 && conda clean -y --all
+    conda install -y conda=4.10.3 && \
+    pip install --upgrade --no-cache-dir pip==21.2.2 && \
+    conda install -y python=3.6.7 && conda install -y pip=21.2.2 && conda clean -y --all
 
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
