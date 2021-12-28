@@ -318,12 +318,8 @@ namespace QuantConnect.Configuration
         {
             try
             {
-                // will throw if the key exists but can't parse.
-                // it won't throw if key is not found
                 value = GetValue(key, defaultValue);
-
-                var keyExists = GetToken(key) != null;
-                return keyExists;
+                return true;
             }
             catch
             {
