@@ -53,9 +53,9 @@ ENV PATH="/opt/miniconda3/bin:${PATH}"
 RUN wget https://cdn.quantconnect.com/miniconda/${CONDA} && \
     bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA} && \
     ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so && \
-    conda update -y conda pip && \
-    pip install --upgrade --no-cache-dir pip && \
-    conda install -y python=3.6.8 && conda clean -y --all
+    conda install -y conda=4.10.3 && \
+    pip install --upgrade --no-cache-dir pip==21.2.2 && \
+    conda install -y python=3.6.8 && conda install -y pip=21.2.2 && conda clean -y --all
 
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
