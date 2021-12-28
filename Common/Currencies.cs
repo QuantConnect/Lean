@@ -23,24 +23,34 @@ namespace QuantConnect
     public static class Currencies
     {
         /// <summary>
-        /// USD currency string
+        /// USD (United States Dollar) currency string
         /// </summary>
-        public static string USD = "USD";
+        public const string USD = "USD";
 
         /// <summary>
-        /// EUR currency string
+        /// EUR (Euro) currency string
         /// </summary>
-        public static string EUR = "EUR";
+        public const string EUR = "EUR";
 
         /// <summary>
-        /// GBP currency string
+        /// GBP (British pound sterling) currency string
         /// </summary>
-        public static string GBP = "GBP";
+        public const string GBP = "GBP";
 
         /// <summary>
-        /// INR currency string
+        /// INR (Indian rupee) currency string
         /// </summary>
-        public static string INR = "INR";
+        public const string INR = "INR";
+
+        /// <summary>
+        /// CNH (Chinese Yuan Renminbi) currency string
+        /// </summary>
+        public const string CNH = "CNH";
+
+        /// <summary>
+        /// HKD (Hong Kong dollar) currency string
+        /// </summary>
+        public const string HKD = "HKD";
 
         /// <summary>
         /// Null currency used when a real one is not required
@@ -55,19 +65,19 @@ namespace QuantConnect
         /// </remarks>
         public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
         {
-            {"USD", "$"},
-            {"GBP", "₤"},
+            {USD, "$"},
+            {GBP, "₤"},
             {"JPY", "¥"},
-            {"EUR", "€"},
+            {EUR, "€"},
             {"NZD", "$"},
             {"AUD", "$"},
             {"CAD", "$"},
             {"CHF", "Fr"},
-            {"HKD", "$"},
+            {HKD, "$"},
             {"SGD", "$"},
             {"XAG", "Ag"},
             {"XAU", "Au"},
-            {"CNH", "¥"},
+            {CNH, "¥"},
             {"CNY", "¥"},
             {"CZK", "Kč"},
             {"DKK", "kr"},
