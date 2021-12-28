@@ -137,7 +137,7 @@ namespace QuantConnect.Orders.Fees
                     switch (market)
                     {
                         case Market.USA:
-                            equityFee = new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
+                            equityFee = new EquityFee(Currencies.USD, feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
                             break;
                         default:
                             throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
@@ -245,7 +245,7 @@ namespace QuantConnect.Orders.Fees
 
         private static CashAmount UnitedStatesFutureFees(Security security)
         {
-            return new CashAmount(0.85m + 1, "USD");
+            return new CashAmount(0.85m + 1, Currencies.USD);
         }
 
         /// <summary>
