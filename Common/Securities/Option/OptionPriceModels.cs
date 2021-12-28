@@ -43,7 +43,7 @@ namespace QuantConnect.Securities.Option
         /// Pricing engine for . 
         /// </summary>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel Create(string priceEngineName)
+        public static IOptionPriceModel Create(string priceEngineName, double riskFree)
         {
             var type = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a => !a.IsDynamic)
@@ -52,7 +52,7 @@ namespace QuantConnect.Securities.Option
 
             return new QLOptionPriceModel(process => (IPricingEngine)Activator.CreateInstance(type, process),
                 _underlyingVolEstimator,
-                _riskFreeRateEstimator,
+                new ConstantQLRiskFreeRateEstimator(riskFree),
                 _dividendYieldEstimator);
         }
 
