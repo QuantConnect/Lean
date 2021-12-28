@@ -48,10 +48,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
         }
 
-        public IEnumerable<IEnumerable<Tick>> GenerateTicks()
+        public IEnumerable<Tick> GenerateTicks()
         {
-            List<Tick> ticks = new List<Tick>();
-
             var previousValues = new Dictionary<TickType, decimal>
             {
                 {TickType.Trade, 100m},
@@ -74,8 +72,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var deviation = GetMaximumDeviation(Settings.Resolution);
             while (current <= Settings.End)
             {
-                ticks.Clear();
-
                 var next = NextTickTime(current, Settings.Resolution, Settings.DataDensity);
                 if (TickTypes.Contains(TickType.OpenInterest))
                 {
@@ -85,7 +81,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         var previous = previousValues[TickType.OpenInterest];
                         var openInterest = NextOpenInterest(next.Date, previous, 5m);
                         previousValues[TickType.OpenInterest] = openInterest.Value;
-                        ticks.Add(openInterest);
+                        yield return openInterest;
                     }
                 }
 
@@ -103,12 +99,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     if (Random.NextBool(tradeChancePercent))
                     {
                         var nextTrade = NextTick(next, TickType.Trade, referenceValue, deviation);
-                        ticks.Add(nextTrade);
+                        yield return nextTrade;
                     }
                     else
                     {
                         var nextQuote = NextTick(next, TickType.Quote, referenceValue, deviation);
-                        ticks.Add(nextQuote);
+                        yield return nextQuote;
                     }
                     previousValues[TickType.Trade] = referenceValue;
                 }
@@ -116,18 +112,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 {
                     var nextTrade = NextTick(next, TickType.Trade, NextReferencePrice(next, previousValues[TickType.Trade], deviation), deviation);
                     previousValues[TickType.Trade] = nextTrade.Value;
-                    ticks.Add(nextTrade);
+                    yield return nextTrade;
                 }
                 else if (TickTypes.Contains(TickType.Quote))
                 {
                     var nextQuote = NextTick(next, TickType.Quote, NextReferencePrice(next, previousValues[TickType.Quote], deviation), deviation);
                     previousValues[TickType.Quote] = nextQuote.Value;
-                    ticks.Add(nextQuote);
+                    yield return nextQuote;
                 }
 
                 // advance to the next time step
                 current = next;
-                yield return ticks;
             }
         }
 

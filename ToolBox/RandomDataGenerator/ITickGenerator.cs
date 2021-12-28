@@ -7,7 +7,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     public interface ITickGenerator
     {
         Symbol Symbol { get; }
-        IEnumerable<IEnumerable<Tick>> GenerateTicks();
+        IEnumerable<Tick> GenerateTicks();
 
         /// <summary>
         /// Generates a random <see cref="Tick"/> that is at most the specified <paramref name="maximumPercentDeviation"/> away from the

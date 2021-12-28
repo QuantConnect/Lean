@@ -10,6 +10,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -157,8 +158,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 output.Warn.WriteLine($"\tSymbol[{++count}]: {symbolRef} Progress: {progress:0.0}% - Generating data...");
 
-                var tickGenerators = new Dictionary<Security, IEnumerator<IEnumerable<Tick>>>();
+                var tickGenerators = new List<IEnumerator<Tick>>();
                 var tickHistories = new Dictionary<Symbol, List<Tick>>();
+                var securities = new Dictionary<Symbol, Security>();
                 Security underlyingSecurity = null;
                 foreach (var currentSymbol in currentSymbolGroup)
                 {
@@ -167,10 +169,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         new List<SubscriptionDataConfig>(),
                         underlying: underlyingSecurity);
 
+                    securities[currentSymbol] = security;
                     underlyingSecurity ??= security;
 
                     tickGenerators.Add(
-                        security,
                         TickGenerator.Create(settings, tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray(), randomValueGenerator, security)
                             .GenerateTicks()
                             .GetEnumerator());
@@ -181,27 +183,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
 
                 var go = true;
-                while (go)
+                using var sync = new SynchronizingEnumerator(tickGenerators);
+                while (sync.MoveNext())
                 {
-                    foreach (var (security, tickGenerator) in tickGenerators)
-                    {
-                        go = tickGenerator.MoveNext();
-                        if (!go)
-                        {
-                            break;
-                        }
-
-                        var ticks = tickGenerator.Current.ToList();
-                        tickHistories[security.Symbol].AddRange(ticks);
-
-                        foreach (var group in ticks.GroupBy(t => t.TickType))
-                        {
-                            security.Update(group.ToList(), group.First().GetType(), false);
-                        }
-                    }
+                    var datapoint = sync.Current;
+                    securities[sync.Current.Symbol].Update(new List<BaseData>() { datapoint }, datapoint.GetType(), false);
                 }
 
-                foreach (var (currentSymbol, tickHistory) in tickHistories)
+                foreach (var (currentSymbol, tickHistory) in tickHistories.Where(s => s.Key.SecurityType != SecurityType.Equity))
                 {
                     var symbol = currentSymbol;
 
