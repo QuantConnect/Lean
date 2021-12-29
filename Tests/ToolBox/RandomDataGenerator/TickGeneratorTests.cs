@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.RandomDataGenerator;
 
@@ -8,6 +11,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
     [TestFixture]
     public class TickGeneratorTests
     {
+        private Dictionary<SecurityType, List<TickType>> _tickTypesPerSecurityType = SubscriptionManager.DefaultDataTypes();
         private Symbol _symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
         private ITickGenerator _tickGenerator;
 
@@ -17,7 +21,26 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             // initialize using a seed for deterministic tests
             _symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
-            _tickGenerator = new TickGenerator(new RandomDataGeneratorSettings());
+            var security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(typeof(TradeBar),
+                    _symbol,
+                    Resolution.Minute,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    true, true, false),
+                new Cash(Currencies.USD, 0, 0),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+
+            _tickGenerator = TickGenerator.Create(
+                new RandomDataGeneratorSettings(),
+                _tickTypesPerSecurityType[_symbol.SecurityType].ToArray(),
+                new RandomValueGenerator(),
+                security);
 
         }
 
@@ -25,7 +48,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesTradeTick_WithPriceAndQuantity()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(_symbol, dateTime, TickType.Trade, 100m, 1m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.Trade, 100m, 1m);
 
             Assert.AreEqual(_symbol, tick.Symbol);
             Assert.AreEqual(dateTime, tick.Time);
@@ -41,7 +64,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesQuoteTick_WithCommonValues()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(_symbol, dateTime, TickType.Quote, 100m, 1m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.Quote, 100m, 1m);
 
             Assert.AreEqual(_symbol, tick.Symbol);
             Assert.AreEqual(dateTime, tick.Time);
@@ -54,7 +77,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesQuoteTick_WithBidData()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(_symbol, dateTime, TickType.Quote, 100m, 1m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.Quote, 100m, 1m);
 
             Assert.Greater(tick.BidSize, 0);
             Assert.LessOrEqual(tick.BidSize, 1500);
@@ -67,7 +90,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesQuoteTick_WithAskData()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(_symbol, dateTime, TickType.Quote, 100m, 1m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.Quote, 100m, 1m);
 
             Assert.GreaterOrEqual(tick.AskSize, 0);
             Assert.LessOrEqual(tick.AskSize, 1500);
@@ -80,7 +103,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesOpenInterestTick()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(_symbol, dateTime, TickType.OpenInterest, 10000m, 10m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.OpenInterest, 10000m, 10m);
 
             Assert.AreEqual(dateTime, tick.Time);
             Assert.AreEqual(TickType.OpenInterest, tick.TickType);
@@ -119,7 +142,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var marketHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(_symbol.ID.Market, _symbol, _symbol.SecurityType);
             for (int i = 0; i < count; i++)
             {
-                var next = _tickGenerator.NextTickTime(_symbol, previous, resolution, density);
+                var next = _tickGenerator.NextTickTime(previous, resolution, density);
                 var barStart = next.Subtract(increment);
                 Assert.Less(previous, next);
                 Assert.IsTrue(marketHours.IsOpen(barStart, next, false));

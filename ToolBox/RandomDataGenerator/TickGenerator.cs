@@ -79,7 +79,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     {
                         // 5% deviation in daily OI
                         var previous = previousValues[TickType.OpenInterest];
-                        var openInterest = NextOpenInterest(next.Date, previous, 5m);
+                        var openInterest = NextTick(next.Date, TickType.OpenInterest, previous, 5m);
                         previousValues[TickType.OpenInterest] = openInterest.Value;
                         yield return openInterest;
                     }
@@ -153,6 +153,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             switch (tickType)
             {
+                case TickType.OpenInterest:
+                    return NextOpenInterest(dateTime, referencePrice, maximumPercentDeviation);
+
                 case TickType.Trade:
                     tick.Quantity = Random.NextInt(1, 1500);
                     return tick;
@@ -191,7 +194,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// Generates a random <see cref="Tick"/> that is at most the specified <paramref name="maximumPercentDeviation"/> away from the
         /// <paramref name="previousValue"/> and is of the Open Interest
         /// </summary>
-        /// <param name="symbol">The Symbol of the generated tick</param>
         /// <param name="dateTime">The time of the generated tick</param>
         /// <param name="previousValue">The previous price, used as a reference for generating
         /// new random prices for the next time step</param>
@@ -200,7 +202,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <paramref name="previousValue"/>. For a previous price of 100, this would yield a price between 99 and 101 inclusive</param>
         /// <returns>A random <see cref="Tick"/> value that is within the specified <paramref name="maximumPercentDeviation"/>
         /// from the <paramref name="previousValue"/></returns>
-        public virtual Tick NextOpenInterest(DateTime dateTime, decimal previousValue, decimal maximumPercentDeviation)
+        public Tick NextOpenInterest(DateTime dateTime, decimal previousValue, decimal maximumPercentDeviation)
         {
             var next = (long)Random.NextPrice(Symbol.SecurityType, Symbol.ID.Market, previousValue, maximumPercentDeviation);
             return new Tick

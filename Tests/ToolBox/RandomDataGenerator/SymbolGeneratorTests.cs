@@ -105,8 +105,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     Market = market
                 }, _randomValueGenerator);
 
-                var symbol = symbolGenerator.GenerateSingle();
+                var symbols = symbolGenerator.GenerateAsset().ToList();
+                Assert.AreEqual(1, symbols.Count);
 
+                var symbol = symbols.First();
                 Assert.AreEqual(securityType, symbol.SecurityType);
                 Assert.AreEqual(market, symbol.ID.Market);
             }
@@ -127,7 +129,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     Market = market
                 }, _randomValueGenerator);
 
-                var symbol = symbolGenerator.GenerateSingle();
+                var symbols = symbolGenerator.GenerateAsset().ToList();
+                Assert.AreEqual(1, symbols.Count);
+
+                var symbol = symbols.First();
 
                 var db = SymbolPropertiesDatabase.FromDataFolder();
                 if (db.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType))
@@ -162,11 +167,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
                 for (var i = 0; i < symbolCount; i++)
                 {
-                    symbolGenerator.GenerateSingle();
+                    var symbols = symbolGenerator.GenerateAsset().ToList();
+                    Assert.AreEqual(1, symbols.Count);
                 }
 
                 Assert.Throws<NoTickersAvailableException>(() =>
-                    symbolGenerator.GenerateSingle()
+                    symbolGenerator.GenerateAsset().ToList()
                 );
             }
         }
@@ -201,7 +207,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             [Test]
             public void NextFuture_CreatesSymbol_WithFutureSecurityTypeAndRequestedMarket()
             {
-                var symbol = _symbolGenerator.GenerateSingle();
+                var symbols = _symbolGenerator.GenerateAsset().ToList();
+                Assert.AreEqual(1, symbols.Count);
+
+                var symbol = symbols.First();
 
                 Assert.AreEqual(Market.CME, symbol.ID.Market);
                 Assert.AreEqual(SecurityType.Future, symbol.SecurityType);
@@ -210,7 +219,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             [Test]
             public void NextFuture_CreatesSymbol_WithFutureWithValidFridayExpiry()
             {
-                var symbol = _symbolGenerator.GenerateSingle();
+                var symbols = _symbolGenerator.GenerateAsset().ToList();
+                Assert.AreEqual(1, symbols.Count);
+
+                var symbol = symbols.First();
 
                 var expiry = symbol.ID.Date;
                 Assert.Greater(expiry, _minExpiry);
@@ -221,7 +233,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             [Test]
             public void NextFuture_CreatesSymbol_WithEntryInSymbolPropertiesDatabase()
             {
-                var symbol = _symbolGenerator.GenerateSingle();
+               var symbols = _symbolGenerator.GenerateAsset().ToList();
+               Assert.AreEqual(1, symbols.Count);
+
+                var symbol = symbols.First();
 
                 var db = SymbolPropertiesDatabase.FromDataFolder();
                 Assert.IsTrue(db.ContainsKey(Market.CME, symbol, SecurityType.Future));
@@ -262,11 +277,16 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             [Test]
             public void NextOptionSymbol_CreatesOptionSymbol_WithCorrectSecurityTypeAndEquityUnderlying()
             {
-                var symbol = _symbolGenerator.GenerateSingle();
+                var securities = _symbolGenerator.GenerateAsset().ToList();
+                Assert.AreEqual(2, securities.Count);
 
-                Assert.AreEqual(SecurityType.Option, symbol.SecurityType);
+                var underlying = securities[0];
+                var option = securities[1];
 
-                var underlying = symbol.Underlying;
+                Assert.AreEqual(SecurityType.Option, option.SecurityType);
+
+                var underlyingOrigin = option.Underlying;
+                Assert.AreEqual(underlying.Value, underlyingOrigin.Value);
                 Assert.AreEqual(Market.USA, underlying.ID.Market);
                 Assert.AreEqual(SecurityType.Equity, underlying.SecurityType);
             }
@@ -274,9 +294,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             [Test]
             public void NextOptionSymbol_CreatesOptionSymbol_WithinSpecifiedExpiration_OnFriday()
             {
-                var symbol = _symbolGenerator.GenerateSingle();
+                var securities = _symbolGenerator.GenerateAsset().ToList();
+                Assert.AreEqual(2, securities.Count);
+                
+                var option = securities[1];
 
-                var expiration = symbol.ID.Date;
+                var expiration = option.ID.Date;
                 Assert.LessOrEqual(_minExpiry, expiration);
                 Assert.GreaterOrEqual(_maxExpiry, expiration);
             }
@@ -297,18 +320,24 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                         _randomValueGenerator,
                         price,
                         50m);
-                    var symbol = _symbolGenerator.GenerateSingle();
+                    var securities = symbolGenerator.GenerateAsset().ToList();
+                    Assert.AreEqual(2, securities.Count);
 
-                    Assert.AreEqual(Market.USA, symbol.ID.Market);
+                    var option = securities[1];
+
+                    Assert.AreEqual(Market.USA, option.ID.Market);
                 }
             }
 
             [Test]
             public void NextOptionSymbol_CreatesOptionSymbol_WithinSpecifiedStrikePriceDeviation()
             {
-                var symbol = _symbolGenerator.GenerateSingle();
+                var securities = _symbolGenerator.GenerateAsset().ToList();
+                Assert.AreEqual(2, securities.Count);
+                
+                var option = securities[1];
 
-                var strikePrice = symbol.ID.StrikePrice;
+                var strikePrice = option.ID.StrikePrice;
                 var maximumDeviation = _underlyingPrice * (_maximumStrikePriceDeviation / 100m);
                 Assert.LessOrEqual(_underlyingPrice - maximumDeviation, strikePrice);
                 Assert.GreaterOrEqual(_underlyingPrice + maximumDeviation, strikePrice);
