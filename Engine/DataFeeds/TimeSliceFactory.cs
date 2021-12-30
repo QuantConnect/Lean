@@ -450,7 +450,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             OptionContract contract;
             if (!chain.Contracts.TryGetValue(baseData.Symbol, out contract))
             {
-                contract = OptionContract.Create(baseData, option, chain.Underlying.Price);
+                contract = OptionContract.Create(baseData, security, chain.Underlying.Price);
 
                 chain.Contracts[baseData.Symbol] = contract;
 

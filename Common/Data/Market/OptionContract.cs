@@ -178,11 +178,11 @@ namespace QuantConnect.Data.Market
         /// </returns>
         public override string ToString() => Symbol.Value;
 
-        public static OptionContract Create(BaseData baseData, IOptionPrice security, decimal underlyingLastPrice)
+        public static OptionContract Create(BaseData baseData, ISecurityPrice security, decimal underlyingLastPrice)
             => Create(baseData.Symbol, baseData.Symbol.Underlying, baseData.EndTime, security, underlyingLastPrice);
 
 
-        public static OptionContract Create(Symbol symbol, Symbol underlyingSymbol, DateTime endTime, IOptionPrice security, decimal underlyinLastPrice)
+        public static OptionContract Create(Symbol symbol, Symbol underlyingSymbol, DateTime endTime, ISecurityPrice security, decimal underlyingLastPrice)
         {
             return new OptionContract(symbol, underlyingSymbol)
             {
@@ -194,7 +194,7 @@ namespace QuantConnect.Data.Market
                 AskPrice = security.AskPrice,
                 AskSize = (long)security.AskSize,
                 OpenInterest = security.OpenInterest,
-                UnderlyingLastPrice = underlyinLastPrice
+                UnderlyingLastPrice = underlyingLastPrice
             };
         }
     }
