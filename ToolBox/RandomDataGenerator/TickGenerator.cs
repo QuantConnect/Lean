@@ -30,14 +30,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             SymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
-            switch (Symbol.SecurityType)
+            if (Symbol.SecurityType.IsOption())
             {
-                case SecurityType.Option:
-                    _priceGenerator = new BlackScholesPriceGenerator(security);
-                    break;
-                default:
-                    _priceGenerator = new RandomPriceGenerator(security.Symbol, random);
-                    break;
+                _priceGenerator = new BlackScholesPriceGenerator(security);
+            }
+            else
+            {
+                _priceGenerator = new RandomPriceGenerator(security.Symbol, random);
             }
         }
 

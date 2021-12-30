@@ -181,8 +181,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         currentSymbol,
                         new List<Tick>());
                 }
-
-                var go = true;
+                
                 using var sync = new SynchronizingEnumerator(tickGenerators);
                 while (sync.MoveNext())
                 {

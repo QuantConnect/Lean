@@ -90,7 +90,14 @@ namespace QuantConnect.Securities
             TimeSpan? updateFrequency = null
             )
         {
-            Init(periods, resolution, updateFrequency);
+            if (periods < 2)
+            {
+                throw new ArgumentOutOfRangeException(nameof(periods), "'periods' must be greater than or equal to 2.");
+            }
+
+            _window = new RollingWindow<double>(periods);
+            _resolution = resolution;
+            _periodSpan = updateFrequency ?? resolution?.ToTimeSpan() ?? TimeSpan.FromDays(1);
         }
 
         /// <summary>
@@ -111,29 +118,10 @@ namespace QuantConnect.Securities
         /// the default value of the <paramref name="updateFrequency"/> if no value is provided.
         /// </remarks>
         public StandardDeviationOfReturnsVolatilityModel(
-            Resolution? resolution,
+            Resolution resolution,
             TimeSpan? updateFrequency = null
-            )
+            ) : this(PeriodsInResolution(resolution), resolution, updateFrequency)
         {
-            int periods;
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                case Resolution.Second:
-                    periods = 600;
-                    break;
-                case Resolution.Minute:
-                    periods = 60 * 24;
-                    break;
-                case Resolution.Hour:
-                    periods = 24 * 30;
-                    break;
-                default:
-                    periods = 30;
-                    break;
-            }
-
-            Init(periods, resolution, updateFrequency);
         }
 
         /// <summary>
@@ -176,19 +164,27 @@ namespace QuantConnect.Securities
                 _window.Size + 1);
         }
 
-        private void Init(
-            int periods,
-            Resolution? resolution,
-            TimeSpan? updateFrequency)
+        private static int PeriodsInResolution(Resolution resolution)
         {
-            if (periods < 2)
+            int periods;
+            switch (resolution)
             {
-                throw new ArgumentOutOfRangeException("periods", "'periods' must be greater than or equal to 2.");
+                case Resolution.Tick:
+                case Resolution.Second:
+                    periods = 600;
+                    break;
+                case Resolution.Minute:
+                    periods = 60 * 24;
+                    break;
+                case Resolution.Hour:
+                    periods = 24 * 30;
+                    break;
+                default:
+                    periods = 30;
+                    break;
             }
 
-            _window = new RollingWindow<double>(periods);
-            _resolution = resolution;
-            _periodSpan = updateFrequency ?? resolution?.ToTimeSpan() ?? TimeSpan.FromDays(1);
+            return periods;
         }
     }
 }

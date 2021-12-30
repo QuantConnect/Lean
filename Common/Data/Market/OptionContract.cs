@@ -25,8 +25,7 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionContract
     {
-        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new Lazy<OptionPriceModelResult>(() =>
-                                                                            new OptionPriceModelResult(0m, new Greeks()));
+        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new(() => OptionPriceModelResult.None);
 
         /// <summary>
         /// Gets the option contract's symbol

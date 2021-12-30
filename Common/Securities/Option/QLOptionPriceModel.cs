@@ -86,7 +86,7 @@ namespace QuantConnect.Securities.Option
                 // expired options has no price
                 if (contract.Time > contract.Expiry)
                 {
-                    return new OptionPriceModelResult(0m, new Greeks());
+                    return OptionPriceModelResult.None;
                 }
 
                 // setting up option pricing parameters
@@ -227,7 +227,7 @@ namespace QuantConnect.Securities.Option
             catch (Exception err)
             {
                 Log.Debug($"QLOptionPriceModel.Evaluate() error: {err.Message}");
-                return new OptionPriceModelResult(0m, new Greeks());
+                return OptionPriceModelResult.None;
             }
         }
 

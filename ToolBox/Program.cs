@@ -65,15 +65,15 @@ namespace QuantConnect.ToolBox
                 PrintMessageAndExit();
             }
 
-            var DataProvider
+            var dataProvider
                 = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider"));
-            var MapFileProvider
+            var mapFileProvider
                 = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
-            var FactorFileProvider
+            var factorFileProvider
                 = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
             
-            MapFileProvider.Initialize(DataProvider);
-            FactorFileProvider.Initialize(MapFileProvider, DataProvider);
+            mapFileProvider.Initialize(dataProvider);
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
 
             var targetApp = GetParameterOrExit(optionsObject, "app").ToLowerInvariant();
             if (targetApp.Contains("download") || targetApp.EndsWith("dl"))

@@ -19,7 +19,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 throw new ArgumentNullException(nameof(security), "security cannot be null");
             }
 
-            if (security.Symbol.SecurityType != SecurityType.Option)
+            if (!security.Symbol.SecurityType.IsOption())
             {
                 throw new ArgumentException("Black-Scholes pricing model cannot be applied to non-option security.");
             }
