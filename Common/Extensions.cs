@@ -2467,7 +2467,7 @@ namespace QuantConnect
                 try
                 {
                     // Special case: Type
-                    if (typeof(Type).IsAssignableFrom(type))
+                    if (typeof(Type).IsAssignableFrom(type) && allowPythonDerivative)
                     {
                         result = (T)pyObject.AsManagedObject(type);
                         return true;
@@ -2775,7 +2775,7 @@ namespace QuantConnect
         public static string GetEnumString(this int value, PyObject pyObject)
         {
             Type type;
-            if (pyObject.TryConvert(out type))
+            if (pyObject.TryConvert(out type, true))
             {
                 return value.ToStringInvariant().ConvertTo(type).ToString();
             }
@@ -2796,8 +2796,15 @@ namespace QuantConnect
         public static Type CreateType(this PyObject pyObject)
         {
             Type type;
-            if (pyObject.TryConvert(out type) && type != typeof(PythonData))
+            if (pyObject.TryConvert(out type, true) && type != typeof(PythonData))
             {
+                if (type.Name == "PythonQuandl")
+                {
+                    using (Py.GIL())
+                    {
+                        pyObject.Invoke();
+                    }
+                }
                 return type;
             }
 
