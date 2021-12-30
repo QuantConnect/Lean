@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -71,6 +72,69 @@ namespace QuantConnect.Data.UniverseSelection
                 clone.Data = clone.Data.Where(d => first.ContainsMember(d.Symbol)).ToList();
                 return second.SelectSymbols(utcTime, clone);
             });
+        }
+
+        /// <summary>
+        /// Creates a universe symbol
+        /// </summary>
+        /// <param name="securityType">The security</param>
+        /// <param name="market">The market</param>
+        /// <param name="ticker">The Universe ticker</param>
+        /// <returns>A symbol for user defined universe of the specified security type and market</returns>
+        public static Symbol CreateSymbol(SecurityType securityType, string market, string ticker)
+        {
+            SecurityIdentifier sid;
+            switch (securityType)
+            {
+                case SecurityType.Base:
+                    sid = SecurityIdentifier.GenerateBase(null, ticker, market);
+                    break;
+
+                case SecurityType.Equity:
+                    sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+                    break;
+
+                case SecurityType.Option:
+                    var underlying = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying, market, 0, 0, 0);
+                    break;
+
+                case SecurityType.FutureOption:
+                    var underlyingFuture = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlyingFuture, market, 0, 0, 0);
+                    break;
+
+                case SecurityType.IndexOption:
+                    var underlyingIndex = SecurityIdentifier.GenerateIndex(ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlyingIndex, market, 0, 0, OptionStyle.European);
+                    break;
+
+                case SecurityType.Forex:
+                    sid = SecurityIdentifier.GenerateForex(ticker, market);
+                    break;
+
+                case SecurityType.Cfd:
+                    sid = SecurityIdentifier.GenerateCfd(ticker, market);
+                    break;
+
+                case SecurityType.Index:
+                    sid = SecurityIdentifier.GenerateIndex(ticker, market);
+                    break;
+
+                case SecurityType.Future:
+                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
+                    break;
+
+                case SecurityType.Crypto:
+                    sid = SecurityIdentifier.GenerateCrypto(ticker, market);
+                    break;
+
+                case SecurityType.Commodity:
+                default:
+                    throw new NotImplementedException($"The specified security type is not implemented yet: {securityType}");
+            }
+
+            return new Symbol(sid, ticker);
         }
     }
 }

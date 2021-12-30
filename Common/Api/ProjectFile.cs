@@ -28,13 +28,13 @@ namespace QuantConnect.Api
         /// Name of a project file
         /// </summary>
         [JsonProperty(PropertyName = "name")]
-        public string Name;
+        public string Name { get; set; }
 
         /// <summary>
         /// Contents of the project file
         /// </summary>
         [JsonProperty(PropertyName = "content")]
-        public string Code;
+        public string Code { get; set; }
 
         /// <summary>
         /// DateTime project file was modified
@@ -52,6 +52,6 @@ namespace QuantConnect.Api
         /// List of project file information
         /// </summary>
         [JsonProperty(PropertyName = "files")]
-        public List<ProjectFile> Files;
+        public List<ProjectFile> Files { get; set; }
     }
 }

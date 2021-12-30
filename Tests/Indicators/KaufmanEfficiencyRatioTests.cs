@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,18 +13,21 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Optimizer.Objectives
+using NUnit.Framework;
+using QuantConnect.Indicators;
+
+namespace QuantConnect.Tests.Indicators
 {
-    /// <summary>
-    /// Defines standard maximization strategy, i.e. right operand is great than left
-    /// </summary>
-    public class Maximization : Extremum
+    [TestFixture]
+    public class KaufmanEfficiencyRatioTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        /// <summary>
-        /// Creates an instance of <see cref="Maximization"/>
-        /// </summary>
-        public Maximization() : base((v1, v2) => v1 < v2)
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
+            return new KaufmanEfficiencyRatio(10);
         }
+
+        protected override string TestFileName => "spy_ker.txt";
+
+        protected override string TestColumnName => "KER";
     }
 }

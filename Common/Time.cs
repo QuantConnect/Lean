@@ -30,6 +30,12 @@ namespace QuantConnect
     public static class Time
     {
         /// <summary>
+        /// Allows specifying an offset to trigger the tradable date event
+        /// </summary>
+        /// <remarks>Useful for delaying the tradable date event until new auxiliary data is available to refresh map and factor files</remarks>
+        public static TimeSpan LiveAuxiliaryDataOffset { get; set; } = TimeSpan.FromHours(8);
+
+        /// <summary>
         /// Provides a value far enough in the future the current computer hardware will have decayed :)
         /// </summary>
         /// <value>

@@ -17,6 +17,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Util;
 using System;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Optimizer.Objectives
 {
@@ -29,7 +31,7 @@ namespace QuantConnect.Optimizer.Objectives
         /// <summary>
         /// The target comparison operation, eg. 'Greater'
         /// </summary>
-        [JsonProperty("operator")]
+        [JsonProperty("operator"), JsonConverter(typeof(StringEnumConverter), typeof(DefaultNamingStrategy))]
         public ComparisonOperatorTypes Operator { get; }
 
         /// <summary>

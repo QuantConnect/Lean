@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,11 +13,8 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using NodaTime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -25,6 +22,11 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Order = QuantConnect.Orders.Order;
 
@@ -37,12 +39,20 @@ namespace QuantConnect.Brokerages.Oanda
     public class OandaBrokerage : Brokerage, IDataQueueHandler
     {
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
-        private readonly OandaRestApiBase _api;
+        private OandaRestApiBase _api;
+        private bool _isInitialized;
 
         /// <summary>
         /// The maximum number of bars per historical data request
         /// </summary>
         public const int MaxBarsPerRequest = 5000;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
+        /// </summary>
+        public OandaBrokerage() : base("Oanda Brokerage")
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
@@ -57,15 +67,7 @@ namespace QuantConnect.Brokerages.Oanda
         public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
             : base("Oanda Brokerage")
         {
-            if (environment != Environment.Trade && environment != Environment.Practice)
-                throw new NotSupportedException("Oanda Environment not supported: " + environment);
-
-            _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
-
-            // forward events received from API
-            _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
-            _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
-            _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
+            Initialize(orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent = OandaRestApiBase.OandaAgentDefaultValue);
         }
 
         #region IBrokerage implementation
@@ -241,7 +243,7 @@ namespace QuantConnect.Brokerages.Oanda
             }
         }
 
-        #endregion
+        #endregion IBrokerage implementation
 
         #region IDataQueueHandler implementation
 
@@ -251,6 +253,25 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            Enum.TryParse(job.BrokerageData["oanda-environment"], out Environment environment);
+            var accessToken = job.BrokerageData["oanda-access-token"];
+            var accountId = job.BrokerageData["oanda-account-id"];
+            var agent = job.BrokerageData["oanda-agent"];
+
+            Initialize(
+                null,
+                null,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                environment,
+                accessToken,
+                accountId,
+                agent);
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
+
             _api.SetJob(job);
         }
 
@@ -274,7 +295,7 @@ namespace QuantConnect.Brokerages.Oanda
             _api.Unsubscribe(dataConfig);
         }
 
-        #endregion
+        #endregion IDataQueueHandler implementation
 
         /// <summary>
         /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
@@ -321,6 +342,35 @@ namespace QuantConnect.Brokerages.Oanda
         public IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
             return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the class.
+        /// </summary>
+        /// <param name="orderProvider">The order provider.</param>
+        /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="aggregator">consolidate ticks</param>
+        /// <param name="environment">The Oanda environment (Trade or Practice)</param>
+        /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
+        /// <param name="accountId">The account identifier.</param>
+        /// <param name="agent">The Oanda agent string</param>
+        private void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator,
+            Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
+        {
+            if (_isInitialized)
+            {
+                return;
+            }
+            _isInitialized = true;
+            if (environment != Environment.Trade && environment != Environment.Practice)
+                throw new NotSupportedException("Oanda Environment not supported: " + environment);
+
+            _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
+
+            // forward events received from API
+            _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
+            _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
+            _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
         }
     }
 }

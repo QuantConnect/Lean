@@ -27,12 +27,12 @@ RUN apt-get update && apt-fast install -y git libgtk2.0.0 cmake bzip2 curl unzip
 # We update the install script so it doesn't use the bundled JVM
 # The bundled JVM doesn't work on ARM64, so we update it to use the JVM installed in the previous command
 RUN mkdir -p /root/ibgateway && \
-    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
+    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.12.2d.sh && \
     java_patch_version=$(java -version 2>&1 | head -n 1 | cut -d'_' -f2 | cut -d'"' -f1) && \
-    bbe -e 's|# INSTALL4J_JAVA_HOME_OVERRIDE=|INSTALL4J_JAVA_HOME_OVERRIDE="/usr/lib/jvm/java-1.8.0-openjdk-arm64"|' -e "s|-lt \"152\"|-lt \"$java_patch_version\"|" -e "s|-gt \"152\"|-gt \"$java_patch_version\"|" ibgateway-latest-standalone-linux-x64.v985.1j.sh > ibgateway-stable-standalone-linux-custom-jvm.sh && \
+    bbe -e 's|# INSTALL4J_JAVA_HOME_OVERRIDE=|INSTALL4J_JAVA_HOME_OVERRIDE="/usr/lib/jvm/java-1.8.0-openjdk-arm64"|' -e "s|-lt \"152\"|-lt \"$java_patch_version\"|" -e "s|-gt \"152\"|-gt \"$java_patch_version\"|" ibgateway-latest-standalone-linux-x64.v10.12.2d.sh > ibgateway-stable-standalone-linux-custom-jvm.sh && \
     chmod 777 ibgateway-stable-standalone-linux-custom-jvm.sh && \
     ./ibgateway-stable-standalone-linux-custom-jvm.sh -q -dir /root/ibgateway && \
-    rm ibgateway-latest-standalone-linux-x64.v985.1j.sh ibgateway-stable-standalone-linux-custom-jvm.sh
+    rm ibgateway-latest-standalone-linux-x64.v10.12.2d.sh ibgateway-stable-standalone-linux-custom-jvm.sh
 
 # Install dotnet 5 sdk & runtime
 # The .deb packages don't support ARM, the install script does
@@ -54,9 +54,9 @@ RUN wget -O Miniforge3.sh https://github.com/conda-forge/miniforge/releases/late
     rm Miniforge3.sh && \
     ln -s /opt/miniforge3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so && \
     conda config --append channels https://repo.anaconda.com/pkgs/main && \
-    conda update -y conda pip && \
-    pip install --upgrade --no-cache-dir pip && \
-    conda install -y python=3.6.7 && conda clean -y --all
+    conda install -y conda=4.10.3 && \
+    pip install --upgrade --no-cache-dir pip==21.2.2 && \
+    conda install -y python=3.6.7 && conda install -y pip=21.2.2 && conda clean -y --all
 
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
@@ -179,10 +179,10 @@ RUN wget https://cdn.quantconnect.com/tigramite/tigramite-4.1.zip && \
     python setup.py install && cd .. && rm -rf tigramite-4.1 && rm tigramite-4.1.zip
 
 # Install H2O: https://www.h2o.ai/download/
-RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
-    unzip -q h2o-3.30.0.3.zip && \
-    pip install h2o-3.30.0.3/python/h2o-3.30.0.3-py2.py3-none-any.whl && \
-    rm -rf h2o-3.30.0.3 && rm h2o-3.30.0.3.zip
+RUN wget https://cdn.quantconnect.com/h2o/h2o-3.34.0.7.zip && \
+    unzip -q h2o-3.34.0.7.zip && \
+    pip install h2o-3.34.0.7-py2.py3-none-any.whl && \
+    rm h2o-3.34.0.7.zip h2o-3.34.0.7-py2.py3-none-any.whl
 
 # Remove black-listed packages
 RUN pip uninstall -y s3transfer

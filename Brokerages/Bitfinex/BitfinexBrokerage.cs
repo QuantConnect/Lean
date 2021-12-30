@@ -14,6 +14,8 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Brokerages.Bitfinex.Messages;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -21,13 +23,13 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
+using QuantConnect.Util;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using QuantConnect.Brokerages.Bitfinex.Messages;
-using QuantConnect.Securities.Crypto;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Bitfinex
@@ -41,6 +43,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Bitfinex);
 
         #region IBrokerage
+
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
         /// </summary>
@@ -427,7 +430,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             } while (startTimeStamp < endTimeStamp);
         }
 
-        #endregion
+        #endregion IBrokerage
 
         #region IDataQueueHandler
 
@@ -437,6 +440,26 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            var apiKey = job.BrokerageData["bitfinex-api-key"];
+            var apiSecret = job.BrokerageData["bitfinex-api-secret"];
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+
+            Initialize(
+                wssUrl: WebSocketUrl,
+                websocket: new WebSocketClientWrapper(),
+                restClient: new RestClient(RestApiUrl),
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                algorithm: null,
+                aggregator: aggregator,
+                job: job
+            );
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
@@ -447,11 +470,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            var symbol = dataConfig.Symbol;
-            if (symbol.Value.Contains("UNIVERSE") ||
-                !_symbolMapper.IsKnownLeanSymbol(symbol))
+            if (!CanSubscribe(dataConfig.Symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
@@ -470,7 +491,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             _aggregator.Remove(dataConfig);
         }
 
-        #endregion
+        #endregion IDataQueueHandler
 
         /// <summary>
         /// Event invocator for the Message event
@@ -491,6 +512,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             _connectionRateLimiter.Dispose();
             _onSubscribeEvent.Dispose();
             _onUnsubscribeEvent.Dispose();
+        }
+
+        private bool CanSubscribe(Symbol symbol)
+        {
+            if (symbol.Value.Contains("UNIVERSE") || !_symbolMapper.IsKnownLeanSymbol(symbol))
+            {
+                return false;
+            }
+            return symbol.ID.Market == Market.Bitfinex;
         }
     }
 }

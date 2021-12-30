@@ -332,6 +332,39 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [Test]
+        public void HandlesErrorOnInitializeCorrectly()
+        {
+            var algorithm = new BacktestingSetupHandlerTests.TestAlgorithmThrowsOnInitialize();
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
+
+            setupHandler.DisposeSafely();
+            Assert.AreEqual(1, setupHandler.Errors.Count);
+            Assert.IsTrue(setupHandler.Errors[0].InnerException.Message.Equals("Some failure"));
+        }
+
+        [Test]
         public void LoadsHoldingsForExpectedMarket()
         {
             var symbol = Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda);

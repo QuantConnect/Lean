@@ -14,17 +14,19 @@
  *
 */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NodaTime;
+using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Packets;
+using QuantConnect.Util;
+using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using NodaTime;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Packets;
-using RestSharp;
 
 namespace QuantConnect.Brokerages.Tradier
 {
@@ -47,6 +49,25 @@ namespace QuantConnect.Brokerages.Tradier
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            var useSandbox = bool.Parse(job.BrokerageData["tradier-use-sandbox"]);
+            var accountId = job.BrokerageData["tradier-account-id"];
+            var accessToken = job.BrokerageData["tradier-access-token"];
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+
+            Initialize(
+                wssUrl: WebSocketUrl,
+                accountId: accountId,
+                accessToken: accessToken,
+                useSandbox: useSandbox,
+                algorithm: null,
+                orderProvider: null,
+                securityProvider: null,
+                aggregator: aggregator);
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
@@ -66,7 +87,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             if (!CanSubscribe(dataConfig.Symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
@@ -164,6 +185,9 @@ namespace QuantConnect.Brokerages.Tradier
             WebSocket.Send(json);
         }
 
+        /// <summary>
+        /// Handles websocket received messages
+        /// </summary>
         protected override void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
             var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
@@ -219,7 +243,7 @@ namespace QuantConnect.Brokerages.Tradier
             switch (tsd.Type)
             {
                 case "trade":
-                    return new Tick(time, symbol, "", tsd.TradeExchange, (int) tsd.TradeSize, tsd.TradePrice);
+                    return new Tick(time, symbol, "", tsd.TradeExchange, (int)tsd.TradeSize, tsd.TradePrice);
 
                 case "quote":
                     return new Tick(time, symbol, "", "", tsd.BidSize, tsd.BidPrice, tsd.AskSize, tsd.AskPrice);
@@ -242,6 +266,6 @@ namespace QuantConnect.Brokerages.Tradier
             return _streamSession;
         }
 
-        #endregion
+        #endregion IDataQueueHandler implementation
     }
 }

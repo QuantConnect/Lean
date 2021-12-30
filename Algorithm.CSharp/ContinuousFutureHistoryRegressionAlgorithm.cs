@@ -20,6 +20,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Securities.Future;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -87,6 +88,16 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_warmedUp)
             {
                 throw new Exception("Algorithm didn't warm up!");
+            }
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            Debug($"{Time}-{changes}");
+            if (changes.AddedSecurities.Any(security => security.Symbol != _continuousContract.Symbol)
+                || changes.RemovedSecurities.Any(security => security.Symbol != _continuousContract.Symbol))
+            {
+                throw new Exception($"We got an unexpected security changes {changes}");
             }
         }
 

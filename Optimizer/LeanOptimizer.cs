@@ -147,6 +147,7 @@ namespace QuantConnect.Optimizer
                 // if after we started there are no running parameter sets means we have failed to start
                 if (RunningParameterSetForBacktest.Count == 0)
                 {
+                    SetOptimizationStatus(OptimizationStatus.Aborted);
                     throw new InvalidOperationException($"LeanOptimizer.Start({GetLogDetails()}): failed to start");
                 }
                 Log.Trace($"LeanOptimizer.Start({GetLogDetails()}): start ended. Waiting on {RunningParameterSetForBacktest.Count + PendingParameterSet.Count} backtests");

@@ -112,29 +112,4 @@ namespace QuantConnect.Optimizer
         }
     }
 
-    /// <summary>
-    /// The different optimization status
-    /// </summary>
-    public enum OptimizationStatus
-    {
-        /// <summary>
-        /// Just created and not running optimization
-        /// </summary>
-        New,
-
-        /// <summary>
-        /// We failed or we were aborted
-        /// </summary>
-        Aborted,
-
-        /// <summary>
-        /// We are running
-        /// </summary>
-        Running,
-
-        /// <summary>
-        /// Optimization job has completed
-        /// </summary>
-        Completed
-    }
 }

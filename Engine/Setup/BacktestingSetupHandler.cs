@@ -209,6 +209,12 @@ namespace QuantConnect.Lean.Engine.Setup
                 sleepIntervalMillis: 100,  // entire system is waiting on this, so be as fast as possible
                 workerThread: WorkerThread);
 
+            if (Errors.Count > 0)
+            {
+                // if we already got an error just exit right away
+                return false;
+            }
+
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
 
@@ -236,10 +242,6 @@ namespace QuantConnect.Lean.Engine.Setup
                       $"MaximumRuntime: {MaximumRuntime} " +
                       $"MaxOrders: {MaxOrders}");
 
-            if (Errors.Count > 0)
-            {
-                initializeComplete = false;
-            }
             return initializeComplete;
         }
 

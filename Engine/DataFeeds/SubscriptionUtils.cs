@@ -43,7 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> enumerator)
         {
             var exchangeHours = request.Security.Exchange.Hours;
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var dataEnumerator = new SubscriptionDataEnumerator(
                 request.Configuration,
                 exchangeHours,
@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var exchangeHours = request.Security.Exchange.Hours;
             var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
             var config = subscription.Configuration;
             enablePriceScale = enablePriceScale && config.PricesShouldBeScaled();

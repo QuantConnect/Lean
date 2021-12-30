@@ -23,6 +23,7 @@ using System.Text;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using Ionic.Zip;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
 using ZipFile = Ionic.Zip.ZipFile;
@@ -185,6 +186,7 @@ namespace QuantConnect
                     }
 
                     zip.AddEntry(entry, data);
+                    zip.UseZip64WhenSaving = Zip64Option.Always;
                     zip.Save();
                 }
             }
@@ -216,6 +218,7 @@ namespace QuantConnect
                     }
 
                     zip.AddEntry(entry, data);
+                    zip.UseZip64WhenSaving = Zip64Option.Always;
                     zip.Save();
                 }
             }
