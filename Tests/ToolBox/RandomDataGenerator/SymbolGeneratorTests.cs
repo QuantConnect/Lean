@@ -20,7 +20,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(1, 4)]
         public void NextUpperCaseString_CreatesString_WithinSpecifiedMinMaxLength(int min, int max)
         {
-            var symbolGenerator = new Mock<SymbolGenerator>(Mock.Of<RandomDataGeneratorSettings>(), new RandomValueGenerator()).Object;
+            var symbolGenerator = new Mock<BaseSymbolGenerator>(Mock.Of<RandomDataGeneratorSettings>(), new RandomValueGenerator()).Object;
             var str = symbolGenerator.NextUpperCaseString(min, max);
             Assert.LessOrEqual(min, str.Length);
             Assert.GreaterOrEqual(max, str.Length);
@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [Test]
         public void NextUpperCaseString_CreatesUpperCaseString()
         {
-            var symbolGenerator = new Mock<SymbolGenerator>(Mock.Of<RandomDataGeneratorSettings>(), new RandomValueGenerator()).Object;
+            var symbolGenerator = new Mock<BaseSymbolGenerator>(Mock.Of<RandomDataGeneratorSettings>(), new RandomValueGenerator()).Object;
             var str = symbolGenerator.NextUpperCaseString(10, 10);
             Assert.IsTrue(str.All(char.IsUpper));
         }
@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(SecurityType.Future)]
         public void ThrowsArgumentException_ForDerivativeSymbols(SecurityType securityType)
         {
-            var symbolGenerator = new Mock<SymbolGenerator>(Mock.Of<RandomDataGeneratorSettings>(), new RandomValueGenerator()).Object;
+            var symbolGenerator = new Mock<BaseSymbolGenerator>(Mock.Of<RandomDataGeneratorSettings>(), new RandomValueGenerator()).Object;
             Assert.Throws<ArgumentException>(() =>
                 symbolGenerator.NextSymbol(securityType, Market.USA)
             );
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestFixture]
         public class SpotSymbolGeneratorTests
         {
-            private SymbolGenerator _symbolGenerator;
+            private BaseSymbolGenerator _symbolGenerator;
             private DateTime _minExpiry = new(2000, 01, 01);
             private DateTime _maxExpiry = new(2001, 01, 01);
 
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     ? int.MaxValue
                     : SymbolPropertiesDatabase.FromDataFolder().GetSymbolPropertiesList(market, securityType).Count();
 
-                var symbolGenerator = new SpotSymbolGenerator(new RandomDataGeneratorSettings
+                var symbolGenerator = new DefaultSymbolGenerator(new RandomDataGeneratorSettings
                 {
                     SecurityType = securityType,
                     Market = market
@@ -99,7 +99,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             [TestCase(SecurityType.Crypto, Market.Bitfinex)]
             public void NextSymbol_CreatesSymbol_WithRequestedSecurityTypeAndMarket(SecurityType securityType, string market)
             {
-                var symbolGenerator = new SpotSymbolGenerator(new RandomDataGeneratorSettings
+                var symbolGenerator = new DefaultSymbolGenerator(new RandomDataGeneratorSettings
                 {
                     SecurityType = securityType,
                     Market = market
@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             [TestCase(SecurityType.Crypto, Market.Bitfinex)]
             public void NextSymbol_CreatesSymbol_WithEntryInSymbolPropertiesDatabase(SecurityType securityType, string market)
             {
-                var symbolGenerator = new SpotSymbolGenerator(new RandomDataGeneratorSettings
+                var symbolGenerator = new DefaultSymbolGenerator(new RandomDataGeneratorSettings
                 {
                     SecurityType = securityType,
                     Market = market
@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 var db = SymbolPropertiesDatabase.FromDataFolder();
                 var symbolCount = db.GetSymbolPropertiesList(market, securityType).Count();
 
-                var symbolGenerator = new SpotSymbolGenerator(new RandomDataGeneratorSettings
+                var symbolGenerator = new DefaultSymbolGenerator(new RandomDataGeneratorSettings
                 {
                     SecurityType = securityType,
                     Market = market
@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestFixture]
         public class FutureSymbolGeneratorTests
         {
-            private SymbolGenerator _symbolGenerator;
+            private BaseSymbolGenerator _symbolGenerator;
             private DateTime _minExpiry = new(2000, 01, 01);
             private DateTime _maxExpiry = new(2001, 01, 01);
 
@@ -246,7 +246,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestFixture]
         public class OptionSymbolGeneratorTests
         {
-            private SymbolGenerator _symbolGenerator;
+            private BaseSymbolGenerator _symbolGenerator;
             private DateTime _minExpiry = new(2000, 01, 01);
             private DateTime _maxExpiry = new(2001, 01, 01);
             private decimal _underlyingPrice = 100m;

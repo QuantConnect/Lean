@@ -2,7 +2,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 {
     public interface IRandomDataGenerator
     {
-        SymbolGenerator CreateSymbolGenerator();
+        BaseSymbolGenerator CreateSymbolGenerator();
 
         ITickGenerator CreateTickGenerator();
     }

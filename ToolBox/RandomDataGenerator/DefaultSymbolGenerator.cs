@@ -20,12 +20,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// <param name="securityType">The security type of the generated Symbol</param>
     /// <param name="market">The market of the generated Symbol</param>
     /// <returns>A new Symbol object of the specified security type</returns>
-    public class SpotSymbolGenerator : SymbolGenerator
+    public class DefaultSymbolGenerator : BaseSymbolGenerator
     {
         private readonly string _market;
         private readonly SecurityType _securityType;
 
-        public SpotSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+        public DefaultSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
             : base(settings, random)
         {
             _market = settings.Market;

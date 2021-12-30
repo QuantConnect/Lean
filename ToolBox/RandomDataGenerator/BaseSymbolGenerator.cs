@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
-    public abstract class SymbolGenerator
+    public abstract class BaseSymbolGenerator
     {
         protected IRandomValueGenerator Random { get; }
         protected RandomDataGeneratorSettings Settings { get; }
@@ -18,7 +18,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         // the memory allocated to checking for duplicates
         private readonly FixedSizeHashQueue<Symbol> _symbols;
 
-        protected SymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+        protected BaseSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
         {
             Settings = settings;
             Random = random;
@@ -27,7 +27,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
-        public static SymbolGenerator Create(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+        public static BaseSymbolGenerator Create(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
         {
             switch (settings.SecurityType)
             {
@@ -38,7 +38,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     return new FutureSymbolGenerator(settings, random);
 
                 default:
-                    return new SpotSymbolGenerator(settings, random);
+                    return new DefaultSymbolGenerator(settings, random);
             }
         }
 

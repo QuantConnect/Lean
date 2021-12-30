@@ -41,13 +41,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly RandomDataGeneratorSettings _settings;
         private readonly DateTime _delistDate;
         private readonly bool _willBeDelisted;
-        private readonly SymbolGenerator _symbolGenerator;
+        private readonly BaseSymbolGenerator _symbolGenerator;
 
         public DividendSplitMapGenerator(
             Symbol symbol,
             RandomDataGeneratorSettings settings,
             RandomValueGenerator randomValueGenerator,
-            SymbolGenerator symbolGenerator,
+            BaseSymbolGenerator symbolGenerator,
             Random random,
             DateTime delistDate,
             bool willBeDelisted)

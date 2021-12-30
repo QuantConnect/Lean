@@ -36,11 +36,11 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 new SecurityCache()
             );
 
-            _tickGenerator = TickGenerator.Create(
+            _tickGenerator = new TickGenerator(
                 new RandomDataGeneratorSettings(),
                 _tickTypesPerSecurityType[_symbol.SecurityType].ToArray(),
-                new RandomValueGenerator(),
-                security);
+                security,
+                new RandomValueGenerator());
 
         }
 

@@ -21,7 +21,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// <param name="underlyingPrice">The option's current underlying price</param>
     /// <param name="maximumStrikePriceDeviation">The strike price's maximum percent deviation from the underlying price</param>
     /// <returns>A new option contract Symbol within the specified expiration and strike price parameters</returns>
-    public class OptionSymbolGenerator : SymbolGenerator
+    public class OptionSymbolGenerator : BaseSymbolGenerator
     {
         private readonly DateTime _minExpiry;
         private readonly DateTime _maxExpiry;

@@ -136,7 +136,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
             );
 
-            var symbolGenerator = SymbolGenerator.Create(settings, randomValueGenerator);
+            var symbolGenerator = BaseSymbolGenerator.Create(settings, randomValueGenerator);
 
             var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount();
             if (settings.SymbolCount > maxSymbolCount)

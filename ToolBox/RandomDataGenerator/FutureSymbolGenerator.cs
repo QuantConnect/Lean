@@ -8,7 +8,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// expiry between the specified time range.
     /// </summary>
     /// <returns>A new future contract Symbol with the specified expiration parameters</returns>
-    public class FutureSymbolGenerator : SymbolGenerator
+    public class FutureSymbolGenerator : BaseSymbolGenerator
     {
         private readonly DateTime _minExpiry;
         private readonly DateTime _maxExpiry;
