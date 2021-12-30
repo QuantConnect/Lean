@@ -72,6 +72,8 @@ namespace QuantConnect.Orders.Fees
                 // limit order posted to the order book
                 unitPrice = ((LimitOrder)order).LimitPrice;
             }
+            
+            unitPrice *= security.SymbolProperties.ContractMultiplier;
 
             var fee = TakerTier1CryptoFee;
 
@@ -104,7 +106,7 @@ namespace QuantConnect.Orders.Fees
             CurrencyPairUtil.DecomposeCurrencyPair(security.Symbol, out actualBaseCurrency, out actualQuoteCurrency);
             
             return new OrderFee(new CashAmount(
-                unitPrice * order.AbsoluteQuantity * fee,
+                isBuy ? unitPrice * order.AbsoluteQuantity * fee : 1 * order.AbsoluteQuantity * fee,
                 isBuy ? actualQuoteCurrency : actualBaseCurrency));
         }
     }

@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromSeconds(30)));
             var addedTime = new DateTime(2018, 1, 1);
-            universe.AddMember(addedTime, _security);
+            universe.AddMember(addedTime, _security, false);
 
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddSeconds(29), _security));
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddSeconds(29.4), _security));
@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromMinutes(30)));
             var addedTime = new DateTime(2018, 1, 1);
-            universe.AddMember(addedTime, _security);
+            universe.AddMember(addedTime, _security, false);
 
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddMinutes(29), _security));
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddMinutes(29.4), _security));
@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromHours(6)));
             var addedTime = new DateTime(2018, 1, 1);
-            universe.AddMember(addedTime, _security);
+            universe.AddMember(addedTime, _security, false);
 
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddHours(5), _security));
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddHours(5.1), _security));
@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(1)));
             var addedTime = new DateTime(2018, 1, 1);
-            universe.AddMember(addedTime, _security);
+            universe.AddMember(addedTime, _security, false);
 
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddHours(5), _security));
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddHours(12), _security));
@@ -120,7 +120,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(7)));
             var addedTime = new DateTime(2018, 1, 1);
-            universe.AddMember(addedTime, _security);
+            universe.AddMember(addedTime, _security, false);
 
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddDays(4), _security));
             Assert.IsFalse(universe.CanRemoveMember(addedTime.AddDays(6.5), _security));

@@ -14,7 +14,9 @@
  *
 */
 
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 
@@ -28,8 +30,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         public override IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
+            var currentInstance = MapFile;
             // refresh map file instance
             InitializeMapFile();
+            var newInstance = MapFile;
+
+            Log.Trace($"LiveMappingEventProvider({Config}): new tradable date {eventArgs.Date}. " +
+                $"New MapFile: {!ReferenceEquals(currentInstance, newInstance)}. " +
+                $"MapFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}");
 
             return base.GetEvents(eventArgs);
         }

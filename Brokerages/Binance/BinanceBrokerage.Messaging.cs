@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages.Binance
 {
     public partial class BinanceBrokerage
     {
-        private readonly IDataAggregator _aggregator;
+        private IDataAggregator _aggregator;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler

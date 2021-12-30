@@ -131,7 +131,7 @@ namespace QuantConnect.Tests.Brokerages.Kraken
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                KrakenFeeModel.MakerTier1CryptoFee * price * Math.Abs(Quantity), fee.Value.Amount);
+                KrakenFeeModel.MakerTier1CryptoFee * 1 * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Brokerages.Kraken
                 feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                KrakenFeeModel.TakerTier1CryptoFee * price * Math.Abs(Quantity), fee.Value.Amount);
+                KrakenFeeModel.TakerTier1CryptoFee * 1 * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual("ETH", fee.Value.Currency);
         }
 

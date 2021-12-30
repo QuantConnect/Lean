@@ -152,6 +152,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to deserialize a json array into a list also handling single json values
+        /// </summary>
+        /// <param name="jsonArray">The value to deserialize</param>
+        public static List<string> DeserializeList(this string jsonArray)
+        {
+            List<string> result = new();
+            try
+            {
+                result = JsonConvert.DeserializeObject<List<string>>(jsonArray);
+            }
+            catch(JsonReaderException)
+            {
+                result.Add(jsonArray);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Helper method to download a provided url as a string
         /// </summary>
         /// <param name="url">The url to download data from</param>
@@ -1333,6 +1352,26 @@ namespace QuantConnect
                 value = value * 10 + (str[i] - '0');
             }
             return value;
+        }
+
+        /// <summary>
+        /// Helper method to determine if a data type implements the Stream reader method
+        /// </summary>
+        public static bool ImplementsStreamReader(this Type baseDataType)
+        {
+            // we know these type implement the streamReader interface lets avoid dynamic reflection call to figure it out
+            if (baseDataType == typeof(TradeBar) || baseDataType == typeof(QuoteBar) || baseDataType == typeof(Tick))
+            {
+                return true;
+            }
+
+            var method = baseDataType.GetMethod("Reader",
+                new[] { typeof(SubscriptionDataConfig), typeof(StreamReader), typeof(DateTime), typeof(bool) });
+            if (method != null && method.DeclaringType == baseDataType)
+            {
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -2927,6 +2966,21 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to determine symbol for a live subscription
+        /// </summary>
+        /// <remarks>Useful for continuous futures where we subscribe to the underlying</remarks>
+        public static bool TryGetLiveSubscriptionSymbol(this Symbol symbol, out Symbol mapped)
+        {
+            mapped = null;
+            if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical() && symbol.HasUnderlying)
+            {
+                mapped = symbol.Underlying;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Gets the delisting date for the provided Symbol
         /// </summary>
         /// <param name="symbol">The symbol to lookup the last trading date</param>
@@ -2993,6 +3047,35 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to unsubscribe a given configuration, handling any required mapping
+        /// </summary>
+        public static void UnsubscribeWithMapping(this IDataQueueHandler dataQueueHandler, SubscriptionDataConfig dataConfig)
+        {
+            if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
+            {
+                dataConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol, mappedConfig: true);
+            }
+            dataQueueHandler.Unsubscribe(dataConfig);
+        }
+
+        /// <summary>
+        /// Helper method to subscribe a given configuration, handling any required mapping
+        /// </summary>
+        public static IEnumerator<BaseData> SubscribeWithMapping(this IDataQueueHandler dataQueueHandler,
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler,
+            out SubscriptionDataConfig subscribedConfig)
+        {
+            subscribedConfig = dataConfig;
+            if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
+            {
+                subscribedConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol, mappedConfig: true);
+            }
+            var enumerator = dataQueueHandler.Subscribe(subscribedConfig, newDataAvailableHandler);
+            return enumerator ?? Enumerable.Empty<BaseData>().GetEnumerator();
+        }
+
+        /// <summary>
         /// Helper method to stream read lines from a file
         /// </summary>
         /// <param name="dataProvider">The data provider to use</param>
@@ -3008,10 +3091,16 @@ namespace QuantConnect
 
             using (var streamReader = new StreamReader(stream))
             {
-                while (!streamReader.EndOfStream)
+                string line;
+                do
                 {
-                    yield return streamReader.ReadLine();
+                    line = streamReader.ReadLine();
+                    if (line != null)
+                    {
+                        yield return line;
+                    }
                 }
+                while (line != null);
             }
         }
 
@@ -3140,6 +3229,41 @@ namespace QuantConnect
                 case DataNormalizationMode.Raw:
                 default:
                     return data;
+            }
+        }
+
+        /// <summary>
+        /// Thread safe concurrent dictionary order by implementation by using <see cref="SafeEnumeration{TSource,TKey}"/>
+        /// </summary>
+        /// <remarks>See https://stackoverflow.com/questions/47630824/is-c-sharp-linq-orderby-threadsafe-when-used-with-concurrentdictionarytkey-tva</remarks>
+        public static IOrderedEnumerable<KeyValuePair<TSource, TKey>> OrderBySafe<TSource, TKey>(
+            this ConcurrentDictionary<TSource, TKey> source, Func<KeyValuePair<TSource, TKey>, TSource> keySelector
+            )
+        {
+            return source.SafeEnumeration().OrderBy(keySelector);
+        }
+
+        /// <summary>
+        /// Thread safe concurrent dictionary order by implementation by using <see cref="SafeEnumeration{TSource,TKey}"/>
+        /// </summary>
+        /// <remarks>See https://stackoverflow.com/questions/47630824/is-c-sharp-linq-orderby-threadsafe-when-used-with-concurrentdictionarytkey-tva</remarks>
+        public static IOrderedEnumerable<KeyValuePair<TSource, TKey>> OrderBySafe<TSource, TKey>(
+            this ConcurrentDictionary<TSource, TKey> source, Func<KeyValuePair<TSource, TKey>, TKey> keySelector
+            )
+        {
+            return source.SafeEnumeration().OrderBy(keySelector);
+        }
+
+        /// <summary>
+        /// Force concurrent dictionary enumeration using a thread safe implementation
+        /// </summary>
+        /// <remarks>See https://stackoverflow.com/questions/47630824/is-c-sharp-linq-orderby-threadsafe-when-used-with-concurrentdictionarytkey-tva</remarks>
+        public static IEnumerable<KeyValuePair<TSource, TKey>> SafeEnumeration<TSource, TKey>(
+            this ConcurrentDictionary<TSource, TKey> source)
+        {
+            foreach (var kvp in source)
+            {
+                yield return kvp;
             }
         }
 

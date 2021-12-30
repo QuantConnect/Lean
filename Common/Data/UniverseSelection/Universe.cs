@@ -277,9 +277,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="utcTime">The current utc date time</param>
         /// <param name="security">The security to be added</param>
+        /// <param name="isInternal">True if internal member</param>
         /// <returns>True if the security was successfully added,
         /// false if the security was already in the universe</returns>
-        internal virtual bool AddMember(DateTime utcTime, Security security)
+        internal virtual bool AddMember(DateTime utcTime, Security security, bool isInternal)
         {
             // never add members to disposed universes
             if (DisposeRequested)
@@ -292,7 +293,7 @@ namespace QuantConnect.Data.UniverseSelection
                 return false;
             }
 
-            return Securities.TryAdd(security.Symbol, new Member(utcTime, security));
+            return Securities.TryAdd(security.Symbol, new Member(utcTime, security, isInternal));
         }
 
         /// <summary>
@@ -387,14 +388,21 @@ namespace QuantConnect.Data.UniverseSelection
             public readonly Security Security;
 
             /// <summary>
+            /// True if the security was added as internal by this universe
+            /// </summary>
+            public readonly bool IsInternal;
+
+            /// <summary>
             /// Initialize a new member for the universe
             /// </summary>
             /// <param name="added">DateTime added</param>
             /// <param name="security">Security to add</param>
-            public Member(DateTime added, Security security)
+            /// <param name="isInternal">True if internal member</param>
+            public Member(DateTime added, Security security, bool isInternal)
             {
                 Added = added;
                 Security = security;
+                IsInternal = isInternal;
             }
         }
 

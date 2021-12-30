@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,11 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Packets;
+using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -34,6 +35,20 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            Initialize(
+                job.BrokerageData["zerodha-trading-segment"],
+                job.BrokerageData["zerodha-product-type"],
+                job.BrokerageData["zerodha-api-key"],
+                job.BrokerageData["zerodha-access-token"],
+                null,
+                null,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"))
+            );
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
@@ -47,7 +62,7 @@ namespace QuantConnect.Brokerages.Zerodha
             var symbol = dataConfig.Symbol;
             if (!CanSubscribe(symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
@@ -66,7 +81,6 @@ namespace QuantConnect.Brokerages.Zerodha
             _aggregator.Remove(dataConfig);
         }
 
-
         /// <summary>
         /// Returns true if this data provide can handle the specified symbol
         /// </summary>
@@ -82,6 +96,7 @@ namespace QuantConnect.Brokerages.Zerodha
             return
                 (securityType == SecurityType.Equity) && (market == Market.India);
         }
-        #endregion
+
+        #endregion IDataQueueHandler implementation
     }
 }

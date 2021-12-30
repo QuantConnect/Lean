@@ -31,7 +31,7 @@ namespace QuantConnect.Orders.Fees
         /// <remarks>Default value is $0.0015 per share</remarks>
         public AtreyuFeeModel(decimal? feesPerShare = null)
         {
-            _feesPerShare = feesPerShare ?? 0.0015m;
+            _feesPerShare = feesPerShare ?? 0.0035m;
         }
 
         /// <summary>

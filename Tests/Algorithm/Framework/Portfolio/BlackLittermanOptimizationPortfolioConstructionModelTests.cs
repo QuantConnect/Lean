@@ -27,6 +27,7 @@ using System.Linq;
 using QuantConnect.Algorithm;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System.Collections.Generic;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -250,7 +251,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             spy.SetMarketPrice(new Tick(algorithm.Time, spySymbol, 1m, 1m));
             algorithm.Securities.Add(spySymbol, spy);
 
-            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChanges.Added(spy));
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChangesTests.AddedNonInternal(spy));
 
             var insights = new[] { Insight.Price(spySymbol, Time.OneMinute, InsightDirection.Up, .1) };
 
@@ -264,7 +265,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             aapl.SetMarketPrice(new Tick(algorithm.Time, aaplSymbol, 1m, 1m));
             algorithm.Securities.Add(aaplSymbol, aapl);
 
-            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChanges.Added(aapl));
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChangesTests.AddedNonInternal(aapl));
 
             insights = new[] { spySymbol, aaplSymbol }
                 .Select(x => Insight.Price(x, Time.OneMinute, InsightDirection.Up, .1)).ToArray();
@@ -321,7 +322,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 }
             }
 
-            var changes = SecurityChanges.Added(_algorithm.Securities.Values.ToList().ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(_algorithm.Securities.Values.ToList().ToArray());
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
 

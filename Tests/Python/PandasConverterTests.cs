@@ -28,6 +28,7 @@ using System;
 using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.ToolBox;
 using QuantConnect.ToolBox;
 using QuantConnect.Util;
@@ -3507,7 +3508,7 @@ def Test(dataFrame, symbol):
             return data.Select(t => timeSliceFactory.Create(
                t.Time,
                new List<DataFeedPacket> { new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() { t as BaseData }) },
-               new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+               SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>()).Slice);
         }
 

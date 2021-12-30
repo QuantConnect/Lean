@@ -42,6 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DataPricesList _dataPrices;
         private readonly Api.Api _api;
         private readonly bool _subscribedToEquityMapAndFactorFiles;
+        private readonly bool _subscribedToFutureMapAndFactorFiles;
         private volatile bool _invalidSecurityTypeLog;
 
         /// <summary>
@@ -65,10 +66,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataPrices = _api.ReadDataPrices(_organizationId);
             var organization = _api.ReadOrganization(_organizationId);
 
-            // Determine if the user is subscribed to map and factor files (Data product Id 37)
-            if (organization.Products.Where(x => x.Type == ProductType.Data).Any(x => x.Items.Any(x => x.Id == 37)))
+            foreach (var productItem in organization.Products.Where(x => x.Type == ProductType.Data).SelectMany(product => product.Items))
             {
-                _subscribedToEquityMapAndFactorFiles = true;
+                if (productItem.Id == 37)
+                {
+                    // Determine if the user is subscribed to Equity map and factor files (Data product Id 37)
+                    _subscribedToEquityMapAndFactorFiles = true;
+                }
+                else if (productItem.Id == 137)
+                {
+                    // Determine if the user is subscribed to Future map and factor files (Data product Id 137)
+                    _subscribedToFutureMapAndFactorFiles = true;
+                }
             }
 
             // Verify user has agreed to data provider agreements
@@ -154,23 +163,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Some security types can't be downloaded, lets attempt to extract that information
             if (LeanData.TryParseSecurityType(filePath, out SecurityType securityType) && _unsupportedSecurityType.Contains(securityType))
             {
-                if (!_invalidSecurityTypeLog)
+                // we do support future auxiliary data (map and factor files)
+                if (securityType != SecurityType.Future || !IsAuxiliaryData(filePath))
                 {
-                    // let's log this once. Will still use any existing data on disk
-                    _invalidSecurityTypeLog = true;
-                    Log.Error($"ApiDataProvider(): does not support security types: {string.Join(", ", _unsupportedSecurityType)}");
+                    if (!_invalidSecurityTypeLog)
+                    {
+                        // let's log this once. Will still use any existing data on disk
+                        _invalidSecurityTypeLog = true;
+                        Log.Error($"ApiDataProvider(): does not support security types: {string.Join(", ", _unsupportedSecurityType)}");
+                    }
+                    return false;
                 }
-                return false;
             }
 
             // Only download if it doesn't exist or is out of date.
             // Files are only "out of date" for non date based files (hour, daily, margins, etc.) because this data is stored all in one file
             var shouldDownload = !File.Exists(filePath) || filePath.IsOutOfDate();
 
-            // Final check; If we want to download and the request requires equity data we need to be sure they are subscribed to map and factor files
-            if (shouldDownload && (securityType == SecurityType.Equity || securityType == SecurityType.Option || IsEquitiesAux(filePath)))
+            if (shouldDownload)
             {
-                CheckMapFactorFileSubscription();
+                if (securityType == SecurityType.Future)
+                {
+                    if (!_subscribedToFutureMapAndFactorFiles)
+                    {
+                        throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider " +
+                            "to download Future auxiliary data from QuantConnect. " +
+                            "Please visit https://www.quantconnect.com/datasets/quantconnect-us-futures-security-master for details.");
+                    }
+                }
+                // Final check; If we want to download and the request requires equity data we need to be sure they are subscribed to map and factor files
+                else if (!_subscribedToEquityMapAndFactorFiles && (securityType == SecurityType.Equity || securityType == SecurityType.Option || IsAuxiliaryData(filePath)))
+                {
+                    throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider " +
+                        "to download Equity data from QuantConnect. " +
+                        "Please visit https://www.quantconnect.com/datasets/quantconnect-security-master for details.");
+                }
             }
 
             return shouldDownload;
@@ -198,29 +225,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Helper method to determine if this filepath is Equity Aux data
+        /// Helper method to determine if this filepath is auxiliary data
         /// </summary>
-        /// <param name="filepath"></param>
-        /// <returns>True if this file is EquitiesAux</returns>
-        private static bool IsEquitiesAux(string filepath)
+        /// <param name="filepath">The target file path</param>
+        /// <returns>True if this file is of auxiliary data</returns>
+        private static bool IsAuxiliaryData(string filepath)
         {
             return filepath.Contains("map_files", StringComparison.InvariantCulture)
                 || filepath.Contains("factor_files", StringComparison.InvariantCulture)
                 || filepath.Contains("fundamental", StringComparison.InvariantCulture)
                 || filepath.Contains("shortable", StringComparison.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Helper to check map and factor file subscription, throws if not subscribed.
-        /// </summary>
-        private void CheckMapFactorFileSubscription()
-        {
-            if(!_subscribedToEquityMapAndFactorFiles)
-            {
-                throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider " +
-                    "to download Equity data from QuantConnect. " + 
-                    "Please visit https://www.quantconnect.com/datasets/quantconnect-security-master for details.");
-            }
         }
     }
 }

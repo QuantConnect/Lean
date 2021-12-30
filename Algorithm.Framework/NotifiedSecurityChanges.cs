@@ -109,7 +109,6 @@ namespace QuantConnect.Algorithm.Framework
 
         /// <summary>
         /// Invokes the provided <paramref name="add"/> and <paramref name="remove"/> functions for each
-        /// <seealso cref="SecurityChanges.Added"/> and <seealso cref="SecurityChanges.Removed"/>, respectively
         /// </summary>
         /// <param name="changes">The security changes to process</param>
         /// <param name="add">Function called for each added security</param>

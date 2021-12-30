@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -34,51 +34,60 @@ namespace QuantConnect.Brokerages
         private const int ConnectionTimeout = 30000;
 
         /// <summary>
+        /// True if the current brokerage is already initialized
+        /// </summary>
+        protected bool IsInitialized { get; set; }
+
+        /// <summary>
         /// The websockets client instance
         /// </summary>
-        protected readonly IWebSocket WebSocket;
+        protected IWebSocket WebSocket { get; set; }
 
         /// <summary>
         /// The rest client instance
         /// </summary>
-        protected readonly IRestClient RestClient;
+        protected IRestClient RestClient { get; set; }
 
         /// <summary>
         /// standard json parsing settings
         /// </summary>
-        protected readonly JsonSerializerSettings JsonSettings;
+        protected JsonSerializerSettings JsonSettings { get; set; }
 
         /// <summary>
         /// A list of currently active orders
         /// </summary>
-        public readonly ConcurrentDictionary<int, Orders.Order> CachedOrderIDs;
+        public ConcurrentDictionary<int, Orders.Order> CachedOrderIDs { get; set; }
 
         /// <summary>
         /// The api secret
         /// </summary>
-        protected readonly string ApiSecret;
+        protected string ApiSecret { get; set; }
 
         /// <summary>
         /// The api key
         /// </summary>
-        protected readonly string ApiKey;
+        protected string ApiKey { get; set; }
 
         /// <summary>
         /// Count subscribers for each (symbol, tickType) combination
         /// </summary>
-        protected DataQueueHandlerSubscriptionManager SubscriptionManager;
+        protected DataQueueHandlerSubscriptionManager SubscriptionManager { get; set; }
 
         /// <summary>
-        /// Creates an instance of a websockets brokerage
+        /// Initialize the instance of this class
         /// </summary>
-        /// <param name="wssUrl">Websockets base url</param>
-        /// <param name="websocket">Websocket client instance</param>
-        /// <param name="restClient">Rest client instance</param>
-        /// <param name="apiKey">Brokerage api auth key</param>
-        /// <param name="apiSecret">Brokerage api auth secret</param>
-        /// <param name="name">Name of brokerage</param>
-        protected BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string name) : base(name)
+        /// <param name="wssUrl">The web socket base url</param>
+        /// <param name="websocket">instance of websockets client</param>
+        /// <param name="restClient">instance of rest client</param>
+        /// <param name="apiKey">api key</param>
+        /// <param name="apiSecret">api secret</param>
+        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret)
         {
+            if (IsInitialized)
+            {
+                return;
+            }
+            IsInitialized = true;
             JsonSettings = new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal };
             CachedOrderIDs = new ConcurrentDictionary<int, Orders.Order>();
 
@@ -95,6 +104,14 @@ namespace QuantConnect.Brokerages
             RestClient = restClient;
             ApiSecret = apiSecret;
             ApiKey = apiKey;
+        }
+
+        /// <summary>
+        /// Creates an instance of a websockets brokerage
+        /// </summary>
+        /// <param name="name">Name of brokerage</param>
+        protected BaseWebsocketsBrokerage(string name) : base(name)
+        {
         }
 
         /// <summary>

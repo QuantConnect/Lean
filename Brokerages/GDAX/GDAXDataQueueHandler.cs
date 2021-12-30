@@ -13,13 +13,14 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 using RestSharp;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -30,21 +31,31 @@ namespace QuantConnect.Brokerages.GDAX
     public class GDAXDataQueueHandler : GDAXBrokerage, IDataQueueHandler
     {
         /// <summary>
+        /// Constructor for brokerage
+        /// </summary>
+        public GDAXDataQueueHandler() : base("GDAX")
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
         public GDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
             IPriceProvider priceProvider, IDataAggregator aggregator, LiveNodePacket job)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator, job)
         {
-            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            subscriptionManager.SubscribeImpl += (s,t) =>
-            {
-                Subscribe(s);
-                return true;
-            };
-            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-
-            SubscriptionManager = subscriptionManager;
+            Initialize(
+                wssUrl: wssUrl,
+                websocket: websocket,
+                restClient: restClient,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                passPhrase: passPhrase,
+                algorithm: algorithm,
+                priceProvider: priceProvider,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         /// <summary>
@@ -62,7 +73,7 @@ namespace QuantConnect.Brokerages.GDAX
         {
             if (!CanSubscribe(dataConfig.Symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
@@ -77,6 +88,34 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            var wssUrl = job.BrokerageData["gdax-url"];
+            var restApi = job.BrokerageData["gdax-rest-api"];
+            var restClient = new RestClient(restApi);
+            var webSocketClient = new WebSocketClientWrapper();
+            var passPhrase = job.BrokerageData["gdax-passphrase"];
+            var apiKey = job.BrokerageData["gdax-api-key"];
+            var apiSecret = job.BrokerageData["gdax-api-secret"];
+            var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+
+            Initialize(
+                wssUrl: wssUrl,
+                websocket: webSocketClient,
+                restClient: restClient,
+                apiKey: apiKey,
+                apiSecret: apiSecret,
+                passPhrase: passPhrase,
+                algorithm: null,
+                priceProvider: priceProvider,
+                aggregator: aggregator,
+                job: job
+            );
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
@@ -102,7 +141,7 @@ namespace QuantConnect.Brokerages.GDAX
                 return false;
             }
 
-            return true;
+            return symbol.ID.Market == Market.GDAX;
         }
     }
 }

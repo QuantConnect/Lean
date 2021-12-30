@@ -27,6 +27,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
@@ -243,7 +244,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
             Assert.AreEqual(1, targets.Count);
 
-            var changes = SecurityChanges.Removed(_algorithm.Securities[Symbols.SPY]);
+            var changes = SecurityChangesTests.RemovedNonInternal(_algorithm.Securities[Symbols.SPY]);
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
 
             var expectedTargets = new List<IPortfolioTarget> { new PortfolioTarget(Symbols.SPY, 0) };
@@ -270,7 +271,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(1, targets.Count);
 
             // Removing SPY should clear the key in the insight collection
-            var changes = SecurityChanges.Removed(_algorithm.Securities[Symbols.SPY]);
+            var changes = SecurityChangesTests.RemovedNonInternal(_algorithm.Securities[Symbols.SPY]);
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
 
             var amount = _algorithm.Portfolio.TotalPortfolioValue * (decimal)Confidence;
@@ -409,7 +410,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.Portfolio.SetCash(_startingCash);
             SetUtcTime(new DateTime(2018, 7, 31));
 
-            var changes = SecurityChanges.Added(_algorithm.Securities.Values.ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(_algorithm.Securities.Values.ToArray());
             algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
 

@@ -298,8 +298,8 @@ namespace QuantConnect.Configuration
         /// </summary>
         /// <typeparam name="T">The desired output type</typeparam>
         /// <param name="key">The configuration key</param>
-        /// <param name="value">The output value</param>
-        /// <returns>True on successful parse, false when output value is default(T)</returns>
+        /// <param name="value">The output value. If the key is found and parsed successfully, it will be the parsed value, else default(T).</param>
+        /// <returns>True on successful parse or if they key is not found. False only when key is found but fails to parse.</returns>
         public static bool TryGetValue<T>(string key, out T value)
         {
             return TryGetValue(key, default(T), out value);
@@ -312,8 +312,8 @@ namespace QuantConnect.Configuration
         /// <typeparam name="T">The desired output type</typeparam>
         /// <param name="key">The configuration key</param>
         /// <param name="defaultValue">The default value to use on key not found or unsuccessful parse</param>
-        /// <param name="value">The output value</param>
-        /// <returns>True on successful parse, false when output value is defaultValue</returns>
+        /// <param name="value">The output value. If the key is found and parsed successfully, it will be the parsed value, else defaultValue.</param>
+        /// <returns>True on successful parse or if they key is not found and using defaultValue. False only when key is found but fails to parse.</returns>
         public static bool TryGetValue<T>(string key, T defaultValue, out T value)
         {
             try

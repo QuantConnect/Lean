@@ -391,7 +391,9 @@ namespace QuantConnect.Lean.Engine
                         var algorithmSecurityChanges = new SecurityChanges(timeSlice.SecurityChanges)
                         {
                             // by default for user code we want to filter out custom securities
-                            FilterCustomSecurities = true
+                            FilterCustomSecurities = true,
+                            // by default for user code we want to filter out internal securities
+                            FilterInternalSecurities = true
                         };
 
                         algorithm.OnSecuritiesChanged(algorithmSecurityChanges);
