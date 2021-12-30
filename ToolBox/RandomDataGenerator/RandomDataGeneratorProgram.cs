@@ -173,7 +173,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     underlyingSecurity ??= security;
 
                     tickGenerators.Add(
-                        TickGenerator.Create(settings, tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray(), randomValueGenerator, security)
+                        new TickGenerator(settings, tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray(), security, randomValueGenerator)
                             .GenerateTicks()
                             .GetEnumerator());
 

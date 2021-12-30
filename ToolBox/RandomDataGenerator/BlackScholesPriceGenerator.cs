@@ -8,37 +8,41 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// <summary>
     /// Pricing model used to determine the fair price or theoretical value for a call or a put option based
     /// </summary>
-    public class BlackScholesTickGenerator : TickGenerator
+    public class BlackScholesPriceGenerator : IPriceGenerator
     {
         private readonly Securities.Option.Option _option;
 
-        public BlackScholesTickGenerator(RandomDataGeneratorSettings settings, TickType[] tickTypes, IRandomValueGenerator random, Security security)
-            : base(settings, tickTypes, security.Symbol)
+        public BlackScholesPriceGenerator(Security security)
         {
+            if (security == null)
+            {
+                throw new ArgumentNullException(nameof(security), "security cannot be null");
+            }
+
+            if (security.Symbol.SecurityType != SecurityType.Option)
+            {
+                throw new ArgumentException("Black-Scholes pricing model cannot be applied to non-option security.");
+            }
+
             _option = security as Securities.Option.Option;
         }
 
-        public override decimal NextReferencePrice(
+        public decimal NextReferencePrice(
             DateTime dateTime,
             decimal referencePrice,
             decimal maximumPercentDeviation
             )
             => _option.Underlying.Price;
 
-        public override decimal NextValue(decimal referencePrice, DateTime referenceDate)
+        public decimal NextValue(decimal referencePrice, DateTime referenceDate)
         {
-            if (Symbol.SecurityType != SecurityType.Option)
-            {
-                throw new ArgumentException("Please use TickGenerator for non options.");
-            }
-
             return _option.PriceModel
                 .Evaluate(
                     _option,
                     null,
                     OptionContract.Create(
-                        Symbol,
-                        Symbol.Underlying,
+                        _option.Symbol,
+                        _option.Symbol.Underlying,
                         referenceDate,
                         _option,
                         referencePrice
