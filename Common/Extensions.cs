@@ -2505,11 +2505,22 @@ namespace QuantConnect
             {
                 try
                 {
-                    // Special case: Type
-                    if (typeof(Type).IsAssignableFrom(type) && allowPythonDerivative)
+                    if (allowPythonDerivative)
                     {
                         result = (T)pyObject.AsManagedObject(type);
                         return true;
+                    }
+
+                    // Special case: Type
+                    if (typeof(Type).IsAssignableFrom(type))
+                    {
+                        result = (T)pyObject.AsManagedObject(type);
+                        // pyObject is a C# object wrapped in PyObject, in this case return true
+                        // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
+                        var castedResult = (Type)pyObject.AsManagedObject(type);
+                        var pythonName = pyObject.GetAttr("__name__").GetAndDispose<string>();
+
+                        return pythonName == castedResult.Name;
                     }
 
                     // Special case: IEnumerable
@@ -2533,9 +2544,9 @@ namespace QuantConnect
                     // If the PyObject type and the managed object names are the same,
                     // pyObject is a C# object wrapped in PyObject, in this case return true
                     // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
-                    var name = (((dynamic) pythonType).__name__ as PyObject).GetAndDispose<string>();
+                    var name = (((dynamic)pythonType).__name__ as PyObject).GetAndDispose<string>();
                     pythonType.Dispose();
-                    return allowPythonDerivative || name == result.GetType().Name;
+                    return name == result.GetType().Name;
                 }
                 catch
                 {
@@ -2835,15 +2846,8 @@ namespace QuantConnect
         public static Type CreateType(this PyObject pyObject)
         {
             Type type;
-            if (pyObject.TryConvert(out type, true) && type != typeof(PythonData))
+            if (pyObject.TryConvert(out type) && type != typeof(PythonData))
             {
-                if (type.Name == "PythonQuandl")
-                {
-                    using (Py.GIL())
-                    {
-                        pyObject.Invoke();
-                    }
-                }
                 return type;
             }
 
