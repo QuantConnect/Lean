@@ -40,9 +40,9 @@ namespace QuantConnect.Securities.Option
         private const int _timeStepsFD = 100;
 
         /// <summary>
-        /// Pricing engine for . 
+        /// Creates pricing engine by engine type name. 
         /// </summary>
-        /// <returns>New option price model instance</returns>
+        /// <returns>New option price model instance of specific engine</returns>
         public static IOptionPriceModel Create(string priceEngineName, double riskFree)
         {
             var type = AppDomain.CurrentDomain.GetAssemblies()

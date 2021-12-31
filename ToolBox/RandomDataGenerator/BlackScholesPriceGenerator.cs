@@ -28,7 +28,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         }
 
         public decimal NextReferencePrice(
-            DateTime dateTime,
             decimal referencePrice,
             decimal maximumPercentDeviation
             )

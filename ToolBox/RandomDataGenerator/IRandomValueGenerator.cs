@@ -1,6 +1,5 @@
-using System;
-using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using System;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {

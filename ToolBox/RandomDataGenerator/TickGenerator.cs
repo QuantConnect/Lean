@@ -81,9 +81,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 if (TickTypes.Contains(TickType.Trade) &&
                     TickTypes.Contains(TickType.Quote))
                 {
-                    // since we're generating both trades and quotes we'll only reference one previous value
+                    // since we're generating both trades and quotes we'll only reference one price
                     // to prevent the trade and quote prices from drifting away from each other
-                    var referenceValue = _priceGenerator.NextReferencePrice(next, previousValues[TickType.Trade], deviation);
+                    var referenceValue = _priceGenerator.NextReferencePrice(previousValues[TickType.Trade], deviation);
 
                     // %odds of getting a trade tick, for example, a quote:trade ratio of 2 means twice as likely
                     // to get a quote, which means you have a 33% chance of getting a trade => 1/3
@@ -102,13 +102,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
                 else if (TickTypes.Contains(TickType.Trade))
                 {
-                    var nextTrade = NextTick(next, TickType.Trade, _priceGenerator.NextReferencePrice(next, previousValues[TickType.Trade], deviation), deviation);
+                    var nextTrade = NextTick(next, TickType.Trade, _priceGenerator.NextReferencePrice(previousValues[TickType.Trade], deviation), deviation);
                     previousValues[TickType.Trade] = nextTrade.Value;
                     yield return nextTrade;
                 }
                 else if (TickTypes.Contains(TickType.Quote))
                 {
-                    var nextQuote = NextTick(next, TickType.Quote, _priceGenerator.NextReferencePrice(next, previousValues[TickType.Quote], deviation), deviation);
+                    var nextQuote = NextTick(next, TickType.Quote, _priceGenerator.NextReferencePrice(previousValues[TickType.Quote], deviation), deviation);
                     previousValues[TickType.Quote] = nextQuote.Value;
                     yield return nextQuote;
                 }

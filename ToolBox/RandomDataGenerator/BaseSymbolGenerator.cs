@@ -1,3 +1,18 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
@@ -6,6 +21,9 @@ using System.Linq;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
+    /// <summary>
+    /// Provide the base symbol generator implementation
+    /// </summary>
     public abstract class BaseSymbolGenerator
     {
         protected IRandomValueGenerator Random { get; }
@@ -27,6 +45,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
+        /// <summary>
+        /// Creates a ad-hoc symbol generator depending on settings
+        /// </summary>
+        /// <param name="settings">random data generator settings</param>
+        /// <param name="random">randomizer</param>
+        /// <returns>New symbol generator</returns>
         public static BaseSymbolGenerator Create(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
         {
             switch (settings.SecurityType)
@@ -42,6 +66,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
         }
 
+        /// <summary>
+        /// Generates specified number of symbols
+        /// </summary>
+        /// <returns>Set of random symbols</returns>
         public IEnumerable<Symbol> GenerateRandomSymbols()
         {
             for (int i = 0; i < Settings.SymbolCount; i++)
@@ -51,8 +79,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
         }
 
+        /// <summary>
+        /// Generates a random asset
+        /// </summary>
+        /// <returns>Random asset</returns>
         public abstract IEnumerable<Symbol> GenerateAsset();
 
+        /// <summary>
+        /// Generates random symbol, used further down for asset
+        /// </summary>
+        /// <param name="securityType">security type</param>
+        /// <param name="market">market</param>
+        /// <returns>Random symbol</returns>
         public Symbol NextSymbol(SecurityType securityType, string market)
         {
             if (securityType == SecurityType.Option || securityType == SecurityType.Future)
@@ -90,6 +128,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return NextSymbol(securityType, market);
         }
 
+        /// <summary>
+        /// Return a Ticker matching an entry in the Symbol properties database
+        /// </summary>
+        /// <param name="securityType">security type</param>
+        /// <param name="market"></param>
+        /// <returns>Random Ticker matching an entry in the Symbol properties database</returns>
         protected string NextTickerFromSymbolPropertiesDatabase(SecurityType securityType, string market)
         {
             // prevent returning a ticker matching any previously generated Symbol
@@ -111,6 +155,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return availableTickers[Random.NextInt(availableTickers.Count)];
         }
 
+        /// <summary>
+        /// Generates random expiration date on a friday within specified time range
+        /// </summary>
+        /// <param name="marketHours">market hours</param>
+        /// <param name="minExpiry">minimum expiration date</param>
+        /// <param name="maxExpiry">maximum expiration date</param>
+        /// <returns>Random date on a friday within specified time range</returns>
         protected DateTime GetRandomExpiration(SecurityExchangeHours marketHours, DateTime minExpiry, DateTime maxExpiry)
         {
             // generate a random expiration date on a friday
