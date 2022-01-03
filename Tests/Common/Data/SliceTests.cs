@@ -418,10 +418,10 @@ def Test(slice):
         count += 1
     if count != 2:
         raise Exception('Unexpected value')").GetAttr("Test");
-                var unlinkedDataSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var indexedLinkedDataSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-                var unlinkedDataAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, tradeBarAapl, unlinkedDataAapl });
+                var indexedLinkedDataAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new BaseData[] { indexedLinkedDataSpy, tradeBarAapl, indexedLinkedDataAapl });
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -1060,10 +1060,10 @@ def Test(slice, symbol):
         private Slice GetSlice()
         {
             SymbolCache.Clear();
-            var unlinkedDataSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+            var indexedLinkedDataSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
             var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-            var unlinkedDataAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-            return new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, tradeBarAapl, unlinkedDataAapl });
+            var indexedLinkedDataAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+            return new Slice(DateTime.Now, new BaseData[] { indexedLinkedDataSpy, tradeBarAapl, indexedLinkedDataAapl });
         }
 
         private PythonSlice GetPythonSlice() => new PythonSlice(GetSlice());

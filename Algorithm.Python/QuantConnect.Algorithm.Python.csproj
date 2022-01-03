@@ -262,6 +262,11 @@
   <ItemGroup>
     <None Include="OptionDataNullReferenceRegressionAlgorithm.py" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="QuantConnect.DataSource">
+      <HintPath>..\..\Lean.DataSource.NasdaqDataLink\bin\Debug\net5.0\QuantConnect.DataSource.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
       build

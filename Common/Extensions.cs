@@ -2544,7 +2544,7 @@ namespace QuantConnect
                     // If the PyObject type and the managed object names are the same,
                     // pyObject is a C# object wrapped in PyObject, in this case return true
                     // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
-                    var name = (((dynamic)pythonType).__name__ as PyObject).GetAndDispose<string>();
+                    var name = (((dynamic) pythonType).__name__ as PyObject).GetAndDispose<string>();
                     pythonType.Dispose();
                     return name == result.GetType().Name;
                 }
@@ -2825,7 +2825,7 @@ namespace QuantConnect
         public static string GetEnumString(this int value, PyObject pyObject)
         {
             Type type;
-            if (pyObject.TryConvert(out type, true))
+            if (pyObject.TryConvert(out type))
             {
                 return value.ToStringInvariant().ConvertTo(type).ToString();
             }
@@ -2846,7 +2846,7 @@ namespace QuantConnect
         public static Type CreateType(this PyObject pyObject)
         {
             Type type;
-            if (pyObject.TryConvert(out type) && type != typeof(PythonData))
+            if (pyObject.TryConvert(out type))
             {
                 return type;
             }
