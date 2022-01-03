@@ -3231,7 +3231,7 @@ def Test(dataFrame, symbol):
         }
 
         [Test]
-        [TestCase(typeof(CustomData), "yyyyMMdd HH:mm")]
+        [TestCase(typeof(CustomData), "yyyy-MM-dd")]
         [TestCase(typeof(FxcmVolume), "yyyyMMdd HH:mm")]
         public void HandlesCustomDataBars(Type type, string format)
         {
@@ -3637,9 +3637,11 @@ def Test(dataFrame, symbol):
                     var value = csv[i].ToDecimal();
                     data.SetProperty(_propertyNames[i], value);
                 }
-
-                // we know that there is a close property, we want to set that to 'Value'
-                data.Value = (decimal)data.GetProperty("Value");
+                
+                if (!_propertyNames.Contains("Value"))
+                {
+                    data.Value = 1;
+                }
 
                 return data;
             }
