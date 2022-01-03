@@ -66,9 +66,4 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="QuantConnect.DataSource">
-      <HintPath>..\..\Lean.DataSource.NasdaqDataLink\bin\Debug\net5.0\QuantConnect.DataSource.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>

@@ -3231,7 +3231,7 @@ def Test(dataFrame, symbol):
         }
 
         [Test]
-        [TestCase(typeof(CustomData), "yyyyMMdd HH:mm")]
+        [TestCase(typeof(CustomDataBars), "yyyyMMdd HH:mm")]
         [TestCase(typeof(FxcmVolume), "yyyyMMdd HH:mm")]
         public void HandlesCustomDataBars(Type type, string format)
         {
@@ -3240,7 +3240,6 @@ def Test(dataFrame, symbol):
 
             var config = GetSubscriptionDataConfig<BaseData>(symbol, Resolution.Daily);
             var custom = Activator.CreateInstance(type) as BaseData;
-            if (type == typeof(CustomData)) custom.Reader(config, "date,open,high,low,close,transactions", DateTime.UtcNow, false);
 
             var rawBars = Enumerable
                 .Range(0, 10)
@@ -3645,8 +3644,12 @@ def Test(dataFrame, symbol):
             }
         }
 
-        internal class CustomDataBars : TradeBar
+        internal class CustomDataBars : BaseData
         {
+            public decimal Open;
+            public decimal High;
+            public decimal Low;
+            public decimal Close;
             public decimal Transactions { private set; get; }
 
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)

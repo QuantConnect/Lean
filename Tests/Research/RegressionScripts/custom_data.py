@@ -30,7 +30,8 @@ class CustomPythonData(PythonData):
 
         scaleFactor = 1 / 10000
         csv = line.split(",")
-        customPythonData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M')
+        customPythonData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M') + timedelta(hours=10)
+        customPythonData.EndTime = customPythonData.Time - timedelta(hours=5)
         customPythonData["Open"] = float(csv[1]) * scaleFactor
         customPythonData["High"] = float(csv[2]) * scaleFactor
         customPythonData["Low"] = float(csv[3]) * scaleFactor

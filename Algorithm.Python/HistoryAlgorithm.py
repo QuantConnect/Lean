@@ -75,9 +75,9 @@ class HistoryAlgorithm(QCAlgorithm):
         allCustomData = self.History(CustomDataEquity, self.Securities.Keys, 14)
         self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, 14)", allCustomData, 10)
 
-        # NOTE: Using different resolutions require that they are properly implemented in your data type. If your
-        #  custom data source has different resolutions, it would need to be implemented in the GetSource and 
-        #  Reader methods properly.
+        # NOTE: using different resolutions require that they are properly implemented in your data type, since
+        #  Custom doesn't support minute data, this won't actually work, but if your custom data source has
+        #  different resolutions, it would need to be implemented in the GetSource and Reader methods properly
         #customDataHistory = self.History(CustomDataEquity, "IBM", timedelta(7), Resolution.Minute)
         #customDataHistory = self.History(CustomDataEquity, "IBM", 14, Resolution.Minute)
         #allCustomData = self.History(CustomDataEquity, timedelta(365), Resolution.Minute)
@@ -97,10 +97,10 @@ class HistoryAlgorithm(QCAlgorithm):
             # do something with 'IBM.CustomDataEquity' customData data
             pass
 
-        customDataSpyValues = allCustomData.loc["IBM"]["value"]
-        self.AssertHistoryCount("allCustomData.loc[\"IBM\"][\"value\"]", customDataSpyValues, 10)
-        for value in customDataSpyValues:
-            # do something with 'IBM.CustomDataEquity' value data
+        customDataSpyLows = allCustomData.loc["IBM"]["value"]
+        self.AssertHistoryCount("allCustomData.loc[\"IBM\"][\"value\"]", customDataSpyLows, 10)
+        for value in customDataSpyLows:
+            # do something with 'IBM.CustomDataEquity' customData data
             pass
 
 
