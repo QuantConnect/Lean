@@ -461,34 +461,34 @@ namespace QuantConnect
                 orders
                     .OrderBy(pair => pair.Key)
                     .Select(pair =>
+                    {
+                        // this is required to avoid any small differences between python and C#
+                        var order = pair.Value;
+                        order.Price = order.Price.SmartRounding();
+                        var limit = order as LimitOrder;
+                        if (limit != null)
                         {
-                            // this is required to avoid any small differences between python and C#
-                            var order = pair.Value;
-                            order.Price = order.Price.SmartRounding();
-                            var limit = order as LimitOrder;
-                            if (limit != null)
-                            {
-                                limit.LimitPrice = limit.LimitPrice.SmartRounding();
-                            }
-                            var stopLimit = order as StopLimitOrder;
-                            if (stopLimit != null)
-                            {
-                                stopLimit.LimitPrice = stopLimit.LimitPrice.SmartRounding();
-                                stopLimit.StopPrice = stopLimit.StopPrice.SmartRounding();
-                            }
-                            var stopMarket = order as StopMarketOrder;
-                            if (stopMarket != null)
-                            {
-                                stopMarket.StopPrice = stopMarket.StopPrice.SmartRounding();
-                            }
-                            var limitIfTouched = order as LimitIfTouchedOrder;
-                            if (limitIfTouched != null)
-                            {
-                                limitIfTouched.LimitPrice = limitIfTouched.LimitPrice.SmartRounding();
-                                limitIfTouched.TriggerPrice = limitIfTouched.TriggerPrice.SmartRounding();
-                            }
-                            return JsonConvert.SerializeObject(pair.Value, Formatting.None);
+                            limit.LimitPrice = limit.LimitPrice.SmartRounding();
                         }
+                        var stopLimit = order as StopLimitOrder;
+                        if (stopLimit != null)
+                        {
+                            stopLimit.LimitPrice = stopLimit.LimitPrice.SmartRounding();
+                            stopLimit.StopPrice = stopLimit.StopPrice.SmartRounding();
+                        }
+                        var stopMarket = order as StopMarketOrder;
+                        if (stopMarket != null)
+                        {
+                            stopMarket.StopPrice = stopMarket.StopPrice.SmartRounding();
+                        }
+                        var limitIfTouched = order as LimitIfTouchedOrder;
+                        if (limitIfTouched != null)
+                        {
+                            limitIfTouched.LimitPrice = limitIfTouched.LimitPrice.SmartRounding();
+                            limitIfTouched.TriggerPrice = limitIfTouched.TriggerPrice.SmartRounding();
+                        }
+                        return JsonConvert.SerializeObject(pair.Value, Formatting.None);
+                    }
                     )
             );
 
@@ -613,18 +613,18 @@ namespace QuantConnect
             }
 
             return targets.Select(x =>
+            {
+                var security = algorithm.Securities[x.Symbol];
+                return new
                 {
-                    var security = algorithm.Securities[x.Symbol];
-                    return new
-                    {
-                        PortfolioTarget = x,
-                        TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
-                        ExistingQuantity = security.Holdings.Quantity
-                            + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
-                                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
-                        Security = security
-                    };
-                })
+                    PortfolioTarget = x,
+                    TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
+                    ExistingQuantity = security.Holdings.Quantity
+                        + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
+                            .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
+                    Security = security
+                };
+            })
                 .Where(x => x.Security.HasData
                             && x.Security.IsTradable
                             && (targetIsDelta ? Math.Abs(x.TargetQuantity) : Math.Abs(x.TargetQuantity - x.ExistingQuantity))
@@ -2636,7 +2636,7 @@ namespace QuantConnect
                 return pyObject.AsManagedObject(typeToConvertTo);
             }
         }
-        
+
         /// <summary>
         /// Converts a Python function to a managed function returning a Symbol
         /// </summary>
@@ -2825,7 +2825,7 @@ namespace QuantConnect
         public static string GetEnumString(this int value, PyObject pyObject)
         {
             Type type;
-            if (pyObject.TryConvert(out type, true))
+            if (pyObject.TryConvert(out type))
             {
                 return value.ToStringInvariant().ConvertTo(type).ToString();
             }
@@ -2846,7 +2846,7 @@ namespace QuantConnect
         public static Type CreateType(this PyObject pyObject)
         {
             Type type;
-            if (pyObject.TryConvert(out type) && type != typeof(PythonData))
+            if (pyObject.TryConvert(out type))
             {
                 return type;
             }
@@ -3529,7 +3529,7 @@ namespace QuantConnect
             {
                 return (data as Delisting)?.Type == DelistingType.Delisted;
             }
-            
+
             if (!(type == typeof(Delisting) || type == typeof(Split) || type == typeof(Dividend)))
             {
                 return true;

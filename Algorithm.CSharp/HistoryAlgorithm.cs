@@ -103,9 +103,9 @@ namespace QuantConnect.Algorithm.CSharp
             allCustomData = History<CustomData>(Securities.Keys, 14);
             AssertHistoryCount("History<CustomData>(Securities.Keys, 14)", allCustomData, 14, IBM);
 
-            // NOTE: using different resolutions require that they are properly implemented in your data type, since
-            //  CustomData doesn't support minute data, this won't actually work, but if your custom data source has
-            //  different resolutions, it would need to be implemented in the GetSource and Reader methods properly
+            // NOTE: Using different resolutions require that they are properly implemented in your data type. If your
+            // custom data source has different resolutions, it would need to be implemented in the GetSource and Reader
+            // methods properly.
             //customDataHistory = History<CustomData>("IBM", TimeSpan.FromDays(7), Resolution.Minute);
             //customDataHistory = History<CustomData>("IBM", 14, Resolution.Minute);
             //allCustomData = History<CustomData>(TimeSpan.FromDays(365), Resolution.Minute);
@@ -135,12 +135,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // we can also access individual properties on our data, this will
-            // get the 'IBM' CustomData objects like above, but then only return the Low properties
+            // get the 'IBM' CustomData objects like above, but then only return the Value properties
             var customDataIbmValues = allCustomData.Get("IBM", "Value");
             AssertHistoryCount("allCustomData.Get(\"IBM\", \"Value\")", customDataIbmValues, 250);
             foreach (decimal value in customDataIbmValues)
             {
-                // do something with each low value
+                // do something with each value
             }
 
             // sometimes it's necessary to get the history for many configured symbols
