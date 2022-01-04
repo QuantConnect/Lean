@@ -16,6 +16,10 @@
 using System;
 using Moq;
 using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.ToolBox.RandomDataGenerator;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
@@ -48,14 +52,95 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 var randomPriceGenerator = new RandomPriceGenerator(Symbols.AAPL, randomMock.Object);
 
                 var actual = randomPriceGenerator.NextValue(10, DateTime.MinValue);
-               Assert.AreEqual(10, actual);
+                Assert.AreEqual(10, actual);
             }
         }
 
         [TestFixture]
         public class BlackScholesPriceGeneratorTests
         {
+            private Security _underlying;
+            private Option _option;
 
+            public BlackScholesPriceGeneratorTests()
+            {
+                _underlying = new Security(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    new SubscriptionDataConfig(
+                        typeof(TradeBar),
+                        Symbols.SPY,
+                        Resolution.Minute,
+                        TimeZones.NewYork,
+                        TimeZones.NewYork,
+                        false,
+                        false,
+                        false
+                    ),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
+                );
+
+                var optionSymbol = Symbol.CreateOption(
+                    _underlying.Symbol,
+                    _underlying.Symbol.ID.Market,
+                    _underlying.Symbol.SecurityType.DefaultOptionStyle(),
+                    OptionRight.Call,
+                    20,
+                    new DateTime(2022, 1, 1));
+
+                _option = new Option(
+                    optionSymbol,
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    new Cash("USD", 0, 1m),
+                    new OptionSymbolProperties(_underlying.SymbolProperties),
+                    new CashBook(),
+                    new RegisteredSecurityDataTypesProvider(),
+                    new OptionCache(),
+                    _underlying);
+            }
+
+            [Test]
+            public void ThrowsIfSecurityIsNull()
+            {
+                Assert.Throws<ArgumentNullException>(() =>
+                {
+                    _ = new BlackScholesPriceGenerator(null);
+                });
+            }
+
+            [Test]
+            public void ThrowsIfSecurityIsNotOption()
+            {
+                Assert.Throws<ArgumentException>(() =>
+                {
+                    _ = new BlackScholesPriceGenerator(_underlying);
+                });
+            }
+
+            [Test]
+            public void ReturnUnderlyingPriceAsReference()
+            {
+                _underlying.SetMarketPrice(new Tick(DateTime.UtcNow, Symbols.SPY, 10, 100));
+                var randomPriceGenerator = new BlackScholesPriceGenerator(_option);
+
+                Assert.AreEqual(55, randomPriceGenerator.NextReferencePrice(50, 50));
+            }
+
+            [Test]
+            public void ReturnNewPrice()
+            {
+                var priceModelMock = new Mock<IOptionPriceModel>();
+                priceModelMock
+                    .Setup(s => s.Evaluate(It.IsAny<Security>(), It.IsAny<Slice>(), It.IsAny<OptionContract>()))
+                    .Returns(new OptionPriceModelResult(1000, new Greeks()));
+                _option.PriceModel = priceModelMock.Object;
+                var randomPriceGenerator = new BlackScholesPriceGenerator(_option);
+
+                Assert.AreEqual(1000, randomPriceGenerator.NextValue(50, new DateTime(2020, 1, 1)));
+            }
         }
     }
 }
