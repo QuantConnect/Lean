@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="map files" />
     public class IndiaDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _symbol;
+        private Symbol _mappingSymbol, _splitAndDividendSymbol;
         private bool _initialMapping;
         private bool _executionMapping;
         private bool _receivedWarningEvent;
@@ -47,19 +47,24 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2004, 5, 20);  //Set Start Date
             SetEndDate(2016, 7, 26);    //Set End Date
-            _symbol = AddEquity("3MINDIA", Resolution.Daily, Market.India).Symbol;
+            _mappingSymbol = AddEquity("3MINDIA", Resolution.Daily, Market.India).Symbol;
+            _splitAndDividendSymbol = AddEquity("CCCL", Resolution.Daily, Market.India).Symbol;
         }
 
         /// <summary>
         /// Raises the data event.
         /// </summary>
         /// <param name="data">Data.</param>
-        public void OnData(Dividends data) // update this to Dividends dictionary
+        public void OnData(Dividends data)
         {
-            var dividend = data["3MINDIA"];
-            if (dividend.Price != 645.5700m || dividend.ReferencePrice != 645.5700m || dividend.Distribution != 645.5700m)
+            if (data.ContainsKey(_splitAndDividendSymbol))
             {
-                throw new Exception("Did not receive expected price values");
+                var dividend = data[_splitAndDividendSymbol];
+                if (Time.Date == new DateTime(2010, 06, 15) &&
+                    (dividend.Price != 0.5m || dividend.ReferencePrice != 88.8m || dividend.Distribution != 0.5m))
+                {
+                    throw new Exception("Did not receive expected dividend values");
+                }
             }
         }
 
@@ -69,17 +74,20 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Data.</param>
         public void OnData(Splits data)
         {
-            var split = data["3MINDIA"];
-            if (split.Type == SplitType.Warning)
+            if (data.ContainsKey(_splitAndDividendSymbol))
             {
-                _receivedWarningEvent = true;
-            }
-            else if (split.Type == SplitType.SplitOccurred)
-            {
-                _receivedOccurredEvent = true;
-                if (split.Price != 645.5700m || split.ReferencePrice != 645.5700m || split.SplitFactor != 645.5700m)
+                var split = data[_splitAndDividendSymbol];
+                if (split.Type == SplitType.Warning)
                 {
-                    throw new Exception("Did not receive expected price values");
+                    _receivedWarningEvent = true;
+                }
+                else if (split.Type == SplitType.SplitOccurred)
+                {
+                    _receivedOccurredEvent = true;
+                    if (split.Price != 421m || split.ReferencePrice != 421m || split.SplitFactor != 0.2m)
+                    {
+                        throw new Exception("Did not receive expected split values");
+                    }
                 }
             }
         }
@@ -89,34 +97,21 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnData(Slice slice)
         {
-            if (Time.Date == new DateTime(2016, 6, 15))
-            {
-            }
-
-            if (slice.Splits.Any())
-            {  
-            }
-
-            if (slice.SymbolChangedEvents.ContainsKey(_symbol))
+            if (slice.SymbolChangedEvents.ContainsKey(_mappingSymbol))
             {
                 var mappingEvent = slice.SymbolChangedEvents.Single(x => x.Key.SecurityType == SecurityType.Equity).Value;
                 Log($"{Time} - Ticker changed from: {mappingEvent.OldSymbol} to {mappingEvent.NewSymbol}");
                 if (Time.Date == new DateTime(1999, 01, 01))
                 {
-                    // we should Not receive the initial mapping event
-                    {
-                        throw new Exception($"Unexpected mapping event {mappingEvent}");
-                    }
                     _initialMapping = true;
                 }
                 else if (Time.Date == new DateTime(2004, 06, 15))
                 {
-                    if (mappingEvent.NewSymbol != "3MINDIA"
-                        || mappingEvent.OldSymbol != "BIRLA3M")
+                    if (mappingEvent.NewSymbol == "3MINDIA"
+                        && mappingEvent.OldSymbol == "BIRLA3M")
                     {
-                        throw new Exception($"Unexpected mapping event {mappingEvent}");
+                        _executionMapping = true;
                     }
-                    _executionMapping = true;
                 }
             }
         }
@@ -133,6 +128,14 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_executionMapping)
             {
                 throw new Exception("The ticker did not rename throughout the course of its life even though it should have");
+            }
+            if (!_receivedOccurredEvent)
+            {
+                throw new Exception("Did not receive expected split event");
+            }
+            if (!_receivedWarningEvent)
+            {
+                throw new Exception("Did not receive expected split warning event");
             }
         }
 

@@ -25,11 +25,11 @@ class BasicTemplateIndiaAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10, 7)  #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
+        self.SetStartDate(2019, 1, 23)  #Set Start Date
+        self.SetEndDate(2019, 10, 31)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("AARTIDRUGS", Resolution.Minute, Market.India)
+        self.AddEquity("YESBANK", Resolution.Minute, Market.India)
         self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
         # Set Order Prperties as per the requirements for order placement
@@ -42,7 +42,7 @@ class BasicTemplateIndiaAlgorithm(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if not self.Portfolio.Invested:
-            self.SetHoldings("AARTIDRUGS", 1)
+            self.SetHoldings("YESBANK", 1)
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
