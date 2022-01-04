@@ -17,15 +17,18 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
-using QuantConnect.Data.Custom.AlphaStreams;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities;
+using System.Collections.Generic;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Securities.IndexOption;
+using QuantConnect.Data.Custom.AlphaStreams;
 using Index = QuantConnect.Securities.Index.Index;
 
 namespace QuantConnect.Tests.Algorithm
@@ -80,6 +83,9 @@ namespace QuantConnect.Tests.Algorithm
                     case SecurityType.Index:
                         var index = (Index)security;
                         break;
+                    case SecurityType.IndexOption:
+                        var indexOption = (IndexOption)security;
+                        break;
                     case SecurityType.Crypto:
                         var crypto = (Crypto)security;
                         break;
@@ -102,7 +108,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             get
             {
-                return new[]
+                var result = new List<TestCaseData>()
                 {
                     new TestCaseData(Symbols.SPY, null),
                     new TestCaseData(Symbols.EURUSD, null),
@@ -117,6 +123,21 @@ namespace QuantConnect.Tests.Algorithm
                     new TestCaseData(Symbol.Create("CustomData", SecurityType.Base, Market.Binance), null),
                     new TestCaseData(Symbol.Create("CustomData2", SecurityType.Base, Market.COMEX), null)
                 };
+
+                foreach (var market in Market.SupportedMarkets())
+                {
+                    foreach (var kvp in SymbolPropertiesDatabase.FromDataFolder().GetSymbolPropertiesList(market))
+                    {
+                        var securityDatabaseKey = kvp.Key;
+                        if (securityDatabaseKey.SecurityType != SecurityType.FutureOption)
+                        {
+                            result.Add(new TestCaseData(Symbol.Create(securityDatabaseKey.Symbol, securityDatabaseKey.SecurityType,
+                                securityDatabaseKey.Market), null));
+                        }
+                    }
+                }
+
+                return result.ToArray();
             }
         }
     }

@@ -279,5 +279,13 @@ namespace QuantConnect
         {
             return !ReverseMarkets.TryGetValue(code, out var market) ? null : market;
         }
+
+        /// <summary>
+        /// Returns a list of the supported markets
+        /// </summary>
+        public static List<string> SupportedMarkets()
+        {
+            return Markets.Keys.ToList();
+        }
     }
 }
