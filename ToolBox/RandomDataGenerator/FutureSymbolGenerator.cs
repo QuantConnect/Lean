@@ -22,7 +22,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// Generates a new random future <see cref="Symbol"/>. The generates future contract Symbol will have an
     /// expiry between the specified time range.
     /// </summary>
-    /// <returns>A new future contract Symbol with the specified expiration parameters</returns>
     public class FutureSymbolGenerator : BaseSymbolGenerator
     {
         private readonly DateTime _minExpiry;
@@ -41,6 +40,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// Generates a new random future <see cref="Symbol"/>. The generates future contract Symbol will have an
         /// expiry between the specified minExpiry and maxExpiry.
         /// </summary>
+        /// <returns>A new future contract Symbol with the specified expiration parameters</returns>
         public override IEnumerable<Symbol> GenerateAsset()
         {
             // get a valid ticker from the Symbol properties database
@@ -52,6 +52,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             yield return Symbol.CreateFuture(ticker, _market, expiry);
         }
 
+        /// <summary>
+        /// There is no limit for the future symbols.
+        /// </summary>
+        /// <returns>Returns int.MaxValue</returns>
         public override int GetAvailableSymbolCount() => int.MaxValue;
     }
 }

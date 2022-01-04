@@ -28,18 +28,16 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// A valid implementation will keep track of generated Symbol objects to ensure duplicates
     /// are not generated.
     /// </remarks>
-    /// <exception cref="ArgumentException">Throw when specifying <see cref="SecurityType.Option"/> or
-    /// <see cref="SecurityType.Future"/>. To generate symbols for the derivative security types, please
-    /// use <see cref="NextOption"/> and <see cref="NextFuture"/> respectively</exception>
-    /// <exception cref="NoTickersAvailableException">Thrown when there are no tickers left to use for new symbols.</exception>
-    /// <param name="securityType">The security type of the generated Symbol</param>
-    /// <param name="market">The market of the generated Symbol</param>
-    /// <returns>A new Symbol object of the specified security type</returns>
     public class DefaultSymbolGenerator : BaseSymbolGenerator
     {
         private readonly string _market;
         private readonly SecurityType _securityType;
 
+        /// <summary>
+        /// Creates <see cref="DefaultSymbolGenerator"/> instance
+        /// </summary>
+        /// <param name="settings">random data generation run settings</param>
+        /// <param name="random">produces random values for use in random data generation</param>
         public DefaultSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
             : base(settings, random)
         {
@@ -47,11 +45,20 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             _securityType = settings.SecurityType;
         }
 
+        /// <summary>
+        /// Generates a single-item list at a time using base random implementation 
+        /// </summary>
+        /// <returns></returns>
         public override IEnumerable<Symbol> GenerateAsset()
         {
             yield return NextSymbol(Settings.SecurityType, Settings.Market);
         }
 
+        /// <summary>
+        /// Returns the number of symbols with the specified parameters can be generated.
+        /// Returns int.MaxValue if there is no limit for the given parameters.
+        /// </summary>
+        /// <returns>The number of available symbols for the given parameters, or int.MaxValue if no limit</returns>
         public override int GetAvailableSymbolCount()
         {
             // check the Symbol properties database to determine how many symbols we can generate

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -26,7 +27,9 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
     [TestFixture]
     public class TickGeneratorTests
     {
-        private Dictionary<SecurityType, List<TickType>> _tickTypesPerSecurityType = SubscriptionManager.DefaultDataTypes();
+        private Dictionary<SecurityType, List<TickType>> _tickTypesPerSecurityType =
+            SubscriptionManager.DefaultDataTypes();
+
         private Symbol _symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
         private ITickGenerator _tickGenerator;
 
@@ -52,7 +55,11 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             );
 
             _tickGenerator = new TickGenerator(
-                new RandomDataGeneratorSettings(),
+                new RandomDataGeneratorSettings()
+                {
+                    Start = new DateTime(2020, 1, 1),
+                    End = new DateTime(2020, 1, 2)
+                },
                 _tickTypesPerSecurityType[_symbol.SecurityType].ToArray(),
                 security,
                 new RandomValueGenerator());
@@ -154,7 +161,9 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             {
                 increment = TimeSpan.FromMilliseconds(500);
             }
-            var marketHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(_symbol.ID.Market, _symbol, _symbol.SecurityType);
+
+            var marketHours = MarketHoursDatabase.FromDataFolder()
+                .GetExchangeHours(_symbol.ID.Market, _symbol, _symbol.SecurityType);
             for (int i = 0; i < count; i++)
             {
                 var next = _tickGenerator.NextTickTime(previous, resolution, density);
@@ -189,6 +198,14 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 default:
                     throw new ArgumentOutOfRangeException(nameof(density), density, null);
             }
+        }
+
+        [Test]
+        public void HistoryIsNotEmpty()
+        {
+            var history = _tickGenerator.GenerateTicks().ToList();
+            Assert.IsNotEmpty(history);
+            Assert.That(history.Select(s => s.Symbol), Is.All.EqualTo(_symbol));
         }
     }
 }

@@ -52,7 +52,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly FixedSizeHashQueue<Symbol> _symbols;
 
         /// <summary>
-        /// 
+        /// Base constructor implementation for Symbol generator
         /// </summary>
         /// <param name="settings">random data generation run settings</param>
         /// <param name="random">produces random values for use in random data generation</param>
