@@ -1680,6 +1680,12 @@ namespace QuantConnect.Algorithm
                             contractDepthOffset: contractOffset
                         );
 
+                        // let's add a MHDB entry for the continuous symbol using the associated security
+                        var continuousContractSymbol = ContinuousContractUniverse.CreateSymbol(security.Symbol);
+                        MarketHoursDatabase.SetEntry(continuousContractSymbol.ID.Market,
+                            continuousContractSymbol.ID.Symbol,
+                            continuousContractSymbol.ID.SecurityType,
+                            security.Exchange.Hours);
                         AddUniverse(new ContinuousContractUniverse(security, new UniverseSettings(settings)
                             {
                                 DataMappingMode = continuousConfigs.First().DataMappingMode,
@@ -1687,7 +1693,7 @@ namespace QuantConnect.Algorithm
                                 ContractDepthOffset = (int)continuousConfigs.First().ContractDepthOffset,
                                 SubscriptionDataTypes = dataTypes
                             }, LiveMode,
-                            new SubscriptionDataConfig(canonicalConfig, symbol: ContinuousContractUniverse.CreateSymbol(security.Symbol))));
+                            new SubscriptionDataConfig(canonicalConfig, symbol: continuousContractSymbol)));
 
                         universe = new FuturesChainUniverse((Future)security, settings);
                     }
