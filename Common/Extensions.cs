@@ -2505,6 +2505,9 @@ namespace QuantConnect
             {
                 try
                 {
+                    // We must first check if allowPythonDerivative is true to then only return true
+                    // when the PyObject is assignable from Type or IEnumerable and is a C# type
+                    // wrapped in PyObject
                     if (allowPythonDerivative)
                     {
                         result = (T)pyObject.AsManagedObject(type);

@@ -565,9 +565,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.DoesNotThrow(() => niftyFactory.GetSource(niftySubscription, DateTime.UtcNow, false));
 
             var customDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "IBM");
-            Assert.AreEqual("custom_data.CustomPythonData", customDataSubscription.Type.ToString());
-            Assert.IsTrue(customDataSubscription.IsCustomData);
             Assert.IsNotNull(customDataSubscription);
+            Assert.IsTrue(customDataSubscription.IsCustomData);
+            Assert.AreEqual("custom_data.CustomPythonData", customDataSubscription.Type.ToString());
 
             var customDataFactory = (BaseData)ObjectActivator.GetActivator(customDataSubscription.Type).Invoke(new object[] { customDataSubscription.Type });
             Assert.DoesNotThrow(() => customDataFactory.GetSource(customDataSubscription, DateTime.UtcNow, false));

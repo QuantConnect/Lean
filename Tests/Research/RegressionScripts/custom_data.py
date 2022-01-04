@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-AddReference("QuantConnect.Common")
 
 import decimal
 

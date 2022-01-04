@@ -12,10 +12,8 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-sys.path.append('/QuantConnect/Tests/Research/RegressionScripts')
 
-from custom_data import CustomPythonData
-
+from custom_data import *
 
 class Test_CustomDataAlgorithm(QCAlgorithm):
 

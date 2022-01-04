@@ -3647,30 +3647,6 @@ def Test(dataFrame, symbol):
             }
         }
 
-        internal class CustomDataBars : TradeBar
-        {
-            public decimal Transactions { private set; get; }
-
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
-            {
-                var csv = line.Split(',');
-
-                var data = new CustomDataBars
-                {
-                    Symbol = config.Symbol,
-                    Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture),
-                    Open = csv[1].ToDecimal(),
-                    High = csv[2].ToDecimal(),
-                    Low = csv[3].ToDecimal(),
-                    Close = csv[4].ToDecimal(),
-                    Transactions = csv[5].ToDecimal(),
-                    Value = csv[4].ToDecimal()
-                };
-
-                return data;
-            }
-        }
-
         internal class EnumerableData : BaseDataCollection
         {
 

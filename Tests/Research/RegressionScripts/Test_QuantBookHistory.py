@@ -12,10 +12,8 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-AddReference("QuantConnect.Research")
-AddReference("QuantConnect.Common")
 
-from custom_data import CustomPythonData, Nifty
+from custom_data import *
 
 class SecurityHistoryTest():
     def __init__(self, start_date, security_type, symbol):
