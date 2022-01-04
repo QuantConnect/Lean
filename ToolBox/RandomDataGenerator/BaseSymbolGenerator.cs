@@ -26,16 +26,36 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public abstract class BaseSymbolGenerator
     {
+
+        /// <summary>
+        /// <see cref="IRandomValueGenerator"/> instance producing random values for use in random data generation
+        /// </summary>
         protected IRandomValueGenerator Random { get; }
+
+        /// <summary>
+        /// Settings of current random data generation run
+        /// </summary>
         protected RandomDataGeneratorSettings Settings { get; }
 
+        /// <summary>
+        /// Exchange hours and raw data times zones in various markets
+        /// </summary>
         protected MarketHoursDatabase MarketHoursDatabase { get; }
+
+        /// <summary>
+        /// Access to specific properties for various symbols
+        /// </summary>
         protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; }
 
         // used to prevent generating duplicates, but also caps
         // the memory allocated to checking for duplicates
         private readonly FixedSizeHashQueue<Symbol> _symbols;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="settings">random data generation run settings</param>
+        /// <param name="random">produces random values for use in random data generation</param>
         protected BaseSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
         {
             Settings = settings;
@@ -49,10 +69,20 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// Creates a ad-hoc symbol generator depending on settings
         /// </summary>
         /// <param name="settings">random data generator settings</param>
-        /// <param name="random">randomizer</param>
+        /// <param name="random">produces random values for use in random data generation</param>
         /// <returns>New symbol generator</returns>
         public static BaseSymbolGenerator Create(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
         {
+            if (settings is null)
+            {
+                throw new ArgumentNullException(nameof(settings), "Settings cannot be null or empty");
+            }
+
+            if (random is null)
+            {
+                throw new ArgumentNullException(nameof(random), "Randomizer cannot be null");
+            }
+
             switch (settings.SecurityType)
             {
                 case SecurityType.Option:

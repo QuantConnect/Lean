@@ -60,6 +60,24 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             );
         }
 
+        [Test]
+        public void ThrowIsSettingsAreNull()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                BaseSymbolGenerator.Create(null, Mock.Of<IRandomValueGenerator>());
+            });
+        }
+
+        [Test]
+        public void ThrowIsRundomValueGeneratorIsNull()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                BaseSymbolGenerator.Create(new RandomDataGeneratorSettings(), null);
+            });
+        }
+
         [TestFixture]
         public class DefaultSymbolGeneratorTests
         {
@@ -71,7 +89,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             public void Setup()
             {
                 // initialize using a seed for deterministic tests
-                _symbolGenerator = new FutureSymbolGenerator(
+                _symbolGenerator = new DefaultSymbolGenerator(
                     new RandomDataGeneratorSettings()
                     {
                         Market = Market.CME,
@@ -79,6 +97,17 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                         End = _maxExpiry
                     },
                     _randomValueGenerator);
+            }
+
+            [Test]
+            [TestCase(SecurityType.Equity)]
+            [TestCase(SecurityType.Index)]
+            public void ReturnsDefaultSymbolGeneratorInstance(SecurityType securityType)
+            {
+                Assert.IsInstanceOf<DefaultSymbolGenerator>(BaseSymbolGenerator.Create(
+                        new RandomDataGeneratorSettings() { SecurityType = securityType },
+                        Mock.Of<IRandomValueGenerator>()
+                    ));
             }
 
             [Test]
@@ -214,6 +243,16 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             }
 
             [Test]
+            [TestCase(SecurityType.Future)]
+            public void ReturnsFutureSymbolGeneratorInstance(SecurityType securityType)
+            {
+                Assert.IsInstanceOf<FutureSymbolGenerator>(BaseSymbolGenerator.Create(
+                    new RandomDataGeneratorSettings { SecurityType = securityType },
+                    Mock.Of<IRandomValueGenerator>()
+                ));
+            }
+
+            [Test]
             public void GetAvailableSymbolCount()
             {
                 Assert.AreEqual(int.MaxValue, _symbolGenerator.GetAvailableSymbolCount());
@@ -248,8 +287,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             [Test]
             public void NextFuture_CreatesSymbol_WithEntryInSymbolPropertiesDatabase()
             {
-               var symbols = _symbolGenerator.GenerateAsset().ToList();
-               Assert.AreEqual(1, symbols.Count);
+                var symbols = _symbolGenerator.GenerateAsset().ToList();
+                Assert.AreEqual(1, symbols.Count);
 
                 var symbol = symbols.First();
 
@@ -284,6 +323,16 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             }
 
             [Test]
+            [TestCase(SecurityType.Option)]
+            public void ReturnsFutureSymbolGeneratorInstance(SecurityType securityType)
+            {
+                Assert.IsInstanceOf<OptionSymbolGenerator>(BaseSymbolGenerator.Create(
+                    new RandomDataGeneratorSettings { SecurityType = securityType },
+                    Mock.Of<IRandomValueGenerator>()
+                ));
+            }
+
+            [Test]
             public void GetAvailableSymbolCount()
             {
                 Assert.AreEqual(int.MaxValue, new OptionSymbolGenerator(Mock.Of<RandomDataGeneratorSettings>(), Mock.Of<RandomValueGenerator>(), 100m, 75m).GetAvailableSymbolCount());
@@ -311,7 +360,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             {
                 var securities = _symbolGenerator.GenerateAsset().ToList();
                 Assert.AreEqual(2, securities.Count);
-                
+
                 var option = securities[1];
 
                 var expiration = option.ID.Date;
@@ -349,7 +398,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             {
                 var securities = _symbolGenerator.GenerateAsset().ToList();
                 Assert.AreEqual(2, securities.Count);
-                
+
                 var option = securities[1];
 
                 var strikePrice = option.ID.StrikePrice;

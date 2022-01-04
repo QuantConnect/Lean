@@ -137,7 +137,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// Generates a random <see cref="Tick"/> that is at most the specified <paramref name="maximumPercentDeviation"/> away from the
         /// <paramref name="referencePrice"/> and is of the requested <paramref name="tickType"/>
         /// </summary>
-        /// <param name="symbol">The Symbol of the generated tick</param>
         /// <param name="dateTime">The time of the generated tick</param>
         /// <param name="tickType">The type of <see cref="Tick"/> to be generated</param>
         /// <param name="referencePrice">The reference price. For spot symbols - the previous price, used as a reference for generating

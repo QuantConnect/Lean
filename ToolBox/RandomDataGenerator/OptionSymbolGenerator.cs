@@ -20,22 +20,8 @@ using System.Collections.Generic;
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
     /// <summary>
-    /// Generates a new random option <see cref="Symbol"/>. The generated option contract Symbol will have an
-    /// expiry between the specified <paramref name="minExpiry"/> and <paramref name="maxExpiry"/>. The strike
-    /// price will be within the specified <paramref name="maximumStrikePriceDeviation"/> of the <paramref name="underlyingPrice"/>
-    /// and should be rounded to reasonable value for the given price. For example, a price of 100 dollars would round
-    /// to 5 dollar increments and a price of 5 dollars would round to 50 cent increments
+    /// Generates a new random option <see cref="Symbol"/>.
     /// </summary>
-    /// <remarks>
-    /// Standard contracts expiry on the third Friday.
-    /// Weekly contracts expiry every week on Friday
-    /// </remarks>
-    /// <param name="market">The market of the generated Symbol</param>
-    /// <param name="minExpiry">The minimum expiry date, inclusive</param>
-    /// <param name="maxExpiry">The maximum expiry date, inclusive</param>
-    /// <param name="underlyingPrice">The option's current underlying price</param>
-    /// <param name="maximumStrikePriceDeviation">The strike price's maximum percent deviation from the underlying price</param>
-    /// <returns>A new option contract Symbol within the specified expiration and strike price parameters</returns>
     public class OptionSymbolGenerator : BaseSymbolGenerator
     {
         private readonly DateTime _minExpiry;
@@ -55,6 +41,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             _maximumStrikePriceDeviation = maximumStrikePriceDeviation;
         }
 
+        /// <summary>
+        /// Generates a new random option <see cref="Symbol"/>. The generated option contract Symbol will have an
+        /// expiry between the specified min and max expiration. The strike
+        /// price will be within the specified maximum strike price deviation of the underlying symbol price
+        /// and should be rounded to reasonable value for the given price. For example, a price of 100 dollars would round
+        /// to 5 dollar increments and a price of 5 dollars would round to 50 cent increments
+        /// </summary>
+        /// <remarks>
+        /// Standard contracts expiry on the third Friday.
+        /// Weekly contracts expiry every week on Friday
+        /// </remarks>
+        /// <returns>A new option contract Symbol within the specified expiration and strike price parameters along with its underlying symbol</returns>
         public override IEnumerable<Symbol> GenerateAsset()
         {
             // first generate the underlying
@@ -81,6 +79,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             yield return Symbol.CreateOption(underlying, _market, underlying.SecurityType.DefaultOptionStyle(), optionRight, strike, expiry);
         }
 
+        /// <summary>
+        /// Returns the number of symbols with the specified parameters can be generated.
+        /// There is no limit for the options.
+        /// </summary>
+        /// <returns>returns int.MaxValue</returns>
         public override int GetAvailableSymbolCount() => int.MaxValue;
     }
 }
