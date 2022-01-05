@@ -298,22 +298,11 @@ namespace QuantConnect.ToolBox
         /// <returns>A list of <see cref="TradeBar"/> read from file</returns>
         private static List<TradeBar> ReadDailyEquityData(string pathForDailyEquityData)
         {
-            using (var zipToOpen = new FileStream(pathForDailyEquityData, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                using (var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
-                {
-                    foreach (var entry in archive.Entries)
-                    {
-                        var parser = new LeanParser();
-                        var stream = entry.Open();
-                        return parser.Parse(pathForDailyEquityData, stream)
-                                     .OrderByDescending(x => x.Time)
-                                     .Select(x => (TradeBar)x)
-                                     .ToList();
-                    }
-                }
-            }
-            return new List<TradeBar>();
+            var dataReader = new LeanDataReader(pathForDailyEquityData);
+            var bars = dataReader.Parse();
+            return bars.OrderByDescending(x => x.Time)
+                         .Select(x => (TradeBar)x)
+                         .ToList();
         }
 
         /// <summary>
