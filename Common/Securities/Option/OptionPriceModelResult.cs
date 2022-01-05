@@ -84,6 +84,6 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Represents the zero option price and greeks. 
         /// </summary>
-        public static OptionPriceModelResult None = new(0, new Greeks());
+        public static OptionPriceModelResult None { get; } = new(0, new Greeks());
     }
 }

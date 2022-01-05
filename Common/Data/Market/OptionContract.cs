@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using System;
 
 namespace QuantConnect.Data.Market
 {
@@ -178,10 +178,25 @@ namespace QuantConnect.Data.Market
         /// </returns>
         public override string ToString() => Symbol.Value;
 
+        /// <summary>
+        /// Creates a <see cref="OptionContract"/> 
+        /// </summary>
+        /// <param name="baseData"></param>
+        /// <param name="security">provides price properties for a <see cref="Security"/></param>
+        /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
+        /// <returns>Option contract</returns>
         public static OptionContract Create(BaseData baseData, ISecurityPrice security, decimal underlyingLastPrice)
             => Create(baseData.Symbol, baseData.Symbol.Underlying, baseData.EndTime, security, underlyingLastPrice);
 
-
+        /// <summary>
+        /// Creates a <see cref="OptionContract"/>
+        /// </summary>
+        /// <param name="symbol">The option contract symbol</param>
+        /// <param name="underlyingSymbol">The symbol of the underlying security</param>
+        /// <param name="endTime">local date time this contract's data was last updated</param>
+        /// <param name="security">provides price properties for a <see cref="Security"/></param>
+        /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
+        /// <returns>Option contract</returns>
         public static OptionContract Create(Symbol symbol, Symbol underlyingSymbol, DateTime endTime, ISecurityPrice security, decimal underlyingLastPrice)
         {
             return new OptionContract(symbol, underlyingSymbol)
