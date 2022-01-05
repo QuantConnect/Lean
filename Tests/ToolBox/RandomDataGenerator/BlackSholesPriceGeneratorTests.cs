@@ -89,15 +89,6 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        public void ReturnUnderlyingPriceAsReference()
-        {
-            _underlying.SetMarketPrice(new Tick(DateTime.UtcNow, Symbols.SPY, 10, 100));
-            var randomPriceGenerator = new BlackScholesPriceGenerator(_option);
-
-            Assert.AreEqual(55, randomPriceGenerator.NextReferencePrice(50, 50));
-        }
-
-        [Test]
         public void ReturnNewPrice()
         {
             var priceModelMock = new Mock<IOptionPriceModel>();

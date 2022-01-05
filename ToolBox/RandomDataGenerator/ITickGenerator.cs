@@ -36,21 +36,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         /// <summary>
         /// Generates a random <see cref="Tick"/> that is at most the specified <paramref name="maximumPercentDeviation"/> away from the
-        /// <paramref name="previousValue"/> and is of the requested <paramref name="tickType"/>
+        /// previous price and is of the requested <paramref name="tickType"/>
         /// </summary>
         /// <param name="dateTime">The time of the generated tick</param>
         /// <param name="tickType">The type of <see cref="Tick"/> to be generated</param>
-        /// <param name="previousValue">The previous price, used as a reference for generating
-        /// new random prices for the next time step</param>
         /// <param name="maximumPercentDeviation">The maximum percentage to deviate from the
-        /// <paramref name="previousValue"/>, for example, 1 would indicate a maximum of 1% deviation from the
-        /// <paramref name="previousValue"/>. For a previous price of 100, this would yield a price between 99 and 101 inclusive</param>
+        /// previous price, for example, 1 would indicate a maximum of 1% deviation from the
+        /// previous price. For a previous price of 100, this would yield a price between 99 and 101 inclusive</param>
         /// <returns>A random <see cref="Tick"/> value that is within the specified <paramref name="maximumPercentDeviation"/>
-        /// from the <paramref name="previousValue"/></returns>
+        /// from the previous price</returns>
         Tick NextTick(
             DateTime dateTime,
             TickType tickType,
-            decimal previousValue,
             decimal maximumPercentDeviation
             );
 
@@ -66,6 +63,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="density">The requested data density</param>
         /// <returns>A new <see cref="DateTime"/> that is after <paramref name="previous"/> according to the specified <paramref name="resolution"/>
         /// and <paramref name="density"/> specified</returns>
-        DateTime NextTickTime( DateTime previous, Resolution resolution, DataDensity density);
+        DateTime NextTickTime(DateTime previous, Resolution resolution, DataDensity density);
     }
 }

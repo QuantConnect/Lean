@@ -31,15 +31,19 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             SubscriptionManager.DefaultDataTypes();
 
         private Symbol _symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+        private Security _security;
         private ITickGenerator _tickGenerator;
 
         [SetUp]
         public void Setup()
         {
+            var start = new DateTime(2020, 1, 1);
+            var end = new DateTime(2020, 1, 2);
+
             // initialize using a seed for deterministic tests
             _symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
-            var security = new Security(
+            _security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new SubscriptionDataConfig(typeof(TradeBar),
                     _symbol,
@@ -53,15 +57,17 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
+            _security.SetMarketPrice(new Tick(start, _security.Symbol, 100, 100));
+            _security.SetMarketPrice(new OpenInterest(start, _security.Symbol, 10000));
 
             _tickGenerator = new TickGenerator(
                 new RandomDataGeneratorSettings()
                 {
-                    Start = new DateTime(2020, 1, 1),
-                    End = new DateTime(2020, 1, 2)
+                    Start = start,
+                    End = end
                 },
                 _tickTypesPerSecurityType[_symbol.SecurityType].ToArray(),
-                security,
+                _security,
                 new RandomValueGenerator());
 
         }
@@ -70,7 +76,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesTradeTick_WithPriceAndQuantity()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(dateTime, TickType.Trade, 100m, 1m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.Trade, 1m);
 
             Assert.AreEqual(_symbol, tick.Symbol);
             Assert.AreEqual(dateTime, tick.Time);
@@ -86,7 +92,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesQuoteTick_WithCommonValues()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(dateTime, TickType.Quote, 100m, 1m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.Quote, 1m);
 
             Assert.AreEqual(_symbol, tick.Symbol);
             Assert.AreEqual(dateTime, tick.Time);
@@ -99,7 +105,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesQuoteTick_WithBidData()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(dateTime, TickType.Quote, 100m, 1m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.Quote, 1m);
 
             Assert.Greater(tick.BidSize, 0);
             Assert.LessOrEqual(tick.BidSize, 1500);
@@ -112,7 +118,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesQuoteTick_WithAskData()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(dateTime, TickType.Quote, 100m, 1m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.Quote, 1m);
 
             Assert.GreaterOrEqual(tick.AskSize, 0);
             Assert.LessOrEqual(tick.AskSize, 1500);
@@ -125,7 +131,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextTick_CreatesOpenInterestTick()
         {
             var dateTime = new DateTime(2000, 01, 01);
-            var tick = _tickGenerator.NextTick(dateTime, TickType.OpenInterest, 10000m, 10m);
+            var tick = _tickGenerator.NextTick(dateTime, TickType.OpenInterest, 10m);
 
             Assert.AreEqual(dateTime, tick.Time);
             Assert.AreEqual(TickType.OpenInterest, tick.TickType);

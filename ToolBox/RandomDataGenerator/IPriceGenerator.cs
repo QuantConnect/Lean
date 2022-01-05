@@ -26,20 +26,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     public interface IPriceGenerator
     {
         /// <summary>
-        /// Generates a reference price used in further price calculation
-        /// </summary>
-        /// <param name="referencePrice">previous reference price</param>
-        /// <param name="maximumPercentDeviation">The maximum percent deviation. This value is in percent space,
-        ///     so a value of 1m is equal to 1%.</param>
-        /// <returns>A new decimal suitable for usage as reference price</returns>
-        public decimal NextReferencePrice(decimal referencePrice, decimal maximumPercentDeviation);
-
-        /// <summary>
         /// Generates an asset price
         /// </summary>
-        /// <param name="referencePrice">reference price used in price calculation</param>
+        /// <param name="maximumPercentDeviation">The maximum percent deviation. This value is in percent space,
+        ///     so a value of 1m is equal to 1%.</param>
         /// <param name="referenceDate">date used in price calculation</param>
         /// <returns>Returns a new decimal as price</returns>
-        public decimal NextValue(decimal referencePrice, DateTime referenceDate);
+        public decimal NextValue(decimal maximumPercentDeviation, DateTime referenceDate);
     }
 }

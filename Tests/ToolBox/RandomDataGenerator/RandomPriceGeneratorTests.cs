@@ -17,35 +17,52 @@ using Moq;
 using NUnit.Framework;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using System;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
     [TestFixture]
     public class RandomPriceGeneratorTests
     {
-        [Test]
-        public void ReturnRandomReference()
-        {
-            var randomMock = new Mock<IRandomValueGenerator>();
-            decimal expect = 42m;
-            randomMock
-                .Setup(s => s.NextPrice(It.IsAny<SecurityType>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<decimal>()))
-                .Returns(expect);
-            var randomPriceGenerator = new RandomPriceGenerator(Symbols.AAPL, randomMock.Object);
+        private Security _security;
 
-            var actual = randomPriceGenerator.NextReferencePrice(10, 20);
-            randomMock.Verify(s => s.NextPrice(SecurityType.Equity, Market.USA, 10, 20), Times.Once);
-            Assert.AreEqual(expect, actual);
+        public RandomPriceGeneratorTests()
+        {
+            _security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.SPY,
+                    Resolution.Minute,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    false,
+                    false,
+                    false
+                ),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
         }
 
         [Test]
         public void ReturnSameAsReference()
         {
             var randomMock = new Mock<IRandomValueGenerator>();
-            var randomPriceGenerator = new RandomPriceGenerator(Symbols.AAPL, randomMock.Object);
+            randomMock.Setup(s => s.NextPrice(It.IsAny<SecurityType>(), It.IsNotNull<string>(), It.IsAny<decimal>(),
+                It.IsAny<decimal>()))
+                .Returns(50);
+            var randomPriceGenerator = new RandomPriceGenerator(_security, randomMock.Object);
+            _security.SetMarketPrice(new Tick(DateTime.UtcNow, Symbols.SPY, 10, 100));
 
-            var actual = randomPriceGenerator.NextValue(10, DateTime.MinValue);
-            Assert.AreEqual(10, actual);
+            var actual = randomPriceGenerator.NextValue(1, DateTime.MinValue);
+            randomMock.Verify(s => s.NextPrice(It.IsAny<SecurityType>(), It.IsNotNull<string>(), 55,1), Times.Once);
+            Assert.AreEqual(50, actual);
         }
     }
 }

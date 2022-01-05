@@ -48,25 +48,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         }
 
         /// <summary>
-        /// For Black-Scholes-Merton model the price of underlying security is used as reference
-        /// </summary>
-        /// <param name="referencePrice">previous reference price</param>
-        /// <param name="maximumPercentDeviation">The maximum percent deviation. This value is in percent space,
-        ///     so a value of 1m is equal to 1%.</param>
-        /// <returns>A new decimal suitable for usage as reference price</returns>
-        public decimal NextReferencePrice(
-            decimal referencePrice,
-            decimal maximumPercentDeviation
-            )
-            => _option.Underlying.Price;
-
-        /// <summary>
         /// For Black-Scholes-Merton model price calculation relies <see cref="IOptionPriceModel"/> of the security
         /// </summary>
-        /// <param name="referencePrice">current reference price</param>
+        /// <param name="maximumPercentDeviation">The maximum percent deviation. This value is in percent space,
+        ///     so a value of 1m is equal to 1%.</param>
         /// /// <param name="referenceDate">current reference date</param>
         /// <returns>A new decimal suitable for usage as new security price</returns>
-        public decimal NextValue(decimal referencePrice, DateTime referenceDate)
+        public decimal NextValue(decimal maximumPercentDeviation, DateTime referenceDate)
         {
             return _option.PriceModel
                 .Evaluate(
@@ -77,7 +65,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         _option.Symbol.Underlying,
                         referenceDate,
                         _option,
-                        referencePrice
+                        _option.Underlying.Price
                         ))
                 .TheoreticalPrice;
         }

@@ -34,36 +34,30 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         protected MarketHoursDatabase MarketHoursDatabase { get; }
         protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; }
-        public Symbol Symbol { get; }
+        public Security Security { get; }
+        public Symbol Symbol => Security.Symbol;
 
         public TickGenerator(RandomDataGeneratorSettings settings, TickType[] tickTypes, Security security, IRandomValueGenerator random)
         {
             Random = random;
             Settings = settings;
             TickTypes = tickTypes;
-            Symbol = security.Symbol;
+            Security = security;
             SymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-            
+
             if (Symbol.SecurityType.IsOption())
             {
                 _priceGenerator = new BlackScholesPriceGenerator(security);
             }
             else
             {
-                _priceGenerator = new RandomPriceGenerator(security.Symbol, random);
+                _priceGenerator = new RandomPriceGenerator(security, random);
             }
         }
 
         public IEnumerable<Tick> GenerateTicks()
         {
-            var previousValues = new Dictionary<TickType, decimal>
-            {
-                {TickType.Trade, 100m},
-                {TickType.Quote, 100m},
-                {TickType.OpenInterest, 10000m}
-            };
-
             var current = Settings.Start;
 
             // There is a possibility that even though this succeeds, the DateTime
@@ -85,9 +79,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     if (next.Date != current.Date)
                     {
                         // 5% deviation in daily OI
-                        var previous = previousValues[TickType.OpenInterest];
-                        var openInterest = NextTick(next.Date, TickType.OpenInterest, previous, 5m);
-                        previousValues[TickType.OpenInterest] = openInterest.Value;
+                        var openInterest = NextTick(next.Date, TickType.OpenInterest, 5m);
                         yield return openInterest;
                     }
                 }
@@ -96,35 +88,28 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 if (TickTypes.Contains(TickType.Trade) &&
                     TickTypes.Contains(TickType.Quote))
                 {
-                    // since we're generating both trades and quotes we'll only reference one price
-                    // to prevent the trade and quote prices from drifting away from each other
-                    var referenceValue = _priceGenerator.NextReferencePrice(previousValues[TickType.Trade], deviation);
-
                     // %odds of getting a trade tick, for example, a quote:trade ratio of 2 means twice as likely
                     // to get a quote, which means you have a 33% chance of getting a trade => 1/3
                     var tradeChancePercent = 100 / (1 + Settings.QuoteTradeRatio);
                     if (Random.NextBool(tradeChancePercent))
                     {
-                        var nextTrade = NextTick(next, TickType.Trade, referenceValue, deviation);
+                        var nextTrade = NextTick(next, TickType.Trade, deviation);
                         yield return nextTrade;
                     }
                     else
                     {
-                        var nextQuote = NextTick(next, TickType.Quote, referenceValue, deviation);
+                        var nextQuote = NextTick(next, TickType.Quote, deviation);
                         yield return nextQuote;
                     }
-                    previousValues[TickType.Trade] = referenceValue;
                 }
                 else if (TickTypes.Contains(TickType.Trade))
                 {
-                    var nextTrade = NextTick(next, TickType.Trade, _priceGenerator.NextReferencePrice(previousValues[TickType.Trade], deviation), deviation);
-                    previousValues[TickType.Trade] = nextTrade.Value;
+                    var nextTrade = NextTick(next, TickType.Trade, deviation);
                     yield return nextTrade;
                 }
                 else if (TickTypes.Contains(TickType.Quote))
                 {
-                    var nextQuote = NextTick(next, TickType.Quote, _priceGenerator.NextReferencePrice(previousValues[TickType.Quote], deviation), deviation);
-                    previousValues[TickType.Quote] = nextQuote.Value;
+                    var nextQuote = NextTick(next, TickType.Quote, deviation);
                     yield return nextQuote;
                 }
 
@@ -135,20 +120,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         /// <summary>
         /// Generates a random <see cref="Tick"/> that is at most the specified <paramref name="maximumPercentDeviation"/> away from the
-        /// <paramref name="referencePrice"/> and is of the requested <paramref name="tickType"/>
+        /// previous price and is of the requested <paramref name="tickType"/>
         /// </summary>
         /// <param name="dateTime">The time of the generated tick</param>
         /// <param name="tickType">The type of <see cref="Tick"/> to be generated</param>
-        /// <param name="referencePrice">The reference price. For spot symbols - the previous price, used as a reference for generating
-        /// new random prices for the next time step; for options - it's underlying Symbol price</param>
         /// <param name="maximumPercentDeviation">The maximum percentage to deviate from the
-        /// <paramref name="referencePrice"/>, for example, 1 would indicate a maximum of 1% deviation from the
-        /// <paramref name="referencePrice"/>. For a previous price of 100, this would yield a price between 99 and 101 inclusive</param>
+        /// previous price for example, 1 would indicate a maximum of 1% deviation from the
+        /// previous price. For a previous price of 100, this would yield a price between 99 and 101 inclusive</param>
         /// <returns>A random <see cref="Tick"/> value that is within the specified <paramref name="maximumPercentDeviation"/>
-        /// from the <paramref name="referencePrice"/></returns>
-        public virtual Tick NextTick(DateTime dateTime, TickType tickType, decimal referencePrice, decimal maximumPercentDeviation)
+        /// from the previous price</returns>
+        public virtual Tick NextTick(DateTime dateTime, TickType tickType, decimal maximumPercentDeviation)
         {
-            var next = _priceGenerator.NextValue(referencePrice, dateTime);
+            var next = _priceGenerator.NextValue(maximumPercentDeviation, dateTime);
             var tick = new Tick
             {
                 Time = dateTime,
@@ -160,7 +143,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             switch (tickType)
             {
                 case TickType.OpenInterest:
-                    return NextOpenInterest(dateTime, referencePrice, maximumPercentDeviation);
+                    return NextOpenInterest(dateTime, Security.OpenInterest, maximumPercentDeviation);
 
                 case TickType.Trade:
                     tick.Quantity = Random.NextInt(1, 1500);

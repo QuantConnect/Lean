@@ -119,13 +119,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 new CashBook(),
                 MarketHoursDatabase.FromDataFolder(),
                 SymbolPropertiesDatabase.FromDataFolder(),
-                new SecurityInitializerProvider(new FuncSecurityInitializer(secutiry =>
+                new SecurityInitializerProvider(new FuncSecurityInitializer(security =>
                 {
-                    // from settings
-                    secutiry.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.Resolution);
+                    // init price
+                    security.SetMarketPrice(new Tick(settings.Start, security.Symbol, 100, 100));
+                    security.SetMarketPrice(new OpenInterest(settings.Start, security.Symbol, 10000));
 
                     // from settings
-                    if (secutiry is Option option)
+                    security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.Resolution);
+
+                    // from settings
+                    if (security is Option option)
                     {
                         option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Statistics.PortfolioStatistics.GetRiskFreeRate());
                     }
@@ -168,7 +172,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         currentSymbol,
                         new List<SubscriptionDataConfig>(),
                         underlying: underlyingSecurity);
-
+                    
                     securities[currentSymbol] = security;
                     underlyingSecurity ??= security;
 
@@ -181,7 +185,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         currentSymbol,
                         new List<Tick>());
                 }
-                
+
                 using var sync = new SynchronizingEnumerator(tickGenerators);
                 while (sync.MoveNext())
                 {
