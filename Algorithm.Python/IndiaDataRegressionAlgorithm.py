@@ -24,10 +24,15 @@ class IndiaDataRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-
         self.SetStartDate(2004, 5, 20)
-        self.SetEndDate(2016, 7, 26)  
-        _symbol = AddEquity("3MINDIA", Resolution.Daily, Market.India).Symbol
+        self.SetEndDate(2016, 7, 26) 
+        self._mappingSymbol = self.AddEquity("3MINDIA", Resolution.Daily, Market.India).Symbol
+        self._splitAndDividendSymbol = self.AddEquity("CCCL", Resolution.Daily, Market.India).Symbol
+        self._receivedWarningEvent = False
+        self._receivedOccurredEvent = False
+        self._initialMapping = False
+        self._executionMapping = False
+        self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -37,36 +42,40 @@ class IndiaDataRegressionAlgorithm(QCAlgorithm):
         '''
 
         # dividend
-        if data.Dividends.ContainsKey("3MINDIA"):
-            dividend = data["3MINDIA"];
-            if dividend.Price != 645.5700 or (dividend.ReferencePrice != 645.5700) or (dividend.Distribution != 645.5700):
-                raise Exception("Did not receive expected price values")
+        if data.Dividends.ContainsKey(self._splitAndDividendSymbol):
+            dividend = data.Dividends[self._splitAndDividendSymbol]
+            if ((self.Time.year == 2010 and self.Time.month == 6 and self.Time.day == 15) and
+                    (dividend.Price != 0.5 or dividend.ReferencePrice != 88.8 or dividend.Distribution != 0.5)):
+                raise Exception("Did not receive expected dividend values")
 
         # split
-        if data.Splits.ContainsKey("3MINDIA"):
-            split = data["3MINDIA"];
+        if data.Splits.ContainsKey(self._splitAndDividendSymbol):
+            split = data.Splits[self._splitAndDividendSymbol]
             if split.Type == SplitType.Warning:
-                _receivedWarningEvent = True
+                self._receivedWarningEvent = True
             elif split.Type == SplitType.SplitOccurred:
-                _receivedOccurredEvent = True
-                if dividend.Price != 645.5700 or (dividend.ReferencePrice != 645.5700) or (dividend.Distribution != 645.5700):
+                self._receivedOccurredEvent = True
+                if split.Price != 421.0 or split.ReferencePrice != 421.0 or split.SplitFactor != 0.2:
                     raise Exception("Did not receive expected price values")
-        
-        # mapping
-        if data.SymbolChangedEvents.ContainsKey(_symbol):
-                mappingEvent = [x.value for x in data.SymbolChangedEvents if x.Key.SecurityType == SecurityType.Equity][0]
-                if Time.Date == DateTime(1999, 1, 1):
-                    _initialMapping = True
-                    raise Exception(f"Unexpected mapping event {mappingEvent}")
-                elif Time.Date == DateTime(2004, 6, 15):
-                    if mappingEvent.NewSymbol != "3MINDIA" or mappingEvent.OldSymbol != "BIRLA3M":
-                        raise Exception(f"Unexpected mapping event {mappingEvent}")
-                    _executionMapping = True
 
+        # mapping
+        if data.SymbolChangedEvents.ContainsKey(self._mappingSymbol):
+                mappingEvent = [x.Value for x in data.SymbolChangedEvents if x.Key.SecurityType == 1][0]
+                if self.Time.year == 1999 and self.Time.month == 1 and self.Time.day == 1:
+                    self._initialMapping = True
+                elif self.Time.year == 2004 and self.Time.month == 6 and self.Time.day == 15:
+                    if mappingEvent.NewSymbol == "3MINDIA" and mappingEvent.OldSymbol == "BIRLA3M":
+                        self._executionMapping = True
     
-    def OnEndOfAlgorithm(self, orderEvent):
-        if _initialMapping:
+    def OnEndOfAlgorithm(self):
+        if self._initialMapping:
             raise Exception("The ticker generated the initial rename event")
 
-        if not _executionMapping:
+        if not self._executionMapping:
             raise Exception("The ticker did not rename throughout the course of its life even though it should have")
+        
+        if not self._receivedOccurredEvent:
+            raise Exception("Did not receive expected split event")
+
+        if not self._receivedWarningEvent:
+            raise Exception("Did not receive expected split warning event")
