@@ -33,22 +33,28 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
 
         public RandomValueGenerator()
-        {
-            _random = new Random();
-            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
-        }
+            : this(new Random())
+        { }
 
         public RandomValueGenerator(int seed)
-        {
-            _random = new Random(seed);
-            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
-        }
+            : this(new Random(seed))
+        { }
 
-        public RandomValueGenerator(int seed, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
+        public RandomValueGenerator(Random random)
+            : this(random, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder())
+        { }
+
+        public RandomValueGenerator(
+            int seed,
+            MarketHoursDatabase marketHoursDatabase,
+            SymbolPropertiesDatabase symbolPropertiesDatabase
+            )
+            : this(new Random(seed), marketHoursDatabase, symbolPropertiesDatabase)
+        { }
+
+        public RandomValueGenerator(Random random, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
         {
-            _random = new Random(seed);
+            _random = random;
             _marketHoursDatabase = marketHoursDatabase;
             _symbolPropertiesDatabase = symbolPropertiesDatabase;
         }
@@ -139,7 +145,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
                 throw new ArgumentException("The provided reference price must be a positive number.");
             }
-            
+
             if (maximumPercentDeviation <= 0)
             {
                 throw new ArgumentException("The provided maximum percent deviation must be a postive number");
@@ -185,7 +191,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return value >= min && value <= max;
         }
 
-        private static bool IsPriceValid(SecurityType securityType, decimal price){
+        private static bool IsPriceValid(SecurityType securityType, decimal price)
+        {
             switch (securityType)
             {
                 case SecurityType.Option:
