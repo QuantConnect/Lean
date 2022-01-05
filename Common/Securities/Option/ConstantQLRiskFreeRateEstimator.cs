@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,14 +14,8 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Util;
-using QLNet;
 
 namespace QuantConnect.Securities.Option
 {
@@ -30,12 +24,12 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class ConstantQLRiskFreeRateEstimator : IQLRiskFreeRateEstimator
     {
-        private readonly double _riskFreeRate;
+        private readonly decimal _riskFreeRate;
         /// <summary>
         /// Constructor initializes class with risk free rate constant
         /// </summary>
         /// <param name="riskFreeRate"></param>
-        public ConstantQLRiskFreeRateEstimator(double riskFreeRate = 0.01)
+        public ConstantQLRiskFreeRateEstimator(decimal riskFreeRate = 0.01m)
         {
             _riskFreeRate = riskFreeRate;
         }
@@ -49,8 +43,6 @@ namespace QuantConnect.Securities.Option
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>The estimate</returns>
         public double Estimate(Security security, Slice slice, OptionContract contract)
-        {
-            return _riskFreeRate;
-        }
+            => Convert.ToDouble(_riskFreeRate);
     }
 }

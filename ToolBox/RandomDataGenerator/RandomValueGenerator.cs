@@ -131,11 +131,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <returns>A new decimal suitable for usage as price within the specified deviation from the reference price</returns>
         public virtual decimal NextPrice(SecurityType securityType, string market, decimal referencePrice, decimal maximumPercentDeviation)
         {
-            Dictionary<SecurityType, Func<decimal, bool>> priceVariationDictionary = new Dictionary<SecurityType, Func<decimal, bool>>
-            {
-                [SecurityType.Option] = p => p < 0
-            };
-
             if (referencePrice <= 0)
             {
                 if (securityType == SecurityType.Option && referencePrice == 0)
@@ -144,12 +139,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
                 throw new ArgumentException("The provided reference price must be a positive number.");
             }
-
-            if (!priceVariationDictionary.TryGetValue(securityType, out var priceVariation))
-            {
-                priceVariation = p => p <= 0;
-            }
-
+            
             if (maximumPercentDeviation <= 0)
             {
                 throw new ArgumentException("The provided maximum percent deviation must be a postive number");
@@ -173,9 +163,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 price = RoundPrice(price, minimumPriceVariation);
 
                 attempts++;
-            } while (priceVariation(price) && attempts < 10);
+            } while (!IsPriceValid(securityType, price) && attempts < 10);
 
-            if (priceVariation(price))
+            if (!IsPriceValid(securityType, price))
             {
                 // if still invalid, bail
                 throw new TooManyFailedAttemptsException(nameof(NextPrice), attempts);
@@ -195,5 +185,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return value >= min && value <= max;
         }
 
+        private static bool IsPriceValid(SecurityType securityType, decimal price){
+            switch (securityType)
+            {
+                case SecurityType.Option:
+                {
+                    return price >= 0;
+                }
+                default:
+                {
+                    return price > 0;
+                }
+            }
+        }
     }
 }

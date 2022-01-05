@@ -15,7 +15,9 @@
 
 using QLNet;
 using System;
+using System.Globalization;
 using System.Linq;
+using Fasterflect;
 
 namespace QuantConnect.Securities.Option
 {
@@ -42,13 +44,16 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Creates pricing engine by engine type name. 
         /// </summary>
+        /// <param name="priceEngineName">QL price engine name</param>
+        /// <param name="riskFree">The risk free rate</param>
         /// <returns>New option price model instance of specific engine</returns>
-        public static IOptionPriceModel Create(string priceEngineName, double riskFree)
+        public static IOptionPriceModel Create(string priceEngineName, decimal riskFree)
         {
             var type = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a => !a.IsDynamic)
                 .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t => t.FullName.EndsWith(priceEngineName));
+                .Where(s => s.Implements(typeof(IPricingEngine)))
+                .FirstOrDefault(t => t.FullName?.EndsWith(priceEngineName, StringComparison.InvariantCulture) == true);
 
             return new QLOptionPriceModel(process => (IPricingEngine)Activator.CreateInstance(type, process),
                 _underlyingVolEstimator,
@@ -117,7 +122,7 @@ namespace QuantConnect.Securities.Option
         {
             PricingEngineFuncEx pricingEngineFunc = (symbol, process) =>
                             symbol.ID.OptionStyle == OptionStyle.American ?
-                            new FDAmericanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine:
+                            new FDAmericanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine :
                             new FDEuropeanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine;
 
             return new QLOptionPriceModel(pricingEngineFunc,

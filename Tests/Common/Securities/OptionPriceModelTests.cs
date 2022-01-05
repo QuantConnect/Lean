@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Option;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests.Common
 {
@@ -252,6 +252,20 @@ namespace QuantConnect.Tests.Common
             Assert.Greater(callPrice1, callPrice2);
         }
 
+        [Test]
+        [TestCase("BaroneAdesiWhaleyApproximationEngine")]
+        [TestCase("QLNet.BaroneAdesiWhaleyApproximationEngine")]
+        public void CreatesOptionPriceModelByName(string priceEngineName)
+        {
+            IOptionPriceModel priceModel = null;
+            Assert.DoesNotThrow(() =>
+            {
+                priceModel = OptionPriceModels.Create(priceEngineName, 0.01m);
+            });
+
+            Assert.NotNull(priceModel);
+            Assert.IsInstanceOf<QLOptionPriceModel>(priceModel);
+        }
 
         [Test]
         public void GreekApproximationTest()

@@ -127,7 +127,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // from settings
                     if (secutiry is Option option)
                     {
-                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Convert.ToDouble(Statistics.PortfolioStatistics.GetRiskFreeRate()));
+                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Statistics.PortfolioStatistics.GetRiskFreeRate());
                     }
                 })),
                 RegisteredSecurityDataTypesProvider.Null,
