@@ -15,6 +15,7 @@
 
 using System;
 using NodaTime;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Packets;
@@ -35,12 +36,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var canonical = Symbols.Fut_SPY_Feb19_2016.Canonical;
             var dataQueue = new TestDataQueueHandler
             {
-                DataPerSymbol = new Dictionary<Symbol, IEnumerator<BaseData>>
+                DataPerSymbol = new Dictionary<Symbol, List<BaseData>>
                 {
                     { Symbols.Fut_SPY_Feb19_2016,
-                        new List<BaseData>{ new Tick(Time.BeginningOfTime, Symbols.Fut_SPY_Feb19_2016, 1, 1)}.GetEnumerator() },
+                        new List<BaseData>{ new Tick(Time.BeginningOfTime, Symbols.Fut_SPY_Feb19_2016, 1, 1)} },
                     { Symbols.Fut_SPY_Mar19_2016,
-                        new List<BaseData>{ new Tick(Time.BeginningOfTime, Symbols.Fut_SPY_Mar19_2016, 2, 2)}.GetEnumerator() },
+                        new List<BaseData>{ new Tick(Time.BeginningOfTime, Symbols.Fut_SPY_Mar19_2016, 2, 2)} },
                 }
             };
             var config = new SubscriptionDataConfig(typeof(Tick), canonical, Resolution.Tick,
@@ -67,6 +68,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(data.MoveNext());
             Assert.AreEqual(2, (data.Current as Tick).AskPrice);
             Assert.AreEqual(canonical, (data.Current as Tick).Symbol);
+            Assert.AreNotEqual(canonical, dataQueue.DataPerSymbol[Symbols.Fut_SPY_Mar19_2016].Single().Symbol);
 
             Assert.IsFalse(data.MoveNext());
             Assert.IsNull(data.Current);
@@ -81,13 +83,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             public bool IsConnected => true;
 
-            public Dictionary<Symbol, IEnumerator<BaseData>> DataPerSymbol;
+            public Dictionary<Symbol, List<BaseData>> DataPerSymbol;
 
             public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
             {
-                if (DataPerSymbol.TryGetValue(dataConfig.Symbol, out var enumerator))
+                if (DataPerSymbol.TryGetValue(dataConfig.Symbol, out var baseDatas))
                 {
-                    return enumerator;
+                    return baseDatas.GetEnumerator();
                 }
                 throw new Exception($"Failed to find a data enumerator for symbol {dataConfig.Symbol}!");
             }
