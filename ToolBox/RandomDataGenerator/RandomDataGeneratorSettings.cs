@@ -247,8 +247,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 Environment.Exit(-1);
             }
 
-            //output.Info.WriteLine($"Selected tick types for {securityType}: {string.Join(", ", tickTypes)}");
-
             return new RandomDataGeneratorSettings
             {
                 End = endDate,

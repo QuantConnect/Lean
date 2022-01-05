@@ -44,7 +44,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             Symbol = security.Symbol;
             SymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-
+            
             if (Symbol.SecurityType.IsOption())
             {
                 _priceGenerator = new BlackScholesPriceGenerator(security);
@@ -221,7 +221,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// if the density provided is <see cref="DataDensity.VerySparse"/>, then at least one tick will be generated every 50 <paramref name="resolution"/> steps.
         /// Times returned are guaranteed to be within market hours for the specified Symbol
         /// </summary>
-        /// <param name="symbol">The Symbol to generate a new tick time for</param>
         /// <param name="previous">The previous tick time</param>
         /// <param name="resolution">The requested resolution of data</param>
         /// <param name="density">The requested data density</param>
