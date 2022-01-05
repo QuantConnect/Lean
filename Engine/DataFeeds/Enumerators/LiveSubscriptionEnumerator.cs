@@ -29,13 +29,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class LiveSubscriptionEnumerator : IEnumerator<BaseData>
     {
+        private BaseData _current;
         private readonly Symbol _requestedSymbol;
         private SubscriptionDataConfig _currentConfig;
         private IEnumerator<BaseData> _previousEnumerator;
         private IEnumerator<BaseData> _underlyingEnumerator;
 
-        public BaseData Current => _underlyingEnumerator.Current;
+        /// <summary>
+        /// The current data object instance
+        /// </summary>
+        public BaseData Current => _current;
 
+        /// <summary>
+        /// The current data object instance
+        /// </summary>
         object IEnumerator.Current => Current;
 
         /// <summary>
@@ -73,9 +80,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             var result = _underlyingEnumerator.MoveNext();
-            if (Current != null)
+            _current = _underlyingEnumerator.Current;
+
+            if (_current != null && _current.Symbol != _requestedSymbol)
             {
-                Current.Symbol = _requestedSymbol;
+                // if we've done some mapping at this layer let's clone the underlying and set the requested symbol,
+                // don't trust the IDQH implementations for data uniqueness, since the configuration could be shared
+                _current = _current.Clone();
+                _current.Symbol = _requestedSymbol;
             }
 
             return result;
