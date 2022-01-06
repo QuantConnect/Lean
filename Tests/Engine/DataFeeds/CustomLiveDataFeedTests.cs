@@ -390,4 +390,3 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
     }
 }
-
