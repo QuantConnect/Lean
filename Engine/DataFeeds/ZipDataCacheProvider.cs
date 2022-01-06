@@ -15,15 +15,15 @@
 
 using System;
 using System.IO;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using QuantConnect.Logging;
-using System.Linq;
-using System.Threading;
 using Ionic.Zip;
 using Ionic.Zlib;
-using QuantConnect.Interfaces;
+using System.Linq;
+using System.Threading;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -89,6 +89,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 }
                                 else
                                 {
+                                    existingZip.Refresh();
                                     stream = CreateEntryStream(existingZip, entryName, filename);
                                 }
                             }
@@ -170,6 +171,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         cachedZip.WriteEntry(entryName, data);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns a list of zip entries in a provided zip file
+        /// </summary>
+        public List<string> GetZipEntries(string zipFile)
+        {
+            if (!_zipFileCache.TryGetValue(zipFile, out var cachedZip))
+            {
+                if (!Cache(zipFile, out cachedZip))
+                {
+                    throw new ArgumentException($"Failed to get zip entries from {zipFile}");
+                }
+            }
+
+            lock (cachedZip)
+            {
+                cachedZip.Refresh();
+                return cachedZip.EntryCache.Keys.ToList();
             }
         }
 
@@ -461,8 +482,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             public void WriteEntry(string entryName, byte[] content)
             {
                 Interlocked.Increment(ref _modified);
-                // we refresh our cache time when modified
-                _dateCached = new ReferenceWrapper<DateTime>(DateTime.UtcNow);
+                Refresh();
 
                 // If the entry already exists remove it 
                 if (_zipFile.ContainsEntry(entryName))
@@ -474,6 +494,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // Write this entry to zip file
                 var newEntry = _zipFile.AddEntry(entryName, content);
                 EntryCache.Add(entryName, new ZipEntryCache { Entry = newEntry, Modified = true });
+            }
+
+            /// <summary>
+            /// We refresh our cache time when used to avoid it being clean up
+            /// </summary>
+            public void Refresh()
+            {
+                _dateCached = new ReferenceWrapper<DateTime>(DateTime.UtcNow);
             }
 
             /// <summary>
@@ -497,7 +525,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _zipFile.Save(tempFileName);
                 }
 
-                EntryCache.Clear();
                 _zipFile?.DisposeSafely();
                 _dataStream?.DisposeSafely();
 

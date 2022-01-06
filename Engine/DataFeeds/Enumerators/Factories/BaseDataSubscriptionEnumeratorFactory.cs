@@ -31,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     {
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
+        private readonly IDataCacheProvider _dataCacheProvider;
         private readonly bool _isLiveMode;
 
         /// <summary>
@@ -38,13 +39,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// </summary>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
         /// <param name="mapFileProvider">Used for resolving the correct map files</param>
-        /// <param name="factorFileProvider">Used for getting factor files</param>
-        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
-        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        /// <param name="dataCacheProvider">The cache provider instance to use</param>
+        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, IMapFileProvider mapFileProvider, IDataCacheProvider dataCacheProvider)
+            : this(isLiveMode, dataCacheProvider)
         {
-            _isLiveMode = isLiveMode;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
             _mapFileProvider = mapFileProvider;
         }
 
@@ -52,12 +50,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
-        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
-        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        /// <param name="dataCacheProvider">The cache provider instance to use</param>
+        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, IDataCacheProvider dataCacheProvider)
         {
             _isLiveMode = isLiveMode;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+            _dataCacheProvider = dataCacheProvider;
+            _tradableDaysProvider = (request => request.TradableDays);
         }
 
         /// <summary>
@@ -73,28 +71,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // It has the added benefit of caching any zip files that we request from the filesystem, and reading
             // files contained within the zip file, which the SingleEntryDataCacheProvider does not support.
             var sourceFactory = request.Configuration.GetBaseDataInstance();
-            using (var dataCacheProvider = new ZipDataCacheProvider(dataProvider))
+            foreach (var date in _tradableDaysProvider(request))
             {
-                foreach (var date in _tradableDaysProvider(request))
+                if (sourceFactory.RequiresMapping() && _mapFileProvider != null)
                 {
-                    if (sourceFactory.RequiresMapping() && _mapFileProvider != null)
-                    {
-                        request.Configuration.MappedSymbol = GetMappedSymbol(request.Configuration, date);
-                    }
+                    request.Configuration.MappedSymbol = GetMappedSymbol(request.Configuration, date);
+                }
 
-                    var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode, sourceFactory, dataProvider);
-                    var entriesForDate = factory.Read(source);
-                    foreach (var entry in entriesForDate)
-                    {
-                        // Fix for Daily/Hour options cases when reading in all equity data from daily/hourly file
-                        if (entry.Time.Date != date)
-                        {
-                            continue;
-                        }
-
-                        yield return entry;
-                    }
+                var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
+                var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, request.Configuration, date, _isLiveMode, sourceFactory, dataProvider);
+                var entriesForDate = factory.Read(source);
+                foreach (var entry in entriesForDate)
+                {
+                    yield return entry;
                 }
             }
         }

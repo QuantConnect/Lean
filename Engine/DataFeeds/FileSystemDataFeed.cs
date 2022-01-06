@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -44,6 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataProvider _dataProvider;
+        private IDataCacheProvider _cacheProvider;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private SubscriptionDataReaderSubscriptionEnumeratorFactory _subscriptionFactory;
@@ -74,11 +74,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _timeProvider = dataFeedTimeProvider.FrontierTimeProvider;
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
             _cancellationTokenSource = new CancellationTokenSource();
+            _cacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: false);
             _subscriptionFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(
                 _resultHandler,
                 _mapFileProvider,
                 _factorFileProvider,
-                _dataProvider,
+                _cacheProvider,
                 enablePriceScaling: false);
 
             IsActive = true;
@@ -150,13 +151,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 factory = new OptionChainUniverseSubscriptionEnumeratorFactory((req) =>
                 {
-                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _factorFileProvider);
+                    if (!req.Configuration.SecurityType.IsOption())
+                    {
+                        var enumerator = _subscriptionFactory.CreateEnumerator(req, _dataProvider);
+                        enumerator = new FilterEnumerator<BaseData>(enumerator, data => data.DataType != MarketDataType.Auxiliary);
+                        return ConfigureEnumerator(req, true, enumerator);
+                    }
+                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _cacheProvider);
                     return ConfigureEnumerator(req, true, underlyingFactory.CreateEnumerator(req, _dataProvider));
                 });
             }
             if (request.Universe is FuturesChainUniverse)
             {
-                factory = new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
+                factory = new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), _cacheProvider);
             }
 
             // define our data enumerator

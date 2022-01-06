@@ -179,7 +179,8 @@ namespace QuantConnect.Tests.ToolBox
             //load future chain first
             var config = new SubscriptionDataConfig(typeof(ZipEntryName), baseFuture, res,
                                                     TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, tickType);
-            var factory = new ZipEntryNameSubscriptionDataSourceReader(TestGlobals.DataProvider, config, date, false);
+            using var cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
+            var factory = new ZipEntryNameSubscriptionDataSourceReader(cacheProvider, config, date, false);
 
             var result = factory.Read(new SubscriptionDataSource(filePath, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName))
                           .Select(s => s.Symbol).ToList();
