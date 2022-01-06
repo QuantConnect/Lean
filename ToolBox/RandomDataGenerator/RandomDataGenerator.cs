@@ -109,6 +109,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         continue;
                     }
 
+                    tickHistories[security.Symbol].Add(dataPoint as Tick);
                     security.Update(new List<BaseData> { dataPoint }, dataPoint.GetType(), false);
                 }
 
