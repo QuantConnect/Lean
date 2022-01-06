@@ -24,6 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -150,7 +151,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 factory = new OptionChainUniverseSubscriptionEnumeratorFactory((req) =>
                 {
-                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _factorFileProvider);
+                    if (!req.Configuration.SecurityType.IsOption())
+                    {
+                        var enumerator = _subscriptionFactory.CreateEnumerator(req, _dataProvider);
+                        enumerator = new FilterEnumerator<BaseData>(enumerator, data => data.DataType != MarketDataType.Auxiliary);
+                        return ConfigureEnumerator(req, true, enumerator);
+                    }
+                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider);
                     return ConfigureEnumerator(req, true, underlyingFactory.CreateEnumerator(req, _dataProvider));
                 });
             }

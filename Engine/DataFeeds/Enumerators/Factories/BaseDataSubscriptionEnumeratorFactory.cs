@@ -38,13 +38,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// </summary>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
         /// <param name="mapFileProvider">Used for resolving the correct map files</param>
-        /// <param name="factorFileProvider">Used for getting factor files</param>
-        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
-        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, IMapFileProvider mapFileProvider)
+            : this(isLiveMode)
         {
-            _isLiveMode = isLiveMode;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
             _mapFileProvider = mapFileProvider;
         }
 
@@ -52,12 +48,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
-        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
-        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode)
         {
             _isLiveMode = isLiveMode;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+            _tradableDaysProvider = (request => request.TradableDays);
         }
 
         /// <summary>
@@ -87,12 +81,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     var entriesForDate = factory.Read(source);
                     foreach (var entry in entriesForDate)
                     {
-                        // Fix for Daily/Hour options cases when reading in all equity data from daily/hourly file
-                        if (entry.Time.Date != date)
-                        {
-                            continue;
-                        }
-
                         yield return entry;
                     }
                 }

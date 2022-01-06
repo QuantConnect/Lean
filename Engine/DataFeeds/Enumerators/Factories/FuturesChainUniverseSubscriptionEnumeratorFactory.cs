@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -67,8 +66,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             if (_isLiveMode)
             {
-                var subscriptionConfiguration = GetSubscriptionConfigurations(request).First();
-                var subscriptionRequest = new SubscriptionRequest(request, configuration: subscriptionConfiguration);
+                var subscriptionRequest = new SubscriptionRequest(request, configuration: GetSubscriptionConfiguration(request));
 
                 return new DataQueueFuturesChainUniverseDataCollectionEnumerator(subscriptionRequest, _symbolUniverse, _timeProvider);
             }
@@ -76,27 +74,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 var factory = new BaseDataSubscriptionEnumeratorFactory(_isLiveMode);
 
-                var enumerators = GetSubscriptionConfigurations(request)
-                    .Select(c => new SubscriptionRequest(request, configuration: c))
-                    .Select(sr => _enumeratorConfigurator(request, factory.CreateEnumerator(sr, dataProvider)));
+                var newRequest = new SubscriptionRequest(request, configuration: GetSubscriptionConfiguration(request));
+                var enumerator = _enumeratorConfigurator(request, factory.CreateEnumerator(newRequest, dataProvider));
 
-                var sync = new SynchronizingEnumerator(enumerators);
-                return new FuturesChainUniverseDataCollectionAggregatorEnumerator(sync, request.Security.Symbol);
+                return new FuturesChainUniverseDataCollectionAggregatorEnumerator(enumerator, request.Security.Symbol);
             }
         }
 
-        private static IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(SubscriptionRequest request)
+        private static SubscriptionDataConfig GetSubscriptionConfiguration(SubscriptionRequest request)
         {
             var config = request.Configuration;
             var resolution = config.Resolution;
 
-            var configurations = new List<SubscriptionDataConfig>
-            {
-                // rewrite the primary to be fill forward
-                new SubscriptionDataConfig(config, resolution: resolution, fillForward: true)
-            };
-
-            return configurations;
+            // rewrite the primary to be fill forward
+            return new SubscriptionDataConfig(config, resolution: resolution, fillForward: true);
         }
     }
 }

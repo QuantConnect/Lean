@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             );
 
             var fileProvider = TestGlobals.DataProvider;
-            var factory = new BaseDataSubscriptionEnumeratorFactory(false, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider);
+            var factory = new BaseDataSubscriptionEnumeratorFactory(false, TestGlobals.MapFileProvider);
 
             GC.Collect();
             var ramUsageBeforeLoop = OS.TotalPhysicalMemoryUsed;

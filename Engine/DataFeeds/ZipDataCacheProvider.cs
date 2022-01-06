@@ -15,15 +15,15 @@
 
 using System;
 using System.IO;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using QuantConnect.Logging;
-using System.Linq;
-using System.Threading;
 using Ionic.Zip;
 using Ionic.Zlib;
-using QuantConnect.Interfaces;
+using System.Linq;
+using System.Threading;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -170,6 +170,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         cachedZip.WriteEntry(entryName, data);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns a list of zip entries in a provided zip file
+        /// </summary>
+        public List<string> GetZipEntries(string zipFile)
+        {
+            if (!Cache(zipFile, out var cachedZip))
+            {
+                throw new ArgumentException($"Failed to get zip entries from {zipFile}");
+            }
+
+            lock (cachedZip)
+            {
+                return cachedZip.EntryCache.Keys.ToList();
             }
         }
 
@@ -497,7 +513,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _zipFile.Save(tempFileName);
                 }
 
-                EntryCache.Clear();
                 _zipFile?.DisposeSafely();
                 _dataStream?.DisposeSafely();
 
