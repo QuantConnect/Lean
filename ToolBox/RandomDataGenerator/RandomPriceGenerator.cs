@@ -38,6 +38,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         }
 
         /// <summary>
+        /// <see cref="RandomPriceGenerator"/> is always ready to generate new price values as it does not depend on volatility model
+        /// </summary>
+        public bool WarmedUp => true;
+
+        /// <summary>
         /// Generates an asset price
         /// </summary>
         /// <param name="maximumPercentDeviation">The maximum percent deviation. This value is in percent space,

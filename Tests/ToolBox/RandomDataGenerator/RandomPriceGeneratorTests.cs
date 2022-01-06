@@ -15,11 +15,11 @@
 
 using Moq;
 using NUnit.Framework;
-using QuantConnect.ToolBox.RandomDataGenerator;
-using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.ToolBox.RandomDataGenerator;
+using System;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        public void ReturnSameAsReference()
+        public void ReturnsSameAsReference()
         {
             var randomMock = new Mock<IRandomValueGenerator>();
             randomMock.Setup(s => s.NextPrice(It.IsAny<SecurityType>(), It.IsNotNull<string>(), It.IsAny<decimal>(),
@@ -61,8 +61,15 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             _security.SetMarketPrice(new Tick(DateTime.UtcNow, Symbols.SPY, 10, 100));
 
             var actual = randomPriceGenerator.NextValue(1, DateTime.MinValue);
-            randomMock.Verify(s => s.NextPrice(It.IsAny<SecurityType>(), It.IsNotNull<string>(), 55,1), Times.Once);
+            randomMock.Verify(s => s.NextPrice(It.IsAny<SecurityType>(), It.IsNotNull<string>(), 55, 1), Times.Once);
             Assert.AreEqual(50, actual);
+        }
+
+        [Test]
+        public void AlwaysReady()
+        {
+            var priceGenerator = new RandomPriceGenerator(_security, Mock.Of<IRandomValueGenerator>());
+            Assert.True(priceGenerator.WarmedUp);
         }
     }
 }

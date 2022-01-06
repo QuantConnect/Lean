@@ -16,6 +16,7 @@
 using QuantConnect.Securities;
 using System;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities.Option;
 
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -52,7 +53,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// </summary>
         /// <param name="maximumPercentDeviation">The maximum percent deviation. This value is in percent space,
         ///     so a value of 1m is equal to 1%.</param>
-        /// /// <param name="referenceDate">current reference date</param>
+        /// <param name="referenceDate">current reference date</param>
         /// <returns>A new decimal suitable for usage as new security price</returns>
         public decimal NextValue(decimal maximumPercentDeviation, DateTime referenceDate)
         {
@@ -69,5 +70,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         ))
                 .TheoreticalPrice;
         }
+
+        /// <summary>
+        /// <see cref="RandomPriceGenerator"/> is always ready to generate new price values as it does not depend on volatility model
+        /// </summary>
+        public bool WarmedUp => _option.PriceModel is QLOptionPriceModel optionPriceModel && optionPriceModel.VolatilityEstimatorWarmedUp || _option.PriceModel is not QLOptionPriceModel;
     }
 }

@@ -17,10 +17,13 @@ using Moq;
 using NUnit.Framework;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using System;
+using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using Cash = QuantConnect.Securities.Cash;
+using Option = QuantConnect.Securities.Option.Option;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -89,7 +92,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        public void ReturnNewPrice()
+        public void ReturnsNewPrice()
         {
             var priceModelMock = new Mock<IOptionPriceModel>();
             priceModelMock
@@ -99,6 +102,32 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var randomPriceGenerator = new BlackScholesPriceGenerator(_option);
 
             Assert.AreEqual(1000, randomPriceGenerator.NextValue(50, new DateTime(2020, 1, 1)));
+        }
+
+        [Test]
+        public void WarmedUpIfNotQLOptionPriceModel()
+        {
+            _option.PriceModel = Mock.Of<IOptionPriceModel>();
+            var blackScholesModel = new BlackScholesPriceGenerator(_option);
+
+            Assert.True(blackScholesModel.WarmedUp);
+        }
+
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void WarmedUpSameQLOptionPriceModel(bool warmUp)
+        {
+            var volatilityModel = new Mock<IQLUnderlyingVolatilityEstimator>();
+            volatilityModel.SetupGet(s => s.IsReady).Returns(warmUp);
+            _option.PriceModel = new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
+                volatilityModel.Object,
+                null,
+                null);
+
+            var blackScholesModel = new BlackScholesPriceGenerator(_option);
+
+            Assert.AreEqual(warmUp, blackScholesModel.WarmedUp);
         }
     }
 }

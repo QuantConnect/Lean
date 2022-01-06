@@ -41,10 +41,16 @@ namespace QuantConnect.Securities.Option
                 option.Underlying.VolatilityModel != null &&
                 option.Underlying.VolatilityModel.Volatility > 0m)
             {
+                IsReady = true;
                 return (double)option.Underlying.VolatilityModel.Volatility;
             }
 
             return 0.0;
         }
+
+        /// <summary>
+        /// Indicates whether volatility model has been warmed ot not
+        /// </summary>
+        public bool IsReady { get; private set; }
     }
 }

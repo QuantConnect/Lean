@@ -33,5 +33,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="referenceDate">date used in price calculation</param>
         /// <returns>Returns a new decimal as price</returns>
         public decimal NextValue(decimal maximumPercentDeviation, DateTime referenceDate);
+
+        /// <summary>
+        /// Indicates Price generator warmed up and ready to generate new values
+        /// </summary>
+        public bool WarmedUp { get; }
     }
 }

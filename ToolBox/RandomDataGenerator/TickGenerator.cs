@@ -18,6 +18,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QLNet;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -73,6 +74,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var deviation = GetMaximumDeviation(Settings.Resolution);
             while (current <= Settings.End)
             {
+
                 var next = NextTickTime(current, Settings.Resolution, Settings.DataDensity);
                 if (TickTypes.Contains(TickType.OpenInterest))
                 {
@@ -84,6 +86,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     }
                 }
 
+                Tick nextTick = null;
                 // keeps quotes close to the trades for consistency
                 if (TickTypes.Contains(TickType.Trade) &&
                     TickTypes.Contains(TickType.Quote))
@@ -91,26 +94,26 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // %odds of getting a trade tick, for example, a quote:trade ratio of 2 means twice as likely
                     // to get a quote, which means you have a 33% chance of getting a trade => 1/3
                     var tradeChancePercent = 100 / (1 + Settings.QuoteTradeRatio);
-                    if (Random.NextBool(tradeChancePercent))
-                    {
-                        var nextTrade = NextTick(next, TickType.Trade, deviation);
-                        yield return nextTrade;
-                    }
-                    else
-                    {
-                        var nextQuote = NextTick(next, TickType.Quote, deviation);
-                        yield return nextQuote;
-                    }
+                    nextTick = NextTick(
+                        next,
+                        Random.NextBool(tradeChancePercent)
+                            ? TickType.Trade
+                            : TickType.Quote,
+                        deviation);
                 }
                 else if (TickTypes.Contains(TickType.Trade))
                 {
-                    var nextTrade = NextTick(next, TickType.Trade, deviation);
-                    yield return nextTrade;
+                    nextTick = NextTick(next, TickType.Trade, deviation);
+
                 }
                 else if (TickTypes.Contains(TickType.Quote))
                 {
-                    var nextQuote = NextTick(next, TickType.Quote, deviation);
-                    yield return nextQuote;
+                    nextTick = NextTick(next, TickType.Quote, deviation);
+                }
+
+                if (nextTick != null && _priceGenerator.WarmedUp)
+                {
+                    yield return nextTick;
                 }
 
                 // advance to the next time step

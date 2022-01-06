@@ -33,5 +33,10 @@ namespace QuantConnect.Securities.Option
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>Volatility</returns>
         double Estimate(Security security, Slice slice, OptionContract contract);
+
+        /// <summary>
+        /// Indicates whether volatility model is warmed up or no
+        /// </summary>
+        bool IsReady { get; }
     }
 }

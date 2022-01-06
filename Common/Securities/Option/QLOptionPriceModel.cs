@@ -42,6 +42,11 @@ namespace QuantConnect.Securities.Option
         public bool EnableGreekApproximation { get; set; } = true;
 
         /// <summary>
+        /// True if volatility model is warmed up, i.e. has generated volatility value different from zero, otherwise false.
+        /// </summary>
+        public bool VolatilityEstimatorWarmedUp => _underlyingVolEstimator.IsReady;
+
+        /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
         /// <param name="pricingEngineFunc">Function modeled stochastic process, and returns new pricing engine to run calculations for that option</param>
@@ -106,6 +111,11 @@ namespace QuantConnect.Securities.Option
 
                 var underlyingVolValue = new SimpleQuote(_underlyingVolEstimator.Estimate(security, slice, contract));
                 var underlyingVol = new Handle<BlackVolTermStructure>(new BlackConstantVol(0, calendar, new Handle<Quote>(underlyingVolValue), dayCounter));
+
+                if (!_underlyingVolEstimator.IsReady)
+                {
+                    return OptionPriceModelResult.None;
+                }
 
                 // preparing stochastic process and payoff functions
                 var stochasticProcess = new BlackScholesMertonProcess(new Handle<Quote>(underlyingQuoteValue), dividendYield, riskFreeRate, underlyingVol);
