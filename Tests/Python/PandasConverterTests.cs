@@ -1041,7 +1041,7 @@ def Test(dataFrame, symbol):
             if(_newerPandas){
                 return;
             }
-
+            
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
