@@ -856,7 +856,6 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(canConvert);
             Assert.IsNotNull(baseData);
             Assert.IsAssignableFrom<CustomData>(baseData);
-
         }
 
         [Test]

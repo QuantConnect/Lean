@@ -30,7 +30,7 @@ class HistoryAlgorithm(QCAlgorithm):
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
         self.AddEquity("SPY", Resolution.Daily)
-        self.AddData(CustomDataEquity,"IBM", Resolution.Daily)
+        self.AddData(CustomDataEquity, "IBM", Resolution.Daily)
         # specifying the exchange will allow the history methods that accept a number of bars to return to work properly
 
         # we can get history in initialize to set up indicators and such

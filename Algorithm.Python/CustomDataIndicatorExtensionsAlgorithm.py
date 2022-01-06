@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from HistoryAlgorithm import CustomDataEquity
+from HistoryAlgorithm import *
 
 ### <summary>
 ### The algorithm creates new indicator value with the existing indicator method by Indicator Extensions

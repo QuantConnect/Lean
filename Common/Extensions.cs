@@ -461,34 +461,34 @@ namespace QuantConnect
                 orders
                     .OrderBy(pair => pair.Key)
                     .Select(pair =>
-                    {
-                        // this is required to avoid any small differences between python and C#
-                        var order = pair.Value;
-                        order.Price = order.Price.SmartRounding();
-                        var limit = order as LimitOrder;
-                        if (limit != null)
                         {
-                            limit.LimitPrice = limit.LimitPrice.SmartRounding();
+                            // this is required to avoid any small differences between python and C#
+                            var order = pair.Value;
+                            order.Price = order.Price.SmartRounding();
+                            var limit = order as LimitOrder;
+                            if (limit != null)
+                            {
+                                limit.LimitPrice = limit.LimitPrice.SmartRounding();
+                            }
+                            var stopLimit = order as StopLimitOrder;
+                            if (stopLimit != null)
+                            {
+                                stopLimit.LimitPrice = stopLimit.LimitPrice.SmartRounding();
+                                stopLimit.StopPrice = stopLimit.StopPrice.SmartRounding();
+                            }
+                            var stopMarket = order as StopMarketOrder;
+                            if (stopMarket != null)
+                            {
+                                stopMarket.StopPrice = stopMarket.StopPrice.SmartRounding();
+                            }
+                            var limitIfTouched = order as LimitIfTouchedOrder;
+                            if (limitIfTouched != null)
+                            {
+                                limitIfTouched.LimitPrice = limitIfTouched.LimitPrice.SmartRounding();
+                                limitIfTouched.TriggerPrice = limitIfTouched.TriggerPrice.SmartRounding();
+                            }
+                            return JsonConvert.SerializeObject(pair.Value, Formatting.None);
                         }
-                        var stopLimit = order as StopLimitOrder;
-                        if (stopLimit != null)
-                        {
-                            stopLimit.LimitPrice = stopLimit.LimitPrice.SmartRounding();
-                            stopLimit.StopPrice = stopLimit.StopPrice.SmartRounding();
-                        }
-                        var stopMarket = order as StopMarketOrder;
-                        if (stopMarket != null)
-                        {
-                            stopMarket.StopPrice = stopMarket.StopPrice.SmartRounding();
-                        }
-                        var limitIfTouched = order as LimitIfTouchedOrder;
-                        if (limitIfTouched != null)
-                        {
-                            limitIfTouched.LimitPrice = limitIfTouched.LimitPrice.SmartRounding();
-                            limitIfTouched.TriggerPrice = limitIfTouched.TriggerPrice.SmartRounding();
-                        }
-                        return JsonConvert.SerializeObject(pair.Value, Formatting.None);
-                    }
                     )
             );
 
@@ -613,18 +613,18 @@ namespace QuantConnect
             }
 
             return targets.Select(x =>
-            {
-                var security = algorithm.Securities[x.Symbol];
-                return new
                 {
-                    PortfolioTarget = x,
-                    TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
-                    ExistingQuantity = security.Holdings.Quantity
-                        + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
-                            .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
-                    Security = security
-                };
-            })
+                    var security = algorithm.Securities[x.Symbol];
+                    return new
+                    {
+                        PortfolioTarget = x,
+                        TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
+                        ExistingQuantity = security.Holdings.Quantity
+                            + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
+                                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
+                        Security = security
+                    };
+                })
                 .Where(x => x.Security.HasData
                             && x.Security.IsTradable
                             && (targetIsDelta ? Math.Abs(x.TargetQuantity) : Math.Abs(x.TargetQuantity - x.ExistingQuantity))
@@ -2547,7 +2547,7 @@ namespace QuantConnect
                     // If the PyObject type and the managed object names are the same,
                     // pyObject is a C# object wrapped in PyObject, in this case return true
                     // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
-                    var name = (((dynamic)pythonType).__name__ as PyObject).GetAndDispose<string>();
+                    var name = (((dynamic) pythonType).__name__ as PyObject).GetAndDispose<string>();
                     pythonType.Dispose();
                     return name == result.GetType().Name;
                 }
