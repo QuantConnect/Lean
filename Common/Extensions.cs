@@ -2639,7 +2639,7 @@ namespace QuantConnect
                 return pyObject.AsManagedObject(typeToConvertTo);
             }
         }
-
+        
         /// <summary>
         /// Converts a Python function to a managed function returning a Symbol
         /// </summary>
@@ -3532,7 +3532,7 @@ namespace QuantConnect
             {
                 return (data as Delisting)?.Type == DelistingType.Delisted;
             }
-
+            
             if (!(type == typeof(Delisting) || type == typeof(Split) || type == typeof(Dividend)))
             {
                 return true;
