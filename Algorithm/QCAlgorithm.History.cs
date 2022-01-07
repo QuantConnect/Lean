@@ -804,9 +804,30 @@ namespace QuantConnect.Algorithm
             Security security;
             if (Securities.TryGetValue(symbol, out security))
             {
-                return resolution ?? SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(symbol)
-                    .GetHighestResolution();
+                if (resolution != null)
+                {
+                    return resolution.Value;
+                }
+
+                Resolution? result = null;
+                var hasNonInternal = false;
+                foreach (var config in SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
+                    // we process non internal configs first
+                    .OrderBy(config => config.IsInternalFeed ? 1 : 0))
+                {
+                    if (!config.IsInternalFeed || !hasNonInternal)
+                    {
+                        // once we find a non internal config we ignore internals
+                        hasNonInternal |= !config.IsInternalFeed;
+                        if (!result.HasValue || config.Resolution < result)
+                        {
+                            result = config.Resolution;
+                        }
+                    }
+                }
+
+                return result ?? UniverseSettings.Resolution;
             }
             else
             {
