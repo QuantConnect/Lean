@@ -43,6 +43,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public double HasDividendsPercentage { get; set; }
         public double DividendEveryQuarterPercentage { get; set; }
         public string OptionPriceEngineName { get; set; }
+        public Resolution StandardDeviationVolatilityPeriodSpan { get; private set; } = Resolution.Daily;
 
         public static RandomDataGeneratorSettings FromCommandLineArguments(
             string startDateString,
@@ -61,6 +62,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string hasDividendsPercentageString,
             string dividendEveryQuarterPercentageString,
             string optionPriceEngineName,
+            string standardDeviationVolatilityPeriodSpanString,
             ConsoleLeveledOutput output
             )
         {
@@ -79,6 +81,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             double hasSplitsPercentage;
             double hasDividendsPercentage;
             double dividendEveryQuarterPercentage;
+            Resolution standardDeviationVolatilityPeriodSpan;
 
             // --start
             if (!DateTime.TryParseExact(startDateString, DateFormats, null, DateTimeStyles.None, out startDate))
@@ -108,6 +111,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 var validValues = string.Join(", ", Enum.GetValues(typeof(Resolution)).Cast<Resolution>());
                 output.Error.WriteLine($"Optional parameter --resolution was incorrectly formatted. Default is Minute. Please specify a valid Resolution. Value provided: '{resolutionString}' Valid values: {validValues}");
+            }
+
+            // --standard deviation volatility period span
+            if (string.IsNullOrEmpty(standardDeviationVolatilityPeriodSpanString))
+            {
+                standardDeviationVolatilityPeriodSpan = Resolution.Daily;
+                output.Info.WriteLine($"Using default value of '{resolution}' for --resolution");
+            }
+            else if (!Enum.TryParse(standardDeviationVolatilityPeriodSpanString, true, out standardDeviationVolatilityPeriodSpan))
+            {
+                var validValues = string.Join(", ", Enum.GetValues(typeof(Resolution)).Cast<Resolution>());
+                output.Error.WriteLine($"Optional parameter --standard-deviation-volatility-periodSpan was incorrectly formatted. Default is Minute. Please specify a valid Resolution. Value provided: '{resolutionString}' Valid values: {validValues}");
             }
 
             // --security-type
@@ -269,7 +284,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 HasSplitsPercentage = hasSplitsPercentage,
                 HasDividendsPercentage = hasDividendsPercentage,
                 DividendEveryQuarterPercentage = dividendEveryQuarterPercentage,
-                OptionPriceEngineName = optionPriceEngineName
+                OptionPriceEngineName = optionPriceEngineName,
+                StandardDeviationVolatilityPeriodSpan = standardDeviationVolatilityPeriodSpan
             };
         }
     }

@@ -35,7 +35,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string hasSplitsPercentageString,
             string hasDividendsPercentageString,
             string dividendEveryQuarterPercentageString,
-            string optionPriceEngineName
+            string optionPriceEngineName,
+            string standardDeviationVolatilityPeriodSpanString
             )
         {
             var output = new ConsoleLeveledOutput();
@@ -56,6 +57,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 hasDividendsPercentageString,
                 dividendEveryQuarterPercentageString,
                 optionPriceEngineName,
+                standardDeviationVolatilityPeriodSpanString,
 
                 output
             );
@@ -78,7 +80,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     security.SetMarketPrice(new OpenInterest(settings.Start, security.Symbol, 10000));
 
                     // from settings
-                    security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(Resolution.Tick);
+                    security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.StandardDeviationVolatilityPeriodSpan);
 
                     // from settings
                     if (security is Option option)
