@@ -20,6 +20,8 @@ using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using System;
+using System.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -70,6 +72,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             var priceGenerator = new RandomPriceGenerator(_security, Mock.Of<IRandomValueGenerator>());
             Assert.True(priceGenerator.WarmedUp);
+        }
+
+        [Test]
+        public void ComposeRandomDataGenerator()
+        {
+            Assert.NotNull(Composer.Instance.GetExportedValueByTypeName<QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator>("QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator"));
         }
     }
 }
