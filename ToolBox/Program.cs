@@ -248,7 +248,7 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "dividends-percentage", "60.0"),
                             GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0"),
                             GetParameterOrDefault(optionsObject, "option-price-engine", "BaroneAdesiWhaleyApproximationEngine"),
-                            GetParameterOrDefault(optionsObject, "standard-deviation-volatility-periodSpan", "Daily")
+                            GetParameterOrDefault(optionsObject, "volatility-model-resolution", "Daily")
                         );
                         break;
 
